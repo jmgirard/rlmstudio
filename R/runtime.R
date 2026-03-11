@@ -1,3 +1,15 @@
+#' Build arguments for runtime_ls
+#' @noRd
+build_args_runtime_ls <- function(json = FALSE) {
+  args <- c("runtime", "ls")
+
+  if (isTRUE(json)) {
+    args <- c(args, "--json")
+  }
+
+  args
+}
+
 #' List installed inference runtimes
 #'
 #' Displays a list of all installed LM Studio inference runtimes (e.g., llama.cpp, mlx).
@@ -13,24 +25,34 @@
 #' runtime_ls()
 #' }
 runtime_ls <- function(json = FALSE) {
-  args <- c("runtime", "ls")
+  args <- build_args_runtime_ls(json = json)
 
-  if (isTRUE(json)) {
-    args <- c(args, "--json")
-  }
+  res <- processx::run("lms", args, error_on_status = FALSE)
 
-  res <- system2("lms", args = args, stdout = TRUE)
+  # Split output into lines and clean ANSI codes/carriage returns
+  lines <- strsplit(res$stdout, "\r?\n")[[1]]
+  lines <- cli::ansi_strip(lines)
+  lines <- gsub("\r", "", lines)
+  lines <- lines[lines != ""]
 
   if (isTRUE(json)) {
     tryCatch({
-      return(jsonlite::fromJSON(paste(res, collapse = "\n")))
+      return(jsonlite::fromJSON(paste(lines, collapse = "\n")))
     }, error = function(e) {
       cli::cli_warn("Failed to parse JSON output. Returning raw character vector instead.")
-      return(res)
+      return(lines)
     })
   }
 
-  return(res)
+  return(lines)
+}
+
+#' Build arguments for runtime_get
+#' @noRd
+build_args_runtime_get <- function(runtime = NULL) {
+  args <- c("runtime", "get")
+  if (!is.null(runtime)) args <- c(args, runtime)
+  args
 }
 
 #' Download an inference runtime
@@ -49,17 +71,25 @@ runtime_ls <- function(json = FALSE) {
 #' runtime_get()
 #' }
 runtime_get <- function(runtime = NULL) {
-  args <- c("runtime", "get")
-  if (!is.null(runtime)) args <- c(args, runtime)
+  args <- build_args_runtime_get(runtime = runtime)
 
-  status <- system2("lms", args = args)
+  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
 
-  if (status == 0) {
+  if (res$status == 0) {
     cli::cli_alert_success("Runtime downloaded successfully.")
   } else {
-    cli::cli_abort("Failed to download runtime. Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to download runtime. Exit code: {.val {res$status}}.")
   }
-  invisible(status)
+
+  invisible(res$status)
+}
+
+#' Build arguments for runtime_select
+#' @noRd
+build_args_runtime_select <- function(runtime = NULL) {
+  args <- c("runtime", "select")
+  if (!is.null(runtime)) args <- c(args, runtime)
+  args
 }
 
 #' Set the active inference runtime
@@ -77,17 +107,25 @@ runtime_get <- function(runtime = NULL) {
 #' runtime_select("llama.cpp")
 #' }
 runtime_select <- function(runtime = NULL) {
-  args <- c("runtime", "select")
-  if (!is.null(runtime)) args <- c(args, runtime)
+  args <- build_args_runtime_select(runtime = runtime)
 
-  status <- system2("lms", args = args)
+  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
 
-  if (status == 0) {
+  if (res$status == 0) {
     cli::cli_alert_success("Runtime selected successfully.")
   } else {
-    cli::cli_abort("Failed to select runtime. Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to select runtime. Exit code: {.val {res$status}}.")
   }
-  invisible(status)
+
+  invisible(res$status)
+}
+
+#' Build arguments for runtime_update
+#' @noRd
+build_args_runtime_update <- function(runtime = NULL) {
+  args <- c("runtime", "update")
+  if (!is.null(runtime)) args <- c(args, runtime)
+  args
 }
 
 #' Update an installed runtime
@@ -104,17 +142,25 @@ runtime_select <- function(runtime = NULL) {
 #' runtime_update("llama.cpp")
 #' }
 runtime_update <- function(runtime = NULL) {
-  args <- c("runtime", "update")
-  if (!is.null(runtime)) args <- c(args, runtime)
+  args <- build_args_runtime_update(runtime = runtime)
 
-  status <- system2("lms", args = args)
+  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
 
-  if (status == 0) {
+  if (res$status == 0) {
     cli::cli_alert_success("Runtime updated successfully.")
   } else {
-    cli::cli_abort("Failed to update runtime. Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to update runtime. Exit code: {.val {res$status}}.")
   }
-  invisible(status)
+
+  invisible(res$status)
+}
+
+#' Build arguments for runtime_remove
+#' @noRd
+build_args_runtime_remove <- function(runtime = NULL) {
+  args <- c("runtime", "remove")
+  if (!is.null(runtime)) args <- c(args, runtime)
+  args
 }
 
 #' Uninstall an inference runtime
@@ -131,15 +177,15 @@ runtime_update <- function(runtime = NULL) {
 #' runtime_remove("mlx")
 #' }
 runtime_remove <- function(runtime = NULL) {
-  args <- c("runtime", "remove")
-  if (!is.null(runtime)) args <- c(args, runtime)
+  args <- build_args_runtime_remove(runtime = runtime)
 
-  status <- system2("lms", args = args)
+  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
 
-  if (status == 0) {
+  if (res$status == 0) {
     cli::cli_alert_success("Runtime removed successfully.")
   } else {
-    cli::cli_abort("Failed to remove runtime. Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to remove runtime. Exit code: {.val {res$status}}.")
   }
-  invisible(status)
+
+  invisible(res$status)
 }

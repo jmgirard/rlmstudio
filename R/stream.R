@@ -1,3 +1,32 @@
+#' Build arguments for log_stream
+#' @noRd
+build_args_log_stream <- function(source = c("model", "server"),
+                                  filter = NULL,
+                                  stats = FALSE,
+                                  json = FALSE) {
+
+  source <- match.arg(source)
+  args <- c("log", "stream")
+
+  if (source != "model") {
+    args <- c(args, "--source", source)
+  }
+
+  if (!is.null(filter)) {
+    filter_str <- paste(filter, collapse = ",")
+    args <- c(args, "--filter", filter_str)
+  }
+
+  if (isTRUE(stats)) {
+    args <- c(args, "--stats")
+  }
+
+  if (isTRUE(json)) {
+    args <- c(args, "--json")
+  }
+
+  args
+}
 
 #' Stream logs from LM Studio
 #'
@@ -27,26 +56,13 @@ log_stream <- function(source = c("model", "server"),
                        stats = FALSE,
                        json = FALSE) {
 
-  source <- match.arg(source)
-  args <- c("log", "stream")
+  args <- build_args_log_stream(source = source,
+                                filter = filter,
+                                stats = stats,
+                                json = json)
 
-  if (source != "model") {
-    args <- c(args, "--source", source)
-  }
-
-  if (!is.null(filter)) {
-    filter_str <- paste(filter, collapse = ",")
-    args <- c(args, "--filter", filter_str)
-  }
-
-  if (isTRUE(stats)) {
-    args <- c(args, "--stats")
-  }
-
-  if (isTRUE(json)) {
-    args <- c(args, "--json")
-  }
-
+  # We use process$new here instead of processx::run because we need
+  # this process to stay alive in the background
   p <- processx::process$new(
     command = "lms",
     args = args,
@@ -86,6 +102,10 @@ read_log_stream <- function(process) {
   }
 
   lines <- process$read_output_lines()
+
+  # Strip ANSI codes and carriage returns to ensure clean JSON parsing
+  lines <- cli::ansi_strip(lines)
+  lines <- gsub("\r", "", lines)
   lines <- lines[lines != ""]
 
   if (length(lines) == 0) {
@@ -97,8 +117,13 @@ read_log_stream <- function(process) {
     con <- textConnection(lines)
     on.exit(close(con))
 
-    parsed_logs <- jsonlite::stream_in(con, verbose = FALSE)
-    return(parsed_logs)
+    tryCatch({
+      parsed_logs <- jsonlite::stream_in(con, verbose = FALSE)
+      return(parsed_logs)
+    }, error = function(e) {
+      cli::cli_warn("Failed to parse JSON logs. Returning raw text.")
+      return(lines)
+    })
   } else {
     cli::cli_warn("The {.pkg jsonlite} package is required to parse JSON logs. Returning raw text.")
     return(lines)

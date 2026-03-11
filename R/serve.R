@@ -1,3 +1,19 @@
+#' Build arguments for server_start
+#' @noRd
+build_args_server_start <- function(port = NULL, cors = FALSE) {
+  args <- c("server", "start")
+
+  if (!is.null(port)) {
+    args <- c(args, "--port", as.character(port))
+  }
+
+  if (isTRUE(cors)) {
+    args <- c(args, "--cors")
+  }
+
+  args
+}
+
 #' Start the LM Studio local server
 #'
 #' Launches the LM Studio local server, allowing you to interact with loaded
@@ -20,30 +36,25 @@
 #' server_start(port = 3000, cors = TRUE)
 #' }
 server_start <- function(port = NULL, cors = FALSE) {
-  args <- c("server", "start")
+  args <- build_args_server_start(port = port, cors = cors)
 
-  if (!is.null(port)) {
-    args <- c(args, "--port", as.character(port))
-  }
+  # Let processx run silently in the background by capturing output
+  # but we won't print it unless there is an error
+  res <- processx::run("lms", args, error_on_status = FALSE)
 
-  if (isTRUE(cors)) {
-    args <- c(args, "--cors")
-  }
-
-  status <- system2(
-    command = "lms",
-    args = args,
-    stdout = FALSE,
-    stderr = FALSE
-  )
-
-  if (status == 0) {
+  if (res$status == 0) {
     cli::cli_alert_success("LM Studio server started successfully.")
   } else {
-    cli::cli_abort("Failed to start the LM Studio server. Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to start the LM Studio server. Exit code: {.val {res$status}}.")
   }
 
-  invisible(status)
+  invisible(res$status)
+}
+
+#' Build arguments for server_stop
+#' @noRd
+build_args_server_stop <- function() {
+  c("server", "stop")
 }
 
 #' Stop the LM Studio local server
@@ -58,20 +69,38 @@ server_start <- function(port = NULL, cors = FALSE) {
 #' server_stop()
 #' }
 server_stop <- function() {
-  status <- system2(
-    command = "lms",
-    args = c("server", "stop"),
-    stdout = FALSE,
-    stderr = FALSE
-  )
+  args <- build_args_server_stop()
 
-  if (status == 0) {
+  res <- processx::run("lms", args, error_on_status = FALSE)
+
+  if (res$status == 0) {
     cli::cli_alert_success("LM Studio server stopped successfully.")
   } else {
-    cli::cli_abort("Failed to stop the LM Studio server. Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to stop the LM Studio server. Exit code: {.val {res$status}}.")
   }
 
-  invisible(status)
+  invisible(res$status)
+}
+
+#' Build arguments for server_status
+#' @noRd
+build_args_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
+  args <- c("server", "status")
+
+  if (isTRUE(json)) {
+    args <- c(args, "--json")
+  }
+  if (isTRUE(verbose)) {
+    args <- c(args, "--verbose")
+  }
+  if (isTRUE(quiet)) {
+    args <- c(args, "--quiet")
+  }
+  if (!is.null(log_level)) {
+    args <- c(args, "--log-level", as.character(log_level))
+  }
+
+  args
 }
 
 #' Check the status of the LM Studio server
@@ -100,40 +129,30 @@ server_stop <- function() {
 #' status_data <- server_status(json = TRUE, quiet = TRUE)
 #' }
 server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
-  args <- c("server", "status")
 
   logging_flags <- sum(c(isTRUE(verbose), isTRUE(quiet), !is.null(log_level)))
   if (logging_flags > 1) {
     cli::cli_warn("Only one logging control flag ({.arg verbose}, {.arg quiet}, or {.arg log_level}) can be used at a time.")
   }
 
-  if (isTRUE(json)) {
-    args <- c(args, "--json")
-  }
-  if (isTRUE(verbose)) {
-    args <- c(args, "--verbose")
-  }
-  if (isTRUE(quiet)) {
-    args <- c(args, "--quiet")
-  }
-  if (!is.null(log_level)) {
-    args <- c(args, "--log-level", as.character(log_level))
-  }
+  args <- build_args_server_status(json = json, verbose = verbose, quiet = quiet, log_level = log_level)
 
-  res <- system2(
-    command = "lms",
-    args = args,
-    stdout = TRUE
-  )
+  res <- processx::run("lms", args, error_on_status = FALSE)
+
+  # Split output into lines and clean ANSI codes/carriage returns
+  lines <- strsplit(res$stdout, "\r?\n")[[1]]
+  lines <- cli::ansi_strip(lines)
+  lines <- gsub("\r", "", lines)
+  lines <- lines[lines != ""]
 
   if (isTRUE(json) && requireNamespace("jsonlite", quietly = TRUE)) {
     tryCatch({
-      return(jsonlite::fromJSON(paste(res, collapse = "\n")))
+      return(jsonlite::fromJSON(paste(lines, collapse = "\n")))
     }, error = function(e) {
       cli::cli_warn("Failed to parse JSON output. Returning raw character vector instead.")
-      return(res)
+      return(lines)
     })
   }
 
-  return(res)
+  return(lines)
 }

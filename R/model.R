@@ -1,3 +1,16 @@
+#' Build arguments for model_ls
+#' @noRd
+build_args_model_ls <- function(llm = FALSE, embedding = FALSE, detailed = FALSE,
+                                json = FALSE, host = NULL) {
+  args <- "ls"
+  if (isTRUE(llm)) args <- c(args, "--llm")
+  if (isTRUE(embedding)) args <- c(args, "--embedding")
+  if (isTRUE(detailed)) args <- c(args, "--detailed")
+  if (isTRUE(json)) args <- c(args, "--json")
+  if (!is.null(host)) args <- c(args, "--host", host)
+  args
+}
+
 #' List downloaded models
 #'
 #' Displays a list of all models downloaded to your LM Studio machine, including
@@ -24,46 +37,36 @@
 model_ls <- function(llm = FALSE, embedding = FALSE, detailed = FALSE,
                      json = FALSE, host = NULL) {
 
-  args <- c("ls")
+  args <- build_args_model_ls(llm = llm, embedding = embedding, detailed = detailed,
+                              json = json, host = host)
 
-  if (isTRUE(llm)) {
-    args <- c(args, "--llm")
-  }
+  res <- processx::run("lms", args, error_on_status = FALSE)
 
-  if (isTRUE(embedding)) {
-    args <- c(args, "--embedding")
-  }
+  # Split output into lines and clean ANSI codes/carriage returns
+  lines <- strsplit(res$stdout, "\r?\n")[[1]]
+  lines <- cli::ansi_strip(lines)
+  lines <- gsub("\r", "", lines)
+  lines <- lines[lines != ""]
 
-  if (isTRUE(detailed)) {
-    args <- c(args, "--detailed")
-  }
-
-  if (isTRUE(json)) {
-    args <- c(args, "--json")
-  }
-
-  if (!is.null(host)) {
-    args <- c(args, "--host", host)
-  }
-
-  res <- system2(
-    command = "lms",
-    args = args,
-    stdout = TRUE
-  )
-
-  # The lms CLI can sometimes return a non-zero exit code if no models are found,
-  # or it might just return empty JSON. We handle parsing safely here.
   if (isTRUE(json)) {
     tryCatch({
-      return(jsonlite::fromJSON(paste(res, collapse = "\n")))
+      return(jsonlite::fromJSON(paste(lines, collapse = "\n")))
     }, error = function(e) {
       cli::cli_warn("Failed to parse JSON output. Returning raw character vector instead.")
-      return(res)
+      return(lines)
     })
   }
 
-  return(res)
+  return(lines)
+}
+
+#' Build arguments for model_ps
+#' @noRd
+build_args_model_ps <- function(json = FALSE, host = NULL) {
+  args <- "ps"
+  if (isTRUE(json)) args <- c(args, "--json")
+  if (!is.null(host)) args <- c(args, "--host", host)
+  args
 }
 
 #' List currently loaded models
@@ -87,32 +90,46 @@ model_ls <- function(llm = FALSE, embedding = FALSE, detailed = FALSE,
 #' }
 model_ps <- function(json = FALSE, host = NULL) {
 
-  args <- c("ps")
+  args <- build_args_model_ps(json = json, host = host)
 
-  if (isTRUE(json)) {
-    args <- c(args, "--json")
-  }
+  res <- processx::run("lms", args, error_on_status = FALSE)
 
-  if (!is.null(host)) {
-    args <- c(args, "--host", host)
-  }
-
-  res <- system2(
-    command = "lms",
-    args = args,
-    stdout = TRUE
-  )
+  # Split output into lines and clean ANSI codes/carriage returns
+  lines <- strsplit(res$stdout, "\r?\n")[[1]]
+  lines <- cli::ansi_strip(lines)
+  lines <- gsub("\r", "", lines)
+  lines <- lines[lines != ""]
 
   if (isTRUE(json)) {
     tryCatch({
-      return(jsonlite::fromJSON(paste(res, collapse = "\n")))
+      return(jsonlite::fromJSON(paste(lines, collapse = "\n")))
     }, error = function(e) {
       cli::cli_warn("Failed to parse JSON output. Returning raw character vector instead.")
-      return(res)
+      return(lines)
     })
   }
 
-  return(res)
+  return(lines)
+}
+
+#' Build arguments for model_get
+#' @noRd
+build_args_model_get <- function(model_name = NULL,
+                                 mlx = FALSE,
+                                 gguf = FALSE,
+                                 limit = NULL,
+                                 always_show_all_results = FALSE,
+                                 always_show_download_options = FALSE) {
+  args <- "get"
+
+  if (!is.null(model_name)) args <- c(args, model_name)
+  if (isTRUE(mlx)) args <- c(args, "--mlx")
+  if (isTRUE(gguf)) args <- c(args, "--gguf")
+  if (!is.null(limit)) args <- c(args, "--limit", as.character(limit))
+  if (isTRUE(always_show_all_results)) args <- c(args, "--always-show-all-results")
+  if (isTRUE(always_show_download_options)) args <- c(args, "-a")
+
+  args
 }
 
 #' Search and download models
@@ -155,44 +172,40 @@ model_get <- function(model_name = NULL,
                       always_show_all_results = FALSE,
                       always_show_download_options = FALSE) {
 
-  args <- c("get")
+  args <- build_args_model_get(model_name = model_name,
+                               mlx = mlx,
+                               gguf = gguf,
+                               limit = limit,
+                               always_show_all_results = always_show_all_results,
+                               always_show_download_options = always_show_download_options)
 
-  if (!is.null(model_name)) {
-    args <- c(args, model_name)
-  }
+  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
 
-  if (isTRUE(mlx)) {
-    args <- c(args, "--mlx")
-  }
-
-  if (isTRUE(gguf)) {
-    args <- c(args, "--gguf")
-  }
-
-  if (!is.null(limit)) {
-    args <- c(args, "--limit", as.character(limit))
-  }
-
-  if (isTRUE(always_show_all_results)) {
-    args <- c(args, "--always-show-all-results")
-  }
-
-  if (isTRUE(always_show_download_options)) {
-    args <- c(args, "-a")
-  }
-
-  status <- system2(
-    command = "lms",
-    args = args
-  )
-
-  if (status == 0) {
+  if (res$status == 0) {
     cli::cli_alert_success("Model download process completed successfully.")
   } else {
-    cli::cli_abort("Model download failed or was interrupted. Exit code: {.val {status}}.")
+    cli::cli_abort("Model download failed or was interrupted. Exit code: {.val {res$status}}.")
   }
 
-  invisible(status)
+  invisible(res$status)
+}
+
+#' Build arguments for model_load
+#' @noRd
+build_args_model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
+                                  context_length = NULL, identifier = NULL,
+                                  estimate_only = FALSE, host = NULL) {
+  args <- "load"
+
+  if (!is.null(model)) args <- c(args, model)
+  if (!is.null(ttl)) args <- c(args, "--ttl", as.character(ttl))
+  if (!is.null(gpu)) args <- c(args, "--gpu", as.character(gpu))
+  if (!is.null(context_length)) args <- c(args, "--context-length", as.character(context_length))
+  if (!is.null(identifier)) args <- c(args, "--identifier", identifier)
+  if (isTRUE(estimate_only)) args <- c(args, "--estimate-only")
+  if (!is.null(host)) args <- c(args, "--host", host)
+
+  args
 }
 
 #' Load a model into memory
@@ -222,44 +235,40 @@ model_get <- function(model_name = NULL,
 model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
                        context_length = NULL, identifier = NULL,
                        estimate_only = FALSE, host = NULL) {
-  args <- c("load")
 
-  if (!is.null(model)) {
-    args <- c(args, model)
-  }
-  if (!is.null(ttl)) {
-    args <- c(args, "--ttl", as.character(ttl))
-  }
-  if (!is.null(gpu)) {
-    args <- c(args, "--gpu", as.character(gpu))
-  }
-  if (!is.null(context_length)) {
-    args <- c(args, "--context-length", as.character(context_length))
-  }
-  if (!is.null(identifier)) {
-    args <- c(args, "--identifier", identifier)
-  }
-  if (isTRUE(estimate_only)) {
-    args <- c(args, "--estimate-only")
-  }
-  if (!is.null(host)) {
-    args <- c(args, "--host", host)
-  }
+  args <- build_args_model_load(model = model,
+                                ttl = ttl,
+                                gpu = gpu,
+                                context_length = context_length,
+                                identifier = identifier,
+                                estimate_only = estimate_only,
+                                host = host)
 
-  # Allow the CLI to print progress bars and interactive prompts
-  status <- system2("lms", args = args)
+  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
 
-  if (status == 0) {
+  if (res$status == 0) {
     if (isTRUE(estimate_only)) {
       cli::cli_alert_success("Memory estimation completed successfully.")
     } else {
       cli::cli_alert_success("Model loaded successfully.")
     }
   } else {
-    cli::cli_abort("Failed to load model. Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to load model. Exit code: {.val {res$status}}.")
   }
 
-  invisible(status)
+  invisible(res$status)
+}
+
+#' Build arguments for model_unload
+#' @noRd
+build_args_model_unload <- function(model = NULL, all = FALSE, host = NULL) {
+  args <- "unload"
+
+  if (!is.null(model)) args <- c(args, model)
+  if (isTRUE(all)) args <- c(args, "--all")
+  if (!is.null(host)) args <- c(args, "--host", host)
+
+  args
 }
 
 #' Unload a model from memory
@@ -282,27 +291,41 @@ model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
 #' model_unload(all = TRUE)
 #' }
 model_unload <- function(model = NULL, all = FALSE, host = NULL) {
-  args <- c("unload")
 
-  if (!is.null(model)) {
-    args <- c(args, model)
-  }
-  if (isTRUE(all)) {
-    args <- c(args, "--all")
-  }
-  if (!is.null(host)) {
-    args <- c(args, "--host", host)
-  }
+  args <- build_args_model_unload(model = model, all = all, host = host)
 
-  status <- system2("lms", args = args)
+  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
 
-  if (status == 0) {
+  if (res$status == 0) {
     cli::cli_alert_success("Model(s) unloaded successfully.")
   } else {
-    cli::cli_abort("Failed to unload model(s). Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to unload model(s). Exit code: {.val {res$status}}.")
   }
 
-  invisible(status)
+  invisible(res$status)
+}
+
+#' Build arguments for model_import
+#' @noRd
+build_args_model_import <- function(file_path, user_repo = NULL, yes = FALSE,
+                                    action = c("move", "copy", "hard-link", "symbolic-link"),
+                                    dry_run = FALSE) {
+  args <- c("import", file_path)
+
+  if (!is.null(user_repo)) args <- c(args, "--user-repo", user_repo)
+  if (isTRUE(yes)) args <- c(args, "--yes")
+  if (isTRUE(dry_run)) args <- c(args, "--dry-run")
+
+  action <- match.arg(action)
+  if (action == "copy") {
+    args <- c(args, "--copy")
+  } else if (action == "hard-link") {
+    args <- c(args, "--hard-link")
+  } else if (action == "symbolic-link") {
+    args <- c(args, "--symbolic-link")
+  }
+
+  args
 }
 
 #' Import a local model file
@@ -335,38 +358,23 @@ model_import <- function(file_path, user_repo = NULL, yes = FALSE,
     cli::cli_abort("The {.arg file_path} must be a valid, existing file path.")
   }
 
-  action <- match.arg(action)
-  args <- c("import", file_path)
+  args <- build_args_model_import(file_path = file_path,
+                                  user_repo = user_repo,
+                                  yes = yes,
+                                  action = action,
+                                  dry_run = dry_run)
 
-  if (!is.null(user_repo)) {
-    args <- c(args, "--user-repo", user_repo)
-  }
-  if (isTRUE(yes)) {
-    args <- c(args, "--yes")
-  }
-  if (isTRUE(dry_run)) {
-    args <- c(args, "--dry-run")
-  }
+  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
 
-  if (action == "copy") {
-    args <- c(args, "--copy")
-  } else if (action == "hard-link") {
-    args <- c(args, "--hard-link")
-  } else if (action == "symbolic-link") {
-    args <- c(args, "--symbolic-link")
-  }
-
-  status <- system2("lms", args = args)
-
-  if (status == 0) {
+  if (res$status == 0) {
     if (isTRUE(dry_run)) {
       cli::cli_alert_success("Model import dry run completed successfully.")
     } else {
       cli::cli_alert_success("Model imported successfully.")
     }
   } else {
-    cli::cli_abort("Failed to import model. Exit code: {.val {status}}.")
+    cli::cli_abort("Failed to import model. Exit code: {.val {res$status}}.")
   }
 
-  invisible(status)
+  invisible(res$status)
 }
