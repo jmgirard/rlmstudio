@@ -304,3 +304,69 @@ model_unload <- function(model = NULL, all = FALSE, host = NULL) {
 
   invisible(status)
 }
+
+#' Import a local model file
+#'
+#' Imports an existing model file into your LM Studio models directory. This is
+#' useful for bringing in models without downloading them again.
+#'
+#' @param file_path Character. Path to the model file to import.
+#' @param user_repo Character. Set the target folder as <user>/<repo>. Skips categorization prompts.
+#' @param yes Logical. Skip confirmations and try to infer the model location from the file name.
+#' @param action Character. How to handle the file: "move" (default), "copy", "hard-link", or "symbolic-link".
+#' @param dry_run Logical. Do not perform the import, just print what would be done.
+#'
+#' @return Invisibly returns the system exit code (0 for success).
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Dry run an import to see where it would go
+#' model_import("path/to/model.gguf", dry_run = TRUE)
+#'
+#' # Import a model by copying it into a specific user repository
+#' model_import("path/to/model.gguf", action = "copy", user_repo = "my-org/custom-models")
+#' }
+model_import <- function(file_path, user_repo = NULL, yes = FALSE,
+                         action = c("move", "copy", "hard-link", "symbolic-link"),
+                         dry_run = FALSE) {
+
+  if (missing(file_path) || !file.exists(file_path)) {
+    cli::cli_abort("The {.arg file_path} must be a valid, existing file path.")
+  }
+
+  action <- match.arg(action)
+  args <- c("import", file_path)
+
+  if (!is.null(user_repo)) {
+    args <- c(args, "--user-repo", user_repo)
+  }
+  if (isTRUE(yes)) {
+    args <- c(args, "--yes")
+  }
+  if (isTRUE(dry_run)) {
+    args <- c(args, "--dry-run")
+  }
+
+  if (action == "copy") {
+    args <- c(args, "--copy")
+  } else if (action == "hard-link") {
+    args <- c(args, "--hard-link")
+  } else if (action == "symbolic-link") {
+    args <- c(args, "--symbolic-link")
+  }
+
+  status <- system2("lms", args = args)
+
+  if (status == 0) {
+    if (isTRUE(dry_run)) {
+      cli::cli_alert_success("Model import dry run completed successfully.")
+    } else {
+      cli::cli_alert_success("Model imported successfully.")
+    }
+  } else {
+    cli::cli_abort("Failed to import model. Exit code: {.val {status}}.")
+  }
+
+  invisible(status)
+}
