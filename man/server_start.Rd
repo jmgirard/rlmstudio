@@ -2,12 +2,30 @@
 % Please edit documentation in R/serve.R
 \name{server_start}
 \alias{server_start}
-\title{Start the LM Studio local server
-... (keep your existing roxygen comments here)}
+\title{Start the LM Studio local server}
 \usage{
 server_start(port = NULL, cors = FALSE)
 }
+\arguments{
+\item{port}{Integer. Port to run the server on. If not provided, LM Studio
+uses the last used port.}
+
+\item{cors}{Logical. Enable CORS support for web application development.
+Defaults to FALSE.}
+}
+\value{
+Invisibly returns the system exit code (0 for success).
+}
 \description{
-Start the LM Studio local server
-... (keep your existing roxygen comments here)
+Launches the LM Studio local server, allowing you to interact with loaded
+models via HTTP API calls.
+}
+\examples{
+\dontrun{
+# Start on default port
+server_start()
+
+# Start on port 3000 with CORS enabled
+server_start(port = 3000, cors = TRUE)
+}
 }

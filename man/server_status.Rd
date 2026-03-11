@@ -2,12 +2,37 @@
 % Please edit documentation in R/serve.R
 \name{server_status}
 \alias{server_status}
-\title{Check the status of the LM Studio server
-... (keep your existing roxygen comments here)}
+\title{Check the status of the LM Studio server}
 \usage{
 server_status(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL)
 }
+\arguments{
+\item{json}{Logical. Output the status in machine-readable JSON format.}
+
+\item{verbose}{Logical. Enable detailed logging output.}
+
+\item{quiet}{Logical. Suppress all logging output.}
+
+\item{log_level}{Character. The level of logging to use (e.g., "info", "debug").}
+}
+\value{
+A character vector of the raw CLI output. If \code{json = TRUE} and the
+\code{jsonlite} package is installed, it returns a parsed list or data frame.
+}
 \description{
-Check the status of the LM Studio server
-... (keep your existing roxygen comments here)
+Displays the current status of the LM Studio local server, including whether
+it is running and its configuration.
+}
+\details{
+You can only use one logging control flag at a time (\code{verbose},
+\code{quiet}, or \code{log_level}).
+}
+\examples{
+\dontrun{
+# Standard status
+server_status()
+
+# Quiet JSON output parsed directly into R
+status_data <- server_status(json = TRUE, quiet = TRUE)
+}
 }

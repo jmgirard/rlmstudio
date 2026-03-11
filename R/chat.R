@@ -1,3 +1,4 @@
+#' @noRd
 build_args_model_chat <- function(model = NULL, prompt = NULL, system_prompt = NULL,
                                   stats = FALSE, ttl = NULL) {
   args <- "chat"
@@ -11,6 +12,32 @@ build_args_model_chat <- function(model = NULL, prompt = NULL, system_prompt = N
   args
 }
 
+#' Chat with a local model
+#'
+#' Starts an interactive chat session with a local model in the terminal, or
+#' sends a single prompt and returns the response.
+#'
+#' @param model Character. Identifier of the model to use. If omitted, the CLI will prompt you.
+#' @param prompt Character. Send a one-off prompt and exit without staying interactive.
+#' @param system_prompt Character. Custom system prompt for the chat.
+#' @param stats Logical. Show detailed prediction statistics after each response. Defaults to FALSE.
+#' @param ttl Integer. Seconds to keep the model loaded after the chat ends.
+#' @param capture Logical. If `TRUE` and a `prompt` is provided, the function will
+#'   return the response as a character vector instead of printing it to the console.
+#'
+#' @return If `capture = TRUE` and a `prompt` is provided, returns a character
+#'   vector of the model's response, stripped of ANSI escape codes. Otherwise,
+#'   invisibly returns the system exit code.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Start an interactive chat
+#' model_chat("llama-3.1-8b")
+#'
+#' # Send a one-off prompt and capture the text in R
+#' response <- model_chat("llama-3.1-8b", prompt = "What is 2+2?", capture = TRUE)
+#' }
 model_chat <- function(model = NULL, prompt = NULL, system_prompt = NULL,
                        stats = FALSE, ttl = NULL, capture = FALSE) {
 

@@ -2,12 +2,18 @@
 % Please edit documentation in R/serve.R
 \name{server_stop}
 \alias{server_stop}
-\title{Stop the LM Studio local server
-... (keep your existing roxygen comments here)}
+\title{Stop the LM Studio local server}
 \usage{
 server_stop()
 }
+\value{
+Invisibly returns the system exit code (0 for success).
+}
 \description{
-Stop the LM Studio local server
-... (keep your existing roxygen comments here)
+Stops the currently running LM Studio local server.
+}
+\examples{
+\dontrun{
+server_stop()
+}
 }

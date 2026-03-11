@@ -29,7 +29,8 @@ return the response as a character vector instead of printing it to the console.
 }
 \value{
 If \code{capture = TRUE} and a \code{prompt} is provided, returns a character
-vector of the model's response. Otherwise, invisibly returns the system exit code.
+vector of the model's response, stripped of ANSI escape codes. Otherwise,
+invisibly returns the system exit code.
 }
 \description{
 Starts an interactive chat session with a local model in the terminal, or
