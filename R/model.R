@@ -114,3 +114,83 @@ model_ps <- function(json = FALSE, host = NULL) {
 
   return(res)
 }
+
+#' Search and download models
+#'
+#' Searches for and downloads models from online repositories via the LM Studio CLI.
+#' If no model name is specified, it shows staff-picked recommendations.
+#'
+#' @details This function is interactive. It will print search results and download
+#'   progress directly to your R console. If multiple matches are found, it may
+#'   prompt you to choose one.
+#'
+#' @param model_name Character. The model to search for or download. For models
+#'   with multiple quantizations, append '@' (e.g., "llama-3.1-8b@q4_k_m").
+#' @param mlx Logical. Include only MLX models in search results.
+#' @param gguf Logical. Include only GGUF models in search results.
+#' @param limit Integer. Limit the number of model options shown in search results.
+#' @param always_show_all_results Logical. Always prompt you to choose from search
+#'   results, even when there is an exact match.
+#' @param always_show_download_options Logical. Always prompt you to choose a
+#'   quantization, even when an exact match is auto-selected.
+#'
+#' @return Invisibly returns the system exit code (0 for success).
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Show staff-picked recommendations
+#' model_get()
+#'
+#' # Search for a specific model
+#' model_get("llama-3.1-8b")
+#'
+#' # Download an exact quantization and limit search results
+#' model_get("llama-3.1-8b@q4_k_m", limit = 5)
+#' }
+model_get <- function(model_name = NULL,
+                      mlx = FALSE,
+                      gguf = FALSE,
+                      limit = NULL,
+                      always_show_all_results = FALSE,
+                      always_show_download_options = FALSE) {
+
+  args <- c("get")
+
+  if (!is.null(model_name)) {
+    args <- c(args, model_name)
+  }
+
+  if (isTRUE(mlx)) {
+    args <- c(args, "--mlx")
+  }
+
+  if (isTRUE(gguf)) {
+    args <- c(args, "--gguf")
+  }
+
+  if (!is.null(limit)) {
+    args <- c(args, "--limit", as.character(limit))
+  }
+
+  if (isTRUE(always_show_all_results)) {
+    args <- c(args, "--always-show-all-results")
+  }
+
+  if (isTRUE(always_show_download_options)) {
+    args <- c(args, "-a")
+  }
+
+  status <- system2(
+    command = "lms",
+    args = args
+  )
+
+  if (status == 0) {
+    cli::cli_alert_success("Model download process completed successfully.")
+  } else {
+    cli::cli_abort("Model download failed or was interrupted. Exit code: {.val {status}}.")
+  }
+
+  invisible(status)
+}
