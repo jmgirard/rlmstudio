@@ -21,12 +21,8 @@ test_that("server_start aborts on failure", {
   skip_if_no_lms()
   skip_on_cran()
 
-  server_start(port = 8888)
-
   expect_error(
-    server_start(port = 8888),
-    regexp = "Failed to start"
+    server_start(port = 999999),
+    regexp = "Failed to start the LM Studio server"
   )
-
-  server_stop()
 })
