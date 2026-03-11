@@ -194,3 +194,113 @@ model_get <- function(model_name = NULL,
 
   invisible(status)
 }
+
+#' Load a model into memory
+#'
+#' Loads a specified model into LM Studio's memory. You can configure parameters
+#' like context length, GPU offload, and time-to-live (TTL).
+#'
+#' @param model Character. The model key or path to load. If omitted, the CLI will prompt you.
+#' @param ttl Integer. Unload the model after this many seconds of inactivity.
+#' @param gpu Character or Numeric. GPU offload amount. Values can be "max", "off", "auto", or a decimal between 0 and 1.
+#' @param context_length Integer. The number of tokens to consider as context.
+#' @param identifier Character. A custom identifier for the loaded model for API reference.
+#' @param estimate_only Logical. Print a resource (memory) estimate and exit without loading the model. Defaults to FALSE.
+#' @param host Character. The host address of a remote LM Studio instance.
+#'
+#' @return Invisibly returns the system exit code (0 for success).
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Load a model with specific GPU offload and context length
+#' model_load("llama-3.1-8b", gpu = "max", context_length = 4096)
+#'
+#' # Estimate memory usage without loading
+#' model_load("llama-3.1-8b", estimate_only = TRUE)
+#' }
+model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
+                       context_length = NULL, identifier = NULL,
+                       estimate_only = FALSE, host = NULL) {
+  args <- c("load")
+
+  if (!is.null(model)) {
+    args <- c(args, model)
+  }
+  if (!is.null(ttl)) {
+    args <- c(args, "--ttl", as.character(ttl))
+  }
+  if (!is.null(gpu)) {
+    args <- c(args, "--gpu", as.character(gpu))
+  }
+  if (!is.null(context_length)) {
+    args <- c(args, "--context-length", as.character(context_length))
+  }
+  if (!is.null(identifier)) {
+    args <- c(args, "--identifier", identifier)
+  }
+  if (isTRUE(estimate_only)) {
+    args <- c(args, "--estimate-only")
+  }
+  if (!is.null(host)) {
+    args <- c(args, "--host", host)
+  }
+
+  # Allow the CLI to print progress bars and interactive prompts
+  status <- system2("lms", args = args)
+
+  if (status == 0) {
+    if (isTRUE(estimate_only)) {
+      cli::cli_alert_success("Memory estimation completed successfully.")
+    } else {
+      cli::cli_alert_success("Model loaded successfully.")
+    }
+  } else {
+    cli::cli_abort("Failed to load model. Exit code: {.val {status}}.")
+  }
+
+  invisible(status)
+}
+
+#' Unload a model from memory
+#'
+#' Removes a specific model or all currently loaded models from LM Studio's memory.
+#'
+#' @param model Character. The key of the model to unload. If omitted and `all = FALSE`, the CLI will prompt you.
+#' @param all Logical. Unload all currently loaded models. Defaults to FALSE.
+#' @param host Character. The host address of a remote LM Studio instance.
+#'
+#' @return Invisibly returns the system exit code (0 for success).
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Unload a specific model
+#' model_unload("llama-3.1-8b")
+#'
+#' # Unload all loaded models
+#' model_unload(all = TRUE)
+#' }
+model_unload <- function(model = NULL, all = FALSE, host = NULL) {
+  args <- c("unload")
+
+  if (!is.null(model)) {
+    args <- c(args, model)
+  }
+  if (isTRUE(all)) {
+    args <- c(args, "--all")
+  }
+  if (!is.null(host)) {
+    args <- c(args, "--host", host)
+  }
+
+  status <- system2("lms", args = args)
+
+  if (status == 0) {
+    cli::cli_alert_success("Model(s) unloaded successfully.")
+  } else {
+    cli::cli_abort("Failed to unload model(s). Exit code: {.val {status}}.")
+  }
+
+  invisible(status)
+}
