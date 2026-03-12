@@ -159,3 +159,14 @@ server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_leve
 
   return(lines)
 }
+
+#' Check if the LM Studio server is reachable
+#' @return Logical.
+#' @noRd
+is_server_running <- function() {
+  tryCatch({
+    con <- socketConnection(host = "localhost", port = 1234, timeout = 0.5)
+    close(con)
+    TRUE
+  }, error = function(e) FALSE)
+}

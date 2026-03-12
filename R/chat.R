@@ -1,79 +1,99 @@
-#' @noRd
-build_args_model_chat <- function(model = NULL, prompt = NULL, system_prompt = NULL,
-                                  stats = FALSE, ttl = NULL) {
-  args <- "chat"
-
-  if (!is.null(model)) args <- c(args, model)
-  if (!is.null(prompt)) args <- c(args, "--prompt", prompt)
-  if (!is.null(system_prompt)) args <- c(args, "--system-prompt", system_prompt)
-  if (isTRUE(stats)) args <- c(args, "--stats")
-  if (!is.null(ttl)) args <- c(args, "--ttl", as.character(ttl))
-
-  args
+#' Create a base request for the LM Studio API
+#'
+#' @param base_url Character. The base URL of the local server.
+#'   Defaults to "http://localhost:1234/v1".
+#'
+#' @return An httr2 request object.
+#' @export
+lms_client <- function(base_url = "http://localhost:1234/v1") {
+  httr2::request(base_url) |>
+    httr2::req_headers(
+      "Content-Type" = "application/json",
+      "Accept" = "application/json"
+    )
 }
 
-#' Chat with a local model
+#' Send a chat completion request to the LM Studio API
 #'
-#' Starts an interactive chat session with a local model in the terminal, or
-#' sends a single prompt and returns the response.
+#' @param prompt Character. A single user prompt to send to the model.
+#' @param system_prompt Character. An optional system prompt to set model behavior.
+#' @param messages A list of message lists representing the conversation history.
+#'   If provided, this overrides \code{prompt} and \code{system_prompt}.
+#' @param model Character. The identifier of the loaded model to use.
+#'   LM Studio often ignores this if only one model is loaded.
+#' @param temperature Numeric. The temperature for sampling (default 0.7).
+#' @param max_tokens Integer. The maximum number of tokens to generate (default -1 for infinite).
+#' @param simplify Logical. If \code{TRUE}, returns only the character string of
+#'   the model's response. If \code{FALSE}, returns the full parsed list.
+#' @param base_url Character. The base URL of the local server.
 #'
-#' @param model Character. Identifier of the model to use. If omitted, the CLI will prompt you.
-#' @param prompt Character. Send a one-off prompt and exit without staying interactive.
-#' @param system_prompt Character. Custom system prompt for the chat.
-#' @param stats Logical. Show detailed prediction statistics after each response. Defaults to FALSE.
-#' @param ttl Integer. Seconds to keep the model loaded after the chat ends.
-#' @param capture Logical. If `TRUE` and a `prompt` is provided, the function will
-#'   return the response as a character vector instead of printing it to the console.
-#'
-#' @return If `capture = TRUE` and a `prompt` is provided, returns a character
-#'   vector of the model's response, stripped of ANSI escape codes. Otherwise,
-#'   invisibly returns the system exit code.
+#' @return A character string if \code{simplify = TRUE}, otherwise a parsed
+#'   list containing the full API response.
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Start an interactive chat
-#' model_chat("llama-3.1-8b")
-#'
-#' # Send a one-off prompt and capture the text in R
-#' response <- model_chat("llama-3.1-8b", prompt = "What is 2+2?", capture = TRUE)
-#' }
-model_chat <- function(model = NULL, prompt = NULL, system_prompt = NULL,
-                       stats = FALSE, ttl = NULL, capture = FALSE) {
+api_chat_completions <- function(prompt = NULL,
+                                 system_prompt = NULL,
+                                 messages = NULL,
+                                 model = "local-model",
+                                 temperature = 0.7,
+                                 max_tokens = -1,
+                                 simplify = FALSE,
+                                 base_url = "http://localhost:1234/v1") {
 
-  args <- build_args_model_chat(
+  # Build messages if not provided
+  if (is.null(messages)) {
+    if (is.null(prompt)) {
+      cli::cli_abort("Either {.arg prompt} or {.arg messages} must be provided.")
+    }
+    messages <- list()
+    if (!is.null(system_prompt)) {
+      messages <- append(messages, list(list(role = "system", content = system_prompt)))
+    }
+    messages <- append(messages, list(list(role = "user", content = prompt)))
+  }
+
+  # Build the payload
+  body <- list(
     model = model,
-    prompt = prompt,
-    system_prompt = system_prompt,
-    stats = stats,
-    ttl = ttl
+    messages = messages,
+    temperature = temperature,
+    max_tokens = max_tokens,
+    stream = FALSE
   )
 
-  if (isTRUE(capture) && !is.null(prompt)) {
-    res <- processx::run("lms", args, error_on_status = FALSE)
+  # Prepare and perform the request
+  resp <- lms_client(base_url) |>
+    httr2::req_url_path_append("chat/completions") |>
+    httr2::req_body_json(body) |>
+    httr2::req_error(is_error = function(resp) httr2::resp_status(resp) >= 400) |>
+    httr2::req_perform()
 
-    if (res$status != 0) {
-      cli::cli_abort("Chat request failed. Exit code: {.val {res$status}}.")
-    }
+  # Parse the JSON response
+  out <- httr2::resp_body_json(resp)
 
-    # Split the output into lines
-    lines <- strsplit(res$stdout, "\r?\n")[[1]]
-
-    # Clean up ANSI escape sequences and carriage returns
-    lines <- cli::ansi_strip(lines)
-    lines <- sub(".*\r", "", lines)
-
-    # Drop any empty lines that result from the cleanup
-    lines <- lines[lines != ""]
-
-    return(lines)
+  if (isTRUE(simplify)) {
+    return(out$choices[[1]]$message$content)
   }
 
-  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
+  out
+}
 
-  if (res$status != 0) {
-    cli::cli_abort("Chat session ended with an error. Exit code: {.val {res$status}}.")
-  }
-
-  invisible(res$status)
+#' Quick chat via the API
+#'
+#' A convenience wrapper around \code{api_chat_completions} for simple, one-turn interactions.
+#'
+#' @param prompt Character. The prompt to send to the model.
+#' @param system_prompt Character. An optional system prompt.
+#' @param simplify Logical. Whether to return only the response text (default)
+#'   or the full API response list.
+#' @param ... Additional arguments passed to \code{api_chat_completions}.
+#'
+#' @return A character string if \code{simplify = TRUE}, or the full response list otherwise.
+#' @export
+lms_chat <- function(prompt, system_prompt = NULL, simplify = TRUE, ...) {
+  api_chat_completions(
+    prompt = prompt,
+    system_prompt = system_prompt,
+    simplify = simplify,
+    ...
+  )
 }
