@@ -20,7 +20,7 @@ model_load(
 
 \item{ttl}{Integer. Unload the model after this many seconds of inactivity.}
 
-\item{gpu}{Character or Numeric. GPU offload amount. Values can be "max", "off", "auto", or a decimal between 0 and 1.}
+\item{gpu}{Character or Numeric. GPU offload amount. Values can be "auto" (default), "max", "off", or a decimal between 0 and 1.}
 
 \item{context_length}{Integer. The number of tokens to consider as context.}
 

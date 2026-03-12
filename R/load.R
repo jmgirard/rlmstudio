@@ -8,7 +8,14 @@ build_args_model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
 
   if (!is.null(model)) args <- c(args, model)
   if (!is.null(ttl)) args <- c(args, "--ttl", as.character(ttl))
-  if (!is.null(gpu)) args <- c(args, "--gpu", as.character(gpu))
+
+  if (!is.null(gpu)) {
+    gpu_str <- as.character(gpu)
+    if (tolower(gpu_str) != "auto") {
+      args <- c(args, "--gpu", gpu_str)
+    }
+  }
+
   if (!is.null(context_length)) args <- c(args, "--context-length", as.character(context_length))
   if (!is.null(parallel)) args <- c(args, "--parallel", as.character(parallel))
   if (!is.null(identifier)) args <- c(args, "--identifier", identifier)
@@ -25,7 +32,7 @@ build_args_model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
 #'
 #' @param model Character. The model key or path to load. If omitted, the CLI will prompt you.
 #' @param ttl Integer. Unload the model after this many seconds of inactivity.
-#' @param gpu Character or Numeric. GPU offload amount. Values can be "max", "off", "auto", or a decimal between 0 and 1.
+#' @param gpu Character or Numeric. GPU offload amount. Values can be "auto" (default), "max", "off", or a decimal between 0 and 1.
 #' @param context_length Integer. The number of tokens to consider as context.
 #' @param parallel Integer. The maximum number of concurrent requests the model can process simultaneously.
 #' @param identifier Character. A custom identifier for the loaded model for API reference.
@@ -47,16 +54,39 @@ model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
                                 estimate_only = estimate_only,
                                 host = host)
 
-  res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
+  if (is.null(model)) {
+    res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
+  } else {
+    res <- processx::run("lms", args, error_on_status = FALSE)
+  }
 
   if (res$status == 0) {
     if (isTRUE(estimate_only)) {
       cli::cli_alert_success("Memory estimation completed successfully.")
     } else {
       cli::cli_alert_success("Model loaded successfully.")
+
+      if (!is.null(model) && !is.na(res$stdout)) {
+        lines <- strsplit(res$stdout, "\r?\n")[[1]]
+        api_tip <- grep("identifier", lines, value = TRUE, ignore.case = TRUE)
+        if (length(api_tip) > 0) {
+          cli::cli_bullets(c("i" = cli::ansi_strip(trimws(api_tip[1]))))
+        }
+      }
     }
   } else {
-    cli::cli_abort("Failed to load model. Exit code: {.val {res$status}}.")
+    if (!is.null(model) && (!is.na(res$stderr) || !is.na(res$stdout))) {
+      err_lines <- strsplit(paste(res$stderr, res$stdout, sep = "\n"), "\r?\n")[[1]]
+      err_lines <- cli::ansi_strip(err_lines)
+      err_lines <- err_lines[err_lines != ""]
+
+      cli::cli_abort(c(
+        "Failed to load model. Exit code: {.val {res$status}}.",
+        "x" = paste(err_lines, collapse = "\n")
+      ), call = NULL)
+    } else {
+      cli::cli_abort("Failed to load model. Exit code: {.val {res$status}}.", call = NULL)
+    }
   }
 
   invisible(res$status)
