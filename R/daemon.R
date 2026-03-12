@@ -24,8 +24,21 @@ build_args_daemon_up <- function() {
 #' \dontrun{
 #' daemon_up()
 #' }
+#' Start the LM Studio headless daemon
+#'
+#' @return Invisibly returns the process object (or 0 if already running).
+#' @export
 daemon_up <- function() {
-  # ... (code remains the same)
+  args <- build_args_daemon_up()
+  res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
+
+  if (res$status == 0) {
+    cli::cli_alert_success("LM Studio daemon started in the background.")
+  } else {
+    cli::cli_abort("Failed to start the LM Studio daemon. Exit code: {.val {res$status}}.")
+  }
+
+  invisible(res$status)
 }
 
 #' Check the global status of LM Studio
@@ -42,7 +55,7 @@ daemon_up <- function() {
 #' daemon_status()
 #' }
 daemon_status <- function() {
-  res <- processx::run("lms", "status", error_on_status = FALSE)
+  res <- processx::run(get_lms_path(), "status", error_on_status = FALSE)
 
   lines <- strsplit(res$stdout, "\r?\n")[[1]]
   lines <- cli::ansi_strip(lines)
@@ -87,7 +100,7 @@ daemon_down <- function(force = FALSE) {
   }
 
   args <- build_args_daemon_down()
-  res <- processx::run("lms", args, error_on_status = FALSE)
+  res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
 
   if (res$status == 0) {
     cli::cli_alert_success("LM Studio daemon stopped successfully.")
