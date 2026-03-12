@@ -51,8 +51,14 @@ test_that("build_args_model_get constructs correct vectors", {
 test_that("build_args_model_load constructs correct vectors", {
   expect_equal(build_args_model_load(), "load")
   expect_equal(
-    build_args_model_load(model = "llama", ttl = 300, gpu = "max", estimate_only = TRUE),
-    c("load", "llama", "--ttl", "300", "--gpu", "max", "--estimate-only")
+    build_args_model_load(
+      model = "llama",
+      ttl = 300,
+      gpu = "max",
+      parallel = 4,
+      estimate_only = TRUE
+    ),
+    c("load", "llama", "--ttl", "300", "--gpu", "max", "--parallel", "4", "--estimate-only")
   )
 })
 
@@ -104,6 +110,15 @@ test_that("build_args_runtime_remove constructs correct vectors", {
   expect_equal(build_args_runtime_remove("llama.cpp"), c("runtime", "remove", "llama.cpp"))
 })
 
+# --- Daemon Args ---
+
+test_that("build_args_daemon_up constructs correct vectors", {
+  expect_equal(build_args_daemon_up(), c("daemon", "up"))
+})
+
+test_that("build_args_daemon_down constructs correct vectors", {
+  expect_equal(build_args_daemon_down(), c("daemon", "down"))
+})
 
 # --- Server Args ---
 

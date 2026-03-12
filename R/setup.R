@@ -100,6 +100,7 @@ lms_setup <- function(method = c("browser", "headless")) {
 
       cli::cli_alert_success("Installation script completed.")
       cli::cli_alert_warning("You may need to restart your R session or terminal for the PATH changes to take effect.")
+      cli::cli_alert_info("In a headless environment, remember to start the daemon using `daemon_up()` before loading models.")
 
     }, error = function(e) {
       cli::cli_abort(c(
