@@ -132,17 +132,20 @@ server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_leve
 
   logging_flags <- sum(c(isTRUE(verbose), isTRUE(quiet), !is.null(log_level)))
   if (logging_flags > 1) {
-    cli::cli_warn("Only one logging control flag ({.arg verbose}, {.arg quiet}, or {.arg log_level}) can be used at a time.")
+    cli::cli_warn("Only one logging control flag can be used at a time.")
   }
 
   args <- build_args_server_status(json = json, verbose = verbose, quiet = quiet, log_level = log_level)
 
+  # Capture both streams to ensure no status messages are missed
   res <- processx::run("lms", args, error_on_status = FALSE)
+  output <- paste(res$stdout, res$stderr, sep = "\n")
 
-  # Split output into lines and clean ANSI codes/carriage returns
-  lines <- strsplit(res$stdout, "\r?\n")[[1]]
+  lines <- strsplit(output, "\r?\n")[[1]]
   lines <- cli::ansi_strip(lines)
-  lines <- sub(".*\r", "", lines)
+
+  # Remove \r without losing the content of the line
+  lines <- gsub("\r", "", lines)
   lines <- lines[lines != ""]
 
   if (isTRUE(json) && requireNamespace("jsonlite", quietly = TRUE)) {

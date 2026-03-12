@@ -12,7 +12,8 @@ model_load(
   parallel = NULL,
   identifier = NULL,
   estimate_only = FALSE,
-  host = NULL
+  host = NULL,
+  echo = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ model_load(
 \item{estimate_only}{Logical. Print a resource (memory) estimate and exit without loading the model. Defaults to FALSE.}
 
 \item{host}{Character. The host address of a remote LM Studio instance.}
+
+\item{echo}{Logical. Whether to echo the CLI output to the console. Defaults to TRUE.}
 }
 \value{
 Invisibly returns the system exit code (0 for success).

@@ -38,27 +38,36 @@ build_args_model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
 #' @param identifier Character. A custom identifier for the loaded model for API reference.
 #' @param estimate_only Logical. Print a resource (memory) estimate and exit without loading the model. Defaults to FALSE.
 #' @param host Character. The host address of a remote LM Studio instance.
+#' @param echo Logical. Whether to echo the CLI output to the console. Defaults to TRUE.
 #'
 #' @return Invisibly returns the system exit code (0 for success).
 #' @export
 model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
                        context_length = NULL, parallel = NULL,
-                       identifier = NULL, estimate_only = FALSE, host = NULL) {
+                       identifier = NULL, estimate_only = FALSE, host = NULL,
+                       echo = TRUE) {
 
-  args <- build_args_model_load(model = model,
-                                ttl = ttl,
-                                gpu = gpu,
-                                context_length = context_length,
-                                parallel = parallel,
-                                identifier = identifier,
-                                estimate_only = estimate_only,
-                                host = host)
+  args <- build_args_model_load(
+    model = model,
+    ttl = ttl,
+    gpu = gpu,
+    context_length = context_length,
+    parallel = parallel,
+    identifier = identifier,
+    estimate_only = estimate_only,
+    host = host
+  )
 
-  if (is.null(model)) {
-    res <- processx::run("lms", args, stdout = "", stderr = "", error_on_status = FALSE)
-  } else {
-    res <- processx::run("lms", args, error_on_status = FALSE)
-  }
+  # Setting echo = FALSE here prevents processx from printing the command line.
+  # Setting stdout/stderr to "" allows the CLI to print directly to the R console.
+  res <- processx::run(
+    command = get_lms_path(),
+    args = args,
+    stdout = if (echo) "" else "|",
+    stderr = if (echo) "" else "|",
+    echo = FALSE,
+    error_on_status = FALSE
+  )
 
   if (res$status == 0) {
     if (isTRUE(estimate_only)) {
@@ -66,7 +75,8 @@ model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
     } else {
       cli::cli_alert_success("Model loaded successfully.")
 
-      if (!is.null(model) && !is.na(res$stdout)) {
+      # Only print the manual identifier tip if output wasn't already shown
+      if (!echo && !is.null(model) && !is.na(res$stdout)) {
         lines <- strsplit(res$stdout, "\r?\n")[[1]]
         api_tip <- grep("identifier", lines, value = TRUE, ignore.case = TRUE)
         if (length(api_tip) > 0) {
@@ -75,18 +85,15 @@ model_load <- function(model = NULL, ttl = NULL, gpu = NULL,
       }
     }
   } else {
-    if (!is.null(model) && (!is.na(res$stderr) || !is.na(res$stdout))) {
-      err_lines <- strsplit(paste(res$stderr, res$stdout, sep = "\n"), "\r?\n")[[1]]
-      err_lines <- cli::ansi_strip(err_lines)
-      err_lines <- err_lines[err_lines != ""]
+    # Provide detailed error reporting
+    err_out <- paste(res$stdout, res$stderr, sep = "\n")
+    err_lines <- strsplit(err_out, "\r?\n")[[1]]
+    err_lines <- cli::ansi_strip(err_lines[err_lines != ""])
 
-      cli::cli_abort(c(
-        "Failed to load model. Exit code: {.val {res$status}}.",
-        "x" = paste(err_lines, collapse = "\n")
-      ), call = NULL)
-    } else {
-      cli::cli_abort("Failed to load model. Exit code: {.val {res$status}}.", call = NULL)
-    }
+    cli::cli_abort(c(
+      "Failed to load model. Exit code: {.val {res$status}}.",
+      "x" = paste(err_lines, collapse = "\n")
+    ), call = NULL)
   }
 
   invisible(res$status)
