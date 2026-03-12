@@ -4,17 +4,20 @@
 \alias{api_chat}
 \title{Quick chat via the API}
 \usage{
-api_chat(prompt, system_prompt = NULL, ...)
+api_chat(prompt, system_prompt = NULL, simplify = TRUE, ...)
 }
 \arguments{
 \item{prompt}{Character. The prompt to send to the model.}
 
 \item{system_prompt}{Character. An optional system prompt.}
 
+\item{simplify}{Logical. Whether to return only the response text (default)
+or the full API response list.}
+
 \item{...}{Additional arguments passed to \code{api_chat_completions}.}
 }
 \value{
-A character string of the model's response text.
+A character string if \code{simplify = TRUE}, or the full response list otherwise.
 }
 \description{
 A convenience wrapper around \code{api_chat_completions} for simple, one-turn interactions.

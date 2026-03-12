@@ -5,15 +5,23 @@
 \title{Send a chat completion request to the LM Studio API}
 \usage{
 api_chat_completions(
-  messages,
+  prompt = NULL,
+  system_prompt = NULL,
+  messages = NULL,
   model = "local-model",
   temperature = 0.7,
   max_tokens = -1,
+  simplify = FALSE,
   base_url = "http://localhost:1234/v1"
 )
 }
 \arguments{
-\item{messages}{A list of message lists representing the conversation history.}
+\item{prompt}{Character. A single user prompt to send to the model.}
+
+\item{system_prompt}{Character. An optional system prompt to set model behavior.}
+
+\item{messages}{A list of message lists representing the conversation history.
+If provided, this overrides \code{prompt} and \code{system_prompt}.}
 
 \item{model}{Character. The identifier of the loaded model to use.
 LM Studio often ignores this if only one model is loaded.}
@@ -22,18 +30,15 @@ LM Studio often ignores this if only one model is loaded.}
 
 \item{max_tokens}{Integer. The maximum number of tokens to generate (default -1 for infinite).}
 
+\item{simplify}{Logical. If \code{TRUE}, returns only the character string of
+the model's response. If \code{FALSE}, returns the full parsed list.}
+
 \item{base_url}{Character. The base URL of the local server.}
 }
 \value{
-A parsed list containing the API response.
+A character string if \code{simplify = TRUE}, otherwise a parsed
+list containing the full API response.
 }
 \description{
 Send a chat completion request to the LM Studio API
-}
-\examples{
-\dontrun{
-msgs <- list(list(role = "user", content = "What is the capital of France?"))
-response <- api_chat_completions(msgs)
-cat(response$choices[[1]]$message$content)
-}
 }
