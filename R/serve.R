@@ -35,7 +35,7 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' # Start on port 3000 with CORS enabled
 #' server_start(port = 3000, cors = TRUE)
 #' }
-server_start <- function(port = NULL, cors = FALSE) {
+start_server <- function(port = NULL, cors = FALSE) {
   args <- build_args_server_start(port = port, cors = cors)
 
   # Let processx run silently in the background by capturing output
@@ -68,7 +68,7 @@ build_args_server_stop <- function() {
 #' \dontrun{
 #' server_stop()
 #' }
-server_stop <- function() {
+stop_server <- function() {
   args <- build_args_server_stop()
 
   res <- processx::run("lms", args, error_on_status = FALSE)
@@ -128,7 +128,7 @@ build_args_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALS
 #' # Quiet JSON output parsed directly into R
 #' status_data <- server_status(json = TRUE, quiet = TRUE)
 #' }
-server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
+check_server <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
 
   logging_flags <- sum(c(isTRUE(verbose), isTRUE(quiet), !is.null(log_level)))
   if (logging_flags > 1) {

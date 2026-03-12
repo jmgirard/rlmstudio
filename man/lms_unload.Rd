@@ -4,7 +4,7 @@
 \alias{lms_unload}
 \title{Unload a model from memory}
 \usage{
-lms_unload(model = NULL, all = FALSE)
+lms_unload(model)
 }
 \description{
 Unload a model from memory

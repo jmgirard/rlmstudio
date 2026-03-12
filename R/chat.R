@@ -48,7 +48,7 @@ lms_client <- function(base_url = "http://localhost:1234/v1") {
 #' @return A character string (with attributes) if \code{simplify = TRUE},
 #'   otherwise a parsed list.
 #' @export
-chat_full <- function(prompt = NULL,
+lms_prompt <- function(prompt = NULL,
                                  system_prompt = NULL,
                                  messages = NULL,
                                  model = "local-model",
@@ -142,18 +142,18 @@ chat_full <- function(prompt = NULL,
 
 #' Quick chat via the API
 #'
-#' A convenience wrapper around \code{chat_full} for simple interactions.
+#' A convenience wrapper around \code{lms_prompt} for simple interactions.
 #'
+#' @param model Character. The identifier of the model to use.
 #' @param prompt Character. The prompt to send.
 #' @param system_prompt Character. An optional system prompt.
-#' @param model Character. The identifier of the model to use.
 #' @param simplify Logical. Whether to return response text (default) or the list.
-#' @param ... Additional arguments passed to \code{chat_full}.
+#' @param ... Additional arguments passed to \code{lms_prompt}.
 #'
 #' @return Response text or a full list.
 #' @export
-chat <- function(prompt, system_prompt = NULL, model = "local-model", simplify = TRUE, ...) {
-  chat_full(
+lms_chat <- function(model, prompt, system_prompt = NULL, simplify = TRUE, ...) {
+  lms_prompt(
     prompt = prompt,
     system_prompt = system_prompt,
     model = model,
