@@ -17,17 +17,13 @@ build_args_daemon_up <- function() {
 #' instance and return successfully. While safe to use, desktop users generally
 #' do not need to call this function and can just open the application manually.
 #'
-#' @return Invisibly returns the system exit code (0 for success).
+#' @return Invisibly returns the process object (or 0 if already running).
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' daemon_up()
 #' }
-#' Start the LM Studio headless daemon
-#'
-#' @return Invisibly returns the process object (or 0 if already running).
-#' @export
 daemon_up <- function() {
   args <- build_args_daemon_up()
   res <- processx::run(get_lms_path(), args, error_on_status = FALSE)

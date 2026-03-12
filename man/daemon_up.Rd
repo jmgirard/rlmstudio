@@ -7,7 +7,7 @@
 daemon_up()
 }
 \value{
-Invisibly returns the system exit code (0 for success).
+Invisibly returns the process object (or 0 if already running).
 }
 \description{
 Launches the \code{llmster} daemon in the background. This is required in
