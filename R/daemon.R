@@ -150,7 +150,6 @@ daemon_down <- function(force = FALSE) {
 with_daemon <- function(code) {
   daemon_up()
 
-  # Ensure the daemon and server stop even if the code errors out
   on.exit(daemon_down(force = TRUE), add = TRUE)
 
   force(code)
