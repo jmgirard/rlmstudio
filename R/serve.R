@@ -142,7 +142,7 @@ server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_leve
   # Split output into lines and clean ANSI codes/carriage returns
   lines <- strsplit(res$stdout, "\r?\n")[[1]]
   lines <- cli::ansi_strip(lines)
-  lines <- gsub("\r", "", lines)
+  lines <- sub(".*\r", "", lines)
   lines <- lines[lines != ""]
 
   if (isTRUE(json) && requireNamespace("jsonlite", quietly = TRUE)) {

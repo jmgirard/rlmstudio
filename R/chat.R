@@ -61,7 +61,7 @@ model_chat <- function(model = NULL, prompt = NULL, system_prompt = NULL,
 
     # Clean up ANSI escape sequences and carriage returns
     lines <- cli::ansi_strip(lines)
-    lines <- gsub("\r", "", lines)
+    lines <- sub(".*\r", "", lines)
 
     # Drop any empty lines that result from the cleanup
     lines <- lines[lines != ""]
