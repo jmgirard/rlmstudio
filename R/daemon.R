@@ -24,7 +24,7 @@ build_args_daemon_up <- function() {
 #' \dontrun{
 #' daemon_up()
 #' }
-daemon_up <- function() {
+start_daemon <- function() {
   args <- build_args_daemon_up()
   res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
 
@@ -50,7 +50,7 @@ daemon_up <- function() {
 #' \dontrun{
 #' daemon_status()
 #' }
-daemon_status <- function() {
+check_daemon <- function() {
   res <- processx::run(get_lms_path(), "status", error_on_status = FALSE)
 
   lines <- strsplit(res$stdout, "\r?\n")[[1]]
@@ -89,7 +89,7 @@ build_args_daemon_down <- function() {
 #' \dontrun{
 #' daemon_down(force = TRUE)
 #' }
-daemon_down <- function(force = FALSE) {
+stop_daemon <- function(force = FALSE) {
   if (isTRUE(force)) {
     # Attempt to stop the server first, suppressing errors
     tryCatch(server_stop(), error = function(e) NULL)
@@ -148,9 +148,9 @@ daemon_down <- function(force = FALSE) {
 #' })
 #' }
 with_daemon <- function(code) {
-  daemon_up()
+  start_daemon()
 
-  on.exit(daemon_down(force = TRUE), add = TRUE)
+  on.exit(stop_daemon(force = TRUE), add = TRUE)
 
   force(code)
 }
