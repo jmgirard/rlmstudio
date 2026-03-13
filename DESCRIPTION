@@ -17,7 +17,9 @@ Imports:
     processx,
     utils
 Suggests:
+    httptest2,
     knitr,
+    mockery,
     rmarkdown,
     testthat (>= 3.0.0)
 VignetteBuilder:
