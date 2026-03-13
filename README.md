@@ -52,7 +52,7 @@ Studio backend server.
 ``` r
 # Start the server on the default port (1234)
 lms_server_start()
-## ✔ LM Studio server started successfully.
+## ✔ LM Studio server started successfully on the default port.
 ```
 
 *(Note for headless environments like remote servers or Docker
@@ -68,9 +68,9 @@ using `list_models()`.
 # Returns a clean data frame of available models
 my_models <- list_models()
 my_models
-##   state     type  display_name  key                  architecture  size_gb
-## 1 unloaded  llm   Gemma 3n E4B  google/gemma-3n-e4b  gemma3n       5.46
-## 2 unloaded  llm   Gemma 3 12B   google/gemma-3-12b   gemma3        7.51
+##      state  type  display_name                  key  architecture  size_gb
+## 1 unloaded   llm  Gemma 3n E4B  google/gemma-3n-e4b       gemma3n     5.46
+## 2 unloaded   llm   Gemma 3 12B   google/gemma-3-12b        gemma3     7.51
 ```
 
 If you do not have a model yet, you can download one using its Hugging
@@ -90,8 +90,7 @@ Once a model is downloaded and available, load it into memory.
 ``` r
 # Load the model
 lms_load("google/gemma-3-1b")
-## ✔ Model "google/gemma-3-1b" loaded and verified.
-## ✔ Loading model: "google/gemma-3-1b" . . . [32.9s]
+## ✔ Model "google/gemma-3-1b" loaded and verified. [31.6s]
 ```
 
 ### 3. Chat
@@ -101,7 +100,7 @@ Use the `lms_chat()` function for quick and easy interactions.
 ``` r
 response <- lms_chat(
   model = "google/gemma-3-1b",
-  input = "What are the capitals of each country in North America.?"
+  input = "What are the capitals of each country in North America?"
 )
 
 cat(response)
@@ -131,8 +130,7 @@ memory and shut down the local server to free up system resources.
 ``` r
 # Unload the specific model
 lms_unload("google/gemma-3-1b")
-## ✔ Model "google/gemma-3-1b" unloaded successfully.
-## ✔ Unloading model: "google/gemma-3-1b"... [374ms]
+## ✔ Model "google/gemma-3-1b" unloaded successfully. [382ms]
 
 # Stop the local server
 lms_server_stop()
