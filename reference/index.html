@@ -35,9 +35,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="chat-inference">Chat &amp; Inference<a class="anchor" aria-label="anchor" href="#chat-inference"></a></h2>
 
-
+      <div class="section-desc"><p>Interact with loaded LLMs to generate text and process batches of prompts.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -45,34 +45,6 @@
 
 
       <dl><dt>
-
-          <code><a href="check_lms_version.html">check_lms_version()</a></code>
-
-        </dt>
-        <dd>Check if the installed LM Studio CLI meets the minimum requirement</dd>
-
-        <dt>
-
-          <code><a href="has_lms.html">has_lms()</a></code>
-
-        </dt>
-        <dd>Check if LM Studio CLI is installed</dd>
-
-        <dt>
-
-          <code><a href="install_lmstudio.html">install_lmstudio()</a></code>
-
-        </dt>
-        <dd>Help the user install or update LM Studio</dd>
-
-        <dt>
-
-          <code><a href="list_models.html">list_models()</a></code>
-
-        </dt>
-        <dd>List available models</dd>
-
-        <dt>
 
           <code><a href="lms_chat.html">lms_chat()</a></code>
 
@@ -85,27 +57,22 @@
 
         </dt>
         <dd>Batch Chat Completions via REST API</dd>
+      </dl></div><div class="section level2">
+      <h2 id="model-management">Model Management<a class="anchor" aria-label="anchor" href="#model-management"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>Discover, download, load, and manage local models.</p></div>
 
-          <code><a href="lms_daemon_start.html">lms_daemon_start()</a></code>
+      <dl></dl></div><div class="section level2">
 
-        </dt>
-        <dd>Start the LM Studio headless daemon</dd>
 
-        <dt>
 
-          <code><a href="lms_daemon_status.html">lms_daemon_status()</a></code>
 
-        </dt>
-        <dd>Check the global status of LM Studio</dd>
+      <dl><dt>
 
-        <dt>
-
-          <code><a href="lms_daemon_stop.html">lms_daemon_stop()</a></code>
+          <code><a href="list_models.html">list_models()</a></code>
 
         </dt>
-        <dd>Stop the LM Studio headless daemon</dd>
+        <dd>List available models</dd>
 
         <dt>
 
@@ -130,24 +97,26 @@
 
         <dt>
 
-          <code><a href="lms_path.html">lms_path()</a></code>
+          <code><a href="lms_unload.html">lms_unload()</a></code>
 
         </dt>
-        <dd>Get the absolute path to the LMS executable</dd>
+        <dd>Unload a model from memory via REST API</dd>
+      </dl></div><div class="section level2">
+      <h2 id="local-server-management">Local Server Management<a class="anchor" aria-label="anchor" href="#local-server-management"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>Control the LM Studio local REST API server.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="lms_server_start.html">lms_server_start()</a></code>
 
         </dt>
         <dd>Start the LM Studio local server</dd>
-
-        <dt>
-
-          <code><a href="lms_server_status.html">lms_server_status()</a></code>
-
-        </dt>
-        <dd>Check the status of the LM Studio server</dd>
 
         <dt>
 
@@ -158,17 +127,40 @@
 
         <dt>
 
-          <code><a href="lms_unload.html">lms_unload()</a></code>
+          <code><a href="lms_server_status.html">lms_server_status()</a></code>
 
         </dt>
-        <dd>Unload a model from memory via REST API</dd>
+        <dd>Check the status of the LM Studio server</dd>
+      </dl></div><div class="section level2">
+      <h2 id="headless-daemon-management">Headless Daemon Management<a class="anchor" aria-label="anchor" href="#headless-daemon-management"></a></h2>
+
+      <div class="section-desc"><p>Manage the background <code>llmster</code> daemon required for headless environments (e.g., remote servers, Docker).</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="lms_daemon_start.html">lms_daemon_start()</a></code>
+
+        </dt>
+        <dd>Start the LM Studio headless daemon</dd>
 
         <dt>
 
-          <code><a href="print.lms_download_status.html">print(<i>&lt;lms_download_status&gt;</i>)</a></code>
+          <code><a href="lms_daemon_stop.html">lms_daemon_stop()</a></code>
 
         </dt>
-        <dd>Print method for LM Studio download status</dd>
+        <dd>Stop the LM Studio headless daemon</dd>
+
+        <dt>
+
+          <code><a href="lms_daemon_status.html">lms_daemon_status()</a></code>
+
+        </dt>
+        <dd>Check the global status of LM Studio</dd>
 
         <dt>
 
@@ -176,8 +168,46 @@
 
         </dt>
         <dd>Run code with the LM Studio daemon active</dd>
+      </dl></div><div class="section level2">
+      <h2 id="setup-configuration">Setup &amp; Configuration<a class="anchor" aria-label="anchor" href="#setup-configuration"></a></h2>
+
+      <div class="section-desc"><p>Install, locate, and verify the LM Studio CLI installation.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="install_lmstudio.html">install_lmstudio()</a></code>
+
+        </dt>
+        <dd>Help the user install or update LM Studio</dd>
+
+        <dt>
+
+          <code><a href="has_lms.html">has_lms()</a></code>
+
+        </dt>
+        <dd>Check if LM Studio CLI is installed</dd>
+
+        <dt>
+
+          <code><a href="check_lms_version.html">check_lms_version()</a></code>
+
+        </dt>
+        <dd>Check if the installed LM Studio CLI meets the minimum requirement</dd>
+
+        <dt>
+
+          <code><a href="lms_path.html">lms_path()</a></code>
+
+        </dt>
+        <dd>Get the absolute path to the LMS executable</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
