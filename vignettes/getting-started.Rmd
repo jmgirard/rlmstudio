@@ -1,0 +1,131 @@
+---
+title: "Getting Started with lms"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with lms}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The `lms` package bridges the gap between R and local Large Language Models (LLMs) by wrapping the LM Studio CLI and its v1 REST API. This vignette will guide you through the two primary ways to run LM Studio and show you how to manage and chat with your models.
+
+## Choosing Your Workflow: GUI vs. Headless
+
+LM Studio can run its local server in two different ways. The R package works identically with both, but how you start the server depends on your preference and operating system.
+
+### 1. The GUI Workflow (Desktop Application)
+* **Best for:** Visual users, desktop environments (macOS, Windows, and Linux desktops), and those who like to manually manage their models.
+* **How it works:** You open the LM Studio desktop application, navigate to the Developer/Local Server tab, and click "Start". You do not need to use the startup functions in R.
+* **The R Code:** You simply open R and immediately start running commands like `lms_load()` and `lms_chat()`. The R package communicates directly with the server you started in the visual app.
+
+### 2. The Headless Workflow (CLI Daemon)
+* **Best for:** Automated R scripts, remote servers, Docker containers, and users who want R to manage the entire process from start to finish.
+* **How it works:** The GUI remains completely closed. Instead, you use R to boot up the LM Studio background engine (the daemon) and the local server.
+* **The R Code:** You must run `lms_daemon_start()` followed by `lms_server_start()` before you can load models or chat. When your script finishes, you clean up with `lms_server_stop()` and `lms_daemon_stop()`.
+* **Important Note:** If you try to run `lms_daemon_start()` while the desktop GUI is open, you will encounter conflicts. Pick one lane and stick to it for your session.
+
+## Step-by-Step Guide
+
+For this guide, we will assume you are using the headless workflow so the code is fully self-contained. If you are using the GUI, you can skip the startup and teardown steps.
+
+### 1. Start the Environment
+
+First, load the package and spin up the daemon and server.
+
+```{r setup, eval=FALSE}
+library(lms)
+
+# Start the background daemon
+lms_daemon_start()
+
+# Start the local server on port 1234
+lms_server_start()
+```
+
+### 2. Finding and Managing Models
+
+You can check which models you have downloaded and whether they are currently loaded into memory using `list_models()`.
+
+```{r list-models, eval=FALSE}
+# View all models
+models <- list_models()
+
+# You can use standard R tools to filter this list
+# For example, finding all unloaded embedding models:
+unloaded_embeddings <- models |>
+  subset(type == "embedding" & state == "unloaded")
+```
+
+If you need a new model, you can initiate a download using a Hugging Face repository ID. Downloads happen asynchronously in the background.
+
+```{r download, eval=FALSE}
+job_id <- lms_download("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+
+# Check the progress
+lms_download_status(job_id)
+```
+
+### 3. Loading Models
+
+Before you can chat with a model, you must load it into system memory (RAM or VRAM). You can pass specific hardware parameters during this step if needed.
+
+```{r load, eval=FALSE}
+# Standard load
+lms_load("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+
+# Advanced load with specific parameters
+lms_load(
+  model = "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+  context_length = 4096,
+  flash_attention = TRUE
+)
+```
+
+### 4. Chatting
+
+The `lms_chat()` function is designed for simple, single-turn prompts.
+
+```{r simple-chat, eval=FALSE}
+response <- lms_chat(
+  model = "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+  input = "Write a haiku about writing R code.",
+  system_prompt = "You are a helpful programming assistant."
+)
+
+cat(response)
+```
+
+For more complex use cases (like streaming, adjusting temperatures, or utilizing Model Context Protocol integrations), use `lms_chat_advanced()`. Setting `simplify = FALSE` will return the raw, unparsed API list response.
+
+```{r advanced-chat, eval=FALSE}
+advanced_response <- lms_chat_advanced(
+  model = "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+  input = "Explain variance.",
+  temperature = 0.2,
+  max_output_tokens = 150,
+  simplify = FALSE
+)
+
+# Access the generated text from the structured list
+advanced_response$output[[1]]$content
+```
+
+### 5. Teardown
+
+To free up memory, unload your models when you are done. If you are running the headless setup, shut down the server and daemon.
+
+```{r teardown, eval=FALSE}
+# Unload the model
+lms_unload("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+
+# Stop the server and daemon
+lms_server_stop()
+lms_daemon_stop()
+```

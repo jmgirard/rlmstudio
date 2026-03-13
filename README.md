@@ -1,0 +1,112 @@
+
+# lms
+
+The `lms` package provides an R interface to the [LM
+Studio](https://lmstudio.ai/) CLI and REST API. It allows you to
+download local Large Language Models (LLMs), manage server instances,
+load or unload models into memory, and generate text directly from your
+R console or scripts.
+
+## Installation
+
+You can install the development version of `lms` from GitHub with:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("jmgirard/lms")
+```
+
+## Setup and Prerequisites
+
+This package relies on the LM Studio CLI (version 0.4.0 or higher) and
+the new v1 REST API. If you do not have LM Studio installed or need to
+update your version, the package provides a convenient setup function.
+
+``` r
+library(lms)
+
+# This will check your installation and offer to open the download page
+# or perform a headless installation depending on your operating system.
+lms_setup()
+```
+
+## Quick Start
+
+The standard workflow involves starting the LM Studio server, loading a
+model into memory, chatting with it, and then cleaning up your
+environment.
+
+For a deeper dive into the package architecture and a detailed
+explanation of how to use LM Studio with a visual GUI versus a headless
+background daemon, please see the `vignette("getting-started")`.
+
+### 1. Start the Server
+
+Before you can load models or generate text, you need to start the LM
+Studio backend server.
+
+``` r
+# Start the server on the default port (1234)
+lms_server_start()
+```
+
+*(Note for headless environments like remote servers or Docker
+containers: You must start the background daemon first using
+lms_daemon_start() before starting the server).*
+
+### 2. Find and Load a Model
+
+You can see which models you currently have available on your machine
+using `list_models()`.
+
+``` r
+# Returns a clean data frame of available models
+my_models <- list_models()
+my_models
+```
+
+If you do not have a model yet, you can download one using its Hugging
+Face repository or LM Studio catalog identifier.
+
+``` r
+# Download a lightweight model
+job_id <- lms_download("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+lms_download_status(job_id)
+```
+
+Once a model is downloaded and available, load it into memory.
+
+``` r
+# Load the model
+lms_load("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+```
+
+### 3. Chat
+
+Use the `lms_chat()` function for quick and easy interactions.
+
+``` r
+response <- lms_chat(
+  model = "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+  input = "Explain the difference between a data frame and a matrix in R in two sentences."
+)
+
+cat(response)
+```
+
+If you need access to advanced features like Model Context Protocol
+(MCP) integrations, structured tool calling, or granular control over
+inference parameters, use the `lms_chat_advanced()` function instead.
+
+### 4. Clean Up
+
+When you are finished, it is good practice to unload the model from
+memory and shut down the local server to free up system resources.
+
+``` r
+# Unload the specific model
+lms_unload("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+
+# Stop the local server
+lms_server_stop()
+```
