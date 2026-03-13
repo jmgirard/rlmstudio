@@ -1,6 +1,17 @@
 #' Get the absolute path to the LMS executable
-#' @noRd
-get_lms_path <- function() {
+#'
+#' Locates the LM Studio CLI (`lms`) on your system. It checks the `RLMSTUDIO_LMS_PATH`
+#' environment variable first, then the system `PATH`, and finally common installation
+#' directories.
+#'
+#' @return A character string containing the absolute path to the executable.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_path()
+#' }
+lms_path <- function() {
   # 1. Allow an explicit override via environment variable
   custom_path <- Sys.getenv("RLMSTUDIO_LMS_PATH")
   if (custom_path != "" && file.exists(custom_path)) {
@@ -15,7 +26,7 @@ get_lms_path <- function() {
 
   # 3. Fallback to checking common installation directories
   os <- Sys.info()[["sysname"]]
-  home <- Sys.getenv("HOME")
+  home <- path.expand("~")
 
   common_paths <- if (os == "Windows") {
     c(file.path(Sys.getenv("LOCALAPPDATA"), "LM-Studio", "bin", "lms.exe"))

@@ -26,7 +26,7 @@ build_args_daemon_up <- function() {
 #' }
 lms_daemon_start <- function() {
   args <- build_args_daemon_up()
-  res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
+  res <- processx::run(lms_path(), args, error_on_status = FALSE)
 
   if (res$status == 0) {
     cli::cli_alert_success("LM Studio daemon started in the background.")
@@ -53,7 +53,7 @@ lms_daemon_start <- function() {
 #' lms_daemon_status()
 #' }
 lms_daemon_status <- function() {
-  res <- processx::run(get_lms_path(), "status", error_on_status = FALSE)
+  res <- processx::run(lms_path(), "status", error_on_status = FALSE)
 
   lines <- strsplit(res$stdout, "\r?\n")[[1]]
   lines <- cli::ansi_strip(lines)
@@ -98,7 +98,7 @@ lms_daemon_stop <- function(force = FALSE) {
   }
 
   args <- build_args_daemon_down()
-  res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
+  res <- processx::run(lms_path(), args, error_on_status = FALSE)
 
   if (res$status == 0) {
     cli::cli_alert_success("LM Studio daemon stopped successfully.")
