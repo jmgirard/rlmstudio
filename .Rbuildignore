@@ -5,3 +5,7 @@
 ^\.vscode$
 ^[.]?air[.]toml$
 ^vignettes/.*\.pdf$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
