@@ -55,3 +55,11 @@ lms_chat_batch(
 
 A character vector, list, or data frame depending on the `format`
 argument and the value of `simplify`.
+
+## See also
+
+- [LM Studio Native Chat
+  API](https://lmstudio.ai/docs/developer/rest/chat)
+
+- [OpenAI Compatible Chat
+  API](https://lmstudio.ai/docs/developer/openai-compat/chat-completions)

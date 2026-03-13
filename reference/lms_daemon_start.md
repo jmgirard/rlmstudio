@@ -23,6 +23,11 @@ detect the active instance and return successfully. While safe to use,
 desktop users generally do not need to call this function and can just
 open the application manually.
 
+## See also
+
+[LM Studio Headless Daemon
+(llmster)](https://lmstudio.ai/docs/developer/core/headless_llmster)
+
 ## Examples
 
 ``` r

@@ -22,3 +22,8 @@ lms_download_status(job_id, host = "http://localhost:1234")
 ## Value
 
 An object of class `lms_download_status` containing the download status.
+
+## See also
+
+[LM Studio Download Status
+API](https://lmstudio.ai/docs/developer/rest/download-status)

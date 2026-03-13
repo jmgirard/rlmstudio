@@ -37,3 +37,8 @@ list_models(
 ## Value
 
 A data frame of model information.
+
+## See also
+
+[LM Studio List Models
+API](https://lmstudio.ai/docs/developer/rest/list)

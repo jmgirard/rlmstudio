@@ -33,3 +33,8 @@ lms_download(model, quantization = NULL, host = "http://localhost:1234", ...)
 
 A character string containing the download `job_id`, or
 `"already_downloaded"` if already downloaded.
+
+## See also
+
+[LM Studio Download Model
+API](https://lmstudio.ai/docs/developer/rest/download)

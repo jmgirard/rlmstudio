@@ -12,10 +12,7 @@ lms_server_stop()
 
 Invisibly returns the system exit code (0 for success).
 
-## Examples
+## See also
 
-``` r
-if (FALSE) { # \dontrun{
-lms_server_stop()
-} # }
-```
+[LM Studio CLI Server Stop
+Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)

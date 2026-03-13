@@ -25,14 +25,7 @@ lms_server_start(port = NULL, cors = FALSE)
 
 Invisibly returns the system exit code (0 for success).
 
-## Examples
+## See also
 
-``` r
-if (FALSE) { # \dontrun{
-# Start on default port
-lms_server_start()
-
-# Start on port 3000 with CORS enabled
-lms_server_start(port = 3000, cors = TRUE)
-} # }
-```
+[LM Studio CLI Server Start
+Documentation](https://lmstudio.ai/docs/cli/serve/server-start)

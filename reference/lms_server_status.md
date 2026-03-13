@@ -42,14 +42,7 @@ A character vector of the raw CLI output. If `json = TRUE` and the
 You can only use one logging control flag at a time (`verbose`, `quiet`,
 or `log_level`).
 
-## Examples
+## See also
 
-``` r
-if (FALSE) { # \dontrun{
-# Standard status
-lms_server_status()
-
-# Quiet JSON output parsed directly into R
-status_data <- lms_server_status(json = TRUE, quiet = TRUE)
-} # }
-```
+[LM Studio CLI Server Status
+Documentation](https://lmstudio.ai/docs/cli/serve/server-status)

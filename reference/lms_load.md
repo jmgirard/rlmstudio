@@ -64,3 +64,7 @@ lms_load(
 
 Invisibly returns `TRUE` on success, or the load configuration list if
 `echo_load_config = TRUE`.
+
+## See also
+
+[LM Studio Load Model API](https://lmstudio.ai/docs/developer/rest/load)

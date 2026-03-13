@@ -27,3 +27,8 @@ lms_unload(model, host = "http://localhost:1234", ...)
 ## Value
 
 Invisibly returns `TRUE` on success.
+
+## See also
+
+[LM Studio Unload Model
+API](https://lmstudio.ai/docs/developer/rest/unload)

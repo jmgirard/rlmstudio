@@ -56,3 +56,11 @@ lms_chat(
 
 A character string (if `simplify = TRUE`) or a list containing the full
 API response.
+
+## See also
+
+- [LM Studio Native Chat
+  API](https://lmstudio.ai/docs/developer/rest/chat)
+
+- [OpenAI Compatible Chat
+  API](https://lmstudio.ai/docs/developer/openai-compat/chat-completions)
