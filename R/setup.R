@@ -12,7 +12,7 @@ has_lms <- function() {
 #' @return Logical. TRUE if the version is sufficient, FALSE otherwise.
 #' @export
 check_lms_version <- function(min_version = "0.4.0") {
-  if (Sys.which("lms") == "") {
+  if (!has_lms()) {
     cli::cli_alert_danger("LM Studio CLI is not installed.")
     return(FALSE)
   }
@@ -75,7 +75,7 @@ install_lmstudio <- function(method = c("browser", "headless")) {
   method <- match.arg(method)
 
   # Check for existence AND version before proceeding
-  if (Sys.which("lms") != "" && check_lms_version("0.4.0")) {
+  if (!has_lms() && check_lms_version("0.4.0")) {
     cli::cli_alert_success("Your LM Studio setup is ready to go!")
     return(invisible(TRUE))
   }
