@@ -141,7 +141,34 @@ advanced_response$output[[1]]$content
 ## [1] "**Variance** is a statistical measure that quantifies how spread out a set of data points is from their mean (average value). It tells us the average of the squared differences between each data point and the mean.\n\n### Formula for Variance:\nFor a population:\n\\[\n\\sigma^2 = \\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2\n\\]\nFor a sample:\n\\[\ns^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2\n\\]\n\nWhere:\n- \\( \\sigma^2 \\) = population variance  \n- \\( s^"
 ```
 
-### 5. Teardown
+### 5. Batch Processing
+
+For high-volume tasks like zero-shot classification or data extraction across many documents, use `lms_chat_batch()`. This function includes a built-in progress bar and supports several output formats via the `format` argument:
+
+* **`"vector"`**: Returns a simple character vector of responses (requires `simplify = TRUE`).
+* **`"data.frame"`**: Returns a data frame mapping each input to its corresponding output.
+* **`"list"`**: Returns a list of responses, which is useful when `simplify = FALSE` to preserve full API metadata.
+
+```{r batch, eval=FALSE}
+queries <- c("What is 2+2?", "What is the capital of France?")
+
+# Get results as a character vector
+answers <- lms_chat_batch(
+  model = "qwen/qwen3-4b-2507",
+  inputs = queries,
+  format = "vector"
+)
+
+# Get results as a structured data frame for further analysis
+results_df <- lms_chat_batch(
+  model = "qwen/qwen3-4b-2507",
+  inputs = queries,
+  format = "data.frame",
+  temperature = 0
+)
+```
+
+### 6. Teardown
 
 To free up memory, unload your models when you are done. If you are running the headless setup, shut down the server and daemon.
 

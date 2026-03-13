@@ -189,10 +189,12 @@ lms_server_status <- function(
 #' Check if the LM Studio server is reachable
 #' @return Logical.
 #' @noRd
-is_server_running <- function(port = 1234) {
+is_server_running <- function() {
   tryCatch(
     {
-      con <- socketConnection(host = "localhost", port = port, timeout = 0.5)
+      con <- suppressWarnings(
+        socketConnection(host = "localhost", port = 1234, timeout = 0.5)
+      )
       close(con)
       TRUE
     },
