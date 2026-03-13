@@ -1,0 +1,16 @@
+# rlmstudio: Access and Control LM Studio from R
+
+A community-maintained R wrapper for the LM Studio CLI and REST API.
+Provides functions to manage the local server, download and load models,
+and interact with LLMs using OpenAI-compatible endpoints. This is an
+unofficial package.
+
+## See also
+
+Useful links:
+
+- <https://jmgirard.github.io/rlmstudio/>
+
+## Author
+
+**Maintainer**: Jeffrey Girard <me@jmgirard.com>
