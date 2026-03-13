@@ -12,18 +12,21 @@
 #'
 #' @return Invisibly returns \code{TRUE} on success, or the load configuration list if \code{echo_load_config = TRUE}.
 #' @export
-lms_load <- function(model,
-                     context_length = NULL,
-                     eval_batch_size = NULL,
-                     flash_attention = NULL,
-                     num_experts = NULL,
-                     offload_kv_cache_to_gpu = NULL,
-                     echo_load_config = FALSE,
-                     host = "http://localhost:1234",
-                     ...) {
-
+lms_load <- function(
+  model,
+  context_length = NULL,
+  eval_batch_size = NULL,
+  flash_attention = NULL,
+  num_experts = NULL,
+  offload_kv_cache_to_gpu = NULL,
+  echo_load_config = FALSE,
+  host = "http://localhost:1234",
+  ...
+) {
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn lms_server_start} first.")
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    )
   }
 
   endpoint <- paste0(host, "/api/v1/models/load")
@@ -31,11 +34,27 @@ lms_load <- function(model,
   # 1. Build the explicit body based on current known parameters
   body <- list(
     model = model,
-    context_length = if (!is.null(context_length)) as.integer(context_length) else NULL,
-    eval_batch_size = if (!is.null(eval_batch_size)) as.integer(eval_batch_size) else NULL,
-    flash_attention = if (!is.null(flash_attention)) as.logical(flash_attention) else NULL,
+    context_length = if (!is.null(context_length)) {
+      as.integer(context_length)
+    } else {
+      NULL
+    },
+    eval_batch_size = if (!is.null(eval_batch_size)) {
+      as.integer(eval_batch_size)
+    } else {
+      NULL
+    },
+    flash_attention = if (!is.null(flash_attention)) {
+      as.logical(flash_attention)
+    } else {
+      NULL
+    },
     num_experts = if (!is.null(num_experts)) as.integer(num_experts) else NULL,
-    offload_kv_cache_to_gpu = if (!is.null(offload_kv_cache_to_gpu)) as.logical(offload_kv_cache_to_gpu) else NULL,
+    offload_kv_cache_to_gpu = if (!is.null(offload_kv_cache_to_gpu)) {
+      as.logical(offload_kv_cache_to_gpu)
+    } else {
+      NULL
+    },
     echo_load_config = if (isTRUE(echo_load_config)) TRUE else NULL
   )
 
@@ -55,18 +74,29 @@ lms_load <- function(model,
   if (httr2::resp_status(resp) == 200) {
     resp_data <- httr2::resp_body_json(resp)
     if (identical(resp_data$status, "loaded")) {
-      if (isTRUE(echo_load_config)) return(invisible(resp_data$load_config))
+      if (isTRUE(echo_load_config)) {
+        return(invisible(resp_data$load_config))
+      }
       return(invisible(TRUE))
     }
   }
 
-  err_msg <- tryCatch({
-    err_json <- httr2::resp_body_json(resp)
-    if (!is.null(err_json$error$message)) err_json$error$message
-    else if (!is.null(err_json$error)) err_json$error
-    else httr2::resp_body_string(resp)
-  }, error = function(e) httr2::resp_body_string(resp))
+  err_msg <- tryCatch(
+    {
+      err_json <- httr2::resp_body_json(resp)
+      if (!is.null(err_json$error$message)) {
+        err_json$error$message
+      } else if (!is.null(err_json$error)) {
+        err_json$error
+      } else {
+        httr2::resp_body_string(resp)
+      }
+    },
+    error = function(e) httr2::resp_body_string(resp)
+  )
 
-  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  if (err_msg == "") {
+    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  }
   cli::cli_abort(c("x" = "API Load Failed: {err_msg}"))
 }

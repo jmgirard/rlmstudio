@@ -9,9 +9,16 @@
 #'
 #' @return A character string containing the download \code{job_id}, or \code{NULL} if already downloaded.
 #' @export
-lms_download <- function(model, quantization = NULL, host = "http://localhost:1234", ...) {
+lms_download <- function(
+  model,
+  quantization = NULL,
+  host = "http://localhost:1234",
+  ...
+) {
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn start_server} first.")
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn start_server} first."
+    )
   }
 
   if (is.null(model) || model == "") {
@@ -37,13 +44,17 @@ lms_download <- function(model, quantization = NULL, host = "http://localhost:12
   if (httr2::resp_status(resp) == 200) {
     resp_data <- httr2::resp_body_json(resp)
 
-    if (!is.null(resp_data$status) && resp_data$status == "already_downloaded") {
+    if (
+      !is.null(resp_data$status) && resp_data$status == "already_downloaded"
+    ) {
       cli::cli_alert_success("Model {.val {model}} is already downloaded.")
       return(invisible(NULL))
     }
 
     if (!is.null(resp_data$job_id)) {
-      cli::cli_alert_success("Download job started successfully. Job ID: {.val {resp_data$job_id}}")
+      cli::cli_alert_success(
+        "Download job started successfully. Job ID: {.val {resp_data$job_id}}"
+      )
       return(resp_data$job_id)
     }
 
@@ -51,16 +62,25 @@ lms_download <- function(model, quantization = NULL, host = "http://localhost:12
     return(invisible(TRUE))
   }
 
-  err_msg <- tryCatch({
-    err_json <- httr2::resp_body_json(resp)
-    if (!is.null(err_json$error$message)) err_json$error$message
-    else if (!is.null(err_json$error)) err_json$error
-    else httr2::resp_body_string(resp)
-  }, error = function(e) {
-    httr2::resp_body_string(resp)
-  })
+  err_msg <- tryCatch(
+    {
+      err_json <- httr2::resp_body_json(resp)
+      if (!is.null(err_json$error$message)) {
+        err_json$error$message
+      } else if (!is.null(err_json$error)) {
+        err_json$error
+      } else {
+        httr2::resp_body_string(resp)
+      }
+    },
+    error = function(e) {
+      httr2::resp_body_string(resp)
+    }
+  )
 
-  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  if (err_msg == "") {
+    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  }
 
   cli::cli_abort(c("x" = "API Download Failed: {err_msg}"))
 }
@@ -74,7 +94,9 @@ lms_download <- function(model, quantization = NULL, host = "http://localhost:12
 #' @export
 lms_download_status <- function(job_id, host = "http://localhost:1234") {
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn lms_server_start} first.")
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    )
   }
 
   if (is.null(job_id) || job_id == "") {
@@ -94,14 +116,23 @@ lms_download_status <- function(job_id, host = "http://localhost:1234") {
     return(out)
   }
 
-  err_msg <- tryCatch({
-    err_json <- httr2::resp_body_json(resp)
-    if (!is.null(err_json$error$message)) err_json$error$message
-    else if (!is.null(err_json$error)) err_json$error
-    else httr2::resp_body_string(resp)
-  }, error = function(e) httr2::resp_body_string(resp))
+  err_msg <- tryCatch(
+    {
+      err_json <- httr2::resp_body_json(resp)
+      if (!is.null(err_json$error$message)) {
+        err_json$error$message
+      } else if (!is.null(err_json$error)) {
+        err_json$error
+      } else {
+        httr2::resp_body_string(resp)
+      }
+    },
+    error = function(e) httr2::resp_body_string(resp)
+  )
 
-  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  if (err_msg == "") {
+    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  }
 
   cli::cli_abort(c("x" = "API Status Request Failed: {err_msg}"))
 }
@@ -116,7 +147,8 @@ print.lms_download_status <- function(x, ...) {
   cli::cli_h3("Download Job: {.val {x$job_id}}")
 
   # Color-code the status dynamically
-  status_col <- switch(x$status,
+  status_col <- switch(
+    x$status,
     "downloading" = cli::col_blue,
     "completed" = cli::col_green,
     "already_downloaded" = cli::col_green,

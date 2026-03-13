@@ -42,12 +42,18 @@ lms_server_start <- function(port = NULL, cors = FALSE) {
 
   if (res$status == 0) {
     if (!is.null(port)) {
-      cli::cli_alert_success("LM Studio server started successfully on port {.val {port}}.")
+      cli::cli_alert_success(
+        "LM Studio server started successfully on port {.val {port}}."
+      )
     } else {
-      cli::cli_alert_success("LM Studio server started successfully on the default port.")
+      cli::cli_alert_success(
+        "LM Studio server started successfully on the default port."
+      )
     }
   } else {
-    cli::cli_abort("Failed to start the LM Studio server. Exit code: {.val {res$status}}.")
+    cli::cli_abort(
+      "Failed to start the LM Studio server. Exit code: {.val {res$status}}."
+    )
   }
 
   invisible(res$status)
@@ -78,7 +84,9 @@ lms_server_stop <- function() {
   if (res$status == 0) {
     cli::cli_alert_success("LM Studio server stopped successfully.")
   } else {
-    cli::cli_abort("Failed to stop the LM Studio server. Exit code: {.val {res$status}}.")
+    cli::cli_abort(
+      "Failed to stop the LM Studio server. Exit code: {.val {res$status}}."
+    )
   }
 
   invisible(res$status)
@@ -86,7 +94,12 @@ lms_server_stop <- function() {
 
 #' Build arguments for lms_server_status
 #' @noRd
-build_args_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
+build_args_server_status <- function(
+  json = FALSE,
+  verbose = FALSE,
+  quiet = FALSE,
+  log_level = NULL
+) {
   args <- c("server", "status")
 
   if (isTRUE(json)) {
@@ -130,14 +143,23 @@ build_args_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALS
 #' # Quiet JSON output parsed directly into R
 #' status_data <- lms_server_status(json = TRUE, quiet = TRUE)
 #' }
-lms_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
-
+lms_server_status <- function(
+  json = FALSE,
+  verbose = FALSE,
+  quiet = FALSE,
+  log_level = NULL
+) {
   logging_flags <- sum(c(isTRUE(verbose), isTRUE(quiet), !is.null(log_level)))
   if (logging_flags > 1) {
     cli::cli_warn("Only one logging control flag can be used at a time.")
   }
 
-  args <- build_args_server_status(json = json, verbose = verbose, quiet = quiet, log_level = log_level)
+  args <- build_args_server_status(
+    json = json,
+    verbose = verbose,
+    quiet = quiet,
+    log_level = log_level
+  )
 
   res <- processx::run("lms", args, error_on_status = FALSE)
   output <- paste(res$stdout, res$stderr, sep = "\n")
@@ -148,12 +170,17 @@ lms_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_
   lines <- lines[lines != ""]
 
   if (isTRUE(json) && requireNamespace("jsonlite", quietly = TRUE)) {
-    tryCatch({
-      return(jsonlite::fromJSON(paste(lines, collapse = "\n")))
-    }, error = function(e) {
-      cli::cli_warn("Failed to parse JSON output. Returning raw character vector instead.")
-      return(lines)
-    })
+    tryCatch(
+      {
+        return(jsonlite::fromJSON(paste(lines, collapse = "\n")))
+      },
+      error = function(e) {
+        cli::cli_warn(
+          "Failed to parse JSON output. Returning raw character vector instead."
+        )
+        return(lines)
+      }
+    )
   }
 
   return(lines)
@@ -163,9 +190,12 @@ lms_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_
 #' @return Logical.
 #' @noRd
 is_server_running <- function() {
-  tryCatch({
-    con <- socketConnection(host = "localhost", port = 1234, timeout = 0.5)
-    close(con)
-    TRUE
-  }, error = function(e) FALSE)
+  tryCatch(
+    {
+      con <- socketConnection(host = "localhost", port = 1234, timeout = 0.5)
+      close(con)
+      TRUE
+    },
+    error = function(e) FALSE
+  )
 }

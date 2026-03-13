@@ -8,7 +8,9 @@
 #' @export
 lms_unload <- function(model, host = "http://localhost:1234", ...) {
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn lms_server_start} first.")
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    )
   }
 
   endpoint <- paste0(host, "/api/v1/models/unload")
@@ -30,13 +32,22 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
     return(invisible(TRUE))
   }
 
-  err_msg <- tryCatch({
-    err_json <- httr2::resp_body_json(resp)
-    if (!is.null(err_json$error$message)) err_json$error$message
-    else if (!is.null(err_json$error)) err_json$error
-    else httr2::resp_body_string(resp)
-  }, error = function(e) httr2::resp_body_string(resp))
+  err_msg <- tryCatch(
+    {
+      err_json <- httr2::resp_body_json(resp)
+      if (!is.null(err_json$error$message)) {
+        err_json$error$message
+      } else if (!is.null(err_json$error)) {
+        err_json$error
+      } else {
+        httr2::resp_body_string(resp)
+      }
+    },
+    error = function(e) httr2::resp_body_string(resp)
+  )
 
-  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  if (err_msg == "") {
+    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  }
   cli::cli_abort(c("x" = "API Unload Failed: {err_msg}"))
 }

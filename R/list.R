@@ -9,11 +9,12 @@
 #'
 #' @return A data frame of model information.
 #' @export
-list_models <- function(loaded = FALSE,
-                        type = c("llm", "embedding"),
-                        detailed = FALSE,
-                        host = "http://localhost:1234") {
-
+list_models <- function(
+  loaded = FALSE,
+  type = c("llm", "embedding"),
+  detailed = FALSE,
+  host = "http://localhost:1234"
+) {
   resp <- httr2::request(host) |>
     httr2::req_url_path("/api/v1/models") |>
     httr2::req_perform()
@@ -32,9 +33,13 @@ list_models <- function(loaded = FALSE,
   # Evaluate load state for all matching models
   if (nrow(df) > 0) {
     df$state <- ifelse(
-      vapply(df$loaded_instances, function(x) {
-        if (is.data.frame(x)) nrow(x) > 0 else length(x) > 0
-      }, logical(1)),
+      vapply(
+        df$loaded_instances,
+        function(x) {
+          if (is.data.frame(x)) nrow(x) > 0 else length(x) > 0
+        },
+        logical(1)
+      ),
       "loaded",
       "unloaded"
     )
@@ -46,7 +51,9 @@ list_models <- function(loaded = FALSE,
   }
 
   if (nrow(df) == 0) {
-    return(if (isTRUE(json)) data.frame() else "No models found matching criteria.")
+    return(
+      if (isTRUE(json)) data.frame() else "No models found matching criteria."
+    )
   }
 
   # Format size for readability
@@ -56,7 +63,14 @@ list_models <- function(loaded = FALSE,
 
   # Clean up and select columns
   if (!isTRUE(detailed)) {
-    core_cols <- c("state", "type", "display_name", "key", "architecture", "size_gb")
+    core_cols <- c(
+      "state",
+      "type",
+      "display_name",
+      "key",
+      "architecture",
+      "size_gb"
+    )
     available_cols <- intersect(core_cols, names(df))
     df <- df[, available_cols, drop = FALSE]
   } else {

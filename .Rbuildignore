@@ -2,3 +2,5 @@
 ^LICENSE\.md$
 ^doc$
 ^Meta$
+^\.vscode$
+^[.]?air[.]toml$

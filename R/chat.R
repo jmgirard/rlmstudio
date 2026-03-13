@@ -31,15 +31,18 @@ lms_client <- function(host = "http://localhost:1234") {
 #'
 #' @return A character string (if \code{simplify = TRUE}) or a list containing the full API response.
 #' @export
-lms_chat_advanced <- function(model,
-                               input,
-                               system_prompt = NULL,
-                               host = "http://localhost:1234",
-                               simplify = TRUE,
-                               ...) {
-
+lms_chat_advanced <- function(
+  model,
+  input,
+  system_prompt = NULL,
+  host = "http://localhost:1234",
+  simplify = TRUE,
+  ...
+) {
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn lms_server_start} first.")
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    )
   }
 
   endpoint <- paste0(host, "/api/v1/chat/completions")
@@ -47,7 +50,10 @@ lms_chat_advanced <- function(model,
   # 1. Build the message structure
   messages <- list()
   if (!is.null(system_prompt)) {
-    messages[[length(messages) + 1]] <- list(role = "system", content = system_prompt)
+    messages[[length(messages) + 1]] <- list(
+      role = "system",
+      content = system_prompt
+    )
   }
   messages[[length(messages) + 1]] <- list(role = "user", content = input)
 
@@ -76,16 +82,25 @@ lms_chat_advanced <- function(model,
   }
 
   # Robust error message extraction
-  err_msg <- tryCatch({
-    err_json <- httr2::resp_body_json(resp)
-    if (!is.null(err_json$error$message)) err_json$error$message
-    else if (!is.null(err_json$error)) err_json$error
-    else httr2::resp_body_string(resp)
-  }, error = function(e) {
-    httr2::resp_body_string(resp)
-  })
+  err_msg <- tryCatch(
+    {
+      err_json <- httr2::resp_body_json(resp)
+      if (!is.null(err_json$error$message)) {
+        err_json$error$message
+      } else if (!is.null(err_json$error)) {
+        err_json$error
+      } else {
+        httr2::resp_body_string(resp)
+      }
+    },
+    error = function(e) {
+      httr2::resp_body_string(resp)
+    }
+  )
 
-  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  if (err_msg == "") {
+    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+  }
 
   cli::cli_abort(c("x" = "Chat Completion Failed: {err_msg}"))
 }
