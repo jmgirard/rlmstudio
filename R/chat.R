@@ -45,7 +45,8 @@ lms_chat_advanced <- function(
     )
   }
 
-  endpoint <- paste0(host, "/api/v1/chat/completions")
+  # Endpoint must use /v1/ for OpenAI-compatible inference
+  endpoint <- paste0(host, "/v1/chat/completions")
 
   # 1. Build the message structure
   messages <- list()
@@ -145,11 +146,14 @@ lms_chat_batch <- function(
   }
 
   n_inputs <- length(inputs)
-  cli::cli_progress_bar(
+
+  # Capture ID to ensure update() can find it across environments
+  pb <- cli::cli_progress_bar(
     name = "Batch processing",
     total = n_inputs,
     format = "{cli::pb_name} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}"
   )
+  on.exit(cli::cli_progress_done(id = pb), add = TRUE)
 
   results <- lapply(inputs, function(input) {
     res <- lms_chat_advanced(
@@ -160,7 +164,8 @@ lms_chat_batch <- function(
       simplify = simplify,
       ...
     )
-    cli::cli_progress_update()
+    # Explicitly use ID for robustness
+    cli::cli_progress_update(id = pb)
     res
   })
 

@@ -89,8 +89,8 @@ Once a model is downloaded and available, load it into memory.
 
 ``` r
 # Load the model
-lms_load("google/gemma-3-1b")
-## ✔ Model "google/gemma-3-1b" loaded and verified. [31.6s]
+lms_load("google/gemma-3-1b", flash_attention = TRUE)
+## ✔ Model "google/gemma-3-1b" loaded and verified. [10.1s]
 ```
 
 ### 3. Chat
@@ -138,13 +138,12 @@ prompts <- c(
 results <- lms_chat_batch(
   model = "google/gemma-3-1b",
   inputs = prompts,
-  format = "data.frame"
+  system_prompt = "Answer in two sentences or less."
 )
 
 print(results)
-##                                    input                                   output
-## 1 Summarize the benefits of local LLMs. Local LLMs offer privacy, low latency...
-## 2    Explain why privacy matters in AI. Privacy ensures that sensitive data...
+## [1] "Local LLMs offer significant benefits like improved privacy, reduced reliance on cloud services, and increased control over data. They also often demonstrate superior performance within specific domains due to training on localized datasets."
+## [2] "Privacy matters in AI because sophisticated algorithms require vast amounts of data, and this data often includes personal information. Without adequate safeguards and regulations, AI systems can violate individuals’ privacy rights and lead to potential misuse of sensitive data."
 ```
 
 ### 5. Clean Up
