@@ -1,8 +1,8 @@
 ---
-title: "Getting Started with rlmstudio"
+title: "Getting Started with LM Studio: GUI Workflow"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting Started with rlmstudio}
+  %\VignetteIndexEntry{Getting Started with LM Studio: GUI Workflow}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,94 +14,75 @@ knitr::opts_chunk$set(
 )
 ```
 
-The `rlmstudio` package bridges the gap between R and local Large Language Models (LLMs) by wrapping the LM Studio CLI and its v1 REST API. This vignette will guide you through the two primary ways to run LM Studio and show you how to manage and chat with your models.
+The `rlmstudio` package bridges the gap between R and local Large Language Models by wrapping the LM Studio CLI and its REST API. This vignette covers the **GUI Workflow**, which is best for visual users on desktop environments like macOS, Windows, and Linux desktops.
 
-## Choosing Your Workflow: GUI vs. Headless
+While the R package provides functions to manage the entire lifecycle of a local LLM, the LM Studio desktop application provides an excellent visual search function for finding new models and exploring advanced configurations beyond what the API can currently do. You can seamlessly mix and match: use the GUI to discover and tweak models, and use R to automate your chatting and data processing.
 
-LM Studio can run its local server in two different ways. The R package works identically with both, but how you start the server depends on your preference and operating system.
+## Setup and Installation
 
-### 1. The GUI Workflow (Desktop Application)
-* **Best for:** Visual users, desktop environments (macOS, Windows, and Linux desktops), and those who like to manually manage their models.
-* **How it works:** You open the LM Studio desktop application, navigate to the Developer/Local Server tab, and click "Start". You do not need to use the startup functions in R.
-* **The R Code:** You simply open R and immediately start running commands like `lms_load()` and `lms_chat()`. The R package communicates directly with the server you started in the visual app.
+This package relies on the LM Studio CLI. If you do not have LM Studio installed or need to update your version, the package provides a convenient setup function.
 
-### 2. The Headless Workflow (CLI Daemon)
-* **Best for:** Automated R scripts, remote servers, Docker containers, and users who want R to manage the entire process from start to finish.
-* **How it works:** The GUI remains completely closed. Instead, you use R to boot up the LM Studio background engine (the daemon) and the local server.
-* **The R Code:** You must run `lms_daemon_start()` followed by `lms_server_start()` before you can load models or chat. When your script finishes, you clean up with `lms_server_stop()` and `lms_daemon_stop()`.
-* **Important Note:** If you try to run `lms_daemon_start()` while the desktop GUI is open, you will encounter conflicts. Pick one lane and stick to it for your session.
-
-## Step-by-Step Guide
-
-### 1. Start the Environment
-
-First, load the package and spin up the (daemon and) server.
+For desktop users, you can use the `"browser"` method to open the official download page.
 
 ```{r setup, eval=FALSE}
 library(rlmstudio)
 
-# If headless, start the background daemon (if not, start the GUI)
-lms_daemon_start()
-## ✔ LM Studio daemon started in the background.
+# Open the download page in your default browser
+install_lmstudio(method = "browser")
+## ℹ Opening the LM Studio download page in your default browser...
+## ! Please install or update the software, restart R, and try again.
+```
 
-# Start the local server
+## Step-by-Step Guide
+
+### 1. Start the Server
+
+You have two options for starting the local server. You can open the LM Studio desktop application, navigate to the Developer or Local Server tab, and click "Start". Alternatively, you can start it directly from R.
+
+```{r start-server, eval=FALSE}
+# Start the local server on the default port
 lms_server_start()
 ## ✔ LM Studio server started successfully on the default port.
 ```
 
 ### 2. Finding and Managing Models
 
-You can check which models you have downloaded (e.g., through the GUI) and whether they are currently loaded into memory using `list_models()`.
+The LM Studio GUI shines when it comes to discovering models. You can use its built-in search bar to browse Hugging Face, filter by compatibility, and select specific quantizations.
+
+However, if you already know the exact identifier of the model you want, you can download it and manage your inventory directly from R.
 
 ```{r list-models, eval=FALSE}
-# View all models
-models <- list_models()
-
-# You can use standard R tools to filter this list
-# For example, finding all unloaded llm models:
-unloaded_llms <- models |>
-  subset(type == "llm" & state == "unloaded")
-unloaded_llms
-##      state type display_name                 key architecture size_gb
-## 1 unloaded  llm   Gemma 3 1B   google/gemma-3-1b  gemma3_text    0.72
-## 2 unloaded  llm   Gemma 3 4B   google/gemma-3-4b       gemma3    2.83
-## 3 unloaded  llm Gemma 3n E4B google/gemma-3n-e4b      gemma3n    5.46
-## 4 unloaded  llm  Gemma 3 12B  google/gemma-3-12b       gemma3    7.51
-```
-
-If you need a new model, you can download it through the package (or the GUI). Package downloads happen asynchronously in the background.
-
-```{r download, eval=FALSE}
+# Download a model using its identifier
 job_id <- lms_download("qwen/qwen3-4b-2507")
-
-# Check the progress
 lms_download_status(job_id)
 ## ── Download Job: "job_493c7c9ded"
 ## Status: completed
 ## Progress: 100% (2.12 GB / 2.12 GB)
+
+# View all downloaded models
+models <- list_models()
+
+# Filter for unloaded text models
+unloaded_llms <- models |>
+  subset(type == "llm" & state == "unloaded")
+unloaded_llms
+##       state  type   display_name                 key  architecture  size_gb
+## 1  unloaded   llm  Qwen3 4B 2507  qwen/qwen3-4b-2507         qwen3     2.12
 ```
 
 ### 3. Loading Models
 
-Before you can chat with a model, you must load it into system memory (RAM or VRAM). You can pass specific hardware parameters during this step if needed.
+Before you can chat with a model, you must load it into system memory.
 
 ```{r load, eval=FALSE}
 # Standard load
 lms_load("qwen/qwen3-4b-2507")
-## ✔ Model "qwen/qwen3-4b-2507" loaded and verified. [27.6s]
-
-# Advanced load with specific parameters
-lms_load(
-  model = "qwen/qwen3-4b-2507",
-  context_length = 4096,
-  flash_attention = TRUE
-)
 ## ✔ Model "qwen/qwen3-4b-2507" loaded and verified. [7.5s]
 ```
 
 ### 4. Chatting
 
-The `lms_chat()` function is designed for simple, single-turn prompts.
+The `lms_chat()` function is designed for simple interactions.
 
 ```{r simple-chat, eval=FALSE}
 response <- lms_chat(
@@ -111,66 +92,71 @@ response <- lms_chat(
 )
 
 cat(response)
-## Hello there, friend! 🌟
-## With a smile, I greet you—what a delight!
-## Waves of joy and warmth, I’m here to stay,
-## Spreading light through the quiet day.
+## Hello there! 🌟
+## With a wave and a grin, I'm here to shine!
+## Like a spark in the night, bright and bold,
+## I'm your friend, ready to unfold!
 ##
-## So say hello back, and let the fun begin—
-## I’m ready to chat, or just be your friend.
-## No need for books, or charts, or codes,
-## Just a spark, a thought, or a simple "how are you?" — I’m at your door!
+## So take a breath, let the joy take flight—
+## I’m all smiles, and a tale to write!
+## From the stars to the ground, I’ll spin a rhyme,
+## Just say the word, and I’ll be on time!
 ##
-## So here’s to dreams, and giggles, and rhyme,
-## Hello, world—this is how we climb! 🌈✨
+## So say hello again, or just "hi,"
+## I’m here to keep things light and *sigh*! 😊
+## What’s on your mind? I’ll meet you there—
+## With a rhyme, a laugh, and a spark to spare! ✨
 ```
 
-For more complex use cases (like streaming, adjusting temperatures, or utilizing Model Context Protocol integrations), use `lms_chat_advanced()`. Setting `simplify = FALSE` will return the raw, unparsed API list response.
+For more complex use cases like adjusting temperatures or utilizing structured tool calling, use `lms_chat_advanced()`.
 
 ```{r advanced-chat, eval=FALSE}
 advanced_response <- lms_chat_advanced(
   model = "qwen/qwen3-4b-2507",
   input = "Explain variance.",
   temperature = 0.2,
-  max_output_tokens = 150,
   simplify = FALSE
 )
 
-# Access the generated text from the structured list
-advanced_response$choices[[1]]$message$content
-## [1] "**Variance** is a statistical measure that quantifies how spread out a set of data points is from their mean (average value). It tells us the average of the squared differences between each data point and the mean.\n\n### Formula for Variance:\nFor a population:\n\\[\n\\sigma^2 = \\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2\n\\]\nFor a sample:\n\\[\ns^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2\n\\]\n\nWhere:\n- \\( \\sigma^2 \\) = population variance  \n- \\( s^"
+# Access the structured list
+advanced_response
+## $model_instance_id
+## [1] "qwen/qwen3-4b-2507"
+##
+## $output
+## $output[[1]]
+## $output[[1]]$type
+## [1] "message"
+##
+## $output[[1]]$content
+## [1] "**Variance** is a statistical measure that quantifies the spread or dispersion of a set of data points around their mean (average value). It tells us how much the individual data points deviate from the average.\n\n### Key Points About Variance:\n\n1. **Definition**:\n   - Variance is the average of the squared differences between each data point and the mean.\n   - Mathematically, for a dataset \\( x_1, x_2, \\ldots, x_n \\), the **population variance** is:\n     \\[\n     \\sigma^2 = \\frac{1}{n} \\sum_{i=1}^{n} (x_i - \\mu)^2\n     \\]\n     where:\n     - \\( \\mu \\) is the population mean,\n     - \\( n \\) is the total number of data points.\n\n   - For a **sample** (used in real-world data), we use \\( n-1 \\) instead of \\( n \\) to correct for bias (this is called **sample variance**):\n     \\[\n     s^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2\n     \\]\n     where \\( \\bar{x} \\) is the sample mean.\n\n2. **Interpretation**:\n   - A **low variance** means the data points are close to the mean and to each other (i.e., the data is tightly clustered).\n   - A **high variance** means the data points are spread out over a wide range (i.e., the data is more dispersed).\n\n3. **Why Square the Differences?**\n   - Squaring the differences ensures that all deviations are positive, preventing positive and negative deviations from canceling each other out.\n   - It also gives more weight to larger deviations.\n\n4. **Units**:\n   - Variance is expressed in **square units** of the original data (e.g., if data is in meters, variance is in square meters). This can make interpretation difficult.\n\n5. **Relation to Standard Deviation**:\n   - The **standard deviation** is the square root of the variance and is expressed in the same units as the original data, making it easier to interpret.\n\n---\n\n### Example:\nConsider the dataset: 4, 6, 8, 10, 12\n\n- Mean = \\( \\frac{4+6+8+10+12}{5} = 8 \\)\n- Deviations from mean: \\( -4, -2, 0, 2, 4 \\)\n- Squared deviations: \\( 16, 4, 0, 4, 16 \\)\n- Sum of squared deviations = \\( 16+4+0+4+16 = 40 \\)\n- Variance (population) = \\( \\frac{40}{5} = 8 \\)\n- Sample variance = \\( \\frac{40}{4} = 10 \\)\n\nSo, the variance is **8** (population) or **10** (sample).\n\n---\n\n### In Summary:\n> **Variance measures how spread out the data is from the mean.**  \n> A low variance indicates consistency; a high variance indicates variability.\n\nIt's a fundamental concept in statistics used in fields like finance (risk assessment), quality control, and machine learning (feature scaling)."
+##
+##
+##
+## $stats
+## $stats$input_tokens
+## [1] 12
+##
+## $stats$total_output_tokens
+## [1] 711
+##
+## $stats$reasoning_output_tokens
+## [1] 0
+##
+## $stats$tokens_per_second
+## [1] 33.29417
+##
+## $stats$time_to_first_token_seconds
+## [1] 0.382
+##
+##
+## $response_id
+## [1] "resp_5f480db79f250b19cd1fd5063112b44a2583f6ae97ef3320"
 ```
 
-### 5. Batch Processing
+### 5. Teardown
 
-For high-volume tasks like zero-shot classification or data extraction across many documents, use `lms_chat_batch()`. This function includes a built-in progress bar and supports several output formats via the `format` argument:
-
-* **`"vector"`**: Returns a simple character vector of responses (requires `simplify = TRUE`).
-* **`"data.frame"`**: Returns a data frame mapping each input to its corresponding output.
-* **`"list"`**: Returns a list of responses, which is useful when `simplify = FALSE` to preserve full API metadata.
-
-```{r batch, eval=FALSE}
-queries <- c("What is 2+2?", "What is the capital of France?")
-
-# Get results as a character vector
-answers <- lms_chat_batch(
-  model = "qwen/qwen3-4b-2507",
-  inputs = queries,
-  format = "vector"
-)
-
-# Get results as a structured data frame for further analysis
-results_df <- lms_chat_batch(
-  model = "qwen/qwen3-4b-2507",
-  inputs = queries,
-  format = "data.frame",
-  temperature = 0
-)
-```
-
-### 6. Teardown
-
-To free up memory, unload your models when you are done. If you are running the headless setup, shut down the server and daemon.
+To free up memory and system resources when you are finished, it is best practice to unload your models and stop the local server. Closing the LM Studio GUI will also perform this cleanup if you forget.
 
 ```{r teardown, eval=FALSE}
 # Unload the model
@@ -180,7 +166,4 @@ lms_unload("qwen/qwen3-4b-2507")
 # Stop the server
 lms_server_stop()
 ## ✔ LM Studio server stopped successfully.
-
-# If headless, stop the daemon (if not, just close the GUI)
-lms_daemon_stop()
 ```

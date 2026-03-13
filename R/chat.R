@@ -12,7 +12,7 @@ lms_client <- function(host = "http://localhost:1234") {
     )
 }
 
-#' Advanced Chat Completions via REST API
+#' Chat Completions via REST API
 #'
 #' Provides full control over the Chat Completions API, including system
 #' prompts, multiple messages, and inference parameters.
@@ -30,7 +30,7 @@ lms_client <- function(host = "http://localhost:1234") {
 #'
 #' @return A character string (if \code{simplify = TRUE}) or a list containing the full API response.
 #' @export
-lms_chat_advanced <- function(
+lms_chat <- function(
   model,
   input,
   system_prompt = NULL,
@@ -126,23 +126,13 @@ lms_chat_advanced <- function(
   cli::cli_abort(c("x" = "Chat Completion Failed: {err_msg}"))
 }
 
-#' Basic Chat Completion via REST API
-#'
-#' A simplified wrapper for quick interactions with a loaded model.
-#'
-#' @inheritParams lms_chat_advanced
-#' @export
-lms_chat <- function(model, input, ...) {
-  lms_chat_advanced(model = model, input = input, ...)
-}
-
 #' Batch Chat Completions via REST API
 #'
 #' Applies chat completions to a vector of input strings. This is useful for
 #' processing multiple documents or prompts in a single call, such as during
 #' zero-shot classification or text extraction.
 #'
-#' @inheritParams lms_chat_advanced
+#' @inheritParams lms_chat
 #' @param inputs Character vector. The user messages or prompts to process.
 #' @param format Character. The desired output format: \code{"vector"} (default),
 #'   \code{"list"}, or \code{"data.frame"}.
@@ -183,7 +173,7 @@ lms_chat_batch <- function(
   on.exit(cli::cli_progress_done(id = pb), add = TRUE)
 
   results <- lapply(inputs, function(input) {
-    res <- lms_chat_advanced(
+    res <- lms_chat(
       model = model,
       input = input,
       system_prompt = system_prompt,

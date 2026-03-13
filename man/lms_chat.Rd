@@ -2,17 +2,40 @@
 % Please edit documentation in R/chat.R
 \name{lms_chat}
 \alias{lms_chat}
-\title{Basic Chat Completion via REST API}
+\title{Chat Completions via REST API}
 \usage{
-lms_chat(model, input, ...)
+lms_chat(
+  model,
+  input,
+  system_prompt = NULL,
+  host = "http://localhost:1234",
+  api_type = c("native", "openai"),
+  simplify = TRUE,
+  ...
+)
 }
 \arguments{
 \item{model}{Character. Unique identifier of the loaded model to use.}
 
 \item{input}{Character. The user message or prompt.}
 
+\item{system_prompt}{Character. Optional system instructions to guide model behavior.}
+
+\item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
+
+\item{api_type}{Character. Which REST API to use. \code{"native"} (default) uses LM Studio's
+proprietary \code{/api/v1/chat} endpoint for advanced features like stateful
+conversations and MCPs. \code{"openai"} uses the standard \code{/v1/chat/completions} endpoint.}
+
+\item{simplify}{Logical. If \code{TRUE} (default), returns only the character string of the response.
+If \code{FALSE}, returns the full raw API response list.}
+
 \item{...}{Additional inference parameters passed to the API request body.}
 }
+\value{
+A character string (if \code{simplify = TRUE}) or a list containing the full API response.
+}
 \description{
-A simplified wrapper for quick interactions with a loaded model.
+Provides full control over the Chat Completions API, including system
+prompts, multiple messages, and inference parameters.
 }
