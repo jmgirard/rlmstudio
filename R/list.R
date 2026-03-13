@@ -22,8 +22,8 @@ list_models <- function(
     return(invisible(data.frame()))
   }
 
-  resp <- httr2::request(host) |>
-    httr2::req_url_path("/api/v1/models") |>
+  resp <- lms_client(host) |>
+    httr2::req_url_path("api/v1/models") |>
     httr2::req_perform()
 
   raw_content <- httr2::resp_body_string(resp)

@@ -105,9 +105,9 @@ lms_download_status <- function(job_id, host = "http://localhost:1234") {
     cli::cli_abort("You must provide a valid job_id.")
   }
 
-  endpoint <- paste0(host, "/api/v1/models/download/status/", job_id)
-
-  resp <- httr2::request(endpoint) |>
+  resp <- lms_client(host) |>
+    httr2::req_url_path("api/v1/models/download") |>
+    httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 

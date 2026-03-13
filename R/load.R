@@ -30,8 +30,6 @@ lms_load <- function(
     return(invisible(FALSE))
   }
 
-  endpoint <- paste0(host, "/api/v1/models/load")
-
   # 1. Build the explicit body based on current known parameters
   body <- list(
     model = model,
@@ -67,7 +65,8 @@ lms_load <- function(
     msg_done = "Model {.val {model}} loaded and verified."
   )
 
-  resp <- httr2::request(endpoint) |>
+  resp <- lms_client(host) |>
+    httr2::req_url_path("api/v1/models/load") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()

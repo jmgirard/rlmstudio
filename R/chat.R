@@ -46,8 +46,6 @@ lms_chat_advanced <- function(
     return(invisible(NULL))
   }
 
-  endpoint <- paste0(host, "/v1/chat/completions")
-
   # 1. Build the message structure
   messages <- list()
   if (!is.null(system_prompt)) {
@@ -67,7 +65,8 @@ lms_chat_advanced <- function(
   # 3. Merge dots into the body (e.g., temperature, max_tokens, etc.)
   body <- utils::modifyList(body, list(...))
 
-  resp <- httr2::request(endpoint) |>
+  resp <- lms_client(host) |>
+    httr2::req_url_path("v1/chat/completions") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
