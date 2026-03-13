@@ -103,16 +103,22 @@ Use the `lms_chat()` function for quick and easy interactions.
 ``` r
 response <- lms_chat(
   model = "google/gemma-3-1b",
-  input = "Explain the difference between a data frame and a matrix in R in two sentences."
+  input = "What are the capitals of each country in North America.?"
 )
 
 cat(response)
-## Okay, here's the difference explained in two sentences:
+## Okay, here’s a list of the capitals of each country in North America:
 ##
-## *   **Data frame:** A data frame is a flexible, multi-dimensional table (like a spreadsheet) in R that holds multiple variables as columns. It's the most common and versatile way to represent data.
-## *   **Matrix:** A matrix is a rectangular array of numbers, often used in linear algebra and numerical computation.  It's essentially a collection of rows and columns, stored as elements in a specific format.
+## *   **Canada:** Ottawa
+## *   **Mexico:** Mexico City
+## *   **United States of America:** Washington, D.C.
+## *   **Cuba:** Havana
+## *   **Dominican Republic:** Santo Domingo
+## *   **Jamaica:** Kingston
+## *   **Bahamas:** Nassau
+## *   **Trinidad and Tobago:** Port of Grace
 ##
-## Let me know if you'd like a more detailed explanation or want to explore examples!
+## Would you like me to provide more details about any of these countries or their capitals?
 ```
 
 If you need access to advanced features like Model Context Protocol
