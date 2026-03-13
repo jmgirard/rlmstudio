@@ -7,7 +7,7 @@
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
 #' @param ... Additional arguments passed to the request.
 #'
-#' @return A character string containing the download \code{job_id}, or \code{NULL} if already downloaded.
+#' @return A character string containing the download \code{job_id}, or \code{"already_downloaded"} if already downloaded.
 #' @export
 lms_download <- function(
   model,
@@ -26,21 +26,28 @@ lms_download <- function(
     cli::cli_abort("You must provide a valid model identifier or URL.")
   }
 
-  endpoint <- paste0(host, "/api/v1/models/download")
-
   body <- list(
     model = model,
     quantization = quantization
   )
 
+  # Remove NULLs and merge any additional arguments from dots
   body <- Filter(Negate(is.null), body)
+  body <- utils::modifyList(body, list(...))
 
-  cli::cli_progress_step("Initiating download for model: {.val {model}}...")
+  # Capture the step ID so we can manually close it later
+  step_id <- cli::cli_progress_step(
+    "Initiating download for model: {.val {model}}..."
+  )
 
-  resp <- httr2::request(endpoint) |>
+  resp <- lms_client(host) |>
+    httr2::req_url_path("api/v1/models/download") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
+
+  # Explicitly complete the progress step before printing subsequent alerts
+  cli::cli_progress_done(step_id)
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- httr2::resp_body_json(resp)
@@ -49,7 +56,7 @@ lms_download <- function(
       !is.null(resp_data$status) && resp_data$status == "already_downloaded"
     ) {
       cli::cli_alert_success("Model {.val {model}} is already downloaded.")
-      return(invisible(NULL))
+      return(invisible("already_downloaded"))
     }
 
     if (!is.null(resp_data$job_id)) {
@@ -74,9 +81,7 @@ lms_download <- function(
         httr2::resp_body_string(resp)
       }
     },
-    error = function(e) {
-      httr2::resp_body_string(resp)
-    }
+    error = function(e) httr2::resp_body_string(resp)
   )
 
   if (err_msg == "") {
@@ -101,19 +106,26 @@ lms_download_status <- function(job_id, host = "http://localhost:1234") {
     return(invisible(NULL))
   }
 
+  if (identical(job_id, "already_downloaded")) {
+    out <- list(
+      job_id = "N/A",
+      status = "already_downloaded"
+    )
+    class(out) <- c("lms_download_status", "list")
+    return(out)
+  }
+
   if (is.null(job_id) || job_id == "") {
     cli::cli_abort("You must provide a valid job_id.")
   }
 
   resp <- lms_client(host) |>
-    httr2::req_url_path("api/v1/models/download") |>
-    httr2::req_body_json(body) |>
+    httr2::req_url_path(paste0("api/v1/models/download/status/", job_id)) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
     out <- httr2::resp_body_json(resp)
-    # Assign S3 class for pretty printing
     class(out) <- c("lms_download_status", "list")
     return(out)
   }

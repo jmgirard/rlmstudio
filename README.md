@@ -107,15 +107,10 @@ cat(response)
 ## Okay, here’s a list of the capitals of each country in North America:
 ##
 ## *   **Canada:** Ottawa
-## *   **Mexico:** Mexico City
+## *   **Mexico:** Mexico City (Federal Capital)
 ## *   **United States of America:** Washington, D.C.
-## *   **Cuba:** Havana
-## *   **Dominican Republic:** Santo Domingo
-## *   **Jamaica:** Kingston
-## *   **Bahamas:** Nassau
-## *   **Trinidad and Tobago:** Port of Grace
 ##
-## Would you like me to provide more details about any of these countries or their capitals?
+## Let me know if you’d like to learn more about any of these countries!
 ```
 
 If you need access to advanced features like Model Context Protocol

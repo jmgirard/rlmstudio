@@ -11,11 +11,7 @@ lms_chat(model, input, ...)
 
 \item{input}{Character. The user message or prompt.}
 
-\item{...}{Additional inference parameters passed to the API request body.
-Common parameters include \code{temperature}, \code{max_tokens}, \code{top_p},
-\code{presence_penalty}, and \code{frequency_penalty}.
-For a full list of supported parameters, see the LM Studio documentation:
-\url{https://lmstudio.ai/docs/api/endpoints/chat-completions}}
+\item{...}{Additional inference parameters passed to the API request body.}
 }
 \description{
 A simplified wrapper for quick interactions with a loaded model.

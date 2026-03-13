@@ -54,18 +54,11 @@ lms_chat_advanced <- function(
 
     body <- list(
       model = model,
-      messages = list(
-        list(role = "user", content = input)
-      )
+      input = input,
+      system_prompt = system_prompt
     )
 
-    # The native API can take system prompts as part of the messages array
-    if (!is.null(system_prompt)) {
-      body$messages <- c(
-        list(list(role = "system", content = system_prompt)),
-        body$messages
-      )
-    }
+    body <- Filter(Negate(is.null), body)
   } else {
     endpoint_path <- "v1/chat/completions"
 
@@ -101,7 +94,7 @@ lms_chat_advanced <- function(
     if (isTRUE(simplify)) {
       if (api_type == "native") {
         # Extract text from native LM Studio response
-        return(resp_data$messages[[length(resp_data$messages)]]$content)
+        return(resp_data$output[[1]]$content)
       } else {
         # Extract text from standard OpenAI response
         return(resp_data$choices[[1]]$message$content)

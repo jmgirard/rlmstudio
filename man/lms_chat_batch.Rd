@@ -29,11 +29,7 @@ lms_chat_batch(
 \item{simplify}{Logical. If \code{TRUE} (default), returns only the character string of the response.
 If \code{FALSE}, returns the full raw API response list.}
 
-\item{...}{Additional inference parameters passed to the API request body.
-Common parameters include \code{temperature}, \code{max_tokens}, \code{top_p},
-\code{presence_penalty}, and \code{frequency_penalty}.
-For a full list of supported parameters, see the LM Studio documentation:
-\url{https://lmstudio.ai/docs/api/endpoints/chat-completions}}
+\item{...}{Additional inference parameters passed to the API request body.}
 }
 \value{
 A character vector, list, or data frame depending on the \code{format}

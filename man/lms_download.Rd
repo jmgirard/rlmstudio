@@ -18,7 +18,7 @@ lms_download(model, quantization = NULL, host = "http://localhost:1234", ...)
 \item{...}{Additional arguments passed to the request.}
 }
 \value{
-A character string containing the download \code{job_id}, or \code{NULL} if already downloaded.
+A character string containing the download \code{job_id}, or \code{"already_downloaded"} if already downloaded.
 }
 \description{
 Download a model via REST API

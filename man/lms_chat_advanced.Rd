@@ -9,6 +9,7 @@ lms_chat_advanced(
   input,
   system_prompt = NULL,
   host = "http://localhost:1234",
+  api_type = c("native", "openai"),
   simplify = TRUE,
   ...
 )
@@ -22,14 +23,14 @@ lms_chat_advanced(
 
 \item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
 
+\item{api_type}{Character. Which REST API to use. \code{"native"} (default) uses LM Studio's
+proprietary \code{/api/v1/chat} endpoint for advanced features like stateful
+conversations and MCPs. \code{"openai"} uses the standard \code{/v1/chat/completions} endpoint.}
+
 \item{simplify}{Logical. If \code{TRUE} (default), returns only the character string of the response.
 If \code{FALSE}, returns the full raw API response list.}
 
-\item{...}{Additional inference parameters passed to the API request body.
-Common parameters include \code{temperature}, \code{max_tokens}, \code{top_p},
-\code{presence_penalty}, and \code{frequency_penalty}.
-For a full list of supported parameters, see the LM Studio documentation:
-\url{https://lmstudio.ai/docs/api/endpoints/chat-completions}}
+\item{...}{Additional inference parameters passed to the API request body.}
 }
 \value{
 A character string (if \code{simplify = TRUE}) or a list containing the full API response.
