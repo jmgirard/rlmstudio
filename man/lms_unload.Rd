@@ -11,7 +11,7 @@ lms_unload(model, host = "http://localhost:1234", ...)
 
 \item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
 
-\item{...}{Additional arguments passed to the request.}
+\item{...}{Additional arguments passed to the API request body.}
 }
 \value{
 Invisibly returns \code{TRUE} on success.

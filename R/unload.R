@@ -2,23 +2,24 @@
 #'
 #' @param model Character. Unique identifier (\code{instance_id}) of the model instance to unload.
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
-#' @param ... Additional arguments passed to the request.
+#' @param ... Additional arguments passed to the API request body.
 #'
 #' @return Invisibly returns \code{TRUE} on success.
 #' @export
 lms_unload <- function(model, host = "http://localhost:1234", ...) {
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn start_server} first.")
-  }
-
-  if (is.null(model) || model == "") {
-    cli::cli_abort("You must provide a valid model identifier.")
+    cli::cli_abort("The LM Studio server is not running. Run {.fn lms_server_start} first.")
   }
 
   endpoint <- paste0(host, "/api/v1/models/unload")
-  body <- list(instance_id = model)
 
-  cli::cli_progress_step("Unloading model: {.val {model}}...")
+  # Build body and merge extra args from dots
+  body <- utils::modifyList(list(instance_id = model), list(...))
+
+  cli::cli_progress_step(
+    msg = "Unloading model: {.val {model}}...",
+    msg_done = "Model {.val {model}} unloaded successfully."
+  )
 
   resp <- httr2::request(endpoint) |>
     httr2::req_body_json(body) |>
@@ -26,19 +27,16 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
-
-    # Verify the API confirms the target instance_id was unloaded
-    if (!is.null(resp_data$instance_id) && resp_data$instance_id == model) {
-      cli::cli_alert_success("Model {.val {model}} unloaded successfully.")
-      return(invisible(TRUE))
-    }
-
-    # Fallback in case of subtle API response changes
-    cli::cli_alert_success("Model {.val {model}} unloaded.")
     return(invisible(TRUE))
   }
 
-  err_msg <- tryCatch(httr2::resp_body_json(resp)$error$message, error = function(e) "Unknown Error")
+  err_msg <- tryCatch({
+    err_json <- httr2::resp_body_json(resp)
+    if (!is.null(err_json$error$message)) err_json$error$message
+    else if (!is.null(err_json$error)) err_json$error
+    else httr2::resp_body_string(resp)
+  }, error = function(e) httr2::resp_body_string(resp))
+
+  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
   cli::cli_abort(c("x" = "API Unload Failed: {err_msg}"))
 }

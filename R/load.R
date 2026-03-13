@@ -4,11 +4,11 @@
 #' @param context_length Integer. Maximum number of tokens that the model will consider.
 #' @param eval_batch_size Integer. Number of input tokens to process together in a single batch during evaluation.
 #' @param flash_attention Logical. Whether to optimize attention computation.
-#' @param num_experts Integer. Number of experts to use during inference for MoE (Mixture of Experts) models.
+#' @param num_experts Integer. Number of experts to use during inference for MoE models.
 #' @param offload_kv_cache_to_gpu Logical. Whether KV cache is offloaded to GPU memory.
 #' @param echo_load_config Logical. If \code{TRUE}, echoes the final load configuration in the response.
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
-#' @param ... Additional arguments passed to the request.
+#' @param ... Additional arguments passed to the API request body (useful for future API parameters).
 #'
 #' @return Invisibly returns \code{TRUE} on success, or the load configuration list if \code{echo_load_config = TRUE}.
 #' @export
@@ -23,12 +23,12 @@ lms_load <- function(model,
                      ...) {
 
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn start_server} first.")
+    cli::cli_abort("The LM Studio server is not running. Run {.fn lms_server_start} first.")
   }
 
   endpoint <- paste0(host, "/api/v1/models/load")
 
-  # Build the request body with the explicit v1 options
+  # 1. Build the explicit body based on current known parameters
   body <- list(
     model = model,
     context_length = if (!is.null(context_length)) as.integer(context_length) else NULL,
@@ -39,10 +39,13 @@ lms_load <- function(model,
     echo_load_config = if (isTRUE(echo_load_config)) TRUE else NULL
   )
 
-  # Remove NULLs so the API uses its own defaults
-  body <- Filter(Negate(is.null), body)
+  # 2. Merge dots into the body (allows for future/undocumented API parameters)
+  body <- utils::modifyList(Filter(Negate(is.null), body), list(...))
 
-  cli::cli_progress_step("Loading model: {.val {model}} . . .")
+  cli::cli_progress_step(
+    msg = "Loading model: {.val {model}}...",
+    msg_done = "Model {.val {model}} loaded and verified."
+  )
 
   resp <- httr2::request(endpoint) |>
     httr2::req_body_json(body) |>
@@ -51,31 +54,19 @@ lms_load <- function(model,
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- httr2::resp_body_json(resp)
-
-    # Verify the API reports the status as loaded
     if (identical(resp_data$status, "loaded")) {
-
-      # Optional double-check with the models manifest (v1)
-      verify_resp <- httr2::request(paste0(host, "/api/v1/models")) |> httr2::req_perform()
-      models_data <- httr2::resp_body_json(verify_resp)$models
-
-      # Look for the model key and ensure it has active loaded instances
-      is_loaded <- any(vapply(models_data, function(x) {
-        identical(x$key, model) && length(x$loaded_instances) > 0
-      }, logical(1)))
-
-      if (is_loaded) {
-        cli::cli_alert_success("Model {.val {model}} loaded and verified.")
-
-        # Return load configuration if requested
-        if (isTRUE(echo_load_config) && !is.null(resp_data$load_config)) {
-          return(invisible(resp_data$load_config))
-        }
-        return(invisible(TRUE))
-      }
+      if (isTRUE(echo_load_config)) return(invisible(resp_data$load_config))
+      return(invisible(TRUE))
     }
   }
 
-  err_msg <- tryCatch(httr2::resp_body_json(resp)$error$message, error = function(e) "Unknown Error")
+  err_msg <- tryCatch({
+    err_json <- httr2::resp_body_json(resp)
+    if (!is.null(err_json$error$message)) err_json$error$message
+    else if (!is.null(err_json$error)) err_json$error
+    else httr2::resp_body_string(resp)
+  }, error = function(e) httr2::resp_body_string(resp))
+
+  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
   cli::cli_abort(c("x" = "API Load Failed: {err_msg}"))
 }

@@ -41,7 +41,11 @@ lms_server_start <- function(port = NULL, cors = FALSE) {
   res <- processx::run("lms", args, error_on_status = FALSE)
 
   if (res$status == 0) {
-    cli::cli_alert_success("LM Studio server started successfully.")
+    if (!is.null(port)) {
+      cli::cli_alert_success("LM Studio server started successfully on port {.val {port}}.")
+    } else {
+      cli::cli_alert_success("LM Studio server started successfully on the default port.")
+    }
   } else {
     cli::cli_abort("Failed to start the LM Studio server. Exit code: {.val {res$status}}.")
   }

@@ -33,43 +33,52 @@ LM Studio can run its local server in two different ways. The R package works id
 
 ## Step-by-Step Guide
 
-For this guide, we will assume you are using the headless workflow so the code is fully self-contained. If you are using the GUI, you can skip the startup and teardown steps.
-
 ### 1. Start the Environment
 
-First, load the package and spin up the daemon and server.
+First, load the package and spin up the (daemon and) server.
 
 ```{r setup, eval=FALSE}
 library(rlmstudio)
 
-# Start the background daemon
+# If headless, start the background daemon (if not, start the GUI)
 lms_daemon_start()
+## ✔ LM Studio daemon started in the background.
 
-# Start the local server on port 1234
+# Start the local server
 lms_server_start()
+## ✔ LM Studio server started successfully.
 ```
 
 ### 2. Finding and Managing Models
 
-You can check which models you have downloaded and whether they are currently loaded into memory using `list_models()`.
+You can check which models you have downloaded (e.g., through the GUI) and whether they are currently loaded into memory using `list_models()`.
 
 ```{r list-models, eval=FALSE}
 # View all models
 models <- list_models()
 
 # You can use standard R tools to filter this list
-# For example, finding all unloaded embedding models:
-unloaded_embeddings <- models |>
-  subset(type == "embedding" & state == "unloaded")
+# For example, finding all unloaded llm models:
+unloaded_llms <- models |>
+  subset(type == "llm" & state == "unloaded")
+unloaded_llms
+##      state type display_name                 key architecture size_gb
+## 1 unloaded  llm   Gemma 3 1B   google/gemma-3-1b  gemma3_text    0.72
+## 2 unloaded  llm   Gemma 3 4B   google/gemma-3-4b       gemma3    2.83
+## 3 unloaded  llm Gemma 3n E4B google/gemma-3n-e4b      gemma3n    5.46
+## 4 unloaded  llm  Gemma 3 12B  google/gemma-3-12b       gemma3    7.51
 ```
 
-If you need a new model, you can initiate a download using a Hugging Face repository ID. Downloads happen asynchronously in the background.
+If you need a new model, you can download it through the package (or the GUI). Package downloads happen asynchronously in the background.
 
 ```{r download, eval=FALSE}
-job_id <- lms_download("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+job_id <- lms_download("qwen/qwen3-4b-2507")
 
 # Check the progress
 lms_download_status(job_id)
+## ── Download Job: "job_493c7c9ded"
+## Status: completed
+## Progress: 100% (2.12 GB / 2.12 GB)
 ```
 
 ### 3. Loading Models
@@ -78,14 +87,16 @@ Before you can chat with a model, you must load it into system memory (RAM or VR
 
 ```{r load, eval=FALSE}
 # Standard load
-lms_load("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+lms_load("qwen/qwen3-4b-2507")
+## ✔ Model "qwen/qwen3-4b-2507" loaded and verified. [27.6s]
 
 # Advanced load with specific parameters
 lms_load(
-  model = "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+  model = "qwen/qwen3-4b-2507",
   context_length = 4096,
   flash_attention = TRUE
 )
+## ✔ Model "qwen/qwen3-4b-2507" loaded and verified. [7.5s]
 ```
 
 ### 4. Chatting
@@ -94,19 +105,31 @@ The `lms_chat()` function is designed for simple, single-turn prompts.
 
 ```{r simple-chat, eval=FALSE}
 response <- lms_chat(
-  model = "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
-  input = "Write a haiku about writing R code.",
-  system_prompt = "You are a helpful programming assistant."
+  model = "qwen/qwen3-4b-2507",
+  input = "Say hello!",
+  system_prompt = "Answer in rhymes."
 )
 
 cat(response)
+## Hello there, friend! 🌟
+## With a smile, I greet you—what a delight!
+## Waves of joy and warmth, I’m here to stay,
+## Spreading light through the quiet day.
+##
+## So say hello back, and let the fun begin—
+## I’m ready to chat, or just be your friend.
+## No need for books, or charts, or codes,
+## Just a spark, a thought, or a simple "how are you?" — I’m at your door!
+##
+## So here’s to dreams, and giggles, and rhyme,
+## Hello, world—this is how we climb! 🌈✨
 ```
 
 For more complex use cases (like streaming, adjusting temperatures, or utilizing Model Context Protocol integrations), use `lms_chat_advanced()`. Setting `simplify = FALSE` will return the raw, unparsed API list response.
 
 ```{r advanced-chat, eval=FALSE}
 advanced_response <- lms_chat_advanced(
-  model = "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+  model = "qwen/qwen3-4b-2507",
   input = "Explain variance.",
   temperature = 0.2,
   max_output_tokens = 150,
@@ -115,6 +138,7 @@ advanced_response <- lms_chat_advanced(
 
 # Access the generated text from the structured list
 advanced_response$output[[1]]$content
+## [1] "**Variance** is a statistical measure that quantifies how spread out a set of data points is from their mean (average value). It tells us the average of the squared differences between each data point and the mean.\n\n### Formula for Variance:\nFor a population:\n\\[\n\\sigma^2 = \\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2\n\\]\nFor a sample:\n\\[\ns^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2\n\\]\n\nWhere:\n- \\( \\sigma^2 \\) = population variance  \n- \\( s^"
 ```
 
 ### 5. Teardown
@@ -123,9 +147,13 @@ To free up memory, unload your models when you are done. If you are running the 
 
 ```{r teardown, eval=FALSE}
 # Unload the model
-lms_unload("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+lms_unload("qwen/qwen3-4b-2507")
+## ✔ Model "qwen/qwen3-4b-2507" unloaded successfully. [391ms]
 
-# Stop the server and daemon
+# Stop the server
 lms_server_stop()
+## ✔ LM Studio server stopped successfully.
+
+# If headless, stop the daemon (if not, just close the GUI)
 lms_daemon_stop()
 ```

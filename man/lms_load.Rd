@@ -25,7 +25,7 @@ lms_load(
 
 \item{flash_attention}{Logical. Whether to optimize attention computation.}
 
-\item{num_experts}{Integer. Number of experts to use during inference for MoE (Mixture of Experts) models.}
+\item{num_experts}{Integer. Number of experts to use during inference for MoE models.}
 
 \item{offload_kv_cache_to_gpu}{Logical. Whether KV cache is offloaded to GPU memory.}
 
@@ -33,7 +33,7 @@ lms_load(
 
 \item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
 
-\item{...}{Additional arguments passed to the request.}
+\item{...}{Additional arguments passed to the API request body (useful for future API parameters).}
 }
 \value{
 Invisibly returns \code{TRUE} on success, or the load configuration list if \code{echo_load_config = TRUE}.
