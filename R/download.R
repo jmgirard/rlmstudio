@@ -51,7 +51,17 @@ lms_download <- function(model, quantization = NULL, host = "http://localhost:12
     return(invisible(TRUE))
   }
 
-  err_msg <- tryCatch(httr2::resp_body_json(resp)$error$message, error = function(e) "Unknown Error")
+  err_msg <- tryCatch({
+    err_json <- httr2::resp_body_json(resp)
+    if (!is.null(err_json$error$message)) err_json$error$message
+    else if (!is.null(err_json$error)) err_json$error
+    else httr2::resp_body_string(resp)
+  }, error = function(e) {
+    httr2::resp_body_string(resp)
+  })
+
+  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+
   cli::cli_abort(c("x" = "API Download Failed: {err_msg}"))
 }
 
@@ -60,11 +70,11 @@ lms_download <- function(model, quantization = NULL, host = "http://localhost:12
 #' @param job_id Character. The unique identifier for the download job.
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
 #'
-#' @return A list containing the download status and related metadata.
+#' @return An object of class \code{lms_download_status} containing the download status.
 #' @export
 lms_download_status <- function(job_id, host = "http://localhost:1234") {
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn start_server} first.")
+    cli::cli_abort("The LM Studio server is not running. Run {.fn lms_server_start} first.")
   }
 
   if (is.null(job_id) || job_id == "") {
@@ -78,9 +88,60 @@ lms_download_status <- function(job_id, host = "http://localhost:1234") {
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    return(httr2::resp_body_json(resp))
+    out <- httr2::resp_body_json(resp)
+    # Assign S3 class for pretty printing
+    class(out) <- c("lms_download_status", "list")
+    return(out)
   }
 
-  err_msg <- tryCatch(httr2::resp_body_json(resp)$error$message, error = function(e) "Unknown Error")
+  err_msg <- tryCatch({
+    err_json <- httr2::resp_body_json(resp)
+    if (!is.null(err_json$error$message)) err_json$error$message
+    else if (!is.null(err_json$error)) err_json$error
+    else httr2::resp_body_string(resp)
+  }, error = function(e) httr2::resp_body_string(resp))
+
+  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+
   cli::cli_abort(c("x" = "API Status Request Failed: {err_msg}"))
+}
+
+#' Print method for LM Studio download status
+#'
+#' @param x An object of class \code{lms_download_status}.
+#' @param ... Additional arguments passed to print.
+#'
+#' @export
+print.lms_download_status <- function(x, ...) {
+  cli::cli_h3("Download Job: {.val {x$job_id}}")
+
+  # Color-code the status dynamically
+  status_col <- switch(x$status,
+    "downloading" = cli::col_blue,
+    "completed" = cli::col_green,
+    "already_downloaded" = cli::col_green,
+    "failed" = cli::col_red,
+    "error" = cli::col_red,
+    cli::col_grey
+  )
+
+  cli::cli_text("{.strong Status:} ", status_col(x$status))
+
+  # Calculate and format progress
+  if (!is.null(x$total_size_bytes) && !is.null(x$downloaded_bytes)) {
+    pct <- round((x$downloaded_bytes / x$total_size_bytes) * 100, 1)
+    dl_gb <- round(x$downloaded_bytes / (1024^3), 2)
+    tot_gb <- round(x$total_size_bytes / (1024^3), 2)
+
+    cli::cli_text("{.strong Progress:} {pct}% ({dl_gb} GB / {tot_gb} GB)")
+  }
+
+  # Format speed
+  if (!is.null(x$bytes_per_second) && x$bytes_per_second > 0) {
+    spd_mb <- round(x$bytes_per_second / (1024^2), 2)
+    cli::cli_text("{.strong Speed:} {spd_mb} MB/s")
+  }
+
+  # Invisible return so assignment still captures the underlying list
+  invisible(x)
 }

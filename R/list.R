@@ -64,5 +64,5 @@ list_models <- function(loaded = FALSE,
     df$loaded_instances <- NULL
   }
 
-  return(utils::capture.output(print(df)))
+  return(df)
 }

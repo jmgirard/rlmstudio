@@ -52,6 +52,7 @@ Studio backend server.
 ``` r
 # Start the server on the default port (1234)
 lms_server_start()
+## ✔ LM Studio server started successfully.
 ```
 
 *(Note for headless environments like remote servers or Docker
@@ -67,6 +68,11 @@ using `list_models()`.
 # Returns a clean data frame of available models
 my_models <- list_models()
 my_models
+##      state      type          display_name                                  key architecture size_gb
+## 1 unloaded       llm          Gemma 3n E4B                  google/gemma-3n-e4b      gemma3n    5.46
+## 2   loaded       llm            Gemma 3 1B                    google/gemma-3-1b  gemma3_text    0.72
+## 3 unloaded       llm           Gemma 3 12B                   google/gemma-3-12b       gemma3    7.51
+## 4 unloaded embedding Nomic Embed Text v1.5 text-embedding-nomic-embed-text-v1.5         <NA>    0.08
 ```
 
 If you do not have a model yet, you can download one using its Hugging
@@ -74,15 +80,20 @@ Face repository or LM Studio catalog identifier.
 
 ``` r
 # Download a lightweight model
-job_id <- lms_download("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+job_id <- lms_download("google/gemma-3-1b")
 lms_download_status(job_id)
+## ── Download Job: "job_02c8a1f86e"
+## Status: completed
+## Progress: 100% (0.72 GB / 0.72 GB)
 ```
 
 Once a model is downloaded and available, load it into memory.
 
 ``` r
 # Load the model
-lms_load("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+lms_load("google/gemma-3-1b")
+## ✔ Model "google/gemma-3-1b" loaded and verified.
+## ✔ Loading model: "google/gemma-3-1b" . . . [32.9s]
 ```
 
 ### 3. Chat
@@ -91,11 +102,17 @@ Use the `lms_chat()` function for quick and easy interactions.
 
 ``` r
 response <- lms_chat(
-  model = "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+  model = "google/gemma-3-1b",
   input = "Explain the difference between a data frame and a matrix in R in two sentences."
 )
 
 cat(response)
+## Okay, here's the difference explained in two sentences:
+##
+## *   **Data frame:** A data frame is a flexible, multi-dimensional table (like a spreadsheet) in R that holds multiple variables as columns. It's the most common and versatile way to represent data.
+## *   **Matrix:** A matrix is a rectangular array of numbers, often used in linear algebra and numerical computation.  It's essentially a collection of rows and columns, stored as elements in a specific format.
+##
+## Let me know if you'd like a more detailed explanation or want to explore examples!
 ```
 
 If you need access to advanced features like Model Context Protocol
@@ -109,8 +126,11 @@ memory and shut down the local server to free up system resources.
 
 ``` r
 # Unload the specific model
-lms_unload("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF")
+lms_unload("google/gemma-3-1b")
+## ✔ Model "google/gemma-3-1b" unloaded successfully.
+## ✔ Unloading model: "google/gemma-3-1b"... [374ms]
 
 # Stop the local server
 lms_server_stop()
+## ✔ LM Studio server stopped successfully.
 ```
