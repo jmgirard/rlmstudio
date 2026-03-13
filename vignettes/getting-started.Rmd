@@ -108,10 +108,10 @@ cat(response)
 ## With a rhyme, a laugh, and a spark to spare! ✨
 ```
 
-For more complex use cases like adjusting temperatures or utilizing structured tool calling, use `lms_chat_advanced()`.
+For more complex use cases like adjusting temperatures, utilizing structured tool calling, or accessing raw API responses, simply pass additional arguments to `lms_chat()`.
 
 ```{r advanced-chat, eval=FALSE}
-advanced_response <- lms_chat_advanced(
+advanced_response <- lms_chat(
   model = "qwen/qwen3-4b-2507",
   input = "Explain variance.",
   temperature = 0.2,

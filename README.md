@@ -28,10 +28,9 @@ update your version, the package provides a convenient setup function.
 
 ``` r
 library(rlmstudio)
-
-# This will check your installation and offer to open the download page
-# or perform a headless installation depending on your operating system.
 install_lmstudio()
+## ℹ Opening the LM Studio download page in your default browser...
+## ! Please install or update the software, restart R, and try again.
 ```
 
 ## Quick Start
@@ -42,7 +41,7 @@ environment.
 
 For a deeper dive into the package architecture and a detailed
 explanation of how to use LM Studio with a visual GUI versus a headless
-background daemon, please see the `vignette("getting-started")`.
+background daemon, please see the package vignettes.
 
 ### 1. Start the Server
 
@@ -50,7 +49,6 @@ Before you can load models or generate text, you need to start the LM
 Studio backend server.
 
 ``` r
-# Start the server on the default port (1234)
 lms_server_start()
 ## ✔ LM Studio server started successfully on the default port.
 ```
@@ -106,16 +104,18 @@ response <- lms_chat(
 cat(response)
 ## Okay, here’s a list of the capitals of each country in North America:
 ##
-## *   **Canada:** Ottawa
-## *   **Mexico:** Mexico City (Federal Capital)
-## *   **United States of America:** Washington, D.C.
+## * **Canada:** Ottawa
+## * **Mexico:** Mexico City (Federal Capital)
+## * **United States of America:** Washington, D.C.
 ##
 ## Let me know if you’d like to learn more about any of these countries!
 ```
 
 If you need access to advanced features like Model Context Protocol
 (MCP) integrations, structured tool calling, or granular control over
-inference parameters, use the `lms_chat_advanced()` function instead.
+inference parameters, you can pass additional arguments directly to
+`lms_chat()`. Setting `simplify = FALSE` will return the raw, unparsed
+API list response.
 
 ### 4. Batch Processing
 
