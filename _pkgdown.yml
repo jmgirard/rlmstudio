@@ -2,3 +2,41 @@ url: https://jmgirard.github.io/rlmstudio/
 template:
   bootstrap: 5
 
+reference:
+  - title: "Chat & Inference"
+    desc: "Interact with loaded LLMs to generate text and process batches of prompts."
+    contents:
+      - lms_chat
+      - lms_chat_batch
+
+  - title: "Model Management"
+    desc: "Discover, download, load, and manage local models."
+    contents:
+      - list_models
+      - lms_download
+      - lms_download_status
+      - lms_load
+      - lms_unload
+
+  - title: "Local Server Management"
+    desc: "Control the LM Studio local REST API server."
+    contents:
+      - lms_server_start
+      - lms_server_stop
+      - lms_server_status
+
+  - title: "Headless Daemon Management"
+    desc: "Manage the background `llmster` daemon required for headless environments (e.g., remote servers, Docker)."
+    contents:
+      - lms_daemon_start
+      - lms_daemon_stop
+      - lms_daemon_status
+      - with_lms_daemon
+
+  - title: "Setup & Configuration"
+    desc: "Install, locate, and verify the LM Studio CLI installation."
+    contents:
+      - install_lmstudio
+      - has_lms
+      - check_lms_version
+      - lms_path
