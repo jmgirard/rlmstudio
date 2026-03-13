@@ -68,9 +68,9 @@ using `list_models()`.
 # Returns a clean data frame of available models
 my_models <- list_models()
 my_models
-## state    type display_name key                 architecture size_gb
-## 1 unloaded llm  Gemma 3n E4B google/gemma-3n-e4b gemma3n          5.46
-## 2 unloaded llm  Gemma 3 12B  google/gemma-3-12b  gemma3           7.51
+##   state     type  display_name  key                  architecture  size_gb
+## 1 unloaded  llm   Gemma 3n E4B  google/gemma-3n-e4b  gemma3n       5.46
+## 2 unloaded  llm   Gemma 3 12B   google/gemma-3-12b   gemma3        7.51
 ```
 
 If you do not have a model yet, you can download one using its Hugging
