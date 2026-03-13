@@ -1,0 +1,214 @@
+# rlmstudio
+
+**Disclaimer:** This is an unofficial, community-maintained R package.
+It is not affiliated with, endorsed by, or maintained by the creators of
+LM Studio.
+
+The `rlmstudio` package provides an R interface to the [LM
+Studio](https://lmstudio.ai/) CLI and REST API. It allows you to
+download local Large Language Models (LLMs), manage server instances,
+load or unload models into memory, and generate text directly from your
+R console or scripts.
+
+## Installation
+
+You can install the development version of `rlmstudio` from GitHub with:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("jmgirard/rlmstudio")
+```
+
+## Setup and Prerequisites
+
+This package relies on the LM Studio CLI (version 0.4.0 or higher) and
+the new v1 REST API. If you do not have LM Studio installed or need to
+update your version, the package provides a convenient setup function.
+
+``` r
+library(rlmstudio)
+install_lmstudio()
+## ℹ Opening the LM Studio download page in your default browser...
+## ! Please install or update the software, restart R, and try again.
+```
+
+## Quick Start
+
+The standard workflow involves starting the LM Studio server, loading a
+model into memory, chatting with it, and then cleaning up your
+environment.
+
+For a deeper dive into the package architecture and a detailed
+explanation of how to use LM Studio with a visual GUI versus a headless
+background daemon, please see the package vignettes.
+
+### 1. Start the Server
+
+Before you can load models or generate text, you need to start the LM
+Studio backend server.
+
+``` r
+lms_server_start()
+## ✔ LM Studio server started successfully on the default port.
+```
+
+*(Note for headless environments like remote servers or Docker
+containers: You must start the background daemon first using
+[`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_start.md)
+before starting the server).*
+
+### 2. Find and Load a Model
+
+You can see which models you currently have available on your machine
+using
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md).
+
+``` r
+# Returns a clean data frame of available models
+my_models <- list_models()
+my_models
+##      state  type  display_name                  key  architecture  size_gb
+## 1 unloaded   llm  Gemma 3n E4B  google/gemma-3n-e4b       gemma3n     5.46
+## 2 unloaded   llm   Gemma 3 12B   google/gemma-3-12b        gemma3     7.51
+```
+
+If you do not have a model yet, you can download one using its Hugging
+Face repository or LM Studio catalog identifier.
+
+``` r
+# Download a lightweight model
+job_id <- lms_download("google/gemma-3-1b")
+lms_download_status(job_id)
+## ── Download Job: "job_02c8a1f86e"
+## Status: completed
+## Progress: 100% (0.72 GB / 0.72 GB)
+```
+
+Once a model is downloaded and available, load it into memory.
+
+``` r
+# Load the model
+lms_load("google/gemma-3-1b", flash_attention = TRUE)
+## ✔ Model "google/gemma-3-1b" loaded and verified. [10.1s]
+```
+
+### 3. Chat
+
+Use the
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+function for quick and easy interactions.
+
+``` r
+response <- lms_chat(
+  model = "google/gemma-3-1b",
+  input = "What are the capitals of each country in North America?"
+)
+
+cat(response)
+## Okay, here’s a list of the capitals of each country in North America:
+##
+## * **Canada:** Ottawa
+## * **Mexico:** Mexico City (Federal Capital)
+## * **United States of America:** Washington, D.C.
+##
+## Let me know if you’d like to learn more about any of these countries!
+```
+
+If you need access to advanced features like Model Context Protocol
+(MCP) integrations, structured tool calling, or granular control over
+inference parameters, you can pass additional arguments directly to
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md).
+Setting `simplify = FALSE` will return the raw, unparsed API list
+response.
+
+### 4. Batch Processing
+
+If you have a collection of documents or prompts to process,
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+allows you to iterate over a vector of inputs and capture the results in
+a tidy format.
+
+``` r
+prompts <- c(
+  "Summarize the benefits of local LLMs.",
+  "Explain why privacy matters in AI."
+)
+
+# Process all prompts and return a data frame
+results <- lms_chat_batch(
+  model = "google/gemma-3-1b",
+  inputs = prompts,
+  system_prompt = "Answer in two sentences or less."
+)
+
+print(results)
+## [1] "Local LLMs offer significant benefits like improved privacy, reduced reliance on cloud services, and increased control over data. They also often demonstrate superior performance within specific domains due to training on localized datasets."
+## [2] "Privacy matters in AI because sophisticated algorithms require vast amounts of data, and this data often includes personal information. Without adequate safeguards and regulations, AI systems can violate individuals’ privacy rights and lead to potential misuse of sensitive data."
+```
+
+### 5. Clean Up
+
+When you are finished, it is good practice to unload the model from
+memory and shut down the local server to free up system resources.
+
+``` r
+# Unload the specific model
+lms_unload("google/gemma-3-1b")
+## ✔ Model "google/gemma-3-1b" unloaded successfully. [382ms]
+
+# Stop the local server
+lms_server_stop()
+## ✔ LM Studio server stopped successfully.
+```
+
+# Package index
+
+## All functions
+
+- [`check_lms_version()`](https://jmgirard.github.io/rlmstudio/reference/check_lms_version.md)
+  : Check if the installed LM Studio CLI meets the minimum requirement
+- [`has_lms()`](https://jmgirard.github.io/rlmstudio/reference/has_lms.md)
+  : Check if LM Studio CLI is installed
+- [`install_lmstudio()`](https://jmgirard.github.io/rlmstudio/reference/install_lmstudio.md)
+  : Help the user install or update LM Studio
+- [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  : List available models
+- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  : Chat Completions via REST API
+- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  : Batch Chat Completions via REST API
+- [`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_start.md)
+  : Start the LM Studio headless daemon
+- [`lms_daemon_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_status.md)
+  : Check the global status of LM Studio
+- [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
+  : Stop the LM Studio headless daemon
+- [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+  : Download a model via REST API
+- [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  : Get the status of a download job
+- [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  : Load a model via REST API
+- [`lms_path()`](https://jmgirard.github.io/rlmstudio/reference/lms_path.md)
+  : Get the absolute path to the LMS executable
+- [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
+  : Start the LM Studio local server
+- [`lms_server_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_status.md)
+  : Check the status of the LM Studio server
+- [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md)
+  : Stop the LM Studio local server
+- [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
+  : Unload a model from memory via REST API
+- [`print(`*`<lms_download_status>`*`)`](https://jmgirard.github.io/rlmstudio/reference/print.lms_download_status.md)
+  : Print method for LM Studio download status
+- [`with_lms_daemon()`](https://jmgirard.github.io/rlmstudio/reference/with_lms_daemon.md)
+  : Run code with the LM Studio daemon active
+
+# Articles
+
+### All vignettes
+
+- [Getting Started with LM Studio: GUI
+  Workflow](https://jmgirard.github.io/rlmstudio/articles/getting-started.md):
+- [Headless Configuration and Usage: llmster
+  Daemon](https://jmgirard.github.io/rlmstudio/articles/headless-config.md):
