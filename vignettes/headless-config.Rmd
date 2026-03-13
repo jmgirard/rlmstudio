@@ -1,0 +1,143 @@
+---
+title: "Headless Configuration and Usage: llmster Daemon"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Headless Configuration and Usage: llmster Daemon}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+```
+
+The `rlmstudio` package provides robust support for running LM Studio in completely headless environments. This is ideal for Linux servers, Docker containers, remote cloud instances, and automated CI/CD pipelines where a visual desktop application is unavailable or inconvenient.
+
+To operate without a GUI, LM Studio relies on a background process called the `llmster` daemon. This vignette will walk you through managing the daemon, starting the local server, and fully automating your local LLM workflows.
+
+## Setup and Installation
+
+If you are setting up a fresh remote server, you can use the package to download and install the LM Studio CLI automatically via the terminal.
+
+```{r setup, eval=FALSE}
+library(rlmstudio)
+
+# Run the automated CLI installation script for Linux/macOS or Windows
+install_lmstudio(method = "headless")
+## ℹ Attempting headless installation or update...
+## ✔ Installation script completed.
+## ! You may need to restart your R session or terminal for the PATH changes to take effect.
+```
+
+## Step-by-Step Guide
+
+### 1. Start the Background Daemon
+
+Unlike the desktop version where opening the app initializes the backend engine, a headless environment requires you to start the engine manually. You must start the `llmster` daemon before attempting to load models or start the API server.
+
+```{r start-daemon, eval=FALSE}
+# Start the headless engine in the background
+lms_daemon_start()
+## ✔ LM Studio daemon started in the background.
+```
+
+### 2. Start the Local Server
+
+With the daemon running, you can now spin up the REST API server to accept HTTP requests.
+
+```{r start-server, eval=FALSE}
+# Start the local server on the default port
+lms_server_start()
+## ✔ LM Studio server started successfully on the default port.
+```
+
+### 3. Finding and Managing Models
+
+Because you do not have the GUI's visual search tool, you will need to know the Hugging Face repository or the LM Studio catalog identifier for the model you want to use.
+
+```{r list-models, eval=FALSE}
+# Download a lightweight model directly
+job_id <- lms_download("google/gemma-3-1b")
+lms_download_status(job_id)
+## ── Download Job: "job_02c8a1f86e"
+## Status: completed
+## Progress: 100% (0.72 GB / 0.72 GB)
+
+# Verify it is available in your inventory
+my_models <- list_models() |>
+  subset(type == "llm")
+my_models
+##      state type display_name               key architecture size_gb
+## 1 unloaded  llm   Gemma 3 1B google/gemma-3-1b       gemma3    0.67
+```
+
+### 4. Loading Models
+
+Allocate the model to your system's memory (RAM/VRAM) so it is ready for inference.
+
+```{r load, eval=FALSE}
+# Load the model
+lms_load("google/gemma-3-1b", flash_attention = TRUE)
+## ✔ Model "google/gemma-3-1b" loaded and verified. [823ms]
+```
+
+### 5. Chatting
+
+Interact with the model exactly as you would in a desktop environment.
+
+```{r chat, eval=FALSE}
+response <- lms_chat(
+  model = "google/gemma-3-1b",
+  input = "Provide just the str_extract() pattern to match all text after the third comma.",
+  system_prompt = "You are an expert R programmer familiar with the tidyverse."
+)
+
+cat(response)
+## ```R
+## str_extract(text, "%[^,]+")
+## ```
+```
+
+### 6. Teardown and Cleanup
+
+In a headless environment, managing your system resources is critical. When your script finishes, you should explicitly tear down the entire stack to free up memory and stop background processes.
+
+```{r teardown, eval=FALSE}
+# 1. Unload the model from memory
+lms_unload("google/gemma-3-1b")
+## ✔ Model "google/gemma-3-1b" unloaded successfully. [35ms]
+
+# 2. Stop the API server
+lms_server_stop()
+## ✔ LM Studio server stopped successfully.
+
+# 3. Stop the background daemon
+lms_daemon_stop()
+## ✔ LM Studio daemon stopped successfully.
+```
+
+## Bonus: Pipeline Automation
+
+If you are writing a script that just needs to run a quick job and exit, managing the daemon state manually can be tedious. The `with_lms_daemon()` wrapper handles the setup and guaranteed teardown of the background engine automatically.
+
+```{r with-daemon, eval=FALSE}
+# The daemon will start, the code will run, and the daemon will stop on exit.
+results <- with_lms_daemon({
+  lms_server_start()
+  lms_load("google/gemma-3-1b")
+
+  res <- lms_chat("google/gemma-3-1b", "Is the daemon running?")
+
+  lms_server_stop()
+  res
+})
+## ✔ LM Studio daemon started in the background.
+## ✔ LM Studio server started successfully on the default port.
+## ✔ Model "google/gemma-3-1b" loaded and verified. [840ms]
+## ✔ LM Studio server stopped successfully.
+## ✔ LM Studio daemon stopped successfully.
+```
