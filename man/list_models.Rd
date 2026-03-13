@@ -26,3 +26,6 @@ A data frame of model information.
 \description{
 Retrieves a list of models available on your system via the LM Studio REST API.
 }
+\seealso{
+\href{https://lmstudio.ai/docs/developer/rest/list}{LM Studio List Models API}
+}

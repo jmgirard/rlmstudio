@@ -4,6 +4,8 @@
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
 #' @param ... Additional arguments passed to the API request body.
 #'
+#' @seealso [LM Studio Unload Model API](https://lmstudio.ai/docs/developer/rest/unload)
+#'
 #' @return Invisibly returns \code{TRUE} on success.
 #' @export
 lms_unload <- function(model, host = "http://localhost:1234", ...) {

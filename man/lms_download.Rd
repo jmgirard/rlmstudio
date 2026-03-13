@@ -23,3 +23,6 @@ A character string containing the download \code{job_id}, or \code{"already_down
 \description{
 Download a model via REST API
 }
+\seealso{
+\href{https://lmstudio.ai/docs/developer/rest/download}{LM Studio Download Model API}
+}

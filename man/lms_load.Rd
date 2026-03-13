@@ -41,3 +41,6 @@ Invisibly returns \code{TRUE} on success, or the load configuration list if \cod
 \description{
 Load a model via REST API
 }
+\seealso{
+\href{https://lmstudio.ai/docs/developer/rest/load}{LM Studio Load Model API}
+}

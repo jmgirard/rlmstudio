@@ -19,3 +19,6 @@ Invisibly returns \code{TRUE} on success.
 \description{
 Unload a model from memory via REST API
 }
+\seealso{
+\href{https://lmstudio.ai/docs/developer/rest/unload}{LM Studio Unload Model API}
+}

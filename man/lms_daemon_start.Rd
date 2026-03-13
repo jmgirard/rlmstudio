@@ -28,3 +28,6 @@ do not need to call this function and can just open the application manually.
 lms_daemon_start()
 }
 }
+\seealso{
+\href{https://lmstudio.ai/docs/developer/core/headless_llmster}{LM Studio Headless Daemon (llmster)}
+}

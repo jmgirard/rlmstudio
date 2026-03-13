@@ -1,17 +1,3 @@
-#' Create a base request for the LM Studio API
-#'
-#' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
-#'
-#' @return An httr2 request object.
-#' @noRd
-lms_client <- function(host = "http://localhost:1234") {
-  httr2::request(host) |>
-    httr2::req_headers(
-      "Content-Type" = "application/json",
-      "Accept" = "application/json"
-    )
-}
-
 #' Chat Completions via REST API
 #'
 #' Provides full control over the Chat Completions API, including system
@@ -27,6 +13,10 @@ lms_client <- function(host = "http://localhost:1234") {
 #' @param simplify Logical. If \code{TRUE} (default), returns only the character string of the response.
 #'   If \code{FALSE}, returns the full raw API response list.
 #' @param ... Additional inference parameters passed to the API request body.
+#'
+#' @seealso
+#' * [LM Studio Native Chat API](https://lmstudio.ai/docs/developer/rest/chat)
+#' * [OpenAI Compatible Chat API](https://lmstudio.ai/docs/developer/openai-compat/chat-completions)
 #'
 #' @return A character string (if \code{simplify = TRUE}) or a list containing the full API response.
 #' @export
@@ -137,6 +127,10 @@ lms_chat <- function(
 #' @param format Character. The desired output format: \code{"vector"} (default),
 #'   \code{"list"}, or \code{"data.frame"}.
 #'
+#' @seealso
+#' * [LM Studio Native Chat API](https://lmstudio.ai/docs/developer/rest/chat)
+#' * [OpenAI Compatible Chat API](https://lmstudio.ai/docs/developer/openai-compat/chat-completions)
+#'
 #' @return A character vector, list, or data frame depending on the \code{format}
 #'   argument and the value of \code{simplify}.
 #' @export
@@ -210,4 +204,18 @@ lms_chat_batch <- function(
   }
 
   results
+}
+
+#' Create a base request for the LM Studio API
+#'
+#' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
+#'
+#' @return An httr2 request object.
+#' @noRd
+lms_client <- function(host = "http://localhost:1234") {
+  httr2::request(host) |>
+    httr2::req_headers(
+      "Content-Type" = "application/json",
+      "Accept" = "application/json"
+    )
 }

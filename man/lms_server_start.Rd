@@ -20,12 +20,6 @@ Invisibly returns the system exit code (0 for success).
 Launches the LM Studio local server via the CLI, allowing you to interact
 with loaded models via HTTP API calls.
 }
-\examples{
-\dontrun{
-# Start on default port
-lms_server_start()
-
-# Start on port 3000 with CORS enabled
-lms_server_start(port = 3000, cors = TRUE)
-}
+\seealso{
+\href{https://lmstudio.ai/docs/cli/serve/server-start}{LM Studio CLI Server Start Documentation}
 }

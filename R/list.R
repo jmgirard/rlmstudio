@@ -7,6 +7,8 @@
 #' @param detailed Logical. Show all information about each model. Defaults to \code{FALSE}.
 #' @param host Character. The host address of the local server.
 #'
+#' @seealso [LM Studio List Models API](https://lmstudio.ai/docs/developer/rest/list)
+#'
 #' @return A data frame of model information.
 #' @export
 list_models <- function(

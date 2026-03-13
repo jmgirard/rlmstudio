@@ -39,3 +39,9 @@ A character string (if \code{simplify = TRUE}) or a list containing the full API
 Provides full control over the Chat Completions API, including system
 prompts, multiple messages, and inference parameters.
 }
+\seealso{
+\itemize{
+\item \href{https://lmstudio.ai/docs/developer/rest/chat}{LM Studio Native Chat API}
+\item \href{https://lmstudio.ai/docs/developer/openai-compat/chat-completions}{OpenAI Compatible Chat API}
+}
+}

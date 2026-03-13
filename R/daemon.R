@@ -17,6 +17,8 @@ build_args_daemon_up <- function() {
 #' instance and return successfully. While safe to use, desktop users generally
 #' do not need to call this function and can just open the application manually.
 #'
+#' @seealso [LM Studio Headless Daemon (llmster)](https://lmstudio.ai/docs/developer/core/headless_llmster)
+#'
 #' @return Invisibly returns the process object (or 0 if already running).
 #' @export
 #'

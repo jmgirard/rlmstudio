@@ -24,17 +24,10 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' @param cors Logical. Enable CORS support for web application development.
 #'   Defaults to FALSE.
 #'
+#' @seealso [LM Studio CLI Server Start Documentation](https://lmstudio.ai/docs/cli/serve/server-start)
+#'
 #' @return Invisibly returns the system exit code (0 for success).
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Start on default port
-#' lms_server_start()
-#'
-#' # Start on port 3000 with CORS enabled
-#' lms_server_start(port = 3000, cors = TRUE)
-#' }
 lms_server_start <- function(port = NULL, cors = FALSE) {
   args <- build_args_server_start(port = port, cors = cors)
 
@@ -69,13 +62,10 @@ build_args_server_stop <- function() {
 #'
 #' Stops the currently running LM Studio local server via the CLI.
 #'
+#' @seealso [LM Studio CLI Server Stop Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)
+#'
 #' @return Invisibly returns the system exit code (0 for success).
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' lms_server_stop()
-#' }
 lms_server_stop <- function() {
   args <- build_args_server_stop()
 
@@ -131,18 +121,11 @@ build_args_server_status <- function(
 #' @details You can only use one logging control flag at a time (`verbose`,
 #'   `quiet`, or `log_level`).
 #'
+#' @seealso [LM Studio CLI Server Status Documentation](https://lmstudio.ai/docs/cli/serve/server-status)
+#'
 #' @return A character vector of the raw CLI output. If `json = TRUE` and the
 #'   `jsonlite` package is installed, it returns a parsed list or data frame.
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Standard status
-#' lms_server_status()
-#'
-#' # Quiet JSON output parsed directly into R
-#' status_data <- lms_server_status(json = TRUE, quiet = TRUE)
-#' }
 lms_server_status <- function(
   json = FALSE,
   verbose = FALSE,

@@ -17,3 +17,6 @@ An object of class \code{lms_download_status} containing the download status.
 \description{
 Get the status of a download job
 }
+\seealso{
+\href{https://lmstudio.ai/docs/developer/rest/download-status}{LM Studio Download Status API}
+}

@@ -10,6 +10,8 @@
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
 #' @param ... Additional arguments passed to the API request body (useful for future API parameters).
 #'
+#' @seealso [LM Studio Load Model API](https://lmstudio.ai/docs/developer/rest/load)
+#'
 #' @return Invisibly returns \code{TRUE} on success, or the load configuration list if \code{echo_load_config = TRUE}.
 #' @export
 lms_load <- function(

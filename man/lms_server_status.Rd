@@ -32,12 +32,6 @@ including whether it is running and its configuration.
 You can only use one logging control flag at a time (\code{verbose},
 \code{quiet}, or \code{log_level}).
 }
-\examples{
-\dontrun{
-# Standard status
-lms_server_status()
-
-# Quiet JSON output parsed directly into R
-status_data <- lms_server_status(json = TRUE, quiet = TRUE)
-}
+\seealso{
+\href{https://lmstudio.ai/docs/cli/serve/server-status}{LM Studio CLI Server Status Documentation}
 }

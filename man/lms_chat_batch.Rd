@@ -40,3 +40,9 @@ Applies chat completions to a vector of input strings. This is useful for
 processing multiple documents or prompts in a single call, such as during
 zero-shot classification or text extraction.
 }
+\seealso{
+\itemize{
+\item \href{https://lmstudio.ai/docs/developer/rest/chat}{LM Studio Native Chat API}
+\item \href{https://lmstudio.ai/docs/developer/openai-compat/chat-completions}{OpenAI Compatible Chat API}
+}
+}

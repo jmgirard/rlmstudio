@@ -7,6 +7,8 @@
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
 #' @param ... Additional arguments passed to the request.
 #'
+#' @seealso [LM Studio Download Model API](https://lmstudio.ai/docs/developer/rest/download)
+#'
 #' @return A character string containing the download \code{job_id}, or \code{"already_downloaded"} if already downloaded.
 #' @export
 lms_download <- function(
@@ -95,6 +97,8 @@ lms_download <- function(
 #'
 #' @param job_id Character. The unique identifier for the download job.
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
+#'
+#' @seealso [LM Studio Download Status API](https://lmstudio.ai/docs/developer/rest/download-status)
 #'
 #' @return An object of class \code{lms_download_status} containing the download status.
 #' @export
