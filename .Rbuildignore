@@ -4,3 +4,4 @@
 ^Meta$
 ^\.vscode$
 ^[.]?air[.]toml$
+^vignettes/.*\.pdf$
