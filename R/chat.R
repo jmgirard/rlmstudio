@@ -114,3 +114,78 @@ lms_chat_advanced <- function(
 lms_chat <- function(model, input, ...) {
   lms_chat_advanced(model = model, input = input, ...)
 }
+
+#' Batch Chat Completions via REST API
+#'
+#' Applies chat completions to a vector of input strings. This is useful for
+#' processing multiple documents or prompts in a single call, such as during
+#' zero-shot classification or text extraction.
+#'
+#' @inheritParams lms_chat_advanced
+#' @param inputs Character vector. The user messages or prompts to process.
+#' @param format Character. The desired output format: \code{"vector"} (default),
+#'   \code{"list"}, or \code{"data.frame"}.
+#'
+#' @return A character vector, list, or data frame depending on the \code{format}
+#'   argument and the value of \code{simplify}.
+#' @export
+lms_chat_batch <- function(
+  model,
+  inputs,
+  system_prompt = NULL,
+  format = c("vector", "list", "data.frame"),
+  host = "http://localhost:1234",
+  simplify = TRUE,
+  ...
+) {
+  format <- match.arg(format)
+
+  if (!is.character(inputs) || length(inputs) == 0) {
+    cli::cli_abort("{.arg inputs} must be a non-empty character vector.")
+  }
+
+  n_inputs <- length(inputs)
+  cli::cli_progress_bar(
+    name = "Batch processing",
+    total = n_inputs,
+    format = "{cli::pb_name} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}"
+  )
+
+  results <- lapply(inputs, function(input) {
+    res <- lms_chat_advanced(
+      model = model,
+      input = input,
+      system_prompt = system_prompt,
+      host = host,
+      simplify = simplify,
+      ...
+    )
+    cli::cli_progress_update()
+    res
+  })
+
+  if (format == "data.frame") {
+    if (!isTRUE(simplify)) {
+      cli::cli_abort(
+        "The {.val data.frame} format requires {.code simplify = TRUE}."
+      )
+    }
+    return(data.frame(
+      input = inputs,
+      output = unlist(results),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  if (format == "vector") {
+    if (!isTRUE(simplify)) {
+      cli::cli_warn(
+        "The {.val vector} format is not compatible with {.code simplify = FALSE}. Returning a list."
+      )
+      return(results)
+    }
+    return(unlist(results))
+  }
+
+  results
+}
