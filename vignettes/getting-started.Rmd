@@ -1,8 +1,8 @@
 ---
-title: "Getting Started with lms"
+title: "Getting Started with rlmstudio"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting Started with lms}
+  %\VignetteIndexEntry{Getting Started with rlmstudio}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-The `lms` package bridges the gap between R and local Large Language Models (LLMs) by wrapping the LM Studio CLI and its v1 REST API. This vignette will guide you through the two primary ways to run LM Studio and show you how to manage and chat with your models.
+The `rlmstudio` package bridges the gap between R and local Large Language Models (LLMs) by wrapping the LM Studio CLI and its v1 REST API. This vignette will guide you through the two primary ways to run LM Studio and show you how to manage and chat with your models.
 
 ## Choosing Your Workflow: GUI vs. Headless
 
@@ -40,7 +40,7 @@ For this guide, we will assume you are using the headless workflow so the code i
 First, load the package and spin up the daemon and server.
 
 ```{r setup, eval=FALSE}
-library(lms)
+library(rlmstudio)
 
 # Start the background daemon
 lms_daemon_start()

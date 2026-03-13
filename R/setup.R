@@ -56,7 +56,7 @@ check_lms_version <- function(min_version = "0.4.0") {
 #'
 #' @param method Character. Either "browser" or "headless".
 #' @export
-lms_setup <- function(method = c("browser", "headless")) {
+install_lmstudio <- function(method = c("browser", "headless")) {
   method <- match.arg(method)
 
   # Check for existence AND version before proceeding

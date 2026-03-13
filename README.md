@@ -1,7 +1,11 @@
 
-# lms
+# rlmstudio
 
-The `lms` package provides an R interface to the [LM
+**Disclaimer:** This is an unofficial, community-maintained R package.
+It is not affiliated with, endorsed by, or maintained by the creators of
+LM Studio.
+
+The `rlmstudio` package provides an R interface to the [LM
 Studio](https://lmstudio.ai/) CLI and REST API. It allows you to
 download local Large Language Models (LLMs), manage server instances,
 load or unload models into memory, and generate text directly from your
@@ -9,11 +13,11 @@ R console or scripts.
 
 ## Installation
 
-You can install the development version of `lms` from GitHub with:
+You can install the development version of `rlmstudio` from GitHub with:
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("jmgirard/lms")
+remotes::install_github("jmgirard/rlmstudio")
 ```
 
 ## Setup and Prerequisites
@@ -23,11 +27,11 @@ the new v1 REST API. If you do not have LM Studio installed or need to
 update your version, the package provides a convenient setup function.
 
 ``` r
-library(lms)
+library(rlmstudio)
 
 # This will check your installation and offer to open the download page
 # or perform a headless installation depending on your operating system.
-lms_setup()
+install_lmstudio()
 ```
 
 ## Quick Start
@@ -52,7 +56,7 @@ lms_server_start()
 
 *(Note for headless environments like remote servers or Docker
 containers: You must start the background daemon first using
-lms_daemon_start() before starting the server).*
+`lms_daemon_start()` before starting the server).*
 
 ### 2. Find and Load a Model
 

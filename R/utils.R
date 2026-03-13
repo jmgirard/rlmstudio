@@ -5,7 +5,7 @@ get_lms_path <- function() {
   if (cmd == "") {
     cli::cli_abort(c(
       "x" = "The LM Studio CLI ({.val lms}) was not found on your system.",
-      "i" = "Please install it or run {.fun lms_setup} to configure your environment."
+      "i" = "Please install it or run {.fun install_lmstudio} to configure your environment."
     ))
   }
   unname(cmd)
