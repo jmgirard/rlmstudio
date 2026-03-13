@@ -46,7 +46,7 @@ lms_daemon_start()
 
 # Start the local server
 lms_server_start()
-## ✔ LM Studio server started successfully.
+## ✔ LM Studio server started successfully on the default port.
 ```
 
 ### 2. Finding and Managing Models
@@ -137,7 +137,7 @@ advanced_response <- lms_chat_advanced(
 )
 
 # Access the generated text from the structured list
-advanced_response$output[[1]]$content
+advanced_response$choices[[1]]$message$content
 ## [1] "**Variance** is a statistical measure that quantifies how spread out a set of data points is from their mean (average value). It tells us the average of the squared differences between each data point and the mean.\n\n### Formula for Variance:\nFor a population:\n\\[\n\\sigma^2 = \\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2\n\\]\nFor a sample:\n\\[\ns^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2\n\\]\n\nWhere:\n- \\( \\sigma^2 \\) = population variance  \n- \\( s^"
 ```
 

@@ -21,13 +21,12 @@ lms_client <- function(host = "http://localhost:1234") {
 #' @param input Character. The user message or prompt.
 #' @param system_prompt Character. Optional system instructions to guide model behavior.
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
+#' @param api_type Character. Which REST API to use. \code{"native"} (default) uses LM Studio's
+#'   proprietary \code{/api/v1/chat} endpoint for advanced features like stateful
+#'   conversations and MCPs. \code{"openai"} uses the standard \code{/v1/chat/completions} endpoint.
 #' @param simplify Logical. If \code{TRUE} (default), returns only the character string of the response.
 #'   If \code{FALSE}, returns the full raw API response list.
 #' @param ... Additional inference parameters passed to the API request body.
-#'   Common parameters include \code{temperature}, \code{max_tokens}, \code{top_p},
-#'   \code{presence_penalty}, and \code{frequency_penalty}.
-#'   For a full list of supported parameters, see the LM Studio documentation:
-#'   \url{https://lmstudio.ai/docs/api/endpoints/chat-completions}
 #'
 #' @return A character string (if \code{simplify = TRUE}) or a list containing the full API response.
 #' @export
@@ -36,6 +35,7 @@ lms_chat_advanced <- function(
   input,
   system_prompt = NULL,
   host = "http://localhost:1234",
+  api_type = c("native", "openai"),
   simplify = TRUE,
   ...
 ) {
@@ -46,42 +46,72 @@ lms_chat_advanced <- function(
     return(invisible(NULL))
   }
 
-  # 1. Build the message structure
-  messages <- list()
-  if (!is.null(system_prompt)) {
-    messages[[length(messages) + 1]] <- list(
-      role = "system",
-      content = system_prompt
+  api_type <- match.arg(api_type)
+
+  # 1. Build the body and select the endpoint based on API type
+  if (api_type == "native") {
+    endpoint_path <- "api/v1/chat"
+
+    body <- list(
+      model = model,
+      messages = list(
+        list(role = "user", content = input)
+      )
+    )
+
+    # The native API can take system prompts as part of the messages array
+    if (!is.null(system_prompt)) {
+      body$messages <- c(
+        list(list(role = "system", content = system_prompt)),
+        body$messages
+      )
+    }
+  } else {
+    endpoint_path <- "v1/chat/completions"
+
+    messages <- list()
+    if (!is.null(system_prompt)) {
+      messages[[length(messages) + 1]] <- list(
+        role = "system",
+        content = system_prompt
+      )
+    }
+    messages[[length(messages) + 1]] <- list(role = "user", content = input)
+
+    body <- list(
+      model = model,
+      messages = messages
     )
   }
-  messages[[length(messages) + 1]] <- list(role = "user", content = input)
 
-  # 2. Build the base body
-  body <- list(
-    model = model,
-    messages = messages
-  )
-
-  # 3. Merge dots into the body (e.g., temperature, max_tokens, etc.)
+  # 2. Merge dots into the body
   body <- utils::modifyList(body, list(...))
 
+  # 3. Use the centralized httr2 client
   resp <- lms_client(host) |>
-    httr2::req_url_path("v1/chat/completions") |>
+    httr2::req_url_path(endpoint_path) |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
+  # 4. Handle Response
   if (httr2::resp_status(resp) == 200) {
     resp_data <- httr2::resp_body_json(resp)
 
     if (isTRUE(simplify)) {
-      return(resp_data$choices[[1]]$message$content)
+      if (api_type == "native") {
+        # Extract text from native LM Studio response
+        return(resp_data$messages[[length(resp_data$messages)]]$content)
+      } else {
+        # Extract text from standard OpenAI response
+        return(resp_data$choices[[1]]$message$content)
+      }
     } else {
       return(resp_data)
     }
   }
 
-  # Robust error message extraction
+  # 5. Robust error message extraction
   err_msg <- tryCatch(
     {
       err_json <- httr2::resp_body_json(resp)
@@ -93,9 +123,7 @@ lms_chat_advanced <- function(
         httr2::resp_body_string(resp)
       }
     },
-    error = function(e) {
-      httr2::resp_body_string(resp)
-    }
+    error = function(e) httr2::resp_body_string(resp)
   )
 
   if (err_msg == "") {
