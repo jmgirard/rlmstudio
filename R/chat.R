@@ -40,12 +40,12 @@ lms_chat_advanced <- function(
   ...
 ) {
   if (!is_server_running()) {
-    cli::cli_abort(
+    cli::cli_alert_danger(
       "The LM Studio server is not running. Run {.fn lms_server_start} first."
     )
+    return(invisible(NULL))
   }
 
-  # Endpoint must use /v1/ for OpenAI-compatible inference
   endpoint <- paste0(host, "/v1/chat/completions")
 
   # 1. Build the message structure
@@ -139,6 +139,13 @@ lms_chat_batch <- function(
   simplify = TRUE,
   ...
 ) {
+  if (!is_server_running()) {
+    cli::cli_alert_danger(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    )
+    return(invisible(NULL))
+  }
+
   format <- match.arg(format)
 
   if (!is.character(inputs) || length(inputs) == 0) {

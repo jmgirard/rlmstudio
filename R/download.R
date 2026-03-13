@@ -16,9 +16,10 @@ lms_download <- function(
   ...
 ) {
   if (!is_server_running()) {
-    cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn start_server} first."
+    cli::cli_alert_danger(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first."
     )
+    return(invisible(NULL))
   }
 
   if (is.null(model) || model == "") {
@@ -94,9 +95,10 @@ lms_download <- function(
 #' @export
 lms_download_status <- function(job_id, host = "http://localhost:1234") {
   if (!is_server_running()) {
-    cli::cli_abort(
+    cli::cli_alert_danger(
       "The LM Studio server is not running. Run {.fn lms_server_start} first."
     )
+    return(invisible(NULL))
   }
 
   if (is.null(job_id) || job_id == "") {

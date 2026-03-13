@@ -24,9 +24,10 @@ lms_load <- function(
   ...
 ) {
   if (!is_server_running()) {
-    cli::cli_abort(
+    cli::cli_alert_danger(
       "The LM Studio server is not running. Run {.fn lms_server_start} first."
     )
+    return(invisible(FALSE))
   }
 
   endpoint <- paste0(host, "/api/v1/models/load")

@@ -15,6 +15,13 @@ list_models <- function(
   detailed = FALSE,
   host = "http://localhost:1234"
 ) {
+  if (!is_server_running()) {
+    cli::cli_alert_danger(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    )
+    return(invisible(data.frame()))
+  }
+
   resp <- httr2::request(host) |>
     httr2::req_url_path("/api/v1/models") |>
     httr2::req_perform()
@@ -25,7 +32,7 @@ list_models <- function(
 
   if (is.null(df) || nrow(df) == 0) {
     cli::cli_inform(c("i" = "No models found on host {.url {host}}."))
-    return(data.frame())
+    return(invisible(data.frame()))
   }
 
   # Apply type filters
@@ -55,7 +62,7 @@ list_models <- function(
     cli::cli_inform(c(
       "!" = "No models found matching criteria: loaded = {.val {loaded}}, type = {.val {type}}."
     ))
-    return(data.frame())
+    return(invisible(data.frame()))
   }
 
   # Format size for readability
