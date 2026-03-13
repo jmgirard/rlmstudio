@@ -21,6 +21,7 @@ get_lms_path <- function() {
     c(file.path(Sys.getenv("LOCALAPPDATA"), "LM-Studio", "bin", "lms.exe"))
   } else {
     c(
+      file.path(home, ".lmstudio", "bin", "lms"),
       file.path(home, ".cache", "lm-studio", "bin", "lms"),
       file.path(home, ".local", "bin", "lms")
     )
