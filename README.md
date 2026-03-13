@@ -1,4 +1,10 @@
 
+<!-- badges: start -->
+
+[![Codecov test
+coverage](https://codecov.io/gh/jmgirard/rlmstudio/graph/badge.svg)](https://app.codecov.io/gh/jmgirard/rlmstudio)
+<!-- badges: end -->
+
 # rlmstudio
 
 **Disclaimer:** This is an unofficial, community-maintained R package.

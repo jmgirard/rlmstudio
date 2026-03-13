@@ -12,10 +12,14 @@ Depends:
     R (>= 4.1.0)
 Imports:
     cli,
+    glue,
     httr2,
     jsonlite,
+    lifecycle,
     processx,
-    utils
+    rlang,
+    utils,
+    withr
 Suggests:
     httptest2,
     knitr,

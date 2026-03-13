@@ -11,6 +11,10 @@ knitr::opts_chunk$set(
 )
 ```
 
+<!-- badges: start -->
+[![Codecov test coverage](https://codecov.io/gh/jmgirard/rlmstudio/graph/badge.svg)](https://app.codecov.io/gh/jmgirard/rlmstudio)
+<!-- badges: end -->
+
 # rlmstudio
 
 **Disclaimer:** This is an unofficial, community-maintained R package. It is not affiliated with, endorsed by, or maintained by the creators of LM Studio.
