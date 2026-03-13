@@ -1,16 +1,15 @@
 Package: rlmstudio
 Title: Access and Control LM Studio from R
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     person("Jeffrey", "Girard", , "me@jmgirard.com", role = c("aut", "cre"))
 Description: A community-maintained R wrapper for the LM Studio CLI and
-    REST API. Provides functions to manage the local server, download
-    and load models, and interact with LLMs using OpenAI-compatible
-    endpoints. This is an unofficial package.
+    REST API. Provides functions to manage the local server, download and
+    load models, and interact with LLMs using OpenAI-compatible endpoints.
+    This is an unofficial package.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
+Depends:
+    R (>= 4.1.0)
 Imports:
     cli,
     httr2,
@@ -21,5 +20,9 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
+VignetteBuilder:
+    knitr
 Config/testthat/edition: 3
-VignetteBuilder: knitr
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

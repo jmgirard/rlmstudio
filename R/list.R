@@ -23,8 +23,9 @@ list_models <- function(
   full_data <- jsonlite::fromJSON(raw_content, simplifyDataFrame = TRUE)
   df <- full_data$models
 
-  if (is.null(df) || length(df) == 0 || nrow(df) == 0) {
-    return(if (isTRUE(json)) data.frame() else "No models found.")
+  if (is.null(df) || nrow(df) == 0) {
+    cli::cli_inform(c("i" = "No models found on host {.url {host}}."))
+    return(data.frame())
   }
 
   # Apply type filters
@@ -51,9 +52,10 @@ list_models <- function(
   }
 
   if (nrow(df) == 0) {
-    return(
-      if (isTRUE(json)) data.frame() else "No models found matching criteria."
-    )
+    cli::cli_inform(c(
+      "!" = "No models found matching criteria: loaded = {.val {loaded}}, type = {.val {type}}."
+    ))
+    return(data.frame())
   }
 
   # Format size for readability
