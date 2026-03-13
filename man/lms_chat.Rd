@@ -4,22 +4,31 @@
 \alias{lms_chat}
 \title{Quick chat via the API}
 \usage{
-lms_chat(model, prompt, system_prompt = NULL, simplify = TRUE, ...)
+lms_chat(
+  model,
+  input,
+  system_prompt = NULL,
+  simplify = TRUE,
+  host = "http://localhost:1234",
+  ...
+)
 }
 \arguments{
-\item{model}{Character. The identifier of the model to use.}
+\item{model}{Character. The identifier of the loaded model to use.}
 
-\item{prompt}{Character. The prompt to send.}
+\item{input}{Character. The prompt or message to send.}
 
 \item{system_prompt}{Character. An optional system prompt.}
 
-\item{simplify}{Logical. Whether to return response text (default) or the list.}
+\item{simplify}{Logical. Whether to return response text (default) or the full list.}
 
-\item{...}{Additional arguments passed to \code{lms_prompt}.}
+\item{host}{Character. The host address of the local server.}
+
+\item{...}{Additional arguments passed to \code{lms_chat_advanced}.}
 }
 \value{
 Response text or a full list.
 }
 \description{
-A convenience wrapper around \code{lms_prompt} for simple interactions.
+A convenience wrapper around \code{lms_chat_advanced} for simple interactions.
 }

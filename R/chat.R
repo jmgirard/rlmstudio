@@ -1,118 +1,89 @@
 #' Create a base request for the LM Studio API
 #'
-#' @param base_url Character. The base URL of the local server.
-#'   Defaults to "http://localhost:1234/v1".
+#' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
 #'
 #' @return An httr2 request object.
-#' @export
-lms_client <- function(base_url = "http://localhost:1234/v1") {
-  httr2::request(base_url) |>
+#' @noRd
+lms_client <- function(host = "http://localhost:1234") {
+  httr2::request(host) |>
     httr2::req_headers(
       "Content-Type" = "application/json",
       "Accept" = "application/json"
     )
 }
 
-#' Send a chat completion request to the LM Studio API
+#' Send an advanced chat request to the LM Studio API
 #'
-#' Provides a direct interface to the \code{/chat/completions} endpoint, supporting
-#' all OpenAI-compatible parameters.
+#' Provides a direct interface to the \code{/api/v1/chat} endpoint, supporting
+#' LM Studio specific features like MCP integrations and reasoning settings.
 #'
-#' @param prompt Character. A single user prompt.
-#' @param system_prompt Character. An optional system prompt to set model behavior.
-#' @param messages A list of message lists representing the conversation history.
-#'   If provided, this overrides \code{prompt} and \code{system_prompt}.
 #' @param model Character. The identifier of the loaded model to use.
-#' @param frequency_penalty Numeric. Number between -2.0 and 2.0. Positive values
-#'   penalize new tokens based on their existing frequency in the text.
-#' @param logit_bias Map. Modify the likelihood of specified tokens appearing.
-#' @param logprobs Logical. Whether to return log probabilities of output tokens.
-#' @param top_logprobs Integer. Number of most likely tokens to return at each position.
-#' @param max_tokens Integer. The maximum number of tokens to generate.
-#' @param n Integer. How many chat completion choices to generate for each input.
-#' @param presence_penalty Numeric. Number between -2.0 and 2.0. Positive values
-#'   penalize new tokens based on whether they have appeared yet.
-#' @param response_format List. Use \code{list(type = "json_object")} for JSON mode.
-#' @param seed Integer. If specified, the system will sample deterministically.
-#' @param stop Character vector. Up to 4 sequences where the API will stop.
-#' @param stream Logical. If \code{TRUE}, partial message deltas will be sent.
-#' @param temperature Numeric. Sampling temperature between 0 and 2.
-#' @param top_p Numeric. Nucleus sampling alternative to temperature.
-#' @param tools List. A list of tools (functions) the model may call.
-#' @param tool_choice Character or List. Controls which tool is called.
-#' @param user Character. A unique identifier representing your end-user.
+#' @param input Character or List. The user message or a list of message objects.
+#' @param system_prompt Character. An optional system prompt to set model behavior.
+#' @param integrations List. A list of integrations (e.g., MCP servers) to enable.
+#' @param stream Logical. Whether to stream partial outputs via SSE.
+#' @param temperature Numeric. Randomness in token selection (0 to 1).
+#' @param top_p Numeric. Minimum cumulative probability for possible next tokens.
+#' @param top_k Integer. Limits next token selection to top-k probable tokens.
+#' @param min_p Numeric. Minimum base probability for a token.
+#' @param repeat_penalty Numeric. Penalty for repeating token sequences.
+#' @param max_output_tokens Integer. Maximum number of tokens to generate.
+#' @param reasoning Character. Reasoning setting: "off", "low", "medium", "high", or "on".
+#' @param context_length Integer. Number of tokens to consider as context.
+#' @param store Logical. Whether to store the chat.
+#' @param previous_response_id Character. ID of a previous response to continue a conversation.
 #' @param simplify Logical. If \code{TRUE}, returns the response text with metadata
 #'   as attributes. If \code{FALSE}, returns the full parsed list.
-#' @param base_url Character. The base URL of the local server.
+#' @param host Character. The host address of the local server.
 #'
 #' @return A character string (with attributes) if \code{simplify = TRUE},
 #'   otherwise a parsed list.
 #' @export
-lms_prompt <- function(prompt = NULL,
-                                 system_prompt = NULL,
-                                 messages = NULL,
-                                 model = "local-model",
-                                 frequency_penalty = NULL,
-                                 logit_bias = NULL,
-                                 logprobs = NULL,
-                                 top_logprobs = NULL,
-                                 max_tokens = NULL,
-                                 n = NULL,
-                                 presence_penalty = NULL,
-                                 response_format = NULL,
-                                 seed = NULL,
-                                 stop = NULL,
-                                 stream = FALSE,
-                                 temperature = 0.7,
-                                 top_p = NULL,
-                                 tools = NULL,
-                                 tool_choice = NULL,
-                                 user = NULL,
-                                 simplify = FALSE,
-                                 base_url = "http://localhost:1234/v1") {
+lms_chat_advanced <- function(model,
+                              input,
+                              system_prompt = NULL,
+                              integrations = NULL,
+                              stream = FALSE,
+                              temperature = NULL,
+                              top_p = NULL,
+                              top_k = NULL,
+                              min_p = NULL,
+                              repeat_penalty = NULL,
+                              max_output_tokens = NULL,
+                              reasoning = NULL,
+                              context_length = NULL,
+                              store = NULL,
+                              previous_response_id = NULL,
+                              simplify = FALSE,
+                              host = "http://localhost:1234") {
 
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn server_start} first.")
+    cli::cli_abort("The LM Studio server is not running. Run {.fn start_server} first.")
   }
 
-  # Build messages if not provided
-  if (is.null(messages)) {
-    if (is.null(prompt)) {
-      cli::cli_abort("Either {.arg prompt} or {.arg messages} must be provided.")
-    }
-    messages <- list()
-    if (!is.null(system_prompt)) {
-      messages <- append(messages, list(list(role = "system", content = system_prompt)))
-    }
-    messages <- append(messages, list(list(role = "user", content = prompt)))
-  }
-
-  # Build the payload, excluding NULLs to let the API use its defaults
   body <- list(
     model = model,
-    messages = messages,
-    frequency_penalty = frequency_penalty,
-    logit_bias = logit_bias,
-    logprobs = logprobs,
-    top_logprobs = top_logprobs,
-    max_tokens = max_tokens,
-    n = n,
-    presence_penalty = presence_penalty,
-    response_format = response_format,
-    seed = seed,
-    stop = stop,
+    input = input,
+    system_prompt = system_prompt,
+    integrations = integrations,
     stream = stream,
     temperature = temperature,
     top_p = top_p,
-    tools = tools,
-    tool_choice = tool_choice,
-    user = user
+    top_k = if (!is.null(top_k)) as.integer(top_k) else NULL,
+    min_p = min_p,
+    repeat_penalty = repeat_penalty,
+    max_output_tokens = if (!is.null(max_output_tokens)) as.integer(max_output_tokens) else NULL,
+    reasoning = reasoning,
+    context_length = if (!is.null(context_length)) as.integer(context_length) else NULL,
+    store = store,
+    previous_response_id = previous_response_id
   )
+
+  # Remove NULLs to let the API use its defaults
   body <- Filter(Negate(is.null), body)
 
-  # Perform the request using the native pipe
-  resp <- lms_client(base_url) |>
-    httr2::req_url_path_append("chat/completions") |>
+  resp <- lms_client(host) |>
+    httr2::req_url_path_append("api/v1/chat") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) httr2::resp_status(resp) >= 400) |>
     httr2::req_perform()
@@ -120,18 +91,25 @@ lms_prompt <- function(prompt = NULL,
   out <- httr2::resp_body_json(resp)
 
   if (isTRUE(simplify)) {
-    if (length(out$choices) == 0) return(NULL)
+    if (is.null(out$output) || length(out$output) == 0) return(NULL)
 
-    # Extract the first choice content
-    content <- out$choices[[1]]$message$content
+    # Extract all message content
+    content_list <- lapply(out$output, function(x) {
+      if (identical(x$type, "message")) return(x$content)
+      return(NULL)
+    })
+
+    content <- paste(unlist(Filter(Negate(is.null), content_list)), collapse = "\n")
 
     # Attach comprehensive metadata as attributes
-    attr(content, "usage") <- out$usage
-    attr(content, "model") <- out$model
-    attr(content, "id") <- out$id
-    attr(content, "finish_reason") <- out$choices[[1]]$finish_reason
-    if (!is.null(out$choices[[1]]$message$tool_calls)) {
-      attr(content, "tool_calls") <- out$choices[[1]]$message$tool_calls
+    attr(content, "model_instance_id") <- out$model_instance_id
+    attr(content, "response_id") <- out$response_id
+    attr(content, "stats") <- out$stats
+
+    # Check if there are tool calls to attach
+    tool_calls <- Filter(function(x) identical(x$type, "tool_call"), out$output)
+    if (length(tool_calls) > 0) {
+      attr(content, "tool_calls") <- tool_calls
     }
 
     return(content)
@@ -142,22 +120,24 @@ lms_prompt <- function(prompt = NULL,
 
 #' Quick chat via the API
 #'
-#' A convenience wrapper around \code{lms_prompt} for simple interactions.
+#' A convenience wrapper around \code{lms_chat_advanced} for simple interactions.
 #'
-#' @param model Character. The identifier of the model to use.
-#' @param prompt Character. The prompt to send.
+#' @param model Character. The identifier of the loaded model to use.
+#' @param input Character. The prompt or message to send.
 #' @param system_prompt Character. An optional system prompt.
-#' @param simplify Logical. Whether to return response text (default) or the list.
-#' @param ... Additional arguments passed to \code{lms_prompt}.
+#' @param simplify Logical. Whether to return response text (default) or the full list.
+#' @param host Character. The host address of the local server.
+#' @param ... Additional arguments passed to \code{lms_chat_advanced}.
 #'
 #' @return Response text or a full list.
 #' @export
-lms_chat <- function(model, prompt, system_prompt = NULL, simplify = TRUE, ...) {
-  lms_prompt(
-    prompt = prompt,
-    system_prompt = system_prompt,
+lms_chat <- function(model, input, system_prompt = NULL, simplify = TRUE, host = "http://localhost:1234", ...) {
+  lms_chat_advanced(
     model = model,
+    input = input,
+    system_prompt = system_prompt,
     simplify = simplify,
+    host = host,
     ...
   )
 }

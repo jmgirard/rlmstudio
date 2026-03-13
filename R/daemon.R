@@ -1,4 +1,4 @@
-#' Build arguments for daemon_up
+#' Build arguments for lms_daemon_start
 #' @noRd
 build_args_daemon_up <- function() {
   c("daemon", "up")
@@ -6,7 +6,7 @@ build_args_daemon_up <- function() {
 
 #' Start the LM Studio headless daemon
 #'
-#' Launches the `llmster` daemon in the background. This is required in
+#' Launches the `llmster` daemon in the background via the CLI. This is required in
 #' headless environments (such as Linux servers) before loading models or
 #' starting the local server.
 #'
@@ -22,9 +22,9 @@ build_args_daemon_up <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' daemon_up()
+#' lms_daemon_start()
 #' }
-start_daemon <- function() {
+lms_daemon_start <- function() {
   args <- build_args_daemon_up()
   res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
 
@@ -39,7 +39,7 @@ start_daemon <- function() {
 
 #' Check the global status of LM Studio
 #'
-#' Displays the overall status of the LM Studio backend, including loaded
+#' Displays the overall status of the LM Studio backend via the CLI, including loaded
 #' models and the server state. This function works regardless of whether
 #' the backend was started via the desktop GUI or the headless daemon.
 #'
@@ -48,9 +48,9 @@ start_daemon <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' daemon_status()
+#' lms_daemon_status()
 #' }
-check_daemon <- function() {
+lms_daemon_status <- function() {
   res <- processx::run(get_lms_path(), "status", error_on_status = FALSE)
 
   lines <- strsplit(res$stdout, "\r?\n")[[1]]
@@ -61,7 +61,7 @@ check_daemon <- function() {
   return(lines)
 }
 
-#' Build arguments for daemon_down
+#' Build arguments for lms_daemon_stop
 #' @noRd
 build_args_daemon_down <- function() {
   c("daemon", "down")
@@ -69,7 +69,7 @@ build_args_daemon_down <- function() {
 
 #' Stop the LM Studio headless daemon
 #'
-#' Stops the `llmster` daemon. Use this to clean up system resources when
+#' Stops the `llmster` daemon via the CLI. Use this to clean up system resources when
 #' you are completely finished using LM Studio in headless mode.
 #'
 #' @section Desktop Users:
@@ -87,12 +87,12 @@ build_args_daemon_down <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' daemon_down(force = TRUE)
+#' lms_daemon_stop(force = TRUE)
 #' }
-stop_daemon <- function(force = FALSE) {
+lms_daemon_stop <- function(force = FALSE) {
   if (isTRUE(force)) {
     # Attempt to stop the server first, suppressing errors
-    tryCatch(server_stop(), error = function(e) NULL)
+    tryCatch(lms_server_stop(), error = function(e) NULL)
   }
 
   args <- build_args_daemon_down()
@@ -115,7 +115,7 @@ stop_daemon <- function(force = FALSE) {
     cli::cli_abort(c(
       "Failed to stop the LM Studio daemon. Exit code: {.val {res$status}}.",
       "x" = "CLI output: {.val {err_msg}}",
-      "i" = "Hint: If the server is still running, try `daemon_down(force = TRUE)` or run `server_stop()` first."
+      "i" = "Hint: If the server is still running, try `lms_daemon_stop(force = TRUE)` or run `lms_server_stop()` first."
     ))
   }
 
@@ -130,8 +130,8 @@ stop_daemon <- function(force = FALSE) {
 #'
 #' @section Desktop Users:
 #' Be cautious using this wrapper if you already have the LM Studio GUI open.
-#' While the setup phase (`daemon_up`) will succeed, the teardown phase
-#' (`daemon_down`) will fail because the CLI prevents programmatic shutdowns
+#' While the setup phase (`lms_daemon_start`) will succeed, the teardown phase
+#' (`lms_daemon_stop`) will fail because the CLI prevents programmatic shutdowns
 #' of the graphical interface. This wrapper is best reserved for strictly
 #' headless environments or fully automated scripts.
 #'
@@ -142,15 +142,15 @@ stop_daemon <- function(force = FALSE) {
 #'
 #' @examples
 #' \dontrun{
-#' result <- with_daemon({
-#'   model_load("llama-3.1-8b")
-#'   model_chat("llama-3.1-8b", prompt = "Hello world!", capture = TRUE)
+#' result <- with_lms_daemon({
+#'   lms_load("llama-3.1-8b")
+#'   lms_chat("llama-3.1-8b", input = "Hello world!")
 #' })
 #' }
-with_daemon <- function(code) {
-  start_daemon()
+with_lms_daemon <- function(code) {
+  lms_daemon_start()
 
-  on.exit(stop_daemon(force = TRUE), add = TRUE)
+  on.exit(lms_daemon_stop(force = TRUE), add = TRUE)
 
   force(code)
 }

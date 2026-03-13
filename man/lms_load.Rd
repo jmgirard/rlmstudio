@@ -4,7 +4,39 @@
 \alias{lms_load}
 \title{Load a model via REST API}
 \usage{
-lms_load(model, context_length = NULL, ...)
+lms_load(
+  model,
+  context_length = NULL,
+  eval_batch_size = NULL,
+  flash_attention = NULL,
+  num_experts = NULL,
+  offload_kv_cache_to_gpu = NULL,
+  echo_load_config = FALSE,
+  host = "http://localhost:1234",
+  ...
+)
+}
+\arguments{
+\item{model}{Character. Unique identifier for the model to load.}
+
+\item{context_length}{Integer. Maximum number of tokens that the model will consider.}
+
+\item{eval_batch_size}{Integer. Number of input tokens to process together in a single batch during evaluation.}
+
+\item{flash_attention}{Logical. Whether to optimize attention computation.}
+
+\item{num_experts}{Integer. Number of experts to use during inference for MoE (Mixture of Experts) models.}
+
+\item{offload_kv_cache_to_gpu}{Logical. Whether KV cache is offloaded to GPU memory.}
+
+\item{echo_load_config}{Logical. If \code{TRUE}, echoes the final load configuration in the response.}
+
+\item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
+
+\item{...}{Additional arguments passed to the request.}
+}
+\value{
+Invisibly returns \code{TRUE} on success, or the load configuration list if \code{echo_load_config = TRUE}.
 }
 \description{
 Load a model via REST API

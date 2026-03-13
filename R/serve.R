@@ -1,4 +1,4 @@
-#' Build arguments for server_start
+#' Build arguments for lms_server_start
 #' @noRd
 build_args_server_start <- function(port = NULL, cors = FALSE) {
   args <- c("server", "start")
@@ -16,8 +16,8 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 
 #' Start the LM Studio local server
 #'
-#' Launches the LM Studio local server, allowing you to interact with loaded
-#' models via HTTP API calls.
+#' Launches the LM Studio local server via the CLI, allowing you to interact
+#' with loaded models via HTTP API calls.
 #'
 #' @param port Integer. Port to run the server on. If not provided, LM Studio
 #'   uses the last used port.
@@ -30,16 +30,14 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' @examples
 #' \dontrun{
 #' # Start on default port
-#' server_start()
+#' lms_server_start()
 #'
 #' # Start on port 3000 with CORS enabled
-#' server_start(port = 3000, cors = TRUE)
+#' lms_server_start(port = 3000, cors = TRUE)
 #' }
-start_server <- function(port = NULL, cors = FALSE) {
+lms_server_start <- function(port = NULL, cors = FALSE) {
   args <- build_args_server_start(port = port, cors = cors)
 
-  # Let processx run silently in the background by capturing output
-  # but we won't print it unless there is an error
   res <- processx::run("lms", args, error_on_status = FALSE)
 
   if (res$status == 0) {
@@ -51,7 +49,7 @@ start_server <- function(port = NULL, cors = FALSE) {
   invisible(res$status)
 }
 
-#' Build arguments for server_stop
+#' Build arguments for lms_server_stop
 #' @noRd
 build_args_server_stop <- function() {
   c("server", "stop")
@@ -59,16 +57,16 @@ build_args_server_stop <- function() {
 
 #' Stop the LM Studio local server
 #'
-#' Stops the currently running LM Studio local server.
+#' Stops the currently running LM Studio local server via the CLI.
 #'
 #' @return Invisibly returns the system exit code (0 for success).
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' server_stop()
+#' lms_server_stop()
 #' }
-stop_server <- function() {
+lms_server_stop <- function() {
   args <- build_args_server_stop()
 
   res <- processx::run("lms", args, error_on_status = FALSE)
@@ -82,7 +80,7 @@ stop_server <- function() {
   invisible(res$status)
 }
 
-#' Build arguments for server_status
+#' Build arguments for lms_server_status
 #' @noRd
 build_args_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
   args <- c("server", "status")
@@ -105,8 +103,8 @@ build_args_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALS
 
 #' Check the status of the LM Studio server
 #'
-#' Displays the current status of the LM Studio local server, including whether
-#' it is running and its configuration.
+#' Displays the current status of the LM Studio local server via the CLI,
+#' including whether it is running and its configuration.
 #'
 #' @param json Logical. Output the status in machine-readable JSON format.
 #' @param verbose Logical. Enable detailed logging output.
@@ -123,12 +121,12 @@ build_args_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALS
 #' @examples
 #' \dontrun{
 #' # Standard status
-#' server_status()
+#' lms_server_status()
 #'
 #' # Quiet JSON output parsed directly into R
-#' status_data <- server_status(json = TRUE, quiet = TRUE)
+#' status_data <- lms_server_status(json = TRUE, quiet = TRUE)
 #' }
-check_server <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
+lms_server_status <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level = NULL) {
 
   logging_flags <- sum(c(isTRUE(verbose), isTRUE(quiet), !is.null(log_level)))
   if (logging_flags > 1) {
@@ -137,14 +135,11 @@ check_server <- function(json = FALSE, verbose = FALSE, quiet = FALSE, log_level
 
   args <- build_args_server_status(json = json, verbose = verbose, quiet = quiet, log_level = log_level)
 
-  # Capture both streams to ensure no status messages are missed
   res <- processx::run("lms", args, error_on_status = FALSE)
   output <- paste(res$stdout, res$stderr, sep = "\n")
 
   lines <- strsplit(output, "\r?\n")[[1]]
   lines <- cli::ansi_strip(lines)
-
-  # Remove \r without losing the content of the line
   lines <- gsub("\r", "", lines)
   lines <- lines[lines != ""]
 
