@@ -38,7 +38,7 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 lms_server_start <- function(port = NULL, cors = FALSE) {
   args <- build_args_server_start(port = port, cors = cors)
 
-  res <- processx::run("lms", args, error_on_status = FALSE)
+  res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
 
   if (res$status == 0) {
     if (!is.null(port)) {
@@ -79,7 +79,7 @@ build_args_server_stop <- function() {
 lms_server_stop <- function() {
   args <- build_args_server_stop()
 
-  res <- processx::run("lms", args, error_on_status = FALSE)
+  res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
 
   if (res$status == 0) {
     cli::cli_alert_success("LM Studio server stopped successfully.")
@@ -161,7 +161,7 @@ lms_server_status <- function(
     log_level = log_level
   )
 
-  res <- processx::run("lms", args, error_on_status = FALSE)
+  res <- processx::run(get_lms_path(), args, error_on_status = FALSE)
   output <- paste(res$stdout, res$stderr, sep = "\n")
 
   lines <- strsplit(output, "\r?\n")[[1]]
@@ -189,10 +189,10 @@ lms_server_status <- function(
 #' Check if the LM Studio server is reachable
 #' @return Logical.
 #' @noRd
-is_server_running <- function() {
+is_server_running <- function(port = 1234) {
   tryCatch(
     {
-      con <- socketConnection(host = "localhost", port = 1234, timeout = 0.5)
+      con <- socketConnection(host = "localhost", port = port, timeout = 0.5)
       close(con)
       TRUE
     },

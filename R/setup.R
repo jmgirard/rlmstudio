@@ -20,7 +20,7 @@ check_lms_version <- function(min_version = "0.4.0") {
   tryCatch(
     {
       result <- processx::run(
-        "lms",
+        get_lms_path(),
         args = "--version",
         error_on_status = FALSE
       )

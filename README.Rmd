@@ -115,7 +115,30 @@ cat(response)
 
 If you need access to advanced features like Model Context Protocol (MCP) integrations, structured tool calling, or granular control over inference parameters, use the `lms_chat_advanced()` function instead.
 
-### 4. Clean Up
+### 4. Batch Processing
+
+If you have a collection of documents or prompts to process, `lms_chat_batch()` allows you to iterate over a vector of inputs and capture the results in a tidy format.
+
+```{r eval=FALSE}
+prompts <- c(
+  "Summarize the benefits of local LLMs.",
+  "Explain why privacy matters in AI."
+)
+
+# Process all prompts and return a data frame
+results <- lms_chat_batch(
+  model = "google/gemma-3-1b",
+  inputs = prompts,
+  format = "data.frame"
+)
+
+print(results)
+##                                    input                                   output
+## 1 Summarize the benefits of local LLMs. Local LLMs offer privacy, low latency...
+## 2    Explain why privacy matters in AI. Privacy ensures that sensitive data...
+```
+
+### 5. Clean Up
 
 When you are finished, it is good practice to unload the model from memory and shut down the local server to free up system resources.
 
