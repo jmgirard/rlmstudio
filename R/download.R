@@ -160,6 +160,7 @@ lms_download_status <- function(job_id, host = "http://localhost:1234") {
 #' @param x An object of class \code{lms_download_status}.
 #' @param ... Additional arguments passed to print.
 #'
+#' @keywords internal
 #' @export
 print.lms_download_status <- function(x, ...) {
   cli::cli_h3("Download Job: {.val {x$job_id}}")

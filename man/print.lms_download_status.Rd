@@ -14,3 +14,4 @@
 \description{
 Print method for LM Studio download status
 }
+\keyword{internal}
