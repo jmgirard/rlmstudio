@@ -12,132 +12,90 @@ lms_client <- function(host = "http://localhost:1234") {
     )
 }
 
-#' Send an advanced chat request to the LM Studio API
+#' Advanced Chat Completions via REST API
 #'
-#' Provides a direct interface to the \code{/api/v1/chat} endpoint, supporting
-#' LM Studio specific features like MCP integrations and reasoning settings.
+#' Provides full control over the Chat Completions API, including system
+#' prompts, multiple messages, and inference parameters.
 #'
-#' @param model Character. The identifier of the loaded model to use.
-#' @param input Character or List. The user message or a list of message objects.
-#' @param system_prompt Character. An optional system prompt to set model behavior.
-#' @param integrations List. A list of integrations (e.g., MCP servers) to enable.
-#' @param stream Logical. Whether to stream partial outputs via SSE.
-#' @param temperature Numeric. Randomness in token selection (0 to 1).
-#' @param top_p Numeric. Minimum cumulative probability for possible next tokens.
-#' @param top_k Integer. Limits next token selection to top-k probable tokens.
-#' @param min_p Numeric. Minimum base probability for a token.
-#' @param repeat_penalty Numeric. Penalty for repeating token sequences.
-#' @param max_output_tokens Integer. Maximum number of tokens to generate.
-#' @param reasoning Character. Reasoning setting: "off", "low", "medium", "high", or "on".
-#' @param context_length Integer. Number of tokens to consider as context.
-#' @param store Logical. Whether to store the chat.
-#' @param previous_response_id Character. ID of a previous response to continue a conversation.
-#' @param simplify Logical. If \code{TRUE}, returns the response text with metadata
-#'   as attributes. If \code{FALSE}, returns the full parsed list.
-#' @param host Character. The host address of the local server.
+#' @param model Character. Unique identifier of the loaded model to use.
+#' @param input Character. The user message or prompt.
+#' @param system_prompt Character. Optional system instructions to guide model behavior.
+#' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
+#' @param simplify Logical. If \code{TRUE} (default), returns only the character string of the response.
+#'   If \code{FALSE}, returns the full raw API response list.
+#' @param ... Additional inference parameters passed to the API request body.
+#'   Common parameters include \code{temperature}, \code{max_tokens}, \code{top_p},
+#'   \code{presence_penalty}, and \code{frequency_penalty}.
+#'   For a full list of supported parameters, see the LM Studio documentation:
+#'   \url{https://lmstudio.ai/docs/api/endpoints/chat-completions}
 #'
-#' @return A character string (with attributes) if \code{simplify = TRUE},
-#'   otherwise a parsed list.
+#' @return A character string (if \code{simplify = TRUE}) or a list containing the full API response.
 #' @export
 lms_chat_advanced <- function(model,
-                              input,
-                              system_prompt = NULL,
-                              integrations = NULL,
-                              stream = FALSE,
-                              temperature = NULL,
-                              top_p = NULL,
-                              top_k = NULL,
-                              min_p = NULL,
-                              repeat_penalty = NULL,
-                              max_output_tokens = NULL,
-                              reasoning = NULL,
-                              context_length = NULL,
-                              store = NULL,
-                              previous_response_id = NULL,
-                              simplify = FALSE,
-                              host = "http://localhost:1234") {
+                               input,
+                               system_prompt = NULL,
+                               host = "http://localhost:1234",
+                               simplify = TRUE,
+                               ...) {
 
   if (!is_server_running()) {
-    cli::cli_abort("The LM Studio server is not running. Run {.fn start_server} first.")
+    cli::cli_abort("The LM Studio server is not running. Run {.fn lms_server_start} first.")
   }
 
+  endpoint <- paste0(host, "/api/v1/chat/completions")
+
+  # 1. Build the message structure
+  messages <- list()
+  if (!is.null(system_prompt)) {
+    messages[[length(messages) + 1]] <- list(role = "system", content = system_prompt)
+  }
+  messages[[length(messages) + 1]] <- list(role = "user", content = input)
+
+  # 2. Build the base body
   body <- list(
     model = model,
-    input = input,
-    system_prompt = system_prompt,
-    integrations = integrations,
-    stream = stream,
-    temperature = temperature,
-    top_p = top_p,
-    top_k = if (!is.null(top_k)) as.integer(top_k) else NULL,
-    min_p = min_p,
-    repeat_penalty = repeat_penalty,
-    max_output_tokens = if (!is.null(max_output_tokens)) as.integer(max_output_tokens) else NULL,
-    reasoning = reasoning,
-    context_length = if (!is.null(context_length)) as.integer(context_length) else NULL,
-    store = store,
-    previous_response_id = previous_response_id
+    messages = messages
   )
 
-  # Remove NULLs to let the API use its defaults
-  body <- Filter(Negate(is.null), body)
+  # 3. Merge dots into the body (e.g., temperature, max_tokens, etc.)
+  body <- utils::modifyList(body, list(...))
 
-  resp <- lms_client(host) |>
-    httr2::req_url_path_append("api/v1/chat") |>
+  resp <- httr2::request(endpoint) |>
     httr2::req_body_json(body) |>
-    httr2::req_error(is_error = \(resp) httr2::resp_status(resp) >= 400) |>
+    httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
-  out <- httr2::resp_body_json(resp)
+  if (httr2::resp_status(resp) == 200) {
+    resp_data <- httr2::resp_body_json(resp)
 
-  if (isTRUE(simplify)) {
-    if (is.null(out$output) || length(out$output) == 0) return(NULL)
-
-    # Extract all message content
-    content_list <- lapply(out$output, function(x) {
-      if (identical(x$type, "message")) return(x$content)
-      return(NULL)
-    })
-
-    content <- paste(unlist(Filter(Negate(is.null), content_list)), collapse = "\n")
-
-    # Attach comprehensive metadata as attributes
-    attr(content, "model_instance_id") <- out$model_instance_id
-    attr(content, "response_id") <- out$response_id
-    attr(content, "stats") <- out$stats
-
-    # Check if there are tool calls to attach
-    tool_calls <- Filter(function(x) identical(x$type, "tool_call"), out$output)
-    if (length(tool_calls) > 0) {
-      attr(content, "tool_calls") <- tool_calls
+    if (isTRUE(simplify)) {
+      return(resp_data$choices[[1]]$message$content)
+    } else {
+      return(resp_data)
     }
-
-    return(content)
   }
 
-  out
+  # Robust error message extraction
+  err_msg <- tryCatch({
+    err_json <- httr2::resp_body_json(resp)
+    if (!is.null(err_json$error$message)) err_json$error$message
+    else if (!is.null(err_json$error)) err_json$error
+    else httr2::resp_body_string(resp)
+  }, error = function(e) {
+    httr2::resp_body_string(resp)
+  })
+
+  if (err_msg == "") err_msg <- paste("HTTP Status", httr2::resp_status(resp))
+
+  cli::cli_abort(c("x" = "Chat Completion Failed: {err_msg}"))
 }
 
-#' Quick chat via the API
+#' Basic Chat Completion via REST API
 #'
-#' A convenience wrapper around \code{lms_chat_advanced} for simple interactions.
+#' A simplified wrapper for quick interactions with a loaded model.
 #'
-#' @param model Character. The identifier of the loaded model to use.
-#' @param input Character. The prompt or message to send.
-#' @param system_prompt Character. An optional system prompt.
-#' @param simplify Logical. Whether to return response text (default) or the full list.
-#' @param host Character. The host address of the local server.
-#' @param ... Additional arguments passed to \code{lms_chat_advanced}.
-#'
-#' @return Response text or a full list.
+#' @inheritParams lms_chat_advanced
 #' @export
-lms_chat <- function(model, input, system_prompt = NULL, simplify = TRUE, host = "http://localhost:1234", ...) {
-  lms_chat_advanced(
-    model = model,
-    input = input,
-    system_prompt = system_prompt,
-    simplify = simplify,
-    host = host,
-    ...
-  )
+lms_chat <- function(model, input, ...) {
+  lms_chat_advanced(model = model, input = input, ...)
 }

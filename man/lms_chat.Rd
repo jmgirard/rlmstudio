@@ -2,33 +2,21 @@
 % Please edit documentation in R/chat.R
 \name{lms_chat}
 \alias{lms_chat}
-\title{Quick chat via the API}
+\title{Basic Chat Completion via REST API}
 \usage{
-lms_chat(
-  model,
-  input,
-  system_prompt = NULL,
-  simplify = TRUE,
-  host = "http://localhost:1234",
-  ...
-)
+lms_chat(model, input, ...)
 }
 \arguments{
-\item{model}{Character. The identifier of the loaded model to use.}
+\item{model}{Character. Unique identifier of the loaded model to use.}
 
-\item{input}{Character. The prompt or message to send.}
+\item{input}{Character. The user message or prompt.}
 
-\item{system_prompt}{Character. An optional system prompt.}
-
-\item{simplify}{Logical. Whether to return response text (default) or the full list.}
-
-\item{host}{Character. The host address of the local server.}
-
-\item{...}{Additional arguments passed to \code{lms_chat_advanced}.}
-}
-\value{
-Response text or a full list.
+\item{...}{Additional inference parameters passed to the API request body.
+Common parameters include \code{temperature}, \code{max_tokens}, \code{top_p},
+\code{presence_penalty}, and \code{frequency_penalty}.
+For a full list of supported parameters, see the LM Studio documentation:
+\url{https://lmstudio.ai/docs/api/endpoints/chat-completions}}
 }
 \description{
-A convenience wrapper around \code{lms_chat_advanced} for simple interactions.
+A simplified wrapper for quick interactions with a loaded model.
 }

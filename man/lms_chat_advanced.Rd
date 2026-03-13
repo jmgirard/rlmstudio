@@ -2,69 +2,39 @@
 % Please edit documentation in R/chat.R
 \name{lms_chat_advanced}
 \alias{lms_chat_advanced}
-\title{Send an advanced chat request to the LM Studio API}
+\title{Advanced Chat Completions via REST API}
 \usage{
 lms_chat_advanced(
   model,
   input,
   system_prompt = NULL,
-  integrations = NULL,
-  stream = FALSE,
-  temperature = NULL,
-  top_p = NULL,
-  top_k = NULL,
-  min_p = NULL,
-  repeat_penalty = NULL,
-  max_output_tokens = NULL,
-  reasoning = NULL,
-  context_length = NULL,
-  store = NULL,
-  previous_response_id = NULL,
-  simplify = FALSE,
-  host = "http://localhost:1234"
+  host = "http://localhost:1234",
+  simplify = TRUE,
+  ...
 )
 }
 \arguments{
-\item{model}{Character. The identifier of the loaded model to use.}
+\item{model}{Character. Unique identifier of the loaded model to use.}
 
-\item{input}{Character or List. The user message or a list of message objects.}
+\item{input}{Character. The user message or prompt.}
 
-\item{system_prompt}{Character. An optional system prompt to set model behavior.}
+\item{system_prompt}{Character. Optional system instructions to guide model behavior.}
 
-\item{integrations}{List. A list of integrations (e.g., MCP servers) to enable.}
+\item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
 
-\item{stream}{Logical. Whether to stream partial outputs via SSE.}
+\item{simplify}{Logical. If \code{TRUE} (default), returns only the character string of the response.
+If \code{FALSE}, returns the full raw API response list.}
 
-\item{temperature}{Numeric. Randomness in token selection (0 to 1).}
-
-\item{top_p}{Numeric. Minimum cumulative probability for possible next tokens.}
-
-\item{top_k}{Integer. Limits next token selection to top-k probable tokens.}
-
-\item{min_p}{Numeric. Minimum base probability for a token.}
-
-\item{repeat_penalty}{Numeric. Penalty for repeating token sequences.}
-
-\item{max_output_tokens}{Integer. Maximum number of tokens to generate.}
-
-\item{reasoning}{Character. Reasoning setting: "off", "low", "medium", "high", or "on".}
-
-\item{context_length}{Integer. Number of tokens to consider as context.}
-
-\item{store}{Logical. Whether to store the chat.}
-
-\item{previous_response_id}{Character. ID of a previous response to continue a conversation.}
-
-\item{simplify}{Logical. If \code{TRUE}, returns the response text with metadata
-as attributes. If \code{FALSE}, returns the full parsed list.}
-
-\item{host}{Character. The host address of the local server.}
+\item{...}{Additional inference parameters passed to the API request body.
+Common parameters include \code{temperature}, \code{max_tokens}, \code{top_p},
+\code{presence_penalty}, and \code{frequency_penalty}.
+For a full list of supported parameters, see the LM Studio documentation:
+\url{https://lmstudio.ai/docs/api/endpoints/chat-completions}}
 }
 \value{
-A character string (with attributes) if \code{simplify = TRUE},
-otherwise a parsed list.
+A character string (if \code{simplify = TRUE}) or a list containing the full API response.
 }
 \description{
-Provides a direct interface to the \code{/api/v1/chat} endpoint, supporting
-LM Studio specific features like MCP integrations and reasoning settings.
+Provides full control over the Chat Completions API, including system
+prompts, multiple messages, and inference parameters.
 }

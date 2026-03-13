@@ -1,9 +1,12 @@
-Package: lms
+Package: rlmstudio
 Title: Access and Control LM Studio from R
 Version: 0.0.0.9000
 Authors@R:
     person("Jeffrey", "Girard", , "me@jmgirard.com", role = c("aut", "cre"))
-Description: This package is a wrapper for the LM Studio Command Line Interface, allowing you to access and control the LM Studio software from R.
+Description: A community-maintained R wrapper for the LM Studio CLI and
+    REST API. Provides functions to manage the local server, download
+    and load models, and interact with LLMs using OpenAI-compatible
+    endpoints. This is an unofficial package.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -12,7 +15,8 @@ Imports:
     cli,
     httr2,
     jsonlite,
-    processx
+    processx,
+    utils
 Suggests:
     knitr,
     rmarkdown,
