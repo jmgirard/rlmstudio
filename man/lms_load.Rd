@@ -12,6 +12,7 @@ lms_load(
   num_experts = NULL,
   offload_kv_cache_to_gpu = NULL,
   echo_load_config = FALSE,
+  force = FALSE,
   host = "http://localhost:1234",
   ...
 )
@@ -30,6 +31,8 @@ lms_load(
 \item{offload_kv_cache_to_gpu}{Logical. Whether KV cache is offloaded to GPU memory.}
 
 \item{echo_load_config}{Logical. If \code{TRUE}, echoes the final load configuration in the response.}
+
+\item{force}{Logical. If \code{TRUE}, bypasses the check for currently loaded models and requests a new instance from the server. Note that this does not overwrite or replace the existing model; it loads a second concurrent instance into VRAM. Defaults to \code{FALSE}.}
 
 \item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
 

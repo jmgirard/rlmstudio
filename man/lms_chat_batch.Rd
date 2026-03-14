@@ -11,6 +11,7 @@ lms_chat_batch(
   format = c("vector", "list", "data.frame"),
   host = "http://localhost:1234",
   simplify = TRUE,
+  quiet = FALSE,
   ...
 )
 }
@@ -28,6 +29,8 @@ lms_chat_batch(
 
 \item{simplify}{Logical. If \code{TRUE} (default), returns only the character string of the response.
 If \code{FALSE}, returns the full raw API response list.}
+
+\item{quiet}{Logical. A local override for the global \code{rlmstudio.quiet} setting. Defaults to \code{FALSE}.}
 
 \item{...}{Additional inference parameters passed to the API request body.}
 }

@@ -27,7 +27,7 @@ check_lms_version <- function(min_version = "0.4.0") {
       output <- paste(result$stdout, result$stderr)
 
       if (grepl("CLI commit:", output, ignore.case = TRUE)) {
-        cli::cli_alert_success(
+        rlm_alert_success(
           "LM Studio CLI is using the modern architecture (0.4.0+)."
         )
         return(TRUE)
@@ -47,7 +47,7 @@ check_lms_version <- function(min_version = "0.4.0") {
       }
 
       if (numeric_version(version_string) >= numeric_version(min_version)) {
-        cli::cli_alert_success(
+        rlm_alert_success(
           "LM Studio CLI version {.val {version_string}} meets the requirement ({.val {min_version}})."
         )
         return(TRUE)
@@ -76,12 +76,12 @@ install_lmstudio <- function(method = c("browser", "headless")) {
 
   # Check for existence AND version before proceeding
   if (!has_lms() && check_lms_version("0.4.0")) {
-    cli::cli_alert_success("Your LM Studio setup is ready to go!")
+    rlm_alert_success("Your LM Studio setup is ready to go!")
     return(invisible(TRUE))
   }
 
   if (method == "browser") {
-    cli::cli_alert_info(
+    rlm_alert_info(
       "Opening the LM Studio download page in your default browser..."
     )
     utils::browseURL("https://lmstudio.ai/download")
@@ -90,7 +90,7 @@ install_lmstudio <- function(method = c("browser", "headless")) {
     )
   } else if (method == "headless") {
     os <- Sys.info()[["sysname"]]
-    cli::cli_alert_info("Attempting headless installation or update...")
+    rlm_alert_info("Attempting headless installation or update...")
 
     tryCatch(
       {
@@ -124,11 +124,11 @@ install_lmstudio <- function(method = c("browser", "headless")) {
           )
         }
 
-        cli::cli_alert_success("Installation script completed.")
+        rlm_alert_success("Installation script completed.")
         cli::cli_alert_warning(
           "You may need to restart your R session or terminal for the PATH changes to take effect."
         )
-        cli::cli_alert_info(
+        rlm_alert_info(
           "In a headless environment, remember to start the daemon using {.fn lms_daemon_start} and the server using {.fn lms_server_start} before loading models."
         )
       },

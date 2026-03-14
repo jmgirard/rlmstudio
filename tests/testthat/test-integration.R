@@ -19,7 +19,7 @@ test_that("End-to-end model load and chat works", {
   expect_true(load_res)
 
   # 2. Check that it appears in the loaded list
-  models <- list_models(loaded = TRUE)
+  models <- list_models(loaded = TRUE, quiet = TRUE)
   expect_true(test_model %in% models$key)
 
   # 3. Test chat generation

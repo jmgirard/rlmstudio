@@ -31,7 +31,7 @@ lms_daemon_start <- function() {
   res <- processx::run(lms_path(), args, error_on_status = FALSE)
 
   if (res$status == 0) {
-    cli::cli_alert_success("LM Studio daemon started in the background.")
+    rlm_alert_success("LM Studio daemon started in the background.")
   } else {
     cli::cli_abort(
       "Failed to start the LM Studio daemon. Exit code: {.val {res$status}}."
@@ -103,7 +103,7 @@ lms_daemon_stop <- function(force = FALSE) {
   res <- processx::run(lms_path(), args, error_on_status = FALSE)
 
   if (res$status == 0) {
-    cli::cli_alert_success("LM Studio daemon stopped successfully.")
+    rlm_alert_success("LM Studio daemon stopped successfully.")
   } else {
     err_msg <- trimws(res$stderr)
     if (err_msg == "") {

@@ -14,10 +14,16 @@ lms_unload(model, host = "http://localhost:1234", ...)
 \item{...}{Additional arguments passed to the API request body.}
 }
 \value{
-Invisibly returns \code{TRUE} on success.
+Invisibly returns the model identifier string on success.
 }
 \description{
 Unload a model from memory via REST API
+}
+\note{
+If you have loaded multiple instances of the same model using \code{force = TRUE} in \code{lms_load()},
+the server assigns them unique instance identifiers (e.g., \code{"google/gemma-3-1b"} and \code{"google/gemma-3-1b:2"}).
+Passing the base model name to \code{lms_unload()} will only unload the primary instance.
+To unload duplicate instances, you must provide their exact \code{instance_id}, or use \code{lms_unload_all()} to clear everything.
 }
 \seealso{
 \href{https://lmstudio.ai/docs/developer/rest/unload}{LM Studio Unload Model API}

@@ -7,6 +7,7 @@
 #' @param num_experts Integer. Number of experts to use during inference for MoE models.
 #' @param offload_kv_cache_to_gpu Logical. Whether KV cache is offloaded to GPU memory.
 #' @param echo_load_config Logical. If \code{TRUE}, echoes the final load configuration in the response.
+#' @param force Logical. If \code{TRUE}, bypasses the check for currently loaded models and requests a new instance from the server. Note that this does not overwrite or replace the existing model; it loads a second concurrent instance into VRAM. Defaults to \code{FALSE}.
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
 #' @param ... Additional arguments passed to the API request body (useful for future API parameters).
 #'
@@ -22,6 +23,7 @@ lms_load <- function(
   num_experts = NULL,
   offload_kv_cache_to_gpu = NULL,
   echo_load_config = FALSE,
+  force = FALSE,
   host = "http://localhost:1234",
   ...
 ) {
@@ -33,20 +35,25 @@ lms_load <- function(
   }
 
   # Check if the model is already loaded to prevent redundant API calls
-  active_models <- list_models(
-    loaded = TRUE,
-    detailed = TRUE,
-    quiet = TRUE,
-    host = host
-  )
-  if (nrow(active_models) > 0 && model %in% active_models$key) {
-    cli::cli_alert_info("Model {.val {model}} is already loaded.")
-    if (isTRUE(echo_load_config)) {
-      cli::cli_alert_warning(
-        "Cannot echo load config because the model was already loaded."
+  if (!isTRUE(force)) {
+    active_models <- list_models(
+      loaded = TRUE,
+      detailed = TRUE,
+      quiet = TRUE,
+      host = host
+    )
+
+    if (nrow(active_models) > 0 && model %in% active_models$key) {
+      rlm_alert_info(
+        "Model {.val {model}} is already loaded. Use {.code force = TRUE} to load an additional instance."
       )
+      if (isTRUE(echo_load_config)) {
+        cli::cli_alert_warning(
+          "Cannot echo load config because the model was already loaded."
+        )
+      }
+      return(invisible(model))
     }
-    return(invisible(model))
   }
 
   # 1. Build the explicit body based on current known parameters
@@ -79,7 +86,7 @@ lms_load <- function(
   # 2. Merge dots into the body (allows for future/undocumented API parameters)
   body <- utils::modifyList(Filter(Negate(is.null), body), list(...))
 
-  cli::cli_progress_step(
+  rlm_progress_step(
     msg = "Loading model: {.val {model}}...",
     msg_done = "Model {.val {model}} loaded and verified."
   )
@@ -117,6 +124,5 @@ lms_load <- function(
   if (err_msg == "") {
     err_msg <- paste("HTTP Status", httr2::resp_status(resp))
   }
-
   cli::cli_abort(c("x" = "API Load Failed: {err_msg}"), call = NULL)
 }

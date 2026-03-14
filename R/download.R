@@ -38,7 +38,7 @@ lms_download <- function(
   body <- utils::modifyList(body, list(...))
 
   # Capture the step ID so we can manually close it later
-  step_id <- cli::cli_progress_step(
+  step_id <- rlm_progress_step(
     "Initiating download for model: {.val {model}}..."
   )
 
@@ -49,7 +49,7 @@ lms_download <- function(
     httr2::req_perform()
 
   # Explicitly complete the progress step before printing subsequent alerts
-  cli::cli_progress_done(step_id)
+  rlm_progress_done(step_id)
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- httr2::resp_body_json(resp)
@@ -57,18 +57,18 @@ lms_download <- function(
     if (
       !is.null(resp_data$status) && resp_data$status == "already_downloaded"
     ) {
-      cli::cli_alert_success("Model {.val {model}} is already downloaded.")
+      rlm_alert_success("Model {.val {model}} is already downloaded.")
       return(invisible("already_downloaded"))
     }
 
     if (!is.null(resp_data$job_id)) {
-      cli::cli_alert_success(
+      rlm_alert_success(
         "Download job started successfully. Job ID: {.val {resp_data$job_id}}"
       )
       return(resp_data$job_id)
     }
 
-    cli::cli_alert_success("Download request succeeded.")
+    rlm_alert_success("Download request succeeded.")
     return(invisible(TRUE))
   }
 

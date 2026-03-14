@@ -38,7 +38,7 @@ list_models <- function(
 
   if (is.null(df) || nrow(df) == 0) {
     if (!quiet) {
-      cli::cli_inform(c("i" = "No models found on host {.url {host}}."))
+      rlm_inform(c("i" = "No models found on host {.url {host}}."))
     }
     return(invisible(data.frame()))
   }
@@ -68,7 +68,7 @@ list_models <- function(
 
   if (nrow(df) == 0) {
     if (!quiet) {
-      cli::cli_inform(c(
+      rlm_inform(c(
         "!" = "No models found matching criteria: loaded = {.val {loaded}}, type = {.val {type}}."
       ))
     }
@@ -92,8 +92,6 @@ list_models <- function(
     )
     available_cols <- intersect(core_cols, names(df))
     df <- df[, available_cols, drop = FALSE]
-  } else {
-    df$loaded_instances <- NULL
   }
 
   return(df)

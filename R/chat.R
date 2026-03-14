@@ -30,10 +30,10 @@ lms_chat <- function(
   ...
 ) {
   if (!is_server_running()) {
-    cli::cli_alert_danger(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
+      call = NULL
     )
-    return(invisible(NULL))
   }
 
   api_type <- match.arg(api_type)
@@ -113,7 +113,7 @@ lms_chat <- function(
     err_msg <- paste("HTTP Status", httr2::resp_status(resp))
   }
 
-  cli::cli_abort(c("x" = "Chat Completion Failed: {err_msg}"))
+  cli::cli_abort(c("x" = "Chat Completion Failed: {err_msg}"), call = NULL)
 }
 
 #' Batch Chat Completions via REST API
@@ -126,6 +126,7 @@ lms_chat <- function(
 #' @param inputs Character vector. The user messages or prompts to process.
 #' @param format Character. The desired output format: \code{"vector"} (default),
 #'   \code{"list"}, or \code{"data.frame"}.
+#' @param quiet Logical. A local override for the global \code{rlmstudio.quiet} setting. Defaults to \code{FALSE}.
 #'
 #' @seealso
 #' * [LM Studio Native Chat API](https://lmstudio.ai/docs/developer/rest/chat)
@@ -141,30 +142,39 @@ lms_chat_batch <- function(
   format = c("vector", "list", "data.frame"),
   host = "http://localhost:1234",
   simplify = TRUE,
+  quiet = FALSE,
   ...
 ) {
   if (!is_server_running()) {
-    cli::cli_alert_danger(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
+      call = NULL
     )
-    return(invisible(NULL))
   }
 
   format <- match.arg(format)
 
   if (!is.character(inputs) || length(inputs) == 0) {
-    cli::cli_abort("{.arg inputs} must be a non-empty character vector.")
+    cli::cli_abort(
+      "{.arg inputs} must be a non-empty character vector.",
+      call = NULL
+    )
   }
 
   n_inputs <- length(inputs)
 
-  # Capture ID to ensure update() can find it across environments
-  pb <- cli::cli_progress_bar(
-    name = "Batch processing",
-    total = n_inputs,
-    format = "{cli::pb_name} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}"
-  )
-  on.exit(cli::cli_progress_done(id = pb), add = TRUE)
+  # Evaluate the quiet setting using our internal helper
+  should_be_quiet <- is_quiet(quiet)
+
+  if (!should_be_quiet) {
+    pb <- cli::cli_progress_bar(
+      name = "Batch processing",
+      total = n_inputs,
+      format = "{cli::pb_name} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}"
+    )
+    # Ensure the progress bar is always closed, even if the user hits Escape
+    on.exit(cli::cli_progress_done(id = pb), add = TRUE)
+  }
 
   results <- lapply(inputs, function(input) {
     res <- lms_chat(
@@ -175,15 +185,20 @@ lms_chat_batch <- function(
       simplify = simplify,
       ...
     )
-    # Explicitly use ID for robustness
-    cli::cli_progress_update(id = pb)
+
+    # Only update if the progress bar was created
+    if (!should_be_quiet) {
+      cli::cli_progress_update(id = pb)
+    }
+
     res
   })
 
   if (format == "data.frame") {
     if (!isTRUE(simplify)) {
       cli::cli_abort(
-        "The {.val data.frame} format requires {.code simplify = TRUE}."
+        "The {.val data.frame} format requires {.code simplify = TRUE}.",
+        call = NULL
       )
     }
     return(data.frame(
