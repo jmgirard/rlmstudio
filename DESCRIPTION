@@ -1,6 +1,6 @@
 Package: rlmstudio
 Title: Access and Control LM Studio
-Version: 0.2.0
+Version: 0.2.1
 Authors@R:
     person("Jeffrey", "Girard", , "me@jmgirard.com",
            role = c("aut", "cph", "cre"),

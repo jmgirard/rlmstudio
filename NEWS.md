@@ -1,3 +1,5 @@
+# rlmstudio 0.2.1
+
 # rlmstudio 0.2.0
 
 * Improve list--load interaction
