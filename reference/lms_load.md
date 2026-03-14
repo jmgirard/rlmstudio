@@ -62,8 +62,8 @@ lms_load(
 
 ## Value
 
-Invisibly returns `TRUE` on success, or the load configuration list if
-`echo_load_config = TRUE`.
+Invisibly returns the model identifier string on success, or the load
+configuration list if `echo_load_config = TRUE`.
 
 ## See also
 

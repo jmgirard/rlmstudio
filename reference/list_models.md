@@ -10,6 +10,7 @@ list_models(
   loaded = FALSE,
   type = c("llm", "embedding"),
   detailed = FALSE,
+  quiet = FALSE,
   host = "http://localhost:1234"
 )
 ```
@@ -29,6 +30,11 @@ list_models(
 - detailed:
 
   Logical. Show all information about each model. Defaults to `FALSE`.
+
+- quiet:
+
+  Logical. If `TRUE`, suppresses informative console messages. Defaults
+  to `FALSE`.
 
 - host:
 
