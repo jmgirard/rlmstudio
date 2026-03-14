@@ -8,10 +8,11 @@ template:
   bootstrap: 5
   bslib:
     bootswatch: sandstone
+    primary: "#4139C3"
     link-color: "#4139C3"
 
 navbar:
-  bg: dark
+  bg: primary
 
 development:
   mode: auto
