@@ -1,22 +1,22 @@
-test_that("lms_chat gracefully exits if server is off", {
+test_that("lms_chat aborts if server is off", {
   local_mocked_bindings(is_server_running = function() FALSE)
 
-  suppressMessages({
-    res <- lms_chat("model-id", "Hello")
-  })
-  expect_null(res)
+  expect_error(
+    lms_chat("model-id", "Hello"),
+    "The LM Studio server is not running"
+  )
 })
 
 test_that("lms_chat_batch handles data.frame format correctly", {
   local_mocked_bindings(is_server_running = function() TRUE)
 
-  # Mock lms_chat directly to avoid HTTP calls for this structural test
   local_mocked_bindings(lms_chat = function(...) "Mocked output")
 
   res <- lms_chat_batch(
     model = "test-model",
     inputs = c("prompt 1", "prompt 2"),
-    format = "data.frame"
+    format = "data.frame",
+    quiet = TRUE
   )
 
   expect_s3_class(res, "data.frame")
