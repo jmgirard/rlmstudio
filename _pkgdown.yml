@@ -38,6 +38,7 @@ reference:
       - lms_download_status
       - lms_load
       - lms_unload
+      - lms_unload_all
 
   - title: "Local Server Management"
     desc: "Control the LM Studio local REST API server."
