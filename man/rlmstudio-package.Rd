@@ -12,6 +12,8 @@ A community-maintained R wrapper for the LM Studio CLI and REST API. Provides fu
 Useful links:
 \itemize{
   \item \url{https://jmgirard.github.io/rlmstudio/}
+  \item \url{https://github.com/jmgirard/rlmstudio}
+  \item Report bugs at \url{https://github.com/jmgirard/rlmstudio/issues}
 }
 
 }

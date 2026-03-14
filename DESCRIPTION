@@ -9,7 +9,8 @@ Description: A community-maintained R wrapper for the LM Studio CLI and
     load models, and interact with LLMs using OpenAI-compatible endpoints.
     This is an unofficial package.
 License: MIT + file LICENSE
-URL: https://jmgirard.github.io/rlmstudio/
+URL: https://jmgirard.github.io/rlmstudio/, https://github.com/jmgirard/rlmstudio
+BugReports: https://github.com/jmgirard/rlmstudio/issues
 Depends:
     R (>= 4.1.0)
 Imports:
@@ -20,15 +21,14 @@ Imports:
     lifecycle,
     processx,
     rlang,
-    utils,
-    withr
+    utils
 Suggests:
     httptest2,
     knitr,
     mockery,
     rmarkdown,
     testthat (>= 3.0.0),
-    waldo
+    withr
 VignetteBuilder:
     knitr
 Config/testthat/edition: 3
