@@ -1,14 +1,14 @@
 # rlmstudio
 
-**Disclaimer:** This is an unofficial, community-maintained R package.
-It is not affiliated with, endorsed by, or maintained by the creators of
-LM Studio.
-
 The `rlmstudio` package provides an R interface to the [LM
 Studio](https://lmstudio.ai/) CLI and REST API. It allows you to
 download local Large Language Models (LLMs), manage server instances,
 load or unload models into memory, and generate text directly from your
 R console or scripts.
+
+***Disclaimer:** This is an unofficial, community-maintained R package.
+It is not affiliated with, endorsed by, or maintained by the creators of
+LM Studio.*
 
 ## Installation
 
