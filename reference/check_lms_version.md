@@ -17,3 +17,11 @@ check_lms_version(min_version = "0.4.0")
 ## Value
 
 Logical. TRUE if the version is sufficient, FALSE otherwise.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+check_lms_version("0.4.0")
+} # }
+```

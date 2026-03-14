@@ -45,3 +45,16 @@ to clear everything.
 
 [LM Studio Unload Model
 API](https://lmstudio.ai/docs/developer/rest/unload)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+lms_server_start()
+lms_download("google/gemma-3-1b")
+lms_load("google/gemma-3-1b")
+
+# Unload a single specific model
+lms_unload("google/gemma-3-1b")
+} # }
+```

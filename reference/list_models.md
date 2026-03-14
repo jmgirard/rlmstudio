@@ -48,3 +48,22 @@ A data frame of model information.
 
 [LM Studio List Models
 API](https://lmstudio.ai/docs/developer/rest/list)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+lms_server_start()
+lms_download("google/gemma-3-1b")
+lms_load("google/gemma-3-1b")
+
+# List all downloaded models
+list_models()
+
+# List only currently loaded models
+list_models(loaded = TRUE)
+
+# Get detailed information about loaded text models
+list_models(loaded = TRUE, type = "llm", detailed = TRUE)
+} # }
+```

@@ -11,3 +11,11 @@ has_lms()
 ## Value
 
 Logical. TRUE if lms is found, FALSE otherwise.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+has_lms()
+} # }
+```

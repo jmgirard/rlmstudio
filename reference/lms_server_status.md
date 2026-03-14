@@ -46,3 +46,17 @@ or `log_level`).
 
 [LM Studio CLI Server Status
 Documentation](https://lmstudio.ai/docs/cli/serve/server-status)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+lms_server_start()
+
+# Get basic status string
+lms_server_status()
+
+# Get status as a parsed JSON data frame
+lms_server_status(json = TRUE)
+} # }
+```

@@ -29,3 +29,16 @@ identifiers, or `NULL` if no models were loaded.
 ## See also
 
 [`lms_unload`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+lms_server_start()
+lms_download("google/gemma-3-1b")
+lms_load("google/gemma-3-1b")
+
+# Unload all currently loaded models to clear VRAM
+lms_unload_all()
+} # }
+```

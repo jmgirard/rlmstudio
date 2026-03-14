@@ -29,3 +29,15 @@ Invisibly returns the system exit code (0 for success).
 
 [LM Studio CLI Server Start
 Documentation](https://lmstudio.ai/docs/cli/serve/server-start)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Start server on the default port
+lms_server_start()
+
+# Start server on a custom port with CORS enabled
+lms_server_start(port = 8080, cors = TRUE)
+} # }
+```
