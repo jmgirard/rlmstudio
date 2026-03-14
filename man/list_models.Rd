@@ -8,6 +8,7 @@ list_models(
   loaded = FALSE,
   type = c("llm", "embedding"),
   detailed = FALSE,
+  quiet = FALSE,
   host = "http://localhost:1234"
 )
 }
@@ -17,6 +18,8 @@ list_models(
 \item{type}{Character vector. The types of models to include. Defaults to \code{c("llm", "embedding")}.}
 
 \item{detailed}{Logical. Show all information about each model. Defaults to \code{FALSE}.}
+
+\item{quiet}{Logical. If \code{TRUE}, suppresses informative console messages. Defaults to \code{FALSE}.}
 
 \item{host}{Character. The host address of the local server.}
 }

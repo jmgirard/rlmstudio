@@ -12,7 +12,7 @@
 #'
 #' @seealso [LM Studio Load Model API](https://lmstudio.ai/docs/developer/rest/load)
 #'
-#' @return Invisibly returns \code{TRUE} on success, or the load configuration list if \code{echo_load_config = TRUE}.
+#' @return Invisibly returns the model identifier string on success, or the load configuration list if \code{echo_load_config = TRUE}.
 #' @export
 lms_load <- function(
   model,
@@ -26,10 +26,27 @@ lms_load <- function(
   ...
 ) {
   if (!is_server_running()) {
-    cli::cli_alert_danger(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first."
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
+      call = NULL
     )
-    return(invisible(FALSE))
+  }
+
+  # Check if the model is already loaded to prevent redundant API calls
+  active_models <- list_models(
+    loaded = TRUE,
+    detailed = TRUE,
+    quiet = TRUE,
+    host = host
+  )
+  if (nrow(active_models) > 0 && model %in% active_models$key) {
+    cli::cli_alert_info("Model {.val {model}} is already loaded.")
+    if (isTRUE(echo_load_config)) {
+      cli::cli_alert_warning(
+        "Cannot echo load config because the model was already loaded."
+      )
+    }
+    return(invisible(model))
   }
 
   # 1. Build the explicit body based on current known parameters
@@ -79,7 +96,7 @@ lms_load <- function(
       if (isTRUE(echo_load_config)) {
         return(invisible(resp_data$load_config))
       }
-      return(invisible(TRUE))
+      return(invisible(model))
     }
   }
 
@@ -100,5 +117,6 @@ lms_load <- function(
   if (err_msg == "") {
     err_msg <- paste("HTTP Status", httr2::resp_status(resp))
   }
-  cli::cli_abort(c("x" = "API Load Failed: {err_msg}"))
+
+  cli::cli_abort(c("x" = "API Load Failed: {err_msg}"), call = NULL)
 }

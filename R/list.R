@@ -5,6 +5,7 @@
 #' @param loaded Logical. If \code{TRUE}, returns only currently loaded models. Defaults to \code{FALSE}.
 #' @param type Character vector. The types of models to include. Defaults to \code{c("llm", "embedding")}.
 #' @param detailed Logical. Show all information about each model. Defaults to \code{FALSE}.
+#' @param quiet Logical. If \code{TRUE}, suppresses informative console messages. Defaults to \code{FALSE}.
 #' @param host Character. The host address of the local server.
 #'
 #' @seealso [LM Studio List Models API](https://lmstudio.ai/docs/developer/rest/list)
@@ -15,12 +16,15 @@ list_models <- function(
   loaded = FALSE,
   type = c("llm", "embedding"),
   detailed = FALSE,
+  quiet = FALSE,
   host = "http://localhost:1234"
 ) {
   if (!is_server_running()) {
-    cli::cli_alert_danger(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first."
-    )
+    if (!quiet) {
+      cli::cli_alert_danger(
+        "The LM Studio server is not running. Run {.fn lms_server_start} first."
+      )
+    }
     return(invisible(data.frame()))
   }
 
@@ -33,7 +37,9 @@ list_models <- function(
   df <- full_data$models
 
   if (is.null(df) || nrow(df) == 0) {
-    cli::cli_inform(c("i" = "No models found on host {.url {host}}."))
+    if (!quiet) {
+      cli::cli_inform(c("i" = "No models found on host {.url {host}}."))
+    }
     return(invisible(data.frame()))
   }
 
@@ -61,9 +67,11 @@ list_models <- function(
   }
 
   if (nrow(df) == 0) {
-    cli::cli_inform(c(
-      "!" = "No models found matching criteria: loaded = {.val {loaded}}, type = {.val {type}}."
-    ))
+    if (!quiet) {
+      cli::cli_inform(c(
+        "!" = "No models found matching criteria: loaded = {.val {loaded}}, type = {.val {type}}."
+      ))
+    }
     return(invisible(data.frame()))
   }
 
@@ -85,7 +93,6 @@ list_models <- function(
     available_cols <- intersect(core_cols, names(df))
     df <- df[, available_cols, drop = FALSE]
   } else {
-    # Drop the complex list column for easier printing even in detailed view
     df$loaded_instances <- NULL
   }
 

@@ -36,7 +36,7 @@ lms_load(
 \item{...}{Additional arguments passed to the API request body (useful for future API parameters).}
 }
 \value{
-Invisibly returns \code{TRUE} on success, or the load configuration list if \code{echo_load_config = TRUE}.
+Invisibly returns the model identifier string on success, or the load configuration list if \code{echo_load_config = TRUE}.
 }
 \description{
 Load a model via REST API
