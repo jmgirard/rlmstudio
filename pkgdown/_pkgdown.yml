@@ -7,7 +7,7 @@ authors:
 template:
   bootstrap: 5
   bslib:
-    bootswatch: Sandstone
+    bootswatch: sandstone
 
 navbar:
   bg: dark
