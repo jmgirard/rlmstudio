@@ -6,7 +6,7 @@ authors:
 
 template:
   bootstrap: 5
-  bootswatch: sandstone
+  bootswatch: Sandstone
 
 development:
   mode: auto
