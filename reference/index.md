@@ -24,6 +24,8 @@ Discover, download, load, and manage local models.
   : Load a model via REST API
 - [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
   : Unload a model from memory via REST API
+- [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+  : Unload all models from memory
 
 ## Local Server Management
 

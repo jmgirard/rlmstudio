@@ -13,6 +13,7 @@ lms_load(
   num_experts = NULL,
   offload_kv_cache_to_gpu = NULL,
   echo_load_config = FALSE,
+  force = FALSE,
   host = "http://localhost:1234",
   ...
 )
@@ -49,6 +50,13 @@ lms_load(
 
   Logical. If `TRUE`, echoes the final load configuration in the
   response.
+
+- force:
+
+  Logical. If `TRUE`, bypasses the check for currently loaded models and
+  requests a new instance from the server. Note that this does not
+  overwrite or replace the existing model; it loads a second concurrent
+  instance into VRAM. Defaults to `FALSE`.
 
 - host:
 

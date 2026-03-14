@@ -14,6 +14,7 @@ lms_chat_batch(
   format = c("vector", "list", "data.frame"),
   host = "http://localhost:1234",
   simplify = TRUE,
+  quiet = FALSE,
   ...
 )
 ```
@@ -46,6 +47,11 @@ lms_chat_batch(
 
   Logical. If `TRUE` (default), returns only the character string of the
   response. If `FALSE`, returns the full raw API response list.
+
+- quiet:
+
+  Logical. A local override for the global `rlmstudio.quiet` setting.
+  Defaults to `FALSE`.
 
 - ...:
 
