@@ -8,6 +8,7 @@ template:
   bootstrap: 5
   bslib:
     bootswatch: sandstone
+    primary: "#4139C3"
 
 navbar:
   bg: dark
