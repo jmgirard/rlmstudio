@@ -6,7 +6,11 @@ authors:
 
 template:
   bootstrap: 5
-  bootswatch: Sandstone
+  bslib:
+    bootswatch: Sandstone
+
+navbar:
+  bg: dark
 
 development:
   mode: auto
