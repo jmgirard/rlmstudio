@@ -7,6 +7,9 @@
 
 ## Citation
 
+Source:
+[`DESCRIPTION`](https://github.com/jmgirard/rlmstudio/blob/HEAD/DESCRIPTION)
+
 Girard J (2026). *rlmstudio: Access and Control LM Studio from R*. R
 package version 0.1.0, <https://jmgirard.github.io/rlmstudio/>.
 
