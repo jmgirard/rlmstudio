@@ -1,8 +1,8 @@
 ---
-title: "Headless Configuration and Usage: llmster Daemon"
+title: "Headless Configuration and Usage"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Headless Configuration and Usage: llmster Daemon}
+  %\VignetteIndexEntry{Headless Configuration and Usage}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

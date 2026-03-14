@@ -1,8 +1,8 @@
 ---
-title: "Getting Started with LM Studio: GUI Workflow"
+title: "Getting Started with LM Studio in R"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting Started with LM Studio: GUI Workflow}
+  %\VignetteIndexEntry{Getting Started with LM Studio in R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
