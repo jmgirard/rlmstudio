@@ -11,6 +11,10 @@ Useful links:
 
 - <https://jmgirard.github.io/rlmstudio/>
 
+- <https://github.com/jmgirard/rlmstudio>
+
+- Report bugs at <https://github.com/jmgirard/rlmstudio/issues>
+
 ## Author
 
 **Maintainer**: Jeffrey Girard <me@jmgirard.com>
