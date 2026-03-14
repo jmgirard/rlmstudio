@@ -2,6 +2,13 @@ url: https://jmgirard.github.io/rlmstudio/
 template:
   bootstrap: 5
 
+repo:
+  url:
+    home: https://github.com/jmgirard/rlmstudio/
+    source: https://github.com/jmgirard/rlmstudio/blob/HEAD/
+    issue: https://github.com/jmgirard/rlmstudio/issues/
+    user: https://github.com/jmgirard/
+
 reference:
   - title: "Chat & Inference"
     desc: "Interact with loaded LLMs to generate text and process batches of prompts."
