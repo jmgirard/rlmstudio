@@ -14,3 +14,4 @@ Useful links:
 ## Author
 
 **Maintainer**: Jeffrey Girard <me@jmgirard.com>
+([ORCID](https://orcid.org/0000-0002-7359-3746))
