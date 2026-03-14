@@ -16,7 +16,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jeffrey Girard \email{me@jmgirard.com}
+\strong{Maintainer}: Jeffrey Girard \email{me@jmgirard.com} (\href{https://orcid.org/0000-0002-7359-3746}{ORCID})
 
 }
 \keyword{internal}
