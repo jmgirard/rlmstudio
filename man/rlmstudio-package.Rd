@@ -4,9 +4,9 @@
 \name{rlmstudio-package}
 \alias{rlmstudio}
 \alias{rlmstudio-package}
-\title{rlmstudio: Access and Control LM Studio from R}
+\title{rlmstudio: Access and Control LM Studio}
 \description{
-A community-maintained R wrapper for the LM Studio CLI and REST API. Provides functions to manage the local server, download and load models, and interact with LLMs using OpenAI-compatible endpoints. This is an unofficial package.
+A community-maintained 'R' wrapper for the 'LM Studio' command line interface and API. Provides functions to manage the local daemon and server, download and load models, and interact with Large Language Models (LLMs).
 }
 \seealso{
 Useful links:
@@ -18,7 +18,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jeffrey Girard \email{me@jmgirard.com} (\href{https://orcid.org/0000-0002-7359-3746}{ORCID})
+\strong{Maintainer}: Jeffrey Girard \email{me@jmgirard.com} (\href{https://orcid.org/0000-0002-7359-3746}{ORCID}) [copyright holder]
 
 }
 \keyword{internal}

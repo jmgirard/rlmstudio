@@ -23,6 +23,17 @@ A character string containing the download \code{job_id}, or \code{"already_down
 \description{
 Download a model via REST API
 }
+\examples{
+\dontrun{
+lms_server_start()
+
+# Download a model by its HuggingFace identifier
+job_id <- lms_download("google/gemma-3-1b")
+
+# Download with a specific quantization level
+lms_download("google/gemma-3-1b", quantization = "4bit")
+}
+}
 \seealso{
 \href{https://lmstudio.ai/docs/developer/rest/download}{LM Studio Download Model API}
 }

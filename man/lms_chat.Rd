@@ -39,6 +39,25 @@ A character string (if \code{simplify = TRUE}) or a list containing the full API
 Provides full control over the Chat Completions API, including system
 prompts, multiple messages, and inference parameters.
 }
+\examples{
+\dontrun{
+# Ensure the server is running and the model is loaded
+lms_server_start()
+lms_download("google/gemma-3-1b")
+lms_load("google/gemma-3-1b")
+
+# Basic chat with a loaded model
+lms_chat(model = "google/gemma-3-1b", input = "What is the capital of France?")
+
+# Chat with a system prompt and custom inference parameters
+lms_chat(
+  model = "google/gemma-3-1b",
+  input = "Write a short poem about R.",
+  system_prompt = "You are a helpful assistant.",
+  temperature = 0.7
+)
+}
+}
 \seealso{
 \itemize{
 \item \href{https://lmstudio.ai/docs/developer/rest/chat}{LM Studio Native Chat API}

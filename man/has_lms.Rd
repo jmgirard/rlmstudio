@@ -12,3 +12,8 @@ Logical. TRUE if lms is found, FALSE otherwise.
 \description{
 Check if LM Studio CLI is installed
 }
+\examples{
+\dontrun{
+has_lms()
+}
+}

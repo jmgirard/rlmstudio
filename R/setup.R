@@ -1,7 +1,13 @@
 #' Check if LM Studio CLI is installed
 #'
 #' @return Logical. TRUE if lms is found, FALSE otherwise.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' has_lms()
+#' }
 has_lms <- function() {
   Sys.which("lms") != ""
 }
@@ -9,8 +15,15 @@ has_lms <- function() {
 #' Check if the installed LM Studio CLI meets the minimum requirement
 #'
 #' @param min_version Character string of the required version. Default is "0.4.0".
+#'
 #' @return Logical. TRUE if the version is sufficient, FALSE otherwise.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' check_lms_version("0.4.0")
+#' }
 check_lms_version <- function(min_version = "0.4.0") {
   if (!has_lms()) {
     cli::cli_alert_danger("LM Studio CLI is not installed.")
@@ -70,7 +83,17 @@ check_lms_version <- function(min_version = "0.4.0") {
 #' Help the user install or update LM Studio
 #'
 #' @param method Character. Either "browser" or "headless".
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Open your default web browser to the download page
+#' install_lmstudio(method = "browser")
+#'
+#' # Attempt automatic headless installation via the command line
+#' install_lmstudio(method = "headless")
+#' }
 install_lmstudio <- function(method = c("browser", "headless")) {
   method <- match.arg(method)
 

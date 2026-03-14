@@ -21,10 +21,11 @@ LM Studio.*
 
 ## Installation
 
-You can install the development version of `rlmstudio` from GitHub with:
-
 ``` r
-# install.packages("remotes")
+# Install release version from CRAN
+install.packages("rlmstudio")
+
+# Install development version from GitHub
 remotes::install_github("jmgirard/rlmstudio")
 ```
 

@@ -11,7 +11,24 @@
 #' @seealso [LM Studio List Models API](https://lmstudio.ai/docs/developer/rest/list)
 #'
 #' @return A data frame of model information.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#' lms_download("google/gemma-3-1b")
+#' lms_load("google/gemma-3-1b")
+#'
+#' # List all downloaded models
+#' list_models()
+#'
+#' # List only currently loaded models
+#' list_models(loaded = TRUE)
+#'
+#' # Get detailed information about loaded text models
+#' list_models(loaded = TRUE, type = "llm", detailed = TRUE)
+#' }
 list_models <- function(
   loaded = FALSE,
   type = c("llm", "embedding"),

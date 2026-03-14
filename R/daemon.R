@@ -1,5 +1,8 @@
 #' Build arguments for lms_daemon_start
 #' @noRd
+#'
+#' @examples
+#' build_args_daemon_up()
 build_args_daemon_up <- function() {
   c("daemon", "up")
 }
@@ -67,6 +70,9 @@ lms_daemon_status <- function() {
 
 #' Build arguments for lms_daemon_stop
 #' @noRd
+#'
+#' @examples
+#' build_args_daemon_down()
 build_args_daemon_down <- function() {
   c("daemon", "down")
 }

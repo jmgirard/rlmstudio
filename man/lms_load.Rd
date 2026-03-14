@@ -44,6 +44,18 @@ Invisibly returns the model identifier string on success, or the load configurat
 \description{
 Load a model via REST API
 }
+\examples{
+\dontrun{
+lms_server_start()
+lms_download("google/gemma-3-1b")
+
+# Load a model with default settings
+lms_load("google/gemma-3-1b")
+
+# Load a model with custom context length and flash attention enabled
+lms_load("google/gemma-3-1b", context_length = 8192, flash_attention = TRUE)
+}
+}
 \seealso{
 \href{https://lmstudio.ai/docs/developer/rest/load}{LM Studio Load Model API}
 }

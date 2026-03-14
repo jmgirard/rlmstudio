@@ -14,7 +14,20 @@
 #' @seealso [LM Studio Load Model API](https://lmstudio.ai/docs/developer/rest/load)
 #'
 #' @return Invisibly returns the model identifier string on success, or the load configuration list if \code{echo_load_config = TRUE}.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#' lms_download("google/gemma-3-1b")
+#'
+#' # Load a model with default settings
+#' lms_load("google/gemma-3-1b")
+#'
+#' # Load a model with custom context length and flash attention enabled
+#' lms_load("google/gemma-3-1b", context_length = 8192, flash_attention = TRUE)
+#' }
 lms_load <- function(
   model,
   context_length = NULL,

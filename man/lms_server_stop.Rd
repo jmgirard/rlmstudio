@@ -12,6 +12,12 @@ Invisibly returns the system exit code (0 for success).
 \description{
 Stops the currently running LM Studio local server via the CLI.
 }
+\examples{
+\dontrun{
+lms_server_start()
+lms_server_stop()
+}
+}
 \seealso{
 \href{https://lmstudio.ai/docs/cli/serve/server-stop}{LM Studio CLI Server Stop Documentation}
 }

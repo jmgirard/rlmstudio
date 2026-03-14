@@ -15,3 +15,8 @@ Logical. TRUE if the version is sufficient, FALSE otherwise.
 \description{
 Check if the installed LM Studio CLI meets the minimum requirement
 }
+\examples{
+\dontrun{
+check_lms_version("0.4.0")
+}
+}

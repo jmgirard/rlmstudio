@@ -16,7 +16,7 @@ test_that("End-to-end model load and chat works", {
 
   # 1. Load the model
   load_res <- lms_load(test_model)
-  expect_true(load_res)
+  expect_equal(load_res, test_model)
 
   # 2. Check that it appears in the loaded list
   models <- list_models(loaded = TRUE, quiet = TRUE)

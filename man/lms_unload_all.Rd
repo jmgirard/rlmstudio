@@ -17,6 +17,16 @@ Invisibly returns a character vector of the unloaded model instance identifiers,
 \description{
 Retrieves a list of all currently loaded models and unloads them one by one.
 }
+\examples{
+\dontrun{
+lms_server_start()
+lms_download("google/gemma-3-1b")
+lms_load("google/gemma-3-1b")
+
+# Unload all currently loaded models to clear VRAM
+lms_unload_all()
+}
+}
 \seealso{
 \code{\link{lms_unload}}
 }

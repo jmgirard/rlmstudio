@@ -19,7 +19,27 @@
 #' * [OpenAI Compatible Chat API](https://lmstudio.ai/docs/developer/openai-compat/chat-completions)
 #'
 #' @return A character string (if \code{simplify = TRUE}) or a list containing the full API response.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Ensure the server is running and the model is loaded
+#' lms_server_start()
+#' lms_download("google/gemma-3-1b")
+#' lms_load("google/gemma-3-1b")
+#'
+#' # Basic chat with a loaded model
+#' lms_chat(model = "google/gemma-3-1b", input = "What is the capital of France?")
+#'
+#' # Chat with a system prompt and custom inference parameters
+#' lms_chat(
+#'   model = "google/gemma-3-1b",
+#'   input = "Write a short poem about R.",
+#'   system_prompt = "You are a helpful assistant.",
+#'   temperature = 0.7
+#' )
+#' }
 lms_chat <- function(
   model,
   input,
@@ -123,6 +143,7 @@ lms_chat <- function(
 #' zero-shot classification or text extraction.
 #'
 #' @inheritParams lms_chat
+#'
 #' @param inputs Character vector. The user messages or prompts to process.
 #' @param format Character. The desired output format: \code{"vector"} (default),
 #'   \code{"list"}, or \code{"data.frame"}.
@@ -134,7 +155,27 @@ lms_chat <- function(
 #'
 #' @return A character vector, list, or data frame depending on the \code{format}
 #'   argument and the value of \code{simplify}.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#' lms_download("google/gemma-3-1b")
+#' lms_load("google/gemma-3-1b")
+#'
+#' prompts <- c("What is 2+2?", "What is the capital of Japan?")
+#'
+#' # Returns a vector of responses by default
+#' lms_chat_batch(model = "google/gemma-3-1b", inputs = prompts)
+#'
+#' # Returns a data frame
+#' lms_chat_batch(
+#'   model = "google/gemma-3-1b",
+#'   inputs = prompts,
+#'   format = "data.frame"
+#' )
+#' }
 lms_chat_batch <- function(
   model,
   inputs,
@@ -226,7 +267,16 @@ lms_chat_batch <- function(
 #' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
 #'
 #' @return An httr2 request object.
+#'
 #' @noRd
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#'
+#' req <- lms_client("http://localhost:1234")
+#' # req is a base httr2 request object that can be further modified
+#' }
 lms_client <- function(host = "http://localhost:1234") {
   httr2::request(host) |>
     httr2::req_headers(

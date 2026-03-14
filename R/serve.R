@@ -1,5 +1,8 @@
 #' Build arguments for lms_server_start
 #' @noRd
+#'
+#' @examples
+#' build_args_server_start(port = 8080, cors = TRUE)
 build_args_server_start <- function(port = NULL, cors = FALSE) {
   args <- c("server", "start")
 
@@ -27,7 +30,17 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' @seealso [LM Studio CLI Server Start Documentation](https://lmstudio.ai/docs/cli/serve/server-start)
 #'
 #' @return Invisibly returns the system exit code (0 for success).
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Start server on the default port
+#' lms_server_start()
+#'
+#' # Start server on a custom port with CORS enabled
+#' lms_server_start(port = 8080, cors = TRUE)
+#' }
 lms_server_start <- function(port = NULL, cors = FALSE) {
   args <- build_args_server_start(port = port, cors = cors)
 
@@ -54,6 +67,9 @@ lms_server_start <- function(port = NULL, cors = FALSE) {
 
 #' Build arguments for lms_server_stop
 #' @noRd
+#'
+#' @examples
+#' build_args_server_stop()
 build_args_server_stop <- function() {
   c("server", "stop")
 }
@@ -65,7 +81,14 @@ build_args_server_stop <- function() {
 #' @seealso [LM Studio CLI Server Stop Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)
 #'
 #' @return Invisibly returns the system exit code (0 for success).
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#' lms_server_stop()
+#' }
 lms_server_stop <- function() {
   args <- build_args_server_stop()
 
@@ -84,6 +107,9 @@ lms_server_stop <- function() {
 
 #' Build arguments for lms_server_status
 #' @noRd
+#'
+#' @examples
+#' build_args_server_status(json = TRUE, quiet = TRUE)
 build_args_server_status <- function(
   json = FALSE,
   verbose = FALSE,
@@ -125,7 +151,19 @@ build_args_server_status <- function(
 #'
 #' @return A character vector of the raw CLI output. If `json = TRUE` and the
 #'   `jsonlite` package is installed, it returns a parsed list or data frame.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#'
+#' # Get basic status string
+#' lms_server_status()
+#'
+#' # Get status as a parsed JSON data frame
+#' lms_server_status(json = TRUE)
+#' }
 lms_server_status <- function(
   json = FALSE,
   verbose = FALSE,
@@ -171,7 +209,17 @@ lms_server_status <- function(
 
 #' Check if the LM Studio server is reachable
 #' @return Logical.
+#'
 #' @noRd
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#'
+#' if (is_server_running()) {
+#'   message("The LM Studio server is currently active.")
+#' }
+#' }
 is_server_running <- function() {
   tryCatch(
     {

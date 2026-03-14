@@ -13,7 +13,18 @@
 #' @seealso [LM Studio Unload Model API](https://lmstudio.ai/docs/developer/rest/unload)
 #'
 #' @return Invisibly returns the model identifier string on success.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#' lms_download("google/gemma-3-1b")
+#' lms_load("google/gemma-3-1b")
+#'
+#' # Unload a single specific model
+#' lms_unload("google/gemma-3-1b")
+#' }
 lms_unload <- function(model, host = "http://localhost:1234", ...) {
   if (!is_server_running()) {
     cli::cli_abort(
@@ -71,7 +82,18 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #' @seealso \code{\link{lms_unload}}
 #'
 #' @return Invisibly returns a character vector of the unloaded model instance identifiers, or \code{NULL} if no models were loaded.
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#' lms_download("google/gemma-3-1b")
+#' lms_load("google/gemma-3-1b")
+#'
+#' # Unload all currently loaded models to clear VRAM
+#' lms_unload_all()
+#' }
 lms_unload_all <- function(host = "http://localhost:1234", ...) {
   if (!is_server_running()) {
     cli::cli_abort(

@@ -43,6 +43,25 @@ Applies chat completions to a vector of input strings. This is useful for
 processing multiple documents or prompts in a single call, such as during
 zero-shot classification or text extraction.
 }
+\examples{
+\dontrun{
+lms_server_start()
+lms_download("google/gemma-3-1b")
+lms_load("google/gemma-3-1b")
+
+prompts <- c("What is 2+2?", "What is the capital of Japan?")
+
+# Returns a vector of responses by default
+lms_chat_batch(model = "google/gemma-3-1b", inputs = prompts)
+
+# Returns a data frame
+lms_chat_batch(
+  model = "google/gemma-3-1b",
+  inputs = prompts,
+  format = "data.frame"
+)
+}
+}
 \seealso{
 \itemize{
 \item \href{https://lmstudio.ai/docs/developer/rest/chat}{LM Studio Native Chat API}

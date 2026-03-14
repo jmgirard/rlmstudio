@@ -25,6 +25,16 @@ the server assigns them unique instance identifiers (e.g., \code{"google/gemma-3
 Passing the base model name to \code{lms_unload()} will only unload the primary instance.
 To unload duplicate instances, you must provide their exact \code{instance_id}, or use \code{lms_unload_all()} to clear everything.
 }
+\examples{
+\dontrun{
+lms_server_start()
+lms_download("google/gemma-3-1b")
+lms_load("google/gemma-3-1b")
+
+# Unload a single specific model
+lms_unload("google/gemma-3-1b")
+}
+}
 \seealso{
 \href{https://lmstudio.ai/docs/developer/rest/unload}{LM Studio Unload Model API}
 }

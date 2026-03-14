@@ -29,6 +29,22 @@ A data frame of model information.
 \description{
 Retrieves a list of models available on your system via the LM Studio REST API.
 }
+\examples{
+\dontrun{
+lms_server_start()
+lms_download("google/gemma-3-1b")
+lms_load("google/gemma-3-1b")
+
+# List all downloaded models
+list_models()
+
+# List only currently loaded models
+list_models(loaded = TRUE)
+
+# Get detailed information about loaded text models
+list_models(loaded = TRUE, type = "llm", detailed = TRUE)
+}
+}
 \seealso{
 \href{https://lmstudio.ai/docs/developer/rest/list}{LM Studio List Models API}
 }

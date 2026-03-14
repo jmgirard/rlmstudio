@@ -32,6 +32,17 @@ including whether it is running and its configuration.
 You can only use one logging control flag at a time (\code{verbose},
 \code{quiet}, or \code{log_level}).
 }
+\examples{
+\dontrun{
+lms_server_start()
+
+# Get basic status string
+lms_server_status()
+
+# Get status as a parsed JSON data frame
+lms_server_status(json = TRUE)
+}
+}
 \seealso{
 \href{https://lmstudio.ai/docs/cli/serve/server-status}{LM Studio CLI Server Status Documentation}
 }

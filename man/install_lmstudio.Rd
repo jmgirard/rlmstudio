@@ -12,3 +12,12 @@ install_lmstudio(method = c("browser", "headless"))
 \description{
 Help the user install or update LM Studio
 }
+\examples{
+\dontrun{
+# Open your default web browser to the download page
+install_lmstudio(method = "browser")
+
+# Attempt automatic headless installation via the command line
+install_lmstudio(method = "headless")
+}
+}
