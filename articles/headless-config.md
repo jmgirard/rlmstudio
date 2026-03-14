@@ -1,4 +1,4 @@
-# Headless Configuration and Usage: llmster Daemon
+# Headless Configuration and Usage
 
 The `rlmstudio` package provides robust support for running LM Studio in
 completely headless environments. This is ideal for Linux servers,

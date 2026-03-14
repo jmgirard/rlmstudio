@@ -1,4 +1,4 @@
-# Getting Started with LM Studio: GUI Workflow
+# Getting Started with LM Studio in R
 
 The `rlmstudio` package bridges the gap between R and local Large
 Language Models by wrapping the LM Studio CLI and its REST API. This
