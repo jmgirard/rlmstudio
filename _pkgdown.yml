@@ -1,7 +1,8 @@
 url: https://jmgirard.github.io/rlmstudio/
 
 authors:
-  Jeffrey Girard: https://affcom.ku.edu/girard
+  Jeffrey Girard:
+    href: https://affcom.ku.edu/girard
 
 template:
   bootstrap: 5
