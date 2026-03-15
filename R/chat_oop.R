@@ -43,6 +43,7 @@ validate_lms_chat_result <- function(x) {
 #'
 #' @param x An object of class \code{lms_chat_result}.
 #' @param ... Additional arguments passed to print.
+#' @keywords internal
 #' @export
 print.lms_chat_result <- function(x, ...) {
   # Create a clean, themed layout using cli
