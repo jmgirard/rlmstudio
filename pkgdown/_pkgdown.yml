@@ -30,6 +30,10 @@ reference:
     contents:
       - lms_chat
       - lms_chat_batch
+      - lms_chat_native
+      - lms_chat_openai
+      - lms_chat_openresponses
+      - lms_score_expected
 
   - title: "Model Management"
     desc: "Discover, download, load, and manage local models."
