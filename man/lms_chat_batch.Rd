@@ -2,7 +2,7 @@
 % Please edit documentation in R/chat.R
 \name{lms_chat_batch}
 \alias{lms_chat_batch}
-\title{Batch Chat Completions via REST API}
+\title{Batch Chat Completion with LM Studio}
 \usage{
 lms_chat_batch(
   model,
@@ -16,55 +16,22 @@ lms_chat_batch(
 )
 }
 \arguments{
-\item{model}{Character. Unique identifier of the loaded model to use.}
+\item{model}{Character. The loaded model name.}
 
-\item{inputs}{Character vector. The user messages or prompts to process.}
+\item{inputs}{Character vector. The prompts to process.}
 
-\item{system_prompt}{Character. Optional system instructions to guide model behavior.}
+\item{system_prompt}{Character. Optional system prompt.}
 
-\item{format}{Character. The desired output format: \code{"vector"} (default),
-\code{"list"}, or \code{"data.frame"}.}
+\item{format}{Character. Output format: "vector", "list", or "data.frame".}
 
-\item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
+\item{host}{Character. Server URL.}
 
-\item{simplify}{Logical. If \code{TRUE} (default), returns only the character string of the response.
-If \code{FALSE}, returns the full raw API response list.}
+\item{simplify}{Logical. If TRUE, parses outputs.}
 
-\item{quiet}{Logical. A local override for the global \code{rlmstudio.quiet} setting. Defaults to \code{FALSE}.}
+\item{quiet}{Logical. Whether to suppress the progress bar.}
 
-\item{...}{Additional inference parameters passed to the API request body.}
-}
-\value{
-A character vector, list, or data frame depending on the \code{format}
-argument and the value of \code{simplify}.
+\item{...}{Additional arguments passed to \code{lms_chat}.}
 }
 \description{
-Applies chat completions to a vector of input strings. This is useful for
-processing multiple documents or prompts in a single call, such as during
-zero-shot classification or text extraction.
-}
-\examples{
-\dontrun{
-lms_server_start()
-lms_download("google/gemma-3-1b")
-lms_load("google/gemma-3-1b")
-
-prompts <- c("What is 2+2?", "What is the capital of Japan?")
-
-# Returns a vector of responses by default
-lms_chat_batch(model = "google/gemma-3-1b", inputs = prompts)
-
-# Returns a data frame
-lms_chat_batch(
-  model = "google/gemma-3-1b",
-  inputs = prompts,
-  format = "data.frame"
-)
-}
-}
-\seealso{
-\itemize{
-\item \href{https://lmstudio.ai/docs/developer/rest/chat}{LM Studio Native Chat API}
-\item \href{https://lmstudio.ai/docs/developer/openai-compat/chat-completions}{OpenAI Compatible Chat API}
-}
+Process a vector of inputs sequentially through LM Studio.
 }
