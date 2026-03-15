@@ -1,8 +1,6 @@
-# Batch Chat Completions via REST API
+# Batch Chat Completion with LM Studio
 
-Applies chat completions to a vector of input strings. This is useful
-for processing multiple documents or prompts in a single call, such as
-during zero-shot classification or text extraction.
+Process a vector of inputs sequentially through LM Studio.
 
 ## Usage
 
@@ -23,71 +21,32 @@ lms_chat_batch(
 
 - model:
 
-  Character. Unique identifier of the loaded model to use.
+  Character. The loaded model name.
 
 - inputs:
 
-  Character vector. The user messages or prompts to process.
+  Character vector. The prompts to process.
 
 - system_prompt:
 
-  Character. Optional system instructions to guide model behavior.
+  Character. Optional system prompt.
 
 - format:
 
-  Character. The desired output format: `"vector"` (default), `"list"`,
-  or `"data.frame"`.
+  Character. Output format: "vector", "list", or "data.frame".
 
 - host:
 
-  Character. The host address of the local server. Defaults to
-  "http://localhost:1234".
+  Character. Server URL.
 
 - simplify:
 
-  Logical. If `TRUE` (default), returns only the character string of the
-  response. If `FALSE`, returns the full raw API response list.
+  Logical. If TRUE, parses outputs.
 
 - quiet:
 
-  Logical. A local override for the global `rlmstudio.quiet` setting.
-  Defaults to `FALSE`.
+  Logical. Whether to suppress the progress bar.
 
 - ...:
 
-  Additional inference parameters passed to the API request body.
-
-## Value
-
-A character vector, list, or data frame depending on the `format`
-argument and the value of `simplify`.
-
-## See also
-
-- [LM Studio Native Chat
-  API](https://lmstudio.ai/docs/developer/rest/chat)
-
-- [OpenAI Compatible Chat
-  API](https://lmstudio.ai/docs/developer/openai-compat/chat-completions)
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-lms_server_start()
-lms_download("google/gemma-3-1b")
-lms_load("google/gemma-3-1b")
-
-prompts <- c("What is 2+2?", "What is the capital of Japan?")
-
-# Returns a vector of responses by default
-lms_chat_batch(model = "google/gemma-3-1b", inputs = prompts)
-
-# Returns a data frame
-lms_chat_batch(
-  model = "google/gemma-3-1b",
-  inputs = prompts,
-  format = "data.frame"
-)
-} # }
-```
+  Additional arguments passed to `lms_chat`.

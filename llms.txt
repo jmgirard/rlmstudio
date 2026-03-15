@@ -170,9 +170,17 @@ Interact with loaded LLMs to generate text and process batches of
 prompts.
 
 - [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  : Chat Completions via REST API
+  : Chat Completion with LM Studio
 - [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  : Batch Chat Completions via REST API
+  : Batch Chat Completion with LM Studio
+- [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
+  : Chat Completion via Native API
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  : Chat Completion via OpenAI Compatibility API
+- [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+  : Chat Completion via OpenResponses API
+- [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md)
+  : Calculate Expected Scores and Uncertainty from Logprobs
 
 ## Model Management
 

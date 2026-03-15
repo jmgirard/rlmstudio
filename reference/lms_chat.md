@@ -1,7 +1,8 @@
-# Chat Completions via REST API
+# Chat Completion with LM Studio
 
-Provides full control over the Chat Completions API, including system
-prompts, multiple messages, and inference parameters.
+Send a prompt to a locally running LM Studio model. This wrapper
+automatically routes your request to the appropriate subfunction based
+on the selected API type.
 
 ## Usage
 
@@ -11,7 +12,8 @@ lms_chat(
   input,
   system_prompt = NULL,
   host = "http://localhost:1234",
-  api_type = c("native", "openai"),
+  api_type = c("openresponses", "openai", "native"),
+  logprobs = FALSE,
   simplify = TRUE,
   ...
 )
@@ -21,68 +23,35 @@ lms_chat(
 
 - model:
 
-  Character. Unique identifier of the loaded model to use.
+  Character. The name of the loaded model.
 
 - input:
 
-  Character. The user message or prompt.
+  Character. The user prompt to send to the model.
 
 - system_prompt:
 
-  Character. Optional system instructions to guide model behavior.
+  Character. An optional system prompt to guide model behavior.
 
 - host:
 
-  Character. The host address of the local server. Defaults to
+  Character. The base URL of the LM Studio server. Default is
   "http://localhost:1234".
 
 - api_type:
 
-  Character. Which REST API to use. `"native"` (default) uses LM
-  Studio's proprietary `/api/v1/chat` endpoint for advanced features
-  like stateful conversations and MCPs. `"openai"` uses the standard
-  `/v1/chat/completions` endpoint.
+  Character. The LM Studio API endpoint to use. Options are
+  "openresponses" (default), "openai", or "native".
+
+- logprobs:
+
+  Logical. Whether to return the log probabilities of the generated
+  tokens. Default is FALSE.
 
 - simplify:
 
-  Logical. If `TRUE` (default), returns only the character string of the
-  response. If `FALSE`, returns the full raw API response list.
+  Logical. If TRUE, extracts the core text response. Default is TRUE.
 
 - ...:
 
-  Additional inference parameters passed to the API request body.
-
-## Value
-
-A character string (if `simplify = TRUE`) or a list containing the full
-API response.
-
-## See also
-
-- [LM Studio Native Chat
-  API](https://lmstudio.ai/docs/developer/rest/chat)
-
-- [OpenAI Compatible Chat
-  API](https://lmstudio.ai/docs/developer/openai-compat/chat-completions)
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-# Ensure the server is running and the model is loaded
-lms_server_start()
-lms_download("google/gemma-3-1b")
-lms_load("google/gemma-3-1b")
-
-# Basic chat with a loaded model
-lms_chat(model = "google/gemma-3-1b", input = "What is the capital of France?")
-
-# Chat with a system prompt and custom inference parameters
-lms_chat(
-  model = "google/gemma-3-1b",
-  input = "Write a short poem about R.",
-  system_prompt = "You are a helpful assistant.",
-  temperature = 0.7
-)
-} # }
-```
+  Additional arguments passed to the selected API body.
