@@ -106,7 +106,8 @@ tab, and click “Start”. Alternatively, you can start it directly from
 R.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Start the local server on the default port</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ LM Studio server started successfully on the default port.</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="finding-and-managing-models">2. Finding and Managing Models<a class="anchor" aria-label="anchor" href="#finding-and-managing-models"></a>
@@ -118,52 +119,59 @@ compatibility, and select specific quantizations.</p>
 want, you can download it and manage your inventory directly from R.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Download a model using its identifier</span></span>
-<span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="st">"qwen/qwen3-4b-2507"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/lms_download_status.html">lms_download_status</a></span><span class="op">(</span><span class="va">job_id</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># View all downloaded models</span></span>
-<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/list_models.html">list_models</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span>
+<span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ Initiating download for model: "google/gemma-3-1b"... [973ms]</span></span>
+<span><span class="co">#&gt; ✔ Download job started successfully. Job ID: "job_02c8a1f86e"</span></span>
 <span></span>
-<span><span class="co"># Filter for unloaded text models</span></span>
-<span><span class="va">unloaded_llms</span> <span class="op">&lt;-</span> <span class="va">models</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">type</span> <span class="op">==</span> <span class="st">"llm"</span> <span class="op">&amp;</span> <span class="va">state</span> <span class="op">==</span> <span class="st">"unloaded"</span><span class="op">)</span></span>
-<span><span class="va">unloaded_llms</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_download_status.html">lms_download_status</a></span><span class="op">(</span><span class="va">job_id</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ── Download Job: "job_02c8a1f86e"</span></span>
+<span><span class="co">#&gt; Status: completed</span></span>
+<span><span class="co">#&gt; Progress: 100% (0.72 GB / 0.72 GB)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="loading-models">3. Loading Models<a class="anchor" aria-label="anchor" href="#loading-models"></a>
 </h3>
 <p>Before you can chat with a model, you must load it into system
-memory.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+memory. We include the optional <code>flash_attention = TRUE</code>
+argument here, which speeds up processing and reduces memory usage on
+supported hardware.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Standard load</span></span>
-<span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="st">"qwen/qwen3-4b-2507"</span>, flash_attention <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span>, flash_attention <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" loaded and verified. [30.8s]</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="chatting">4. Chatting<a class="anchor" aria-label="anchor" href="#chatting"></a>
 </h3>
-<p>The <code><a href="../reference/lms_chat.html">lms_chat()</a></code> function is designed for simple
-interactions.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p>Interact with the model by sending it text prompts. The
+<code><a href="../reference/lms_chat.html">lms_chat()</a></code> function takes a few key arguments to guide the
+AI’s response:</p>
+<ul>
+<li><p><code>input</code>: This is your main message or question for the
+model.</p></li>
+<li><p><code>system_prompt</code>: This is an optional set of background
+instructions. You use it to tell the AI how to behave, what role to
+play, or how to format its answers (like asking it to act as an expert R
+programmer).</p></li>
+</ul>
+<p><em>Note:</em> The rlmstudio package currently processes each chat
+request independently. Every time you run the lms_chat() function, you
+are starting a brand new conversation. The model will not remember
+previous messages or context from earlier in your R script.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="st">"qwen/qwen3-4b-2507"</span>,</span>
+<span>  model <span class="op">=</span> <span class="va">model</span>,</span>
 <span>  input <span class="op">=</span> <span class="st">"Say hello!"</span>,</span>
 <span>  system_prompt <span class="op">=</span> <span class="st">"Answer in rhymes."</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">response</span><span class="op">)</span></span></code></pre></div>
-<p>For more complex use cases like adjusting temperatures, utilizing
-structured tool calling, or accessing raw API responses, simply pass
-additional arguments to <code><a href="../reference/lms_chat.html">lms_chat()</a></code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">advanced_response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="st">"qwen/qwen3-4b-2507"</span>,</span>
-<span>  input <span class="op">=</span> <span class="st">"Explain variance."</span>,</span>
-<span>  temperature <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>  simplify <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Access the structured list</span></span>
-<span><span class="va">advanced_response</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">response</span><span class="op">)</span></span>
+<span><span class="co">#&gt; A friendly face, so bright and new,</span></span>
+<span><span class="co">#&gt; Hello there, it’s waiting for you!</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; Let's chat and have a joyful spree,</span></span>
+<span><span class="co">#&gt; Hello there, happy as can be!</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="teardown">5. Teardown<a class="anchor" aria-label="anchor" href="#teardown"></a>
@@ -171,12 +179,14 @@ additional arguments to <code><a href="../reference/lms_chat.html">lms_chat()</a
 <p>To free up memory and system resources when you are finished, it is
 best practice to unload your models and stop the local server. Closing
 the LM Studio GUI will also perform this cleanup if you forget.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Unload the model</span></span>
-<span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="st">"qwen/qwen3-4b-2507"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]</span></span>
 <span></span>
 <span><span class="co"># Stop the server</span></span>
-<span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ LM Studio server stopped successfully.</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
