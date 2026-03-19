@@ -18,7 +18,6 @@ Imports:
     httr2,
     jsonlite,
     processx,
-    rlang,
     utils
 Suggests:
     httptest2,

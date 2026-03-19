@@ -6,6 +6,5 @@
 #' \itemize{
 #'   \item \code{rlmstudio.quiet}: A logical value. If \code{TRUE}, suppresses informational console messages and progress bars across the package. Defaults to \code{FALSE}.
 #' }
-#' @import rlang
 ## usethis namespace: end
 NULL
