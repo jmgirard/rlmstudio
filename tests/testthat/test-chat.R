@@ -1,54 +1,59 @@
 test_that("Full Integration: Download, Load, and Rate", {
+  local_mocked_bindings(
+    has_lms = function() TRUE,
+    is_server_running = function() TRUE
+  )
+
   skip_if_no_lms()
   skip_if_no_server()
 
-  # 1. Setup: Ensure the specific model is available and loaded
-  target_model <- "google/gemma-3-4b" # Using a smaller variant for faster tests
+  target_model <- "google/gemma-3-1b"
 
-  # Download if missing (assuming lms_download handles 'already exists' gracefully)
-  lms_download(target_model)
-
-  # Load the model
-  lms_load(target_model, flash_attention = TRUE)
-
-  # Ensure cleanup: unload the model when the test finishes (success or failure)
-  on.exit(lms_unload(target_model), add = TRUE)
-
-  # 2. Test Data
-  reviews <- c(
-    "The food was absolutely incredible!",
-    "Terrible service, I will never go back."
-  )
-  sys_prompt <- "Rate on a scale of 1 to 5. Respond with ONLY the integer."
-
-  # 3. Execution
-  results_df <- lms_chat_batch(
-    model = target_model,
-    inputs = reviews,
-    system_prompt = sys_prompt,
-    format = "data.frame",
-    api_type = "openresponses",
-    logprobs = TRUE,
-    top_logprobs = 5,
-    temperature = 1.0,
-    quiet = TRUE
+  # Safe teardown fallback (silences the error if it runs unmocked)
+  on.exit(
+    {
+      try(lms_unload(target_model), silent = TRUE)
+    },
+    add = TRUE
   )
 
-  # 4. Assertions
+  httptest2::with_mock_dir("chat_integration", {
+    lms_download(target_model)
+    lms_load(target_model, flash_attention = TRUE)
+
+    reviews <- c(
+      "The food was absolutely incredible!",
+      "Terrible service, I will never go back."
+    )
+    sys_prompt <- "Rate on a scale of 1 to 5. Respond with ONLY the integer."
+
+    results_df <- lms_chat_batch(
+      model = target_model,
+      inputs = reviews,
+      system_prompt = sys_prompt,
+      format = "data.frame",
+      api_type = "openresponses",
+      logprobs = TRUE,
+      top_logprobs = 5,
+      temperature = 1.0,
+      quiet = TRUE
+    )
+
+    # Explicitly unload inside the mock so httptest2 records it
+    try(lms_unload(target_model), silent = TRUE)
+  })
+
   expect_s3_class(results_df, "data.frame")
   expect_true("logprobs" %in% names(results_df))
   expect_s3_class(results_df$logprobs[[1]], "data.frame")
 
-  # Math check
   results_df$expected_rating <- sapply(results_df$logprobs, function(lp_df) {
     if (is.null(lp_df)) {
       return(NA_real_)
     }
 
-    # Isolate first generation step
     candidates <- lp_df[lp_df$step_token == lp_df$step_token[1], ]
 
-    # Convert and filter
     nums <- suppressWarnings(as.numeric(candidates$candidate_token))
     valid <- !is.na(nums) & nums %in% 1:5
 

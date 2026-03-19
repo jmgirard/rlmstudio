@@ -1,0 +1,174 @@
+{
+    "id": "resp_03dd2375032b5a19aa4cac382eb4386b334ae6fb7de1f887",
+    "object": "response",
+    "created_at": 1773948899,
+    "completed_at": 1773948900,
+    "status": "completed",
+    "incomplete_details": null,
+    "model": "google/gemma-3-1b",
+    "previous_response_id": null,
+    "instructions": "Rate on a scale of 1 to 5. Respond with ONLY the integer.",
+    "output": [
+        {
+            "id": "msg_f5j4cbvgfeh101h4a7x3n",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "5\n",
+                    "annotations": [
+
+                    ],
+                    "logprobs": [
+                        {
+                            "token": "5",
+                            "logprob": -0.015625,
+                            "bytes": [
+                                53
+                            ],
+                            "top_logprobs": [
+                                {
+                                    "token": "5",
+                                    "logprob": -0.015625,
+                                    "bytes": [
+                                        53
+                                    ]
+                                },
+                                {
+                                    "token": "4",
+                                    "logprob": -4.75,
+                                    "bytes": [
+                                        52
+                                    ]
+                                },
+                                {
+                                    "token": "3",
+                                    "logprob": -5.671875,
+                                    "bytes": [
+                                        51
+                                    ]
+                                },
+                                {
+                                    "token": "1",
+                                    "logprob": -5.953125,
+                                    "bytes": [
+                                        49
+                                    ]
+                                },
+                                {
+                                    "token": "**",
+                                    "logprob": -7.875,
+                                    "bytes": [
+                                        42,
+                                        42
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "token": "\n",
+                            "logprob": -0.015625,
+                            "bytes": [
+                                10
+                            ],
+                            "top_logprobs": [
+                                {
+                                    "token": "\n",
+                                    "logprob": -0.015625,
+                                    "bytes": [
+                                        10
+                                    ]
+                                },
+                                {
+                                    "token": "<end_of_turn>",
+                                    "logprob": -4.578125,
+                                    "bytes": [
+                                        60,
+                                        101,
+                                        110,
+                                        100,
+                                        95,
+                                        111,
+                                        102,
+                                        95,
+                                        116,
+                                        117,
+                                        114,
+                                        110,
+                                        62
+                                    ]
+                                },
+                                {
+                                    "token": " ",
+                                    "logprob": -6.25,
+                                    "bytes": [
+                                        32
+                                    ]
+                                },
+                                {
+                                    "token": ".",
+                                    "logprob": -6.484375,
+                                    "bytes": [
+                                        46
+                                    ]
+                                },
+                                {
+                                    "token": "\n\n",
+                                    "logprob": -7.03125,
+                                    "bytes": [
+                                        10,
+                                        10
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "error": null,
+    "tools": [
+
+    ],
+    "tool_choice": "auto",
+    "truncation": "auto",
+    "parallel_tool_calls": true,
+    "text": {
+        "format": {
+            "type": "text"
+        }
+    },
+    "top_p": false,
+    "presence_penalty": 0,
+    "frequency_penalty": 1.1,
+    "top_logprobs": 5,
+    "temperature": 1,
+    "reasoning": {
+        "summary": null,
+        "effort": null
+    },
+    "usage": {
+        "input_tokens": 32,
+        "output_tokens": 2,
+        "total_tokens": 34,
+        "input_tokens_details": {
+            "cached_tokens": 0
+        },
+        "output_tokens_details": {
+            "reasoning_tokens": 0
+        }
+    },
+    "max_output_tokens": null,
+    "max_tool_calls": null,
+    "store": true,
+    "background": false,
+    "service_tier": "default",
+    "metadata": {
+
+    },
+    "safety_identifier": null,
+    "prompt_cache_key": null
+}

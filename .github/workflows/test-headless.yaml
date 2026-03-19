@@ -13,12 +13,11 @@ jobs:
       - name: Install System Dependencies
         run: |
           apt-get update
-          apt-get install -y curl r-cran-devtools r-cran-processx r-cran-cli r-cran-httr2 r-cran-httptest2
+          apt-get install -y r-cran-devtools r-cran-processx r-cran-cli r-cran-httr2 r-cran-httptest2
 
       - name: Run Tests
         shell: Rscript {0}
         env:
           RLMSTUDIO_TEST_HEADLESS: "true"
-          RLMSTUDIO_ALLOW_INSTALL: "TRUE"
         run: |
           devtools::test(stop_on_failure = TRUE)

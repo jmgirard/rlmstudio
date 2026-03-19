@@ -1,0 +1,6 @@
+{
+    "type": "llm",
+    "instance_id": "google/gemma-3-1b",
+    "load_time_seconds": 7.882,
+    "status": "loaded"
+}
