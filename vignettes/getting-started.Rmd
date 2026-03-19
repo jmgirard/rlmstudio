@@ -45,6 +45,7 @@ You have two options for starting the local server. You can open the LM Studio d
 ```{r start-server}
 # Start the local server on the default port
 lms_server_start()
+#> ✔ LM Studio server started successfully on the default port.
 ```
 
 ### 2. Finding and Managing Models
@@ -55,8 +56,15 @@ However, if you already know the exact identifier of the model you want, you can
 
 ```{r download}
 # Download a model using its identifier
-job_id <- lms_download("qwen/qwen3-4b-2507")
+model <- "google/gemma-3-1b"
+job_id <- lms_download(model)
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [973ms]
+#> ✔ Download job started successfully. Job ID: "job_02c8a1f86e"
+
 lms_download_status(job_id)
+#> ── Download Job: "job_02c8a1f86e"
+#> Status: completed
+#> Progress: 100% (0.72 GB / 0.72 GB)
 ```
 
 ```{r wait, echo=FALSE}
@@ -74,51 +82,39 @@ if (job_id != "already_downloaded") {
 }
 ```
 
-```{r list}
-# View all downloaded models
-models <- list_models()
-
-# Filter for unloaded text models
-unloaded_llms <- models |>
-  subset(type == "llm" & state == "unloaded")
-unloaded_llms
-```
-
 ### 3. Loading Models
 
-Before you can chat with a model, you must load it into system memory.
+Before you can chat with a model, you must load it into system memory. We include the optional `flash_attention = TRUE` argument here, which speeds up processing and reduces memory usage on supported hardware.
 
 ```{r load}
 # Standard load
-lms_load("qwen/qwen3-4b-2507", flash_attention = TRUE)
+lms_load(model, flash_attention = TRUE)
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [30.8s]
 ```
 
 ### 4. Chatting
 
-The `lms_chat()` function is designed for simple interactions.
+Interact with the model by sending it text prompts. The `lms_chat()` function takes a few key arguments to guide the AI's response:
+
+- `input`: This is your main message or question for the model.
+
+- `system_prompt`: This is an optional set of background instructions. You use it to tell the AI how to behave, what role to play, or how to format its answers (like asking it to act as an expert R programmer).
+
+*Note:* The rlmstudio package currently processes each chat request independently. Every time you run the lms_chat() function, you are starting a brand new conversation. The model will not remember previous messages or context from earlier in your R script.
 
 ```{r simple-chat}
 response <- lms_chat(
-  model = "qwen/qwen3-4b-2507",
+  model = model,
   input = "Say hello!",
   system_prompt = "Answer in rhymes."
 )
 
 cat(response)
-```
-
-For more complex use cases like adjusting temperatures, utilizing structured tool calling, or accessing raw API responses, simply pass additional arguments to `lms_chat()`.
-
-```{r advanced-chat}
-advanced_response <- lms_chat(
-  model = "qwen/qwen3-4b-2507",
-  input = "Explain variance.",
-  temperature = 0.2,
-  simplify = FALSE
-)
-
-# Access the structured list
-advanced_response
+#> A friendly face, so bright and new,
+#> Hello there, it’s waiting for you!
+#>
+#> Let's chat and have a joyful spree,
+#> Hello there, happy as can be!
 ```
 
 ### 5. Teardown
@@ -127,8 +123,10 @@ To free up memory and system resources when you are finished, it is best practic
 
 ```{r teardown}
 # Unload the model
-lms_unload("qwen/qwen3-4b-2507")
+lms_unload(model)
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]
 
 # Stop the server
 lms_server_stop()
+#> ✔ LM Studio server stopped successfully.
 ```

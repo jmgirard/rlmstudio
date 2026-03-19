@@ -82,7 +82,18 @@ check_lms_version <- function(min_version = "0.4.0") {
 
 #' Help the user install or update LM Studio
 #'
-#' @param method Character. Either "browser" or "headless".
+#' This function provides two methods for setting up LM Studio on your system.
+#' The "browser" method opens the official download page for the LM Studio
+#' desktop application (GUI). The "headless" method runs an automated
+#' installation script to install the \code{llmster} daemon and CLI, which
+#' is suitable for servers, containers, or users who prefer a GUI-less environment.
+#'
+#' @param method Character. Either "browser" (opens the GUI download page)
+#'   or "headless" (installs the \code{llmster} daemon via script).
+#'
+#' @return Returns \code{TRUE} invisibly upon successful completion. This
+#' function is primarily called for its side effects of installing software or
+#' opening a download page.
 #'
 #' @export
 #'
@@ -112,8 +123,7 @@ install_lmstudio <- function(method = c("browser", "headless")) {
       "Please install or update the software, restart R, and try again."
     )
   } else if (method == "headless") {
-    os <- Sys.info()[["sysname"]]
-
+    # CRAN Compliance: Require interactive consent or explicit environment variable
     if (
       !interactive() &&
         !isTRUE(as.logical(Sys.getenv("RLMSTUDIO_ALLOW_INSTALL", "FALSE")))
@@ -133,31 +143,35 @@ install_lmstudio <- function(method = c("browser", "headless")) {
       }
     }
 
+    os <- Sys.info()[["sysname"]]
+    rlm_progress_step("Downloading and installing LM Studio CLI...")
+
     tryCatch(
       {
         if (os %in% c("Darwin", "Linux")) {
-          # Check if curl is available
           if (Sys.which("curl") == "") {
             cli::cli_abort(
               "The system command {.val curl} is required but was not found."
             )
           }
 
-          processx::run(
+          res <- processx::run(
             command = "bash",
             args = c(
               "-c",
               "set -o pipefail; curl -fsSL https://lmstudio.ai/install.sh | bash"
             ),
-            echo_cmd = TRUE,
-            echo = TRUE
+            echo = FALSE,
+            stderr_to_stdout = TRUE,
+            error_on_status = FALSE
           )
         } else if (os == "Windows") {
-          processx::run(
+          res <- processx::run(
             command = "powershell",
             args = c("-Command", "irm https://lmstudio.ai/install.ps1 | iex"),
-            echo_cmd = TRUE,
-            echo = TRUE
+            echo = FALSE,
+            stderr_to_stdout = TRUE,
+            error_on_status = FALSE
           )
         } else {
           cli::cli_abort(
@@ -165,15 +179,23 @@ install_lmstudio <- function(method = c("browser", "headless")) {
           )
         }
 
-        rlm_alert_success("Installation script completed.")
-        cli::cli_alert_warning(
-          "You may need to restart your R session or terminal for the PATH changes to take effect."
-        )
+        if (res$status == 0) {
+          rlm_progress_done()
+          rlm_alert_success("LM Studio CLI installed successfully.")
+        } else {
+          cli::cli_progress_cleanup()
+          cli::cli_abort(c(
+            "x" = "Headless installation failed. Exit code: {.val {res$status}}.",
+            "i" = "CLI output: {.val {trimws(res$stdout)}}"
+          ))
+        }
+
         rlm_alert_info(
           "In a headless environment, remember to start the daemon using {.fn lms_daemon_start} and the server using {.fn lms_server_start} before loading models."
         )
       },
       error = function(e) {
+        cli::cli_progress_cleanup()
         cli::cli_abort(c(
           "x" = "Headless installation failed.",
           "i" = "Error message: {.val {e$message}}"

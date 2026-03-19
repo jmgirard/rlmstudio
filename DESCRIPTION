@@ -15,10 +15,8 @@ Depends:
     R (>= 4.1.0)
 Imports:
     cli,
-    glue,
     httr2,
     jsonlite,
-    lifecycle,
     processx,
     rlang,
     utils
