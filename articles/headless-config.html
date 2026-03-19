@@ -86,10 +86,7 @@ terminal.</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jmgirard.github.io/rlmstudio/">rlmstudio</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run the automated CLI installation script for Linux/macOS or Windows</span></span>
-<span><span class="fu"><a href="../reference/install_lmstudio.html">install_lmstudio</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"headless"</span><span class="op">)</span></span>
-<span><span class="co">## ℹ Attempting headless installation or update...</span></span>
-<span><span class="co">## ✔ Installation script completed.</span></span>
-<span><span class="co">## ! You may need to restart your R session or terminal for the PATH changes to take effect.</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/install_lmstudio.html">install_lmstudio</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"headless"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="step-by-step-guide">Step-by-Step Guide<a class="anchor" aria-label="anchor" href="#step-by-step-guide"></a>
@@ -103,8 +100,7 @@ manually. You must start the <code>llmster</code> daemon before
 attempting to load models or start the API server.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Start the headless engine in the background</span></span>
-<span><span class="fu"><a href="../reference/lms_daemon_start.html">lms_daemon_start</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## ✔ LM Studio daemon started in the background.</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_daemon_start.html">lms_daemon_start</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="start-the-local-server">2. Start the Local Server<a class="anchor" aria-label="anchor" href="#start-the-local-server"></a>
@@ -113,8 +109,7 @@ attempting to load models or start the API server.</p>
 accept HTTP requests.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Start the local server on the default port</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## ✔ LM Studio server started successfully on the default port.</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="finding-and-managing-models">3. Finding and Managing Models<a class="anchor" aria-label="anchor" href="#finding-and-managing-models"></a>
@@ -123,46 +118,40 @@ accept HTTP requests.</p>
 to know the Hugging Face repository or the LM Studio catalog identifier
 for the model you want to use.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Download a lightweight model directly</span></span>
-<span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="st">"google/gemma-3-1b"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/lms_download_status.html">lms_download_status</a></span><span class="op">(</span><span class="va">job_id</span><span class="op">)</span></span>
-<span><span class="co">## ── Download Job: "job_02c8a1f86e"</span></span>
-<span><span class="co">## Status: completed</span></span>
-<span><span class="co">## Progress: 100% (0.72 GB / 0.72 GB)</span></span>
+<code class="sourceCode R"><span><span class="co"># Download a model using its identifier</span></span>
+<span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="st">"qwen/qwen3-4b-2507"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/lms_download_status.html">lms_download_status</a></span><span class="op">(</span><span class="va">job_id</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># View all downloaded models</span></span>
+<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/list_models.html">list_models</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Verify it is available in your inventory</span></span>
-<span><span class="va">my_models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/list_models.html">list_models</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">type</span> <span class="op">==</span> <span class="st">"llm"</span><span class="op">)</span></span>
-<span><span class="va">my_models</span></span>
-<span><span class="co">##      state type display_name               key architecture size_gb</span></span>
-<span><span class="co">## 1 unloaded  llm   Gemma 3 1B google/gemma-3-1b       gemma3    0.67</span></span></code></pre></div>
+<span><span class="co"># Filter for unloaded text models</span></span>
+<span><span class="va">unloaded_llms</span> <span class="op">&lt;-</span> <span class="va">models</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">type</span> <span class="op">==</span> <span class="st">"llm"</span> <span class="op">&amp;</span> <span class="va">state</span> <span class="op">==</span> <span class="st">"unloaded"</span><span class="op">)</span></span>
+<span><span class="va">unloaded_llms</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="loading-models">4. Loading Models<a class="anchor" aria-label="anchor" href="#loading-models"></a>
 </h3>
 <p>Allocate the model to your system’s memory (RAM/VRAM) so it is ready
 for inference.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load the model</span></span>
-<span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="st">"google/gemma-3-1b"</span>, flash_attention <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">## ✔ Model "google/gemma-3-1b" loaded and verified. [823ms]</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="st">"google/gemma-3-1b"</span>, flash_attention <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="chatting">5. Chatting<a class="anchor" aria-label="anchor" href="#chatting"></a>
 </h3>
 <p>Interact with the model exactly as you would in a desktop
 environment.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="st">"google/gemma-3-1b"</span>,</span>
 <span>  input <span class="op">=</span> <span class="st">"Provide just the str_extract() pattern to match all text after the third comma."</span>,</span>
 <span>  system_prompt <span class="op">=</span> <span class="st">"You are an expert R programmer familiar with the tidyverse."</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">response</span><span class="op">)</span></span>
-<span><span class="co">## ```R</span></span>
-<span><span class="co">## str_extract(text, "%[^,]+")</span></span>
-<span><span class="co">## ```</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">response</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="teardown-and-cleanup">6. Teardown and Cleanup<a class="anchor" aria-label="anchor" href="#teardown-and-cleanup"></a>
@@ -170,18 +159,15 @@ environment.</p>
 <p>In a headless environment, managing your system resources is
 critical. When your script finishes, you should explicitly tear down the
 entire stack to free up memory and stop background processes.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 1. Unload the model from memory</span></span>
 <span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="st">"google/gemma-3-1b"</span><span class="op">)</span></span>
-<span><span class="co">## ✔ Model "google/gemma-3-1b" unloaded successfully. [35ms]</span></span>
 <span></span>
 <span><span class="co"># 2. Stop the API server</span></span>
 <span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## ✔ LM Studio server stopped successfully.</span></span>
 <span></span>
 <span><span class="co"># 3. Stop the background daemon</span></span>
-<span><span class="fu"><a href="../reference/lms_daemon_stop.html">lms_daemon_stop</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## ✔ LM Studio daemon stopped successfully.</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_daemon_stop.html">lms_daemon_stop</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -191,7 +177,7 @@ entire stack to free up memory and stop background processes.</p>
 exit, managing the daemon state manually can be tedious. The
 <code><a href="../reference/with_lms_daemon.html">with_lms_daemon()</a></code> wrapper handles the setup and guaranteed
 teardown of the background engine automatically.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The daemon will start, the code will run, and the daemon will stop on exit.</span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/with_lms_daemon.html">with_lms_daemon</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -201,12 +187,7 @@ teardown of the background engine automatically.</p>
 <span></span>
 <span>  <span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="va">res</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="co">## ✔ LM Studio daemon started in the background.</span></span>
-<span><span class="co">## ✔ LM Studio server started successfully on the default port.</span></span>
-<span><span class="co">## ✔ Model "google/gemma-3-1b" loaded and verified. [840ms]</span></span>
-<span><span class="co">## ✔ LM Studio server stopped successfully.</span></span>
-<span><span class="co">## ✔ LM Studio daemon stopped successfully.</span></span></code></pre></div>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

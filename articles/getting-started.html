@@ -91,8 +91,8 @@ open the official download page.</p>
 <span></span>
 <span><span class="co"># Open the download page in your default browser</span></span>
 <span><span class="fu"><a href="../reference/install_lmstudio.html">install_lmstudio</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"browser"</span><span class="op">)</span></span>
-<span><span class="co">## ℹ Opening the LM Studio download page in your default browser...</span></span>
-<span><span class="co">## ! Please install or update the software, restart R, and try again.</span></span></code></pre></div>
+<span><span class="co">#&gt; ℹ Opening the LM Studio download page in your default browser...</span></span>
+<span><span class="co">#&gt; ! Please install or update the software, restart R, and try again.</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="step-by-step-guide">Step-by-Step Guide<a class="anchor" aria-label="anchor" href="#step-by-step-guide"></a>
@@ -106,8 +106,7 @@ tab, and click “Start”. Alternatively, you can start it directly from
 R.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Start the local server on the default port</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## ✔ LM Studio server started successfully on the default port.</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="finding-and-managing-models">2. Finding and Managing Models<a class="anchor" aria-label="anchor" href="#finding-and-managing-models"></a>
@@ -120,62 +119,42 @@ want, you can download it and manage your inventory directly from R.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Download a model using its identifier</span></span>
 <span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="st">"qwen/qwen3-4b-2507"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/lms_download_status.html">lms_download_status</a></span><span class="op">(</span><span class="va">job_id</span><span class="op">)</span></span>
-<span><span class="co">## ── Download Job: "job_493c7c9ded"</span></span>
-<span><span class="co">## Status: completed</span></span>
-<span><span class="co">## Progress: 100% (2.12 GB / 2.12 GB)</span></span>
-<span></span>
-<span><span class="co"># View all downloaded models</span></span>
+<span><span class="fu"><a href="../reference/lms_download_status.html">lms_download_status</a></span><span class="op">(</span><span class="va">job_id</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># View all downloaded models</span></span>
 <span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/list_models.html">list_models</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Filter for unloaded text models</span></span>
 <span><span class="va">unloaded_llms</span> <span class="op">&lt;-</span> <span class="va">models</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">type</span> <span class="op">==</span> <span class="st">"llm"</span> <span class="op">&amp;</span> <span class="va">state</span> <span class="op">==</span> <span class="st">"unloaded"</span><span class="op">)</span></span>
-<span><span class="va">unloaded_llms</span></span>
-<span><span class="co">##       state  type   display_name                 key  architecture  size_gb</span></span>
-<span><span class="co">## 1  unloaded   llm  Qwen3 4B 2507  qwen/qwen3-4b-2507         qwen3     2.12</span></span></code></pre></div>
+<span><span class="va">unloaded_llms</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="loading-models">3. Loading Models<a class="anchor" aria-label="anchor" href="#loading-models"></a>
 </h3>
 <p>Before you can chat with a model, you must load it into system
 memory.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Standard load</span></span>
-<span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="st">"qwen/qwen3-4b-2507"</span><span class="op">)</span></span>
-<span><span class="co">## ✔ Model "qwen/qwen3-4b-2507" loaded and verified. [7.5s]</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="st">"qwen/qwen3-4b-2507"</span>, flash_attention <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="chatting">4. Chatting<a class="anchor" aria-label="anchor" href="#chatting"></a>
 </h3>
 <p>The <code><a href="../reference/lms_chat.html">lms_chat()</a></code> function is designed for simple
 interactions.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="st">"qwen/qwen3-4b-2507"</span>,</span>
 <span>  input <span class="op">=</span> <span class="st">"Say hello!"</span>,</span>
 <span>  system_prompt <span class="op">=</span> <span class="st">"Answer in rhymes."</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">response</span><span class="op">)</span></span>
-<span><span class="co">## Hello there! 🌟</span></span>
-<span><span class="co">## With a wave and a grin, I'm here to shine!</span></span>
-<span><span class="co">## Like a spark in the night, bright and bold,</span></span>
-<span><span class="co">## I'm your friend, ready to unfold!</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## So take a breath, let the joy take flight—</span></span>
-<span><span class="co">## I’m all smiles, and a tale to write!</span></span>
-<span><span class="co">## From the stars to the ground, I’ll spin a rhyme,</span></span>
-<span><span class="co">## Just say the word, and I’ll be on time!</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## So say hello again, or just "hi,"</span></span>
-<span><span class="co">## I’m here to keep things light and *sigh*! 😊</span></span>
-<span><span class="co">## What’s on your mind? I’ll meet you there—</span></span>
-<span><span class="co">## With a rhyme, a laugh, and a spark to spare! ✨</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">response</span><span class="op">)</span></span></code></pre></div>
 <p>For more complex use cases like adjusting temperatures, utilizing
 structured tool calling, or accessing raw API responses, simply pass
 additional arguments to <code><a href="../reference/lms_chat.html">lms_chat()</a></code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">advanced_response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="st">"qwen/qwen3-4b-2507"</span>,</span>
 <span>  input <span class="op">=</span> <span class="st">"Explain variance."</span>,</span>
@@ -184,39 +163,7 @@ additional arguments to <code><a href="../reference/lms_chat.html">lms_chat()</a
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Access the structured list</span></span>
-<span><span class="va">advanced_response</span></span>
-<span><span class="co">## $model_instance_id</span></span>
-<span><span class="co">## [1] "qwen/qwen3-4b-2507"</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## $output</span></span>
-<span><span class="co">## $output[[1]]</span></span>
-<span><span class="co">## $output[[1]]$type</span></span>
-<span><span class="co">## [1] "message"</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## $output[[1]]$content</span></span>
-<span><span class="co">## [1] "**Variance** is a statistical measure that quantifies the spread or dispersion of a set of data points around their mean (average value). It tells us how much the individual data points deviate from the average.\n\n### Key Points About Variance:\n\n1. **Definition**:\n   - Variance is the average of the squared differences between each data point and the mean.\n   - Mathematically, for a dataset \\( x_1, x_2, \\ldots, x_n \\), the **population variance** is:\n     \\[\n     \\sigma^2 = \\frac{1}{n} \\sum_{i=1}^{n} (x_i - \\mu)^2\n     \\]\n     where:\n     - \\( \\mu \\) is the population mean,\n     - \\( n \\) is the total number of data points.\n\n   - For a **sample** (used in real-world data), we use \\( n-1 \\) instead of \\( n \\) to correct for bias (this is called **sample variance**):\n     \\[\n     s^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2\n     \\]\n     where \\( \\bar{x} \\) is the sample mean.\n\n2. **Interpretation**:\n   - A **low variance** means the data points are close to the mean and to each other (i.e., the data is tightly clustered).\n   - A **high variance** means the data points are spread out over a wide range (i.e., the data is more dispersed).\n\n3. **Why Square the Differences?**\n   - Squaring the differences ensures that all deviations are positive, preventing positive and negative deviations from canceling each other out.\n   - It also gives more weight to larger deviations.\n\n4. **Units**:\n   - Variance is expressed in **square units** of the original data (e.g., if data is in meters, variance is in square meters). This can make interpretation difficult.\n\n5. **Relation to Standard Deviation**:\n   - The **standard deviation** is the square root of the variance and is expressed in the same units as the original data, making it easier to interpret.\n\n---\n\n### Example:\nConsider the dataset: 4, 6, 8, 10, 12\n\n- Mean = \\( \\frac{4+6+8+10+12}{5} = 8 \\)\n- Deviations from mean: \\( -4, -2, 0, 2, 4 \\)\n- Squared deviations: \\( 16, 4, 0, 4, 16 \\)\n- Sum of squared deviations = \\( 16+4+0+4+16 = 40 \\)\n- Variance (population) = \\( \\frac{40}{5} = 8 \\)\n- Sample variance = \\( \\frac{40}{4} = 10 \\)\n\nSo, the variance is **8** (population) or **10** (sample).\n\n---\n\n### In Summary:\n&gt; **Variance measures how spread out the data is from the mean.**  \n&gt; A low variance indicates consistency; a high variance indicates variability.\n\nIt's a fundamental concept in statistics used in fields like finance (risk assessment), quality control, and machine learning (feature scaling)."</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## $stats</span></span>
-<span><span class="co">## $stats$input_tokens</span></span>
-<span><span class="co">## [1] 12</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## $stats$total_output_tokens</span></span>
-<span><span class="co">## [1] 711</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## $stats$reasoning_output_tokens</span></span>
-<span><span class="co">## [1] 0</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## $stats$tokens_per_second</span></span>
-<span><span class="co">## [1] 33.29417</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## $stats$time_to_first_token_seconds</span></span>
-<span><span class="co">## [1] 0.382</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## $response_id</span></span>
-<span><span class="co">## [1] "resp_5f480db79f250b19cd1fd5063112b44a2583f6ae97ef3320"</span></span></code></pre></div>
+<span><span class="va">advanced_response</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="teardown">5. Teardown<a class="anchor" aria-label="anchor" href="#teardown"></a>
@@ -224,14 +171,12 @@ additional arguments to <code><a href="../reference/lms_chat.html">lms_chat()</a
 <p>To free up memory and system resources when you are finished, it is
 best practice to unload your models and stop the local server. Closing
 the LM Studio GUI will also perform this cleanup if you forget.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Unload the model</span></span>
 <span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="st">"qwen/qwen3-4b-2507"</span><span class="op">)</span></span>
-<span><span class="co">## ✔ Model "qwen/qwen3-4b-2507" unloaded successfully. [391ms]</span></span>
 <span></span>
 <span><span class="co"># Stop the server</span></span>
-<span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## ✔ LM Studio server stopped successfully.</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

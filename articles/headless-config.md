@@ -20,9 +20,6 @@ library(rlmstudio)
 
 # Run the automated CLI installation script for Linux/macOS or Windows
 install_lmstudio(method = "headless")
-## ℹ Attempting headless installation or update...
-## ✔ Installation script completed.
-## ! You may need to restart your R session or terminal for the PATH changes to take effect.
 ```
 
 ## Step-by-Step Guide
@@ -37,7 +34,6 @@ models or start the API server.
 ``` r
 # Start the headless engine in the background
 lms_daemon_start()
-## ✔ LM Studio daemon started in the background.
 ```
 
 ### 2. Start the Local Server
@@ -48,7 +44,6 @@ accept HTTP requests.
 ``` r
 # Start the local server on the default port
 lms_server_start()
-## ✔ LM Studio server started successfully on the default port.
 ```
 
 ### 3. Finding and Managing Models
@@ -58,19 +53,19 @@ know the Hugging Face repository or the LM Studio catalog identifier for
 the model you want to use.
 
 ``` r
-# Download a lightweight model directly
-job_id <- lms_download("google/gemma-3-1b")
+# Download a model using its identifier
+job_id <- lms_download("qwen/qwen3-4b-2507")
 lms_download_status(job_id)
-## ── Download Job: "job_02c8a1f86e"
-## Status: completed
-## Progress: 100% (0.72 GB / 0.72 GB)
+```
 
-# Verify it is available in your inventory
-my_models <- list_models() |>
-  subset(type == "llm")
-my_models
-##      state type display_name               key architecture size_gb
-## 1 unloaded  llm   Gemma 3 1B google/gemma-3-1b       gemma3    0.67
+``` r
+# View all downloaded models
+models <- list_models()
+
+# Filter for unloaded text models
+unloaded_llms <- models |>
+  subset(type == "llm" & state == "unloaded")
+unloaded_llms
 ```
 
 ### 4. Loading Models
@@ -81,7 +76,6 @@ inference.
 ``` r
 # Load the model
 lms_load("google/gemma-3-1b", flash_attention = TRUE)
-## ✔ Model "google/gemma-3-1b" loaded and verified. [823ms]
 ```
 
 ### 5. Chatting
@@ -96,9 +90,6 @@ response <- lms_chat(
 )
 
 cat(response)
-## ```R
-## str_extract(text, "%[^,]+")
-## ```
 ```
 
 ### 6. Teardown and Cleanup
@@ -110,15 +101,12 @@ stack to free up memory and stop background processes.
 ``` r
 # 1. Unload the model from memory
 lms_unload("google/gemma-3-1b")
-## ✔ Model "google/gemma-3-1b" unloaded successfully. [35ms]
 
 # 2. Stop the API server
 lms_server_stop()
-## ✔ LM Studio server stopped successfully.
 
 # 3. Stop the background daemon
 lms_daemon_stop()
-## ✔ LM Studio daemon stopped successfully.
 ```
 
 ## Bonus: Pipeline Automation
@@ -140,9 +128,4 @@ results <- with_lms_daemon({
   lms_server_stop()
   res
 })
-## ✔ LM Studio daemon started in the background.
-## ✔ LM Studio server started successfully on the default port.
-## ✔ Model "google/gemma-3-1b" loaded and verified. [840ms]
-## ✔ LM Studio server stopped successfully.
-## ✔ LM Studio daemon stopped successfully.
 ```
