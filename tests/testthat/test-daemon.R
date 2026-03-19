@@ -32,14 +32,28 @@ test_that("lms_daemon_status parses multi-line output correctly", {
   expect_equal(res, c("Status OK", "Loaded models: 2"))
 })
 
-test_that("lms_daemon_stop handles force argument and failures", {
-  mock_run_fail <- function(command, args, error_on_status) {
+test_that("lms_daemon_stop exits gracefully when managed by GUI", {
+  mock_run_gui <- function(command, args, error_on_status) {
     list(status = 1, stdout = "", stderr = "part of LM Studio")
+  }
+  local_mocked_bindings(run = mock_run_gui, .package = "processx")
+
+  # Expect the informational message and a return value of FALSE
+  expect_message(
+    res <- lms_daemon_stop(),
+    "managed by the LM Studio GUI"
+  )
+  expect_false(res)
+})
+
+test_that("lms_daemon_stop handles force argument and generic failures", {
+  mock_run_fail <- function(command, args, error_on_status) {
+    list(status = 1, stdout = "", stderr = "Some unknown system error")
   }
   local_mocked_bindings(run = mock_run_fail, .package = "processx")
 
   expect_error(
     lms_daemon_stop(),
-    "Cannot stop the daemon because it is running as part of the LM Studio GUI"
+    "Failed to stop the LM Studio daemon"
   )
 })
