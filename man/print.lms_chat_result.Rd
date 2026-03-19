@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments passed to print.}
 }
+\value{
+Invisibly returns the input object \code{x}.
+}
 \description{
 Custom print method for responses that include log probabilities.
 Displays the text clearly and provides a summary of the metadata.

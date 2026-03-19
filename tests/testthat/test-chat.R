@@ -30,6 +30,7 @@ test_that("Full Integration: Download, Load, and Rate", {
     api_type = "openresponses",
     logprobs = TRUE,
     top_logprobs = 5,
+    temperature = 1.0,
     quiet = TRUE
   )
 
