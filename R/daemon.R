@@ -101,7 +101,6 @@ build_args_daemon_down <- function() {
 #' }
 lms_daemon_stop <- function(force = FALSE) {
   if (isTRUE(force)) {
-    # Attempt to stop the server first, suppressing errors
     tryCatch(lms_server_stop(), error = function(e) NULL)
   }
 
@@ -110,6 +109,7 @@ lms_daemon_stop <- function(force = FALSE) {
 
   if (res$status == 0) {
     rlm_alert_success("LM Studio daemon stopped successfully.")
+    return(invisible(TRUE))
   } else {
     err_msg <- trimws(res$stderr)
     if (err_msg == "") {
@@ -119,21 +119,27 @@ lms_daemon_stop <- function(force = FALSE) {
       err_msg <- "Unknown CLI error."
     }
 
+    # Catch the GUI conflict and exit gracefully
     if (grepl("part of LM Studio", err_msg, ignore.case = TRUE)) {
-      cli::cli_abort(c(
-        "Cannot stop the daemon because it is running as part of the LM Studio GUI.",
-        "i" = "Please close the desktop application manually."
-      ))
+      rlm_alert_info(
+        "The daemon is managed by the LM Studio GUI and will remain running."
+      )
+      return(invisible(FALSE))
     }
 
+    # Catch the "already stopped" scenario and exit gracefully
+    if (grepl("not running", err_msg, ignore.case = TRUE)) {
+      rlm_alert_info("The LM Studio daemon is already stopped.")
+      return(invisible(TRUE))
+    }
+
+    # For all other errors, abort as usual
     cli::cli_abort(c(
       "Failed to stop the LM Studio daemon. Exit code: {.val {res$status}}.",
       "x" = "CLI output: {.val {err_msg}}",
       "i" = "Hint: If the server is still running, try `lms_daemon_stop(force = TRUE)` or run `lms_server_stop()` first."
     ))
   }
-
-  invisible(res$status)
 }
 
 #' Run code with the LM Studio daemon active

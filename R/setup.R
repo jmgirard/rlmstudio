@@ -98,7 +98,7 @@ install_lmstudio <- function(method = c("browser", "headless")) {
   method <- match.arg(method)
 
   # Check for existence AND version before proceeding
-  if (!has_lms() && check_lms_version("0.4.0")) {
+  if (has_lms() && check_lms_version("0.4.0")) {
     rlm_alert_success("Your LM Studio setup is ready to go!")
     return(invisible(TRUE))
   }
@@ -113,7 +113,25 @@ install_lmstudio <- function(method = c("browser", "headless")) {
     )
   } else if (method == "headless") {
     os <- Sys.info()[["sysname"]]
-    rlm_alert_info("Attempting headless installation or update...")
+
+    if (
+      !interactive() &&
+        !isTRUE(as.logical(Sys.getenv("RLMSTUDIO_ALLOW_INSTALL", "FALSE")))
+    ) {
+      cli::cli_abort(c(
+        "Installation requires an interactive session to grant permission.",
+        "i" = "To install automatically in non-interactive scripts or CI/CD, set the {.envvar RLMSTUDIO_ALLOW_INSTALL} environment variable to {.val TRUE}."
+      ))
+    }
+
+    if (interactive()) {
+      consent <- utils::askYesNo(
+        "This will download and install the LM Studio CLI to your system. Do you want to proceed?"
+      )
+      if (!isTRUE(consent)) {
+        cli::cli_abort("Installation cancelled by user.")
+      }
+    }
 
     tryCatch(
       {
