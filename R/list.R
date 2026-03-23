@@ -1,14 +1,20 @@
 #' List available models
 #'
-#' Retrieves a list of models available on your system via the LM Studio REST API.
+#' Retrieves a list of models available on your system via the LM Studio REST
+#' API.
 #'
-#' @param loaded Logical. If \code{TRUE}, returns only currently loaded models. Defaults to \code{FALSE}.
-#' @param type Character vector. The types of models to include. Defaults to \code{c("llm", "embedding")}.
-#' @param detailed Logical. Show all information about each model. Defaults to \code{FALSE}.
-#' @param quiet Logical. If \code{TRUE}, suppresses informative console messages. Defaults to \code{FALSE}.
+#' @param loaded Logical. If \code{TRUE}, returns only currently loaded models.
+#'   Defaults to \code{FALSE}.
+#' @param type Character vector. The types of models to include. Defaults to
+#'   \code{c("llm", "embedding")}.
+#' @param detailed Logical. Show all information about each model. Defaults to
+#'   \code{FALSE}.
+#' @param quiet Logical. If \code{TRUE}, suppresses informative console
+#'   messages. Defaults to \code{FALSE}.
 #' @param host Character. The host address of the local server.
 #'
-#' @seealso [LM Studio List Models API](https://lmstudio.ai/docs/developer/rest/list)
+#' @seealso [LM Studio List Models
+#'   API](https://lmstudio.ai/docs/developer/rest/list)
 #'
 #' @return A data frame of model information.
 #'

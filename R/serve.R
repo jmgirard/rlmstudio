@@ -27,7 +27,8 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' @param cors Logical. Enable CORS support for web application development.
 #'   Defaults to FALSE.
 #'
-#' @seealso [LM Studio CLI Server Start Documentation](https://lmstudio.ai/docs/cli/serve/server-start)
+#' @seealso [LM Studio CLI Server Start
+#'   Documentation](https://lmstudio.ai/docs/cli/serve/server-start)
 #'
 #' @return Invisibly returns the system exit code (0 for success).
 #'
@@ -78,7 +79,8 @@ build_args_server_stop <- function() {
 #'
 #' Stops the currently running LM Studio local server via the CLI.
 #'
-#' @seealso [LM Studio CLI Server Stop Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)
+#' @seealso [LM Studio CLI Server Stop
+#'   Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)
 #'
 #' @return Invisibly returns the system exit code (0 for success).
 #'
@@ -142,12 +144,14 @@ build_args_server_status <- function(
 #' @param json Logical. Output the status in machine-readable JSON format.
 #' @param verbose Logical. Enable detailed logging output.
 #' @param quiet Logical. Suppress all logging output.
-#' @param log_level Character. The level of logging to use (e.g., "info", "debug").
+#' @param log_level Character. The level of logging to use (e.g., "info",
+#'   "debug").
 #'
 #' @details You can only use one logging control flag at a time (`verbose`,
 #'   `quiet`, or `log_level`).
 #'
-#' @seealso [LM Studio CLI Server Status Documentation](https://lmstudio.ai/docs/cli/serve/server-status)
+#' @seealso [LM Studio CLI Server Status
+#'   Documentation](https://lmstudio.ai/docs/cli/serve/server-status)
 #'
 #' @return A character vector of the raw CLI output. If `json = TRUE` and the
 #'   `jsonlite` package is installed, it returns a parsed list or data frame.

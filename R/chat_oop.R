@@ -1,11 +1,13 @@
 #' Create a new LM Studio chat result
 #'
-#' Internal constructor to create a structured object for responses
-#' containing log probabilities.
+#' Internal constructor to create a structured object for responses containing
+#' log probabilities.
 #'
 #' @param text Character. The generated text response.
 #' @param logprobs Dataframe. The token-level probability data.
+#'
 #' @return An object of class \code{lms_chat_result}.
+#'
 #' @keywords internal
 new_lms_chat_result <- function(text = character(), logprobs = data.frame()) {
   stopifnot(is.character(text))
@@ -24,7 +26,9 @@ new_lms_chat_result <- function(text = character(), logprobs = data.frame()) {
 #' Internal validator to ensure the integrity of \code{lms_chat_result} objects.
 #'
 #' @param x An object to validate.
+#'
 #' @return The validated object.
+#'
 #' @keywords internal
 validate_lms_chat_result <- function(x) {
   if (!is.character(x$text)) {
@@ -38,13 +42,16 @@ validate_lms_chat_result <- function(x) {
 
 #' Print an LM Studio chat result
 #'
-#' Custom print method for responses that include log probabilities.
-#' Displays the text clearly and provides a summary of the metadata.
+#' Custom print method for responses that include log probabilities. Displays
+#' the text clearly and provides a summary of the metadata.
 #'
 #' @param x An object of class \code{lms_chat_result}.
 #' @param ... Additional arguments passed to print.
+#'
 #' @return Invisibly returns the input object \code{x}.
+#'
 #' @keywords internal
+#'
 #' @export
 print.lms_chat_result <- function(x, ...) {
   # Create a clean, themed layout using cli

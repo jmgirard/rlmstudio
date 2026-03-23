@@ -1,16 +1,21 @@
 #' Unload a model from memory via REST API
 #'
-#' @param model Character. Unique identifier (\code{instance_id}) of the model instance to unload.
-#' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
+#' @param model Character. Unique identifier (\code{instance_id}) of the model
+#'   instance to unload.
+#' @param host Character. The host address of the local server. Defaults to
+#'   "http://localhost:1234".
 #' @param ... Additional arguments passed to the API request body.
 #'
-#' @note
-#' If you have loaded multiple instances of the same model using \code{force = TRUE} in \code{lms_load()},
-#' the server assigns them unique instance identifiers (e.g., \code{"google/gemma-3-1b"} and \code{"google/gemma-3-1b:2"}).
-#' Passing the base model name to \code{lms_unload()} will only unload the primary instance.
-#' To unload duplicate instances, you must provide their exact \code{instance_id}, or use \code{lms_unload_all()} to clear everything.
+#' @note If you have loaded multiple instances of the same model using
+#'   \code{force = TRUE} in \code{lms_load()}, the server assigns them unique
+#'   instance identifiers (e.g., \code{"google/gemma-3-1b"} and
+#'   \code{"google/gemma-3-1b:2"}). Passing the base model name to
+#'   \code{lms_unload()} will only unload the primary instance. To unload
+#'   duplicate instances, you must provide their exact \code{instance_id}, or
+#'   use \code{lms_unload_all()} to clear everything.
 #'
-#' @seealso [LM Studio Unload Model API](https://lmstudio.ai/docs/developer/rest/unload)
+#' @seealso [LM Studio Unload Model
+#'   API](https://lmstudio.ai/docs/developer/rest/unload)
 #'
 #' @return Invisibly returns the model identifier string on success.
 #'
@@ -76,12 +81,15 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #'
 #' Retrieves a list of all currently loaded models and unloads them one by one.
 #'
-#' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
-#' @param ... Additional arguments passed to the API request body for each unload request.
+#' @param host Character. The host address of the local server. Defaults to
+#'   "http://localhost:1234".
+#' @param ... Additional arguments passed to the API request body for each
+#'   unload request.
 #'
 #' @seealso \code{\link{lms_unload}}
 #'
-#' @return Invisibly returns a character vector of the unloaded model instance identifiers, or \code{NULL} if no models were loaded.
+#' @return Invisibly returns a character vector of the unloaded model instance
+#'   identifiers, or \code{NULL} if no models were loaded.
 #'
 #' @export
 #'

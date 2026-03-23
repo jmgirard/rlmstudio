@@ -1,19 +1,31 @@
 #' Load a model via REST API
 #'
 #' @param model Character. Unique identifier for the model to load.
-#' @param context_length Integer. Maximum number of tokens that the model will consider.
-#' @param eval_batch_size Integer. Number of input tokens to process together in a single batch during evaluation.
+#' @param context_length Integer. Maximum number of tokens that the model will
+#'   consider.
+#' @param eval_batch_size Integer. Number of input tokens to process together in
+#'   a single batch during evaluation.
 #' @param flash_attention Logical. Whether to optimize attention computation.
-#' @param num_experts Integer. Number of experts to use during inference for MoE models.
-#' @param offload_kv_cache_to_gpu Logical. Whether KV cache is offloaded to GPU memory.
-#' @param echo_load_config Logical. If \code{TRUE}, echoes the final load configuration in the response.
-#' @param force Logical. If \code{TRUE}, bypasses the check for currently loaded models and requests a new instance from the server. Note that this does not overwrite or replace the existing model; it loads a second concurrent instance into VRAM. Defaults to \code{FALSE}.
-#' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
-#' @param ... Additional arguments passed to the API request body (useful for future API parameters).
+#' @param num_experts Integer. Number of experts to use during inference for MoE
+#'   models.
+#' @param offload_kv_cache_to_gpu Logical. Whether KV cache is offloaded to GPU
+#'   memory.
+#' @param echo_load_config Logical. If \code{TRUE}, echoes the final load
+#'   configuration in the response.
+#' @param force Logical. If \code{TRUE}, bypasses the check for currently loaded
+#'   models and requests a new instance from the server. Note that this does not
+#'   overwrite or replace the existing model; it loads a second concurrent
+#'   instance into VRAM. Defaults to \code{FALSE}.
+#' @param host Character. The host address of the local server. Defaults to
+#'   "http://localhost:1234".
+#' @param ... Additional arguments passed to the API request body (useful for
+#'   future API parameters).
 #'
-#' @seealso [LM Studio Load Model API](https://lmstudio.ai/docs/developer/rest/load)
+#' @seealso [LM Studio Load Model
+#'   API](https://lmstudio.ai/docs/developer/rest/load)
 #'
-#' @return Invisibly returns the model identifier string on success, or the load configuration list if \code{echo_load_config = TRUE}.
+#' @return Invisibly returns the model identifier string on success, or the load
+#'   configuration list if \code{echo_load_config = TRUE}.
 #'
 #' @export
 #'

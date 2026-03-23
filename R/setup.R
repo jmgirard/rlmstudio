@@ -14,7 +14,8 @@ has_lms <- function() {
 
 #' Check if the installed LM Studio CLI meets the minimum requirement
 #'
-#' @param min_version Character string of the required version. Default is "0.4.0".
+#' @param min_version Character string of the required version. Default is
+#'   "0.4.0".
 #'
 #' @return Logical. TRUE if the version is sufficient, FALSE otherwise.
 #'
@@ -85,15 +86,15 @@ check_lms_version <- function(min_version = "0.4.0") {
 #' This function provides two methods for setting up LM Studio on your system.
 #' The "browser" method opens the official download page for the LM Studio
 #' desktop application (GUI). The "headless" method runs an automated
-#' installation script to install the \code{llmster} daemon and CLI, which
-#' is suitable for servers, containers, or users who prefer a GUI-less environment.
+#' installation script to install the \code{llmster} daemon and CLI, which is
+#' suitable for servers, containers, or users who prefer a GUI-less environment.
 #'
-#' @param method Character. Either "browser" (opens the GUI download page)
-#'   or "headless" (installs the \code{llmster} daemon via script).
+#' @param method Character. Either "browser" (opens the GUI download page) or
+#'   "headless" (installs the \code{llmster} daemon via script).
 #'
 #' @return Returns \code{TRUE} invisibly upon successful completion. This
-#' function is primarily called for its side effects of installing software or
-#' opening a download page.
+#'   function is primarily called for its side effects of installing software or
+#'   opening a download page.
 #'
 #' @export
 #'

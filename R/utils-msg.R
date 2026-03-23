@@ -1,11 +1,14 @@
 #' Check if rlmstudio should be quiet
 #'
-#' Evaluates whether the user has set the global package option to silence messages,
-#' or if a local quiet argument was passed.
+#' Evaluates whether the user has set the global package option to silence
+#' messages, or if a local quiet argument was passed.
 #'
 #' @param quiet Logical. A local override for the quiet setting.
+#'
 #' @return Logical.
+#'
 #' @noRd
+#'
 #' @examples
 #' is_quiet(quiet = TRUE)
 #' is_quiet(quiet = FALSE)

@@ -1,12 +1,15 @@
 #' Calculate Expected Scores and Uncertainty from Logprobs
 #'
 #' Takes a logprobs dataframe (from an \code{lms_chat_result}) and calculates
-#' the weighted average score, normalized probabilities, and uncertainty metrics.
+#' the weighted average score, normalized probabilities, and uncertainty
+#' metrics.
 #'
 #' @param lp_df A dataframe of logprobs (e.g., \code{x$logprobs}).
 #' @param scale Numeric vector. The valid labels (e.g., \code{1:5}).
+#'
 #' @return A list containing the \code{expected_value}, \code{weighted_sd},
 #'   \code{entropy}, and a \code{data.frame} of normalized probabilities.
+#'
 #' @export
 lms_score_expected <- function(lp_df, scale = 1:5) {
   if (is.null(lp_df) || nrow(lp_df) == 0) {

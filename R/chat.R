@@ -1,16 +1,23 @@
 #' Chat Completion with LM Studio
 #'
-#' Send a prompt to a locally running LM Studio model. This wrapper automatically routes
-#' your request to the appropriate subfunction based on the selected API type.
+#' Send a prompt to a locally running LM Studio model. This wrapper
+#' automatically routes your request to the appropriate subfunction based on the
+#' selected API type.
 #'
 #' @param model Character. The name of the loaded model.
 #' @param input Character. The user prompt to send to the model.
-#' @param system_prompt Character. An optional system prompt to guide model behavior.
-#' @param host Character. The base URL of the LM Studio server. Default is "http://localhost:1234".
-#' @param api_type Character. The LM Studio API endpoint to use. Options are "openresponses" (default), "openai", or "native".
-#' @param logprobs Logical. Whether to return the log probabilities of the generated tokens. Default is FALSE.
-#' @param simplify Logical. If TRUE, extracts the core text response. Default is TRUE.
+#' @param system_prompt Character. An optional system prompt to guide model
+#'   behavior.
+#' @param host Character. The base URL of the LM Studio server. Default is
+#'   "http://localhost:1234".
+#' @param api_type Character. The LM Studio API endpoint to use. Options are
+#'   "openresponses" (default), "openai", or "native".
+#' @param logprobs Logical. Whether to return the log probabilities of the
+#'   generated tokens. Default is FALSE.
+#' @param simplify Logical. If TRUE, extracts the core text response. Default is
+#'   TRUE.
 #' @param ... Additional arguments passed to the selected API body.
+#'
 #' @export
 lms_chat <- function(
   model,
@@ -72,15 +79,18 @@ lms_chat <- function(
 
 #' Chat Completion via OpenResponses API
 #'
-#' Direct interface to LM Studio's OpenResponses endpoint. Supports logprobs and custom instructions.
+#' Direct interface to LM Studio's OpenResponses endpoint. Supports logprobs and
+#' custom instructions.
 #'
 #' @param model Character. The loaded model name.
 #' @param input Character. The user prompt.
 #' @param instructions Character. Optional system instructions.
 #' @param host Character. Server URL.
 #' @param logprobs Logical. Whether to return token probabilities.
-#' @param simplify Logical. If TRUE, parses output to text and dataframe. If FALSE, returns raw list.
+#' @param simplify Logical. If TRUE, parses output to text and dataframe. If
+#'   FALSE, returns raw list.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature).
+#'
 #' @export
 lms_chat_openresponses <- function(
   model,
@@ -188,14 +198,17 @@ lms_chat_openresponses <- function(
 
 #' Chat Completion via OpenAI Compatibility API
 #'
-#' Direct interface to LM Studio's OpenAI-compatible endpoint. Uses the messages array format.
+#' Direct interface to LM Studio's OpenAI-compatible endpoint. Uses the messages
+#' array format.
 #'
 #' @param model Character. The loaded model name.
 #' @param messages List. A structured list of role and content pairs.
 #' @param host Character. Server URL.
-#' @param logprobs Logical. Whether to request logprobs (currently stubbed by LM Studio).
+#' @param logprobs Logical. Whether to request logprobs (currently stubbed by LM
+#'   Studio).
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
+#'
 #' @export
 lms_chat_openai <- function(
   model,
