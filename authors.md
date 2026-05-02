@@ -11,12 +11,12 @@ Source:
 [`DESCRIPTION`](https://github.com/jmgirard/rlmstudio/blob/HEAD/DESCRIPTION)
 
 Girard J (2026). *rlmstudio: Access and Control LM Studio*. R package
-version 0.2.1, <https://jmgirard.github.io/rlmstudio/>.
+version 0.2.2, <https://jmgirard.github.io/rlmstudio/>.
 
     @Manual{,
       title = {rlmstudio: Access and Control LM Studio},
       author = {Jeffrey Girard},
       year = {2026},
-      note = {R package version 0.2.1},
+      note = {R package version 0.2.2},
       url = {https://jmgirard.github.io/rlmstudio/},
     }
