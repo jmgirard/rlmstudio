@@ -30,7 +30,8 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' @seealso [LM Studio CLI Server Start
 #'   Documentation](https://lmstudio.ai/docs/cli/serve/server-start)
 #'
-#' @return Invisibly returns the system exit code (0 for success).
+#' @return Invisibly returns an integer representing the system exit code
+#'   (\code{0} for success).
 #'
 #' @export
 #'
@@ -82,7 +83,8 @@ build_args_server_stop <- function() {
 #' @seealso [LM Studio CLI Server Stop
 #'   Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)
 #'
-#' @return Invisibly returns the system exit code (0 for success).
+#' @return Invisibly returns an integer representing the system exit code
+#'   (\code{0} for success).
 #'
 #' @export
 #'
@@ -153,8 +155,9 @@ build_args_server_status <- function(
 #' @seealso [LM Studio CLI Server Status
 #'   Documentation](https://lmstudio.ai/docs/cli/serve/server-status)
 #'
-#' @return A character vector of the raw CLI output. If `json = TRUE` and the
-#'   `jsonlite` package is installed, it returns a parsed list or data frame.
+#' @return By default, returns a character vector containing the raw CLI output.
+#'   If \code{json = TRUE} and the \code{jsonlite} package is available, it
+#'   returns a parsed list or \code{data.frame} of the status configuration.
 #'
 #' @export
 #'

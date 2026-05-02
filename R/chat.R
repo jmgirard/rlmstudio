@@ -95,7 +95,10 @@ lms_chat <- function(
 #' @param simplify Logical. If TRUE, parses output to text and dataframe. If
 #'   FALSE, returns raw list.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature).
-#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON response. Otherwise, returns a character string containing the generated text. If \code{logprobs = TRUE}, returns an object of class \code{lms_chat_result} incorporating both the text and probability data.
+#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
+#'   response. Otherwise, returns a character string containing the generated
+#'   text. If \code{logprobs = TRUE}, returns an object of class
+#'   \code{lms_chat_result} incorporating both the text and probability data.
 #' @export
 lms_chat_openresponses <- function(
   model,
@@ -213,7 +216,11 @@ lms_chat_openresponses <- function(
 #'   Studio).
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
-#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON response. Otherwise, returns a character string containing the generated text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result} object with the log probabilities populated as \code{NULL} since they are currently stubbed in the LM Studio OpenAI endpoint.
+#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
+#'   response. Otherwise, returns a character string containing the generated
+#'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
+#'   object with the log probabilities populated as \code{NULL} since they are
+#'   currently stubbed in the LM Studio OpenAI endpoint.
 #' @export
 lms_chat_openai <- function(
   model,
@@ -283,7 +290,9 @@ lms_chat_openai <- function(
 #' @param host Character. Server URL.
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
-#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON response. If \code{simplify = TRUE}, returns a character string containing the model's text output.
+#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
+#'   response. If \code{simplify = TRUE}, returns a character string containing
+#'   the model's text output.
 #' @export
 lms_chat_native <- function(
   model,
@@ -471,7 +480,8 @@ lms_chat_batch <- function(
 
 #' Create a base request for the LM Studio API
 #'
-#' @param host Character. The host address of the local server. Defaults to "http://localhost:1234".
+#' @param host Character. The host address of the local server.
+#'   Defaults to "http://localhost:1234".
 #'
 #' @return An httr2 request object.
 #'

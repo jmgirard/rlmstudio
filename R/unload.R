@@ -17,7 +17,8 @@
 #' @seealso [LM Studio Unload Model
 #'   API](https://lmstudio.ai/docs/developer/rest/unload)
 #'
-#' @return Invisibly returns the model identifier string on success.
+#' @return Invisibly returns a character string representing the unloaded
+#'   \code{instance_id} upon success.
 #'
 #' @export
 #'
@@ -88,8 +89,9 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #'
 #' @seealso \code{\link{lms_unload}}
 #'
-#' @return Invisibly returns a character vector of the unloaded model instance
-#'   identifiers, or \code{NULL} if no models were loaded.
+#' @return Invisibly returns a character vector of the \code{instance_id}s that
+#'   were successfully unloaded. If no models were currently loaded, it
+#'   invisibly returns \code{NULL}.
 #'
 #' @export
 #'

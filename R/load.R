@@ -24,8 +24,9 @@
 #' @seealso [LM Studio Load Model
 #'   API](https://lmstudio.ai/docs/developer/rest/load)
 #'
-#' @return Invisibly returns the model identifier string on success, or the load
-#'   configuration list if \code{echo_load_config = TRUE}.
+#' @return Invisibly returns a character string of the loaded model identifier
+#'   upon success. If \code{echo_load_config = TRUE}, it instead invisibly
+#'   returns a list containing the model's detailed load configuration.
 #'
 #' @export
 #'

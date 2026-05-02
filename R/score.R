@@ -7,8 +7,11 @@
 #' @param lp_df A dataframe of logprobs (e.g., \code{x$logprobs}).
 #' @param scale Numeric vector. The valid labels (e.g., \code{1:5}).
 #'
-#' @return A list containing the \code{expected_value}, \code{weighted_sd},
-#'   \code{entropy}, and a \code{data.frame} of normalized probabilities.
+#' @return A named list containing three numeric elements
+#'   (\code{expected_value}, \code{weighted_sd}, \code{entropy}) and a
+#'   \code{data.frame} named \code{probabilities} with columns \code{label} and
+#'   \code{prob}. Returns \code{NULL} if the input dataframe is empty or
+#'   invalid.
 #'
 #' @export
 #'

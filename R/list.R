@@ -16,7 +16,12 @@
 #' @seealso [LM Studio List Models
 #'   API](https://lmstudio.ai/docs/developer/rest/list)
 #'
-#' @return A data frame of model information.
+#' @return A \code{data.frame} containing information about the available
+#' models. By default, it includes columns for \code{state}, \code{type},
+#' \code{display_name}, \code{key}, \code{architecture}, and \code{size_gb}.
+#' If \code{detailed = TRUE}, it returns a comprehensive \code{data.frame}
+#' including all raw metadata columns provided by the API. Returns an empty
+#' \code{data.frame} if no models match the criteria.
 #'
 #' @export
 #'

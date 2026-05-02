@@ -4,7 +4,8 @@
 #' `RLMSTUDIO_LMS_PATH` environment variable first, then the system `PATH`, and
 #' finally common installation directories.
 #'
-#' @return A character string containing the absolute path to the executable.
+#' @return A character string specifying the absolute file path to the LM Studio
+#'   executable (\code{lms}) on the user's system.
 #'
 #' @export
 #'

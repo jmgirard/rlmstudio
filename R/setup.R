@@ -1,6 +1,7 @@
 #' Check if LM Studio CLI is installed
 #'
-#' @return Logical. TRUE if lms is found, FALSE otherwise.
+#' @return A logical scalar: \code{TRUE} if the \code{lms} executable is found
+#'   on the system path, and \code{FALSE} otherwise.
 #'
 #' @export
 #'
@@ -17,7 +18,8 @@ has_lms <- function() {
 #' @param min_version Character string of the required version. Default is
 #'   "0.4.0".
 #'
-#' @return Logical. TRUE if the version is sufficient, FALSE otherwise.
+#' @return A logical scalar: \code{TRUE} if the LM Studio CLI version meets or
+#'   exceeds the specified \code{min_version}, and \code{FALSE} otherwise.
 #'
 #' @export
 #'
@@ -92,9 +94,9 @@ check_lms_version <- function(min_version = "0.4.0") {
 #' @param method Character. Either "browser" (opens the GUI download page) or
 #'   "headless" (installs the \code{llmster} daemon via script).
 #'
-#' @return Returns \code{TRUE} invisibly upon successful completion. This
-#'   function is primarily called for its side effects of installing software or
-#'   opening a download page.
+#' @return Invisibly returns \code{TRUE} upon successful completion. This
+#'   function is primarily utilized for its side effects of opening a web
+#'   browser or executing system installation commands.
 #'
 #' @export
 #'
