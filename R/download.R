@@ -189,7 +189,7 @@ lms_download_status <- function(job_id, host = "http://localhost:1234") {
 #' @param ... Additional arguments passed to print.
 #'
 #' @keywords internal
-#'
+#' @return Invisibly returns the input object \code{x}.
 #' @export
 #'
 #' @examples

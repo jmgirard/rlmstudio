@@ -17,7 +17,12 @@
 #' @param simplify Logical. If TRUE, extracts the core text response. Default is
 #'   TRUE.
 #' @param ... Additional arguments passed to the selected API body.
-#'
+#' @return Depending on the arguments provided:
+#' \itemize{
+#'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
+#'   \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response.
+#'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
+#' }
 #' @export
 lms_chat <- function(
   model,
@@ -90,7 +95,7 @@ lms_chat <- function(
 #' @param simplify Logical. If TRUE, parses output to text and dataframe. If
 #'   FALSE, returns raw list.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature).
-#'
+#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON response. Otherwise, returns a character string containing the generated text. If \code{logprobs = TRUE}, returns an object of class \code{lms_chat_result} incorporating both the text and probability data.
 #' @export
 lms_chat_openresponses <- function(
   model,
@@ -208,7 +213,7 @@ lms_chat_openresponses <- function(
 #'   Studio).
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
-#'
+#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON response. Otherwise, returns a character string containing the generated text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result} object with the log probabilities populated as \code{NULL} since they are currently stubbed in the LM Studio OpenAI endpoint.
 #' @export
 lms_chat_openai <- function(
   model,
@@ -278,6 +283,7 @@ lms_chat_openai <- function(
 #' @param host Character. Server URL.
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
+#' @return If \code{simplify = FALSE}, returns a list representing the raw JSON response. If \code{simplify = TRUE}, returns a character string containing the model's text output.
 #' @export
 lms_chat_native <- function(
   model,
@@ -345,7 +351,12 @@ lms_chat_native <- function(
 #' @param simplify Logical. If TRUE, parses outputs.
 #' @param quiet Logical. Whether to suppress the progress bar.
 #' @param ... Additional arguments passed to `lms_chat`.
-#'
+#' @return The return type depends on the \code{format} argument:
+#' \itemize{
+#'   \item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}.
+#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included.
+#' }
 #' @export
 lms_chat_batch <- function(
   model,
