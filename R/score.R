@@ -11,6 +11,19 @@
 #'   \code{entropy}, and a \code{data.frame} of normalized probabilities.
 #'
 #' @export
+#'
+#' @examples
+#' # Create a sample logprobs dataframe representing a model's generation step
+#' mock_logprobs <- data.frame(
+#'   step_token = rep("4", 3),
+#'   step_logprob = rep(0, 3),
+#'   candidate_token = c("4", "5", "3"),
+#'   candidate_logprob = c(-0.105, -2.302, -3.506),
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' # Calculate the expected score and uncertainty metrics
+#' lms_score_expected(mock_logprobs, scale = 1:5)
 lms_score_expected <- function(lp_df, scale = 1:5) {
   if (is.null(lp_df) || nrow(lp_df) == 0) {
     return(NULL)

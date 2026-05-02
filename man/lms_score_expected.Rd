@@ -19,3 +19,16 @@ A list containing the \code{expected_value}, \code{weighted_sd},
 Takes a logprobs dataframe (from an \code{lms_chat_result}) and calculates
 the weighted average score, normalized probabilities, and uncertainty metrics.
 }
+\examples{
+# Create a sample logprobs dataframe representing a model's generation step
+mock_logprobs <- data.frame(
+  step_token = rep("4", 3),
+  step_logprob = rep(0, 3),
+  candidate_token = c("4", "5", "3"),
+  candidate_logprob = c(-0.105, -2.302, -3.506),
+  stringsAsFactors = FALSE
+)
+
+# Calculate the expected score and uncertainty metrics
+lms_score_expected(mock_logprobs, scale = 1:5)
+}
