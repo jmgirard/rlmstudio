@@ -1,6 +1,10 @@
 # rlmstudio 0.2.2
 
+* Fix CRAN issues
+
 # rlmstudio 0.2.1
+
+* Submit to CRAN
 
 # rlmstudio 0.2.0
 
