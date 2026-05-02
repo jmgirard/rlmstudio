@@ -23,7 +23,8 @@ lms_server_start(port = NULL, cors = FALSE)
 
 ## Value
 
-Invisibly returns the system exit code (0 for success).
+Invisibly returns an integer representing the system exit code (`0` for
+success).
 
 ## See also
 

@@ -26,7 +26,8 @@ lms_unload(model, host = "http://localhost:1234", ...)
 
 ## Value
 
-Invisibly returns the model identifier string on success.
+Invisibly returns a character string representing the unloaded
+`instance_id` upon success.
 
 ## Note
 

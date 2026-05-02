@@ -47,3 +47,10 @@ lms_chat_openresponses(
 - ...:
 
   Additional API arguments (e.g., top_logprobs, temperature).
+
+## Value
+
+If `simplify = FALSE`, returns a list representing the raw JSON
+response. Otherwise, returns a character string containing the generated
+text. If `logprobs = TRUE`, returns an object of class `lms_chat_result`
+incorporating both the text and probability data.

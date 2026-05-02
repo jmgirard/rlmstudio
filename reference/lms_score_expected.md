@@ -22,8 +22,10 @@ lms_score_expected(lp_df, scale = 1:5)
 
 ## Value
 
-A list containing the `expected_value`, `weighted_sd`, `entropy`, and a
-`data.frame` of normalized probabilities.
+A named list containing three numeric elements (`expected_value`,
+`weighted_sd`, `entropy`) and a `data.frame` named `probabilities` with
+columns `label` and `prob`. Returns `NULL` if the input dataframe is
+empty or invalid.
 
 ## Examples
 

@@ -16,7 +16,8 @@ check_lms_version(min_version = "0.4.0")
 
 ## Value
 
-Logical. TRUE if the version is sufficient, FALSE otherwise.
+A logical scalar: `TRUE` if the LM Studio CLI version meets or exceeds
+the specified `min_version`, and `FALSE` otherwise.
 
 ## Examples
 

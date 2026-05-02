@@ -72,13 +72,15 @@ including whether it is running and its configuration.</p>
 
 
 <dt id="arg-log-level">log_level<a class="anchor" aria-label="anchor" href="#arg-log-level"></a></dt>
-<dd><p>Character. The level of logging to use (e.g., "info", "debug").</p></dd>
+<dd><p>Character. The level of logging to use (e.g., "info",
+"debug").</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A character vector of the raw CLI output. If <code>json = TRUE</code> and the
-<code>jsonlite</code> package is installed, it returns a parsed list or data frame.</p>
+    <p>By default, returns a character vector containing the raw CLI output.
+If <code>json = TRUE</code> and the <code>jsonlite</code> package is available, it
+returns a parsed list or <code>data.frame</code> of the status configuration.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

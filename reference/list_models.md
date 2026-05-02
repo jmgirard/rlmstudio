@@ -42,7 +42,12 @@ list_models(
 
 ## Value
 
-A data frame of model information.
+A `data.frame` containing information about the available models. By
+default, it includes columns for `state`, `type`, `display_name`, `key`,
+`architecture`, and `size_gb`. If `detailed = TRUE`, it returns a
+comprehensive `data.frame` including all raw metadata columns provided
+by the API. Returns an empty `data.frame` if no models match the
+criteria.
 
 ## See also
 

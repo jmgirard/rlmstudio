@@ -67,11 +67,13 @@
 
 
 <dt id="arg-context-length">context_length<a class="anchor" aria-label="anchor" href="#arg-context-length"></a></dt>
-<dd><p>Integer. Maximum number of tokens that the model will consider.</p></dd>
+<dd><p>Integer. Maximum number of tokens that the model will
+consider.</p></dd>
 
 
 <dt id="arg-eval-batch-size">eval_batch_size<a class="anchor" aria-label="anchor" href="#arg-eval-batch-size"></a></dt>
-<dd><p>Integer. Number of input tokens to process together in a single batch during evaluation.</p></dd>
+<dd><p>Integer. Number of input tokens to process together in
+a single batch during evaluation.</p></dd>
 
 
 <dt id="arg-flash-attention">flash_attention<a class="anchor" aria-label="anchor" href="#arg-flash-attention"></a></dt>
@@ -79,32 +81,42 @@
 
 
 <dt id="arg-num-experts">num_experts<a class="anchor" aria-label="anchor" href="#arg-num-experts"></a></dt>
-<dd><p>Integer. Number of experts to use during inference for MoE models.</p></dd>
+<dd><p>Integer. Number of experts to use during inference for MoE
+models.</p></dd>
 
 
 <dt id="arg-offload-kv-cache-to-gpu">offload_kv_cache_to_gpu<a class="anchor" aria-label="anchor" href="#arg-offload-kv-cache-to-gpu"></a></dt>
-<dd><p>Logical. Whether KV cache is offloaded to GPU memory.</p></dd>
+<dd><p>Logical. Whether KV cache is offloaded to GPU
+memory.</p></dd>
 
 
 <dt id="arg-echo-load-config">echo_load_config<a class="anchor" aria-label="anchor" href="#arg-echo-load-config"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, echoes the final load configuration in the response.</p></dd>
+<dd><p>Logical. If <code>TRUE</code>, echoes the final load
+configuration in the response.</p></dd>
 
 
 <dt id="arg-force">force<a class="anchor" aria-label="anchor" href="#arg-force"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, bypasses the check for currently loaded models and requests a new instance from the server. Note that this does not overwrite or replace the existing model; it loads a second concurrent instance into VRAM. Defaults to <code>FALSE</code>.</p></dd>
+<dd><p>Logical. If <code>TRUE</code>, bypasses the check for currently loaded
+models and requests a new instance from the server. Note that this does not
+overwrite or replace the existing model; it loads a second concurrent
+instance into VRAM. Defaults to <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
-<dd><p>Character. The host address of the local server. Defaults to "http://localhost:1234".</p></dd>
+<dd><p>Character. The host address of the local server. Defaults to
+"http://localhost:1234".</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to the API request body (useful for future API parameters).</p></dd>
+<dd><p>Additional arguments passed to the API request body (useful for
+future API parameters).</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisibly returns the model identifier string on success, or the load configuration list if <code>echo_load_config = TRUE</code>.</p>
+    <p>Invisibly returns a character string of the loaded model identifier
+upon success. If <code>echo_load_config = TRUE</code>, it instead invisibly
+returns a list containing the model's detailed load configuration.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

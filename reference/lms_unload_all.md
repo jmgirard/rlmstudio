@@ -23,8 +23,9 @@ lms_unload_all(host = "http://localhost:1234", ...)
 
 ## Value
 
-Invisibly returns a character vector of the unloaded model instance
-identifiers, or `NULL` if no models were loaded.
+Invisibly returns a character vector of the `instance_id`s that were
+successfully unloaded. If no models were currently loaded, it invisibly
+returns `NULL`.
 
 ## See also
 

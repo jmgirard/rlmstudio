@@ -41,3 +41,9 @@ lms_chat_native(
 - ...:
 
   Additional API arguments.
+
+## Value
+
+If `simplify = FALSE`, returns a list representing the raw JSON
+response. If `simplify = TRUE`, returns a character string containing
+the model's text output.

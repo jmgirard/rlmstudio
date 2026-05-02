@@ -55,3 +55,16 @@ lms_chat(
 - ...:
 
   Additional arguments passed to the selected API body.
+
+## Value
+
+Depending on the arguments provided:
+
+- If `simplify = FALSE`, returns a parsed list of the raw JSON response.
+
+- If `simplify = TRUE` and `logprobs = FALSE`, returns a single
+  character string containing the model's text response.
+
+- If `simplify = TRUE` and `logprobs = TRUE` (and the chosen API type
+  supports it), returns an object of class `lms_chat_result` containing
+  both the text and a data.frame of token probabilities.

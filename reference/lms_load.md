@@ -70,8 +70,9 @@ lms_load(
 
 ## Value
 
-Invisibly returns the model identifier string on success, or the load
-configuration list if `echo_load_config = TRUE`.
+Invisibly returns a character string of the loaded model identifier upon
+success. If `echo_load_config = TRUE`, it instead invisibly returns a
+list containing the model's detailed load configuration.
 
 ## See also
 

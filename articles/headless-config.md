@@ -1,5 +1,16 @@
 # Headless Configuration and Usage
 
+``` r
+
+library(rlmstudio)
+lms_installed <- has_lms()
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
 The `rlmstudio` package provides robust support for running LM Studio in
 completely headless environments. This is ideal for Linux servers,
 Docker containers, remote cloud instances, and automated CI/CD pipelines
@@ -14,13 +25,15 @@ your local LLM workflows.
 
 If you are setting up a fresh remote server, you can use the package to
 download and install the LM Studio CLI automatically via the terminal.
+Run `install_lmstudio(method = "headless")` in your console to execute
+the automated installation script.
 
 ``` r
 
-library(rlmstudio)
-
-# Run the automated CLI installation script for Linux/macOS or Windows
-install_lmstudio(method = "headless")
+# Verify the CLI is available before proceeding
+has_lms()
+#>   lms 
+#> FALSE
 ```
 
 ## Step-by-Step Guide

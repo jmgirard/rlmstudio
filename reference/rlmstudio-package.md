@@ -19,3 +19,8 @@ Useful links:
 
 **Maintainer**: Jeffrey Girard <me@jmgirard.com>
 ([ORCID](https://orcid.org/0000-0002-7359-3746)) \[copyright holder\]
+
+Authors:
+
+- Jeffrey Girard <me@jmgirard.com>
+  ([ORCID](https://orcid.org/0000-0002-7359-3746)) \[copyright holder\]

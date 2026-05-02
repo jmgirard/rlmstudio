@@ -52,11 +52,13 @@
 
 
 <dl><dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
-<dd><p>Character. Unique identifier (<code>instance_id</code>) of the model instance to unload.</p></dd>
+<dd><p>Character. Unique identifier (<code>instance_id</code>) of the model
+instance to unload.</p></dd>
 
 
 <dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
-<dd><p>Character. The host address of the local server. Defaults to "http://localhost:1234".</p></dd>
+<dd><p>Character. The host address of the local server. Defaults to
+"http://localhost:1234".</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -65,14 +67,18 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisibly returns the model identifier string on success.</p>
+    <p>Invisibly returns a character string representing the unloaded
+<code>instance_id</code> upon success.</p>
     </div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
-    <p>If you have loaded multiple instances of the same model using <code>force = TRUE</code> in <code><a href="lms_load.html">lms_load()</a></code>,
-the server assigns them unique instance identifiers (e.g., <code>"google/gemma-3-1b"</code> and <code>"google/gemma-3-1b:2"</code>).
-Passing the base model name to <code>lms_unload()</code> will only unload the primary instance.
-To unload duplicate instances, you must provide their exact <code>instance_id</code>, or use <code><a href="lms_unload_all.html">lms_unload_all()</a></code> to clear everything.</p>
+    <p>If you have loaded multiple instances of the same model using
+<code>force = TRUE</code> in <code><a href="lms_load.html">lms_load()</a></code>, the server assigns them unique
+instance identifiers (e.g., <code>"google/gemma-3-1b"</code> and
+<code>"google/gemma-3-1b:2"</code>). Passing the base model name to
+<code>lms_unload()</code> will only unload the primary instance. To unload
+duplicate instances, you must provide their exact <code>instance_id</code>, or
+use <code><a href="lms_unload_all.html">lms_unload_all()</a></code> to clear everything.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

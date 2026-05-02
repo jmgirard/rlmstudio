@@ -12,7 +12,8 @@ lms_path()
 
 ## Value
 
-A character string containing the absolute path to the executable.
+A character string specifying the absolute file path to the LM Studio
+executable (`lms`) on the user's system.
 
 ## Examples
 

@@ -34,8 +34,9 @@ lms_server_status(
 
 ## Value
 
-A character vector of the raw CLI output. If `json = TRUE` and the
-`jsonlite` package is installed, it returns a parsed list or data frame.
+By default, returns a character vector containing the raw CLI output. If
+`json = TRUE` and the `jsonlite` package is available, it returns a
+parsed list or `data.frame` of the status configuration.
 
 ## Details
 

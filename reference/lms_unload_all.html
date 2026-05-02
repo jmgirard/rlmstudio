@@ -52,16 +52,20 @@
 
 
 <dl><dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
-<dd><p>Character. The host address of the local server. Defaults to "http://localhost:1234".</p></dd>
+<dd><p>Character. The host address of the local server. Defaults to
+"http://localhost:1234".</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to the API request body for each unload request.</p></dd>
+<dd><p>Additional arguments passed to the API request body for each
+unload request.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisibly returns a character vector of the unloaded model instance identifiers, or <code>NULL</code> if no models were loaded.</p>
+    <p>Invisibly returns a character vector of the <code>instance_id</code>s that
+were successfully unloaded. If no models were currently loaded, it
+invisibly returns <code>NULL</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

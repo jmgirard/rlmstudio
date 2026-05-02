@@ -41,3 +41,11 @@ lms_chat_openai(
 - ...:
 
   Additional API arguments.
+
+## Value
+
+If `simplify = FALSE`, returns a list representing the raw JSON
+response. Otherwise, returns a character string containing the generated
+text. If `logprobs = TRUE`, it returns an `lms_chat_result` object with
+the log probabilities populated as `NULL` since they are currently
+stubbed in the LM Studio OpenAI endpoint.

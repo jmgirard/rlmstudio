@@ -22,9 +22,9 @@ install_lmstudio(method = c("browser", "headless"))
 
 ## Value
 
-Returns `TRUE` invisibly upon successful completion. This function is
-primarily called for its side effects of installing software or opening
-a download page.
+Invisibly returns `TRUE` upon successful completion. This function is
+primarily utilized for its side effects of opening a web browser or
+executing system installation commands.
 
 ## Examples
 

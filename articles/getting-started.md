@@ -1,5 +1,16 @@
 # Getting Started with LM Studio in R
 
+``` r
+
+library(rlmstudio)
+lms_installed <- has_lms()
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
 The `rlmstudio` package bridges the gap between R and local Large
 Language Models by wrapping the LM Studio CLI and its REST API. This
 vignette covers the **GUI Workflow**, which is best for visual users on
@@ -18,17 +29,15 @@ This package relies on the LM Studio CLI. If you do not have LM Studio
 installed or need to update your version, the package provides a
 convenient setup function.
 
-For desktop users, you can use the `"browser"` method to open the
-official download page.
+For desktop users, you can run `install_lmstudio(method = "browser")` in
+your console to open the official download page.
 
 ``` r
 
-library(rlmstudio)
-
-# Open the download page in your default browser
-install_lmstudio(method = "browser")
-#> ℹ Opening the LM Studio download page in your default browser...
-#> ! Please install or update the software, restart R, and try again.
+# Check if LM Studio is available on this system
+has_lms()
+#>   lms 
+#> FALSE
 ```
 
 ## Step-by-Step Guide

@@ -92,6 +92,12 @@
 <dd><p>Additional arguments passed to <code>lms_chat</code>.</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>The return type depends on the <code>format</code> argument:</p><ul><li><p><code>"vector"</code>: A character vector of responses. This format is only supported if <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>.</p></li>
+<li><p><code>"list"</code>: A list where each element is the response corresponding to the provided input.</p></li>
+<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns. If <code>logprobs = TRUE</code>, an additional list-column named <code>logprobs</code> is included.</p></li>
+</ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

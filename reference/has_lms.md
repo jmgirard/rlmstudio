@@ -10,7 +10,8 @@ has_lms()
 
 ## Value
 
-Logical. TRUE if lms is found, FALSE otherwise.
+A logical scalar: `TRUE` if the `lms` executable is found on the system
+path, and `FALSE` otherwise.
 
 ## Examples
 
