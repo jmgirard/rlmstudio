@@ -22,6 +22,7 @@ For desktop users, you can use the `"browser"` method to open the
 official download page.
 
 ``` r
+
 library(rlmstudio)
 
 # Open the download page in your default browser
@@ -39,6 +40,7 @@ Studio desktop application, navigate to the Developer or Local Server
 tab, and click “Start”. Alternatively, you can start it directly from R.
 
 ``` r
+
 # Start the local server on the default port
 lms_server_start()
 #> ✔ LM Studio server started successfully on the default port.
@@ -54,6 +56,7 @@ However, if you already know the exact identifier of the model you want,
 you can download it and manage your inventory directly from R.
 
 ``` r
+
 # Download a model using its identifier
 model <- "google/gemma-3-1b"
 job_id <- lms_download(model)
@@ -73,6 +76,7 @@ We include the optional `flash_attention = TRUE` argument here, which
 speeds up processing and reduces memory usage on supported hardware.
 
 ``` r
+
 # Standard load
 lms_load(model, flash_attention = TRUE)
 #> ✔ Model "google/gemma-3-1b" loaded and verified. [30.8s]
@@ -96,6 +100,7 @@ starting a brand new conversation. The model will not remember previous
 messages or context from earlier in your R script.
 
 ``` r
+
 response <- lms_chat(
   model = model,
   input = "Say hello!",
@@ -117,6 +122,7 @@ practice to unload your models and stop the local server. Closing the LM
 Studio GUI will also perform this cleanup if you forget.
 
 ``` r
+
 # Unload the model
 lms_unload(model)
 #> ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]

@@ -16,6 +16,7 @@ If you are setting up a fresh remote server, you can use the package to
 download and install the LM Studio CLI automatically via the terminal.
 
 ``` r
+
 library(rlmstudio)
 
 # Run the automated CLI installation script for Linux/macOS or Windows
@@ -32,6 +33,7 @@ manually. You must start the `llmster` daemon before attempting to load
 models or start the API server.
 
 ``` r
+
 # Start the headless engine in the background
 lms_daemon_start()
 ```
@@ -42,6 +44,7 @@ With the daemon running, you can now spin up the REST API server to
 accept HTTP requests.
 
 ``` r
+
 # Start the local server on the default port
 lms_server_start()
 ```
@@ -53,12 +56,14 @@ know the Hugging Face repository or the LM Studio catalog identifier for
 the model you want to use.
 
 ``` r
+
 # Download a model using its identifier
 job_id <- lms_download("qwen/qwen3-4b-2507")
 lms_download_status(job_id)
 ```
 
 ``` r
+
 # View all downloaded models
 models <- list_models()
 
@@ -74,6 +79,7 @@ Allocate the model to your system’s memory (RAM/VRAM) so it is ready for
 inference.
 
 ``` r
+
 # Load the model
 lms_load("google/gemma-3-1b", flash_attention = TRUE)
 ```
@@ -83,6 +89,7 @@ lms_load("google/gemma-3-1b", flash_attention = TRUE)
 Interact with the model exactly as you would in a desktop environment.
 
 ``` r
+
 response <- lms_chat(
   model = "google/gemma-3-1b",
   input = "Provide just the str_extract() pattern to match all text after the third comma.",
@@ -99,6 +106,7 @@ When your script finishes, you should explicitly tear down the entire
 stack to free up memory and stop background processes.
 
 ``` r
+
 # 1. Unload the model from memory
 lms_unload("google/gemma-3-1b")
 
@@ -118,6 +126,7 @@ wrapper handles the setup and guaranteed teardown of the background
 engine automatically.
 
 ``` r
+
 # The daemon will start, the code will run, and the daemon will stop on exit.
 results <- with_lms_daemon({
   lms_server_start()

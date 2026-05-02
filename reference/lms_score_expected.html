@@ -68,6 +68,36 @@ the weighted average score, normalized probabilities, and uncertainty metrics.</
 <code>entropy</code>, and a <code>data.frame</code> of normalized probabilities.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create a sample logprobs dataframe representing a model's generation step</span></span></span>
+<span class="r-in"><span><span class="va">mock_logprobs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  step_token <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"4"</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  step_logprob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  candidate_token <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"4"</span>, <span class="st">"5"</span>, <span class="st">"3"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  candidate_logprob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.105</span>, <span class="op">-</span><span class="fl">2.302</span>, <span class="op">-</span><span class="fl">3.506</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Calculate the expected score and uncertainty metrics</span></span></span>
+<span class="r-in"><span><span class="fu">lms_score_expected</span><span class="op">(</span><span class="va">mock_logprobs</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $expected_value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4.067975</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $weighted_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3487363</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $entropy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.6454112</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $probabilities</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   label       prob</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     4 0.87376233</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     5 0.09710651</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3 0.02913116</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

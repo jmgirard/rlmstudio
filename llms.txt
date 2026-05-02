@@ -13,6 +13,7 @@ LM Studio.*
 ## Installation
 
 ``` r
+
 # Install release version from CRAN
 install.packages("rlmstudio")
 
@@ -27,6 +28,7 @@ the new v1 REST API. If you do not have LM Studio installed or need to
 update your version, the package provides a convenient setup function.
 
 ``` r
+
 library(rlmstudio)
 install_lmstudio()
 ## ℹ Opening the LM Studio download page in your default browser...
@@ -49,6 +51,7 @@ Before you can load models or generate text, you need to start the LM
 Studio backend server.
 
 ``` r
+
 lms_server_start()
 ## ✔ LM Studio server started successfully on the default port.
 ```
@@ -65,6 +68,7 @@ using
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md).
 
 ``` r
+
 # Returns a clean data frame of available models
 my_models <- list_models()
 my_models
@@ -77,6 +81,7 @@ If you do not have a model yet, you can download one using its Hugging
 Face repository or LM Studio catalog identifier.
 
 ``` r
+
 # Download a lightweight model
 job_id <- lms_download("google/gemma-3-1b")
 lms_download_status(job_id)
@@ -88,6 +93,7 @@ lms_download_status(job_id)
 Once a model is downloaded and available, load it into memory.
 
 ``` r
+
 # Load the model
 lms_load("google/gemma-3-1b", flash_attention = TRUE)
 ## ✔ Model "google/gemma-3-1b" loaded and verified. [10.1s]
@@ -100,6 +106,7 @@ Use the
 function for quick and easy interactions.
 
 ``` r
+
 response <- lms_chat(
   model = "google/gemma-3-1b",
   input = "What are the capitals of each country in North America?"
@@ -130,6 +137,7 @@ allows you to iterate over a vector of inputs and capture the results in
 a tidy format.
 
 ``` r
+
 prompts <- c(
   "Summarize the benefits of local LLMs.",
   "Explain why privacy matters in AI."
@@ -153,6 +161,7 @@ When you are finished, it is good practice to unload the model from
 memory and shut down the local server to free up system resources.
 
 ``` r
+
 # Unload the specific model
 lms_unload("google/gemma-3-1b")
 ## ✔ Model "google/gemma-3-1b" unloaded successfully. [382ms]
