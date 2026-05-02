@@ -7,12 +7,16 @@
 lms_unload_all(host = "http://localhost:1234", ...)
 }
 \arguments{
-\item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
+\item{host}{Character. The host address of the local server. Defaults to
+"http://localhost:1234".}
 
-\item{...}{Additional arguments passed to the API request body for each unload request.}
+\item{...}{Additional arguments passed to the API request body for each
+unload request.}
 }
 \value{
-Invisibly returns a character vector of the unloaded model instance identifiers, or \code{NULL} if no models were loaded.
+Invisibly returns a character vector of the \code{instance_id}s that
+were successfully unloaded. If no models were currently loaded, it
+invisibly returns \code{NULL}.
 }
 \description{
 Retrieves a list of all currently loaded models and unloads them one by one.

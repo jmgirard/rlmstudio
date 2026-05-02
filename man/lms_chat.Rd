@@ -20,19 +20,33 @@ lms_chat(
 
 \item{input}{Character. The user prompt to send to the model.}
 
-\item{system_prompt}{Character. An optional system prompt to guide model behavior.}
+\item{system_prompt}{Character. An optional system prompt to guide model
+behavior.}
 
-\item{host}{Character. The base URL of the LM Studio server. Default is "http://localhost:1234".}
+\item{host}{Character. The base URL of the LM Studio server. Default is
+"http://localhost:1234".}
 
-\item{api_type}{Character. The LM Studio API endpoint to use. Options are "openresponses" (default), "openai", or "native".}
+\item{api_type}{Character. The LM Studio API endpoint to use. Options are
+"openresponses" (default), "openai", or "native".}
 
-\item{logprobs}{Logical. Whether to return the log probabilities of the generated tokens. Default is FALSE.}
+\item{logprobs}{Logical. Whether to return the log probabilities of the
+generated tokens. Default is FALSE.}
 
-\item{simplify}{Logical. If TRUE, extracts the core text response. Default is TRUE.}
+\item{simplify}{Logical. If TRUE, extracts the core text response. Default is
+TRUE.}
 
 \item{...}{Additional arguments passed to the selected API body.}
 }
+\value{
+Depending on the arguments provided:
+\itemize{
+\item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
+\item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response.
+\item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
+}
+}
 \description{
-Send a prompt to a locally running LM Studio model. This wrapper automatically routes
-your request to the appropriate subfunction based on the selected API type.
+Send a prompt to a locally running LM Studio model. This wrapper
+automatically routes your request to the appropriate subfunction based on the
+selected API type.
 }

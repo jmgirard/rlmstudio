@@ -7,7 +7,8 @@
 has_lms()
 }
 \value{
-Logical. TRUE if lms is found, FALSE otherwise.
+A logical scalar: \code{TRUE} if the \code{lms} executable is found
+on the system path, and \code{FALSE} otherwise.
 }
 \description{
 Check if LM Studio CLI is installed

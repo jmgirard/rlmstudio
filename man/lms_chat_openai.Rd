@@ -20,12 +20,21 @@ lms_chat_openai(
 
 \item{host}{Character. Server URL.}
 
-\item{logprobs}{Logical. Whether to request logprobs (currently stubbed by LM Studio).}
+\item{logprobs}{Logical. Whether to request logprobs (currently stubbed by LM
+Studio).}
 
 \item{simplify}{Logical. If TRUE, parses output to text.}
 
 \item{...}{Additional API arguments.}
 }
+\value{
+If \code{simplify = FALSE}, returns a list representing the raw JSON
+response. Otherwise, returns a character string containing the generated
+text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
+object with the log probabilities populated as \code{NULL} since they are
+currently stubbed in the LM Studio OpenAI endpoint.
+}
 \description{
-Direct interface to LM Studio's OpenAI-compatible endpoint. Uses the messages array format.
+Direct interface to LM Studio's OpenAI-compatible endpoint. Uses the messages
+array format.
 }

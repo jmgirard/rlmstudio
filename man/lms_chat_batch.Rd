@@ -32,6 +32,14 @@ lms_chat_batch(
 
 \item{...}{Additional arguments passed to \code{lms_chat}.}
 }
+\value{
+The return type depends on the \code{format} argument:
+\itemize{
+\item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}.
+\item \code{"list"}: A list where each element is the response corresponding to the provided input.
+\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included.
+}
+}
 \description{
 Process a vector of inputs sequentially through LM Studio.
 }

@@ -7,13 +7,13 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
+```{r setup}
 library(rlmstudio)
-can_evaluate <- has_lms()
+lms_installed <- has_lms()
+
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
-  eval = can_evaluate
+  comment = "#>"
 )
 ```
 
@@ -25,15 +25,11 @@ While the R package provides functions to manage the entire lifecycle of a local
 
 This package relies on the LM Studio CLI. If you do not have LM Studio installed or need to update your version, the package provides a convenient setup function.
 
-For desktop users, you can use the `"browser"` method to open the official download page.
+For desktop users, you can run `install_lmstudio(method = "browser")` in your console to open the official download page.
 
-```{r install, eval=FALSE}
-library(rlmstudio)
-
-# Open the download page in your default browser
-install_lmstudio(method = "browser")
-#> ℹ Opening the LM Studio download page in your default browser...
-#> ! Please install or update the software, restart R, and try again.
+```{r check-status}
+# Check if LM Studio is available on this system
+has_lms()
 ```
 
 ## Step-by-Step Guide
@@ -42,7 +38,7 @@ install_lmstudio(method = "browser")
 
 You have two options for starting the local server. You can open the LM Studio desktop application, navigate to the Developer or Local Server tab, and click "Start". Alternatively, you can start it directly from R.
 
-```{r start-server}
+```{r start-server, eval=lms_installed}
 # Start the local server on the default port
 lms_server_start()
 #> ✔ LM Studio server started successfully on the default port.
@@ -54,7 +50,7 @@ The LM Studio GUI shines when it comes to discovering models. You can use its bu
 
 However, if you already know the exact identifier of the model you want, you can download it and manage your inventory directly from R.
 
-```{r download}
+```{r download, eval=lms_installed}
 # Download a model using its identifier
 model <- "google/gemma-3-1b"
 job_id <- lms_download(model)
@@ -67,7 +63,7 @@ lms_download_status(job_id)
 #> Progress: 100% (0.72 GB / 0.72 GB)
 ```
 
-```{r wait, echo=FALSE}
+```{r wait, echo=FALSE, eval=lms_installed}
 if (job_id != "already_downloaded") {
   repeat {
     res <- lms_download_status(job_id)
@@ -86,7 +82,7 @@ if (job_id != "already_downloaded") {
 
 Before you can chat with a model, you must load it into system memory. We include the optional `flash_attention = TRUE` argument here, which speeds up processing and reduces memory usage on supported hardware.
 
-```{r load}
+```{r load, eval=lms_installed}
 # Standard load
 lms_load(model, flash_attention = TRUE)
 #> ✔ Model "google/gemma-3-1b" loaded and verified. [30.8s]
@@ -102,7 +98,7 @@ Interact with the model by sending it text prompts. The `lms_chat()` function ta
 
 *Note:* The rlmstudio package currently processes each chat request independently. Every time you run the lms_chat() function, you are starting a brand new conversation. The model will not remember previous messages or context from earlier in your R script.
 
-```{r simple-chat}
+```{r simple-chat, eval=lms_installed}
 response <- lms_chat(
   model = model,
   input = "Say hello!",
@@ -121,7 +117,7 @@ cat(response)
 
 To free up memory and system resources when you are finished, it is best practice to unload your models and stop the local server. Closing the LM Studio GUI will also perform this cleanup if you forget.
 
-```{r teardown}
+```{r teardown, eval=lms_installed}
 # Unload the model
 lms_unload(model)
 #> ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]

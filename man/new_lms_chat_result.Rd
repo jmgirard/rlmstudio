@@ -15,7 +15,7 @@ new_lms_chat_result(text = character(), logprobs = data.frame())
 An object of class \code{lms_chat_result}.
 }
 \description{
-Internal constructor to create a structured object for responses
-containing log probabilities.
+Internal constructor to create a structured object for responses containing
+log probabilities.
 }
 \keyword{internal}

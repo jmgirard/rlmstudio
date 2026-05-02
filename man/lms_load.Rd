@@ -20,26 +20,38 @@ lms_load(
 \arguments{
 \item{model}{Character. Unique identifier for the model to load.}
 
-\item{context_length}{Integer. Maximum number of tokens that the model will consider.}
+\item{context_length}{Integer. Maximum number of tokens that the model will
+consider.}
 
-\item{eval_batch_size}{Integer. Number of input tokens to process together in a single batch during evaluation.}
+\item{eval_batch_size}{Integer. Number of input tokens to process together in
+a single batch during evaluation.}
 
 \item{flash_attention}{Logical. Whether to optimize attention computation.}
 
-\item{num_experts}{Integer. Number of experts to use during inference for MoE models.}
+\item{num_experts}{Integer. Number of experts to use during inference for MoE
+models.}
 
-\item{offload_kv_cache_to_gpu}{Logical. Whether KV cache is offloaded to GPU memory.}
+\item{offload_kv_cache_to_gpu}{Logical. Whether KV cache is offloaded to GPU
+memory.}
 
-\item{echo_load_config}{Logical. If \code{TRUE}, echoes the final load configuration in the response.}
+\item{echo_load_config}{Logical. If \code{TRUE}, echoes the final load
+configuration in the response.}
 
-\item{force}{Logical. If \code{TRUE}, bypasses the check for currently loaded models and requests a new instance from the server. Note that this does not overwrite or replace the existing model; it loads a second concurrent instance into VRAM. Defaults to \code{FALSE}.}
+\item{force}{Logical. If \code{TRUE}, bypasses the check for currently loaded
+models and requests a new instance from the server. Note that this does not
+overwrite or replace the existing model; it loads a second concurrent
+instance into VRAM. Defaults to \code{FALSE}.}
 
-\item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
+\item{host}{Character. The host address of the local server. Defaults to
+"http://localhost:1234".}
 
-\item{...}{Additional arguments passed to the API request body (useful for future API parameters).}
+\item{...}{Additional arguments passed to the API request body (useful for
+future API parameters).}
 }
 \value{
-Invisibly returns the model identifier string on success, or the load configuration list if \code{echo_load_config = TRUE}.
+Invisibly returns a character string of the loaded model identifier
+upon success. If \code{echo_load_config = TRUE}, it instead invisibly
+returns a list containing the model's detailed load configuration.
 }
 \description{
 Load a model via REST API

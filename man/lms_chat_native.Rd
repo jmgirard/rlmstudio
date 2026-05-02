@@ -26,6 +26,11 @@ lms_chat_native(
 
 \item{...}{Additional API arguments.}
 }
+\value{
+If \code{simplify = FALSE}, returns a list representing the raw JSON
+response. If \code{simplify = TRUE}, returns a character string containing
+the model's text output.
+}
 \description{
 Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.
 }

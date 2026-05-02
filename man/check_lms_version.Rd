@@ -7,10 +7,12 @@
 check_lms_version(min_version = "0.4.0")
 }
 \arguments{
-\item{min_version}{Character string of the required version. Default is "0.4.0".}
+\item{min_version}{Character string of the required version. Default is
+"0.4.0".}
 }
 \value{
-Logical. TRUE if the version is sufficient, FALSE otherwise.
+A logical scalar: \code{TRUE} if the LM Studio CLI version meets or
+exceeds the specified \code{min_version}, and \code{FALSE} otherwise.
 }
 \description{
 Check if the installed LM Studio CLI meets the minimum requirement

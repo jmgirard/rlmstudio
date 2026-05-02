@@ -18,11 +18,13 @@ lms_server_status(
 
 \item{quiet}{Logical. Suppress all logging output.}
 
-\item{log_level}{Character. The level of logging to use (e.g., "info", "debug").}
+\item{log_level}{Character. The level of logging to use (e.g., "info",
+"debug").}
 }
 \value{
-A character vector of the raw CLI output. If \code{json = TRUE} and the
-\code{jsonlite} package is installed, it returns a parsed list or data frame.
+By default, returns a character vector containing the raw CLI output.
+If \code{json = TRUE} and the \code{jsonlite} package is available, it
+returns a parsed list or \code{data.frame} of the status configuration.
 }
 \description{
 Displays the current status of the LM Studio local server via the CLI,

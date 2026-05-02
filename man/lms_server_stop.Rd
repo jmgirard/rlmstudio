@@ -7,7 +7,8 @@
 lms_server_stop()
 }
 \value{
-Invisibly returns the system exit code (0 for success).
+Invisibly returns an integer representing the system exit code
+(\code{0} for success).
 }
 \description{
 Stops the currently running LM Studio local server via the CLI.

@@ -9,10 +9,12 @@ lms_download_status(job_id, host = "http://localhost:1234")
 \arguments{
 \item{job_id}{Character. The unique identifier for the download job.}
 
-\item{host}{Character. The host address of the local server. Defaults to "http://localhost:1234".}
+\item{host}{Character. The host address of the local server. Defaults to
+"http://localhost:1234".}
 }
 \value{
-An object of class \code{lms_download_status} containing the download status.
+An object of class \code{lms_download_status} containing the download
+status.
 }
 \description{
 Get the status of a download job

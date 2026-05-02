@@ -14,7 +14,8 @@ uses the last used port.}
 Defaults to FALSE.}
 }
 \value{
-Invisibly returns the system exit code (0 for success).
+Invisibly returns an integer representing the system exit code
+(\code{0} for success).
 }
 \description{
 Launches the LM Studio local server via the CLI, allowing you to interact

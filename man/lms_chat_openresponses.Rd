@@ -25,10 +25,18 @@ lms_chat_openresponses(
 
 \item{logprobs}{Logical. Whether to return token probabilities.}
 
-\item{simplify}{Logical. If TRUE, parses output to text and dataframe. If FALSE, returns raw list.}
+\item{simplify}{Logical. If TRUE, parses output to text and dataframe. If
+FALSE, returns raw list.}
 
 \item{...}{Additional API arguments (e.g., top_logprobs, temperature).}
 }
+\value{
+If \code{simplify = FALSE}, returns a list representing the raw JSON
+response. Otherwise, returns a character string containing the generated
+text. If \code{logprobs = TRUE}, returns an object of class
+\code{lms_chat_result} incorporating both the text and probability data.
+}
 \description{
-Direct interface to LM Studio's OpenResponses endpoint. Supports logprobs and custom instructions.
+Direct interface to LM Studio's OpenResponses endpoint. Supports logprobs and
+custom instructions.
 }

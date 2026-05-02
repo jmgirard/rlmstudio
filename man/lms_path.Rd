@@ -7,12 +7,13 @@
 lms_path()
 }
 \value{
-A character string containing the absolute path to the executable.
+A character string specifying the absolute file path to the LM Studio
+executable (\code{lms}) on the user's system.
 }
 \description{
-Locates the LM Studio CLI (\code{lms}) on your system. It checks the \code{RLMSTUDIO_LMS_PATH}
-environment variable first, then the system \code{PATH}, and finally common installation
-directories.
+Locates the LM Studio CLI (\code{lms}) on your system. It checks the
+\code{RLMSTUDIO_LMS_PATH} environment variable first, then the system \code{PATH}, and
+finally common installation directories.
 }
 \examples{
 \dontrun{

@@ -12,12 +12,16 @@ lms_score_expected(lp_df, scale = 1:5)
 \item{scale}{Numeric vector. The valid labels (e.g., \code{1:5}).}
 }
 \value{
-A list containing the \code{expected_value}, \code{weighted_sd},
-\code{entropy}, and a \code{data.frame} of normalized probabilities.
+A named list containing three numeric elements
+(\code{expected_value}, \code{weighted_sd}, \code{entropy}) and a
+\code{data.frame} named \code{probabilities} with columns \code{label} and
+\code{prob}. Returns \code{NULL} if the input dataframe is empty or
+invalid.
 }
 \description{
 Takes a logprobs dataframe (from an \code{lms_chat_result}) and calculates
-the weighted average score, normalized probabilities, and uncertainty metrics.
+the weighted average score, normalized probabilities, and uncertainty
+metrics.
 }
 \examples{
 # Create a sample logprobs dataframe representing a model's generation step

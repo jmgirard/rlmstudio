@@ -13,21 +13,31 @@ list_models(
 )
 }
 \arguments{
-\item{loaded}{Logical. If \code{TRUE}, returns only currently loaded models. Defaults to \code{FALSE}.}
+\item{loaded}{Logical. If \code{TRUE}, returns only currently loaded models.
+Defaults to \code{FALSE}.}
 
-\item{type}{Character vector. The types of models to include. Defaults to \code{c("llm", "embedding")}.}
+\item{type}{Character vector. The types of models to include. Defaults to
+\code{c("llm", "embedding")}.}
 
-\item{detailed}{Logical. Show all information about each model. Defaults to \code{FALSE}.}
+\item{detailed}{Logical. Show all information about each model. Defaults to
+\code{FALSE}.}
 
-\item{quiet}{Logical. If \code{TRUE}, suppresses informative console messages. Defaults to \code{FALSE}.}
+\item{quiet}{Logical. If \code{TRUE}, suppresses informative console
+messages. Defaults to \code{FALSE}.}
 
 \item{host}{Character. The host address of the local server.}
 }
 \value{
-A data frame of model information.
+A \code{data.frame} containing information about the available
+models. By default, it includes columns for \code{state}, \code{type},
+\code{display_name}, \code{key}, \code{architecture}, and \code{size_gb}.
+If \code{detailed = TRUE}, it returns a comprehensive \code{data.frame}
+including all raw metadata columns provided by the API. Returns an empty
+\code{data.frame} if no models match the criteria.
 }
 \description{
-Retrieves a list of models available on your system via the LM Studio REST API.
+Retrieves a list of models available on your system via the LM Studio REST
+API.
 }
 \examples{
 \dontrun{
