@@ -1,0 +1,74 @@
+# Package index
+
+## Chat & Inference
+
+Interact with loaded LLMs to generate text and process batches of
+prompts.
+
+- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_chat.md)
+  : Chat Completion with LM Studio
+- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_chat_batch.md)
+  : Batch Chat Completion with LM Studio
+- [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_chat_native.md)
+  : Chat Completion via Native API
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_chat_openai.md)
+  : Chat Completion via OpenAI Compatibility API
+- [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_chat_openresponses.md)
+  : Chat Completion via OpenResponses API
+- [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_score_expected.md)
+  : Calculate Expected Scores and Uncertainty from Logprobs
+
+## Model Management
+
+Discover, download, load, and manage local models.
+
+- [`list_models()`](https://jmgirard.github.io/rlmstudio/dev/reference/list_models.md)
+  : List available models
+- [`lms_download()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_download.md)
+  : Download a model via REST API
+- [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_download_status.md)
+  : Get the status of a download job
+- [`lms_load()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_load.md)
+  : Load a model via REST API
+- [`lms_unload()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_unload.md)
+  : Unload a model from memory via REST API
+- [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_unload_all.md)
+  : Unload all models from memory
+
+## Local Server Management
+
+Control the LM Studio local REST API server.
+
+- [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_server_start.md)
+  : Start the LM Studio local server
+- [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_server_stop.md)
+  : Stop the LM Studio local server
+- [`lms_server_status()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_server_status.md)
+  : Check the status of the LM Studio server
+
+## Headless Daemon Management
+
+Manage the background `llmster` daemon required for headless
+environments (e.g., remote servers, Docker).
+
+- [`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_daemon_start.md)
+  : Start the LM Studio headless daemon
+- [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_daemon_stop.md)
+  : Stop the LM Studio headless daemon
+- [`lms_daemon_status()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_daemon_status.md)
+  : Check the global status of LM Studio
+- [`with_lms_daemon()`](https://jmgirard.github.io/rlmstudio/dev/reference/with_lms_daemon.md)
+  : Run code with the LM Studio daemon active
+
+## Setup & Configuration
+
+Install, locate, and verify the LM Studio CLI installation.
+
+- [`install_lmstudio()`](https://jmgirard.github.io/rlmstudio/dev/reference/install_lmstudio.md)
+  : Help the user install or update LM Studio
+- [`has_lms()`](https://jmgirard.github.io/rlmstudio/dev/reference/has_lms.md)
+  : Check if LM Studio CLI is installed
+- [`check_lms_version()`](https://jmgirard.github.io/rlmstudio/dev/reference/check_lms_version.md)
+  : Check if the installed LM Studio CLI meets the minimum requirement
+- [`lms_path()`](https://jmgirard.github.io/rlmstudio/dev/reference/lms_path.md)
+  : Get the absolute path to the LMS executable
