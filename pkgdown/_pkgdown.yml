@@ -15,7 +15,7 @@ navbar:
   bg: primary
 
 development:
-  mode: auto
+  mode: dev
 
 repo:
   url:
