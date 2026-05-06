@@ -12,3 +12,7 @@
 ^codecov\.yml$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.positai$
+^\.claude$

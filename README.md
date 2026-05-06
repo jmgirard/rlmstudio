@@ -5,6 +5,8 @@
 coverage](https://codecov.io/gh/jmgirard/rlmstudio/graph/badge.svg)](https://app.codecov.io/gh/jmgirard/rlmstudio)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/rlmstudio)](https://CRAN.R-project.org/package=rlmstudio)
 <!-- badges: end -->
 
 # rlmstudio
