@@ -1,13 +1,13 @@
 # M002: R CMD check on macOS, Windows, and Ubuntu in CI
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — a CI workflow file, dev tooling no package user consumes
-- **Branch/PR:** —
+- **Branch/PR:** `m002-platform-ci`
 
 ## Goal
 
@@ -41,6 +41,7 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 - 2026-09-17: created by /milestone-plan.
 - 2026-09-17: criteria audit ran in reduced mode on a fresh [O] reader; it returned rewordings for AC2 (name the three files the comparison reads) and AC3 (state the platform-bug case); both adopted.
 - 2026-09-17: plan gate chose "workflow runs to completion, platform bugs go to hotfix" over "stay open until all green" because the deliverable is the workflow and a platform bug is a separate release blocker under D-002; falsified by a red run that no hotfix or candidate row records.
+- 2026-09-17: implement gate kept the template's full five-entry matrix and limited the push trigger to the default branch, matching test-coverage.yaml and pkgdown.yaml. The stray tracked `.DS_Store` was untracked and gitignored first, as a trivial commit on main outside this milestone.
 
 ## Decisions
 
