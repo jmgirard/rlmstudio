@@ -1,13 +1,13 @@
 # M001: Honor the host argument and fail fast on a stopped server
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** IP1, GP3, GP5
 - **Resolves:** —
 - **Surface tier:** user-facing — changes the behavior of exported functions and one internal probe they all share
-- **Branch/PR:** —
+- **Branch/PR:** m001-host-aware-probe
 
 ## Goal
 
@@ -39,9 +39,9 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 
 ## Tasks
 
-- [ ] T1: Give `is_server_running()` a `host = "http://localhost:1234"` argument. Parse with `httr2::url_parse()`; use the URL's hostname and port, and 1234 when the URL names no port. Write the AC1 tests in `tests/testthat/test-serve.R` first.
+- [x] T1: Give `is_server_running()` a `host = "http://localhost:1234"` argument. Parse with `httr2::url_parse()`; use the URL's hostname and port, and 1234 when the URL names no port. Write the AC1 tests in `tests/testthat/test-serve.R` first.
 - [ ] T2: Pass `host` at every call site (`R/chat.R`, `R/download.R`, `R/list.R`, `R/load.R`, `R/unload.R`) and in the `@examples` block of `is_server_running()` in `R/serve.R`. Change every test mock from `function() TRUE` to `function(...) TRUE`.
-- [ ] T3: Add an internal helper `stop_if_no_server(host)` in `R/serve.R` that aborts with class `rlmstudio_no_server` and the existing message. Replace the seven existing abort sites and the two soft returns in `R/list.R` and `R/download.R` with it. Write the AC3 tests first.
+- [ ] T3: Add an internal helper `stop_if_no_server(host)` in `R/serve.R` that aborts with class `rlmstudio_no_server` and the existing message. Replace the seven existing abort sites and the two soft returns in `R/list.R` and `R/download.R` with it. Write the AC3 tests first. Sub-task: also replace the soft return in `lms_download_status()` at `R/download.R:134`, with a test of its own.
 - [ ] T4: Rewrite `has_lms()` as a `tryCatch` around `lms_path()`. Update `check_lms_version()` and the roxygen of both. Write the AC4 tests first.
 - [ ] T5: Add the three `NEWS.md` bullets. Run `devtools::document()` and `devtools::test()`; run `devtools::check()` and record the result.
 
@@ -51,6 +51,9 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 - 2026-09-17: criteria audit ran in full mode on a fresh [O] reader; it returned rewordings for AC1 (add a second hostname and a wrong-host probe), AC2 (include the roxygen example), AC3 (name the seven sites instead of a grep proxy), AC4 (cover the PATH branch and a real FALSE case), and AC5 (state what each bullet says); all adopted.
 - 2026-09-17: plan gate chose no review brief over a Fable brief for the IP1 touch because the change narrows where text is sent rather than widening it; falsified by any code path that sends a request to a host the caller did not name.
 - 2026-09-17: plan chose a port fallback of 1234 for a `host` with no port over the scheme default of 80 because 1234 is the package and LM Studio default; falsified by a user report of a server reached at a scheme-default port.
+- 2026-09-17: implement started on branch m001-host-aware-probe; the tree carried an unrelated `.DS_Store` change, left unstaged.
+- 2026-09-17: question gate chose to abort in `lms_download_status()` too (a tenth server-down site the plan did not list); added as a T3 sub-task, criteria unchanged.
+- 2026-09-17: T1 done. Four probe tests in test-serve.R, all failing against the old probe with an unused-argument error. Installed httptest2 and mockery locally so the suite runs. `document()` refreshed `man/rlmstudio-package.Rd`, stale since the DESCRIPTION edit in 31fde62.
 
 ## Decisions
 

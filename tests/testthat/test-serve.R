@@ -27,6 +27,62 @@ test_that("lms_server_start handles success and failure", {
   expect_error(lms_server_start(), "Failed to start the LM Studio server")
 })
 
+# Open a listening socket on a free port and return it with the port number.
+# The caller closes the socket.
+local_listener <- function(env = parent.frame()) {
+  for (i in seq_len(50)) {
+    port <- sample(20000:40000, 1)
+    srv <- tryCatch(serverSocket(port), error = function(e) NULL)
+    if (!is.null(srv)) {
+      withr::defer(close(srv), envir = env)
+      return(port)
+    }
+  }
+  stop("No free port found.")
+}
+
+# Return a port number that nothing listens on.
+free_port <- function() {
+  for (i in seq_len(50)) {
+    port <- sample(20000:40000, 1)
+    srv <- tryCatch(serverSocket(port), error = function(e) NULL)
+    if (!is.null(srv)) {
+      close(srv)
+      return(port)
+    }
+  }
+  stop("No free port found.")
+}
+
+test_that("is_server_running probes the hostname and port named in host", {
+  port <- local_listener()
+  expect_true(is_server_running(paste0("http://localhost:", port)))
+  expect_true(is_server_running(paste0("http://127.0.0.1:", port)))
+})
+
+test_that("is_server_running is FALSE when nothing listens on the port", {
+  port <- free_port()
+  expect_false(is_server_running(paste0("http://localhost:", port)))
+})
+
+test_that("is_server_running is FALSE for a hostname that is not listening", {
+  port <- local_listener()
+  expect_false(is_server_running(paste0("http://nowhere.invalid:", port)))
+})
+
+test_that("is_server_running falls back to port 1234 when host names none", {
+  seen <- NULL
+  local_mocked_bindings(
+    socketConnection = function(host, port, ...) {
+      seen <<- list(host = host, port = port)
+      stop("no listener")
+    },
+    .package = "base"
+  )
+  expect_false(is_server_running("http://example.org"))
+  expect_equal(seen, list(host = "example.org", port = 1234))
+})
+
 test_that("lms_server_status warns on multiple logging flags", {
   mock_run <- function(command, args, error_on_status) {
     list(status = 0, stdout = "ok", stderr = "")

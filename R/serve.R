@@ -215,6 +215,11 @@ lms_server_status <- function(
 }
 
 #' Check if the LM Studio server is reachable
+#'
+#' Opens a TCP connection to the hostname and port named in `host`. When
+#' `host` names no port, the probe uses 1234, the LM Studio default.
+#'
+#' @param host Character. The host address of the local server.
 #' @return Logical.
 #'
 #' @noRd
@@ -223,15 +228,23 @@ lms_server_status <- function(
 #' \dontrun{
 #' lms_server_start()
 #'
-#' if (is_server_running()) {
+#' if (is_server_running(host = "http://localhost:1234")) {
 #'   message("The LM Studio server is currently active.")
 #' }
 #' }
-is_server_running <- function() {
+is_server_running <- function(host = "http://localhost:1234") {
+  url <- httr2::url_parse(host)
+  hostname <- url$hostname
+  port <- if (is.null(url$port)) 1234L else as.integer(url$port)
+
+  if (is.null(hostname) || identical(hostname, "")) {
+    return(FALSE)
+  }
+
   tryCatch(
     {
       con <- suppressWarnings(
-        socketConnection(host = "localhost", port = 1234, timeout = 0.5)
+        socketConnection(host = hostname, port = port, timeout = 0.5)
       )
       close(con)
       TRUE

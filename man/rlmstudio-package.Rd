@@ -6,7 +6,7 @@
 \alias{rlmstudio-package}
 \title{rlmstudio: Access and Control LM Studio}
 \description{
-A community-maintained 'R' wrapper for the 'LM Studio' command line interface and API. Provides functions to manage the local daemon and server, download and load models, and interact with Large Language Models (LLMs).
+Run local Large Language Models (LLMs) over many texts from 'R' without sending data to a third party. A community-maintained wrapper for the 'LM Studio' command line interface and API that provides functions to manage the local daemon and server, download and load models, and score, label, or generate text at scale.
 }
 \seealso{
 Useful links:
