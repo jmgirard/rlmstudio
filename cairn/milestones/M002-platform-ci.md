@@ -7,7 +7,7 @@
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — a CI workflow file, dev tooling no package user consumes
-- **Branch/PR:** `m002-platform-ci`
+- **Branch/PR:** `m002-platform-ci` / https://github.com/jmgirard/rlmstudio/pull/3
 
 ## Goal
 
@@ -23,7 +23,7 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 
 - [x] AC1: `.github/workflows/R-CMD-check.yaml` exists and its job matrix names `macos-latest`, `windows-latest`, and `ubuntu-latest`. Evidence: read the file.
 - [x] AC2: The workflow's `push` trigger carries `paths-ignore` with `cairn/**` and its `pull_request` trigger carries none, matching `test-headless.yaml` and `test-coverage.yaml`. Evidence: read all three files.
-- [ ] AC3: On the milestone PR, the R-CMD-check workflow runs to completion on all three matrix entries. A green run satisfies this. A red run caused by a package failure on one platform also satisfies it once that failure is recorded as a hotfix or candidate row. Evidence: `gh pr checks <N>` output and, on a red run, the ROADMAP row or hotfix branch.
+- [x] AC3: On the milestone PR, the R-CMD-check workflow runs to completion on all three matrix entries. A green run satisfies this. A red run caused by a package failure on one platform also satisfies it once that failure is recorded as a hotfix or candidate row. Evidence: `gh pr checks <N>` output and, on a red run, the ROADMAP row or hotfix branch.
 
 ## Coverage
 
@@ -58,7 +58,8 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 
 - AC1 met. `.github/workflows/R-CMD-check.yaml` exists, 52 lines. Parsed with `yaml.safe_load`, the `R-CMD-check` job matrix holds five `config` entries. Their distinct `os` values are `macos-latest`, `ubuntu-latest`, and `windows-latest`.
 - AC2 met. All three files parsed with `yaml.safe_load`. `R-CMD-check.yaml` resolves to `{"push": {"branches": ["main", "master"], "paths-ignore": ["cairn/**"]}, "pull_request": null}`. `test-coverage.yaml` resolves to the same value. `test-headless.yaml` resolves to `{"push": {"paths-ignore": ["cairn/**"]}, "pull_request": null}`. Every one of the three carries `paths-ignore` with `cairn/**` under `push` and carries nothing under `pull_request`.
-- AC3 pending at the gate. The criterion reads the check run on the milestone PR, and the git model opens that PR only after the merge approval. The evidence line lands after the `gh pr checks` read in step 8, and the box is ticked then.
+- AC3 met. `gh pr checks 3` on PR #3 reports every matrix entry green: `windows-latest (release)` pass in 2m35s, `macos-latest (release)` pass in 1m53s, `ubuntu-latest (release)` pass in 1m33s, `ubuntu-latest (devel)` pass in 7m10s, `ubuntu-latest (oldrel-1)` pass in 2m27s. The run went green, so the red-run branch of the criterion never applied. The cross-platform test risk the review raised did not materialize.
+- AC3 note on the first attempt. The `test-headless` job failed once on the pull-request run, and the failure was not in this diff. The `r2u.stat.illinois.edu` apt mirror timed out, so `apt-get` did not find `r-cran-httptest2`. The push-triggered run of the same workflow on the same commit passed in 36s. A re-run of the failed job passed in 42s.
 
 ### Consistency gate (2026-09-17)
 
