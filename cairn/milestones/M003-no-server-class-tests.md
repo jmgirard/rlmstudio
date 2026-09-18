@@ -1,6 +1,6 @@
 # M003: Class tests for the ten server-down abort sites
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** none
 - **Driving RR:** —
@@ -37,7 +37,7 @@ Assert the `rlmstudio_no_server` condition class at every `R/` call site that ab
 - [x] T2: Add the class test for `lms_load()` at `R/load.R:56` to `tests/testthat/test-load.R`.
 - [x] T3: Add class tests for `lms_unload()` at `R/unload.R:35` and `lms_unload_all()` at `R/unload.R:103`. Put them in a new file `tests/testthat/test-unload.R`.
 - [x] T4: Add three `lms_chat()` tests to `tests/testthat/test-chat.R`. Write one test per `api_type` value: `openresponses`, `openai`, and `native`. Each test asserts that the class reaches the caller through the dispatcher.
-- [ ] T5: Run `grep -rn "stop_if_no_server(" R/` again. Make sure that every function holding a reported line now has a class test. Run `Rscript -e 'devtools::test()'` clean. Make sure that `git diff --stat` against the branch base names no file under `R/`.
+- [x] T5: Run `grep -rn "stop_if_no_server(" R/` again. Make sure that every function holding a reported line now has a class test. Run `Rscript -e 'devtools::test()'` clean. Make sure that `git diff --stat` against the branch base names no file under `R/`.
 
 ## Work log
 
@@ -50,6 +50,8 @@ Assert the `rlmstudio_no_server` condition class at every `R/` call site that ab
 - 2026-09-18: T1 done. Four class tests added to `tests/testthat/test-chat.R`. Each test was proven able to fail: with the mock flipped to a running server, all four go red. `devtools::test(filter = "chat")` reports 0 failures, 0 warnings, 0 skips.
 - 2026-09-18: T2 and T3 done. One class test added to `tests/testthat/test-load.R` for `lms_load()`, and a new file `tests/testthat/test-unload.R` holds two for `lms_unload()` and `lms_unload_all()`. All three were proven able to fail with the mock flipped to a running server. `devtools::test(filter = "load|unload")` reports 0 failures, 0 warnings, 0 skips.
 - 2026-09-18: T4 done. Three `lms_chat()` dispatcher tests added to `tests/testthat/test-chat.R`, one per `api_type` value. All three were proven able to fail with the mock flipped to a running server. `devtools::test(filter = "chat")` reports 0 failures, 0 warnings, 0 skips.
+- 2026-09-18: T5 done. The enumerating grep reports the same ten call sites in ten distinct functions, and every one of those functions now has a class test. `Rscript -e 'devtools::test()'` reports 0 failures, 0 warnings, 0 skips, 68 passes. `git diff --name-only main...HEAD` names no file under `R/`.
+- 2026-09-18: claim audit: not owed — internal tier.
 
 ## Decisions
 
