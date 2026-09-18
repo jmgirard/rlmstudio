@@ -187,16 +187,7 @@ lms_chat_openresponses <- function(
     return(content$text)
   }
 
-  err_msg <- tryCatch(
-    {
-      httr2::resp_body_json(resp)$error$message
-    },
-    error = function(e) ""
-  )
-  if (is.null(err_msg) || err_msg == "") {
-    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
-  }
-  cli::cli_abort(c("x" = "OpenResponses Failed: {err_msg}"), call = NULL)
+  rlm_abort_api(resp, "OpenResponses Failed")
 }
 
 #' Chat Completion via OpenAI Compatibility API
@@ -258,16 +249,7 @@ lms_chat_openai <- function(
     return(res_text)
   }
 
-  err_msg <- tryCatch(
-    {
-      httr2::resp_body_json(resp)$error$message
-    },
-    error = function(e) ""
-  )
-  if (is.null(err_msg) || err_msg == "") {
-    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
-  }
-  cli::cli_abort(c("x" = "OpenAI API Failed: {err_msg}"), call = NULL)
+  rlm_abort_api(resp, "OpenAI API Failed")
 }
 
 #' Chat Completion via Native API
@@ -321,16 +303,7 @@ lms_chat_native <- function(
     return(resp_data$output[[1]]$content)
   }
 
-  err_msg <- tryCatch(
-    {
-      httr2::resp_body_json(resp)$error
-    },
-    error = function(e) ""
-  )
-  if (is.null(err_msg) || err_msg == "") {
-    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
-  }
-  cli::cli_abort(c("x" = "Native API Failed: {err_msg}"), call = NULL)
+  rlm_abort_api(resp, "Native API Failed")
 }
 
 #' Batch Chat Completion with LM Studio

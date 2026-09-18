@@ -52,25 +52,7 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
     return(invisible(model))
   }
 
-  err_msg <- tryCatch(
-    {
-      err_json <- httr2::resp_body_json(resp)
-      if (!is.null(err_json$error$message)) {
-        err_json$error$message
-      } else if (!is.null(err_json$error)) {
-        err_json$error
-      } else {
-        httr2::resp_body_string(resp)
-      }
-    },
-    error = function(e) httr2::resp_body_string(resp)
-  )
-
-  if (err_msg == "") {
-    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
-  }
-
-  cli::cli_abort(c("x" = "API Unload Failed: {err_msg}"), call = NULL)
+  rlm_abort_api(resp, "API Unload Failed")
 }
 
 #' Unload all models from memory

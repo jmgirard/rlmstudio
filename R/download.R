@@ -82,25 +82,7 @@ lms_download <- function(
     return(invisible(TRUE))
   }
 
-  err_msg <- tryCatch(
-    {
-      err_json <- httr2::resp_body_json(resp)
-      if (!is.null(err_json$error$message)) {
-        err_json$error$message
-      } else if (!is.null(err_json$error)) {
-        err_json$error
-      } else {
-        httr2::resp_body_string(resp)
-      }
-    },
-    error = function(e) httr2::resp_body_string(resp)
-  )
-
-  if (err_msg == "") {
-    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
-  }
-
-  cli::cli_abort(c("x" = "API Download Failed: {err_msg}"))
+  rlm_abort_api(resp,"API Download Failed")
 }
 
 #' Get the status of a download job
@@ -152,25 +134,7 @@ lms_download_status <- function(job_id, host = "http://localhost:1234") {
     return(out)
   }
 
-  err_msg <- tryCatch(
-    {
-      err_json <- httr2::resp_body_json(resp)
-      if (!is.null(err_json$error$message)) {
-        err_json$error$message
-      } else if (!is.null(err_json$error)) {
-        err_json$error
-      } else {
-        httr2::resp_body_string(resp)
-      }
-    },
-    error = function(e) httr2::resp_body_string(resp)
-  )
-
-  if (err_msg == "") {
-    err_msg <- paste("HTTP Status", httr2::resp_status(resp))
-  }
-
-  cli::cli_abort(c("x" = "API Status Request Failed: {err_msg}"))
+  rlm_abort_api(resp,"API Status Request Failed")
 }
 
 #' Print method for LM Studio download status

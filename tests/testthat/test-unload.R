@@ -55,37 +55,35 @@ test_that("lms_unload reports the error message field of a JSON body", {
   )
 })
 
-test_that("lms_unload reports a JSON error object that has no message field", {
+test_that("lms_unload falls back to the status when the error object has no message", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(400L, '{"error": {"code": "E42"}}'))
 
   expect_error(
     suppressMessages(lms_unload("test-model")),
-    "API Unload Failed: E42",
+    "API Unload Failed: HTTP Status 400",
     fixed = TRUE
   )
 })
 
-test_that("lms_unload falls back to the body text when the JSON error is a string", {
+test_that("lms_unload reports a JSON error field that is a string", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(400L, '{"error": "top level error"}'))
 
-  # A string `error` field aborts at `err_json$error$message`, so the tryCatch
-  # handler supplies the raw body rather than the field value.
   expect_error(
     suppressMessages(lms_unload("test-model")),
-    'API Unload Failed: {"error": "top level error"}',
+    "API Unload Failed: top level error",
     fixed = TRUE
   )
 })
 
-test_that("lms_unload falls back to the body text when the JSON has no error field", {
+test_that("lms_unload falls back to the status when the JSON has no error field", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(400L, '{"detail": "no error field"}'))
 
   expect_error(
     suppressMessages(lms_unload("test-model")),
-    'API Unload Failed: {"detail": "no error field"}',
+    "API Unload Failed: HTTP Status 400",
     fixed = TRUE
   )
 })
