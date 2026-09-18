@@ -48,6 +48,7 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 - 2026-09-17: implement gate kept the template's full five-entry matrix and limited the push trigger to the default branch, matching test-coverage.yaml and pkgdown.yaml. The stray tracked `.DS_Store` was untracked and gitignored first, as a trivial commit on main outside this milestone.
 - 2026-09-17: review recorded AC1 and AC2 evidence and ticked both boxes. Consistency gate clean. AC3 waits on the PR check run in step 8. Checkpoint taken with the diff-bug reviewer still running.
 - 2026-09-17: three-lens review returned nine findings. One fixed now, the stale DESIGN Platforms line. Two go to candidate rows at hygiene. Three rejected, three noted. No return floor trigger.
+- 2026-09-17: step-7 approval: m002-platform-ci approved for merge.
 
 ## Decisions
 
