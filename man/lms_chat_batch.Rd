@@ -43,6 +43,10 @@ The return type depends on the \code{format} argument:
 \description{
 Process a vector of inputs sequentially through LM Studio.
 }
+\details{
+This function calls \code{\link[=lms_chat]{lms_chat()}} once for each element of \code{inputs}. It can
+raise \code{rlmstudio_api_error} through \code{\link[=lms_chat]{lms_chat()}}.
+}
 \section{Server not running}{
 
 Functions that call the LM Studio REST API check that a server answers at

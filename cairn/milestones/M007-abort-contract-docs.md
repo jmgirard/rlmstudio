@@ -103,7 +103,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
       (`R/chat.R:327`). Each tag stays on one line: roxygen2 8.0.0 warns on a
       wrapped single-line tag, and the section title must match character for
       character. Re-document.
-- [ ] T3: Add the delegation sentence to `lms_chat()` (`R/chat.R:26`),
+- [x] T3: Add the delegation sentence to `lms_chat()` (`R/chat.R:26`),
       `lms_chat_batch()` (`R/chat.R:327`), and `lms_unload_all()`
       (`R/unload.R:73`), each naming the function it calls. `lms_chat()` also
       needs the `rlmstudio_no_server` sentence, because it is the one affected
@@ -130,6 +130,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: implement question gate settled two items. The three exports that reach an abort only through another function carry the two shared sections as well as their own delegation sentence. The drafted section wording was accepted as drafted.
 - 2026-09-18: minor amendment from that gate. T2's function list grows from ten to eleven, adding `lms_chat()`. No criterion changes. AC2 and AC3 still bind the ten call sites the greps name, and the eleventh page is additive.
 - 2026-09-18: T1 done: `R/conditions.R` written and `man/rlmstudio-conditions.Rd` generated. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
+- 2026-09-18: T3 done: a `@details` paragraph added at `lms_chat()`, `lms_chat_batch()`, and `lms_unload_all()`, each naming the function it reaches the abort through. A read of the `lms_chat()` body found no `httr2` call, no `lms_client()` call, and no `stop_if_no_server()` call. That read is the source of the "runs no request of its own" sentence. `devtools::test()` reported 147 pass, 0 fail.
 - 2026-09-18: T2 done: both `@inheritSection` tags added at eleven exports. A grep over the regenerated `man/` files found one `\section{Server not running}` and one `\section{API failure}` in each of the eleven. Each block names its own class. The API block names the integer status field. `devtools::test()` reported 147 pass, 0 fail.
 
 ## Decisions

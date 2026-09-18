@@ -23,6 +23,11 @@
 #'   \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response.
 #'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
 #' }
+#' @details
+#' This function calls [lms_chat_openresponses()], [lms_chat_openai()], or
+#' [lms_chat_native()], according to `api_type`. It runs no request of its own.
+#' It can raise `rlmstudio_no_server` and `rlmstudio_api_error` through
+#' [lms_chat_openresponses()], [lms_chat_openai()], or [lms_chat_native()].
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @export
@@ -332,6 +337,9 @@ lms_chat_native <- function(
 #'   \item \code{"list"}: A list where each element is the response corresponding to the provided input.
 #'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included.
 #' }
+#' @details
+#' This function calls [lms_chat()] once for each element of `inputs`. It can
+#' raise `rlmstudio_api_error` through [lms_chat()].
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @export

@@ -73,6 +73,11 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #'   were successfully unloaded. If no models were currently loaded, it
 #'   invisibly returns \code{NULL}.
 #'
+#' @details
+#' This function calls [list_models()] to find the loaded instances, then calls
+#' [lms_unload()] once for each one. It can raise `rlmstudio_api_error` through
+#' [list_models()] and through [lms_unload()].
+#'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #'
