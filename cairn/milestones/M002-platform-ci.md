@@ -33,7 +33,7 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 
 ## Tasks
 
-- [ ] T1: Run `usethis::use_github_action("check-standard")`, then add `paths-ignore: ['cairn/**']` under `push` and keep `pull_request` without one. Confirm `.Rbuildignore` holds `^\.github$`.
+- [x] T1: Run `usethis::use_github_action("check-standard")`, then add `paths-ignore: ['cairn/**']` under `push` and keep `pull_request` without one. Confirm `.Rbuildignore` holds `^\.github$`.
 - [ ] T2: Push the branch and read `gh pr checks`. On a platform failure, record it as a hotfix or candidate row before review.
 
 ## Work log
@@ -41,6 +41,7 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 - 2026-09-17: created by /milestone-plan.
 - 2026-09-17: criteria audit ran in reduced mode on a fresh [O] reader; it returned rewordings for AC2 (name the three files the comparison reads) and AC3 (state the platform-bug case); both adopted.
 - 2026-09-17: plan gate chose "workflow runs to completion, platform bugs go to hotfix" over "stay open until all green" because the deliverable is the workflow and a platform bug is a separate release blocker under D-002; falsified by a red run that no hotfix or candidate row records.
+- 2026-09-17: T1 added `.github/workflows/R-CMD-check.yaml` from the usethis template, with `paths-ignore: ['cairn/**']` under `push`. The command also added an R-CMD-check badge to README.Rmd, so README.md was re-knitted. `devtools::test()` clean, 58 passing.
 - 2026-09-17: implement gate kept the template's full five-entry matrix and limited the push trigger to the default branch, matching test-coverage.yaml and pkgdown.yaml. The stray tracked `.DS_Store` was untracked and gitignored first, as a trivial commit on main outside this milestone.
 
 ## Decisions
