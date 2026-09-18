@@ -27,11 +27,12 @@ is_message_string <- function(x) {
 #' parse to a list falls back to the body text, and an empty body falls back to
 #' the status.
 #'
-#' One caller aborts on a response the server did not mark as a failure.
+#' Two callers abort on a response the server did not mark as a failure.
 #' `lms_load()` aborts when the status is 200 and the body does not report the
-#' model as loaded. `HTTP Status 200` tells that caller nothing, so a response
-#' below status 400 falls back to the body text before it falls back to the
-#' status.
+#' model as loaded. `list_models()` aborts on any status other than 200, which
+#' includes every status below 400. `HTTP Status 200` tells the first caller
+#' nothing, so a response below status 400 falls back to the body text before
+#' it falls back to the status.
 #'
 #' @param resp An httr2 response the caller has decided to abort on.
 #' @return One character string: the message text the abort will show.

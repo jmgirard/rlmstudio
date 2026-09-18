@@ -98,6 +98,10 @@ names the unload functions. The other seven wrappers shipped in M005.
 - 2026-09-18: claim audit: 10 claims read, 0 corrected. Files were `NEWS.md`, `tests/testthat/test-api-error.R`, and `tests/testthat/test-list.R`. The reader raised two notes that are not claim defects. The NEWS bullet omits the cli `✖ ` prefix the real message carries, which matches the three shipped bullets above it. The new path assertion needs httpuv, a suggested package, so on a machine without it that one assertion skips while the request-count assertion still runs.
 - 2026-09-18: `devtools::document()` produced no diff. `devtools::test()` was clean. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes.
 - 2026-09-18: review step 3 done. All four criteria carry fresh evidence in the Review section and all four boxes are ticked. Review step 4 done. `cairn_validate.py` passed every check and fired no advisory. The toolchain gate passed, and no pkgdown site is present. Checkpoint: the three review lenses are still running, so no findings are recorded yet.
+- 2026-09-18: review step 5 done. Three fresh-context lenses ran. The blame-history and prior-review lenses reported no findings. The diff-bug lens reported nine, all logged with dispositions in the Review section. Two were verified at review by direct runs, and both held.
+- 2026-09-18: fix-now work landed for findings 2, 3, and 4. `NEWS.md` and the roxygen comment on `api_error_message()` were corrected. No code behavior changed. `document()` no diff, `test()` clean, `check()` 0 errors, 0 warnings, 0 notes.
+- 2026-09-18: the ROADMAP candidate row for a replacement coverage guard was corrected in place. The earlier claim that the deleted guard never gated a merge is wrong. It skipped under `R CMD check` and ran under `devtools::test()`. Two new candidate rows were added for review findings 7 and 8.
+- 2026-09-18: step-7 approval: m006-list-models-abort-path approved for merge
 
 ## Decisions
 
@@ -201,3 +205,16 @@ lens reported nine findings, ranked below as it ranked them.
 No finding demonstrates an acceptance criterion failing, and none shows a
 criterion to be wrong. Findings 2 and 3 are wrong statements in a user-facing
 file, so they are put to the maintainer as fix-now work at the gate.
+
+### Gate outcome
+
+The maintainer chose to fix the wording and then merge. Findings 2, 3, and 4
+were fixed on the branch. `NEWS.md` now states the `HTTP Status <n>` fallback
+at status 400 and above, the body text below 400, and the widened abort range.
+The roxygen comment on `api_error_message()` now names two callers. Finding 1
+was corrected in the ROADMAP candidate row in place, and the deletion itself
+stands as the plan gate decided. Findings 7 and 8 became new candidate rows.
+Findings 5, 6, and 9 were rejected for the reasons recorded above. After the
+fixes, `devtools::document()` produced no diff, `devtools::test()` was clean,
+and `devtools::check()` reported `Status: OK` with 0 errors, 0 warnings, and
+0 notes.
