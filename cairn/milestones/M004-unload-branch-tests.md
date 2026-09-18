@@ -17,7 +17,7 @@ Cover the untested response and empty-list branches of `lms_unload()` and
 ## Scope
 
 **In:** New tests in `tests/testthat/test-unload.R` for the success path, the
-four failure-message sources, and the dots merge of `lms_unload()`. Also for
+three failure-message sources, and the dots merge of `lms_unload()`. Also for
 the nothing-loaded path, the unload loop, and the four instance-id shapes of
 `lms_unload_all()`. The tests drive the HTTP layer by mocking
 `httr2::req_perform` and return synthetic `httr2::response()` objects, in the
@@ -53,8 +53,9 @@ owed. No user-visible behavior changes.
       merge of `...` into the body is dropped, the suite fails.
 - [ ] AC4: If `list_models()` reports nothing loaded, `lms_unload_all()` prints
       "No models are currently loaded.", returns `NULL` invisibly, and sends no
-      unload request. The suite asserts all three facts. When that early return
-      is deleted, the suite fails.
+      unload request. The suite asserts all three facts for a `list_models()`
+      result with no rows. When both nothing-loaded guards are deleted, the
+      suite fails.
 - [ ] AC5: If `list_models()` reports two loaded instances, `lms_unload_all()`
       sends one unload POST for each instance id in the reported order. It
       forwards its `...` into each request body. It returns both ids invisibly.
@@ -97,7 +98,7 @@ owed. No user-visible behavior changes.
       their order, the forwarded dots, and the returned ids (R/unload.R:148).
 - [x] T5: Add the four instance-id shape tests and the `NA` and empty filter
       test for `lms_unload_all()` (R/unload.R:120).
-- [ ] T6: Run the planted-defect pass. For each criterion, break the named
+- [x] T6: Run the planted-defect pass. For each criterion, break the named
       behavior in `R/unload.R` itself, because `devtools::test()` loads only the
       real file. Make sure that the matching test goes red. Then restore the file
       with `git checkout -- R/unload.R`. Record one work-log line per criterion
@@ -129,6 +130,19 @@ owed. No user-visible behavior changes.
 - 2026-09-18: T3 done. One test asserts the message, the invisible `NULL`, and zero recorded requests on the nothing-loaded path. Suite 85 pass, 0 fail.
 - 2026-09-18: T4 done. One test asserts two requests, their instance ids in order, the forwarded `ttl`, both unload paths, and the returned ids. Suite 91 pass, 0 fail.
 - 2026-09-18: T5 done. Six tests cover the four `loaded_instances` shapes, the all-dropped filter result, and a partial filter. The `identifier` and `id` shapes carry a decoy first column, so a first-column fallback cannot pass them. Suite 100 pass, 0 fail.
+- 2026-09-18: T6 plant for AC1. `return(invisible(model))` became `return(invisible(NULL))`. One failure, at the success-path test, 33 pass.
+- 2026-09-18: T6 plant for AC2. The `tryCatch` message chain became `err_msg <- httr2::resp_body_string(resp)`. Three failures, at the nested-message, error-object, and HTTP-status tests, 31 pass.
+- 2026-09-18: T6 plant for AC3. `utils::modifyList(list(instance_id = model), list(...))` became `list(instance_id = model)`. Two failures, at the dots test and the unload-loop test, 31 pass.
+- 2026-09-18: T6 plant for AC4 as planned. The first nothing-loaded guard was deleted. Zero failures, 34 pass. The second guard produces the same message, the same invisible `NULL`, and no request for that input.
+- 2026-09-18: T6 plant for AC4 as amended. Both nothing-loaded guards were deleted. Three failures, at the nothing-loaded test and the all-dropped filter test, 31 pass.
+- 2026-09-18: T6 plant for AC5. The unload loop ran over `loaded_keys[1]`. Four failures, all in the unload-loop test, 30 pass.
+- 2026-09-18: T6 plant for AC6. The `identifier` and `id` branches were deleted, leaving the first-column fallback. Two failures, at the identifier-shape and id-shape tests, 32 pass.
+- 2026-09-18: re-audit: AC4 (reduced) — two findings. A clause reasoning that the second guard catches every input the first one catches was an unbounded promise and was disproportionate for the internal tier. Both sentences were dropped before the gate.
+- 2026-09-18: re-audit: AC4 (reduced) — nothing.
+- 2026-09-18: substantive amendment accepted at a mini gate. AC4 now names the no-rows input and asks the suite to catch the deletion of both nothing-loaded guards. No criterion was added.
+- 2026-09-18: the Scope In paragraph was changed from four failure-message sources to three, to match the gated AC2 amendment. The change is that amendment applied to the sentence restating its count, not a new scope decision.
+- 2026-09-18: T6 done. Every criterion has a plant that turns its own tests red, AC4 after its amendment. `R/unload.R` was restored after each plant and the tree is clean.
+- 2026-09-18: the AC4 audit produced a counterexample. A zero-row result whose `loaded_instances` column still holds an entry reaches the first guard and not the second. No real server response takes that shape, so no candidate row was filed and no guard was called redundant.
 
 ## Decisions
 
