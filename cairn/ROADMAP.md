@@ -25,6 +25,7 @@ _Last hygiene pass: 2026-09-18 (M003 review: archived M003, one new candidate ro
 - `lms_load()`, `lms_download()`, `lms_download_status()`, and the three chat functions have no test for their non-2xx response branches, added 2026-09-18, M004 scope
 - The six API-failure aborts carry no condition class, so a caller has to match message text to catch one, added 2026-09-18, M004 plan gate
 - On a failed unload with an empty response body, `lms_unload()` reports httr2's "Can't retrieve empty body." instead of the intended "API Unload Failed: HTTP Status <n>". Both reads of the body abort, so the status-number fallback is unreachable that way, added 2026-09-18, M004 question gate
+- A JSON `error` field holding an empty array crashes `lms_unload()` with "argument is of length zero" instead of reporting a failed unload. The empty-string check compares a zero-length value, added 2026-09-18, M004 T2
 - When only R-devel breaks, a red `ubuntu-latest (devel)` job still blocks the merge. Decide its disposition, added 2026-09-17, M002 review finding 6
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
 - [low] Unify the four workflow files on one `actions/checkout` version, a `concurrency` group, and a `workflow_dispatch` trigger, added 2026-09-17, M002 findings 7 and 8

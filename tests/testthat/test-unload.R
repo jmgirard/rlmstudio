@@ -41,3 +41,73 @@ test_that("lms_unload merges a named dots argument into the request body", {
   expect_equal(body$instance_id, "test-model")
   expect_equal(body$ttl, 300)
 })
+
+test_that("lms_unload reports the error message field of a JSON body", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(
+    mock_response(400L, '{"error": {"message": "nested message"}}')
+  )
+
+  expect_error(
+    suppressMessages(lms_unload("test-model")),
+    "API Unload Failed: nested message",
+    fixed = TRUE
+  )
+})
+
+test_that("lms_unload reports a JSON error object that has no message field", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(400L, '{"error": {"code": "E42"}}'))
+
+  expect_error(
+    suppressMessages(lms_unload("test-model")),
+    "API Unload Failed: E42",
+    fixed = TRUE
+  )
+})
+
+test_that("lms_unload falls back to the body text when the JSON error is a string", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(400L, '{"error": "top level error"}'))
+
+  # A string `error` field aborts at `err_json$error$message`, so the tryCatch
+  # handler supplies the raw body rather than the field value.
+  expect_error(
+    suppressMessages(lms_unload("test-model")),
+    'API Unload Failed: {"error": "top level error"}',
+    fixed = TRUE
+  )
+})
+
+test_that("lms_unload falls back to the body text when the JSON has no error field", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(400L, '{"detail": "no error field"}'))
+
+  expect_error(
+    suppressMessages(lms_unload("test-model")),
+    'API Unload Failed: {"detail": "no error field"}',
+    fixed = TRUE
+  )
+})
+
+test_that("lms_unload falls back to the body text when the body is not JSON", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(502L, "Bad Gateway, not JSON"))
+
+  expect_error(
+    suppressMessages(lms_unload("test-model")),
+    "API Unload Failed: Bad Gateway, not JSON",
+    fixed = TRUE
+  )
+})
+
+test_that("lms_unload names the HTTP status when the extracted message is empty", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(503L, '{"error": {"message": ""}}'))
+
+  expect_error(
+    suppressMessages(lms_unload("test-model")),
+    "API Unload Failed: HTTP Status 503",
+    fixed = TRUE
+  )
+})

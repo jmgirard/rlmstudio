@@ -39,14 +39,15 @@ owed. No user-visible behavior changes.
       asserts this. When the success branch returns `NULL`, the suite fails.
 - [ ] AC2: If the unload response is not HTTP 200, `lms_unload()` aborts with a
       message built from the response. The function reads that message from
-      four sources. The first is the `error$message` field of a JSON body. The
-      second is the `error` field of a JSON body. When the JSON carries no
-      `error` field, the third source is the raw body text. When the body does
-      not parse as JSON, the fourth source is the raw body text. If the result
-      is empty, the message names the HTTP status number instead. The suite
-      asserts the message for each of the four sources and for the empty
-      result. When the message chain is cut back to the raw response string,
-      the suite fails.
+      three sources. The first is the `message` field inside a JSON `error`
+      object. The second is a JSON `error` object with no `message` field. The
+      third is the raw body text. Three response shapes reach the raw body
+      text. They are a JSON body with no `error` field, a JSON body whose
+      `error` is a string, and a body that is not JSON. If the chosen source is
+      an empty string, the message names the HTTP status number instead. The
+      suite asserts the message for the first two sources, for all three shapes
+      that reach the raw body text, and for the empty string. When the message
+      chain is cut back to the raw response string, the suite fails.
 - [ ] AC3: A named argument passed through `...` to `lms_unload()` reaches the
       request body next to `instance_id`. The suite asserts this. When the
       merge of `...` into the body is dropped, the suite fails.
@@ -83,8 +84,9 @@ owed. No user-visible behavior changes.
       `is_server_running` to `TRUE` and `httr2::req_perform` to capture the
       request and return a 200 response. Assert the returned value, the request
       count, the URL path, and both body fields (R/unload.R:34).
-- [ ] T2: Add the four failure-message tests and the empty-body test for
-      `lms_unload()`. Each mock returns a non-200 response with the body that
+- [x] T2: Add the failure-message tests for `lms_unload()`. Cover the first two
+      sources, the three response shapes that reach the raw body text, and the
+      empty-string case. Each mock returns a non-200 response with the body that
       selects its source (R/unload.R:55).
 - [ ] T3: Add the nothing-loaded test for `lms_unload_all()`. Mock
       `list_models` to return an empty data frame. Assert the message, the
@@ -118,6 +120,12 @@ owed. No user-visible behavior changes.
 - 2026-09-18: question gate chose a shared `tests/testthat/helper-mock-http.R` for the request-capturing mock, over a file-local helper and over an inline copy per test.
 - 2026-09-18: minor amendment to T6. The planted-defect pass edits `R/unload.R` in place and restores it with git, because `devtools::test()` loads only the real file.
 - 2026-09-18: T1 done. New `tests/testthat/helper-mock-http.R` records requests and answers them with a synthetic response. Two tests cover the success path and the dots merge. Suite 75 pass, 0 fail.
+- 2026-09-18: superseding an earlier line above. The empty-message case is reached through `{"error": {"message": ""}}`, not through a JSON body whose `error` field is an empty string. A string `error` field aborts at `err_json$error$message` and falls to the raw body text.
+- 2026-09-18: two T2 tests failed and showed that AC2 described a source the code does not reach. A JSON `error` field holding a string aborts on `$` and falls back to the raw body text.
+- 2026-09-18: re-audit: AC2 (reduced) — nothing.
+- 2026-09-18: substantive amendment accepted at a mini gate. AC2 now states three message sources and the three response shapes that reach the raw body text. No criterion was added. T2 was reworded to match.
+- 2026-09-18: probing found a third latent defect. A JSON `error` field holding an empty array crashes `lms_unload()` with "argument is of length zero". Filed as a candidate row.
+- 2026-09-18: T2 done. Five tests cover the two object sources, the three shapes that reach the raw body text, and the empty-string fallback to the HTTP status number. Suite 81 pass, 0 fail.
 
 ## Decisions
 
