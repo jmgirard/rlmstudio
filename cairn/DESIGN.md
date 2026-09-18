@@ -50,6 +50,7 @@ Observed in the code and agreed at the interview on 2026-09-17.
 - HTTP calls use `httr2`. JSON uses `jsonlite`. External processes use `processx`.
 - Every REST wrapper merges `...` into the request body. Dots are the intended escape hatch for API fields that the package does not name. If a field needs input checks or documentation, it becomes a named argument.
 - If the server is not running, a function aborts with a message that names `lms_server_start`. This is the intended posture. Every server-down abort carries the condition class `rlmstudio_no_server`.
+- Every REST wrapper that handles a failed response aborts through `rlm_abort_api()` in `R/utils-api-error.R`. That abort carries the condition class `rlmstudio_api_error` and a `status` field holding the HTTP status as an integer. The helper reads `error` and `error$message` out of the parsed body and falls back to `HTTP Status <n>`. A caller catches an API failure by class rather than by message text.
 - Tests use testthat edition 3. Recorded HTTP fixtures (`httptest2`, under `tests/testthat/<name>/localhost-1234`) are the everyday contract. The helpers in `tests/testthat/helper-skips.R` skip the tests that need a live LM Studio. A CRAN release requires a full live run on a real machine and a new recording of stale fixtures.
 - Code is formatted with Air (`air.toml`).
 - The changelog is `NEWS.md`. The site is pkgdown in release mode.

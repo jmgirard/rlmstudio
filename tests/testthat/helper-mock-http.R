@@ -5,12 +5,18 @@
 # under test sends, and answer each one with a response the test builds itself.
 
 # Build a synthetic httr2 response. `body` is the response body as a string.
-# An empty string means the response carries no body at all.
-mock_response <- function(status_code = 200L, body = "{}") {
+# An empty string means the response carries no body at all. `content_type`
+# sets the header the body is served under, so a test can send a body httr2
+# refuses to parse as JSON on the header alone.
+mock_response <- function(
+  status_code = 200L,
+  body = "{}",
+  content_type = "application/json"
+) {
   httr2::response(
     status_code = status_code,
     body = if (identical(body, "")) raw(0) else charToRaw(body),
-    headers = list(`Content-Type` = "application/json")
+    headers = list(`Content-Type` = content_type)
   )
 }
 
