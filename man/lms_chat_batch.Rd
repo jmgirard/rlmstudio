@@ -43,3 +43,20 @@ The return type depends on the \code{format} argument:
 \description{
 Process a vector of inputs sequentially through LM Studio.
 }
+\section{Server not running}{
+
+Functions that call the LM Studio REST API check that a server answers at
+the \code{host} address. A condition of class \code{rlmstudio_no_server} is raised
+when the LM Studio server is not running. Start the server with
+\code{\link[=lms_server_start]{lms_server_start()}}, or give \code{host} the address that your server listens
+on.
+}
+
+\section{API failure}{
+
+A condition of class \code{rlmstudio_api_error} is raised when a REST call
+returns a response that the wrapper treats as a failure. The condition
+carries a \code{status} field, which holds the HTTP response status as an
+integer.
+}
+

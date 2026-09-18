@@ -24,6 +24,9 @@
 #' including all raw metadata columns provided by the API. Returns an empty
 #' \code{data.frame} if no models match the criteria.
 #'
+#' @inheritSection rlmstudio-conditions Server not running
+#' @inheritSection rlmstudio-conditions API failure
+#'
 #' @export
 #'
 #' @examples

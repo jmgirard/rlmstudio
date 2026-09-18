@@ -20,6 +20,9 @@
 #' @return Invisibly returns a character string representing the unloaded
 #'   \code{instance_id} upon success.
 #'
+#' @inheritSection rlmstudio-conditions Server not running
+#' @inheritSection rlmstudio-conditions API failure
+#'
 #' @export
 #'
 #' @examples
@@ -69,6 +72,9 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #' @return Invisibly returns a character vector of the \code{instance_id}s that
 #'   were successfully unloaded. If no models were currently loaded, it
 #'   invisibly returns \code{NULL}.
+#'
+#' @inheritSection rlmstudio-conditions Server not running
+#' @inheritSection rlmstudio-conditions API failure
 #'
 #' @export
 #'

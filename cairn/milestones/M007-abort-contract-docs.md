@@ -90,8 +90,11 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
       whose `\dontrun{}` body catches each class with `tryCatch()`. Do not add
       `@keywords internal`; T4 puts the topic in the pkgdown index instead. Run
       `devtools::document()`.
-- [ ] T2: Add the two `@inheritSection rlmstudio-conditions <title>` tags to the
-      ten exported functions holding the AC2 and AC3 call sites: `list_models()`
+- [x] T2: Add the two `@inheritSection rlmstudio-conditions <title>` tags to the
+      eleven exported functions named below. Ten of them hold the AC2 and AC3
+      call sites. The eleventh, `lms_chat()` (`R/chat.R:26`), was added at the
+      implement question gate, because it reaches both aborts through the
+      function it routes to. The ten are: `list_models()`
       (`R/list.R:27`), `lms_load()` (`R/load.R:31`), `lms_unload()`
       (`R/unload.R:23`), `lms_unload_all()` (`R/unload.R:73`), `lms_download()`
       (`R/download.R:17`), `lms_download_status()` (`R/download.R:100`),
@@ -127,6 +130,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: implement question gate settled two items. The three exports that reach an abort only through another function carry the two shared sections as well as their own delegation sentence. The drafted section wording was accepted as drafted.
 - 2026-09-18: minor amendment from that gate. T2's function list grows from ten to eleven, adding `lms_chat()`. No criterion changes. AC2 and AC3 still bind the ten call sites the greps name, and the eleventh page is additive.
 - 2026-09-18: T1 done: `R/conditions.R` written and `man/rlmstudio-conditions.Rd` generated. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
+- 2026-09-18: T2 done: both `@inheritSection` tags added at eleven exports. A grep over the regenerated `man/` files found one `\section{Server not running}` and one `\section{API failure}` in each of the eleven. Each block names its own class. The API block names the integer status field. `devtools::test()` reported 147 pass, 0 fail.
 
 ## Decisions
 
