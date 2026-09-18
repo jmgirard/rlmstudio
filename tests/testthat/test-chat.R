@@ -112,3 +112,71 @@ test_that("lms_chat routes correctly to openresponses and creates S3 class", {
   expect_s3_class(res, "lms_chat_result")
   expect_equal(res$text, "5")
 })
+
+test_that("lms_chat_openresponses aborts with class rlmstudio_no_server when the server is down", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat_openresponses(model = "test-model", input = "test input"),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat_openai aborts with class rlmstudio_no_server when the server is down", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat_openai(
+      model = "test-model",
+      messages = list(list(role = "user", content = "test input"))
+    ),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat_native aborts with class rlmstudio_no_server when the server is down", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat_native(model = "test-model", input = "test input"),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat_batch aborts with class rlmstudio_no_server when the server is down", {
+  # lms_chat() reaches a second server check further down, so it is mocked out
+  # here. The abort can then only come from the call site in lms_chat_batch().
+  local_mocked_bindings(
+    is_server_running = function(...) FALSE,
+    lms_chat = function(...) "mocked"
+  )
+  expect_error(
+    lms_chat_batch(model = "test-model", inputs = "test input"),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat passes rlmstudio_no_server through for api_type openresponses", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat(
+      model = "test-model",
+      input = "test input",
+      api_type = "openresponses"
+    ),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat passes rlmstudio_no_server through for api_type openai", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat(model = "test-model", input = "test input", api_type = "openai"),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat passes rlmstudio_no_server through for api_type native", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat(model = "test-model", input = "test input", api_type = "native"),
+    class = "rlmstudio_no_server"
+  )
+})

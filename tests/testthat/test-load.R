@@ -1,3 +1,13 @@
+test_that("lms_load aborts with class rlmstudio_no_server when the server is down", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  # force = TRUE skips the list_models() branch, so the abort can only come
+  # from the stop_if_no_server() call site in lms_load() itself.
+  expect_error(
+    lms_load("test-model", force = TRUE),
+    class = "rlmstudio_no_server"
+  )
+})
+
 test_that("lms_load builds body with correct integer/logical conversions", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
 
