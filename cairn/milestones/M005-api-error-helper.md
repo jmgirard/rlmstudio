@@ -38,21 +38,21 @@ body-shape table drives every wrapper through every failure branch.
 
 ## Acceptance criteria
 
-- [ ] AC1: For every body shape the failure-message table enumerates, all
+- [x] AC1: For every body shape the failure-message table enumerates, all
       seven functions reported by `grep -rn "req_error(is_error" R/`
       abort with the same message text, each behind its own label. That
       grep reports seven lines.
-- [ ] AC2: For these five rows of the failure-message table, all seven
+- [x] AC2: For these five rows of the failure-message table, all seven
       functions report the same message text, each behind its own label.
       `{"error": {"message": "boom"}}` and `{"error": "boom"}` both give
       `boom`. The non-JSON body `plain text failure` gives
       `plain text failure`. `{"error": {"code": "E42"}}` and
       `{"status": "bad"}` both give `HTTP Status <n>`.
-- [ ] AC3: For these six shapes the message text is `HTTP Status <n>`.
+- [x] AC3: For these six shapes the message text is `HTTP Status <n>`.
       The shapes are an empty body, `{"error": []}`, `{"error": {}}`,
       `{"error": {"message": []}}`, `{"error": ["a", "b"]}`, and
       `{"error": {"message": ""}}`.
-- [ ] AC4: For each row of the failure-message table, the helper aborts
+- [x] AC4: For each row of the failure-message table, the helper aborts
       and raises no other R error. When the body parses to a list, the
       helper reads `error` and then `error$message`, and takes the first
       of them that is a non-empty length-one character string. It reads
@@ -60,13 +60,13 @@ body-shape table drives every wrapper through every failure branch.
       gives such a string, the helper takes `HTTP Status <n>`. When the
       body does not parse to a list and is not empty, the helper takes
       the body text. When the body is empty, it takes `HTTP Status <n>`.
-- [ ] AC5: Every abort the helper raises carries the condition class
+- [x] AC5: Every abort the helper raises carries the condition class
       `rlmstudio_api_error` and a `status` field. That field holds the
       HTTP status of the response as an integer.
-- [ ] AC6: `NEWS.md` names every function whose failure message the table
+- [x] AC6: `NEWS.md` names every function whose failure message the table
       shows changing between the parent commit and this branch. It also
       records the new condition class.
-- [ ] AC7: `devtools::document()` produces no diff. `devtools::test()`
+- [x] AC7: `devtools::document()` produces no diff. `devtools::test()`
       and `devtools::check()` are clean, at 0 errors and 0 warnings.
 
 ## Coverage
@@ -136,6 +136,7 @@ body-shape table drives every wrapper through every failure branch.
 - 2026-09-18: claim audit: 37 claims read, 4 corrected — NEWS.md. One was wrong: the four non-chat wrappers did not print the raw body for every JSON body with no readable message. Three were narrower than written: `lms_chat_native()`'s error-object fragment, the empty-body crash, and the omission of `lms_unload_all()` and `lms_chat_batch()`. The same reader re-read all four and found no remaining defect.
 - 2026-09-18: candidate row added. A non-JSON failure body becomes the abort message in full, with no length bound.
 - 2026-09-18: measured against the Scope line "Two crash cases are fixed there". The baseline crashed on five bodies at the four `API ...` wrappers and on four at `lms_chat_native()`. The Scope count is low and is left unedited, because Scope changes only through the amendment gate.
+- 2026-09-18: review, pre-gate checkpoint. All seven criteria carry fresh evidence in the Review section and are ticked. The consistency gate passed, both halves. Two of the three review lenses reported. The third is still running, so its findings and the triage are not yet logged.
 
 ## Decisions
 
@@ -158,3 +159,63 @@ this reason recorded, which is what a guiding principle allows. A report that
 a dropped field left a real failure undiagnosable reopens the choice.
 
 ## Review
+
+### Acceptance-criterion evidence (2026-09-18)
+
+The evidence run below is one driver over the table in
+`tests/testthat/test-api-error.R`: 17 rows, each at statuses 400 and 503,
+against all seven wrappers, with the message text, the condition classes,
+and the `status` field captured per wrapper. It ran on this branch at
+`2c71b2c`, and again on the parent commit `d8b23de` in a throwaway
+worktree for the baseline AC6 reads.
+
+- AC1: the grep reports seven lines, at `R/chat.R` 125, 232, 295,
+  `R/load.R` 118, `R/download.R` 58, 128, and `R/unload.R` 48. All seven
+  wrappers abort through `rlm_abort_api()`. On every one of the 17 rows,
+  at both statuses, the seven message texts are identical after each
+  wrapper's own label. The in-suite test
+  `the table covers every wrapper that handles a failed response` asserts
+  the grep count and the caller count at 7 and ran unskipped.
+- AC2: the five named rows give the promised text at all seven wrappers.
+  `{"error": {"message": "boom"}}` and `{"error": "boom"}` both give
+  `boom`. The body `plain text failure` gives `plain text failure`.
+  `{"error": {"code": "E42"}}` and `{"status": "bad"}` both give
+  `HTTP Status 400` at status 400 and `HTTP Status 503` at status 503.
+- AC3: all six shapes give `HTTP Status <n>` at all seven wrappers, at
+  both statuses. The six are the empty body, `{"error": []}`,
+  `{"error": {}}`, `{"error": {"message": []}}`, `{"error": ["a", "b"]}`,
+  and `{"error": {"message": ""}}`.
+- AC4: over all 17 rows at both statuses, every one of the 238 calls
+  raised a condition carrying `rlmstudio_api_error` and nothing else. No
+  raw R error appeared. The measured texts match the stated read order:
+  `{"error": "boom"}` takes `error`, `{"error": {"message": "boom"}}`
+  takes `error$message`, `"boom"` as a whole body takes the body text,
+  and the empty body takes the status.
+- AC5: every condition in the same run carried class `rlmstudio_api_error`
+  and a `status` field of class `integer`, equal to the response status.
+  That field read 400 on the 400 runs and 503 on the 503 runs.
+- AC6: the parent-commit baseline shows all seven wrappers changing text
+  on at least one row, and `NEWS.md` names all seven, plus
+  `lms_unload_all()` and `lms_chat_batch()` as callers, plus the new
+  condition class. Spot checks of the entry's specific claims against the
+  baseline: on `{"error": "boom"}` the four non-chat wrappers printed the
+  raw body and `lms_chat_openresponses()` and `lms_chat_openai()` printed
+  the status. On a non-JSON body the three chat wrappers printed the
+  status. Each of the seven raised a raw R error on at least one shape.
+  The bodies `{"error": []}`, `{"error": {}}`, and `{"error": ["a", "b"]}`
+  gave `argument is of length zero` at the four non-chat wrappers.
+- AC7: `devtools::document()` produced no diff (`git status` clean after
+  the run). `devtools::test()` is `FAIL 0 | WARN 0 | SKIP 0 | PASS 136`.
+  `devtools::check()` is `0 errors | 0 warnings | 0 notes`.
+
+### Consistency gate (2026-09-18)
+
+`cairn_validate.py` passed all 16 checks. Every advisory read OK, and the
+release-window advisory did not fire. No `DESIGN.md` principle changed,
+so `cairn_impact.py` was not run. The branch adds one Conventions bullet,
+which is not a principle. Toolchain checks from the `r-package` profile
+all pass. `document()` produces no diff. No generated file was hand
+edited, and `NAMESPACE` and `man/` are absent from the diff. `README.md`
+and `README.Rmd` are untouched and in sync. `pkgdown::check_pkgdown()`
+reports no problems. `NEWS.md` carries the entry. The branch adds no
+top-level file, and `check()` reports 0 notes.
