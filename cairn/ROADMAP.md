@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene pass: 2026-09-18 (M003 review: archived M003, one new candidate row, one new lesson, `cairn_validate` clean, budgets under cap)_
+_Last hygiene pass: 2026-09-18 (M004 review: archived M004, four new candidate rows, two new decisions, one new lesson, `cairn_validate` clean, budgets under cap)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene pass: 2026-09-18 (M003 review: archived M003, one new candidate ro
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M004 | Response and empty-list branch tests for the two unload functions | review | none | normal | milestones/M004-unload-branch-tests.md |
+| M004 | Response and empty-list branch tests for the two unload functions | done | none | normal | milestones/archive/M004-unload-branch-tests.md |
 | M003 | Class tests for the ten server-down abort sites | done | none | normal | milestones/archive/M003-no-server-class-tests.md |
 | M002 | R CMD check on macOS, Windows, and Ubuntu in CI | done | none | high | milestones/archive/M002-platform-ci.md |
-| M001 | Honor the host argument and fail fast on a stopped server | done | none | high | milestones/archive/M001-host-aware-probe.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
