@@ -7,7 +7,7 @@
 - **Principles touched:** GP4, GP6
 - **Resolves:** —
 - **Surface tier:** internal. The deliverable is the package's own test suite, which no caller of the installed package runs.
-- **Branch/PR:** `m004-unload-branch-tests`
+- **Branch/PR:** `m004-unload-branch-tests` / https://github.com/jmgirard/rlmstudio/pull/5
 
 ## Goal
 
