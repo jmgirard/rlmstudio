@@ -137,6 +137,9 @@ body-shape table drives every wrapper through every failure branch.
 - 2026-09-18: candidate row added. A non-JSON failure body becomes the abort message in full, with no length bound.
 - 2026-09-18: measured against the Scope line "Two crash cases are fixed there". The baseline crashed on five bodies at the four `API ...` wrappers and on four at `lms_chat_native()`. The Scope count is low and is left unedited, because Scope changes only through the amendment gate.
 - 2026-09-18: review, pre-gate checkpoint. All seven criteria carry fresh evidence in the Review section and are ticked. The consistency gate passed, both halves. Two of the three review lenses reported. The third is still running, so its findings and the triage are not yet logged.
+- 2026-09-18: review, three lenses reported. 16 findings, all from the diff-bug lens. Each was verified against the implementation before the gate.
+- 2026-09-18: step-7 approval: m005-api-error-helper approved for merge. The maintainer chose the fix-now set over merging as is, over a defect return, and over stopping.
+- 2026-09-18: review, fixes applied at the gate. Seven findings fixed, three rejected, one reclassified as unreachable and rejected, four filed as candidate rows, one absorbed into an open row. Suite 147 pass, check 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 
@@ -277,6 +280,45 @@ session verified each one against the implementation before the gate.
     a lowercase `.r` source file. Proposed: candidate row, with finding 2.
 16. `tests/testthat/test-api-error.R:126`. `%||%` is defined after its
     first use site and shadows the base version. Proposed: reject, style.
+
+### Triage and fixes (2026-09-18)
+
+The maintainer chose the fix-now set at the gate. Dispositions, by finding
+number above.
+
+- Fixed now: 1, 5, 6, 7, 8, 9, 14. `api_error_message()` falls back to the
+  body text below status 400, so `lms_load()` reports the body again on a
+  200 that did not load. `is_message_string()` now rejects whitespace
+  alone. The table gained five rows, which are `{"error": ""}`,
+  `{"error": 42}`, `{"error": true}`, `{"error": {"message": "   "}}`, and
+  the scalar body `42`. A new test covers the `lms_load()` 200 case.
+  `air format` fixed `R/download.R`. `NEWS.md` gained the two clauses.
+- Rejected: 10, 13, 16. All three are harmless defensive code or style.
+- Reclassified and rejected: 4. The proposal was to fix it by adding rows,
+  and that turned out to be impossible. The planted-defect run shows why.
+  Removing the `length(x) == 1L` guard leaves the suite green at
+  `FAIL 0 | PASS 47`, because `simplifyVector = FALSE` means no body
+  reaches a longer vector. The guard stays, and a comment on the helper
+  now says it is unreachable and why. D-004 rules out a direct unit test.
+- Candidate rows: 2, 3, 11, 15. Finding 12 was absorbed into the open row
+  on unbounded body text.
+
+Planted-defect runs, which prove the two reachable guards discriminate.
+Replacing `is.list(err) && is_message_string(err$message)` with an
+unguarded read gives `FAIL 6`. Replacing `nzchar(trimws(x))` with
+`nzchar(x)` gives `FAIL 2`. Both were restored before the commit.
+
+### Evidence after the fixes (2026-09-18)
+
+The driver was re-run over the grown table. All 22 rows, at statuses 400
+and 503, against all seven wrappers, report identical text per row. Every
+one of the 308 conditions carries `rlmstudio_api_error` and an integer
+`status` equal to the response status. The 200 case is covered by its own
+test. `devtools::document()` produces no diff. `devtools::test()` is
+`FAIL 0 | WARN 0 | SKIP 0 | PASS 147`. `devtools::check()` is 0 errors, 0
+warnings, 0 notes. `air format --check` is clean over `R/` and `tests/`.
+None of the seven criteria changed meaning under these fixes, because each
+one quantifies over the table at failure statuses.
 
 ### Consistency gate (2026-09-18)
 

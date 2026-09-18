@@ -38,8 +38,10 @@ api_error_table <- list(
     body = '"boom"',
     text = "\"boom\""
   ),
+  # A JSON array parses to an R list, so this row takes the list branch and
+  # finds no `error` key. It does not reach the body-text branch.
   list(
-    name = "whole body is a JSON array",
+    name = "whole body is a JSON array, which parses to a list",
     body = '["a", "b"]',
     text = "<status>"
   ),
@@ -92,6 +94,35 @@ api_error_table <- list(
     name = "message is null",
     body = '{"error": {"message": null}}',
     text = "<status>"
+  ),
+  # `error` holding a scalar that is not a usable message. Without the
+  # `is.list()` guard in the helper, `$` on these raises an R error.
+  list(
+    name = "error is an empty string",
+    body = '{"error": ""}',
+    text = "<status>"
+  ),
+  list(
+    name = "error is a number",
+    body = '{"error": 42}',
+    text = "<status>"
+  ),
+  list(
+    name = "error is a boolean",
+    body = '{"error": true}',
+    text = "<status>"
+  ),
+  list(
+    name = "message is whitespace alone",
+    body = '{"error": {"message": "   "}}',
+    text = "<status>"
+  ),
+  # The second body that parses to something other than a list. A JSON array
+  # parses to a list, so it is not one of these.
+  list(
+    name = "whole body is a JSON number",
+    body = "42",
+    text = "42"
   )
 )
 
@@ -204,6 +235,20 @@ for (row in api_error_table) {
     })
   })
 }
+
+test_that("lms_load() reports the body when the load did not finish", {
+  # This wrapper aborts on a status 200 whose body does not report the model
+  # as loaded. `HTTP Status 200` says nothing about why, so the body is what
+  # the abort has to carry.
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, '{"status": "pending"}'))
+
+  expect_error(
+    suppressMessages(lms_load("m", force = TRUE)),
+    "API Load Failed: \\{\"status\": \"pending\"\\}",
+    class = "rlmstudio_api_error"
+  )
+})
 
 test_that("the table covers every wrapper that handles a failed response", {
   r_dir <- testthat::test_path("..", "..", "R")
