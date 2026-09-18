@@ -68,3 +68,32 @@ Depending on the arguments provided:
 - If `simplify = TRUE` and `logprobs = TRUE` (and the chosen API type
   supports it), returns an object of class `lms_chat_result` containing
   both the text and a data.frame of token probabilities.
+
+## Details
+
+This function calls
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+or
+[`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+according to `api_type`. It runs no request of its own. It can raise
+`rlmstudio_no_server` and `rlmstudio_api_error` through
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+or
+[`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md).
+
+## Server not running
+
+Functions that call the LM Studio REST API check that a server answers
+at the `host` address. A condition of class `rlmstudio_no_server` is
+raised when the LM Studio server is not running. Start the server with
+[`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
+or give `host` the address that your server listens on.
+
+## API failure
+
+A condition of class `rlmstudio_api_error` is raised when a REST call
+returns a response that the wrapper treats as a failure. The condition
+carries a `status` field, which holds the HTTP response status as an
+integer.

@@ -76,6 +76,25 @@ download (e.g., "Q4_K_M"). Only supported for Hugging Face links.</p></dd>
 <code>"already_downloaded"</code> if already downloaded.</p>
     </div>
     <div class="section level2">
+    <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
+
+
+<p>Functions that call the LM Studio REST API check that a server answers at
+the <code>host</code> address. A condition of class <code>rlmstudio_no_server</code> is raised
+when the LM Studio server is not running. Start the server with
+<code><a href="lms_server_start.html">lms_server_start()</a></code>, or give <code>host</code> the address that your server listens
+on.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="api-failure">API failure<a class="anchor" aria-label="anchor" href="#api-failure"></a></h2>
+
+
+<p>A condition of class <code>rlmstudio_api_error</code> is raised when a REST call
+returns a response that the wrapper treats as a failure. The condition
+carries a <code>status</code> field, which holds the HTTP response status as an
+integer.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><a href="https://lmstudio.ai/docs/developer/rest/download" class="external-link">LM Studio Download Model API</a></p></div>
     </div>

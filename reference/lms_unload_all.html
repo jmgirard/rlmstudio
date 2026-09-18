@@ -68,6 +68,32 @@ were successfully unloaded. If no models were currently loaded, it
 invisibly returns <code>NULL</code>.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>This function calls <code><a href="list_models.html">list_models()</a></code> to find the loaded instances, then calls
+<code><a href="lms_unload.html">lms_unload()</a></code> once for each one. It raises <code>rlmstudio_no_server</code> itself,
+before the first call. It can raise <code>rlmstudio_api_error</code> through
+<code><a href="list_models.html">list_models()</a></code> and through <code><a href="lms_unload.html">lms_unload()</a></code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
+
+
+<p>Functions that call the LM Studio REST API check that a server answers at
+the <code>host</code> address. A condition of class <code>rlmstudio_no_server</code> is raised
+when the LM Studio server is not running. Start the server with
+<code><a href="lms_server_start.html">lms_server_start()</a></code>, or give <code>host</code> the address that your server listens
+on.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="api-failure">API failure<a class="anchor" aria-label="anchor" href="#api-failure"></a></h2>
+
+
+<p>A condition of class <code>rlmstudio_api_error</code> is raised when a REST call
+returns a response that the wrapper treats as a failure. The condition
+carries a <code>status</code> field, which holds the HTTP response status as an
+integer.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="lms_unload.html">lms_unload</a></code></p></div>
     </div>

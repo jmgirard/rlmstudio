@@ -2,6 +2,21 @@
 
 ## rlmstudio (development version)
 
+- The help pages now document the two error condition classes that this
+  package raises. A new help topic, `rlmstudio-conditions`, is the
+  source. It names the situation that raises `rlmstudio_no_server` and
+  the situation that raises `rlmstudio_api_error`. It states that an
+  `rlmstudio_api_error` condition carries a `status` field, which holds
+  the HTTP status as an integer. It shows how to catch each class with
+  [`tryCatch()`](https://rdrr.io/r/base/conditions.html). The same two
+  sections now appear on the help page of every exported function that
+  can raise one of these classes. The pages of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  and
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+  also name the function that they reach the abort through.
+
 - Every failed REST response now aborts through one path. This affects
   [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
   [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md),

@@ -248,6 +248,16 @@ Install, locate, and verify the LM Studio CLI installation.
 - [`lms_path()`](https://jmgirard.github.io/rlmstudio/reference/lms_path.md)
   : Get the absolute path to the LMS executable
 
+## Error Conditions
+
+The condition classes that the REST API functions raise, and how to
+catch them.
+
+- [`rlmstudio-conditions`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+  [`rlmstudio_no_server`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+  [`rlmstudio_api_error`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+  : Error conditions raised by rlmstudio
+
 # Articles
 
 ### All vignettes
