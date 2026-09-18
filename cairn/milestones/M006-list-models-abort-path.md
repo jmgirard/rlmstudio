@@ -1,13 +1,13 @@
 # M006: list_models() joins the shared REST abort path
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3
 - **Resolves:** —
 - **Surface tier:** user-facing. It changes the condition class, the message, and the fields a failed `list_models()` raises.
-- **Branch/PR:** —
+- **Branch/PR:** `m006-list-models-abort-path`
 
 ## Goal
 
@@ -58,14 +58,14 @@ names the unload functions. The other seven wrappers shipped in M005.
 
 ## Tasks
 
-- [ ] T1: In `R/list.R:53`, add `httr2::req_error(is_error = \(resp) FALSE)`
+- [x] T1: In `R/list.R:53`, add `httr2::req_error(is_error = \(resp) FALSE)`
       to the models request. Keep the parse under a status 200 check. Call
       `rlm_abort_api(resp, "API List Failed")` on every other status.
-- [ ] T2: In `tests/testthat/test-api-error.R:133`, add a `list_models` entry
+- [x] T2: In `tests/testthat/test-api-error.R:133`, add a `list_models` entry
       to `api_error_callers`. Key the loop expectation off
       `names(api_error_callers)`, so the count is read from the list rather
       than written as `7L`.
-- [ ] T3: In the same driver, replace the `grepl(..., fixed = TRUE)` substring
+- [x] T3: In the same driver, replace the `grepl(..., fixed = TRUE)` substring
       check at `tests/testthat/test-api-error.R:224`. Assert instead that the
       message ends with the expected fragment, so trailing text no longer
       passes.
@@ -85,6 +85,12 @@ names the unload functions. The other seven wrappers shipped in M005.
 - 2026-09-18: plan-gate criteria audit ran in full mode and returned five findings, all fixed here. AC1 now spells out the `<status>` sentinel. The eighth-wrapper test-file update moved from a criterion to T2. The house style clause came off AC3. The host-on-the-wire clause came off AC2. The failure table is now named as the shared domain of record.
 - 2026-09-18: plan gate chose deleting the coverage guard over hardening it. The guard reads package sources that R CMD check does not ship, so it never gated a merge. Falsified by a wrapper that reaches `R/` with no failure-table row and no test going red.
 - 2026-09-18: plan gate chose an ends-with match over the substring match, because the substring form passes on text appended after the message. Falsified by cli formatting that puts content after the label and the text.
+- 2026-09-18: question gate chose a candidate row for a replacement coverage guard over no record. It also chose a separate NEWS bullet over folding `list_models()` into the shipped seven-wrapper bullet.
+- 2026-09-18: T2 and T3 landed before T1, so the failure-table run that follows is the red-before-fix evidence. Minor reorder, no scope change.
+- 2026-09-18: T2 done. `list_models` joins `api_error_callers` and the loop expectation reads its length from the list. With `R/list.R` untouched, every row at both statuses reported a wrong class for `list_models` alone. The classes were `httr2_http_400` and `httr2_http_503`. The other seven callers reported `ok`.
+- 2026-09-18: T2 absorbed the coverage-guard deletion from T5, because the guard asserts seven callers and contradicts the eighth entry in the same file. Minor reorder, no scope change.
+- 2026-09-18: T3 done. The driver matches the tail of the condition message with `endsWith()` in place of the fixed substring `grepl()`.
+- 2026-09-18: T1 done. `R/list.R` turns the httr2 error policy off and aborts through `rlm_abort_api(resp, "API List Failed")` on any status other than 200. The failure-table file then went green, and `devtools::test()` was clean.
 
 ## Decisions
 

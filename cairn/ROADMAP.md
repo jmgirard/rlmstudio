@@ -9,7 +9,7 @@ _Last hygiene pass: 2026-09-18 (M006 plan: added the M006 row, absorbed three ca
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M006 | list_models() joins the shared REST abort path | planned | none | normal | milestones/M006-list-models-abort-path.md |
+| M006 | list_models() joins the shared REST abort path | in-progress | none | normal | milestones/M006-list-models-abort-path.md |
 | M005 | One abort path for the seven REST failure branches | done | none | normal | milestones/archive/M005-api-error-helper.md |
 | M004 | Response and empty-list branch tests for the two unload functions | done | none | normal | milestones/archive/M004-unload-branch-tests.md |
 | M003 | Class tests for the ten server-down abort sites | done | none | normal | milestones/archive/M003-no-server-class-tests.md |
