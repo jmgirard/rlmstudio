@@ -23,6 +23,7 @@ Imports:
     utils
 Suggests:
     httptest2,
+    httpuv,
     knitr,
     mockery,
     rmarkdown,

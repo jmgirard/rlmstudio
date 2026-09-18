@@ -52,8 +52,11 @@ local_request_recorder <- function(
 
 # Read the HTTP method and path a captured request would send. httr2 infers the
 # method from the presence of a body rather than storing it on the request, so
-# req_dry_run() is what reports the verb.
+# req_dry_run() is what reports the verb. That call needs httpuv, which is a
+# suggested package, so a machine without it skips the calling test rather than
+# failing it.
 request_target <- function(req) {
+  testthat::skip_if_not_installed("httpuv")
   out <- httr2::req_dry_run(req, quiet = TRUE)
   list(method = out$method, path = out$path)
 }

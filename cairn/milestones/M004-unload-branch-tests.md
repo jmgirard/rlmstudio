@@ -150,6 +150,8 @@ owed. No user-visible behavior changes.
 - 2026-09-18: three fresh-context reviewers ran. The prior-review and blame-history lenses found nothing blocking. The diff-bug lens reported twelve findings, and every claim naming a plant was re-run before triage. No finding met the return floor.
 - 2026-09-18: gate directed two fixes. The mock recorder now applies the request's error policy, and D-004 records the HTTP-testing style choice. Five findings became four candidate rows, three were rejected, and two were noted.
 - 2026-09-18: step-7 approval: m004-unload-branch-tests approved for merge.
+- 2026-09-18: CI on PR #5 failed two tests that the local suite passed. `httr2::req_dry_run()` needs `httpuv`, which is present on this machine and absent on the runners.
+- 2026-09-18: gate chose adding `httpuv` to Suggests over reading the path off `req$url`, recorded as D-005. When `httpuv` is absent, `request_target()` now skips its caller. Suite 100 pass, check 0/0/0.
 
 ## Decisions
 
