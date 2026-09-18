@@ -21,6 +21,29 @@ invisibly returns \code{NULL}.
 \description{
 Retrieves a list of all currently loaded models and unloads them one by one.
 }
+\details{
+This function calls \code{\link[=list_models]{list_models()}} to find the loaded instances, then calls
+\code{\link[=lms_unload]{lms_unload()}} once for each one. It raises \code{rlmstudio_no_server} itself,
+before the first call. It can raise \code{rlmstudio_api_error} through
+\code{\link[=list_models]{list_models()}} and through \code{\link[=lms_unload]{lms_unload()}}.
+}
+\section{Server not running}{
+
+Functions that call the LM Studio REST API check that a server answers at
+the \code{host} address. A condition of class \code{rlmstudio_no_server} is raised
+when the LM Studio server is not running. Start the server with
+\code{\link[=lms_server_start]{lms_server_start()}}, or give \code{host} the address that your server listens
+on.
+}
+
+\section{API failure}{
+
+A condition of class \code{rlmstudio_api_error} is raised when a REST call
+returns a response that the wrapper treats as a failure. The condition
+carries a \code{status} field, which holds the HTTP response status as an
+integer.
+}
+
 \examples{
 \dontrun{
 lms_server_start()

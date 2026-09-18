@@ -50,3 +50,26 @@ Send a prompt to a locally running LM Studio model. This wrapper
 automatically routes your request to the appropriate subfunction based on the
 selected API type.
 }
+\details{
+This function calls \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, or
+\code{\link[=lms_chat_native]{lms_chat_native()}}, according to \code{api_type}. It runs no request of its own.
+It can raise \code{rlmstudio_no_server} and \code{rlmstudio_api_error} through
+\code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, or \code{\link[=lms_chat_native]{lms_chat_native()}}.
+}
+\section{Server not running}{
+
+Functions that call the LM Studio REST API check that a server answers at
+the \code{host} address. A condition of class \code{rlmstudio_no_server} is raised
+when the LM Studio server is not running. Start the server with
+\code{\link[=lms_server_start]{lms_server_start()}}, or give \code{host} the address that your server listens
+on.
+}
+
+\section{API failure}{
+
+A condition of class \code{rlmstudio_api_error} is raised when a REST call
+returns a response that the wrapper treats as a failure. The condition
+carries a \code{status} field, which holds the HTTP response status as an
+integer.
+}
+

@@ -14,6 +14,9 @@
 #' @return A character string containing the download \code{job_id}, or
 #'   \code{"already_downloaded"} if already downloaded.
 #'
+#' @inheritSection rlmstudio-conditions Server not running
+#' @inheritSection rlmstudio-conditions API failure
+#'
 #' @export
 #'
 #' @examples
@@ -96,6 +99,9 @@ lms_download <- function(
 #'
 #' @return An object of class \code{lms_download_status} containing the download
 #'   status.
+#'
+#' @inheritSection rlmstudio-conditions Server not running
+#' @inheritSection rlmstudio-conditions API failure
 #'
 #' @export
 #'

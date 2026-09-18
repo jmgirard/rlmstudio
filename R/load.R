@@ -28,6 +28,9 @@
 #'   upon success. If \code{echo_load_config = TRUE}, it instead invisibly
 #'   returns a list containing the model's detailed load configuration.
 #'
+#' @inheritSection rlmstudio-conditions Server not running
+#' @inheritSection rlmstudio-conditions API failure
+#'
 #' @export
 #'
 #' @examples

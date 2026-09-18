@@ -67,3 +67,8 @@ reference:
       - has_lms
       - check_lms_version
       - lms_path
+
+  - title: "Error Conditions"
+    desc: "The condition classes that the REST API functions raise, and how to catch them."
+    contents:
+      - rlmstudio-conditions
