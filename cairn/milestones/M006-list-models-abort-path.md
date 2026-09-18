@@ -30,7 +30,7 @@ names the unload functions. The other seven wrappers shipped in M005.
 
 ## Acceptance criteria
 
-- [ ] AC1: Take every row of `api_error_table` at every status in
+- [x] AC1: Take every row of `api_error_table` at every status in
       `api_error_statuses` (`tests/testthat/test-api-error.R`, the shared
       domain of record for all REST wrappers). At each one, `list_models()`
       raises a condition that inherits `rlmstudio_api_error`. Its `status`
@@ -38,15 +38,15 @@ names the unload functions. The other seven wrappers shipped in M005.
       `API List Failed: ` and then the row `text`. Where that `text` is the
       sentinel `<status>`, the message ends with `HTTP Status <n>` for the
       status under test.
-- [ ] AC2: `list_models()` keeps its success contract. Against the recorded
+- [x] AC2: `list_models()` keeps its success contract. Against the recorded
       `list_models` fixture it returns a data frame that carries the columns
       `state`, `type`, `display_name`, and `key`. With `is_server_running()`
       returning `FALSE` it aborts with the condition class
       `rlmstudio_no_server`. The request it sends targets the path
       `api/v1/models`.
-- [ ] AC3: `NEWS.md` names the changed failure behavior of `list_models()`
+- [x] AC3: `NEWS.md` names the changed failure behavior of `list_models()`
       under the development-version heading.
-- [ ] AC4: `devtools::document()` produces no diff. `devtools::test()` is
+- [x] AC4: `devtools::document()` produces no diff. `devtools::test()` is
       clean. `devtools::check()` reports 0 errors and 0 warnings.
 
 ## Coverage
@@ -97,7 +97,35 @@ names the unload functions. The other seven wrappers shipped in M005.
 - 2026-09-18: a candidate row for a replacement coverage guard was added to the ROADMAP, per the question gate. Search-first found the `stop_if_no_server()` guard row, which is a different call-site family, so the new row cross-references it rather than merging into it.
 - 2026-09-18: claim audit: 10 claims read, 0 corrected. Files were `NEWS.md`, `tests/testthat/test-api-error.R`, and `tests/testthat/test-list.R`. The reader raised two notes that are not claim defects. The NEWS bullet omits the cli `✖ ` prefix the real message carries, which matches the three shipped bullets above it. The new path assertion needs httpuv, a suggested package, so on a machine without it that one assertion skips while the request-count assertion still runs.
 - 2026-09-18: `devtools::document()` produced no diff. `devtools::test()` was clean. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes.
+- 2026-09-18: review step 3 done. All four criteria carry fresh evidence in the Review section and all four boxes are ticked. Review step 4 done. `cairn_validate.py` passed every check and fired no advisory. The toolchain gate passed, and no pkgdown site is present. Checkpoint: the three review lenses are still running, so no findings are recorded yet.
 
 ## Decisions
 
 ## Review
+
+2026-09-18. Reviewed at `7f1dee6` on `m006-list-models-abort-path`, even with
+`origin/main` at `8553c85`.
+
+### Acceptance-criterion evidence
+
+- AC1: pass. The table holds 22 rows and runs at statuses 400 and 503, so
+  `list_models()` was driven through 44 cases. A direct run over those cases
+  reported `ok` at all 44. The condition inherits `rlmstudio_api_error`. Its
+  `status` field equals the status under test as an integer. The message ends
+  with `API List Failed: ` plus the row `text`. Where the row `text` is the
+  `<status>` sentinel, the message ends with `HTTP Status <n>`. The driver in
+  `tests/testthat/test-api-error.R` covers all eight callers and passed in the
+  same state.
+- AC2: pass. `tests/testthat/test-list.R` ran clean, five expectations, no
+  skips. The fixture-backed test returns a data frame that carries `state`,
+  `type`, `display_name`, and `key`. With `is_server_running()` returning
+  `FALSE` the call aborts with the class `rlmstudio_no_server`. The recorded
+  request targets the path `/api/v1/models`, and exactly one request goes out.
+- AC3: pass. `NEWS.md` carries a bullet under the `# rlmstudio (development
+  version)` heading. It names the new message, the condition class, the
+  `status` field, and the `HTTP Status <n>` fallback. It states the old raw
+  httr2 error as the before state.
+- AC4: pass. `devtools::document()` left the working tree clean, so it produced
+  no diff. `devtools::test()` was clean across all fourteen test files.
+  `devtools::check()` reported `Status: OK` with 0 errors, 0 warnings, and 0
+  notes on version 0.2.2.9000.
