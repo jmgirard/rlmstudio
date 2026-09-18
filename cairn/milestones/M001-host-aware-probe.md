@@ -1,6 +1,6 @@
 # M001: Honor the host argument and fail fast on a stopped server
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -58,6 +58,8 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 - 2026-09-17: T3 done. `stop_if_no_server(host)` in R/serve.R replaces all ten sites (seven aborts, three soft returns). Four class tests in test-download.R and test-list.R; all four fail against the pre-T3 code.
 - 2026-09-17: T4 done. `has_lms()` wraps `lms_path()`; `check_lms_version()` looks the path up once. Four tests in test-setup.R; the env-var test fails against the old `has_lms()`, the other three pass under both, as expected.
 - 2026-09-17: T5 done. Three NEWS bullets. `document()` no diff, `test()` 53 pass, `check()` 0 errors, 0 warnings, 0 notes after adding `^CLAUDE\.md$` to `.Rbuildignore` (the one NOTE was that file at top level).
+- 2026-09-17: claim audit: 26 claims read, 0 corrected — NEWS.md, R/serve.R, R/setup.R, man/has_lms.Rd, man/check_lms_version.Rd, man/rlmstudio-package.Rd, tests/testthat/test-download.R, test-list.R, test-serve.R, test-setup.R. Reader noted that the `quiet` argument of `list_models()` no longer governs the server-down path, which now aborts unconditionally.
+- 2026-09-17: all tasks checked; verify slot clean; status set to review.
 
 ## Decisions
 

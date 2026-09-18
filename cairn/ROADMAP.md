@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-17 (scaffolded by cairn-init)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M001 | Honor the host argument and fail fast on a stopped server | in-progress | — | high | milestones/M001-host-aware-probe.md |
+| M001 | Honor the host argument and fail fast on a stopped server | review | — | high | milestones/M001-host-aware-probe.md |
 | M002 | R CMD check on macOS, Windows, and Ubuntu in CI | planned | — | high | milestones/M002-platform-ci.md |
 
 ## Candidates
