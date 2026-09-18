@@ -42,7 +42,7 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 - [x] T1: Give `is_server_running()` a `host = "http://localhost:1234"` argument. Parse with `httr2::url_parse()`; use the URL's hostname and port, and 1234 when the URL names no port. Write the AC1 tests in `tests/testthat/test-serve.R` first.
 - [x] T2: Pass `host` at every call site (`R/chat.R`, `R/download.R`, `R/list.R`, `R/load.R`, `R/unload.R`) and in the `@examples` block of `is_server_running()` in `R/serve.R`. Change every test mock from `function() TRUE` to `function(...) TRUE`.
 - [x] T3: Add an internal helper `stop_if_no_server(host)` in `R/serve.R` that aborts with class `rlmstudio_no_server` and the existing message. Replace the seven existing abort sites and the two soft returns in `R/list.R` and `R/download.R` with it. Write the AC3 tests first. Sub-task: also replace the soft return in `lms_download_status()` at `R/download.R:134`, with a test of its own.
-- [ ] T4: Rewrite `has_lms()` as a `tryCatch` around `lms_path()`. Update `check_lms_version()` and the roxygen of both. Write the AC4 tests first.
+- [x] T4: Rewrite `has_lms()` as a `tryCatch` around `lms_path()`. Update `check_lms_version()` and the roxygen of both. Write the AC4 tests first.
 - [ ] T5: Add the three `NEWS.md` bullets. Run `devtools::document()` and `devtools::test()`; run `devtools::check()` and record the result.
 
 ## Work log
@@ -56,6 +56,7 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 - 2026-09-17: T1 done. Four probe tests in test-serve.R, all failing against the old probe with an unused-argument error. Installed httptest2 and mockery locally so the suite runs. `document()` refreshed `man/rlmstudio-package.Rd`, stale since the DESCRIPTION edit in 31fde62.
 - 2026-09-17: T2 done. All ten call sites under `R/` pass `host`; grep shows no zero-argument occurrence under `R/`. Four test files now mock the probe with `function(...) TRUE`. The `skip_if_no_server()` helper under `tests/` keeps the default host.
 - 2026-09-17: T3 done. `stop_if_no_server(host)` in R/serve.R replaces all ten sites (seven aborts, three soft returns). Four class tests in test-download.R and test-list.R; all four fail against the pre-T3 code.
+- 2026-09-17: T4 done. `has_lms()` wraps `lms_path()`; `check_lms_version()` looks the path up once. Four tests in test-setup.R; the env-var test fails against the old `has_lms()`, the other three pass under both, as expected.
 
 ## Decisions
 
