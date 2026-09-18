@@ -79,7 +79,7 @@ owed. No user-visible behavior changes.
 
 ## Tasks
 
-- [ ] T1: Add the success-path and dots tests for `lms_unload()`. Mock
+- [x] T1: Add the success-path and dots tests for `lms_unload()`. Mock
       `is_server_running` to `TRUE` and `httr2::req_perform` to capture the
       request and return a 200 response. Assert the returned value, the request
       count, the URL path, and both body fields (R/unload.R:34).
@@ -117,6 +117,7 @@ owed. No user-visible behavior changes.
 - 2026-09-18: question gate chose `httr2::req_dry_run(quiet = TRUE)` for the method and path assertions, over the unexported `httr2:::req_method_get()` and over leaving the verb unasserted.
 - 2026-09-18: question gate chose a shared `tests/testthat/helper-mock-http.R` for the request-capturing mock, over a file-local helper and over an inline copy per test.
 - 2026-09-18: minor amendment to T6. The planted-defect pass edits `R/unload.R` in place and restores it with git, because `devtools::test()` loads only the real file.
+- 2026-09-18: T1 done. New `tests/testthat/helper-mock-http.R` records requests and answers them with a synthetic response. Two tests cover the success path and the dots merge. Suite 75 pass, 0 fail.
 
 ## Decisions
 
