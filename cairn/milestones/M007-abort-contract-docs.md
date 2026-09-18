@@ -1,13 +1,13 @@
 # M007: The abort contract reaches the help pages
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3
 - **Resolves:** —
 - **Surface tier:** user-facing — the help pages are the package's documented error contract
-- **Branch/PR:** —
+- **Branch/PR:** `m007-abort-contract-docs`
 
 ## Goal
 
@@ -84,7 +84,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 
 ## Tasks
 
-- [ ] T1: Write `R/conditions.R`: a doc-only roxygen block ending in `NULL`,
+- [x] T1: Write `R/conditions.R`: a doc-only roxygen block ending in `NULL`,
       with `@name rlmstudio-conditions`, `@title`, two `@section` blocks titled
       exactly `Server not running` and `API failure`, and an `@examples` block
       whose `\dontrun{}` body catches each class with `tryCatch()`. Do not add
@@ -124,6 +124,9 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: plan gate chose a promise bounded to the two named greps over a promise covering every path that can raise either class, because no stated procedure enumerates the wider domain and the M005 lesson says a guard that greps `R/` does not run under `R CMD check`; falsified by a raiser of either class that neither grep prints.
 - 2026-09-18: plan gate chose a visible pkgdown `Error conditions` section over `@keywords internal`, because a user looking for how to catch an error reads the site; falsified by `pkgdown::check_pkgdown()` failing on the new topic.
 - 2026-09-18: AC5 binds instrument properties and is a standing D-118 finding, kept because the milestone template mandates a verify-slot criterion for code milestones and the audit called it standard repo hygiene rather than a novel instrument; the NOTE-justification half moved out of the criterion into T5.
+- 2026-09-18: implement question gate settled two items. The three exports that reach an abort only through another function carry the two shared sections as well as their own delegation sentence. The drafted section wording was accepted as drafted.
+- 2026-09-18: minor amendment from that gate. T2's function list grows from ten to eleven, adding `lms_chat()`. No criterion changes. AC2 and AC3 still bind the ten call sites the greps name, and the eleventh page is additive.
+- 2026-09-18: T1 done: `R/conditions.R` written and `man/rlmstudio-conditions.Rd` generated. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
 
 ## Decisions
 
