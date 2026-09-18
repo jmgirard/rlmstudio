@@ -95,7 +95,7 @@ owed. No user-visible behavior changes.
 - [x] T4: Add the unload-loop test for `lms_unload_all()`. Mock `list_models`
       to report two loaded instances. Assert the two captured request bodies,
       their order, the forwarded dots, and the returned ids (R/unload.R:148).
-- [ ] T5: Add the four instance-id shape tests and the `NA` and empty filter
+- [x] T5: Add the four instance-id shape tests and the `NA` and empty filter
       test for `lms_unload_all()` (R/unload.R:120).
 - [ ] T6: Run the planted-defect pass. For each criterion, break the named
       behavior in `R/unload.R` itself, because `devtools::test()` loads only the
@@ -128,6 +128,7 @@ owed. No user-visible behavior changes.
 - 2026-09-18: T2 done. Five tests cover the two object sources, the three shapes that reach the raw body text, and the empty-string fallback to the HTTP status number. Suite 81 pass, 0 fail.
 - 2026-09-18: T3 done. One test asserts the message, the invisible `NULL`, and zero recorded requests on the nothing-loaded path. Suite 85 pass, 0 fail.
 - 2026-09-18: T4 done. One test asserts two requests, their instance ids in order, the forwarded `ttl`, both unload paths, and the returned ids. Suite 91 pass, 0 fail.
+- 2026-09-18: T5 done. Six tests cover the four `loaded_instances` shapes, the all-dropped filter result, and a partial filter. The `identifier` and `id` shapes carry a decoy first column, so a first-column fallback cannot pass them. Suite 100 pass, 0 fail.
 
 ## Decisions
 

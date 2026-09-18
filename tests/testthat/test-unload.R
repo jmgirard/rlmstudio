@@ -167,3 +167,72 @@ test_that("lms_unload_all unloads each reported instance in order and forwards d
     rep("/api/v1/models/unload", 2L)
   )
 })
+
+# Run lms_unload_all() over one loaded_instances shape and return the ids it
+# read, so each shape test states only its own shape and expected id.
+ids_read_from <- function(instances) {
+  testthat::local_mocked_bindings(
+    is_server_running = function(...) TRUE,
+    list_models = function(...) loaded_models_frame(instances),
+    .package = "rlmstudio"
+  )
+  local_request_recorder(mock_response(200L))
+  suppressMessages(lms_unload_all())
+}
+
+test_that("lms_unload_all reads the identifier column, not the first column", {
+  ids <- ids_read_from(
+    data.frame(
+      decoy = "wrong-a",
+      identifier = "inst-id-a",
+      stringsAsFactors = FALSE
+    )
+  )
+  expect_equal(ids, "inst-id-a")
+})
+
+test_that("lms_unload_all reads the id column, not the first column", {
+  ids <- ids_read_from(
+    data.frame(decoy = "wrong-b", id = "inst-id-b", stringsAsFactors = FALSE)
+  )
+  expect_equal(ids, "inst-id-b")
+})
+
+test_that("lms_unload_all falls back to the first column when neither name is present", {
+  ids <- ids_read_from(
+    data.frame(
+      first_col = "inst-id-c",
+      other = "ignored",
+      stringsAsFactors = FALSE
+    )
+  )
+  expect_equal(ids, "inst-id-c")
+})
+
+test_that("lms_unload_all reads a plain character vector of instance ids", {
+  ids <- ids_read_from(c("inst-id-d", "inst-id-e"))
+  expect_equal(ids, c("inst-id-d", "inst-id-e"))
+})
+
+test_that("lms_unload_all drops NA and empty ids and returns NULL when none remain", {
+  local_mocked_bindings(
+    is_server_running = function(...) TRUE,
+    list_models = function(...) {
+      loaded_models_frame(c(NA_character_, ""))
+    }
+  )
+  recorder <- local_request_recorder(mock_response(200L))
+
+  expect_message(
+    result <- expect_invisible(lms_unload_all()),
+    "No models are currently loaded"
+  )
+
+  expect_null(result)
+  expect_length(recorder$requests, 0L)
+})
+
+test_that("lms_unload_all keeps the good ids when only some are NA or empty", {
+  ids <- ids_read_from(c("inst-id-f", NA_character_, "", "inst-id-g"))
+  expect_equal(ids, c("inst-id-f", "inst-id-g"))
+})
