@@ -39,7 +39,11 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rlmstudio-development-version">rlmstudio (development version)<a class="anchor" aria-label="anchor" href="#rlmstudio-development-version"></a></h2>
-</div>
+<ul><li>The server probe now honors the <code>host</code> argument. This affects <code><a href="../reference/list_models.html">list_models()</a></code>, <code><a href="../reference/lms_load.html">lms_load()</a></code>, <code><a href="../reference/lms_unload.html">lms_unload()</a></code>, <code><a href="../reference/lms_unload_all.html">lms_unload_all()</a></code>, <code><a href="../reference/lms_download.html">lms_download()</a></code>, <code><a href="../reference/lms_download_status.html">lms_download_status()</a></code>, <code><a href="../reference/lms_chat_openai.html">lms_chat_openai()</a></code>, <code><a href="../reference/lms_chat_openresponses.html">lms_chat_openresponses()</a></code>, <code><a href="../reference/lms_chat_native.html">lms_chat_native()</a></code>, and <code><a href="../reference/lms_chat_batch.html">lms_chat_batch()</a></code>. Before, the probe always tried <code>localhost:1234</code>, so a server on another hostname or port was reported as not running.</li>
+<li>If the server is not running, <code><a href="../reference/list_models.html">list_models()</a></code>, <code><a href="../reference/lms_download.html">lms_download()</a></code>, and <code><a href="../reference/lms_download_status.html">lms_download_status()</a></code> now abort instead of returning an empty data frame or <code>NULL</code>. Every server-down abort carries the condition class <code>rlmstudio_no_server</code>.</li>
+<li>
+<code><a href="../reference/has_lms.html">has_lms()</a></code> now uses the same lookup as <code><a href="../reference/lms_path.html">lms_path()</a></code>: the <code>RLMSTUDIO_LMS_PATH</code> environment variable, then the system <code>PATH</code>, then common installation directories. Before, it checked only the <code>PATH</code>, so the two functions did not always agree.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.2" id="rlmstudio-022">rlmstudio 0.2.2<a class="anchor" aria-label="anchor" href="#rlmstudio-022"></a></h2><p class="text-muted">CRAN release: 2026-05-05</p>
 <ul><li>Fix CRAN issues</li>

@@ -32,8 +32,7 @@ the automated installation script.
 
 # Verify the CLI is available before proceeding
 has_lms()
-#>   lms 
-#> FALSE
+#> [1] FALSE
 ```
 
 ## Step-by-Step Guide

@@ -17,7 +17,9 @@ check_lms_version(min_version = "0.4.0")
 ## Value
 
 A logical scalar: `TRUE` if the LM Studio CLI version meets or exceeds
-the specified `min_version`, and `FALSE` otherwise.
+the specified `min_version`, and `FALSE` otherwise, including when
+[`lms_path()`](https://jmgirard.github.io/rlmstudio/reference/lms_path.md)
+does not find the CLI.
 
 ## Examples
 

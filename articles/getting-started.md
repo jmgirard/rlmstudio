@@ -36,8 +36,7 @@ your console to open the official download page.
 
 # Check if LM Studio is available on this system
 has_lms()
-#>   lms 
-#> FALSE
+#> [1] FALSE
 ```
 
 ## Step-by-Step Guide

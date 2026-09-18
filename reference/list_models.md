@@ -34,7 +34,8 @@ list_models(
 - quiet:
 
   Logical. If `TRUE`, suppresses informative console messages. Defaults
-  to `FALSE`.
+  to `FALSE`. Does not suppress the abort raised when the server is not
+  running.
 
 - host:
 
