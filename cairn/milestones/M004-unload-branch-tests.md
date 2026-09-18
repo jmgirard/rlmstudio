@@ -92,7 +92,7 @@ owed. No user-visible behavior changes.
       `list_models` to return an empty data frame. Assert the message, the
       invisible `NULL`, and that `httr2::req_perform` was never called
       (R/unload.R:113).
-- [ ] T4: Add the unload-loop test for `lms_unload_all()`. Mock `list_models`
+- [x] T4: Add the unload-loop test for `lms_unload_all()`. Mock `list_models`
       to report two loaded instances. Assert the two captured request bodies,
       their order, the forwarded dots, and the returned ids (R/unload.R:148).
 - [ ] T5: Add the four instance-id shape tests and the `NA` and empty filter
@@ -127,6 +127,7 @@ owed. No user-visible behavior changes.
 - 2026-09-18: probing found a third latent defect. A JSON `error` field holding an empty array crashes `lms_unload()` with "argument is of length zero". Filed as a candidate row.
 - 2026-09-18: T2 done. Five tests cover the two object sources, the three shapes that reach the raw body text, and the empty-string fallback to the HTTP status number. Suite 81 pass, 0 fail.
 - 2026-09-18: T3 done. One test asserts the message, the invisible `NULL`, and zero recorded requests on the nothing-loaded path. Suite 85 pass, 0 fail.
+- 2026-09-18: T4 done. One test asserts two requests, their instance ids in order, the forwarded `ttl`, both unload paths, and the returned ids. Suite 91 pass, 0 fail.
 
 ## Decisions
 

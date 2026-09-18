@@ -127,3 +127,43 @@ test_that("lms_unload_all returns early when list_models reports nothing loaded"
   expect_null(result)
   expect_length(recorder$requests, 0L)
 })
+
+# Build the one-row list_models() result that lms_unload_all() reads, with
+# `instances` as the nested loaded_instances value for that row.
+loaded_models_frame <- function(instances) {
+  models <- data.frame(model_key = "model-a", stringsAsFactors = FALSE)
+  models$loaded_instances <- list(instances)
+  models
+}
+
+test_that("lms_unload_all unloads each reported instance in order and forwards dots", {
+  local_mocked_bindings(
+    is_server_running = function(...) TRUE,
+    list_models = function(...) {
+      loaded_models_frame(
+        data.frame(identifier = c("inst-1", "inst-2"), stringsAsFactors = FALSE)
+      )
+    }
+  )
+  recorder <- local_request_recorder(mock_response(200L))
+
+  suppressMessages({
+    result <- expect_invisible(lms_unload_all(ttl = 60))
+  })
+
+  expect_equal(result, c("inst-1", "inst-2"))
+  expect_length(recorder$requests, 2L)
+
+  bodies <- lapply(recorder$requests, function(req) req$body$data)
+  expect_equal(
+    vapply(bodies, function(b) b$instance_id, character(1)),
+    c("inst-1", "inst-2")
+  )
+  expect_equal(vapply(bodies, function(b) b$ttl, numeric(1)), c(60, 60))
+
+  targets <- lapply(recorder$requests, request_target)
+  expect_equal(
+    vapply(targets, function(t) t$path, character(1)),
+    rep("/api/v1/models/unload", 2L)
+  )
+})
