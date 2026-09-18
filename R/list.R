@@ -52,7 +52,12 @@ list_models <- function(
 
   resp <- lms_client(host) |>
     httr2::req_url_path("api/v1/models") |>
+    httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
+
+  if (httr2::resp_status(resp) != 200) {
+    rlm_abort_api(resp, "API List Failed")
+  }
 
   raw_content <- httr2::resp_body_string(resp)
   full_data <- jsonlite::fromJSON(raw_content, simplifyDataFrame = TRUE)

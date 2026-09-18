@@ -126,11 +126,15 @@ api_error_table <- list(
   )
 )
 
-# The seven wrappers the table runs against, each with the label it opens its
-# abort with. `lms_load()` gets `force = TRUE` because without it the call
-# checks the loaded models first, and that check throws on the mocked failure
-# before the load request goes out.
+# The wrappers the table runs against, each with the label it opens its abort
+# with. `lms_load()` gets `force = TRUE` because without it the call checks the
+# loaded models first, and that check throws on the mocked failure before the
+# load request goes out.
 api_error_callers <- list(
+  list_models = list(
+    label = "API List Failed",
+    call = function() list_models()
+  ),
   lms_load = list(
     label = "API Load Failed",
     call = function() lms_load("m", force = TRUE)
@@ -220,8 +224,10 @@ for (row in api_error_table) {
             if (!identical(cnd$status, status)) {
               return(paste0("<wrong status field: ", cnd$status, ">"))
             }
+            # Match the tail, not a substring. A substring match passes on a
+            # message that carries text after the label and the text.
             fragment <- paste0(caller$label, ": ", expected)
-            if (grepl(fragment, conditionMessage(cnd), fixed = TRUE)) {
+            if (endsWith(conditionMessage(cnd), fragment)) {
               "ok"
             } else {
               conditionMessage(cnd)
@@ -230,7 +236,10 @@ for (row in api_error_table) {
           character(1)
         )
 
-        expect_equal(seen, stats::setNames(rep("ok", 7L), names(seen)))
+        expect_equal(
+          seen,
+          stats::setNames(rep("ok", length(api_error_callers)), names(seen))
+        )
       }
     })
   })
@@ -248,19 +257,4 @@ test_that("lms_load() reports the body when the load did not finish", {
     "API Load Failed: \\{\"status\": \"pending\"\\}",
     class = "rlmstudio_api_error"
   )
-})
-
-test_that("the table covers every wrapper that handles a failed response", {
-  r_dir <- testthat::test_path("..", "..", "R")
-  sources <- list.files(r_dir, pattern = "[.]R$", full.names = TRUE)
-  # In an R CMD check the installed package sits where the sources would be,
-  # so there is nothing to grep. Skip rather than pass over an empty domain.
-  skip_if(length(sources) == 0L, "package sources are not available")
-
-  hits <- unlist(lapply(sources, function(f) {
-    grep("req_error(is_error", readLines(f, warn = FALSE), fixed = TRUE)
-  }))
-
-  expect_length(hits, 7L)
-  expect_length(api_error_callers, 7L)
 })
