@@ -1,6 +1,6 @@
 # M005: One abort path for the seven REST failure branches
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -133,6 +133,7 @@ body-shape table drives every wrapper through every failure branch.
 - 2026-09-18: T2. `R/utils-api-error.R` holds `is_message_string()`, `api_error_message()`, and `rlm_abort_api()`.
 - 2026-09-18: T3 and T4. All seven wrappers route through the helper. Three `test-unload.R` cases asserted the superseded text for the three changed shapes and were rewritten.
 - 2026-09-18: T5. NEWS.md names all seven functions and the new condition class. DESIGN.md Conventions gained a bullet on `rlm_abort_api()`. `devtools::document()` produces no diff. `devtools::check()` is clean at 0 errors, 0 warnings, 0 notes.
+- 2026-09-18: claim audit: 37 claims read, 4 corrected — NEWS.md. One was wrong: the four non-chat wrappers did not print the raw body for every JSON body with no readable message. Three were narrower than written: `lms_chat_native()`'s error-object fragment, the empty-body crash, and the omission of `lms_unload_all()` and `lms_chat_batch()`. The same reader re-read all four and found no remaining defect.
 - 2026-09-18: candidate row added. A non-JSON failure body becomes the abort message in full, with no length bound.
 - 2026-09-18: measured against the Scope line "Two crash cases are fixed there". The baseline crashed on five bodies at the four `API ...` wrappers and on four at `lms_chat_native()`. The Scope count is low and is left unedited, because Scope changes only through the amendment gate.
 
