@@ -26,6 +26,10 @@ _Last hygiene pass: 2026-09-18 (M003 review: archived M003, one new candidate ro
 - The six API-failure aborts carry no condition class, so a caller has to match message text to catch one, added 2026-09-18, M004 plan gate
 - On a failed unload with an empty response body, `lms_unload()` reports httr2's "Can't retrieve empty body." instead of the intended "API Unload Failed: HTTP Status <n>". Both reads of the body abort, so the status-number fallback is unreachable that way, added 2026-09-18, M004 question gate
 - A JSON `error` field holding an empty array crashes `lms_unload()` with "argument is of length zero" instead of reporting a failed unload. The empty-string check compares a zero-length value, added 2026-09-18, M004 T2
+- No unload test asserts that `host` reaches the wire, and none asserts that `lms_unload_all()` forwards it. Dropping `host = host` leaves the suite green, added 2026-09-18, M004 review finding 2
+- The unload body assertions read `req$body$data`, an httr2 internal field, rather than the serialized request that `req_dry_run()` reports, added 2026-09-18, M004 review finding 3
+- Three unload tests do not discriminate their branch. They are the character-vector shape, the non-JSON body, and the two message matchers, added 2026-09-18, M004 review findings 5, 8, and 11
+- Fold the inline `req_perform` closures in `test-load.R` and `test-chat.R` into the shared recorder, leaving the two styles D-004 sanctions, added 2026-09-18, M004 review finding 7
 - When only R-devel breaks, a red `ubuntu-latest (devel)` job still blocks the merge. Decide its disposition, added 2026-09-17, M002 review finding 6
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
 - [low] Unify the four workflow files on one `actions/checkout` version, a `concurrency` group, and a `workflow_dispatch` trigger, added 2026-09-17, M002 findings 7 and 8

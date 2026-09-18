@@ -146,6 +146,10 @@ owed. No user-visible behavior changes.
 - 2026-09-18: T7 done. `devtools::document()` produced no diff. `devtools::test()` gave 100 pass, 0 fail, 0 warn, 0 skip. `devtools::check()` gave 0 errors, 0 warnings, 0 notes, so no NOTE reason is owed.
 - 2026-09-18: claim audit: not owed — internal tier.
 - 2026-09-18: status set to review at the end of implement.
+- 2026-09-18: review ran every acceptance criterion with fresh evidence. Suite 100 pass, 0 fail. `devtools::check()` 0 errors, 0 warnings, 0 notes. `cairn_validate` clean with no advisory. Every plant a criterion names was re-run and went red.
+- 2026-09-18: three fresh-context reviewers ran. The prior-review and blame-history lenses found nothing blocking. The diff-bug lens reported twelve findings, and every claim naming a plant was re-run before triage. No finding met the return floor.
+- 2026-09-18: gate directed two fixes. The mock recorder now applies the request's error policy, and D-004 records the HTTP-testing style choice. Five findings became four candidate rows, three were rejected, and two were noted.
+- 2026-09-18: step-7 approval: m004-unload-branch-tests approved for merge.
 
 ## Decisions
 
@@ -247,3 +251,15 @@ plant was re-run against `R/unload.R` before it was triaged.
 No finding meets the return floor. Every plant an acceptance criterion names
 was re-run and went red. No criterion failed inside the domain of its own named
 procedure. The package's behavior is unchanged by this branch.
+
+### Gate outcome
+
+The maintainer directed the two fix-now items and candidate rows for the rest.
+Finding 1 is fixed. `local_request_recorder()` now reads
+`req$policies$error_is_error` and raises through `httr2::resp_check_status()`.
+The real suite stays green, and deleting the `req_error()` line from
+`R/unload.R` now gives 6 fail, 28 pass. Finding 7 is fixed as D-004, which
+sanctions two HTTP-testing styles and names the third as a candidate row.
+Findings 2, 3, 5, 8, and 11 became four candidate rows. Findings 4, 10, and 12
+were rejected, and findings 6 and 9 were noted with no action.
+

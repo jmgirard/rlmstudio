@@ -26,6 +26,18 @@ local_request_recorder <- function(
 
   perform <- function(req, ...) {
     recorder$requests[[length(recorder$requests) + 1L]] <- req
+
+    # Apply the request's own error policy, the way req_perform() does. Without
+    # this, a caller that drops its req_error() line still sees every mocked
+    # response returned rather than thrown, and no test can tell.
+    is_error <- req$policies$error_is_error
+    if (is.null(is_error)) {
+      is_error <- function(resp) httr2::resp_status(resp) >= 400
+    }
+    if (isTRUE(is_error(response))) {
+      httr2::resp_check_status(response)
+    }
+
     response
   }
 
