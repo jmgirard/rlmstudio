@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-17 (M001 review; validate clean, budgets under cap)
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M002 | R CMD check on macOS, Windows, and Ubuntu in CI | planned | — | high | milestones/M002-platform-ci.md |
+| M002 | R CMD check on macOS, Windows, and Ubuntu in CI | review | — | high | milestones/M002-platform-ci.md |
 | M001 | Honor the host argument and fail fast on a stopped server | done | — | high | milestones/archive/M001-host-aware-probe.md |
 
 ## Candidates

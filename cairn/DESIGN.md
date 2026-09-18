@@ -20,7 +20,7 @@ Elicited by `/design-interview` on 2026-09-17 (Phase 1). Seeded by cairn-init fr
 
 ### Platforms
 
-- macOS, Linux, and Windows are all commitments. A reproducible bug on any of them blocks a release. CI today runs R CMD check on Ubuntu only (`.github/workflows/`). The commitment is ahead of the automation.
+- macOS, Linux, and Windows are all commitments. A reproducible bug on any of them blocks a release. CI runs R CMD check on all three (`.github/workflows/R-CMD-check.yaml`), with three R versions on Ubuntu. (corrected M002)
 
 ### Stability and release
 
