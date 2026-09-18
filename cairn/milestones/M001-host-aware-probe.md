@@ -21,12 +21,12 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 
 ## Acceptance criteria
 
-- [ ] AC1: `is_server_running(host)` parses hostname and port from `host` and probes that address. Evidence: a test opens `serverSocket()` on a free port and expects TRUE for `http://localhost:<port>` and for `http://127.0.0.1:<port>`, FALSE for a second free port with no listener, and FALSE for a hostname that is not the listening one at the listening port.
-- [ ] AC2: Every occurrence of `is_server_running(` under `R/`, roxygen examples included, passes a `host` argument. Evidence: `grep -n "is_server_running(" R/*.R` shows no zero-argument occurrence.
-- [ ] AC3: `list_models()` and `lms_download()` abort with condition class `rlmstudio_no_server` instead of returning an empty result, and the seven other server-down aborts (`R/chat.R:112,233,305,380`, `R/load.R:56`, `R/unload.R:35,108` at plan time) carry the same class. Evidence: `expect_error(class = "rlmstudio_no_server")` tests for `list_models()` and `lms_download()`, and a read of each of the seven named sites.
-- [ ] AC4: `has_lms()` calls `lms_path()` and returns FALSE only when it aborts. Evidence: tests expecting TRUE for the `RLMSTUDIO_LMS_PATH` branch (`withr::local_envvar` on a temp file) and for the PATH branch (`withr::local_path` on a temp dir holding a fake executable `lms`), and a test expecting FALSE with the env var cleared, `PATH` set to an empty temp dir, and the common-directory lookup mocked to find nothing.
-- [ ] AC5: Under `# rlmstudio (development version)` in `NEWS.md`, three bullets, each naming the affected function and stating the user-visible change: the server probe now honors `host`; `list_models()` and `lms_download()` now abort instead of returning an empty result; `has_lms()` now uses the same lookup as `lms_path()`.
-- [ ] AC6: `devtools::document()` produces no diff and `devtools::test()` is clean (profile `verify` slot).
+- [x] AC1: `is_server_running(host)` parses hostname and port from `host` and probes that address. Evidence: a test opens `serverSocket()` on a free port and expects TRUE for `http://localhost:<port>` and for `http://127.0.0.1:<port>`, FALSE for a second free port with no listener, and FALSE for a hostname that is not the listening one at the listening port.
+- [x] AC2: Every occurrence of `is_server_running(` under `R/`, roxygen examples included, passes a `host` argument. Evidence: `grep -n "is_server_running(" R/*.R` shows no zero-argument occurrence.
+- [x] AC3: `list_models()` and `lms_download()` abort with condition class `rlmstudio_no_server` instead of returning an empty result, and the seven other server-down aborts (`R/chat.R:112,233,305,380`, `R/load.R:56`, `R/unload.R:35,108` at plan time) carry the same class. Evidence: `expect_error(class = "rlmstudio_no_server")` tests for `list_models()` and `lms_download()`, and a read of each of the seven named sites.
+- [x] AC4: `has_lms()` calls `lms_path()` and returns FALSE only when it aborts. Evidence: tests expecting TRUE for the `RLMSTUDIO_LMS_PATH` branch (`withr::local_envvar` on a temp file) and for the PATH branch (`withr::local_path` on a temp dir holding a fake executable `lms`), and a test expecting FALSE with the env var cleared, `PATH` set to an empty temp dir, and the common-directory lookup mocked to find nothing.
+- [x] AC5: Under `# rlmstudio (development version)` in `NEWS.md`, three bullets, each naming the affected function and stating the user-visible change: the server probe now honors `host`; `list_models()` and `lms_download()` now abort instead of returning an empty result; `has_lms()` now uses the same lookup as `lms_path()`.
+- [x] AC6: `devtools::document()` produces no diff and `devtools::test()` is clean (profile `verify` slot).
 
 ## Coverage
 
@@ -64,3 +64,11 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 ## Decisions
 
 ## Review
+
+- 2026-09-17 AC1: test-serve.R holds four probe tests: TRUE for `http://localhost:<port>` and `http://127.0.0.1:<port>` against a live `serverSocket()`, FALSE for a free port, FALSE for `nowhere.invalid` at the listening port, plus a port-1234 fallback test. `devtools::test()` ran them all (0 skips): pass.
+- 2026-09-17 AC2: `grep -n "is_server_running(" R/*.R` shows two occurrences, the roxygen example at R/serve.R:231 and the helper at R/serve.R:266, both passing `host`: pass.
+- 2026-09-17 AC3: test-list.R and test-download.R hold `expect_error(class = "rlmstudio_no_server")` tests for `list_models()`, `lms_download()`, and `lms_download_status()`, all passing. The seven named sites now read `stop_if_no_server(host)` at R/chat.R:112,228,295,365, R/load.R:56, R/unload.R:35,103, and the helper aborts with that class: pass.
+- 2026-09-17 AC4: `has_lms()` is a `tryCatch` around `lms_path()`. test-setup.R holds the env-var TRUE test, the PATH TRUE test with a fake executable, and the FALSE test with the env var cleared, PATH replaced by an empty dir, and `file.exists` mocked FALSE; all pass: pass.
+- 2026-09-17 AC5: NEWS.md development section holds three bullets naming the affected functions: host probe, fail-fast aborts in `list_models()`/`lms_download()`/`lms_download_status()`, and `has_lms()` lookup: pass.
+- 2026-09-17 AC6: `devtools::document()` left the tree unchanged (only the pre-existing `.DS_Store` change); `devtools::test()` 53 pass, 0 fail, 0 warn, 0 skip: pass.
+- 2026-09-17 gate: `cairn_validate.py` all checks passed; no DESIGN.md principle changed, so `cairn_impact` skipped. Toolchain: `document()` no diff; README.md untouched by the diff; no `_pkgdown.yml`; NEWS.md carries the entries; new top-level `CLAUDE.md` has its `.Rbuildignore` entry; `devtools::check()` 0 errors, 0 warnings, 0 notes.
