@@ -73,7 +73,7 @@ names the unload functions. The other seven wrappers shipped in M005.
       delete the `rlm_abort_api()` call site in `R/list.R`. Run the
       failure-table tests. Record in the work log that they go red. Restore
       the file.
-- [ ] T5: Delete the coverage guard at `tests/testthat/test-api-error.R:253`.
+- [x] T5: Delete the coverage guard at `tests/testthat/test-api-error.R:253`.
       Extend `tests/testthat/test-list.R` with the path assertion AC2 names.
       Keep the fixture-backed success test and the server-down test.
 - [ ] T6: Add the `NEWS.md` entry for the changed failure behavior of
@@ -92,6 +92,7 @@ names the unload functions. The other seven wrappers shipped in M005.
 - 2026-09-18: T3 done. The driver matches the tail of the condition message with `endsWith()` in place of the fixed substring `grepl()`.
 - 2026-09-18: T1 done. `R/list.R` turns the httr2 error policy off and aborts through `rlm_abort_api(resp, "API List Failed")` on any status other than 200. The failure-table file then went green, and `devtools::test()` was clean.
 - 2026-09-18: T4 done. In a scratch copy of the tree, deleting the `rlm_abort_api()` call site in `R/list.R` turned the failure-table tests red. `list_models` reported `<no error raised>` at every row and both statuses. The other seven callers reported `ok`. The scratch copy was then discarded and the working tree was unchanged.
+- 2026-09-18: T5 done. `tests/testthat/test-list.R` now asserts that the request `list_models()` sends targets the path `/api/v1/models`. The fixture-backed success test and the server-down test are unchanged. The coverage guard came out under T2. In a scratch copy, changing the path in `R/list.R` to `api/v1/modelz` turned the new assertion red with `actual: "/api/v1/modelz"`, so it discriminates. The assertion does not skip, because httpuv is installed.
 
 ## Decisions
 
