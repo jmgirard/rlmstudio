@@ -2,6 +2,8 @@
 % Please edit documentation in R/conditions.R
 \name{rlmstudio-conditions}
 \alias{rlmstudio-conditions}
+\alias{rlmstudio_no_server}
+\alias{rlmstudio_api_error}
 \title{Error conditions raised by rlmstudio}
 \description{
 The functions in this package that talk to the LM Studio REST API raise two

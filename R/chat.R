@@ -338,8 +338,9 @@ lms_chat_native <- function(
 #'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included.
 #' }
 #' @details
-#' This function calls [lms_chat()] once for each element of `inputs`. It can
-#' raise `rlmstudio_api_error` through [lms_chat()].
+#' This function calls [lms_chat()] once for each element of `inputs`. It
+#' raises `rlmstudio_no_server` itself, before the first call. It can raise
+#' `rlmstudio_api_error` through [lms_chat()].
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @export

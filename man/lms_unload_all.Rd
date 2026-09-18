@@ -23,7 +23,8 @@ Retrieves a list of all currently loaded models and unloads them one by one.
 }
 \details{
 This function calls \code{\link[=list_models]{list_models()}} to find the loaded instances, then calls
-\code{\link[=lms_unload]{lms_unload()}} once for each one. It can raise \code{rlmstudio_api_error} through
+\code{\link[=lms_unload]{lms_unload()}} once for each one. It raises \code{rlmstudio_no_server} itself,
+before the first call. It can raise \code{rlmstudio_api_error} through
 \code{\link[=list_models]{list_models()}} and through \code{\link[=lms_unload]{lms_unload()}}.
 }
 \section{Server not running}{

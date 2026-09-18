@@ -19,6 +19,7 @@
 #' integer.
 #'
 #' @name rlmstudio-conditions
+#' @aliases rlmstudio_no_server rlmstudio_api_error
 #'
 #' @examples
 #' \dontrun{
