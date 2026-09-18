@@ -56,26 +56,23 @@ Observed in the code and agreed at the interview on 2026-09-17.
 
 ## Design Principles
 
-Phase 2 of `/design-interview` formalizes these. The IP (Inviolable) block comes first, then the GP (Guiding) block. Numbers are never reused.
+Settled by `/design-interview` on 2026-09-17. An IP (Inviolable Principle) changes only by an explicit user decision recorded in DECISIONS.md. A GP (Guiding Principle) is a default that a milestone can trade with a stated reason. Numbers are never reused or renumbered.
 
 ### Inviolable
 
+- **IP1 Local only.** The package sends user text only to the LM Studio host that the user names in the `host` argument. Two other network calls are allowed: the installer download in `install_lmstudio()` and a model download that the user requests. A host on another machine counts as the user's choice. No telemetry, no remote-inference fallback, no third-party service.
+- **IP2 Consent before installing.** No function downloads or runs an installer without consent. Consent is an interactive yes or the explicit `RLMSTUDIO_ALLOW_INSTALL` opt-in. The same rule covers any write outside LM Studio's own directories. A model download is the user's explicit request and needs no prompt.
+
 ### Guiding
 
-### Banked candidates (interview in progress, 2026-09-17)
+- **GP1 One wrapper per LM Studio feature.** The package exposes what `lms` and the REST API offer, plus analysis that serves scoring at scale. A new export must wrap an LM Studio feature or serve that workflow. General LLM helpers are out.
+- **GP2 Batch pipelines win ties.** A scripted run over many items and an interactive console use can conflict. The scripted run wins.
+- **GP3 A missing server is an error.** A function that needs the server aborts with a message that names `lms_server_start()`. It never returns an empty result in place of an error.
+- **GP4 Dots are the escape hatch.** Every REST wrapper forwards unnamed arguments to the request body. The server is the validator, and the package surfaces the error it returns. The package keeps no list of valid fields, so an unknown field passes silently (D-003). If a field needs input checks or documentation, it becomes a named argument.
+- **GP5 Calls are safe to repeat.** Start, load, and download are no-ops with a message on a second call. Stop and unload act only on what the caller named and never close the desktop app.
+- **GP6 Every message honors quiet.** User-facing output goes through the helpers in `R/utils-msg.R` and respects `rlmstudio.quiet` and a local `quiet` argument. Errors are exempt.
 
-Proto-principles heard in Phase 1. Not yet classified. Phase 2 replaces this list.
-
-1. Batch pipelines win ties over console convenience.
-2. One wrapper per LM Studio feature. The package ends where LM Studio's CLI and API end, plus scoring-workflow analysis.
-3. A new export must wrap an LM Studio feature or serve scoring at scale.
-4. macOS, Linux, and Windows are all release commitments.
-5. Before 1.0, exported names and return shapes can change with a NEWS entry.
-6. The five Imports are fixed. Adding one is a decision, not a side effect.
-7. Dots pass through to the API body. Named arguments are added on demand.
-8. A missing server is an error, never an empty result.
-9. Recorded fixtures are the everyday contract. A live run gates each CRAN release.
-10. `lms_score_expected` is experimental and can change or leave.
+Disposition of the Phase 1 banked list: items 1, 2, 3, 7, and 8 became GP2, GP1, GP1, GP4, and GP3. Items 4 and 5 are conventions above and decisions D-002 and D-001. Items 6, 9, and 10 stay as convention and boundary text.
 
 ## Architecture
 
