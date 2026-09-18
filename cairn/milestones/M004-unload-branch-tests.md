@@ -34,10 +34,10 @@ owed. No user-visible behavior changes.
 
 ## Acceptance criteria
 
-- [ ] AC1: On an HTTP 200 unload response, `lms_unload("m")` sends exactly one
+- [x] AC1: On an HTTP 200 unload response, `lms_unload("m")` sends exactly one
       POST to `api/v1/models/unload` and returns `"m"` invisibly. The suite
       asserts this. When the success branch returns `NULL`, the suite fails.
-- [ ] AC2: If the unload response is not HTTP 200, `lms_unload()` aborts with a
+- [x] AC2: If the unload response is not HTTP 200, `lms_unload()` aborts with a
       message built from the response. The function reads that message from
       three sources. The first is the `message` field inside a JSON `error`
       object. The second is a JSON `error` object with no `message` field. The
@@ -48,20 +48,20 @@ owed. No user-visible behavior changes.
       suite asserts the message for the first two sources, for all three shapes
       that reach the raw body text, and for the empty string. When the message
       chain is cut back to the raw response string, the suite fails.
-- [ ] AC3: A named argument passed through `...` to `lms_unload()` reaches the
+- [x] AC3: A named argument passed through `...` to `lms_unload()` reaches the
       request body next to `instance_id`. The suite asserts this. When the
       merge of `...` into the body is dropped, the suite fails.
-- [ ] AC4: If `list_models()` reports nothing loaded, `lms_unload_all()` prints
+- [x] AC4: If `list_models()` reports nothing loaded, `lms_unload_all()` prints
       "No models are currently loaded.", returns `NULL` invisibly, and sends no
       unload request. The suite asserts all three facts for a `list_models()`
       result with no rows. When both nothing-loaded guards are deleted, the
       suite fails.
-- [ ] AC5: If `list_models()` reports two loaded instances, `lms_unload_all()`
+- [x] AC5: If `list_models()` reports two loaded instances, `lms_unload_all()`
       sends one unload POST for each instance id in the reported order. It
       forwards its `...` into each request body. It returns both ids invisibly.
       The suite asserts all three facts. When only the first instance is
       unloaded, the suite fails.
-- [ ] AC6: `lms_unload_all()` reads instance ids from the four
+- [x] AC6: `lms_unload_all()` reads instance ids from the four
       `loaded_instances` shapes the function distinguishes. Two are a data
       frame with an `identifier` column and a data frame with an `id` column.
       The other two are a data frame with neither column and a plain character
@@ -150,3 +150,47 @@ owed. No user-visible behavior changes.
 ## Decisions
 
 ## Review
+
+Evidence run 2026-09-18 on branch `m004-unload-branch-tests`, level with
+`origin/main`. Full suite: 100 pass, 0 fail, 0 warn, 0 skip. Each plant below
+was applied to `R/unload.R`, run under `devtools::test(filter = "unload")`, and
+reverted with `git checkout --`. The tree was clean afterward.
+
+- AC1 met. The success-path test asserts one recorded request, method POST,
+  path `/api/v1/models/unload`, and the invisible `"test-model"`. Plant:
+  `return(invisible(model))` became `return(invisible(NULL))`. Result 1 fail at
+  test-unload.R:26, 33 pass.
+- AC2 met. Five tests assert the message for the nested `message` field and for
+  an `error` object with no `message` field. They also assert it for the three
+  shapes that reach the raw body text. Those shapes are a body with no `error`
+  field, a string `error` field, and a body that is not JSON. A fifth test
+  asserts the empty string falling back to "HTTP Status 503". Plant: the
+  `tryCatch` chain became `err_msg <- httr2::resp_body_string(resp)`. Result 3
+  fail at test-unload.R:51, :62, and :108, 31 pass.
+- AC3 met. The dots test asserts `ttl = 300` in the request body next to
+  `instance_id`. Plant: the body became `list(instance_id = model)`, dropping
+  the `utils::modifyList()` merge. Result 2 fail, the first at test-unload.R:42,
+  31 pass.
+- AC4 met. The nothing-loaded test asserts the message, the invisible `NULL`,
+  and zero recorded requests for a `list_models()` result with no rows. Plant:
+  both nothing-loaded guards were deleted. Result 3 fail at test-unload.R:122,
+  :226, and :231, 31 pass.
+- AC5 met. The loop test asserts two recorded requests, the instance ids
+  `inst-1` then `inst-2` in that order, `ttl = 60` in both bodies, both unload
+  paths, and the two returned ids. Plant: the loop ran over `loaded_keys[1]`.
+  Result 4 fail at test-unload.R:155, :158, :162, and :165, 30 pass.
+- AC6 met. Six tests assert the ids read from the four shapes. The `identifier`
+  and `id` frames each carry a decoy first column, so a first-column fallback
+  cannot pass them. The other tests cover the first-column fallback, a plain
+  character vector, an all-dropped `NA` and empty filter returning invisible
+  `NULL`, and a partial filter. Plant: the `identifier` and `id` branches were
+  deleted, leaving the fallback. Result 2 fail at test-unload.R:191 and :198,
+  32 pass.
+
+Consistency gate, all clean. `cairn_validate.py` passed every check with no
+advisory fired. No principle text changed, so no impact report was owed.
+`devtools::document()` produced no diff. `devtools::check()` gave 0 errors, 0
+warnings, 0 notes. `pkgdown::check_pkgdown()` found no problems. The diff adds
+no top-level file, so no `.Rbuildignore` entry is owed. README.md is in sync
+with README.Rmd and neither was touched. No `NEWS.md` entry is owed, because
+nothing a caller can observe changed.
