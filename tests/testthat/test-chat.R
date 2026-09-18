@@ -141,7 +141,12 @@ test_that("lms_chat_native aborts with class rlmstudio_no_server when the server
 })
 
 test_that("lms_chat_batch aborts with class rlmstudio_no_server when the server is down", {
-  local_mocked_bindings(is_server_running = function(...) FALSE)
+  # lms_chat() reaches a second server check further down, so it is mocked out
+  # here. The abort can then only come from the call site in lms_chat_batch().
+  local_mocked_bindings(
+    is_server_running = function(...) FALSE,
+    lms_chat = function(...) "mocked"
+  )
   expect_error(
     lms_chat_batch(model = "test-model", inputs = "test input"),
     class = "rlmstudio_no_server"
