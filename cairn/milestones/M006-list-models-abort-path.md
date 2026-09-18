@@ -69,7 +69,7 @@ names the unload functions. The other seven wrappers shipped in M005.
       check at `tests/testthat/test-api-error.R:224`. Assert instead that the
       message ends with the expected fragment, so trailing text no longer
       passes.
-- [ ] T4: Make sure that the new abort discriminates. In a scratch copy,
+- [x] T4: Make sure that the new abort discriminates. In a scratch copy,
       delete the `rlm_abort_api()` call site in `R/list.R`. Run the
       failure-table tests. Record in the work log that they go red. Restore
       the file.
@@ -91,6 +91,7 @@ names the unload functions. The other seven wrappers shipped in M005.
 - 2026-09-18: T2 absorbed the coverage-guard deletion from T5, because the guard asserts seven callers and contradicts the eighth entry in the same file. Minor reorder, no scope change.
 - 2026-09-18: T3 done. The driver matches the tail of the condition message with `endsWith()` in place of the fixed substring `grepl()`.
 - 2026-09-18: T1 done. `R/list.R` turns the httr2 error policy off and aborts through `rlm_abort_api(resp, "API List Failed")` on any status other than 200. The failure-table file then went green, and `devtools::test()` was clean.
+- 2026-09-18: T4 done. In a scratch copy of the tree, deleting the `rlm_abort_api()` call site in `R/list.R` turned the failure-table tests red. `list_models` reported `<no error raised>` at every row and both statuses. The other seven callers reported `ok`. The scratch copy was then discarded and the working tree was unchanged.
 
 ## Decisions
 
