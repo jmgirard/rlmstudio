@@ -21,9 +21,9 @@ Assert the `rlmstudio_no_server` condition class at every `R/` call site that ab
 
 ## Acceptance criteria
 
-- [ ] AC1: Run `grep -rn "stop_if_no_server(" R/`. It reports ten call sites. When `is_server_running()` returns `FALSE`, every function that holds one of those sites aborts with condition class `rlmstudio_no_server`. A testthat test names that class for each of those functions.
-- [ ] AC2: When `is_server_running()` returns `FALSE`, `lms_chat()` passes the `rlmstudio_no_server` condition class through to its caller.
-- [ ] AC3: The `verify` slot of `cairn/PROFILE.md` is clean. `Rscript -e 'devtools::test()'` reports 0 failures and 0 warnings. No test that this milestone adds is skipped.
+- [x] AC1: Run `grep -rn "stop_if_no_server(" R/`. It reports ten call sites. When `is_server_running()` returns `FALSE`, every function that holds one of those sites aborts with condition class `rlmstudio_no_server`. A testthat test names that class for each of those functions.
+- [x] AC2: When `is_server_running()` returns `FALSE`, `lms_chat()` passes the `rlmstudio_no_server` condition class through to its caller.
+- [x] AC3: The `verify` slot of `cairn/PROFILE.md` is clean. `Rscript -e 'devtools::test()'` reports 0 failures and 0 warnings. No test that this milestone adds is skipped.
 
 ## Coverage
 
@@ -52,7 +52,13 @@ Assert the `rlmstudio_no_server` condition class at every `R/` call site that ab
 - 2026-09-18: T4 done. Three `lms_chat()` dispatcher tests added to `tests/testthat/test-chat.R`, one per `api_type` value. All three were proven able to fail with the mock flipped to a running server. `devtools::test(filter = "chat")` reports 0 failures, 0 warnings, 0 skips.
 - 2026-09-18: T5 done. The enumerating grep reports the same ten call sites in ten distinct functions, and every one of those functions now has a class test. `Rscript -e 'devtools::test()'` reports 0 failures, 0 warnings, 0 skips, 68 passes. `git diff --name-only main...HEAD` names no file under `R/`.
 - 2026-09-18: claim audit: not owed — internal tier.
+- 2026-09-18: review checkpoint. All three acceptance criteria verified with fresh evidence and ticked. Consistency gate clean. Three fresh-context reviewers are still running.
 
 ## Decisions
 
 ## Review
+
+- 2026-09-18 AC1: the enumerating grep reports ten call sites in ten distinct functions. They are `lms_load`, `lms_chat_openresponses`, `lms_chat_openai`, `lms_chat_native`, `lms_chat_batch`, `lms_unload`, `lms_unload_all`, `list_models`, `lms_download`, and `lms_download_status`. Each of the ten has a test that mocks `is_server_running` to `FALSE` and asserts `class = "rlmstudio_no_server"`. Those tests sit in `test-load.R`, `test-chat.R`, `test-unload.R`, `test-list.R`, and `test-download.R`. All ten pass in the run recorded under AC3.
+- 2026-09-18 AC2: `tests/testthat/test-chat.R:151`, `:163`, and `:171` call `lms_chat()` with `api_type` set to `openresponses`, `openai`, and `native`. Each mocks `is_server_running` to `FALSE` and asserts that the caller receives class `rlmstudio_no_server`. All three pass in the run recorded under AC3.
+- 2026-09-18 AC3: `Rscript -e 'devtools::test()'` reports 0 failures, 0 warnings, 0 skips, 68 passes. The skip count of 0 means that no test this milestone added is skipped. `Rscript -e 'devtools::document()'` produced no diff, which is the other half of the `verify` slot.
+- 2026-09-18 consistency gate: `cairn_validate.py` passes with exit 0, all checks green and every advisory OK. No `DESIGN.md` principle changed, so `cairn_impact.py` was not owed. Toolchain slot: `document()` produced no diff. No generated file was hand-edited. `README.md` is in sync and this branch does not touch it. The repo has no `_pkgdown.yml`. The branch makes no user-visible change, so no `NEWS.md` entry is owed. The branch adds no top-level file, so no `.Rbuildignore` entry is owed. `Rscript -e 'devtools::check()'` reports 0 errors, 0 warnings, and 0 notes.
