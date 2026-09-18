@@ -76,7 +76,7 @@ names the unload functions. The other seven wrappers shipped in M005.
 - [x] T5: Delete the coverage guard at `tests/testthat/test-api-error.R:253`.
       Extend `tests/testthat/test-list.R` with the path assertion AC2 names.
       Keep the fixture-backed success test and the server-down test.
-- [ ] T6: Add the `NEWS.md` entry for the changed failure behavior of
+- [x] T6: Add the `NEWS.md` entry for the changed failure behavior of
       `list_models()`.
 
 ## Work log
@@ -93,6 +93,8 @@ names the unload functions. The other seven wrappers shipped in M005.
 - 2026-09-18: T1 done. `R/list.R` turns the httr2 error policy off and aborts through `rlm_abort_api(resp, "API List Failed")` on any status other than 200. The failure-table file then went green, and `devtools::test()` was clean.
 - 2026-09-18: T4 done. In a scratch copy of the tree, deleting the `rlm_abort_api()` call site in `R/list.R` turned the failure-table tests red. `list_models` reported `<no error raised>` at every row and both statuses. The other seven callers reported `ok`. The scratch copy was then discarded and the working tree was unchanged.
 - 2026-09-18: T5 done. `tests/testthat/test-list.R` now asserts that the request `list_models()` sends targets the path `/api/v1/models`. The fixture-backed success test and the server-down test are unchanged. The coverage guard came out under T2. In a scratch copy, changing the path in `R/list.R` to `api/v1/modelz` turned the new assertion red with `actual: "/api/v1/modelz"`, so it discriminates. The assertion does not skip, because httpuv is installed.
+- 2026-09-18: T6 done. `NEWS.md` gets its own bullet under the development-version heading for the changed failure behavior of `list_models()`. The before and after text in that bullet is read off the two runs recorded above.
+- 2026-09-18: a candidate row for a replacement coverage guard was added to the ROADMAP, per the question gate. Search-first found the `stop_if_no_server()` guard row, which is a different call-site family, so the new row cross-references it rather than merging into it.
 
 ## Decisions
 
