@@ -1,13 +1,13 @@
 # M004: Response and empty-list branch tests for the two unload functions
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4, GP6
 - **Resolves:** —
 - **Surface tier:** internal. The deliverable is the package's own test suite, which no caller of the installed package runs.
-- **Branch/PR:** —
+- **Branch/PR:** `m004-unload-branch-tests`
 
 ## Goal
 
@@ -96,9 +96,10 @@ owed. No user-visible behavior changes.
 - [ ] T5: Add the four instance-id shape tests and the `NA` and empty filter
       test for `lms_unload_all()` (R/unload.R:120).
 - [ ] T6: Run the planted-defect pass. For each criterion, break the named
-      behavior in a scratch copy of `R/unload.R`. Make sure that the matching
-      test goes red. Then restore the file. Record one work-log line per
-      criterion naming the plant and the failure seen.
+      behavior in `R/unload.R` itself, because `devtools::test()` loads only the
+      real file. Make sure that the matching test goes red. Then restore the file
+      with `git checkout -- R/unload.R`. Record one work-log line per criterion
+      naming the plant and the failure seen.
 - [ ] T7: Run `Rscript -e 'devtools::document()'`, `Rscript -e
       'devtools::test()'`, and `Rscript -e 'devtools::check()'`. Record the
       counts. State a reason for each NOTE.
@@ -110,6 +111,12 @@ owed. No user-visible behavior changes.
 - 2026-09-18: a healthy server returns no failure status, and a committed fixture owes a generator script. So the plan gate chose synthetic `httr2::req_perform` mocks over new `httptest2` recordings. Falsified by evidence that a hand-built `httr2::response()` diverges from what `httr2` builds from a real socket.
 - 2026-09-18: a shared condition class spans six abort sites in four files. So the plan gate chose message matchers over adding one. Falsified by evidence that the abort text changes often enough to make the matchers brittle.
 - 2026-09-18: plan gate chose testing all four instance-id branches over only the shapes a real server sends. Falsified by evidence that a behavior-preserving rewrite of the extraction turns the tests red.
+- 2026-09-18: implement started on branch `m004-unload-branch-tests`, cut from the pushed default branch.
+- 2026-09-18: a run against a mocked 500 with an empty body aborted from httr2, not from the intended HTTP-status fallback. Both body reads abort on an empty body.
+- 2026-09-18: question gate kept M004 to tests and filed that defect as a candidate row. AC2 reaches the empty-message case through a JSON body whose `error` field is an empty string.
+- 2026-09-18: question gate chose `httr2::req_dry_run(quiet = TRUE)` for the method and path assertions, over the unexported `httr2:::req_method_get()` and over leaving the verb unasserted.
+- 2026-09-18: question gate chose a shared `tests/testthat/helper-mock-http.R` for the request-capturing mock, over a file-local helper and over an inline copy per test.
+- 2026-09-18: minor amendment to T6. The planted-defect pass edits `R/unload.R` in place and restores it with git, because `devtools::test()` loads only the real file.
 
 ## Decisions
 
