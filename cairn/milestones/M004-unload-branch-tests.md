@@ -1,6 +1,6 @@
 # M004: Response and empty-list branch tests for the two unload functions
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -103,7 +103,7 @@ owed. No user-visible behavior changes.
       real file. Make sure that the matching test goes red. Then restore the file
       with `git checkout -- R/unload.R`. Record one work-log line per criterion
       naming the plant and the failure seen.
-- [ ] T7: Run `Rscript -e 'devtools::document()'`, `Rscript -e
+- [x] T7: Run `Rscript -e 'devtools::document()'`, `Rscript -e
       'devtools::test()'`, and `Rscript -e 'devtools::check()'`. Record the
       counts. State a reason for each NOTE.
 
@@ -143,6 +143,9 @@ owed. No user-visible behavior changes.
 - 2026-09-18: the Scope In paragraph was changed from four failure-message sources to three, to match the gated AC2 amendment. The change is that amendment applied to the sentence restating its count, not a new scope decision.
 - 2026-09-18: T6 done. Every criterion has a plant that turns its own tests red, AC4 after its amendment. `R/unload.R` was restored after each plant and the tree is clean.
 - 2026-09-18: the AC4 audit produced a counterexample. A zero-row result whose `loaded_instances` column still holds an entry reaches the first guard and not the second. No real server response takes that shape, so no candidate row was filed and no guard was called redundant.
+- 2026-09-18: T7 done. `devtools::document()` produced no diff. `devtools::test()` gave 100 pass, 0 fail, 0 warn, 0 skip. `devtools::check()` gave 0 errors, 0 warnings, 0 notes, so no NOTE reason is owed.
+- 2026-09-18: claim audit: not owed — internal tier.
+- 2026-09-18: status set to review at the end of implement.
 
 ## Decisions
 
