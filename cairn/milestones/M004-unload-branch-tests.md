@@ -194,3 +194,56 @@ warnings, 0 notes. `pkgdown::check_pkgdown()` found no problems. The diff adds
 no top-level file, so no `.Rbuildignore` entry is owed. README.md is in sync
 with README.Rmd and neither was touched. No `NEWS.md` entry is owed, because
 nothing a caller can observe changed.
+
+### Independent review
+
+Three fresh-context reviewers ran against distinct evidence bases. The
+prior-review lens found no regression against past findings. The blame-history
+lens found nothing that reverses an earlier milestone and one future-cleanup
+item. The diff-bug lens reported twelve findings. Each claim below that names a
+plant was re-run against `R/unload.R` before it was triaged.
+
+1. The mock bypasses httr2's error policy, so the `req_error(is_error = FALSE)`
+   line at R/unload.R:48 has no test. Reproduced. Deleting that line leaves the
+   suite at 34 pass, 0 fail. Disposition: fix now. A prototype that reads
+   `req$policies$error_is_error` in the recorder keeps the real suite green and
+   turns six failure tests red on that plant.
+2. No test asserts that `host` reaches the wire, and `lms_unload_all()` does not
+   assert that it forwards `host`. Reproduced. Dropping `host = host` at
+   R/unload.R:149 leaves the suite at 34 pass, 0 fail. Disposition: follow-up
+   candidate row. No criterion of M004 promises host coverage, so this is a
+   pre-existing gap of the M001 class.
+3. Body assertions read `req$body$data`, an httr2 internal field, rather than
+   the serialized request. Disposition: follow-up candidate row, with finding 2.
+4. AC4 was narrowed to a plant the suite catches, leaving the first
+   nothing-loaded guard untested on its own. Disposition: reject. The narrowing
+   went through the gated amendment protocol during implement, and the work log
+   records the counterexample and the reason it was not filed.
+5. The non-JSON body test sends a `Content-Type: application/json` header, so it
+   models a parse failure rather than a non-JSON response. Disposition:
+   follow-up candidate row.
+6. GP6 is named in the header but nothing in the diff asserts quiet behavior.
+   Disposition: noted. The header slot is plan-owned and this milestone asserts
+   no quiet behavior.
+7. The suite now holds a third way to fake `req_perform()`, beside the inline
+   closures and the `httptest2` cassettes. DESIGN names recorded fixtures as the
+   everyday contract. The blame lens raised the same point. Disposition: fix
+   now. Record the choice as a D-entry, because it binds the next milestone that
+   writes an HTTP test.
+8. The character-vector shape test cannot fail on its own branch. Reproduced.
+   Replacing `as.character(x)` with `return(x)` leaves the suite at 34 pass, 0
+   fail. Disposition: follow-up candidate row, with finding 5.
+9. The helper's `body = ""` affordance is unused and its only path aborts inside
+   httr2. Disposition: noted. That path is the defect already filed as a
+   candidate row.
+10. Two shared fixtures sit mid-file in `test-unload.R` rather than in the
+    helper. Disposition: reject. A style placement point on a working file.
+11. The two message matchers are unanchored regexes with an unescaped dot, while
+    every error matcher in the file uses `fixed = TRUE`. Disposition: follow-up
+    candidate row, with finding 5.
+12. `ids_read_from()` passes `.package` where no other test does. Disposition:
+    reject. A style nitpick with no behavior behind it.
+
+No finding meets the return floor. Every plant an acceptance criterion names
+was re-run and went red. No criterion failed inside the domain of its own named
+procedure. The package's behavior is unchanged by this branch.
