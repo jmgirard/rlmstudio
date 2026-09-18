@@ -114,7 +114,8 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - [ ] T5: Run `devtools::document()`, `devtools::test()`, and
       `devtools::check()`. Fix what they report. Record each NOTE with a
       one-line reason for the review gate.
-- [ ] T6: Add the `NEWS.md` entry under the development version heading.
+- [x] T6: Add the `NEWS.md` entry under the development version heading.
+      Run before T5, so that `devtools::check()` runs over the finished tree.
 
 ## Work log
 
@@ -130,6 +131,8 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: implement question gate settled two items. The three exports that reach an abort only through another function carry the two shared sections as well as their own delegation sentence. The drafted section wording was accepted as drafted.
 - 2026-09-18: minor amendment from that gate. T2's function list grows from ten to eleven, adding `lms_chat()`. No criterion changes. AC2 and AC3 still bind the ten call sites the greps name, and the eleventh page is additive.
 - 2026-09-18: T1 done: `R/conditions.R` written and `man/rlmstudio-conditions.Rd` generated. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
+- 2026-09-18: minor amendment. T6 runs before T5, so that `devtools::check()` runs over the finished tree. No task text changes beyond the added ordering note.
+- 2026-09-18: T6 done: one `NEWS.md` bullet added under the development version heading. A grep of that bullet found `rlmstudio_no_server`, `rlmstudio_api_error`, `status`, and `rlmstudio-conditions`. The same grep found no `M` followed by digits. A sweep of the other source files found no further exported function that reaches either abort. The bullet's "every exported function" clause therefore covers the eleven pages and no more.
 - 2026-09-18: T4 done: `pkgdown/_pkgdown.yml` gained a reference section holding `rlmstudio-conditions`. The title reads `Error Conditions`, in the title case that the seven existing section titles use. `pkgdown::check_pkgdown()` reported no problems.
 - 2026-09-18: T3 done: a `@details` paragraph added at `lms_chat()`, `lms_chat_batch()`, and `lms_unload_all()`, each naming the function it reaches the abort through. A read of the `lms_chat()` body found no `httr2` call, no `lms_client()` call, and no `stop_if_no_server()` call. That read is the source of the "runs no request of its own" sentence. `devtools::test()` reported 147 pass, 0 fail.
 - 2026-09-18: T2 done: both `@inheritSection` tags added at eleven exports. A grep over the regenerated `man/` files found one `\section{Server not running}` and one `\section{API failure}` in each of the eleven. Each block names its own class. The API block names the integer status field. `devtools::test()` reported 147 pass, 0 fail.
