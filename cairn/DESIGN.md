@@ -49,7 +49,7 @@ Observed in the code and agreed at the interview on 2026-09-17.
 - User-facing messages go through `cli`. The `rlmstudio.quiet` option and a local `quiet` argument silence them (`R/utils-msg.R`).
 - HTTP calls use `httr2`. JSON uses `jsonlite`. External processes use `processx`.
 - Every REST wrapper merges `...` into the request body. Dots are the intended escape hatch for API fields that the package does not name. If a field needs input checks or documentation, it becomes a named argument.
-- If the server is not running, a function aborts with a message that names `lms_server_start`. This is the intended posture. Two functions do not follow it yet (Known issues).
+- If the server is not running, a function aborts with a message that names `lms_server_start`. This is the intended posture. Every server-down abort carries the condition class `rlmstudio_no_server`.
 - Tests use testthat edition 3. Recorded HTTP fixtures (`httptest2`, under `tests/testthat/<name>/localhost-1234`) are the everyday contract. The helpers in `tests/testthat/helper-skips.R` skip the tests that need a live LM Studio. A CRAN release requires a full live run on a real machine and a new recording of stale fixtures.
 - Code is formatted with Air (`air.toml`).
 - The changelog is `NEWS.md`. The site is pkgdown in release mode.
@@ -84,8 +84,5 @@ Disposition of the Phase 1 banked list: items 1, 2, 3, 7, and 8 became GP2, GP1,
 
 Recorded 2026-09-17 at the design interview.
 
-- `is_server_running()` in `R/serve.R` always probes `localhost:1234`. Every REST function accepts a `host` argument, but each reports a server on another host or port as not running.
-- If the server is down, `list_models()` returns an empty data frame and `lms_download()` returns `NULL`. The intended posture is to abort (Conventions).
-- `has_lms()` in `R/setup.R` looks only at the system `PATH`. `lms_path()` also looks at `RLMSTUDIO_LMS_PATH` and common install directories. The two can disagree.
 - The headless CI job (`.github/workflows/test-headless.yaml`) installs no LM Studio. It runs only the tests that do not need a server.
 - `lms_chat_openai()` returns `NULL` logprobs because LM Studio stubs them on that endpoint. Only the OpenResponses endpoint yields the logprobs data frame that `lms_score_expected()` consumes.
