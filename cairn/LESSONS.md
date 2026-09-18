@@ -14,3 +14,5 @@ and 20,000 bytes; over either, retire or prune before adding. Corrected in
 place when proven false (never append a correction).
 - 2026-09-17 (M001): `httr2::url_parse()` keeps the brackets of an IPv6 literal in `$hostname` and errors on a schemeless `host:port`; normalize before handing a hostname to `socketConnection()`.
 - 2026-09-17 (M001): `testthat::local_mocked_bindings(..., .package = "base")` works for `file.exists` and `socketConnection` called from package code; a listening `serverSocket()` on a random 20000–40000 port gives a real TCP target without a server.
+- 2026-09-17 (M002): The `test-headless` job installs its R packages from the `r2u.stat.illinois.edu` apt mirror. A timeout there fails the job with `Unable to locate package r-cran-httptest2`, which reads like a missing dependency. Re-run the job before investigating.
+- 2026-09-17 (M002): Every check workflow limits its `push` trigger to `main` and `master`, so pushing a milestone branch starts no `R-CMD-check` run. The `pull_request` trigger carries no branch filter, so the first multi-platform signal arrives with the pull request.
