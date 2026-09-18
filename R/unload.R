@@ -32,7 +32,7 @@
 #' lms_unload("google/gemma-3-1b")
 #' }
 lms_unload <- function(model, host = "http://localhost:1234", ...) {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     cli::cli_abort(
       "The LM Studio server is not running. Run {.fn lms_server_start} first.",
       call = NULL
@@ -105,7 +105,7 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #' lms_unload_all()
 #' }
 lms_unload_all <- function(host = "http://localhost:1234", ...) {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     cli::cli_abort(
       "The LM Studio server is not running. Run {.fn lms_server_start} first.",
       call = NULL

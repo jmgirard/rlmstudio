@@ -1,7 +1,7 @@
 test_that("Full Integration: Download, Load, and Rate", {
   local_mocked_bindings(
     has_lms = function() TRUE,
-    is_server_running = function() TRUE
+    is_server_running = function(...) TRUE
   )
 
   skip_if_no_lms()
@@ -74,7 +74,7 @@ test_that("Full Integration: Download, Load, and Rate", {
 })
 
 test_that("lms_chat routes correctly to openresponses and creates S3 class", {
-  local_mocked_bindings(is_server_running = function() TRUE)
+  local_mocked_bindings(is_server_running = function(...) TRUE)
 
   fake_body <- list(
     output = list(list(

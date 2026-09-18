@@ -109,7 +109,7 @@ lms_chat_openresponses <- function(
   simplify = TRUE,
   ...
 ) {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     cli::cli_abort(
       "The LM Studio server is not running. Run {.fn lms_server_start} first.",
       call = NULL
@@ -230,7 +230,7 @@ lms_chat_openai <- function(
   simplify = TRUE,
   ...
 ) {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     cli::cli_abort(
       "The LM Studio server is not running. Run {.fn lms_server_start} first.",
       call = NULL
@@ -302,7 +302,7 @@ lms_chat_native <- function(
   simplify = TRUE,
   ...
 ) {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     cli::cli_abort(
       "The LM Studio server is not running. Run {.fn lms_server_start} first.",
       call = NULL
@@ -377,7 +377,7 @@ lms_chat_batch <- function(
   quiet = FALSE,
   ...
 ) {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     cli::cli_abort(
       "The LM Studio server is not running. Run {.fn lms_server_start} first.",
       call = NULL

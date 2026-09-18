@@ -32,7 +32,7 @@ lms_download <- function(
   host = "http://localhost:1234",
   ...
 ) {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     cli::cli_alert_danger(
       "The LM Studio server is not running. Run {.fn lms_server_start} first."
     )
@@ -131,7 +131,7 @@ lms_download <- function(
 #' print(status)
 #' }
 lms_download_status <- function(job_id, host = "http://localhost:1234") {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     cli::cli_alert_danger(
       "The LM Studio server is not running. Run {.fn lms_server_start} first."
     )

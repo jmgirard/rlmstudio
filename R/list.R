@@ -47,7 +47,7 @@ list_models <- function(
   quiet = FALSE,
   host = "http://localhost:1234"
 ) {
-  if (!is_server_running()) {
+  if (!is_server_running(host)) {
     if (!quiet) {
       cli::cli_alert_danger(
         "The LM Studio server is not running. Run {.fn lms_server_start} first."

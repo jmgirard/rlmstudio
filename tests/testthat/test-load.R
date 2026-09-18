@@ -1,5 +1,5 @@
 test_that("lms_load builds body with correct integer/logical conversions", {
-  local_mocked_bindings(is_server_running = function() TRUE)
+  local_mocked_bindings(is_server_running = function(...) TRUE)
 
   # We capture the request object to inspect the built JSON body
   captured_req <- NULL
