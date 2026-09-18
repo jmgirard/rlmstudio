@@ -12,7 +12,8 @@ check_lms_version(min_version = "0.4.0")
 }
 \value{
 A logical scalar: \code{TRUE} if the LM Studio CLI version meets or
-exceeds the specified \code{min_version}, and \code{FALSE} otherwise.
+exceeds the specified \code{min_version}, and \code{FALSE} otherwise,
+including when \code{\link[=lms_path]{lms_path()}} does not find the CLI.
 }
 \description{
 Check if the installed LM Studio CLI meets the minimum requirement

@@ -32,12 +32,7 @@
 #' lms_unload("google/gemma-3-1b")
 #' }
 lms_unload <- function(model, host = "http://localhost:1234", ...) {
-  if (!is_server_running()) {
-    cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
-      call = NULL
-    )
-  }
+  stop_if_no_server(host)
 
   # Build body and merge extra args from dots
   body <- utils::modifyList(list(instance_id = model), list(...))
@@ -105,12 +100,7 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #' lms_unload_all()
 #' }
 lms_unload_all <- function(host = "http://localhost:1234", ...) {
-  if (!is_server_running()) {
-    cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
-      call = NULL
-    )
-  }
+  stop_if_no_server(host)
 
   # Fetch currently active models
   active_models <- list_models(

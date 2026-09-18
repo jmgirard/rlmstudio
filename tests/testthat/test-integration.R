@@ -3,7 +3,7 @@ test_that("End-to-end model load and chat works", {
 
   local_mocked_bindings(
     has_lms = function() TRUE,
-    is_server_running = function() TRUE
+    is_server_running = function(...) TRUE
   )
 
   skip_if_no_lms()

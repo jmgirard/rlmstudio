@@ -10,7 +10,8 @@
 #' @param detailed Logical. Show all information about each model. Defaults to
 #'   \code{FALSE}.
 #' @param quiet Logical. If \code{TRUE}, suppresses informative console
-#'   messages. Defaults to \code{FALSE}.
+#'   messages. Defaults to \code{FALSE}. Does not suppress the abort raised
+#'   when the server is not running.
 #' @param host Character. The host address of the local server.
 #'
 #' @seealso [LM Studio List Models
@@ -47,14 +48,7 @@ list_models <- function(
   quiet = FALSE,
   host = "http://localhost:1234"
 ) {
-  if (!is_server_running()) {
-    if (!quiet) {
-      cli::cli_alert_danger(
-        "The LM Studio server is not running. Run {.fn lms_server_start} first."
-      )
-    }
-    return(invisible(data.frame()))
-  }
+  stop_if_no_server(host)
 
   resp <- lms_client(host) |>
     httr2::req_url_path("api/v1/models") |>

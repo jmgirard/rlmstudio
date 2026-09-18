@@ -7,11 +7,12 @@
 has_lms()
 }
 \value{
-A logical scalar: \code{TRUE} if the \code{lms} executable is found
-on the system path, and \code{FALSE} otherwise.
+A logical scalar: \code{TRUE} if \code{\link[=lms_path]{lms_path()}} finds the \code{lms}
+executable, and \code{FALSE} if it aborts.
 }
 \description{
-Check if LM Studio CLI is installed
+Uses the same lookup as \code{\link[=lms_path]{lms_path()}}: the \code{RLMSTUDIO_LMS_PATH} environment
+variable, then the system \code{PATH}, then common installation directories.
 }
 \examples{
 \dontrun{

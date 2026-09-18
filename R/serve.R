@@ -215,6 +215,13 @@ lms_server_status <- function(
 }
 
 #' Check if the LM Studio server is reachable
+#'
+#' Opens a TCP connection to the hostname and port named in `host`. When
+#' `host` names no port, the probe uses 1234, the LM Studio default. A `host`
+#' with no scheme is read as `http://`. A `host` that does not parse is
+#' reported as not running.
+#'
+#' @param host Character. The host address of the local server.
 #' @return Logical.
 #'
 #' @noRd
@@ -223,19 +230,56 @@ lms_server_status <- function(
 #' \dontrun{
 #' lms_server_start()
 #'
-#' if (is_server_running()) {
+#' if (is_server_running(host = "http://localhost:1234")) {
 #'   message("The LM Studio server is currently active.")
 #' }
 #' }
-is_server_running <- function() {
+is_server_running <- function(host = "http://localhost:1234") {
+  if (!grepl("^[A-Za-z][A-Za-z0-9+.-]*://", host)) {
+    host <- paste0("http://", host)
+  }
+  url <- tryCatch(httr2::url_parse(host), error = function(e) NULL)
+  if (is.null(url)) {
+    return(FALSE)
+  }
+  hostname <- url$hostname
+  port <- if (is.null(url$port)) 1234L else as.integer(url$port)
+
+  if (is.null(hostname) || identical(hostname, "")) {
+    return(FALSE)
+  }
+  # url_parse keeps the brackets of an IPv6 literal; socketConnection does not
+  # accept them.
+  hostname <- sub("^\\[(.*)\\]$", "\\1", hostname)
+
   tryCatch(
     {
       con <- suppressWarnings(
-        socketConnection(host = "localhost", port = 1234, timeout = 0.5)
+        socketConnection(host = hostname, port = port, timeout = 0.5)
       )
       close(con)
       TRUE
     },
     error = function(e) FALSE
   )
+}
+
+#' Abort when the LM Studio server is not reachable
+#'
+#' Every REST wrapper calls this first. The condition carries the class
+#' `rlmstudio_no_server` so callers can catch a stopped server by class.
+#'
+#' @param host Character. The host address of the local server.
+#' @return Invisibly `TRUE` when the server answers. Aborts otherwise.
+#'
+#' @noRd
+stop_if_no_server <- function(host = "http://localhost:1234") {
+  if (!is_server_running(host)) {
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
+      class = "rlmstudio_no_server",
+      call = NULL
+    )
+  }
+  invisible(TRUE)
 }

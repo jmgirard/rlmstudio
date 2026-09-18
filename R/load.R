@@ -53,12 +53,7 @@ lms_load <- function(
   host = "http://localhost:1234",
   ...
 ) {
-  if (!is_server_running()) {
-    cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
-      call = NULL
-    )
-  }
+  stop_if_no_server(host)
 
   # Check if the model is already loaded to prevent redundant API calls
   if (!isTRUE(force)) {

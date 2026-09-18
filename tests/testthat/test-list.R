@@ -1,6 +1,11 @@
+test_that("list_models aborts with class rlmstudio_no_server when the server is down", {
+  testthat::local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(list_models(), class = "rlmstudio_no_server")
+})
+
 test_that("list_models returns a formatted data frame", {
   # Mock the server check to always return TRUE for this test
-  testthat::local_mocked_bindings(is_server_running = function() TRUE)
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
   httptest2::with_mock_dir("list_models", {
     # The first time this runs, you must have the server on.

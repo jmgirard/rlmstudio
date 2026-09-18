@@ -23,7 +23,8 @@ Defaults to \code{FALSE}.}
 \code{FALSE}.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppresses informative console
-messages. Defaults to \code{FALSE}.}
+messages. Defaults to \code{FALSE}. Does not suppress the abort raised
+when the server is not running.}
 
 \item{host}{Character. The host address of the local server.}
 }

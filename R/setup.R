@@ -1,7 +1,10 @@
 #' Check if LM Studio CLI is installed
 #'
-#' @return A logical scalar: \code{TRUE} if the \code{lms} executable is found
-#'   on the system path, and \code{FALSE} otherwise.
+#' Uses the same lookup as [lms_path()]: the `RLMSTUDIO_LMS_PATH` environment
+#' variable, then the system `PATH`, then common installation directories.
+#'
+#' @return A logical scalar: \code{TRUE} if [lms_path()] finds the \code{lms}
+#'   executable, and \code{FALSE} if it aborts.
 #'
 #' @export
 #'
@@ -10,7 +13,13 @@
 #' has_lms()
 #' }
 has_lms <- function() {
-  Sys.which("lms") != ""
+  tryCatch(
+    {
+      lms_path()
+      TRUE
+    },
+    error = function(e) FALSE
+  )
 }
 
 #' Check if the installed LM Studio CLI meets the minimum requirement
@@ -19,7 +28,8 @@ has_lms <- function() {
 #'   "0.4.0".
 #'
 #' @return A logical scalar: \code{TRUE} if the LM Studio CLI version meets or
-#'   exceeds the specified \code{min_version}, and \code{FALSE} otherwise.
+#'   exceeds the specified \code{min_version}, and \code{FALSE} otherwise,
+#'   including when [lms_path()] does not find the CLI.
 #'
 #' @export
 #'
@@ -28,7 +38,8 @@ has_lms <- function() {
 #' check_lms_version("0.4.0")
 #' }
 check_lms_version <- function(min_version = "0.4.0") {
-  if (!has_lms()) {
+  path <- tryCatch(lms_path(), error = function(e) NULL)
+  if (is.null(path)) {
     cli::cli_alert_danger("LM Studio CLI is not installed.")
     return(FALSE)
   }
@@ -36,7 +47,7 @@ check_lms_version <- function(min_version = "0.4.0") {
   tryCatch(
     {
       result <- processx::run(
-        lms_path(),
+        path,
         args = "--version",
         error_on_status = FALSE
       )
