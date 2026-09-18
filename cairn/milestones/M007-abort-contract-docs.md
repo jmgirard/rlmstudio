@@ -1,6 +1,6 @@
 # M007: The abort contract reaches the help pages
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -35,7 +35,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 
 ## Acceptance criteria
 
-- [ ] AC1: `man/rlmstudio-conditions.Rd` exists and is generated from a roxygen
+- [x] AC1: `man/rlmstudio-conditions.Rd` exists and is generated from a roxygen
       block in `R/conditions.R`. Its text states that `rlmstudio_no_server` is
       raised when the LM Studio server does not answer at `host`, states that
       `rlmstudio_api_error` is raised when a REST call returns a response the
@@ -43,20 +43,20 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
       condition carries a `status` field holding the HTTP response status as an
       integer, and carries an `\examples{}` block whose `\dontrun{}` body calls
       `tryCatch()` with a handler named for each of the two classes.
-- [ ] AC2: For each call site that
+- [x] AC2: For each call site that
       `grep -rn "stop_if_no_server(" R/ | grep -v "^[^:]*:[0-9]\+:[[:space:]]*#"`
       prints (ten when this plan was written), the help page of the exported
       function the call site sits in contains a rendered `\section` that names
       `rlmstudio_no_server` and states that it is raised when the LM Studio
       server is not running.
-- [ ] AC3: For each call site that
+- [x] AC3: For each call site that
       `grep -rn "rlm_abort_api(" R/ | grep -v "^[^:]*:[0-9]\+:[[:space:]]*#"`
       prints (eight when this plan was written), the help page of the exported
       function the call site sits in contains a rendered `\section` that names
       `rlmstudio_api_error`, states that it is raised on a failed REST response,
       and states that the condition carries a `status` field holding the HTTP
       status as an integer.
-- [ ] AC4: The help page of `lms_chat()` states that it can raise
+- [x] AC4: The help page of `lms_chat()` states that it can raise
       `rlmstudio_no_server` and `rlmstudio_api_error` through
       `lms_chat_openresponses()`, `lms_chat_openai()`, or `lms_chat_native()`.
       The help page of `lms_chat_batch()` states that it can raise
@@ -68,7 +68,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
       `Rscript -e 'pkgdown::check_pkgdown()'` reports no topic missing from the
       reference index. `Rscript -e 'devtools::check()'` reports 0 errors and 0
       warnings.
-- [ ] AC6: `NEWS.md` carries an entry under the `# rlmstudio (development
+- [x] AC6: `NEWS.md` carries an entry under the `# rlmstudio (development
       version)` heading that names `rlmstudio_no_server`, `rlmstudio_api_error`,
       the `status` field, and `rlmstudio-conditions`, and that contains no `M`
       followed by digits.
@@ -140,7 +140,64 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: T4 done: `pkgdown/_pkgdown.yml` gained a reference section holding `rlmstudio-conditions`. The title reads `Error Conditions`, in the title case that the seven existing section titles use. `pkgdown::check_pkgdown()` reported no problems.
 - 2026-09-18: T3 done: a `@details` paragraph added at `lms_chat()`, `lms_chat_batch()`, and `lms_unload_all()`, each naming the function it reaches the abort through. A read of the `lms_chat()` body found no `httr2` call, no `lms_client()` call, and no `stop_if_no_server()` call. That read is the source of the "runs no request of its own" sentence. `devtools::test()` reported 147 pass, 0 fail.
 - 2026-09-18: T2 done: both `@inheritSection` tags added at eleven exports. A grep over the regenerated `man/` files found one `\section{Server not running}` and one `\section{API failure}` in each of the eleven. Each block names its own class. The API block names the integer status field. `devtools::test()` reported 147 pass, 0 fail.
+- 2026-09-18: review returned M007 to `in-progress`. AC5's first clause failed: `devtools::document()` rewrites `DESCRIPTION` from `Config/roxygen2/version: 8.0.0` to `8.1.0` under the upgraded roxygen2 in this environment. AC1, AC2, AC3, AC4, and AC6 passed with fresh evidence recorded in the Review section. Defect return 1 of this milestone.
 
 ## Decisions
 
 ## Review
+
+- AC1 — pass. `man/rlmstudio-conditions.Rd` exists and its header names
+  `R/conditions.R` as its source. A read of the rendered file found the
+  `rlmstudio_no_server` sentence in the `Server not running` section, the
+  `rlmstudio_api_error` sentence in the `API failure` section, the sentence
+  naming the `status` field as the HTTP response status as an integer, and an
+  `\examples{}` block whose `\dontrun{}` body calls `tryCatch()` with one
+  handler named `rlmstudio_no_server` and one named `rlmstudio_api_error`.
+- AC2 — pass. The criterion's grep printed ten call sites. A script that walks
+  back from each site to its enclosing `<- function` definition, and reads
+  `NAMESPACE`, mapped them to ten exported functions: `list_models()`,
+  `lms_load()`, `lms_unload()`, `lms_unload_all()`, `lms_download()`,
+  `lms_download_status()`, `lms_chat_openresponses()`, `lms_chat_openai()`,
+  `lms_chat_native()`, and `lms_chat_batch()`. Each of the ten `man/*.Rd` files
+  carries a rendered `\section{Server not running}` whose body holds the string
+  `rlmstudio_no_server` and the clause "when the LM Studio server is not
+  running". Ten of ten passed.
+- AC3 — pass. The criterion's grep printed eight call sites, mapping the same
+  way to eight exported functions: `list_models()`, `lms_load()`,
+  `lms_unload()`, `lms_download()`, `lms_download_status()`,
+  `lms_chat_openresponses()`, `lms_chat_openai()`, and `lms_chat_native()`.
+  Each of the eight `man/*.Rd` files carries a rendered `\section{API failure}`
+  whose body holds `rlmstudio_api_error`, the clause "returns a response that
+  the wrapper treats as a failure", and the clause "holds the HTTP response
+  status as an integer". Eight of eight passed.
+- AC4 — pass. A read of the rendered `\details{}` block of each of the three
+  help pages found the required sentence. `man/lms_chat.Rd` states that it can
+  raise `rlmstudio_no_server` and `rlmstudio_api_error` through
+  `lms_chat_openresponses()`, `lms_chat_openai()`, or `lms_chat_native()`.
+  `man/lms_chat_batch.Rd` states that it can raise `rlmstudio_api_error`
+  through `lms_chat()`. `man/lms_unload_all.Rd` states that it can raise
+  `rlmstudio_api_error` through `list_models()` and through `lms_unload()`.
+- AC5 — FAIL on its first clause, pass on the other three.
+  - `Rscript -e 'devtools::document()'` does not leave the working tree
+    unchanged. It rewrites `DESCRIPTION`, changing
+    `Config/roxygen2/version: 8.0.0` to `Config/roxygen2/version: 8.1.0`.
+    No `man/` file changes, and a second `document()` run reproduces the same
+    one-line diff. The committed branch tree therefore does not survive a
+    re-documentation run. The cause is a roxygen2 upgrade in the environment
+    since the implement runs, which recorded roxygen2 8.0.0. `origin/main`
+    carries the same stale stamp, so the drift is not something this branch
+    introduced. The repair is one committed `DESCRIPTION` line.
+  - `Rscript -e 'devtools::test()'` reported `FAIL 0 | WARN 0 | SKIP 0 |
+    PASS 147`.
+  - `Rscript -e 'pkgdown::check_pkgdown()'` reported `No problems found.`
+  - `Rscript -e 'devtools::check()'` reported 0 errors, 0 warnings, 0 notes,
+    over the tree as committed.
+- AC6 — pass. The first bullet under the `# rlmstudio (development version)`
+  heading holds `rlmstudio_no_server`, `rlmstudio_api_error`, `status`, and
+  `rlmstudio-conditions`. A regular-expression search of that bullet for `M`
+  followed by one or more digits returned no match.
+- Gate outcome: returned to `in-progress` on the AC5 first clause. Criteria are
+  never reinterpreted at review, and the consistency-gate slot names the no-diff
+  `document()` run as the check that catches generated-file drift, so the
+  criterion caught what it exists to catch. Steps 4 through 10 did not run.
+
