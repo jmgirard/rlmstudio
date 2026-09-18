@@ -63,7 +63,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
       `rlmstudio_api_error` through `lms_chat()`. The help page of
       `lms_unload_all()` states that it can raise `rlmstudio_api_error` through
       `list_models()` and `lms_unload()`.
-- [ ] AC5: `Rscript -e 'devtools::document()'` leaves the working tree
+- [x] AC5: `Rscript -e 'devtools::document()'` leaves the working tree
       unchanged. `Rscript -e 'devtools::test()'` reports no failures.
       `Rscript -e 'pkgdown::check_pkgdown()'` reports no topic missing from the
       reference index. `Rscript -e 'devtools::check()'` reports 0 errors and 0
@@ -203,4 +203,102 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
   never reinterpreted at review, and the consistency-gate slot names the no-diff
   `document()` run as the check that catches generated-file drift, so the
   criterion caught what it exists to catch. Steps 4 through 10 did not run.
+
+### Pass two (after the AC5 repair)
+
+Every criterion re-executed against the repaired tree. `origin/main` had not
+moved, and the working tree was clean at the start of the pass.
+
+- AC1 — pass. `man/rlmstudio-conditions.Rd` exists, names `R/conditions.R` as
+  its source, and a string search of the rendered file found all four required
+  statements and the `\dontrun{}` `tryCatch()` block with one handler named
+  `rlmstudio_no_server` and one named `rlmstudio_api_error`.
+- AC2 — pass. The criterion's grep printed ten call sites, which mapped to ten
+  exported functions. All ten help pages carry the rendered
+  `\section{Server not running}` with the class name and the "when the LM
+  Studio server is not running" clause. Ten of ten.
+- AC3 — pass. The criterion's grep printed eight call sites, which mapped to
+  eight exported functions. All eight help pages carry the rendered
+  `\section{API failure}` with the class name, the failure clause, and the
+  integer `status` clause. Eight of eight.
+- AC4 — pass. All three help pages carry the delegation sentence naming every
+  required class and function.
+- AC5 — pass on all four clauses. `Rscript -e 'devtools::document()'` left the
+  working tree unchanged, which is the clause that failed in pass one.
+  `Rscript -e 'devtools::test()'` reported `FAIL 0 | WARN 0 | SKIP 0 |
+  PASS 147`. `Rscript -e 'pkgdown::check_pkgdown()'` reported `No problems
+  found.` `Rscript -e 'devtools::check()'` reported 0 errors, 0 warnings, and
+  0 notes, so no note needs a reason.
+- AC6 — pass. The first bullet under the development version heading holds all
+  four required tokens, and a search for `M` followed by digits found no match.
+
+### Consistency gate (pass two)
+
+`cairn_validate.py` exited 0 with every check passing. No `DESIGN.md`
+principle changed, so the impact report was skipped. Toolchain checks from the
+`r-package` profile's `consistency-gate` slot: `devtools::document()` produced
+no diff; generated files are covered by that same no-diff run; the branch
+touches no README and `README.md` is not older than `README.Rmd`;
+`pkgdown::check_pkgdown()` passed; `NEWS.md` carries the entry and no milestone
+number; the branch adds no top-level file and `devtools::check()` reported no
+NOTE; the full check reported 0 errors and 0 warnings.
+
+### Independent review (pass two)
+
+Three fresh-context lenses over the branch diff. The prior-review lens found no
+prior-review evidence to flag: its probe of the repository's inline pull
+request comments returned an empty list, so the per-PR walk was skipped, and no
+finding in `cairn/milestones/archive/` is reintroduced or contradicted by this
+diff. It contributed zero findings. The diff-bug lens returned seven findings
+and the blame-history lens two, one of which duplicates a diff-bug finding.
+Eight distinct findings, each logged below with its disposition.
+
+- Finding 1 (diff-bug) — "The delegation sentences on `lms_chat_batch()` and
+  `lms_unload_all()` attribute only the delegated class and stay silent on the
+  abort each raises itself." Both call `stop_if_no_server(host)` directly
+  (`R/chat.R:356`, `R/unload.R:96`), so both raise `rlmstudio_no_server` in
+  their own frame. Verified: those two call sites are among the ten AC2 binds.
+  Both pages do carry the inherited `Server not running` section, so no
+  information is absent from the page; the risk is that the `\details{}`
+  paragraph reads as though the server check were also delegated. Disposition:
+  fix now.
+- Finding 2 (diff-bug) — "The new topic has no alias for either class name, so
+  `?rlmstudio_no_server` and `?rlmstudio_api_error` find nothing." Verified:
+  `man/rlmstudio-conditions.Rd` carries only `\alias{rlmstudio-conditions}`,
+  and `utils::help("rlmstudio_no_server", package = "rlmstudio")` returned zero
+  topics. A user who has just read the class name out of a `tryCatch()` handler
+  cannot look it up. Disposition: fix now.
+- Finding 3 (blame-history) — the T4 work-log line says the new pkgdown title
+  matches "the seven existing section titles". Verified: `_pkgdown.yml` holds
+  six `title:` entries including the new one, so five existed before, not
+  seven. The title text itself is correct. Disposition: fix now, by a
+  superseding work-log line; history is never edited.
+- Finding 4 (diff-bug) — "`DESCRIPTION` is edited, which the milestone's Scope
+  Out bullet forbids." Disposition: reject. The bullet bounds the families the
+  milestone edits, and the committed line is `Config/roxygen2/version`, which
+  roxygen2 writes as a byproduct of the roxygen edits the scope admits. The
+  work log records the line and its reason. The finding's second half, that a
+  contributor on roxygen2 8.0.0 would flip the line back, is how the field
+  works and is not specific to this branch.
+- Finding 5 (diff-bug) — the `NEWS.md` phrase "every exported function that can
+  raise one of these classes" overstates, because `with_lms_daemon()` evaluates
+  caller code with `force()` and so propagates both classes while carrying
+  neither section. Disposition: reject. The claim audit reached this question
+  and recorded the distinction: propagating a condition is not raising one.
+- Finding 6 (diff-bug, duplicated by blame-history) — the `Server not running`
+  text promises more than `is_server_running()` checks, which opens a TCP
+  connection and does not confirm the listener is LM Studio. Disposition:
+  reject as already filed. The M007 claim audit surfaced it and it holds a
+  candidate row in `ROADMAP.md`.
+- Finding 7 (diff-bug) — the inherited sections are written in a generic voice,
+  so no page asserts that the function on that page raises the condition, which
+  is weaker than the milestone's Goal sentence. Disposition: reject as
+  intentional. The round-two criteria audit found the same thing and rewrote
+  AC2 and AC3 to drop "the function aborts" precisely because an
+  `@inheritSection` section does not state it.
+- Finding 8 (diff-bug) — on `man/lms_chat.Rd` the inherited section's opening
+  clause reads against the page's own `\details{}` sentence that the function
+  runs no request of its own. Disposition: reject. It follows from the plan
+  gate's recorded choice of one shared source topic over eleven copies, and
+  finding 1's fix makes the `\details{}` paragraph the more precise of the two.
 
