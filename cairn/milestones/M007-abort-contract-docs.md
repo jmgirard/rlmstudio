@@ -1,6 +1,6 @@
 # M007: The abort contract reaches the help pages
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -142,6 +142,8 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: T2 done: both `@inheritSection` tags added at eleven exports. A grep over the regenerated `man/` files found one `\section{Server not running}` and one `\section{API failure}` in each of the eleven. Each block names its own class. The API block names the integer status field. `devtools::test()` reported 147 pass, 0 fail.
 - 2026-09-18: review returned M007 to `in-progress`. AC5's first clause failed: `devtools::document()` rewrites `DESCRIPTION` from `Config/roxygen2/version: 8.0.0` to `8.1.0` under the upgraded roxygen2 in this environment. AC1, AC2, AC3, AC4, and AC6 passed with fresh evidence recorded in the Review section. Defect return 1 of this milestone.
 - 2026-09-18: T5 re-run after the review return. `devtools::document()` rewrote `Config/roxygen2/version` in `DESCRIPTION` from `8.0.0` to `8.1.0`, the roxygen2 version installed in this environment. That one line is now committed. No `man/` file changed under 8.1.0. A second `devtools::document()` run left the tree unchanged beyond that committed line, so the run is idempotent. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
+- 2026-09-18: claim audit: 1 claim read, 0 corrected — DESCRIPTION. Scope was the lines the T5 re-run commit adds outside `cairn/`. A fresh-context reader extracted the commit into a scratch copy, ran `roxygen2::roxygenise()` there, and found `man/` and `NAMESPACE` byte-identical to the committed files and `DESCRIPTION` unrewritten. The 2026-09-18 audit of 25 claims covers the rest of the branch diff.
+- 2026-09-18: pre-review check over the repaired tree: `devtools::check()` reported 0 errors, 0 warnings, 0 notes. Status set to `review`.
 
 ## Decisions
 
