@@ -146,6 +146,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: pre-review check over the repaired tree: `devtools::check()` reported 0 errors, 0 warnings, 0 notes. Status set to `review`.
 - 2026-09-18: supersedes the T4 work-log line above on one point. That line says the new pkgdown title matches "the seven existing section titles". `pkgdown/_pkgdown.yml` holds six `title:` entries including the new one, so five existed before, not seven. The title text and its casing are unaffected.
 - 2026-09-18: three fix-now findings applied at the review gate. `R/conditions.R` gained `@aliases rlmstudio_no_server rlmstudio_api_error`, so `?rlmstudio_no_server` and `?rlmstudio_api_error` now reach the topic. `lms_chat_batch()` and `lms_unload_all()` gained the sentence "It raises `rlmstudio_no_server` itself, before the first call." A read of both function bodies confirms it: `stop_if_no_server(host)` is the first statement of `lms_unload_all()` and precedes the `lapply()` over `inputs` in `lms_chat_batch()`.
+- 2026-09-18: step-7 approval: m007-abort-contract-docs approved for merge
 
 ## Decisions
 
@@ -303,4 +304,23 @@ Eight distinct findings, each logged below with its disposition.
   runs no request of its own. Disposition: reject. It follows from the plan
   gate's recorded choice of one shared source topic over eleven copies, and
   finding 1's fix makes the `\details{}` paragraph the more precise of the two.
+
+### Re-verification after the three fix-now findings
+
+The fixes changed `R/conditions.R`, `R/chat.R`, `R/unload.R`, and three
+generated `.Rd` files, so every criterion was executed again against the fixed
+tree. AC1: the topic still carries all four statements and the `\dontrun{}`
+example, and now three aliases. AC2: ten call sites, ten functions, all pages
+carrying the section with the required clauses. AC3: eight call sites, eight
+functions, all passing. AC4: all three delegation sentences still name every
+required class and function. AC5: `devtools::document()` left the tree
+unchanged, `devtools::test()` reported `FAIL 0 | WARN 0 | SKIP 0 | PASS 147`,
+`pkgdown::check_pkgdown()` reported `No problems found.`, and
+`devtools::check()` reported 0 errors, 0 warnings, 0 notes. AC6: unchanged and
+passing. `cairn_validate.py` passed every check.
+
+The added sentence is derived, not composed: `stop_if_no_server(host)` is the
+first statement of `lms_unload_all()` and precedes the `lapply()` over `inputs`
+in `lms_chat_batch()`, so each raises `rlmstudio_no_server` before its first
+delegated call.
 
