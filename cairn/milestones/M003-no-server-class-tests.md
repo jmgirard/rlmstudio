@@ -54,6 +54,7 @@ Assert the `rlmstudio_no_server` condition class at every `R/` call site that ab
 - 2026-09-18: claim audit: not owed — internal tier.
 - 2026-09-18: review checkpoint. All three acceptance criteria verified with fresh evidence and ticked. Consistency gate clean. Three fresh-context reviewers are still running.
 - 2026-09-18: review triage. Six findings, all from the diff-bug lens. One fixed now, one routed to a candidate row, four rejected. No finding met the return floor. Suite and check re-run clean after the fix.
+- 2026-09-18: step-7 approval: m003-no-server-class-tests approved for merge.
 
 ## Decisions
 
