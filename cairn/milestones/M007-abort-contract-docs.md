@@ -111,7 +111,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - [x] T4: Add an `Error conditions` section to the `reference:` list in
       `pkgdown/_pkgdown.yml` holding `rlmstudio-conditions`. Run
       `pkgdown::check_pkgdown()`.
-- [ ] T5: Run `devtools::document()`, `devtools::test()`, and
+- [x] T5: Run `devtools::document()`, `devtools::test()`, and
       `devtools::check()`. Fix what they report. Record each NOTE with a
       one-line reason for the review gate.
 - [x] T6: Add the `NEWS.md` entry under the development version heading.
@@ -131,6 +131,7 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: implement question gate settled two items. The three exports that reach an abort only through another function carry the two shared sections as well as their own delegation sentence. The drafted section wording was accepted as drafted.
 - 2026-09-18: minor amendment from that gate. T2's function list grows from ten to eleven, adding `lms_chat()`. No criterion changes. AC2 and AC3 still bind the ten call sites the greps name, and the eleventh page is additive.
 - 2026-09-18: T1 done: `R/conditions.R` written and `man/rlmstudio-conditions.Rd` generated. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
+- 2026-09-18: T5 done: `devtools::document()` left the working tree unchanged. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes, so no note needs a reason. `pkgdown::check_pkgdown()` reported no problems. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
 - 2026-09-18: minor amendment. T6 runs before T5, so that `devtools::check()` runs over the finished tree. No task text changes beyond the added ordering note.
 - 2026-09-18: T6 done: one `NEWS.md` bullet added under the development version heading. A grep of that bullet found `rlmstudio_no_server`, `rlmstudio_api_error`, `status`, and `rlmstudio-conditions`. The same grep found no `M` followed by digits. A sweep of the other source files found no further exported function that reaches either abort. The bullet's "every exported function" clause therefore covers the eleven pages and no more.
 - 2026-09-18: T4 done: `pkgdown/_pkgdown.yml` gained a reference section holding `rlmstudio-conditions`. The title reads `Error Conditions`, in the title case that the seven existing section titles use. `pkgdown::check_pkgdown()` reported no problems.
