@@ -59,6 +59,18 @@
   [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
   an empty response body raised `Can't retrieve empty body.`
 
+- [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  now reports a failed REST response through that same path. Before, it
+  raised the raw httr2 error, such as `HTTP 400 Bad Request`. It now
+  aborts with the message `API List Failed:` followed by the text read
+  out of the response body. The abort carries the condition class
+  `rlmstudio_api_error`. It also carries a `status` field, which holds
+  the HTTP status as an integer. If the status is 400 or above and the
+  body carries no readable message, the abort reports `HTTP Status <n>`.
+  Below status 400 it reports the body text instead. The call now aborts
+  on every status other than 200. Before, only status 400 and above
+  raised an error, so a status such as 201 or 302 reached the parser.
+
 - The server probe now honors the `host` argument. This affects
   [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
   [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
