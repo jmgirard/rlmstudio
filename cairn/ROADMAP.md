@@ -19,4 +19,5 @@ _Last hygiene check: 2026-09-17 (scaffolded by cairn-init)_
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
 - Write the pre-release live-run procedure (full suite against a running LM Studio, re-record stale fixtures) into the release walk, added 2026-09-17, DESIGN Conventions
+- Add `rlmstudio_no_server` class tests for the seven chat, load, and unload sites that only a code read covers, added 2026-09-17, M001 review finding 11
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues

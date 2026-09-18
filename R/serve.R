@@ -217,7 +217,9 @@ lms_server_status <- function(
 #' Check if the LM Studio server is reachable
 #'
 #' Opens a TCP connection to the hostname and port named in `host`. When
-#' `host` names no port, the probe uses 1234, the LM Studio default.
+#' `host` names no port, the probe uses 1234, the LM Studio default. A `host`
+#' with no scheme is read as `http://`. A `host` that does not parse is
+#' reported as not running.
 #'
 #' @param host Character. The host address of the local server.
 #' @return Logical.
@@ -233,13 +235,22 @@ lms_server_status <- function(
 #' }
 #' }
 is_server_running <- function(host = "http://localhost:1234") {
-  url <- httr2::url_parse(host)
+  if (!grepl("^[A-Za-z][A-Za-z0-9+.-]*://", host)) {
+    host <- paste0("http://", host)
+  }
+  url <- tryCatch(httr2::url_parse(host), error = function(e) NULL)
+  if (is.null(url)) {
+    return(FALSE)
+  }
   hostname <- url$hostname
   port <- if (is.null(url$port)) 1234L else as.integer(url$port)
 
   if (is.null(hostname) || identical(hostname, "")) {
     return(FALSE)
   }
+  # url_parse keeps the brackets of an IPv6 literal; socketConnection does not
+  # accept them.
+  hostname <- sub("^\\[(.*)\\]$", "\\1", hostname)
 
   tryCatch(
     {

@@ -83,6 +83,29 @@ test_that("is_server_running falls back to port 1234 when host names none", {
   expect_equal(seen, list(host = "example.org", port = 1234))
 })
 
+test_that("is_server_running strips the brackets of an IPv6 literal", {
+  seen <- NULL
+  local_mocked_bindings(
+    socketConnection = function(host, port, ...) {
+      seen <<- list(host = host, port = port)
+      stop("no listener")
+    },
+    .package = "base"
+  )
+  expect_false(is_server_running("http://[::1]:4321"))
+  expect_equal(seen, list(host = "::1", port = 4321L))
+})
+
+test_that("is_server_running reads a schemeless host as http", {
+  port <- local_listener()
+  expect_true(is_server_running(paste0("localhost:", port)))
+})
+
+test_that("is_server_running is FALSE for a host that does not parse", {
+  expect_false(is_server_running("http://exa mple:1234"))
+  expect_false(is_server_running(""))
+})
+
 test_that("lms_server_status warns on multiple logging flags", {
   mock_run <- function(command, args, error_on_status) {
     list(status = 0, stdout = "ok", stderr = "")

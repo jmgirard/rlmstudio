@@ -72,3 +72,19 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 - 2026-09-17 AC5: NEWS.md development section holds three bullets naming the affected functions: host probe, fail-fast aborts in `list_models()`/`lms_download()`/`lms_download_status()`, and `has_lms()` lookup: pass.
 - 2026-09-17 AC6: `devtools::document()` left the tree unchanged (only the pre-existing `.DS_Store` change); `devtools::test()` 53 pass, 0 fail, 0 warn, 0 skip: pass.
 - 2026-09-17 gate: `cairn_validate.py` all checks passed; no DESIGN.md principle changed, so `cairn_impact` skipped. Toolchain: `document()` no diff; README.md untouched by the diff; no `_pkgdown.yml`; NEWS.md carries the entries; new top-level `CLAUDE.md` has its `.Rbuildignore` entry; `devtools::check()` 0 errors, 0 warnings, 0 notes.
+- 2026-09-17 reviewers: [S] prior-review lens: no prior-review evidence, zero findings. [S] blame-history lens: zero findings; every change matches the milestone intent, the removed soft returns were server-down guards (b06c1c5), and the `quiet` change was noted in the claim audit. [O] diff-bug lens: 15 findings, triaged below.
+- 2026-09-17 finding 1 (IPv6 host always reported down; `url_parse` keeps the brackets and `socketConnection` rejects them): confirmed by running it. Fix now: brackets stripped in `is_server_running()`, test added.
+- 2026-09-17 finding 2 (schemeless `localhost:1234` raises a raw curl parse error where `httr2::request()` accepts it): confirmed by running it. Fix now: a host with no scheme is read as `http://`, test added.
+- 2026-09-17 finding 3 (a `url_parse` failure escapes the `rlmstudio_no_server` class): fix now: the parse is wrapped and a host that does not parse is reported as not running, test added.
+- 2026-09-17 finding 4 (`https` host with no port probed at 1234): rejected. The plan recorded the 1234 fallback as a decision, falsified only by a user report of a server at a scheme-default port.
+- 2026-09-17 findings 5 and 6 (mocking `file.exists` and `socketConnection` in base is fragile): rejected. testthat 3.2 supports `.package = "base"` mocks, the tests pass, and no failure scenario is present today.
+- 2026-09-17 finding 7 (the PATH test writes `lms.bat`, which `Sys.which("lms")` will not find on Windows): rejected. R's `Sys.which` on Windows tries `.exe`, `.com`, `.cmd`, and `.bat` when the name has no extension; M002's Windows job will confirm.
+- 2026-09-17 finding 8 (random-port race in the listener helpers): rejected. The window between close and probe is microseconds on a random port in 20000–40000; a flake, if one appears, is fixed then.
+- 2026-09-17 finding 9 (the wrong-hostname test exercises DNS failure, so a probe that always used localhost would pass): rejected. The port-fallback test already asserts the parsed hostname reaches `socketConnection`, which catches that regression.
+- 2026-09-17 finding 10 (`quiet` no longer governs the server-down path and the docs do not say so): fix now: the `@param quiet` text of `list_models()` states it.
+- 2026-09-17 finding 11 (seven of the ten converted sites have no class test): follow-up, candidate row added to ROADMAP.
+- 2026-09-17 finding 12 (`helper-skips.R` calls the probe with no host): rejected. The live tests target the default host by design; noted in the T2 work-log line.
+- 2026-09-17 finding 13 (DNS resolution before the socket timeout is unbounded): rejected. Pre-existing and outside the milestone's scope.
+- 2026-09-17 finding 14 (`man/rlmstudio-package.Rd` changed out of scope): rejected. `document()` regenerated a file stale since 31fde62, and the gate requires a no-diff `document()`.
+- 2026-09-17 finding 15 (`has_lms()` no longer checks executability for the env-var branch): rejected. Agreeing with `lms_path()` is the criterion; its env-var branch is pre-existing.
+- 2026-09-17 after fixes: `document()` no diff, `test()` 58 pass, `check()` 0 errors, 0 warnings, 0 notes.
