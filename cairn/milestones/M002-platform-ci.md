@@ -47,6 +47,7 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 - 2026-09-17: claim audit: not owed — internal tier.
 - 2026-09-17: implement gate kept the template's full five-entry matrix and limited the push trigger to the default branch, matching test-coverage.yaml and pkgdown.yaml. The stray tracked `.DS_Store` was untracked and gitignored first, as a trivial commit on main outside this milestone.
 - 2026-09-17: review recorded AC1 and AC2 evidence and ticked both boxes. Consistency gate clean. AC3 waits on the PR check run in step 8. Checkpoint taken with the diff-bug reviewer still running.
+- 2026-09-17: three-lens review returned nine findings. One fixed now, the stale DESIGN Platforms line. Two go to candidate rows at hygiene. Three rejected, three noted. No return floor trigger.
 
 ## Decisions
 
@@ -68,4 +69,26 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 - `NEWS.md`: no entry owed. The milestone changes no user-visible package behavior.
 - `.Rbuildignore`: holds `^\.github$` at line 11, so the new workflow stays out of the built package.
 - `devtools::check()`: 0 errors, 0 warnings, 0 notes on rlmstudio 0.2.2.9000.
+
+### Independent review (2026-09-17)
+
+Three fresh-context reviewers ran in parallel, because the diff touches a CI workflow and is not docs-only. The [O] diff-bug lens read the full diff against the criteria, DESIGN, and DECISIONS. The [S] history lens read `git log` and `git blame` on the touched files. The [S] prior-review lens searched the archive and probed the GitHub review threads.
+
+Prior-review lens: no prior-review evidence. The one archived Review section covers `R/` files that this diff does not touch, and the inline-comment probe returned an empty list. Zero findings.
+
+History lens: the change follows the `paths-ignore` convention an earlier commit added deliberately. No check workflow was ever added and then removed. The README badge follows the existing paired-edit pattern. The lens raised one finding, folded in as F7 below.
+
+Findings and dispositions, most severe first:
+
+- F1 ([O] 1) AC3 carries no evidence yet, because the branch is unpushed and no PR exists. Disposition: noted. The evidence lands at the `gh pr checks` read in step 8, and the box stays unticked until then.
+- F2 ([O] 2) The test suite carries cross-platform risk that Windows will hit first. `tests/testthat/test-serve.R` opens real loopback listeners on random ports through `local_listener()` and `free_port()`. `tests/testthat/test-setup.R` replaces `PATH` with an empty directory and relies on `Sys.which()` finding a hand-written `lms` stub. Neither file carries `skip_on_os()`. Verified by reading both files. Disposition: noted. A red run is what AC3's own procedure dispositions, and the plan routes a platform bug to a hotfix or a candidate row.
+- F3 ([O] 3) `cairn/DESIGN.md` still said CI runs R CMD check on Ubuntu only, which this branch makes false. Disposition: fixed now. The Platforms line now names all three platforms and carries the `corrected M002` mark.
+- F4 ([O] 4) `test-headless.yaml` has no `branches` filter under `push`, so the three named files are not identical. Disposition: noted. AC2 quantifies only over `paths-ignore` and `pull_request`, and on that wording all three agree.
+- F5 ([O] 5) The `pull_request` trigger carries no `paths-ignore`, so a tracking-only PR fires all five jobs. Disposition: rejected. AC2 requires it, and the PR run is the only route to AC3's evidence.
+- F6 ([O] 6) A red `r: 'devel'` job unrelated to this package blocks the merge. The plan's escape hatch covers a platform failure, not an R-version failure. Disposition: follow-up candidate row at hygiene.
+- F7 ([O] 7 and 8, plus the history lens finding) The new workflow has no `workflow_dispatch` trigger and no `concurrency` group. It pins `actions/checkout@v6` where the sibling workflows pin `@v4`. All three points are template-standard. Disposition: one follow-up candidate row at hygiene.
+- F8 ([O] 9) No `NEWS.md` entry. Disposition: rejected. The consistency gate confirmed none is owed, because no user-visible package behavior changed.
+- F9 ([O] 10) `upload-snapshots: true` has no `_snaps` directory to upload. Disposition: rejected. It is template-standard and harmless.
+
+Return floor: no finding demonstrates an acceptance criterion failing, so the milestone does not return to `in-progress`. This is the first review pass, so the defect-return count stays at zero.
 
