@@ -1,6 +1,6 @@
 # M007: The abort contract reaches the help pages
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -131,6 +131,9 @@ name the function. `NEWS.md` and the pkgdown reference index gain entries.
 - 2026-09-18: implement question gate settled two items. The three exports that reach an abort only through another function carry the two shared sections as well as their own delegation sentence. The drafted section wording was accepted as drafted.
 - 2026-09-18: minor amendment from that gate. T2's function list grows from ten to eleven, adding `lms_chat()`. No criterion changes. AC2 and AC3 still bind the ten call sites the greps name, and the eleventh page is additive.
 - 2026-09-18: T1 done: `R/conditions.R` written and `man/rlmstudio-conditions.Rd` generated. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
+- 2026-09-18: claim audit: 25 claims read, 0 corrected — NEWS.md, R/chat.R, R/conditions.R, R/download.R, R/list.R, R/load.R, R/unload.R, man/, pkgdown/_pkgdown.yml.
+- 2026-09-18: claim audit caveat on the shared server text. `is_server_running()` opens a TCP connection to the host and port. It does not make sure that the listener is LM Studio. A foreign process on the port therefore suppresses `rlmstudio_no_server`. AC2 binds the wording "raised when the LM Studio server is not running". The text therefore stands, and the gap goes to a candidate row.
+- 2026-09-18: claim audit caveat on the NEWS bullet. `with_lms_daemon()` runs the caller's code with `force()`, so either class can pass through it. It raises neither class itself. It is therefore outside the bullet's "every exported function that can raise" clause, and it carries no inherited section.
 - 2026-09-18: T5 done: `devtools::document()` left the working tree unchanged. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes, so no note needs a reason. `pkgdown::check_pkgdown()` reported no problems. `devtools::test()` reported 147 pass, 0 fail, 0 warn, 0 skip.
 - 2026-09-18: minor amendment. T6 runs before T5, so that `devtools::check()` runs over the finished tree. No task text changes beyond the added ordering note.
 - 2026-09-18: T6 done: one `NEWS.md` bullet added under the development version heading. A grep of that bullet found `rlmstudio_no_server`, `rlmstudio_api_error`, `status`, and `rlmstudio-conditions`. The same grep found no `M` followed by digits. A sweep of the other source files found no further exported function that reaches either abort. The bullet's "every exported function" clause therefore covers the eleven pages and no more.
