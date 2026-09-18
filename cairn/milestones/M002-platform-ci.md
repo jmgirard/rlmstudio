@@ -1,6 +1,6 @@
 # M002: R CMD check on macOS, Windows, and Ubuntu in CI
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -34,7 +34,7 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 ## Tasks
 
 - [x] T1: Run `usethis::use_github_action("check-standard")`, then add `paths-ignore: ['cairn/**']` under `push` and keep `pull_request` without one. Confirm `.Rbuildignore` holds `^\.github$`.
-- [ ] T2: Push the branch and read `gh pr checks`. On a platform failure, record it as a hotfix or candidate row before review.
+- [x] T2: Confirm the workflow locally before review: the file parses, its matrix names the three platforms, and `devtools::check()` is clean. The PR check run is read at review under AC3, because the PR opens at the merge gate.
 
 ## Work log
 
@@ -42,6 +42,9 @@ Automate the all-platform commitment (D-002) with the standard `R CMD check` wor
 - 2026-09-17: criteria audit ran in reduced mode on a fresh [O] reader; it returned rewordings for AC2 (name the three files the comparison reads) and AC3 (state the platform-bug case); both adopted.
 - 2026-09-17: plan gate chose "workflow runs to completion, platform bugs go to hotfix" over "stay open until all green" because the deliverable is the workflow and a platform bug is a separate release blocker under D-002; falsified by a red run that no hotfix or candidate row records.
 - 2026-09-17: T1 added `.github/workflows/R-CMD-check.yaml` from the usethis template, with `paths-ignore: ['cairn/**']` under `push`. The command also added an R-CMD-check badge to README.Rmd, so README.md was re-knitted. `devtools::test()` clean, 58 passing.
+- 2026-09-17: minor amendment to T2. It said to push the branch and read `gh pr checks`, which the git model does not allow before the merge gate, so it now confirms the workflow locally and leaves the PR check run to AC3 at review. No criterion changed.
+- 2026-09-17: T2 confirmed the workflow parses, its matrix names macos-latest, windows-latest, and ubuntu-latest, and `devtools::check()` reports 0 errors, 0 warnings, 0 notes.
+- 2026-09-17: claim audit: not owed — internal tier.
 - 2026-09-17: implement gate kept the template's full five-entry matrix and limited the push trigger to the default branch, matching test-coverage.yaml and pkgdown.yaml. The stray tracked `.DS_Store` was untracked and gitignored first, as a trivial commit on main outside this milestone.
 
 ## Decisions
