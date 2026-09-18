@@ -111,3 +111,19 @@ test_that("lms_unload names the HTTP status when the extracted message is empty"
     fixed = TRUE
   )
 })
+
+test_that("lms_unload_all returns early when list_models reports nothing loaded", {
+  local_mocked_bindings(
+    is_server_running = function(...) TRUE,
+    list_models = function(...) data.frame()
+  )
+  recorder <- local_request_recorder()
+
+  expect_message(
+    result <- expect_invisible(lms_unload_all()),
+    "No models are currently loaded"
+  )
+
+  expect_null(result)
+  expect_length(recorder$requests, 0L)
+})

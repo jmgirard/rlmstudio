@@ -88,7 +88,7 @@ owed. No user-visible behavior changes.
       sources, the three response shapes that reach the raw body text, and the
       empty-string case. Each mock returns a non-200 response with the body that
       selects its source (R/unload.R:55).
-- [ ] T3: Add the nothing-loaded test for `lms_unload_all()`. Mock
+- [x] T3: Add the nothing-loaded test for `lms_unload_all()`. Mock
       `list_models` to return an empty data frame. Assert the message, the
       invisible `NULL`, and that `httr2::req_perform` was never called
       (R/unload.R:113).
@@ -126,6 +126,7 @@ owed. No user-visible behavior changes.
 - 2026-09-18: substantive amendment accepted at a mini gate. AC2 now states three message sources and the three response shapes that reach the raw body text. No criterion was added. T2 was reworded to match.
 - 2026-09-18: probing found a third latent defect. A JSON `error` field holding an empty array crashes `lms_unload()` with "argument is of length zero". Filed as a candidate row.
 - 2026-09-18: T2 done. Five tests cover the two object sources, the three shapes that reach the raw body text, and the empty-string fallback to the HTTP status number. Suite 81 pass, 0 fail.
+- 2026-09-18: T3 done. One test asserts the message, the invisible `NULL`, and zero recorded requests on the nothing-loaded path. Suite 85 pass, 0 fail.
 
 ## Decisions
 
