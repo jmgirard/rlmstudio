@@ -129,3 +129,75 @@ names the unload functions. The other seven wrappers shipped in M005.
   no diff. `devtools::test()` was clean across all fourteen test files.
   `devtools::check()` reported `Status: OK` with 0 errors, 0 warnings, and 0
   notes on version 0.2.2.9000.
+
+### Consistency gate
+
+`cairn_validate.py` passed all sixteen checks and fired no advisory. The
+`release window` advisory did not fire. No `DESIGN.md` principle changed, so
+`cairn_impact.py` did not run. Toolchain gate: `document()` no diff, no
+hand-edited generated files, `README.md` untouched and in sync, no pkgdown
+site present, `NEWS.md` entry present, no new top-level files, `check()` clean.
+
+### Independent review
+
+Three fresh-context lenses ran against the branch at `7f1dee6`. The
+blame-history lens reported no finding that rises to a real concern. The
+prior-review lens reported zero regression findings, and noted that the diff
+resolves two points an earlier review raised on these same files. The diff-bug
+lens reported nine findings, ranked below as it ranked them.
+
+1. Deleting the coverage guard loses real protection, and the recorded reason
+   is wrong. The guard asserted seven `req_error(is_error` sites in `R/` and
+   seven `api_error_callers` entries. With it gone, a ninth wrapper can land
+   with no failure-table row and nothing goes red. The recorded reason says
+   the guard never gated a merge. That was verified at review and is wrong.
+   From `tests/testthat`, the path `../../R` resolves to a directory holding
+   14 `.R` files. The guard therefore ran under `devtools::test()`, and it
+   gated the local runs that the implement and review gates require. It
+   skipped only under `R CMD check`. Disposition: the deletion itself was the plan gate's
+   recorded choice and stands. The wrong reason is corrected. There are now 8
+   `req_error(is_error` sites and 8 callers.
+2. Statuses below 400 now reach `rlm_abort_api()` from `list_models()`, where
+   the body text becomes the message. If the status is below 400 and the parsed body
+   carries no usable `error`, `api_error_message()` returns the body text.
+   Verified at review by driving `list_models()` at statuses 201, 204, 302,
+   399, and 400 against the body `{"status":"bad"}`. The first four reported
+   `API List Failed: {"status":"bad"}`. Only 400 reported
+   `API List Failed: HTTP Status 400`. The `NEWS.md` sentence that a body with
+   no readable message reports `HTTP Status <n>` therefore holds only at
+   status 400 and above. The failure table runs at 400 and 503, so this branch
+   is untested for the new caller. Disposition: correct the `NEWS.md` sentence.
+3. The new check is wider than the httr2 default policy, and `NEWS.md` does
+   not say so. The default treats status 400 and above as an error. The new
+   code aborts on every status other than 200. Transport failures are
+   unaffected and still raise `httr2_failure`, which matches the seven shipped
+   wrappers. Disposition: state the widened range in the same `NEWS.md` edit.
+4. The roxygen comment on `api_error_message()` is stale. It says one caller
+   aborts on a response the server did not mark as a failure, and names
+   `lms_load()`. There are now two such callers. Disposition: correct the
+   comment.
+5. The `endsWith()` matcher is correct for every current row but brittle. A
+   future row whose label and text exceed the console width gets wrapped by
+   cli. The assertion then fails for a formatting reason. The longest current
+   row sits under 80 characters. Disposition: reject. No current row triggers
+   it, and a future row that did trigger it fails visibly at once.
+6. `R/list.R` inverts the sibling wrappers' shape. The other seven use a
+   status 200 branch with a trailing abort. `list_models()` uses an early
+   abort on a non-200 status. Disposition: reject as a style point.
+7. The `list_models()` help page does not document the new condition class or
+   the `status` field. The same gap exists at the seven wrappers M005 shipped,
+   so it is a package-wide hole rather than something this branch introduced.
+   Disposition: follow-up candidate row.
+8. The new path test does not assert the request verb, although
+   `request_target()` reports it. A `list_models()` that started sending a
+   POST still passes that test. Disposition: follow-up candidate row. The
+   accompanying point that AC2 writes the path without a leading slash while
+   the assertion compares against `/api/v1/models` is not a defect. The two
+   name the same path.
+9. The `NEWS.md` bullet omits the cli `✖ ` prefix the real message carries.
+   The work log already records this as deliberate, matching the three bullets
+   above it. Disposition: reject, already accepted.
+
+No finding demonstrates an acceptance criterion failing, and none shows a
+criterion to be wrong. Findings 2 and 3 are wrong statements in a user-facing
+file, so they are put to the maintainer as fix-now work at the gate.
