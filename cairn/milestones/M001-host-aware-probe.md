@@ -60,6 +60,7 @@ Make every REST wrapper probe the server at the host the user names, abort with 
 - 2026-09-17: T5 done. Three NEWS bullets. `document()` no diff, `test()` 53 pass, `check()` 0 errors, 0 warnings, 0 notes after adding `^CLAUDE\.md$` to `.Rbuildignore` (the one NOTE was that file at top level).
 - 2026-09-17: claim audit: 26 claims read, 0 corrected — NEWS.md, R/serve.R, R/setup.R, man/has_lms.Rd, man/check_lms_version.Rd, man/rlmstudio-package.Rd, tests/testthat/test-download.R, test-list.R, test-serve.R, test-setup.R. Reader noted that the `quiet` argument of `list_models()` no longer governs the server-down path, which now aborts unconditionally.
 - 2026-09-17: all tasks checked; verify slot clean; status set to review.
+- 2026-09-17: step-7 approval: m001-host-aware-probe approved for merge.
 
 ## Decisions
 
