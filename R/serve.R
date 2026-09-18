@@ -252,3 +252,23 @@ is_server_running <- function(host = "http://localhost:1234") {
     error = function(e) FALSE
   )
 }
+
+#' Abort when the LM Studio server is not reachable
+#'
+#' Every REST wrapper calls this first. The condition carries the class
+#' `rlmstudio_no_server` so callers can catch a stopped server by class.
+#'
+#' @param host Character. The host address of the local server.
+#' @return Invisibly `TRUE` when the server answers. Aborts otherwise.
+#'
+#' @noRd
+stop_if_no_server <- function(host = "http://localhost:1234") {
+  if (!is_server_running(host)) {
+    cli::cli_abort(
+      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
+      class = "rlmstudio_no_server",
+      call = NULL
+    )
+  }
+  invisible(TRUE)
+}

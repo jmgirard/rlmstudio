@@ -109,12 +109,7 @@ lms_chat_openresponses <- function(
   simplify = TRUE,
   ...
 ) {
-  if (!is_server_running(host)) {
-    cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
-      call = NULL
-    )
-  }
+  stop_if_no_server(host)
 
   body <- list(model = model, input = input, instructions = instructions)
   if (isTRUE(logprobs)) {
@@ -230,12 +225,7 @@ lms_chat_openai <- function(
   simplify = TRUE,
   ...
 ) {
-  if (!is_server_running(host)) {
-    cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
-      call = NULL
-    )
-  }
+  stop_if_no_server(host)
 
   body <- list(model = model, messages = messages)
   if (isTRUE(logprobs)) {
@@ -302,12 +292,7 @@ lms_chat_native <- function(
   simplify = TRUE,
   ...
 ) {
-  if (!is_server_running(host)) {
-    cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
-      call = NULL
-    )
-  }
+  stop_if_no_server(host)
 
   body <- list(model = model, input = input, system_prompt = system_prompt)
   body <- Filter(Negate(is.null), body)
@@ -377,12 +362,7 @@ lms_chat_batch <- function(
   quiet = FALSE,
   ...
 ) {
-  if (!is_server_running(host)) {
-    cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
-      call = NULL
-    )
-  }
+  stop_if_no_server(host)
   format <- match.arg(format)
 
   if (!is.character(inputs) || length(inputs) == 0) {

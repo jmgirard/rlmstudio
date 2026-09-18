@@ -47,14 +47,7 @@ list_models <- function(
   quiet = FALSE,
   host = "http://localhost:1234"
 ) {
-  if (!is_server_running(host)) {
-    if (!quiet) {
-      cli::cli_alert_danger(
-        "The LM Studio server is not running. Run {.fn lms_server_start} first."
-      )
-    }
-    return(invisible(data.frame()))
-  }
+  stop_if_no_server(host)
 
   resp <- lms_client(host) |>
     httr2::req_url_path("api/v1/models") |>
