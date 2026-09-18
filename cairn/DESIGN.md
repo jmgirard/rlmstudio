@@ -60,17 +60,17 @@ Settled by `/design-interview` on 2026-09-17. An IP (Inviolable Principle) chang
 
 ### Inviolable
 
-- **IP1 Local only.** The package sends user text only to the LM Studio host that the user names in the `host` argument. Two other network calls are allowed: the installer download in `install_lmstudio()` and a model download that the user requests. A host on another machine counts as the user's choice. No telemetry, no remote-inference fallback, no third-party service.
-- **IP2 Consent before installing.** No function downloads or runs an installer without consent. Consent is an interactive yes or the explicit `RLMSTUDIO_ALLOW_INSTALL` opt-in. The same rule covers any write outside LM Studio's own directories. A model download is the user's explicit request and needs no prompt.
+- IP1: **Local only.** The package sends user text only to the LM Studio host that the user names in the `host` argument. Two other network calls are allowed: the installer download in `install_lmstudio()` and a model download that the user requests. A host on another machine counts as the user's choice. No telemetry, no remote-inference fallback, no third-party service.
+- IP2: **Consent before installing.** No function downloads or runs an installer without consent. Consent is an interactive yes or the explicit `RLMSTUDIO_ALLOW_INSTALL` opt-in. The same rule covers any write outside LM Studio's own directories. A model download is the user's explicit request and needs no prompt.
 
 ### Guiding
 
-- **GP1 One wrapper per LM Studio feature.** The package exposes what `lms` and the REST API offer, plus analysis that serves scoring at scale. A new export must wrap an LM Studio feature or serve that workflow. General LLM helpers are out.
-- **GP2 Batch pipelines win ties.** A scripted run over many items and an interactive console use can conflict. The scripted run wins.
-- **GP3 A missing server is an error.** A function that needs the server aborts with a message that names `lms_server_start()`. It never returns an empty result in place of an error.
-- **GP4 Dots are the escape hatch.** Every REST wrapper forwards unnamed arguments to the request body. The server is the validator, and the package surfaces the error it returns. The package keeps no list of valid fields, so an unknown field passes silently (D-003). If a field needs input checks or documentation, it becomes a named argument.
-- **GP5 Calls are safe to repeat.** Start, load, and download are no-ops with a message on a second call. Stop and unload act only on what the caller named and never close the desktop app.
-- **GP6 Every message honors quiet.** User-facing output goes through the helpers in `R/utils-msg.R` and respects `rlmstudio.quiet` and a local `quiet` argument. Errors are exempt.
+- GP1: **One wrapper per LM Studio feature.** The package exposes what `lms` and the REST API offer, plus analysis that serves scoring at scale. A new export must wrap an LM Studio feature or serve that workflow. General LLM helpers are out.
+- GP2: **Batch pipelines win ties.** A scripted run over many items and an interactive console use can conflict. The scripted run wins.
+- GP3: **A missing server is an error.** A function that needs the server aborts with a message that names `lms_server_start()`. It never returns an empty result in place of an error.
+- GP4: **Dots are the escape hatch.** Every REST wrapper forwards unnamed arguments to the request body. The server is the validator, and the package surfaces the error it returns. The package keeps no list of valid fields, so an unknown field passes silently (D-003). If a field needs input checks or documentation, it becomes a named argument.
+- GP5: **Calls are safe to repeat.** Start, load, and download are no-ops with a message on a second call. Stop and unload act only on what the caller named and never close the desktop app.
+- GP6: **Every message honors quiet.** User-facing output goes through the helpers in `R/utils-msg.R` and respects `rlmstudio.quiet` and a local `quiet` argument. Errors are exempt.
 
 Disposition of the Phase 1 banked list: items 1, 2, 3, 7, and 8 became GP2, GP1, GP1, GP4, and GP3. Items 4 and 5 are conventions above and decisions D-002 and D-001. Items 6, 9, and 10 stay as convention and boundary text.
 
