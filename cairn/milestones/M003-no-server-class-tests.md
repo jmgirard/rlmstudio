@@ -1,13 +1,13 @@
 # M003: Class tests for the ten server-down abort sites
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** none
 - **Driving RR:** —
 - **Principles touched:** GP3
 - **Resolves:** none
 - **Surface tier:** internal. The deliverable is test coverage over error behavior that already shipped, and no exported behavior changes.
-- **Branch/PR:** none
+- **Branch/PR:** `m003-no-server-class-tests`
 
 ## Goal
 
@@ -33,7 +33,7 @@ Assert the `rlmstudio_no_server` condition class at every `R/` call site that ab
 
 ## Tasks
 
-- [ ] T1: Add class tests to `tests/testthat/test-chat.R` for four functions. They are `lms_chat_openresponses()` at `R/chat.R:112` and `lms_chat_openai()` at `R/chat.R:228`. The other two are `lms_chat_native()` at `R/chat.R:295` and `lms_chat_batch()` at `R/chat.R:365`. Each test mocks `is_server_running` to `FALSE`. Each test asserts `class = "rlmstudio_no_server"`. Assert the class alone. Do not assert the message text.
+- [x] T1: Add class tests to `tests/testthat/test-chat.R` for four functions. They are `lms_chat_openresponses()` at `R/chat.R:112` and `lms_chat_openai()` at `R/chat.R:228`. The other two are `lms_chat_native()` at `R/chat.R:295` and `lms_chat_batch()` at `R/chat.R:365`. Each test mocks `is_server_running` to `FALSE`. Each test asserts `class = "rlmstudio_no_server"`. Assert the class alone. Do not assert the message text.
 - [ ] T2: Add the class test for `lms_load()` at `R/load.R:56` to `tests/testthat/test-load.R`.
 - [ ] T3: Add class tests for `lms_unload()` at `R/unload.R:35` and `lms_unload_all()` at `R/unload.R:103`. Put them in a new file `tests/testthat/test-unload.R`.
 - [ ] T4: Add three `lms_chat()` tests to `tests/testthat/test-chat.R`. Write one test per `api_type` value: `openresponses`, `openai`, and `native`. Each test asserts that the class reaches the caller through the dispatcher.
@@ -46,6 +46,8 @@ Assert the `rlmstudio_no_server` condition class at every `R/` call site that ab
 - 2026-09-18: plan gate chose one dispatcher criterion plus three per-mode tasks. It rejected a criterion that named all three `api_type` values. The audit read the three-way form as a second promise, one per dispatch route, of what AC1 already covers directly. Falsified by a dispatch route that reaches the server check by a path the other three functions do not share.
 - 2026-09-18: plan gate chose to route an exposed defect to /hotfix. It rejected fixing the defect inside this milestone. A behavior fix needs its own regression test and merge gate, and it ends the tests-only boundary. Falsified by a defect whose fix cannot be separated from the test that finds it.
 - 2026-09-18: plan gate chose to assert the condition class alone. It rejected asserting the message text at each site as well. The message is centralized at `R/serve.R:277`, and one existing test covers it. Falsified by a site that builds its own abort message instead of calling the shared helper.
+
+- 2026-09-18: T1 done. Four class tests added to `tests/testthat/test-chat.R`. Each test was proven able to fail: with the mock flipped to a running server, all four go red. `devtools::test(filter = "chat")` reports 0 failures, 0 warnings, 0 skips.
 
 ## Decisions
 

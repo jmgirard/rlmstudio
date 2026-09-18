@@ -112,3 +112,38 @@ test_that("lms_chat routes correctly to openresponses and creates S3 class", {
   expect_s3_class(res, "lms_chat_result")
   expect_equal(res$text, "5")
 })
+
+test_that("lms_chat_openresponses aborts with class rlmstudio_no_server when the server is down", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat_openresponses(model = "test-model", input = "test input"),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat_openai aborts with class rlmstudio_no_server when the server is down", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat_openai(
+      model = "test-model",
+      messages = list(list(role = "user", content = "test input"))
+    ),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat_native aborts with class rlmstudio_no_server when the server is down", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat_native(model = "test-model", input = "test input"),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat_batch aborts with class rlmstudio_no_server when the server is down", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat_batch(model = "test-model", inputs = "test input"),
+    class = "rlmstudio_no_server"
+  )
+})
