@@ -147,3 +147,31 @@ test_that("lms_chat_batch aborts with class rlmstudio_no_server when the server 
     class = "rlmstudio_no_server"
   )
 })
+
+test_that("lms_chat passes rlmstudio_no_server through for api_type openresponses", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat(
+      model = "test-model",
+      input = "test input",
+      api_type = "openresponses"
+    ),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat passes rlmstudio_no_server through for api_type openai", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat(model = "test-model", input = "test input", api_type = "openai"),
+    class = "rlmstudio_no_server"
+  )
+})
+
+test_that("lms_chat passes rlmstudio_no_server through for api_type native", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  expect_error(
+    lms_chat(model = "test-model", input = "test input", api_type = "native"),
+    class = "rlmstudio_no_server"
+  )
+})
