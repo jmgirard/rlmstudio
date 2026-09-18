@@ -208,6 +208,76 @@ worktree for the baseline AC6 reads.
   the run). `devtools::test()` is `FAIL 0 | WARN 0 | SKIP 0 | PASS 136`.
   `devtools::check()` is `0 errors | 0 warnings | 0 notes`.
 
+### Independent review (2026-09-18)
+
+Three fresh-context lenses ran against the branch diff. The blame-history
+lens reported no history-contradicting regression and one formatting nit.
+The prior-review lens found no prior finding reintroduced, and its probe
+of the repository's pull-request comments returned an empty list. The
+diff-bug lens reported 16 findings, listed below in its own ranking. The
+session verified each one against the implementation before the gate.
+
+1. `R/load.R:121` and `R/load.R:131`. A response with status 200 whose
+   body does not say `loaded` also aborts through the helper. The helper
+   finds no `error` key and reports `API Load Failed: HTTP Status 200`,
+   and the `status` field holds 200. The parent commit printed the body.
+   Verified: a 200 body `{"status": "pending"}` gives
+   `API Load Failed: HTTP Status 200`. A caller that filters on a status
+   of 400 or more misses this abort. Proposed: fix now.
+2. `tests/testthat/test-api-error.R:213`. The test that fences AC1's grep
+   domain skips under `R CMD check`, which is what CI runs. Verified: a
+   hand-run `R CMD check` on the built tarball reports
+   `SKIP 2`, one of them `package sources are not available`. The guard
+   runs under `devtools::test()` and not on the machine that gates the
+   merge. Proposed: candidate row.
+3. `tests/testthat/test-api-error.R:219`. `expect_length(api_error_callers,
+   7L)` asserts the length of a literal list defined in the same file, so
+   it cannot fail on its own. Proposed: candidate row, with finding 2.
+4. `R/utils-api-error.R:13`. No table row discriminates the
+   `length(x) == 1L` guard. `resp_body_json()` parses with
+   `simplifyVector = FALSE`, so no body yields a character vector longer
+   than one. Proposed: fix now, by adding rows.
+5. `R/utils-api-error.R:43`. No table row discriminates the `is.list(err)`
+   guard, which T2 names as a crash fix. Verified: `{"error": ""}` and
+   `{"error": 42}` both give `HTTP Status 400`, and neither is in the
+   table. The code is correct and the coverage is missing. Proposed: fix
+   now, by adding rows.
+6. `R/download.R:85` and `R/download.R:137`. Both calls are missing the
+   space after the comma. Verified: `air format --check R/` reports
+   `Would reformat: R/download.R`. Proposed: fix now.
+7. `NEWS.md`, first bullet. The two download functions moved from an
+   abort that carries its call to one that does not. The other five
+   already passed `call = NULL`. The changelog does not say so. Proposed:
+   fix now.
+8. `tests/testthat/test-api-error.R:50`. The row named
+   `whole body is a JSON array` parses to a list, so it takes the list
+   branch and not the body-text branch its name implies. Only one row
+   reaches that branch. Proposed: fix now, by adding rows.
+9. `R/utils-api-error.R:13`. A message of spaces alone passes
+   `is_message_string()`. Verified: `{"error": {"message": "  "}}` gives
+   the abort text `API Unload Failed:` with nothing after the colon.
+   Proposed: fix now.
+10. `R/utils-api-error.R:65`. `as.integer()` is a no-op, because
+    `httr2::resp_status()` already returns an integer. AC5 holds on the
+    observed class either way. Proposed: reject, harmless.
+11. `tests/testthat/test-api-error.R:184`. The message check is a fixed
+    substring test, so appended text still passes. Proposed:
+    candidate row.
+12. `R/utils-api-error.R:48`. A scalar JSON body reaches the user as the
+    bare token. Verified: bodies `null`, `true`, and `42` give
+    `API Unload Failed: null`, `: true`, and `: 42`. This follows AC4 as
+    written. Proposed: absorb into the open candidate row on unbounded
+    body text.
+13. `R/utils-api-error.R:13`. The `!is.na(x)` guard is unreachable
+    through the wrappers. Proposed: reject, harmless.
+14. `NEWS.md`, second bullet. An empty body is not JSON and reports the
+    status, which the sentence about non-JSON bodies does not carve out.
+    The third bullet covers it. Proposed: fix now.
+15. `tests/testthat/test-api-error.R:212`. The file pattern `[.]R$` misses
+    a lowercase `.r` source file. Proposed: candidate row, with finding 2.
+16. `tests/testthat/test-api-error.R:126`. `%||%` is defined after its
+    first use site and shadows the base version. Proposed: reject, style.
+
 ### Consistency gate (2026-09-18)
 
 `cairn_validate.py` passed all 16 checks. Every advisory read OK, and the
