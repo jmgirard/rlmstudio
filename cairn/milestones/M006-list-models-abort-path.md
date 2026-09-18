@@ -1,6 +1,6 @@
 # M006: list_models() joins the shared REST abort path
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -95,6 +95,8 @@ names the unload functions. The other seven wrappers shipped in M005.
 - 2026-09-18: T5 done. `tests/testthat/test-list.R` now asserts that the request `list_models()` sends targets the path `/api/v1/models`. The fixture-backed success test and the server-down test are unchanged. The coverage guard came out under T2. In a scratch copy, changing the path in `R/list.R` to `api/v1/modelz` turned the new assertion red with `actual: "/api/v1/modelz"`, so it discriminates. The assertion does not skip, because httpuv is installed.
 - 2026-09-18: T6 done. `NEWS.md` gets its own bullet under the development-version heading for the changed failure behavior of `list_models()`. The before and after text in that bullet is read off the two runs recorded above.
 - 2026-09-18: a candidate row for a replacement coverage guard was added to the ROADMAP, per the question gate. Search-first found the `stop_if_no_server()` guard row, which is a different call-site family, so the new row cross-references it rather than merging into it.
+- 2026-09-18: claim audit: 10 claims read, 0 corrected. Files were `NEWS.md`, `tests/testthat/test-api-error.R`, and `tests/testthat/test-list.R`. The reader raised two notes that are not claim defects. The NEWS bullet omits the cli `✖ ` prefix the real message carries, which matches the three shipped bullets above it. The new path assertion needs httpuv, a suggested package, so on a machine without it that one assertion skips while the request-count assertion still runs.
+- 2026-09-18: `devtools::document()` produced no diff. `devtools::test()` was clean. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 
