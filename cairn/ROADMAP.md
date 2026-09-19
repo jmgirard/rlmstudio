@@ -9,7 +9,7 @@ _Last hygiene pass: 2026-09-18 (M008 planned: five candidate rows absorbed into 
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M008 | Tests that fail on the branch they name | planned | none | normal | milestones/M008-test-discrimination.md |
+| M008 | Tests that fail on the branch they name | review | none | normal | milestones/M008-test-discrimination.md |
 | M007 | The abort contract reaches the help pages | done | none | normal | milestones/archive/M007-abort-contract-docs.md |
 | M006 | list_models() joins the shared REST abort path | done | none | normal | milestones/archive/M006-list-models-abort-path.md |
 | M005 | One abort path for the seven REST failure branches | done | none | normal | milestones/archive/M005-api-error-helper.md |
@@ -20,7 +20,7 @@ _Last hygiene pass: 2026-09-18 (M008 planned: five candidate rows absorbed into 
      - idea, added YYYY-MM-DD, links
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
-- A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. Per the M005 lesson a test that greps `R/` does not run under `R CMD check`, so it would gate `devtools::test()` only, added 2026-09-18, M007 scope
+- A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. Per the M005 lesson a test that greps `R/` does not run under `R CMD check`, so it gates `devtools::test()` only, added 2026-09-18, M007 scope
 - The help text promises `rlmstudio_no_server` for a stopped LM Studio server. `is_server_running()` opens a TCP connection to the host and port. It does not make sure that the listener is LM Studio. A foreign process on the port suppresses the condition. Narrow the help text or tighten the probe, added 2026-09-18, M007 claim audit
 - The release walk needs a live-run step: full suite against a running LM Studio, then a re-record of stale fixtures, added 2026-09-17, DESIGN Conventions
 - A guard that keeps every new `stop_if_no_server()` call site covered by a class test, added 2026-09-18, M003 scope
@@ -28,5 +28,7 @@ _Last hygiene pass: 2026-09-18 (M008 planned: five candidate rows absorbed into 
 - Help pages do not document the `rlmstudio_api_error` class or its `status` field at any of the eight REST wrappers. The abort contract is user-facing and undocumented, added 2026-09-18, M006 review finding 7
 - A non-JSON failure body becomes the abort message in full, with no length bound. A proxy's HTML page reaches the user whole. A scalar JSON body reaches the user as the bare token, added 2026-09-18, M005 implement audit and M005 review finding 12
 - When only R-devel breaks, a red `ubuntu-latest (devel)` job still blocks the merge. Decide its disposition, added 2026-09-17, M002 review finding 6
+- `request_target()` calls `skip_if_not_installed("httpuv")`, so every host and body assertion silently empties on a machine without it. D-005 accepted this for contributors. Make the helper fail rather than skip when the `CI` environment variable is set, so a CI image that loses `httpuv` goes red instead of green, added 2026-09-19, M008 review finding 1
+- `request_target()` parses the request body as JSON with no guard, so a wrapper that ever sends a non-JSON body surfaces a raw `jsonlite` error from the helper rather than a named test failure. Catch the parse and return the raw string, added 2026-09-19, M008 review finding 6
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
 - [low] Unify the four workflow files on one `actions/checkout` version, a `concurrency` group, and a `workflow_dispatch` trigger, added 2026-09-17, M002 findings 7 and 8

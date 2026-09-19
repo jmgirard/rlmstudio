@@ -37,7 +37,10 @@ test_that("lms_unload merges a named dots argument into the request body", {
 
   suppressMessages(lms_unload("test-model", ttl = 300))
 
-  body <- recorder$requests[[1]]$body$data
+  # Read the body back off the serialized request rather than off the
+  # request object's own field, so the assertion covers what goes over the
+  # wire rather than what the caller handed httr2.
+  body <- request_target(recorder$requests[[1]])$body
   expect_equal(body$instance_id, "test-model")
   expect_equal(body$ttl, 300)
 })
@@ -88,9 +91,33 @@ test_that("lms_unload falls back to the status when the JSON has no error field"
   )
 })
 
-test_that("lms_unload falls back to the body text when the body is not JSON", {
+# A body reaches the raw-text fallback for either of two reasons: the response
+# is not served as JSON at all, or it is served as JSON and does not parse.
+# One test covering one of them leaves the other cause untested, so each cause
+# gets its own test here.
+
+test_that("lms_unload falls back to the body text when the response is not served as JSON", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
-  local_request_recorder(mock_response(502L, "Bad Gateway, not JSON"))
+  local_request_recorder(
+    mock_response(502L, "Bad Gateway, not JSON", content_type = "text/plain")
+  )
+
+  expect_error(
+    suppressMessages(lms_unload("test-model")),
+    "API Unload Failed: Bad Gateway, not JSON",
+    fixed = TRUE
+  )
+})
+
+test_that("lms_unload falls back to the body text when a JSON response does not parse", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(
+    mock_response(
+      502L,
+      "Bad Gateway, not JSON",
+      content_type = "application/json"
+    )
+  )
 
   expect_error(
     suppressMessages(lms_unload("test-model")),
@@ -119,7 +146,8 @@ test_that("lms_unload_all returns early when list_models reports nothing loaded"
 
   expect_message(
     result <- expect_invisible(lms_unload_all()),
-    "No models are currently loaded"
+    "No models are currently loaded.",
+    fixed = TRUE
   )
 
   expect_null(result)
@@ -152,18 +180,44 @@ test_that("lms_unload_all unloads each reported instance in order and forwards d
   expect_equal(result, c("inst-1", "inst-2"))
   expect_length(recorder$requests, 2L)
 
-  bodies <- lapply(recorder$requests, function(req) req$body$data)
+  targets <- lapply(recorder$requests, request_target)
+
+  bodies <- lapply(targets, function(t) t$body)
   expect_equal(
     vapply(bodies, function(b) b$instance_id, character(1)),
     c("inst-1", "inst-2")
   )
   expect_equal(vapply(bodies, function(b) b$ttl, numeric(1)), c(60, 60))
 
-  targets <- lapply(recorder$requests, request_target)
   expect_equal(
     vapply(targets, function(t) t$path, character(1)),
     rep("/api/v1/models/unload", 2L)
   )
+})
+
+test_that("lms_unload_all sends every unload request to the host it was given", {
+  # lms_unload_all() passes its host down to each lms_unload() call. The
+  # mocked transport answers whatever address it is handed, so a dropped
+  # host is invisible unless a test reads the host header off the request.
+  local_mocked_bindings(
+    is_server_running = function(...) TRUE,
+    list_models = function(...) {
+      loaded_models_frame(
+        data.frame(identifier = c("inst-1", "inst-2"), stringsAsFactors = FALSE)
+      )
+    }
+  )
+  recorder <- local_request_recorder(mock_response(200L))
+
+  suppressMessages(lms_unload_all(host = "http://unload-all-test.invalid:9999"))
+
+  expect_length(recorder$requests, 2L)
+  hosts <- vapply(
+    recorder$requests,
+    function(req) request_target(req)$host,
+    character(1)
+  )
+  expect_equal(hosts, rep("unload-all-test.invalid:9999", 2L))
 })
 
 # Run lms_unload_all() over one loaded_instances shape and return the ids it
@@ -207,9 +261,13 @@ test_that("lms_unload_all falls back to the first column when neither name is pr
   expect_equal(ids, "inst-id-c")
 })
 
-test_that("lms_unload_all reads a plain character vector of instance ids", {
-  ids <- ids_read_from(c("inst-id-d", "inst-id-e"))
-  expect_equal(ids, c("inst-id-d", "inst-id-e"))
+test_that("lms_unload_all coerces a plain vector of instance ids to character", {
+  # Feed numbers rather than strings. With a character vector the as.character()
+  # coercion in lms_unload_all() does nothing, so the test passes whether the
+  # coercion is there or not. Numbers make the coercion load-bearing: without
+  # it the ids come back as numbers and this assertion fails.
+  ids <- ids_read_from(c(101, 102))
+  expect_equal(ids, c("101", "102"))
 })
 
 test_that("lms_unload_all drops NA and empty ids and returns NULL when none remain", {
@@ -223,7 +281,8 @@ test_that("lms_unload_all drops NA and empty ids and returns NULL when none rema
 
   expect_message(
     result <- expect_invisible(lms_unload_all()),
-    "No models are currently loaded"
+    "No models are currently loaded.",
+    fixed = TRUE
   )
 
   expect_null(result)

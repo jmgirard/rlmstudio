@@ -130,38 +130,57 @@ api_error_table <- list(
 # with. `lms_load()` gets `force = TRUE` because without it the call checks the
 # loaded models first, and that check throws on the mocked failure before the
 # load request goes out.
+#
+# Each `call` takes the host to talk to and defaults it to the package default,
+# so the failure-table loop below calls it with no argument and the
+# host-forwarding test calls it with a host of its own. One call expression per
+# wrapper serves both, so the two cannot drift apart.
+api_error_default_host <- "http://localhost:1234"
+
 api_error_callers <- list(
   list_models = list(
     label = "API List Failed",
-    call = function() list_models()
+    call = function(host = api_error_default_host) list_models(host = host)
   ),
   lms_load = list(
     label = "API Load Failed",
-    call = function() lms_load("m", force = TRUE)
+    call = function(host = api_error_default_host) {
+      lms_load("m", force = TRUE, host = host)
+    }
   ),
   lms_unload = list(
     label = "API Unload Failed",
-    call = function() lms_unload("m")
+    call = function(host = api_error_default_host) lms_unload("m", host = host)
   ),
   lms_download = list(
     label = "API Download Failed",
-    call = function() lms_download("m")
+    call = function(host = api_error_default_host) {
+      lms_download("m", host = host)
+    }
   ),
   lms_download_status = list(
     label = "API Status Request Failed",
-    call = function() lms_download_status("j1")
+    call = function(host = api_error_default_host) {
+      lms_download_status("j1", host = host)
+    }
   ),
   lms_chat_openresponses = list(
     label = "OpenResponses Failed",
-    call = function() lms_chat_openresponses("m", "hi")
+    call = function(host = api_error_default_host) {
+      lms_chat_openresponses("m", "hi", host = host)
+    }
   ),
   lms_chat_openai = list(
     label = "OpenAI API Failed",
-    call = function() lms_chat_openai("m", "hi")
+    call = function(host = api_error_default_host) {
+      lms_chat_openai("m", "hi", host = host)
+    }
   ),
   lms_chat_native = list(
     label = "Native API Failed",
-    call = function() lms_chat_native("m", "hi")
+    call = function(host = api_error_default_host) {
+      lms_chat_native("m", "hi", host = host)
+    }
   )
 )
 
@@ -256,5 +275,49 @@ test_that("lms_load() reports the body when the load did not finish", {
     suppressMessages(lms_load("m", force = TRUE)),
     "API Load Failed: \\{\"status\": \"pending\"\\}",
     class = "rlmstudio_api_error"
+  )
+})
+
+test_that("every wrapper sends its request to the host it was given", {
+  # A wrapper that drops the caller's host still passes every other test in
+  # this file, because the mocked transport answers whatever address it is
+  # handed. This test reads the host header off the recorded request, so a
+  # dropped host shows up as the package default instead of the test's host.
+  host <- "http://api-error-test.invalid:9999"
+  expected <- "api-error-test.invalid:9999"
+
+  seen <- vapply(
+    names(api_error_callers),
+    function(nm) {
+      local_mocked_bindings(is_server_running = function(...) TRUE)
+      recorder <- local_request_recorder(mock_response(200L))
+
+      # Several wrappers abort on this response because its body does not say
+      # what they need. The request is recorded before the abort either way,
+      # and the host is all this test reads.
+      try(suppressMessages(api_error_callers[[nm]]$call(host)), silent = TRUE)
+
+      if (length(recorder$requests) == 0L) {
+        return("<no request sent>")
+      }
+
+      # Read every recorded request, not just the first. A wrapper that sends
+      # a correct-host request before a wrong-host one would otherwise pass.
+      hosts <- unique(vapply(
+        recorder$requests,
+        function(req) request_target(req)$host,
+        character(1)
+      ))
+      if (length(hosts) != 1L) {
+        return(paste(hosts, collapse = " and "))
+      }
+      hosts
+    },
+    character(1)
+  )
+
+  expect_equal(
+    seen,
+    stats::setNames(rep(expected, length(api_error_callers)), names(seen))
   )
 })
