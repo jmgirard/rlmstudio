@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene pass: 2026-09-19 (M008 done and archived, two review findings became candidate rows, M005 row pruned at the 3-row terminal cap)_
+_Last hygiene pass: 2026-09-19 (triage of 14 items. The API-error docs row dropped as already shipped by M007. The condition-docs guard row compressed. 12 items unchanged, no decision entry, validate green)_
 
 ## Milestones
 
@@ -19,12 +19,11 @@ _Last hygiene pass: 2026-09-19 (M008 done and archived, two review findings beca
      - idea, added YYYY-MM-DD, links
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
-- A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. Per the M005 lesson a test that greps `R/` does not run under `R CMD check`, so it gates `devtools::test()` only, added 2026-09-18, M007 scope
+- A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. A test that greps `R/` gates `devtools::test()` only, added 2026-09-18, M007 scope
 - The help text promises `rlmstudio_no_server` for a stopped LM Studio server. `is_server_running()` opens a TCP connection to the host and port. It does not make sure that the listener is LM Studio. A foreign process on the port suppresses the condition. Narrow the help text or tighten the probe, added 2026-09-18, M007 claim audit
 - The release walk needs a live-run step: full suite against a running LM Studio, then a re-record of stale fixtures, added 2026-09-17, DESIGN Conventions
 - A guard that keeps every new `stop_if_no_server()` call site covered by a class test, added 2026-09-18, M003 scope
 - A guard that keeps every REST wrapper handling a failed response listed in the failure table. The deleted guard read package sources that R CMD check does not ship, so it skipped there. It did run under `devtools::test()`, so it gated local runs (corrected M006 review), added 2026-09-18, M006 scope, see also the `stop_if_no_server()` guard row
-- Help pages do not document the `rlmstudio_api_error` class or its `status` field at any of the eight REST wrappers. The abort contract is user-facing and undocumented, added 2026-09-18, M006 review finding 7
 - A non-JSON failure body becomes the abort message in full, with no length bound. A proxy's HTML page reaches the user whole. A scalar JSON body reaches the user as the bare token, added 2026-09-18, M005 implement audit and M005 review finding 12
 - When only R-devel breaks, a red `ubuntu-latest (devel)` job still blocks the merge. Decide its disposition, added 2026-09-17, M002 review finding 6
 - `request_target()` calls `skip_if_not_installed("httpuv")`, so every host and body assertion silently empties on a machine without it. D-005 accepted this for contributors. Make the helper fail rather than skip when the `CI` environment variable is set, so a CI image that loses `httpuv` goes red instead of green, added 2026-09-19, M008 review finding 1
