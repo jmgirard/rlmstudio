@@ -76,7 +76,7 @@ closures folded onto the shared recorder.
 - [x] T1: Extend `request_target()` in `tests/testthat/helper-mock-http.R` to return the host header
       and the serialized body that `httr2::req_dry_run()` reports, beside the method and path it
       already returns. Keep the `httpuv` skip.
-- [ ] T2: Give each entry of `api_error_callers` in `tests/testthat/test-api-error.R` a host
+- [x] T2: Give each entry of `api_error_callers` in `tests/testthat/test-api-error.R` a host
       argument, and add one test looping over `names(api_error_callers)` that calls each wrapper
       with a non-default host and asserts that host on the recorded request. Add a test in
       `tests/testthat/test-unload.R` asserting that `lms_unload_all()` forwards its host to every
@@ -107,6 +107,7 @@ closures folded onto the shared recorder.
 - 2026-09-18: implement gate chose a parsed list for the body `request_target()` reports, over a text string. Every request this package sends is JSON. Falsified by a wrapper that sends a body in another format.
 - 2026-09-18: implement gate chose a host argument on each `api_error_callers` entry's `call`, over a second call field. One call expression per wrapper cannot drift from itself. Falsified by a wrapper the two loops must call differently.
 - 2026-09-18: T1 done. `request_target()` now reports the host header and the parsed request body beside the method and path. Suite 147 pass, 0 fail, 0 skip.
+- 2026-09-18: T2 done. Two host-forwarding tests added, one looping the eight wrappers and one for `lms_unload_all()`. Both plants ran early and turned red on the dropped host, reporting `localhost:1234`. Suite 150 pass, 0 fail, 0 skip.
 
 ## Decisions
 

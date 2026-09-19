@@ -166,6 +166,31 @@ test_that("lms_unload_all unloads each reported instance in order and forwards d
   )
 })
 
+test_that("lms_unload_all sends every unload request to the host it was given", {
+  # lms_unload_all() passes its host down to each lms_unload() call. The
+  # mocked transport answers whatever address it is handed, so a dropped
+  # host is invisible unless a test reads the host header off the request.
+  local_mocked_bindings(
+    is_server_running = function(...) TRUE,
+    list_models = function(...) {
+      loaded_models_frame(
+        data.frame(identifier = c("inst-1", "inst-2"), stringsAsFactors = FALSE)
+      )
+    }
+  )
+  recorder <- local_request_recorder(mock_response(200L))
+
+  suppressMessages(lms_unload_all(host = "http://unload-all-test.invalid:9999"))
+
+  expect_length(recorder$requests, 2L)
+  hosts <- vapply(
+    recorder$requests,
+    function(req) request_target(req)$host,
+    character(1)
+  )
+  expect_equal(hosts, rep("unload-all-test.invalid:9999", 2L))
+})
+
 # Run lms_unload_all() over one loaded_instances shape and return the ids it
 # read, so each shape test states only its own shape and expected id.
 ids_read_from <- function(instances) {
