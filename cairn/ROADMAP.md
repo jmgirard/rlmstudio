@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene pass: 2026-09-18 (M008 planned: five candidate rows absorbed into it)_
+_Last hygiene pass: 2026-09-19 (M008 done and archived, two review findings became candidate rows, M005 row pruned at the 3-row terminal cap)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene pass: 2026-09-18 (M008 planned: five candidate rows absorbed into 
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M008 | Tests that fail on the branch they name | review | none | normal | milestones/M008-test-discrimination.md |
+| M008 | Tests that fail on the branch they name | done | none | normal | milestones/archive/M008-test-discrimination.md |
 | M007 | The abort contract reaches the help pages | done | none | normal | milestones/archive/M007-abort-contract-docs.md |
 | M006 | list_models() joins the shared REST abort path | done | none | normal | milestones/archive/M006-list-models-abort-path.md |
-| M005 | One abort path for the seven REST failure branches | done | none | normal | milestones/archive/M005-api-error-helper.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:

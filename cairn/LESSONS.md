@@ -25,4 +25,7 @@ place when proven false (never append a correction).
 - 2026-09-18 (M007): `@inheritSection <topic> <title>` renders a doc-only `@name` block's section into the consumer's `.Rd` under roxygen2 8.x. The tag must stay on one physical line, and the title must match the source `@section` character for character, or it silently inherits nothing.
 - 2026-09-18 (M007): A doc-only topic is reachable only under its `@name`. Add `@aliases` for every name a user will actually type, or `?rlmstudio_no_server` returns zero topics while the class is documented.
 - 2026-09-18 (M007): `devtools::document()` writes `Config/roxygen2/version` into DESCRIPTION. Upgrading roxygen2 therefore makes the no-diff `document()` gate fail on a tree nobody edited. Commit the regenerated stamp.
+- 2026-09-19 (M008): A request body read back through `jsonlite::fromJSON()` loses the integer-versus-double distinction, and `expect_equal()` ignores it anyway. To prove an `as.integer()` coercion load-bearing, feed a value the coercion changes: a string, or a number with a fraction.
+- 2026-09-19 (M008): `httr2::resp_body_json()` throws on a `text/plain` body and on an unparseable `application/json` body alike, so both reach the same raw-text fallback in `api_error_message()`. A test per cause buys no package coverage the other lacks.
+- 2026-09-19 (M008): `lms_load()` without `force = TRUE` sends two requests, the `list_models()` pre-check first. An inline mock that overwrites one captured request hides the second. The shared recorder keeps both.
 
