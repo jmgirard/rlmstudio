@@ -81,7 +81,7 @@ closures folded onto the shared recorder.
       with a non-default host and asserts that host on the recorded request. Add a test in
       `tests/testthat/test-unload.R` asserting that `lms_unload_all()` forwards its host to every
       `lms_unload()` request.
-- [ ] T3: Move the two body assertions in `tests/testthat/test-unload.R` off `req$body$data` and
+- [x] T3: Move the two body assertions in `tests/testthat/test-unload.R` off `req$body$data` and
       onto the serialized body from T1.
 - [ ] T4: Split the raw-body fallback coverage in `tests/testthat/test-unload.R` into a `text/plain`
       response and an unparseable `application/json` response.
@@ -108,6 +108,7 @@ closures folded onto the shared recorder.
 - 2026-09-18: implement gate chose a host argument on each `api_error_callers` entry's `call`, over a second call field. One call expression per wrapper cannot drift from itself. Falsified by a wrapper the two loops must call differently.
 - 2026-09-18: T1 done. `request_target()` now reports the host header and the parsed request body beside the method and path. Suite 147 pass, 0 fail, 0 skip.
 - 2026-09-18: T2 done. Two host-forwarding tests added, one looping the eight wrappers and one for `lms_unload_all()`. Both plants ran early and turned red on the dropped host, reporting `localhost:1234`. Suite 150 pass, 0 fail, 0 skip.
+- 2026-09-18: T3 done. The two `test-unload.R` body assertions now read the serialized body. AC2's grep still matches `test-load.R`, which T8 folds onto the recorder.
 
 ## Decisions
 

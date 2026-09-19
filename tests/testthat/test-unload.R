@@ -37,7 +37,10 @@ test_that("lms_unload merges a named dots argument into the request body", {
 
   suppressMessages(lms_unload("test-model", ttl = 300))
 
-  body <- recorder$requests[[1]]$body$data
+  # Read the body back off the serialized request rather than off the
+  # request object's own field, so the assertion covers what goes over the
+  # wire rather than what the caller handed httr2.
+  body <- request_target(recorder$requests[[1]])$body
   expect_equal(body$instance_id, "test-model")
   expect_equal(body$ttl, 300)
 })
@@ -152,14 +155,15 @@ test_that("lms_unload_all unloads each reported instance in order and forwards d
   expect_equal(result, c("inst-1", "inst-2"))
   expect_length(recorder$requests, 2L)
 
-  bodies <- lapply(recorder$requests, function(req) req$body$data)
+  targets <- lapply(recorder$requests, request_target)
+
+  bodies <- lapply(targets, function(t) t$body)
   expect_equal(
     vapply(bodies, function(b) b$instance_id, character(1)),
     c("inst-1", "inst-2")
   )
   expect_equal(vapply(bodies, function(b) b$ttl, numeric(1)), c(60, 60))
 
-  targets <- lapply(recorder$requests, request_target)
   expect_equal(
     vapply(targets, function(t) t$path, character(1)),
     rep("/api/v1/models/unload", 2L)
