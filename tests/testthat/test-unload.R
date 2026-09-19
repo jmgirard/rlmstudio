@@ -260,9 +260,13 @@ test_that("lms_unload_all falls back to the first column when neither name is pr
   expect_equal(ids, "inst-id-c")
 })
 
-test_that("lms_unload_all reads a plain character vector of instance ids", {
-  ids <- ids_read_from(c("inst-id-d", "inst-id-e"))
-  expect_equal(ids, c("inst-id-d", "inst-id-e"))
+test_that("lms_unload_all coerces a plain vector of instance ids to character", {
+  # Feed numbers rather than strings. With a character vector the as.character()
+  # coercion in lms_unload_all() does nothing, so the test passes whether the
+  # coercion is there or not. Numbers make the coercion load-bearing: without
+  # it the ids come back as numbers and this assertion fails.
+  ids <- ids_read_from(c(101, 102))
+  expect_equal(ids, c("101", "102"))
 })
 
 test_that("lms_unload_all drops NA and empty ids and returns NULL when none remain", {
