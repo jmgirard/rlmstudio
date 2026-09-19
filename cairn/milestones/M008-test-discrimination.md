@@ -1,13 +1,13 @@
 # M008: Tests that fail on the branch they name
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — test-suite changes only, no exported behavior or documentation changes
-- **Branch/PR:** —
+- **Branch/PR:** `m008-test-discrimination`
 
 ## Goal
 
@@ -73,7 +73,7 @@ closures folded onto the shared recorder.
 
 ## Tasks
 
-- [ ] T1: Extend `request_target()` in `tests/testthat/helper-mock-http.R` to return the host header
+- [x] T1: Extend `request_target()` in `tests/testthat/helper-mock-http.R` to return the host header
       and the serialized body that `httr2::req_dry_run()` reports, beside the method and path it
       already returns. Keep the `httpuv` skip.
 - [ ] T2: Give each entry of `api_error_callers` in `tests/testthat/test-api-error.R` a host
@@ -104,6 +104,9 @@ closures folded onto the shared recorder.
 - 2026-09-18: plan gate chose folding the two inline `req_perform` closures into the shared recorder over leaving them a candidate row because D-004's own consequences name that folding; falsified by a closure whose response shape the recorder cannot produce.
 - 2026-09-18: plan gate chose two raw-body tests, one per cause, over correcting the single test's content type because the parse-failure cause otherwise carries no test of its own; falsified by the two causes proving indistinguishable at the abort.
 - 2026-09-18: eight criteria sits at the split tripwire and was not split, because each criterion is one small test edit inside one pull request and no part of it ships independently.
+- 2026-09-18: implement gate chose a parsed list for the body `request_target()` reports, over a text string. Every request this package sends is JSON. Falsified by a wrapper that sends a body in another format.
+- 2026-09-18: implement gate chose a host argument on each `api_error_callers` entry's `call`, over a second call field. One call expression per wrapper cannot drift from itself. Falsified by a wrapper the two loops must call differently.
+- 2026-09-18: T1 done. `request_target()` now reports the host header and the parsed request body beside the method and path. Suite 147 pass, 0 fail, 0 skip.
 
 ## Decisions
 

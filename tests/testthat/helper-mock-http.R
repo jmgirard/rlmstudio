@@ -56,13 +56,33 @@ local_request_recorder <- function(
   recorder
 }
 
-# Read the HTTP method and path a captured request would send. httr2 infers the
-# method from the presence of a body rather than storing it on the request, so
-# req_dry_run() is what reports the verb. That call needs httpuv, which is a
-# suggested package, so a machine without it skips the calling test rather than
-# failing it.
+# Read what a captured request would actually send: the HTTP method, the path,
+# the host header, and the request body. httr2 infers the method from the
+# presence of a body rather than storing it on the request, so req_dry_run() is
+# what reports the verb. The same call is what reports the headers and the
+# serialized body, so an assertion made here is an assertion about the bytes
+# that go over the wire rather than about a field of the request object.
+#
+# `host` is the host header as httr2 sends it, so it carries no URL scheme:
+# a request built for "http://example.com:9999" reports "example.com:9999".
+#
+# `body` is the serialized body parsed back from JSON, or NULL when the request
+# carries no body. Every request this package sends has a JSON body, so the
+# parse is safe here; a request whose body is not JSON would fail the parse.
+#
+# req_dry_run() needs httpuv, which is a suggested package, so a machine
+# without it skips the calling test rather than failing it.
 request_target <- function(req) {
   testthat::skip_if_not_installed("httpuv")
   out <- httr2::req_dry_run(req, quiet = TRUE)
-  list(method = out$method, path = out$path)
+  list(
+    method = out$method,
+    path = out$path,
+    host = out$headers$host,
+    body = if (length(out$body) == 0L) {
+      NULL
+    } else {
+      jsonlite::fromJSON(rawToChar(out$body))
+    }
+  )
 }
