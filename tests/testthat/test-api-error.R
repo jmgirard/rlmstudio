@@ -300,7 +300,18 @@ test_that("every wrapper sends its request to the host it was given", {
       if (length(recorder$requests) == 0L) {
         return("<no request sent>")
       }
-      request_target(recorder$requests[[1]])$host
+
+      # Read every recorded request, not just the first. A wrapper that sends
+      # a correct-host request before a wrong-host one would otherwise pass.
+      hosts <- unique(vapply(
+        recorder$requests,
+        function(req) request_target(req)$host,
+        character(1)
+      ))
+      if (length(hosts) != 1L) {
+        return(paste(hosts, collapse = " and "))
+      }
+      hosts
     },
     character(1)
   )

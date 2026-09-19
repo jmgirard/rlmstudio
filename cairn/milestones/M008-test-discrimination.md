@@ -117,7 +117,8 @@ closures folded onto the shared recorder.
 - 2026-09-18: T9 done. Planted-defect pass over the six plants the criteria name, each applied to a clean tree and reverted after its run. AC1a reddened `test-unload.R:220`. AC1b reddened `test-api-error.R:308`. AC3 reddened `test-unload.R:105` and `test-unload.R:122`, plus eight rows of the failure table. AC4 reddened `test-unload.R:270`. AC5 reddened `test-unload.R:147` and `test-unload.R:282`. AC6 reddened `test-list.R:17`, plus the recorded-fixture and end-to-end tests. Control run on the restored tree: 153 pass, 0 fail, 0 skip.
 - 2026-09-18: verify slot clean. `devtools::test()` 153 pass, 0 fail, 0 skip. `devtools::document()` produced no diff. `devtools::check()` reported 0 errors, 0 warnings, 0 notes.
 - 2026-09-18: claim audit: not owed — internal tier.
-- 2026-09-19: review ran all eight criteria with fresh evidence, including the six plants. Consistency gate passed with one advisory, the 8-criteria split tripwire already justified above. Three-lens fan-out returned seven findings, all from the diff-bug lens: two fix-now, one recorded in the Review section, three rejected. Two candidate rows carry the deferred hardening from findings 1 and 6. No finding meets the return floor.
+- 2026-09-19: review ran all eight criteria with fresh evidence, including the six plants. Consistency gate passed with one advisory, the 8-criteria split tripwire already justified above. Three-lens fan-out returned seven findings, all from the diff-bug lens: one fixed on the branch, one recorded in the Review section, four rejected, one deferred. Finding 2 was rejected after a plant refuted it against the test as written. Two candidate rows carry the deferred hardening from findings 1 and 6. No finding meets the return floor.
+- 2026-09-19: step-7 approval: m008-test-discrimination approved for merge.
 
 ## Decisions
 
@@ -201,9 +202,11 @@ respawned.
    called "builds body with correct integer/logical conversions". The body now returns
    through `jsonlite::fromJSON()`, and JSON has no integer type. Verified here: a double
    `2048` round-trips back as an integer, and `expect_equal(2048, 2048L)` passes in edition 3.
-   Dropping `as.integer()` at `R/load.R:87` leaves the test green.
-   **Fix now.** Feed `context_length = 2048.7` and keep the `2048L` expectation. Only the
-   coercion can produce that value.
+   **Rejected on refutation.** The finding's scenario passes `context_length = 2048`, but the
+   test passes the string `"2048"`. Planted against the test as written: replacing
+   `as.integer(context_length)` with `context_length` at `R/load.R:87` leaves a character
+   `"2048"` in the body, and `test-load.R:33` goes red. The test already discriminates. The
+   reviewer's round-trip mechanics hold, but they do not reach this test's input.
 3. AC3's two raw-body tests reach one package branch, not two. Verified here: a `text/plain`
    body and an unparseable `application/json` body both make `resp_body_json()` throw. Both
    then land at `parsed <- NULL` and take the same final line of `api_error_message()`. No
@@ -216,7 +219,10 @@ respawned.
    `recorder$requests[[1]]`. Every wrapper sends one request under this mock today, so the
    read is correct now. A wrapper that later sends a correct-host request before a wrong-host
    one still passes.
-   **Fix now.** Assert the host on every recorded request instead of the first.
+   **Fixed on the branch.** The loop now reads every recorded request and collapses the hosts
+   with `unique()`. A wrapper sending two different hosts reports both, so the assertion
+   fails. Suite after the fix: 153 pass, 0 fail, 0 skip. The AC1b plant still reddens the
+   loop, now at `test-api-error.R:319`.
 5. `test-load.R:27` asserts a request count that the body test does not care about.
    **Rejected.** The length check is what makes the `requests[[2]]` read legible. Without it a
    changed call pattern gives a subscript error rather than a named failure.
