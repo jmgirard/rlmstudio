@@ -90,7 +90,7 @@ closures folded onto the shared recorder.
 - [x] T6: Anchor the two nothing-loaded `expect_message()` assertions in
       `tests/testthat/test-unload.R` on the full message text with `fixed = TRUE`.
 - [x] T7: Add the `GET` assertion to the path test in `tests/testthat/test-list.R`.
-- [ ] T8: Fold the inline `req_perform` closures in `tests/testthat/test-load.R` and
+- [x] T8: Fold the inline `req_perform` closures in `tests/testthat/test-load.R` and
       `tests/testthat/test-chat.R` onto `local_request_recorder()`.
 - [ ] T9: Planted-defect pass: apply each plant AC1, AC3, AC4, AC5 and AC6 name, record the result,
       revert it. Then run `devtools::test()`, `devtools::document()` and `devtools::check()` clean.
@@ -113,6 +113,7 @@ closures folded onto the shared recorder.
 - 2026-09-18: T5 done. The plain-vector shape test now feeds numbers, so the `as.character()` coercion carries the result. The plant ran early and reddened that one test alone.
 - 2026-09-18: T6 done. Both nothing-loaded assertions now match the full message with `fixed = TRUE`. The plant ran early and reddened both, at `test-unload.R:147` and `test-unload.R:282`.
 - 2026-09-18: T7 done. The `list_models()` path test now asserts `GET`. The plant added a JSON body to the request. The verb assertion went red at `test-list.R:17`, and the recorded-fixture test errored too, because the cassette holds no POST.
+- 2026-09-18: T8 done. Both inline `req_perform` closures now go through `local_request_recorder()`. The fold exposed a fact the closure hid: `lms_load()` without `force = TRUE` sends two requests, and the closure kept only the last. The test now expects two and reads the second. AC2 and AC7 greps both hold. Suite 153 pass, 0 fail, 0 skip.
 
 ## Decisions
 

@@ -91,15 +91,11 @@ test_that("lms_chat routes correctly to openresponses and creates S3 class", {
     ))
   )
 
-  local_mocked_bindings(
-    req_perform = function(req, ...) {
-      httr2::response(
-        status_code = 200,
-        headers = list("Content-Type" = "application/json"),
-        body = charToRaw(jsonlite::toJSON(fake_body, auto_unbox = TRUE))
-      )
-    },
-    .package = "httr2"
+  local_request_recorder(
+    mock_response(
+      200L,
+      as.character(jsonlite::toJSON(fake_body, auto_unbox = TRUE))
+    )
   )
 
   res <- lms_chat(
