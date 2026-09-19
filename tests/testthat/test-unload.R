@@ -146,7 +146,8 @@ test_that("lms_unload_all returns early when list_models reports nothing loaded"
 
   expect_message(
     result <- expect_invisible(lms_unload_all()),
-    "No models are currently loaded"
+    "No models are currently loaded.",
+    fixed = TRUE
   )
 
   expect_null(result)
@@ -280,7 +281,8 @@ test_that("lms_unload_all drops NA and empty ids and returns NULL when none rema
 
   expect_message(
     result <- expect_invisible(lms_unload_all()),
-    "No models are currently loaded"
+    "No models are currently loaded.",
+    fixed = TRUE
   )
 
   expect_null(result)
