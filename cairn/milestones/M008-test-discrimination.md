@@ -83,7 +83,7 @@ closures folded onto the shared recorder.
       `lms_unload()` request.
 - [x] T3: Move the two body assertions in `tests/testthat/test-unload.R` off `req$body$data` and
       onto the serialized body from T1.
-- [ ] T4: Split the raw-body fallback coverage in `tests/testthat/test-unload.R` into a `text/plain`
+- [x] T4: Split the raw-body fallback coverage in `tests/testthat/test-unload.R` into a `text/plain`
       response and an unparseable `application/json` response.
 - [ ] T5: Change the character-vector shape test in `tests/testthat/test-unload.R` to feed a
       non-character vector, so the `as.character()` coercion is load-bearing.
@@ -109,6 +109,7 @@ closures folded onto the shared recorder.
 - 2026-09-18: T1 done. `request_target()` now reports the host header and the parsed request body beside the method and path. Suite 147 pass, 0 fail, 0 skip.
 - 2026-09-18: T2 done. Two host-forwarding tests added, one looping the eight wrappers and one for `lms_unload_all()`. Both plants ran early and turned red on the dropped host, reporting `localhost:1234`. Suite 150 pass, 0 fail, 0 skip.
 - 2026-09-18: T3 done. The two `test-unload.R` body assertions now read the serialized body. AC2's grep still matches `test-load.R`, which T8 folds onto the recorder.
+- 2026-09-18: T4 done. The raw-body fallback now has one `text/plain` test and one unparseable `application/json` test. The plant ran early. Both went red, each reporting `API Unload Failed: HTTP Status 502` in place of the body text.
 
 ## Decisions
 

@@ -91,9 +91,33 @@ test_that("lms_unload falls back to the status when the JSON has no error field"
   )
 })
 
-test_that("lms_unload falls back to the body text when the body is not JSON", {
+# A body reaches the raw-text fallback for either of two reasons: the response
+# is not served as JSON at all, or it is served as JSON and does not parse.
+# One test covering one of them leaves the other cause untested, so each cause
+# gets its own test here.
+
+test_that("lms_unload falls back to the body text when the response is not served as JSON", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
-  local_request_recorder(mock_response(502L, "Bad Gateway, not JSON"))
+  local_request_recorder(
+    mock_response(502L, "Bad Gateway, not JSON", content_type = "text/plain")
+  )
+
+  expect_error(
+    suppressMessages(lms_unload("test-model")),
+    "API Unload Failed: Bad Gateway, not JSON",
+    fixed = TRUE
+  )
+})
+
+test_that("lms_unload falls back to the body text when a JSON response does not parse", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(
+    mock_response(
+      502L,
+      "Bad Gateway, not JSON",
+      content_type = "application/json"
+    )
+  )
 
   expect_error(
     suppressMessages(lms_unload("test-model")),
