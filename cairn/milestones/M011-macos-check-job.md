@@ -2,14 +2,14 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M011: The macOS check job installs its dependencies again
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal. It changes one CI workflow file and ships no package code
-- **Branch/PR:** —
+- **Branch/PR:** `m011-macos-check-job`
 
 ## Goal
 
@@ -59,7 +59,7 @@ once this lands. Unifying the four workflow files stays a candidate row.
 
 ## Tasks
 
-- [ ] T1: Edit `.github/workflows/R-CMD-check.yaml`. Add
+- [x] T1: Edit `.github/workflows/R-CMD-check.yaml`. Add
       `use-public-rspm: always` to the `setup-r` step. Add a macOS-only step
       after it that sets `PKG_CRAN_MIRROR` to
       `https://packagemanager.posit.co/cran/latest` and appends
@@ -83,6 +83,7 @@ once this lands. Unifying the four workflow files stays a candidate row.
 - 2026-09-20: the macOS job runs on the `pull_request` trigger only. The `push` trigger is filtered to the default branch. AC1 and AC2 therefore take their evidence at the review gate.
 - 2026-09-20: evidence pinned 2026-09-20. `knitr_1.52.tgz` begins `28 b5 2f fd` at `cran.rstudio.com` and at `cloud.r-project.org`. It begins `1f 8b` at `packagemanager.posit.co`. The R 4.5 macOS build is `1f 8b`. jmgirard/circumplex#174 merged the same fix and its macOS job passed.
 - 2026-09-20: criteria audit, reduced mode. A fresh reader read all five criteria and returned no findings.
+- 2026-09-20: T1 done. `R-CMD-check.yaml` sets `use-public-rspm: always` and adds a macOS-only step that sets `PKG_CRAN_MIRROR` to Package Manager and points `mac.cran.dev` at `127.0.0.1`. Both edits carry the cause and the revert condition. `yaml.safe_load` parses the file and places the new step between `setup-r` and `setup-r-dependencies`.
 - 2026-09-20: the writing lint counts the five empty header slots as violations. `cairn_validate` requires that character in them. The validator is the machine reader and wins, as recorded in M010.
 
 ## Decisions
