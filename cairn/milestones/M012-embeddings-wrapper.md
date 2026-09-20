@@ -198,6 +198,8 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: the second return is repaired and the status goes back to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 475 pass and 0 fail.
 
 - 2026-09-20: third review pass. Every criterion re-verified against fresh evidence and ticked, AC1 included: the named-input repair holds and a named character vector now goes out as a JSON array. No criterion fails and the return floor does not fire. The consistency gate passed: cairn_validate exits 0 with two dispositioned sizing advisories, document() gives no diff, pkgdown is clean, check() gives 0 errors, 0 warnings and 0 notes, and test() gives 475 pass and 0 fail. All three lenses reported. Eleven findings are recorded in the Review section with recommended dispositions, four fix-now and seven reject.
+- 2026-09-20: the gate took findings 1 to 4 as fix-now work on the branch. The body parse reads by content rather than by header, a `data` field holding a plain value gets its own clause, the changelog fault list matches the thirteen branches, and the help page no longer asserts what LM Studio does with `encoding_format`. Both repairs were planted back and went red. The `verify` slot ran clean and every criterion was re-verified on the repaired tree: document() no diff, pkgdown clean, check() 0/0/0, test() 485 pass and 0 fail.
+
 ## Decisions
 
 ## Review
@@ -273,7 +275,8 @@ evidence gathered fresh this session against the current branch head._
   exactly once. `devtools::document()` run fresh left the tree clean, so
   neither file is hand-edited.
 - AC9: **Pass.** `devtools::document()` run fresh this session produced no
-  diff. `devtools::test()` run fresh gave 475 pass, 0 fail, 0 warn, 0 skip.
+  diff. `devtools::test()` run fresh gave 475 pass, 0 fail, 0 warn, 0 skip,
+  and 485 after the gate's fix-now work added ten expectations.
 
 ### Consistency gate
 
@@ -473,6 +476,50 @@ is to take findings 1 to 4 as fix-now work on the branch instead.
 
 Eleven findings, all recorded above with a disposition. Four recommended
 fix-now, seven recommended reject with a reason. Nothing is dropped.
+
+### Fix-now work taken at the gate
+
+The maintainer took findings 1 to 4 as fix-now work on the branch and approved
+the merge on that basis. All four are discharged below. The `verify` slot ran
+clean afterward and every criterion was re-verified against the repaired tree:
+AC1's four request shapes, AC2's five placement cases, AC3's identity and its
+control, AC4's three classes, AC5's four token states, AC6's eleven probes plus
+the five further branches and the passing control, and AC7's four values all
+behave as their evidence lines above record. `devtools::document()` gives no
+diff, `pkgdown::check_pkgdown()` reports no problems, `devtools::check()` gives
+Status OK with 0 errors, 0 warnings and 0 notes, and `devtools::test()` gives
+485 pass, 0 fail, 0 warn, 0 skip.
+
+- **Finding 1, fixed.** `httr2::resp_body_json()` now parses with
+  `check_type = FALSE` at `R/embed.R:91`, so the branch reads the body by its
+  content rather than by its header and a parse failure is the only cause it
+  can have. Good JSON under `text/plain`, `text/html` or
+  `application/octet-stream` now returns its matrix instead of a false parse
+  diagnosis; a body that really does not parse still aborts with
+  `rlmstudio_bad_response` and the message that names the fault. This is a
+  behavior change and not only a message repair: the wrapper now accepts a
+  content type its siblings reject, which is the point — a proxy that
+  rewrites the header no longer hides a healthy LM Studio. A new test drives
+  the three content types, and planting the default `check_type` back turned
+  it red.
+- **Finding 2, fixed.** The clause is split at `R/embed.R:196-203`. A body
+  carrying no `data` field still says "the response carries no `data` block";
+  a `data` field holding a plain value now says "the `data` block is a plain
+  value rather than an array". Verified over `{"data":"oops"}`, `{"data":5}`
+  and `{"data":true}`. A nineteenth probe pins the new clause, and planting
+  the merged clause back turned it red. The response check now rejects on
+  thirteen conditions rather than twelve, and the probe table's count comment
+  says so.
+- **Finding 3, fixed.** The `NEWS.md` fault list is reworded to match the
+  branches. It now names a body that is a plain value separately from a body
+  that carries no list of vectors, says that a body sent as a bare array
+  reports the latter because it can carry no named field, and names the new
+  plain-value clause from finding 2.
+- **Finding 4, fixed.** The `@param ...` sentence on the help page no longer
+  asserts what LM Studio does with `encoding_format`. It says the field is
+  untested against LM Studio and states the consequence conditionally, for a
+  server that honors it. The `dimensions` claim beside it stays as written,
+  because that one was verified live earlier in this milestone.
 
 ### Second pass (2026-09-20, returned)
 

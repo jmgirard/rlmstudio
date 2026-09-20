@@ -286,8 +286,8 @@ test_that("a failed response aborts with class rlmstudio_api_error", {
 
 # The response check --------------------------------------------------------
 
-# Eighteen probes over the twelve conditions the response check rejects, with
-# three of them aimed at the not-a-list-of-numbers branch, two at the
+# Nineteen probes over the thirteen conditions the response check rejects,
+# with three of them aimed at the not-a-list-of-numbers branch, two at the
 # out-of-range branch, three at the no-data-block branch, and two at the two
 # branches that report a value that is not a JSON object, one for the whole
 # body and one for an element of the data block. `detail` is the clause the
@@ -308,6 +308,15 @@ bad_bodies <- list(
     input = "text",
     body = '{"database": [{"index": 0, "embedding": [0.1, 0.2]}]}',
     detail = "no data block"
+  ),
+  list(
+    # The block is right there; it just holds the wrong thing. Reporting this
+    # as a missing block would send the user looking for a field that is
+    # already in front of them.
+    label = "a data block holding a plain value",
+    input = "text",
+    body = '{"data": "oops"}',
+    detail = "plain value rather than an array"
   ),
   list(
     # A JSON object parses to a list just as an array does, and `length()`
@@ -472,6 +481,26 @@ test_that("a 200 whose body is not JSON aborts with the response class", {
     # send the caller down a path that fails the same way.
     expect_no_match(message, "simplify = FALSE", fixed = TRUE)
     expect_match(message, "may be answering on this host", fixed = TRUE)
+  }
+})
+
+test_that("good JSON under a non-JSON content type is read, not misreported", {
+  # A proxy that rewrites the content-type header sends good JSON under the
+  # wrong label. Reading by content rather than by header is what keeps the
+  # parse-failure message above true: this body parses, so no abort is right,
+  # and calling it a parse failure would have named the wrong fault and left
+  # no way through.
+  for (type in c("text/plain", "text/html", "application/octet-stream")) {
+    local_mocked_bindings(is_server_running = function(...) TRUE)
+    local_request_recorder(mock_response(
+      200L,
+      '{"data": [{"index": 0, "embedding": [0.1, 0.2]}]}',
+      content_type = type
+    ))
+
+    out <- lms_embed("test-embed", input = "text")
+    expect_true(is.matrix(out))
+    expect_identical(dim(out), c(1L, 2L))
   }
 })
 

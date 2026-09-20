@@ -28,8 +28,9 @@ unchanged.}
 \item{...}{Additional fields for the request body. LM Studio ignores a
 field it does not recognize, and two OpenAI fields are worth naming for
 that reason: LM Studio ignores \code{dimensions}, so asking for a narrower
-vector has no effect, and \code{encoding_format = "base64"} returns embeddings
-this function cannot read, so the default \code{simplify = TRUE} path aborts.}
+vector has no effect. \code{encoding_format = "base64"} is untested against LM
+Studio: a server that honors it returns embeddings this function cannot
+read, and the default \code{simplify = TRUE} path then aborts.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the

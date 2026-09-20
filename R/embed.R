@@ -14,8 +14,9 @@
 #' @param ... Additional fields for the request body. LM Studio ignores a
 #'   field it does not recognize, and two OpenAI fields are worth naming for
 #'   that reason: LM Studio ignores `dimensions`, so asking for a narrower
-#'   vector has no effect, and `encoding_format = "base64"` returns embeddings
-#'   this function cannot read, so the default `simplify = TRUE` path aborts.
+#'   vector has no effect. `encoding_format = "base64"` is untested against LM
+#'   Studio: a server that honors it returns embeddings this function cannot
+#'   read, and the default `simplify = TRUE` path then aborts.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
@@ -78,8 +79,16 @@ lms_embed <- function(
   # the fault the whole check exists to name escapes it on a technicality.
   # `simplify = FALSE` cannot rescue this one, because the parse runs first,
   # so the hint says something the caller can act on instead.
+  #
+  # `check_type = FALSE` is what keeps that message true. Left on, the same
+  # error covers two different causes: a body that will not parse, and a body
+  # that parses perfectly under a content type httr2 declines to read. A proxy
+  # that rewrites the header to `text/plain` sends good JSON, and reporting
+  # that as a parse failure names the wrong fault and leaves no way through.
+  # Parsing by content rather than by header leaves the parse failure as the
+  # only cause this branch can have.
   resp_data <- tryCatch(
-    httr2::resp_body_json(resp),
+    httr2::resp_body_json(resp, check_type = FALSE),
     error = function(cnd) {
       rlm_abort_bad_response(
         resp,
@@ -187,11 +196,18 @@ embed_matrix <- function(resp_data, n, resp) {
   }
 
   data <- json_field(resp_data, "data")
-  # A JSON array parses to an unnamed list and a JSON object to a named one.
+  # Three faults, not one. `json_field()` gives NULL for a name the body does
+  # not carry, so that is the only shape that means the block is absent. A
+  # block that is there but holds a plain value has to say so, or the user
+  # goes looking for a field that is already in front of them. And a JSON
+  # array parses to an unnamed list where a JSON object parses to a named one:
   # `length()` on the object form would count its members as though they were
-  # array elements, so the names are what tell the two apart.
-  if (!is.list(data)) {
+  # array elements, so the names are what tell those two apart.
+  if (is.null(data)) {
     fail("the response carries no {.field data} block.")
+  }
+  if (!is.list(data)) {
+    fail("the {.field data} block is a plain value rather than an array.")
   }
   if (!is.null(names(data))) {
     fail("the {.field data} block is a JSON object rather than an array.")
