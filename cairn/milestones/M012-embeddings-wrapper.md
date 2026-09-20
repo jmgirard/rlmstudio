@@ -200,6 +200,8 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: third review pass. Every criterion re-verified against fresh evidence and ticked, AC1 included: the named-input repair holds and a named character vector now goes out as a JSON array. No criterion fails and the return floor does not fire. The consistency gate passed: cairn_validate exits 0 with two dispositioned sizing advisories, document() gives no diff, pkgdown is clean, check() gives 0 errors, 0 warnings and 0 notes, and test() gives 475 pass and 0 fail. All three lenses reported. Eleven findings are recorded in the Review section with recommended dispositions, four fix-now and seven reject.
 - 2026-09-20: the gate took findings 1 to 4 as fix-now work on the branch. The body parse reads by content rather than by header, a `data` field holding a plain value gets its own clause, the changelog fault list matches the thirteen branches, and the help page no longer asserts what LM Studio does with `encoding_format`. Both repairs were planted back and went red. The `verify` slot ran clean and every criterion was re-verified on the repaired tree: document() no diff, pkgdown clean, check() 0/0/0, test() 485 pass and 0 fail.
 
+- 2026-09-20: step-7 approval: m012-embeddings-wrapper approved for merge. The gate was posed twice, because finding 1's repair changed behavior rather than only its message. The maintainer accepted the content-type divergence from the sibling wrappers with the divergence named, and chose not to file a convergence candidate row.
+
 ## Decisions
 
 ## Review
