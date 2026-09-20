@@ -9,6 +9,7 @@ _Last hygiene pass: 2026-09-20 (M009 archived and set done, M006 pruned under te
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M011 | The macOS check job installs its dependencies again | planned | none | high | milestones/M011-macos-check-job.md |
 | M010 | The package can tell a usable LM Studio server from an open port | planned | none | high | milestones/M010-usable-server-probe.md |
 | M009 | The package can authenticate to LM Studio | done | none | high | milestones/archive/M009-api-token-auth.md |
 | M008 | Tests that fail on the branch they name | done | none | normal | milestones/archive/M008-test-discrimination.md |
@@ -27,7 +28,6 @@ _Last hygiene pass: 2026-09-20 (M009 archived and set done, M006 pruned under te
 - A loaded-instance table, the view `lms ps` prints, flattened from the `loaded_instances` field that `list_models(detailed = TRUE)` already returns, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - Stateful chat on `/api/v1/chat`. The endpoint returns a `response_id` and continues a thread from `previous_response_id`. The package drops the id, so the thread is unreachable, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. A test that greps `R/` gates `devtools::test()` only, added 2026-09-18, M007 scope
-- [high] The macOS check job depends on `mac.cran.dev`, a mirror pak carries as a secondary source for macOS binaries. It lags CRAN and 404s new versions, which reds the job before the package is built. Pin a mirror or set `use-public-rspm`, added 2026-09-20, M009 merge, see the R-devel job disposition row below
 - A guard that keeps the pre-call probe in the REST wrappers in step with the condition help page. M010 narrows that page and adds a stronger probe. The wrappers keep the TCP probe, so the two can drift, added 2026-09-20, M010 scope
 - The release walk needs a live-run step: full suite against a running LM Studio, then a re-record of stale fixtures, added 2026-09-17, DESIGN Conventions
 - A guard that keeps every new `stop_if_no_server()` call site covered by a class test, added 2026-09-18, M003 scope
@@ -38,6 +38,8 @@ _Last hygiene pass: 2026-09-20 (M009 archived and set done, M006 pruned under te
 - The eight abort sites call `rlm_token(token)` again to decide the hint. `lms_client()` already resolved it. Ambient state that changes between the two reads gives the wrong hint, added 2026-09-20, M009 review finding 5
 - `request_target()` now returns headers with redaction off for every caller. The older callers do not pin `RLMSTUDIO_API_TOKEN`. Nothing prints those headers today. Give them an opt-in accessor, added 2026-09-20, M009 review finding 6
 - A guard that keeps the token wrapper table covering every exported function that reaches the REST API. The table is a fixed list of eleven names. A twelfth wrapper added later escapes it, added 2026-09-20, M009 review finding 8, see the two sibling guard rows above
+- [low] Remove the macOS Package Manager workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. Promote once a released pak extracts zstd archives, added 2026-09-20, M011 scope, r-lib/pkgdepends#485
+- [low] Pin the macOS check job to R 4.5, whose CRAN binaries are still gzip. This is the alternative M011 rejected. If Posit Package Manager stops serving gzip macOS binaries, or drops its R 4.6 path, promote this row, added 2026-09-20, M011 plan gate
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
 - [low] Unify the four workflow files on one `actions/checkout` version, a `concurrency` group, and a `workflow_dispatch` trigger, added 2026-09-17, M002 findings 7 and 8
