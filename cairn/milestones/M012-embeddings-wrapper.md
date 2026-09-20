@@ -73,8 +73,11 @@ on `/v1/chat/completions` → the existing candidate row.
       missing `index`, a fractional `index`, a duplicated `index`, an `index`
       of -1, an `index` of n, a `data` block shorter than the input vector,
       and one longer.
-- [x] AC7: `lms_embed()` aborts when `input` is not a character vector or has
-      length zero, as `lms_chat_batch()` does at `R/chat.R:385`.
+- [x] AC7: When `input` is supplied and holds `1:3`, `list("a")`, `NULL`, or
+      `character(0)`, `lms_embed()` aborts with the message
+      "`input` must be a non-empty character vector." Evidence: four probes in
+      one test in `tests/testthat/test-embed.R`, each supplying one of those
+      values and matching that whole sentence with `fixed = TRUE`.
 - [x] AC8: `rlmstudio_bad_response` has its own section and alias on the
       `rlmstudio-conditions` help page, and that section is inherited onto the
       `lms_embed()` help page.
@@ -86,10 +89,10 @@ on `/v1/chat/completions` → the existing candidate row.
 - AC1 → T1, T4
 - AC2 → T1, T2, T4, T5
 - AC3 → T1, T4
-- AC4 → T1, T4
+- AC4 → T1, T4, T9
 - AC5 → T1, T4, T6
-- AC6 → T2, T4
-- AC7 → T1, T4
+- AC6 → T2, T4, T8
+- AC7 → T1, T4, T11
 - AC8 → T3
 - AC9 → T3, T4
 
@@ -127,6 +130,25 @@ on `/v1/chat/completions` → the existing candidate row.
       title, write the `NEWS.md` entry in plain user-facing words, and replace
       the "No wrapper exists" note on the `/v1/embeddings` row of
       `cairn/references/lmstudio-api-surface.md:40`.
+- [x] T8: Repair the response check on the two failures the review returned.
+      Read every field with an exact-name accessor rather than `$`, so a
+      `database` field is never read as the data block. Guard the body and
+      each element on being a JSON object, so an atomic value aborts with the
+      class rather than from `$`. Reject a `data` block sent as a JSON object.
+      Give an empty embedding its own clause. Drop the dead
+      `dimnames()` line. Add six probes and plant the partial match back to
+      show they hold.
+- [x] T9: Add an `lms_embed` row to the shared failure-message table at
+      `tests/testthat/test-api-error.R:140`, so the wrapper runs every body
+      shape at both statuses like the other eight.
+- [x] T10: Correct the two `...` examples on the `lms_embed()` help page, one
+      of which always aborts and one of which the server ignores. Make the
+      live-cassette test clear both token sources, so the work-log claim that
+      it reads the cassette with the token unset becomes true.
+- [x] T11: Amend AC7 through the gate and record the `NA` input case as a
+      roadmap candidate row. Change the four input probes to match the whole
+      abort sentence. A wrapper that named the wrong argument then stops
+      passing on the sibling's pattern.
 
 ## Work log
 
@@ -155,6 +177,14 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
 - 2026-09-20: review checkpoint. Every acceptance criterion verified against fresh evidence and ticked. The consistency gate passed: cairn_validate exits 0 with one already-dispositioned sizing advisory, document() no diff, pkgdown clean, check() Status OK. Two of three review lenses reported; the diff-bug lens is still running.
 - 2026-09-20: review returned the milestone to in-progress under the return floor. AC6 fails on two fresh-context findings, both verified against the implementation this session. A 200 body that is an atomic scalar, or whose `data` elements are atomic, raises an unclassed `simpleError` from `$` rather than aborting with `rlmstudio_bad_response`. And `$` partial matching reads a `database` field as the data block, so a response carrying no `data` block returns a matrix instead of aborting, which is the silent-wrong-matrix outcome D-007 exists to prevent. Nine further findings are recorded in the Review section with recommended dispositions. First defect return; the two AC2 amendment returns stay on their own track.
+- 2026-09-20: implement gate on the return took every recommended disposition. The shared failure table gets an `lms_embed` row. All five smaller fixes land. AC7 narrows rather than binds the check order. The `NA` input case goes to a candidate row rather than widening AC7.
+- 2026-09-20: minor amendment. T8 to T11 added for the return work, and the Coverage lines now map AC4 to T9, AC6 to T8, and AC7 to T11.
+- 2026-09-20: T8 done. `json_field()` and `is_json_object()` in `R/embed.R` read every field by exact name, so partial matching can no longer read a `database` field as the data block. The body and each element are guarded on being a JSON object. A `data` block sent as a JSON object is rejected on its names. An empty embedding has its own clause. The dead `dimnames()` line is gone. Six probes were added, for eighteen in all. Planting the partial match back turned three expectations red, and the restore is green.
+- 2026-09-20: substantive amendment to AC7, taken at the mini gate with the narrowing option chosen. The old text claimed the input check behaves as `lms_chat_batch()` does. That claim is false in two ways. The sibling runs the server check first and names its argument `inputs`. The new text drops the cross-reference, names the four values the probes supply, names the whole abort sentence, and cites the test. It binds no ordering. A widening goes to the candidate row instead.
+- 2026-09-20: re-audit: AC7 (full) — six findings. The domain was an unenumerated family of every non-character value. A missing `input` fell inside the wording but raises R's own error. The message clause was unprobed, because all four probes matched a loose pattern the sibling's message also matches. Two sentences stated properties of the criterion rather than of the function. A tested ordering is bound by no criterion, and the disclaimer left it that way. The abort carries no condition class, where the design says callers catch by class. Four narrowing repairs were taken. The last two were held, because each repair widens the promise and the gate chose narrowing.
+- 2026-09-20: re-audit: AC7 (full) — five findings on the fixed text. The evidence clause said "recorder test", but the probes abort before any HTTP call and run as four expectations in one test. Two of the four domain members were still open families resting on one exemplar each. The comparative tail promised a property of the regex rather than of the function. The no-argument case was ambiguous. And the criterion pins message text where D-007 records that callers catch by class. Four narrowing repairs were taken. The D-007 asymmetry is held and recorded here. It matches the sibling wrapper, and closing it adds a condition class to a user-facing surface. This is the second re-entry, so no further reader runs on AC7.
+- 2026-09-20: T11 done. Review finding 8 is discharged by the amendment. The four input probes now match the whole sentence with `fixed = TRUE`. Planting `inputs` in place of `input` in the abort turned both probes red, and the restore is green. The Review entry for AC7 is left as review wrote it, because that section belongs to review.
+- 2026-09-20: T9 and T10 done. The shared failure-message table runs nine wrappers now. The help page says what LM Studio does with `dimensions` and what `encoding_format = "base64"` does to the default path. The live-cassette test clears both token sources. The `verify` slot ran clean: document() wrote `lms_embed.Rd`, test() gave 460 pass and 0 fail.
 
 ## Decisions
 

@@ -21,6 +21,7 @@ _Last hygiene pass: 2026-09-20 (M010 archived and set done, M008 pruned under te
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
 - A `chunk_size` argument on `lms_embed()` with a progress bar, so a long input vector goes out as several requests. M012 sends the whole vector in one POST, added 2026-09-20, M012 plan gate
+- An `NA` inside the `input` vector of `lms_embed()` passes the input guard and goes out as JSON `null`. The user then sees a server error or a count mismatch. Neither names the `NA`, added 2026-09-20, M012 review finding 9
 - A `ttl` argument on `lms_load()` and the chat wrappers. It sets how long an idle model stays in memory and is the one documented load field the package does not name, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A `/api/v1/chat` response carries a `stats` block with `input_tokens`, `total_output_tokens`, `tokens_per_second`, and `time_to_first_token_seconds`. `lms_chat_native()` drops it. Surfacing it lets a batch run report throughput, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - Structured output on `/v1/chat/completions` through `response_format` with a JSON schema. A scoring run gets one parsed value per item instead of prose to parse, added 2026-09-19, cairn/references/lmstudio-api-surface.md

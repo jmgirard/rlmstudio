@@ -181,6 +181,12 @@ api_error_callers <- list(
     call = function(host = api_error_default_host) {
       lms_chat_native("m", "hi", host = host)
     }
+  ),
+  lms_embed = list(
+    label = "Embeddings Failed",
+    call = function(host = api_error_default_host) {
+      lms_embed("m", "hi", host = host)
+    }
   )
 )
 

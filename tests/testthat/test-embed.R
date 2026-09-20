@@ -168,6 +168,12 @@ test_that("a response recorded from a live server builds the matrix", {
   # data-raw/record-embed-cassette.R, which carries the full provenance.
   local_mocked_bindings(is_server_running = function(...) TRUE)
 
+  # The cassette was recorded with no token and carries no request header.
+  # This machine normally has the environment variable set, so the test
+  # clears both sources and reads the cassette the way it was written.
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = NA)
+  withr::local_options(rlmstudio.token = NULL)
+
   httptest2::with_mock_dir("embed_live", {
     out <- lms_embed(
       model = "text-embedding-nomic-embed-text-v1.5",
@@ -259,9 +265,10 @@ test_that("a failed response aborts with class rlmstudio_api_error", {
 
 # The response check --------------------------------------------------------
 
-# Twelve probes over the eight conditions the response check rejects, with
-# three of them aimed at the not-a-list-of-numbers branch and two at the
-# out-of-range branch. `detail` is the clause the
+# Eighteen probes over the ten conditions the response check rejects, with
+# three of them aimed at the not-a-list-of-numbers branch, two at the
+# out-of-range branch, four at the no-data-block branch, and two at the
+# not-a-JSON-object branch. `detail` is the clause the
 # abort must report, so a probe that fired the wrong branch fails rather than
 # passing on the shared class.
 bad_bodies <- list(
@@ -270,6 +277,51 @@ bad_bodies <- list(
     input = "text",
     body = '{"object": "list", "model": "test-embed"}',
     detail = "no data block"
+  ),
+  list(
+    # `$` partial-matches, so a `database` field would be read as the data
+    # block and a matrix built from it. That is the silent wrong matrix the
+    # whole check exists to prevent, so it aborts instead.
+    label = "a database field where the data block should be",
+    input = "text",
+    body = '{"database": [{"index": 0, "embedding": [0.1, 0.2]}]}',
+    detail = "no data block"
+  ),
+  list(
+    # A JSON object parses to a list just as an array does, and `length()`
+    # would count its members as elements.
+    label = "a data block sent as a JSON object",
+    input = "text",
+    body = '{"data": {"first": {"index": 0, "embedding": [0.1, 0.2]}}}',
+    detail = "no data block"
+  ),
+  list(
+    label = "a whole body that is a JSON array",
+    input = "text",
+    body = '[{"index": 0, "embedding": [0.1, 0.2]}]',
+    detail = "no data block"
+  ),
+  list(
+    # `$` on an atomic value is an error, not a missing field, so an
+    # unguarded read here would raise an unclassed condition.
+    label = "a whole body that is a JSON string",
+    input = "text",
+    body = '"hello"',
+    detail = "not a JSON object"
+  ),
+  list(
+    label = "a data element that is a bare string",
+    input = "text",
+    body = '{"data": ["aGVsbG8="]}',
+    detail = "not a JSON object"
+  ),
+  list(
+    # An empty array is a list of numbers, of none of them, so it needs its
+    # own clause rather than the not-a-list-of-numbers one.
+    label = "an embedding that is an empty array",
+    input = "text",
+    body = '{"data": [{"index": 0, "embedding": []}]}',
+    detail = "is empty"
   ),
   list(
     label = "an embedding sent as a base64 string",
@@ -369,7 +421,7 @@ for (probe in bad_bodies) {
 }
 
 test_that("the response check stays silent on a block it should accept", {
-  # The passing control for the twelve probes above. It shares their path:
+  # The passing control for the eighteen probes above. It shares their path:
   # three inputs, three elements, one index each, one common width. Nothing
   # here is rejected, so the probes above are rejecting on their own defect.
   expect_true(is.matrix(drive_embed(in_order_body, input = three_inputs)$value))
@@ -391,23 +443,32 @@ test_that("the dots cannot override the inputs", {
 
 # The input contract --------------------------------------------------------
 
+# The whole message, not a pattern. `lms_chat_batch()` raises the same
+# sentence about its own `inputs` argument, so a loose match on "non-empty
+# character" passes unchanged if this wrapper ever named the wrong argument.
+input_abort_message <- "`input` must be a non-empty character vector."
+
 test_that("lms_embed aborts on an input that is not a character vector", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
 
-  expect_error(lms_embed("test-embed", input = 1:3), "non-empty character")
-  expect_error(lms_embed("test-embed", input = list("a")), "non-empty character")
-  expect_error(lms_embed("test-embed", input = NULL), "non-empty character")
-  expect_error(
-    lms_embed("test-embed", input = character(0)),
-    "non-empty character"
-  )
+  for (bad in list(1:3, list("a"), NULL, character(0))) {
+    expect_error(
+      lms_embed("test-embed", input = bad),
+      input_abort_message,
+      fixed = TRUE
+    )
+  }
 })
 
 test_that("the input check runs before the server check", {
   # A bad input aborts on its own message even with no server, so the abort
   # names the caller's mistake rather than the machine's state.
   local_mocked_bindings(is_server_running = function(...) FALSE)
-  expect_error(lms_embed("test-embed", input = 1:3), "non-empty character")
+  expect_error(
+    lms_embed("test-embed", input = 1:3),
+    input_abort_message,
+    fixed = TRUE
+  )
 })
 
 

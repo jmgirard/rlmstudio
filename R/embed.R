@@ -11,8 +11,11 @@
 #' @param simplify Logical. If `TRUE`, the default, returns a numeric matrix
 #'   with one row per input. Any other value returns the parsed response body
 #'   unchanged.
-#' @param ... Additional API arguments (e.g., `dimensions`,
-#'   `encoding_format`).
+#' @param ... Additional fields for the request body. LM Studio ignores a
+#'   field it does not recognize, and two OpenAI fields are worth naming for
+#'   that reason: LM Studio ignores `dimensions`, so asking for a narrower
+#'   vector has no effect, and `encoding_format = "base64"` returns embeddings
+#'   this function cannot read, so the default `simplify = TRUE` path aborts.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
@@ -95,6 +98,36 @@ is_one_number <- function(x) {
   is.numeric(x) && length(x) == 1L && !is.na(x)
 }
 
+#' Did this value parse from a JSON object?
+#'
+#' A JSON object parses to a named list, a JSON array to an unnamed one, and
+#' anything else to an atomic value. The distinction matters because `[[` on
+#' an atomic value is an error rather than a missing field.
+#'
+#' @param x Any value read out of a parsed response body.
+#' @return `TRUE` when `x` parsed from a JSON object.
+#'
+#' @noRd
+is_json_object <- function(x) {
+  is.list(x) && !is.null(names(x))
+}
+
+#' Read one named field out of a parsed JSON object
+#'
+#' `$` on a list partial-matches, so `body$data` reads a `database` field when
+#' no `data` field exists, and `$` on an atomic value is an error rather than
+#' a missing field. This reads the exact name and returns `NULL` for anything
+#' the name does not reach.
+#'
+#' @param x Any value read out of a parsed response body.
+#' @param name Character. The exact field name.
+#' @return The field, or `NULL`.
+#'
+#' @noRd
+json_field <- function(x, name) {
+  if (is_json_object(x) && name %in% names(x)) x[[name]] else NULL
+}
+
 #' Check the data block of an embeddings response and build the matrix
 #'
 #' Reads the `data` block of a parsed `/v1/embeddings` body and returns a
@@ -128,8 +161,15 @@ embed_matrix <- function(resp_data, n, resp) {
     )
   }
 
-  data <- resp_data$data
-  if (!is.list(data)) {
+  if (!is.list(resp_data)) {
+    fail("the response body is not a JSON object.")
+  }
+
+  data <- json_field(resp_data, "data")
+  # A JSON array parses to an unnamed list and a JSON object to a named one.
+  # `length()` on the object form would count its members as though they were
+  # array elements, so the names are what tell the two apart.
+  if (!is.list(data) || !is.null(names(data))) {
     fail("the response carries no {.field data} block.")
   }
   if (length(data) != n) {
@@ -137,10 +177,16 @@ embed_matrix <- function(resp_data, n, resp) {
       "the response carries {length(data)} embedding{?s} for {n} input{?s}."
     )
   }
+  if (!all(vapply(data, is_json_object, logical(1)))) {
+    fail("an element of the {.field data} block is not a JSON object.")
+  }
 
   indexes <- vapply(
     data,
-    function(el) if (is_one_number(el$index)) as.numeric(el$index) else NA_real_,
+    function(el) {
+      index <- json_field(el, "index")
+      if (is_one_number(index)) as.numeric(index) else NA_real_
+    },
     numeric(1)
   )
   if (anyNA(indexes)) {
@@ -157,8 +203,8 @@ embed_matrix <- function(resp_data, n, resp) {
   }
 
   vectors <- lapply(data, function(el) {
-    embedding <- el$embedding
-    if (!is.list(embedding) || length(embedding) == 0L) {
+    embedding <- json_field(el, "embedding")
+    if (!is.list(embedding) || !is.null(names(embedding))) {
       return(NULL)
     }
     if (!all(vapply(embedding, is_one_number, logical(1)))) {
@@ -170,16 +216,24 @@ embed_matrix <- function(resp_data, n, resp) {
   if (any(vapply(vectors, is.null, logical(1)))) {
     fail("an element of the {.field data} block carries no list of numbers.")
   }
+  # An empty JSON array is a list of numbers, of none of them. It needs its
+  # own clause, and its own guard: `matrix(ncol = 0)` would otherwise build a
+  # matrix of no columns rather than abort.
+  if (any(lengths(vectors) == 0L)) {
+    fail("an embedding in the {.field data} block is empty.")
+  }
 
   widths <- unique(lengths(vectors))
   if (length(widths) > 1L) {
     fail("the embeddings in the {.field data} block are of unequal length.")
   }
 
+  # `matrix()` returns NULL dimnames and `unlist(use.names = FALSE)` strips
+  # the names off every value placed into it, so the matrix is unnamed by
+  # construction and needs no `dimnames(out) <- NULL` line to make it so.
   out <- matrix(0, nrow = n, ncol = widths)
   for (i in seq_len(n)) {
     out[indexes[[i]] + 1L, ] <- vectors[[i]]
   }
-  dimnames(out) <- NULL
   out
 }
