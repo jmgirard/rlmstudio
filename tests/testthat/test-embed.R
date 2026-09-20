@@ -92,43 +92,73 @@ test_that("a single input still travels as an array of one", {
 
 # The returned matrix -------------------------------------------------------
 
-test_that("lms_embed returns one row per input, in the order given", {
-  run <- drive_embed(in_order_body, input = three_inputs)
-  out <- run$value
-
+# Assert the whole promised shape of one returned matrix: a double matrix of
+# the expected size, with no names, whose rows are the expected rows in the
+# expected places. Each arrival-order case below runs the same assertions, so
+# a case cannot pass by checking less than its neighbours.
+expect_embedding_matrix <- function(out, rows) {
   expect_true(is.matrix(out))
   expect_type(out, "double")
-  expect_equal(dim(out), c(3L, 5L))
+  expect_equal(dim(out), c(length(rows), length(rows[[1]])))
   expect_null(dimnames(out))
-  expect_equal(out[1, ], row_one)
-  expect_equal(out[2, ], row_two)
-  expect_equal(out[3, ], row_three)
+  for (i in seq_along(rows)) {
+    expect_equal(out[i, ], rows[[i]])
+  }
+}
+
+test_that("three inputs answered in order give three rows in order", {
+  expect_embedding_matrix(
+    drive_embed(in_order_body, input = three_inputs)$value,
+    list(row_one, row_two, row_three)
+  )
 })
 
-test_that("rows are placed by index and not by arrival order", {
+test_that("three inputs answered out of order are placed by index", {
   permuted <- embed_body(
     embed_element(2, row_three),
     embed_element(0, row_one),
     embed_element(1, row_two)
   )
 
-  out <- drive_embed(permuted, input = three_inputs)$value
-
-  # The same three rows as the in-order body, in the same places. A build that
+  # The same three rows in the same places as the in-order body. A build that
   # used arrival order would put row_three first.
-  expect_equal(out[1, ], row_one)
-  expect_equal(out[2, ], row_two)
-  expect_equal(out[3, ], row_three)
+  expect_embedding_matrix(
+    drive_embed(permuted, input = three_inputs)$value,
+    list(row_one, row_two, row_three)
+  )
+})
+
+test_that("two inputs answered in order give two rows in order", {
+  in_order_two <- embed_body(
+    embed_element(0, row_one),
+    embed_element(1, row_two)
+  )
+
+  expect_embedding_matrix(
+    drive_embed(in_order_two, input = c("one", "two"))$value,
+    list(row_one, row_two)
+  )
+})
+
+test_that("two inputs answered out of order are placed by index", {
+  # The smallest case that tells index placement from arrival placement. A
+  # build reading arrival order would put row_two first.
+  swapped <- embed_body(
+    embed_element(1, row_two),
+    embed_element(0, row_one)
+  )
+
+  expect_embedding_matrix(
+    drive_embed(swapped, input = c("one", "two"))$value,
+    list(row_one, row_two)
+  )
 })
 
 test_that("a single input returns a matrix and not a vector", {
-  out <- drive_embed(
-    embed_body(embed_element(0, row_one)),
-    input = "only one"
-  )$value
-
-  expect_true(is.matrix(out))
-  expect_equal(dim(out), c(1L, 5L))
+  expect_embedding_matrix(
+    drive_embed(embed_body(embed_element(0, row_one)), input = "only one")$value,
+    list(row_one)
+  )
 })
 
 

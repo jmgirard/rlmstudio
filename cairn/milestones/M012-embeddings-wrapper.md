@@ -34,14 +34,20 @@ on `/v1/chat/completions` → the existing candidate row.
       whose JSON body carries `model` and an `input` array holding those n
       strings in the order given. At n = 1 the body carries a one-element
       array and not a bare string.
-- [ ] AC2: With `simplify = TRUE` (the default), `lms_embed()` returns a double
-      matrix with one row per input and one column per embedding dimension,
-      the row at position i holding the numbers carried by the response `data`
-      element whose `index` field is i-1. Evidence: the recorded cassette for
-      an in-order response of three inputs and five fractional dimensions; a
-      recorder test over that same response permuted to arrival order 2, 0, 1;
-      and a recorder test at n = 1 that the return keeps its two dimensions
-      rather than dropping to a vector.
+- [ ] AC2: With `simplify = TRUE` (the default), on a response whose `data`
+      block holds one element per input, each carrying a whole unique `index`
+      in 0 to n-1 and an `embedding` list of numbers of one common length d,
+      `lms_embed()` returns a double matrix of n rows and d columns that
+      carries no row or column names, and the row at position i holds the
+      numbers of the element whose `index` is i-1. Checked at n = 1; at n = 2
+      in arrival orders 0-1 and 1-0; and at n = 3 in arrival orders 0-1-2 and
+      2-0-1. Evidence: a cassette recorded from a live server for the n = 3
+      in-order case at 768 dimensions, from
+      `text-embedding-nomic-embed-text-v1.5`; a recorder test for each of the
+      five cases over a hand-built response of five fractional dimensions,
+      each asserting the row values, both dimensions, the storage mode, and
+      the absent names; and the AC6 control that the check stays silent on a
+      block it accepts.
 - [ ] AC3: With `simplify = FALSE`, `lms_embed()` returns the parsed response
       body unchanged, identical to what `httr2::resp_body_json()` produced for
       that body, and runs none of the AC6 checks: a body AC6 rejects still
@@ -140,6 +146,10 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: T6 and T7 done. The token wrapper table now carries `lms_embed` and the name list runs to thirteen. `_pkgdown.yml` gained an Embeddings title, `NEWS.md` gained three entries in user-facing words, and the `/v1/embeddings` row of the API surface page now names the wrapper. `pkgdown::check_pkgdown()` found no problems and the suite gave 405 pass and 0 fail.
 - 2026-09-20: T5 done. The cassette in `tests/testthat/embed_live/` was recorded against a live server running text-embedding-nomic-embed-text-v1.5, with `data-raw/record-embed-cassette.R` as its generator and provenance. It holds three in-order elements of 768 fractional numbers each. It carries no request header and no token. A grep for the token value over the file found nothing. The test reads it with the server stopped and the token unset, and passes.
 - 2026-09-20: LM Studio ignores the `dimensions` field on `/v1/embeddings`. A request asking for 5 came back with 768. AC2 asks for a cassette of five dimensions, which no live recording can give, so the wording goes to the amendment gate.
+- 2026-09-20: substantive amendment to AC2, taken at the mini gate. The old evidence clause asked a live recording for five dimensions, which LM Studio cannot give. The criterion now names the domain it holds over and narrows the placement promise to the five cases the tests reach. It states the recorded model and its 768 dimensions. It also adds the absent row and column names, which no criterion covered before.
+- 2026-09-20: re-audit: AC2 (full) — four findings. AC2 and AC6 demanded opposite outcomes for a base64 body reachable through the dots. The dimension count was deferred to whatever the fixture held. The placement promise ran over every n and every arrival order with no procedure enumerating them. No n = 2 permutation probe existed. All four fixed before the text was written.
+- 2026-09-20: re-audit: AC2 (full) — six findings on the fixed text. The case list read as a cross product of nine pairs, six of which do not exist. The n = 1 placement claim rested on no probe. The shape sentence was still universal. The n = 2 probe the amendment named did not exist yet. No criterion covered the absent row and column names. The domain was stated by reference to another criterion rather than in observable terms. All six fixed. This is the second re-entry, so no further reader runs on AC2.
+- 2026-09-20: the amendment added to T4. `expect_embedding_matrix()` asserts the size, the storage mode, the absent names, and every row. All five arrival-order cases run it, and the two n = 2 cases are new. Planting `out[i, ]` again turned the n = 2 out-of-order case red as well as the n = 3 one.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
 
 ## Decisions
