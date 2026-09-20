@@ -1,6 +1,6 @@
 # M012: The package can turn text into embedding vectors
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -130,21 +130,17 @@ on `/v1/chat/completions` → the existing candidate row.
       title, write the `NEWS.md` entry in plain user-facing words, and replace
       the "No wrapper exists" note on the `/v1/embeddings` row of
       `cairn/references/lmstudio-api-surface.md:40`.
-- [x] T8: Repair the response check on the two failures the review returned.
-      Read every field with an exact-name accessor rather than `$`, so a
-      `database` field is never read as the data block. Guard the body and
-      each element on being a JSON object, so an atomic value aborts with the
-      class rather than from `$`. Reject a `data` block sent as a JSON object.
-      Give an empty embedding its own clause. Drop the dead
-      `dimnames()` line. Add six probes and plant the partial match back to
-      show they hold.
+- [x] T8: Repair the response check on the two returned failures. Read every
+      field by exact name rather than with `$`, and guard the body and each
+      element on being a JSON object. Also reject a `data` block sent as a
+      JSON object, give an empty embedding its own clause, and drop the dead
+      `dimnames()` line. Add six probes and plant the partial match back.
 - [x] T9: Add an `lms_embed` row to the shared failure-message table at
       `tests/testthat/test-api-error.R:140`, so the wrapper runs every body
       shape at both statuses like the other eight.
-- [x] T10: Correct the two `...` examples on the `lms_embed()` help page, one
-      of which always aborts and one of which the server ignores. Make the
-      live-cassette test clear both token sources, so the work-log claim that
-      it reads the cassette with the token unset becomes true.
+- [x] T10: Correct the two `...` examples on the `lms_embed()` help page. One
+      always aborts and the server ignores the other. Make the live-cassette
+      test clear both token sources.
 - [x] T11: Amend AC7 through the gate and record the `NA` input case as a
       roadmap candidate row. Change the four input probes to match the whole
       abort sentence. A wrapper that named the wrong argument then stops
@@ -185,6 +181,10 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: re-audit: AC7 (full) — five findings on the fixed text. The evidence clause said "recorder test", but the probes abort before any HTTP call and run as four expectations in one test. Two of the four domain members were still open families resting on one exemplar each. The comparative tail promised a property of the regex rather than of the function. The no-argument case was ambiguous. And the criterion pins message text where D-007 records that callers catch by class. Four narrowing repairs were taken. The D-007 asymmetry is held and recorded here. It matches the sibling wrapper, and closing it adds a condition class to a user-facing surface. This is the second re-entry, so no further reader runs on AC7.
 - 2026-09-20: T11 done. Review finding 8 is discharged by the amendment. The four input probes now match the whole sentence with `fixed = TRUE`. Planting `inputs` in place of `input` in the abort turned both probes red, and the restore is green. The Review entry for AC7 is left as review wrote it, because that section belongs to review.
 - 2026-09-20: T9 and T10 done. The shared failure-message table runs nine wrappers now. The help page says what LM Studio does with `dimensions` and what `encoding_format = "base64"` does to the default path. The live-cassette test clears both token sources. The `verify` slot ran clean: document() wrote `lms_embed.Rd`, test() gave 460 pass and 0 fail.
+
+- 2026-09-20: claim audit: 68 claims read, 1 corrected — tests/testthat/test-embed.R. A comment counted ten reject conditions where the check has eleven. It collapsed the two branches that report a value that is not a JSON object. The reader flagged one further claim as reading exhaustive without being so. The changelog listed eight faults that abort. It left out the empty embedding and the non-object element, and both are now named there. The reader did not test the two claims about what LM Studio does with `dimensions` and with `encoding_format`. That needs a live server.
+- 2026-09-20: the amendment pushed the plan-owned sections to 152 lines against a cap of 150, so T8 and T10 were compressed in one pass. The sizing tripwire now also fires at 11 tasks. Kept as one milestone for the reason already recorded: T8 to T11 are the repairs the review returned, and they belong to the criteria they repair.
+- 2026-09-20: the return work is done and the status goes back to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 460 pass and 0 fail.
 
 ## Decisions
 

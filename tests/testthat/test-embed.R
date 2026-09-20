@@ -265,10 +265,11 @@ test_that("a failed response aborts with class rlmstudio_api_error", {
 
 # The response check --------------------------------------------------------
 
-# Eighteen probes over the ten conditions the response check rejects, with
+# Eighteen probes over the eleven conditions the response check rejects, with
 # three of them aimed at the not-a-list-of-numbers branch, two at the
-# out-of-range branch, four at the no-data-block branch, and two at the
-# not-a-JSON-object branch. `detail` is the clause the
+# out-of-range branch, four at the no-data-block branch, and two at the two
+# branches that report a value that is not a JSON object, one for the whole
+# body and one for an element of the data block. `detail` is the clause the
 # abort must report, so a probe that fired the wrong branch fails rather than
 # passing on the shared class.
 bad_bodies <- list(
