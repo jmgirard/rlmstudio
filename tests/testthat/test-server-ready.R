@@ -87,6 +87,63 @@ test_that("a JSON object under the models key is not a model list", {
   expect_identical(lms_server_ready(), FALSE)
 })
 
+test_that("each token source reaches the Authorization header", {
+  # Four sources, four distinct values. Each case unsets the two sources below
+  # it, so a value that arrives could only have come from the source named.
+  # request_target() reads headers with redaction off, so a failure prints the
+  # literal value and names the source that leaked.
+  cases <- list(
+    list(
+      source = "argument",
+      expected = "Bearer ready-argument",
+      run = function() {
+        withr::local_envvar(RLMSTUDIO_API_TOKEN = "ready-envvar")
+        withr::local_options(rlmstudio.token = "ready-option")
+        lms_server_ready(token = "ready-argument")
+      }
+    ),
+    list(
+      source = "option",
+      expected = "Bearer ready-option",
+      run = function() {
+        withr::local_envvar(RLMSTUDIO_API_TOKEN = "ready-envvar")
+        withr::local_options(rlmstudio.token = "ready-option")
+        lms_server_ready()
+      }
+    ),
+    list(
+      source = "environment variable",
+      expected = "Bearer ready-envvar",
+      run = function() {
+        withr::local_envvar(RLMSTUDIO_API_TOKEN = "ready-envvar")
+        withr::local_options(rlmstudio.token = NULL)
+        lms_server_ready()
+      }
+    ),
+    list(
+      source = "no token",
+      expected = NULL,
+      run = function() {
+        withr::local_envvar(RLMSTUDIO_API_TOKEN = "")
+        withr::local_options(rlmstudio.token = NULL)
+        lms_server_ready()
+      }
+    )
+  )
+
+  for (case in cases) {
+    recorder <- local_request_recorder(mock_response(200L, '{"models": []}'))
+    case$run()
+
+    expect_length(recorder$requests, 1L)
+    expect_identical(
+      request_target(recorder$requests[[1]])$headers$authorization,
+      case$expected,
+      info = case$source
+    )
+  }
+})
+
 test_that("the probe reads the model list from api/v1/models", {
   recorder <- local_request_recorder(mock_response(200L, '{"models": []}'))
 

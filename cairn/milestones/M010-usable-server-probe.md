@@ -74,7 +74,7 @@ rows.
       the token through `rlm_token()`. Send a GET to `api/v1/models` through
       `lms_client()` (R/chat.R). Return `TRUE` only for a 200 whose parsed body
       carries a model list. Catch every error and return `FALSE`.
-- [ ] T3: Add the four token-path assertions through `request_target()`,
+- [x] T3: Add the four token-path assertions through `request_target()`,
       following `tests/testthat/test-token-wrappers.R`.
 - [ ] T4: Write the roxygen block for `lms_server_ready()` and export it.
       Narrow the "Server not running" section in `R/conditions.R:8`. Run
@@ -100,6 +100,7 @@ rows.
 - 2026-09-20: implement gate settled three items. If its body carries a `models` JSON array, a 200 reads as ready. An empty array counts. The `timeout` default is 2 seconds. The new function joins the shared token-wrapper table. That table grows from eleven names to twelve.
 - 2026-09-20: T1 wrote eight tests in `tests/testthat/test-server-ready.R`. They cover the five planned cases, an empty model list, a JSON object under the `models` key, and the request target. All eight failed before T2 on `could not find function`.
 - 2026-09-20: T2 added `lms_server_ready(host, timeout, token)` to `R/serve.R`. The token resolves through `lms_client()`. That function calls `rlm_token()`. A malformed `token` therefore aborts and does not read as not ready. Timeout discrimination measured on a silent listener: 0.5 returned FALSE in 0.53 s, 2 returned FALSE in 2.02 s.
+- 2026-09-20: T3 drove the four token sources with four distinct values, each case unsetting the sources below it. The argument, the option, and the environment variable each reach the header. The no-token case sends no header. `lms_server_ready` also joined the shared wrapper table, taking it to twelve names. Discrimination: dropping the `token` argument from the `lms_client()` call turned the argument case red and left the rest green.
 - 2026-09-20: T4's roxygen block and export landed in the T2 commit. The function and its documentation are one edit. T4 keeps the conditions help-page narrowing. Minor reorder, no scope change.
 
 ## Decisions
