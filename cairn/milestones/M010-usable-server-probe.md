@@ -29,29 +29,29 @@ rows.
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_server_ready()` returns a length-one logical rather than
+- [x] AC1: `lms_server_ready()` returns a length-one logical rather than
       raising, inside the time its documented `timeout` argument sets. A test
       drives five cases. The first case is a closed port. The second is an open
       port whose listener never answers, a bare `serverSocket()`. The third is
       an HTTP 401 response. The fourth is an HTTP 200 whose body is not a model
       list. The fifth is an HTTP 200 that carries a model list. The first four
       return `FALSE`. The fifth returns `TRUE`.
-- [ ] AC2: Tests drive all four token paths with distinct values. The four
+- [x] AC2: Tests drive all four token paths with distinct values. The four
       paths are the `token` argument, the `rlmstudio.token` option, the
       `RLMSTUDIO_API_TOKEN` environment variable, and no token at all. Each
       test asserts through `request_target()` which value reaches the
       `Authorization` header. The fourth path sends no such header. The run
       that evidences this criterion has `httpuv` installed.
-- [ ] AC3: The rendered `man/rlmstudio-conditions.Rd` states that the probe
+- [x] AC3: The rendered `man/rlmstudio-conditions.Rd` states that the probe
       behind `rlmstudio_no_server` is a TCP connection to the host and port. It
       states that another process holding that port suppresses the condition.
       It names `lms_server_ready()` as the stronger test.
-- [ ] AC4: `Rscript -e 'devtools::check()'` reports 0 errors and 0 warnings on
+- [x] AC4: `Rscript -e 'devtools::check()'` reports 0 errors and 0 warnings on
       a machine whose LM Studio server requires authentication and whose
       calling environment sets no `RLMSTUDIO_API_TOKEN`.
-- [ ] AC5: `Rscript -e 'devtools::test()'` reports 0 failures, 0 errors, and 0
+- [x] AC5: `Rscript -e 'devtools::test()'` reports 0 failures, 0 errors, and 0
       warnings. `Rscript -e 'devtools::document()'` produces no diff.
-- [ ] AC6: `NEWS.md` carries an entry for the new function and for the narrowed
+- [x] AC6: `NEWS.md` carries an entry for the new function and for the narrowed
       condition help page.
 
 ## Coverage
@@ -122,8 +122,64 @@ rows.
 - 2026-09-20: a fresh reader read every added line outside `cairn/`. The three wrong claims were all test comments. Everything in `NEWS.md`, `R/`, the twelve man pages, and both vignettes held.
 - 2026-09-20: the largest of the three. The comment said the five-second bound proved that the `timeout` argument does the work. It does not. httr2 and curl set no default timeout, so a build with the `req_timeout()` line deleted hangs on the silent socket instead of failing. The comment now says what the bound can catch, which is a timeout set to the wrong value.
 - 2026-09-20: the same reader re-read the three corrections once. Two held. The third was still wrong about which sources the last two token cases clear: they clear the source that otherwise wins, not a source below. Corrected, and the pass is closed.
+- 2026-09-20: review checkpoint. All six criteria re-executed with fresh evidence and ticked. Consistency gate green. The three review lenses are still running, so the findings and triage are not yet written.
 - 2026-09-20: `cairn_validate` wants `—` in the Driving RR slot, so the three header slots keep their em-dashes. The writing lint counts them as violations. The validator is the machine reader and wins.
 
 ## Decisions
 
 ## Review
+
+### Acceptance-criteria evidence
+
+- AC1: `testthat::test_local(filter = "server-ready")` at 97b1ae3 ran ten
+  tests, all green, none skipped. The five named cases are there and each
+  returned the value the criterion asks for. A closed port returns `FALSE`. A
+  bare `serverSocket()` listener that never answers returns `FALSE`. An HTTP
+  401 returns `FALSE`. An HTTP 200 whose body is not a model list returns
+  `FALSE`. An HTTP 200 carrying a model list returns `TRUE`. Nothing raised.
+  Fresh timing against a silent listener on port 38291: `timeout = 0.5`
+  returned `FALSE` in 0.53 s, `timeout = 2` returned `FALSE` in 2.02 s, and a
+  closed port returned `FALSE` in 0.01 s.
+- AC2: the same run reports `httpuv` 1.6.17 installed, so no test skipped
+  under D-006. The test "each token source reaches the Authorization header"
+  passed eight assertions across four cases. The four values are distinct:
+  `ready-argument`, `ready-option`, `ready-envvar`, and no token. Each case
+  reads the header back through `request_target()`. The argument case sends
+  `Bearer ready-argument`, the option case `Bearer ready-option`, the
+  environment case `Bearer ready-envvar`. The fourth case sends no
+  `Authorization` header, asserted as `NULL`.
+- AC3: read `man/rlmstudio-conditions.Rd` at 97b1ae3. The "Server not running"
+  section names the probe as a TCP connection to the hostname and port in
+  `host`. It says any process holding that port accepts the connection, so the
+  condition is not raised. It names `lms_server_ready()` as the stronger test.
+  All three clauses are in the rendered file, not only in the roxygen source.
+- AC4: `Rscript -e 'devtools::check()'` ran at 97b1ae3 with `lms` on `PATH`,
+  the LM Studio server up on port 1234 requiring a token, and no
+  `RLMSTUDIO_API_TOKEN` in the calling environment. A `curl` to
+  `api/v1/models` immediately before the run answered 401 with code
+  `invalid_api_key`. Result: 0 errors, 0 warnings, 0 notes, status OK, 15.5 s.
+  The vignette rebuild passed. The server was down after the run, because both
+  vignettes run their teardown chunks whenever the CLI is present, which is the
+  behavior T5 built.
+- AC5: `Rscript -e 'devtools::test()'` at 97b1ae3 reported FAIL 0, WARN 0,
+  SKIP 0, PASS 310. `Rscript -e 'devtools::document()'` then left the working
+  tree clean apart from this milestone file.
+- AC6: `NEWS.md` at 97b1ae3 carries three new bullets under the development
+  heading. The first describes `lms_server_ready()`, its return values, its
+  `timeout` default of 2, and its `token` argument. The second describes the
+  narrowed condition help page. The third describes the vignette gating.
+
+No driving review report, so no projection to measure against.
+
+### Consistency gate
+
+- `cairn_validate.py` exited 0. Sixteen checks passed and seven advisories read
+  OK, the release window among them.
+- The diff changes no `DESIGN.md` principle, so `cairn_impact.py` was skipped.
+- Toolchain checks from the `r-package` profile: `devtools::document()` left no
+  diff. `NAMESPACE` and `man/` regenerate clean, so nothing was hand-edited.
+  `README.Rmd` and `README.md` are untouched by this branch and were last
+  committed in the same commit. `pkgdown::check_pkgdown()` reported no problems.
+  `NEWS.md` carries the entry. The branch adds no top-level file, so no new
+  `.Rbuildignore` entry is owed. `devtools::check()` was clean, recorded under
+  AC4.
