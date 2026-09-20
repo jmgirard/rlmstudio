@@ -14,10 +14,12 @@ lms_embed(
 )
 }
 \arguments{
-\item{model}{Character. The loaded embedding model name.}
+\item{model}{Character. The loaded embedding model name. Must be one name,
+given as a single string.}
 
 \item{input}{Character. The texts to embed. A vector of length \code{n} returns
-\code{n} embeddings, in the order given.}
+\code{n} embeddings, in the order given. Must hold at least one value and no
+missing values.}
 
 \item{host}{Character. Server URL.}
 

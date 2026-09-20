@@ -19,7 +19,8 @@ lms_load(
 )
 }
 \arguments{
-\item{model}{Character. Unique identifier for the model to load.}
+\item{model}{Character. Unique identifier for the model to load. Must be
+one name, given as a single string.}
 
 \item{context_length}{Integer. Maximum number of tokens that the model will
 consider.}

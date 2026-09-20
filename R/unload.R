@@ -1,7 +1,7 @@
 #' Unload a model from memory via REST API
 #'
 #' @param model Character. Unique identifier (\code{instance_id}) of the model
-#'   instance to unload.
+#'   instance to unload. Must be one name, given as a single string.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
 #' @param token Character or `NULL`. An API token for a server that requires

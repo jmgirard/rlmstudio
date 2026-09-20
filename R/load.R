@@ -1,6 +1,7 @@
 #' Load a model via REST API
 #'
-#' @param model Character. Unique identifier for the model to load.
+#' @param model Character. Unique identifier for the model to load. Must be
+#'   one name, given as a single string.
 #' @param context_length Integer. Maximum number of tokens that the model will
 #'   consider.
 #' @param eval_batch_size Integer. Number of input tokens to process together in

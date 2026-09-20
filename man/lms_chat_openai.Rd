@@ -15,7 +15,8 @@ lms_chat_openai(
 )
 }
 \arguments{
-\item{model}{Character. The loaded model name.}
+\item{model}{Character. The loaded model name. Must be one name, given as a
+single string.}
 
 \item{messages}{List. A structured list of role and content pairs.}
 

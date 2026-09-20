@@ -4,9 +4,11 @@
 #' the model produced for each one. The whole input vector travels in a single
 #' request.
 #'
-#' @param model Character. The loaded embedding model name.
+#' @param model Character. The loaded embedding model name. Must be one name,
+#'   given as a single string.
 #' @param input Character. The texts to embed. A vector of length `n` returns
-#'   `n` embeddings, in the order given.
+#'   `n` embeddings, in the order given. Must hold at least one value and no
+#'   missing values.
 #' @param host Character. Server URL.
 #' @param simplify Logical. If `TRUE`, the default, returns a numeric matrix
 #'   with one row per input. Any other value returns the parsed response body

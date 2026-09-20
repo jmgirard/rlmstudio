@@ -17,9 +17,11 @@ lms_chat_batch(
 )
 }
 \arguments{
-\item{model}{Character. The loaded model name.}
+\item{model}{Character. The loaded model name. Must be one name, given as a
+single string.}
 
-\item{inputs}{Character vector. The prompts to process.}
+\item{inputs}{Character vector. The prompts to process. Must hold at least
+one value and no missing values.}
 
 \item{system_prompt}{Character. Optional system prompt.}
 

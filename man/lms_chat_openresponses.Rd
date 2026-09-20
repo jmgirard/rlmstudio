@@ -16,9 +16,11 @@ lms_chat_openresponses(
 )
 }
 \arguments{
-\item{model}{Character. The loaded model name.}
+\item{model}{Character. The loaded model name. Must be one name, given as a
+single string.}
 
-\item{input}{Character. The user prompt.}
+\item{input}{Character. The user prompt. A character vector must hold no
+missing values.}
 
 \item{instructions}{Character. Optional system instructions.}
 

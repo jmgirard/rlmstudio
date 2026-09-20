@@ -2,6 +2,7 @@
 #'
 #' @param model Character. The model to download. Accepts model catalog
 #'   identifiers (e.g., "openai/gpt-oss-20b") and exact Hugging Face links.
+#'   Must be one name, given as a single string.
 #' @param quantization Character. Optional. Quantization level of the model to
 #'   download (e.g., "Q4_K_M"). Only supported for Hugging Face links.
 #' @param host Character. The host address of the local server. Defaults to
@@ -92,7 +93,8 @@ lms_download <- function(
 
 #' Get the status of a download job
 #'
-#' @param job_id Character. The unique identifier for the download job.
+#' @param job_id Character. The unique identifier for the download job. Must be
+#'   one id, given as a single string.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
 #' @param token Character or `NULL`. An API token for a server that requires

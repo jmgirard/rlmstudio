@@ -14,7 +14,8 @@ lms_download(
 }
 \arguments{
 \item{model}{Character. The model to download. Accepts model catalog
-identifiers (e.g., "openai/gpt-oss-20b") and exact Hugging Face links.}
+identifiers (e.g., "openai/gpt-oss-20b") and exact Hugging Face links.
+Must be one name, given as a single string.}
 
 \item{quantization}{Character. Optional. Quantization level of the model to
 download (e.g., "Q4_K_M"). Only supported for Hugging Face links.}

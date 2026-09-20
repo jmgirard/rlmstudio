@@ -8,7 +8,7 @@ lms_unload(model, host = "http://localhost:1234", ..., token = NULL)
 }
 \arguments{
 \item{model}{Character. Unique identifier (\code{instance_id}) of the model
-instance to unload.}
+instance to unload. Must be one name, given as a single string.}
 
 \item{host}{Character. The host address of the local server. Defaults to
 "http://localhost:1234".}

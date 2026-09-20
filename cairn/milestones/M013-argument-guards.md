@@ -99,7 +99,7 @@ argument faults → rejected at the plan gate, not deferred.
       request.
 - [x] T5: Extend that file with the AC2 probes, including the NA positions and
       the pass-through case for a list `input`.
-- [ ] T6: Update the `@param` text on every touched help page, run
+- [x] T6: Update the `@param` text on every touched help page, run
       `devtools::document()`, add the `NEWS.md` entry, and run
       `devtools::test()` and `devtools::check()`.
 
@@ -110,6 +110,7 @@ argument faults → rejected at the plan gate, not deferred.
 - 2026-09-20: T2 and T3 landed in one commit, because their edits interleave in the same files. Every guard sits above `stop_if_no_server()`. The two `||` guards in `R/download.R` are gone, and `lms_download_status()` now checks `job_id` before the `already_downloaded` shortcut. Suite 517 pass, 0 fail; no existing test asserted the two deleted messages.
 - 2026-09-20: T4 done. `tests/testthat/test-arg-guards.R` reads the domain from `getNamespaceExports()` and `formals()`, and `local_guard_only()` forces the server probe to succeed while `local_no_request_allowed()` raises on any request, so an abort naming the argument can only have come from the guard. Deleting the guard in `R/unload.R` turns the file red, so it is load-bearing. `baseline_args()` takes its table as an argument, following D-006's pattern, and a test drives the missing-placeholder branch to prove it fails rather than skips.
 - 2026-09-20: T5 done. The AC2 probes cover a non-character and a zero-length value on the strict pair, an NA alone, first, middle, last, and doubled on all five, and the structured-list pass-through on the three chat wrappers, which proves itself by reaching the raising request mock. A test asserts the strict and loose lists together equal the NAMESPACE-read text domain, so a sixth `input` formal turns it red. Deleting the guard from `lms_chat_native()` and from `lms_embed()` each turned the file red.
+- 2026-09-20: T6 done. The `@param` text on all ten functions states its rule, `NEWS.md` carries three entries including the two changed messages in `R/download.R`, `devtools::document()` is idempotent, and `devtools::check()` reports 0 errors, 0 warnings, 0 notes.
 - 2026-09-20: plan gate chose unclassed aborts over a new `rlmstudio_bad_argument` condition class because a bad argument is a programming error a batch caller cannot recover from at runtime; falsified by a user who needs to catch an argument fault by class in a pipeline.
 - 2026-09-20: plan gate chose a text rule split by semantics over one character-only rule for all five functions because `input` is a named formal that GP4's dots cannot reach, so a type check there is a permanent API restriction; falsified by evidence that LM Studio rejects the structured OpenResponses input form.
 - 2026-09-20: plan gate chose to fold `lms_download_status(job_id)` into this scope over a candidate row because it carries the identical broken `||` guard; falsified by the two guards needing different rules.

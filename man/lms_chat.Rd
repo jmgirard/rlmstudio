@@ -17,9 +17,11 @@ lms_chat(
 )
 }
 \arguments{
-\item{model}{Character. The name of the loaded model.}
+\item{model}{Character. The name of the loaded model. Must be one name,
+given as a single string.}
 
-\item{input}{Character. The user prompt to send to the model.}
+\item{input}{Character. The user prompt to send to the model. A character
+vector must hold no missing values.}
 
 \item{system_prompt}{Character. An optional system prompt to guide model
 behavior.}

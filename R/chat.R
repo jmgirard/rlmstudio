@@ -4,8 +4,10 @@
 #' automatically routes your request to the appropriate subfunction based on the
 #' selected API type.
 #'
-#' @param model Character. The name of the loaded model.
-#' @param input Character. The user prompt to send to the model.
+#' @param model Character. The name of the loaded model. Must be one name,
+#'   given as a single string.
+#' @param input Character. The user prompt to send to the model. A character
+#'   vector must hold no missing values.
 #' @param system_prompt Character. An optional system prompt to guide model
 #'   behavior.
 #' @param host Character. The base URL of the LM Studio server. Default is
@@ -103,8 +105,10 @@ lms_chat <- function(
 #' Direct interface to LM Studio's OpenResponses endpoint. Supports logprobs and
 #' custom instructions.
 #'
-#' @param model Character. The loaded model name.
-#' @param input Character. The user prompt.
+#' @param model Character. The loaded model name. Must be one name, given as a
+#'   single string.
+#' @param input Character. The user prompt. A character vector must hold no
+#'   missing values.
 #' @param instructions Character. Optional system instructions.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -220,7 +224,8 @@ lms_chat_openresponses <- function(
 #' Direct interface to LM Studio's OpenAI-compatible endpoint. Uses the messages
 #' array format.
 #'
-#' @param model Character. The loaded model name.
+#' @param model Character. The loaded model name. Must be one name, given as a
+#'   single string.
 #' @param messages List. A structured list of role and content pairs.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -289,8 +294,10 @@ lms_chat_openai <- function(
 #'
 #' Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.
 #'
-#' @param model Character. The loaded model name.
-#' @param input Character. The user prompt.
+#' @param model Character. The loaded model name. Must be one name, given as a
+#'   single string.
+#' @param input Character. The user prompt. A character vector must hold no
+#'   missing values.
 #' @param system_prompt Character. Optional system prompt.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -352,8 +359,10 @@ lms_chat_native <- function(
 #'
 #' Process a vector of inputs sequentially through LM Studio.
 #'
-#' @param model Character. The loaded model name.
-#' @param inputs Character vector. The prompts to process.
+#' @param model Character. The loaded model name. Must be one name, given as a
+#'   single string.
+#' @param inputs Character vector. The prompts to process. Must hold at least
+#'   one value and no missing values.
 #' @param system_prompt Character. Optional system prompt.
 #' @param format Character. Output format: "vector", "list", or "data.frame".
 #' @param host Character. Server URL.
