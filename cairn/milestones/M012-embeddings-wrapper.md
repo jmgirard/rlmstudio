@@ -28,7 +28,7 @@ on `/v1/chat/completions` → the existing candidate row.
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_embed()` is exported and documented. A call with a character
+- [x] AC1: `lms_embed()` is exported and documented. A call with a character
       vector of n inputs, passing no `model` or `input` through `...`, sends
       exactly one HTTP request: a POST to the `v1/embeddings` path of `host`,
       whose JSON body carries `model` and an `input` array holding those n
@@ -197,16 +197,133 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: claim audit: 41 claims read, 2 corrected — NEWS.md, R/conditions.R. Both stated the same false thing, in the changelog and on the condition help page. Each said every message of this class names `simplify = FALSE`. T13 made that untrue, because the parse failure passes its own hint and a test asserts the absence. Both now name the exception. The reader also checked the three counting claims and found them right. It did not test the two claims about what LM Studio does with `dimensions` and with `encoding_format`, because that needs a live server.
 - 2026-09-20: the second return is repaired and the status goes back to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 475 pass and 0 fail.
 
+- 2026-09-20: third review pass, in progress. Every criterion re-verified
+  against fresh evidence and ticked, AC1 included: the named-input repair
+  holds and a named character vector now goes out as a JSON array. The
+  consistency gate passed. cairn_validate exits 0 with two dispositioned
+  sizing advisories. document() gives no diff, pkgdown is clean, check()
+  gives 0 errors, 0 warnings and 0 notes, and test() gives 475 pass. Both
+  Sonnet lenses reported: the prior-review lens found nothing, the
+  blame-history lens returned one finding on the input-check order. The Opus
+  diff-bug lens is still running, so the findings list and the approval gate
+  are not reached yet.
+
 ## Decisions
 
 ## Review
 
-_Second pass, 2026-09-20. The first pass returned the milestone on two AC6
-failures. Its evidence, its eleven findings and their dispositions are kept
-below under "First pass", unedited. Every criterion here rests on evidence
-gathered fresh this session against the current branch head._
+_Third pass, 2026-09-20. The second pass returned the milestone on an AC1
+failure: a named character `input` went out as a JSON object. Its evidence,
+its nine findings and their dispositions are kept below under "Second pass",
+unedited, and the first pass below that. Every criterion here rests on
+evidence gathered fresh this session against the current branch head._
 
 ### Acceptance criteria
+
+- AC1: **Pass.** The failure the second pass returned is closed. Verified
+  fresh this session through the shared request recorder, reading the
+  serialized bytes off each captured request with `httr2::req_dry_run()`.
+  Four calls, each recording exactly one request, method POST, path
+  `/v1/embeddings`. Unnamed n = 3 sends
+  `{"model":"m","input":["first","second","third"]}`. Unnamed n = 1 sends
+  `{"model":"m","input":["only one"]}`, a one-element array and not a bare
+  string. **Named** n = 1, `c(doc1 = "only one")`, now sends
+  `{"model":"m","input":["only one"]}`, and named n = 2,
+  `c(a = "first", b = "second")`, sends
+  `{"model":"m","input":["first","second"]}` — arrays in the order given,
+  with the names dropped. `unname()` at `R/embed.R:62` is the repair.
+  `NAMESPACE` carries `export(lms_embed)` and `man/lms_embed.Rd` exists, so
+  the export and documentation clause holds.
+- AC2: **Pass.** The reviewer ran all five named cases directly against
+  `embed_matrix()` this session over a hand-built response of five fractional
+  dimensions. Every one returned a `double` matrix with `NULL` dimnames, the
+  right two dimensions, and the rows in input order: n = 1 (1x5), n = 2 in
+  arrival orders 0-1 and 1-0 (both 2x5, both rows in input order), n = 3 in
+  arrival orders 0-1-2 and 2-0-1 (both 3x5, both in input order). The
+  committed tests run the same five through one shared helper. The cassette at
+  `tests/testthat/embed_live/` was read directly: three elements, indexes 0, 1
+  and 2, 768 numbers each, model `text-embedding-nomic-embed-text-v1.5`. Its
+  test passed in the fresh suite run.
+- AC3: **Pass.** The reviewer ran `simplify = FALSE` over a ragged body this
+  session. The return is `identical()` to `httr2::resp_body_json()` on the
+  same body. The same body under the default aborts with class
+  `rlmstudio_bad_response`, which is the control showing none of the AC6
+  checks run on the raw path.
+- AC4: **Pass.** Run fresh this session. A call against a closed port aborts
+  with class `rlmstudio_no_server`. A 400 and a 503 each abort with class
+  `rlmstudio_api_error` carrying a `status` field of type integer holding that
+  status. The wrapper also runs in the shared failure-message table at
+  `tests/testthat/test-api-error.R`, which drives it over every body shape at
+  both statuses.
+- AC5: **Pass.** `names(formals(lms_embed))` is `model`, `input`, `host`,
+  `simplify`, `...`, `token`, so `token` sits after the dots. The reviewer
+  drove all four token states through `lms_embed()` itself this session and
+  read the header off the serialized request. The argument gives
+  `Bearer arg-token`. The `rlmstudio.token` option alone gives
+  `Bearer option-token`. The `RLMSTUDIO_API_TOKEN` variable alone gives
+  `Bearer variable-token`. With none of the three set the request carries no
+  `authorization` header at all.
+- AC6: **Pass.** The reviewer fired all eleven probes the criterion names
+  directly against `embed_matrix()` this session. Every one aborted with class
+  `rlmstudio_bad_response`, a `status` field of type integer holding 200, and
+  a message naming `simplify = FALSE`. Each fired a distinct branch clause
+  except the three embedding-shape probes, which share one clause by design.
+  The five further reject branches (body not a JSON object, `data` block sent
+  as a JSON object, element not a JSON object, no `data` block, empty
+  embedding) were fired too and behave the same. The control passed: an
+  accepted block returns its matrix with no condition raised.
+- AC7: **Pass.** Run fresh this session. All four values the criterion names
+  abort, and all four messages are the same string:
+  `` `input` must be a non-empty character vector. `` The committed probes
+  match that whole sentence with `fixed = TRUE`.
+- AC8: **Pass.** `man/rlmstudio-conditions.Rd` carries the alias
+  `rlmstudio_bad_response` beside the two existing aliases and a
+  `\section{Malformed response}`. `man/lms_embed.Rd` carries three inherited
+  sections, "Server not running", "API failure" and "Malformed response", each
+  exactly once. `devtools::document()` run fresh left the tree clean, so
+  neither file is hand-edited.
+- AC9: **Pass.** `devtools::document()` run fresh this session produced no
+  diff. `devtools::test()` run fresh gave 475 pass, 0 fail, 0 warn, 0 skip.
+
+### Consistency gate
+
+Universal cairn-file checks:
+
+- `cairn_validate.py` exits 0 with "all checks passed". Two advisories fire,
+  both under `sizing (split tripwires)`: 9 acceptance criteria against a
+  tripwire of 7, and 15 tasks against a tripwire of 10. Both are dispositioned
+  in the work log, the criteria count on the first pass and the task count on
+  each return. Advisories are not gate failures.
+- `cairn_impact.py` not run: `git diff main..HEAD -- cairn/DESIGN.md` is
+  empty, so this milestone changes no `DESIGN.md` principle.
+
+Toolchain checks, from the `consistency-gate` slot of `cairn/PROFILE.md`:
+
+- `devtools::document()` produces no diff. `git status` is clean after it.
+- Generated files not hand-edited: `NAMESPACE`, `man/lms_embed.Rd` and
+  `man/rlmstudio-conditions.Rd` all regenerate identically, which the no-diff
+  run above is the check for. No `data/*.rda` in this package.
+- `README.Rmd` and `README.md` are untouched by this branch, so they are in
+  sync.
+- `pkgdown::check_pkgdown()` reports "No problems found."
+- `NEWS.md` carries three entries for this milestone's user-visible changes,
+  in plain user-facing words with no milestone numbers. The second entry now
+  names all thirteen abort branches, including the two the second pass found
+  missing.
+- The only new top-level directory, `data-raw/`, has its `.Rbuildignore`
+  entry, `^data-raw$`.
+- `devtools::check()` run fresh: Status OK, 0 errors, 0 warnings, 0 notes.
+
+No criterion failed and no gate check failed.
+
+
+### Second pass (2026-09-20, returned)
+
+_The first pass returned the milestone on two AC6 failures. Its evidence, its
+eleven findings and their dispositions are kept below under "First pass",
+unedited._
+
+#### Acceptance criteria
 
 - [ ] AC1: **Fail.** The request shape holds for an unnamed input vector and
   breaks for a named one. Verified fresh this session through the shared
@@ -277,7 +394,7 @@ gathered fresh this session against the current branch head._
 - AC9: **Pass.** `devtools::document()` run fresh this session produced no
   diff. `devtools::test()` run fresh gave 460 pass, 0 fail, 0 warn, 0 skip.
 
-### Consistency gate
+#### Consistency gate
 
 Universal cairn-file checks:
 
@@ -306,7 +423,7 @@ Toolchain checks, from the `consistency-gate` slot of `cairn/PROFILE.md`:
 
 No criterion failed and no gate check failed.
 
-### Independent review
+#### Independent review
 
 Surface tier is user-facing, so the full three-lens fan-out ran again, each
 lens fresh-context and none having seen the implementation.
@@ -341,7 +458,7 @@ failure table green over all 22 body shapes at both statuses, the `...`
 non-override, the `simplify = FALSE` passthrough, and AC8's three inherited
 sections.
 
-### Findings
+#### Findings
 
 1. **[O] diff-bug.** A named character `input` is sent as a JSON object rather
    than an array. `R/embed.R:60`. `as.list()` keeps the vector's names, and
@@ -421,7 +538,7 @@ sections.
    first-pass finding 11, rejected there as documented and sibling-consistent.
    **Recommended disposition: reject, same reason.**
 
-### Outcome
+#### Outcome
 
 The return floor fires on finding 1. A named character vector is a character
 vector of n inputs, so AC1 fails inside the domain its promise quantifies
