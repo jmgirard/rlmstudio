@@ -9,7 +9,7 @@
 - **Principles touched:** GP1, GP3
 - **Resolves:** —
 - **Surface tier:** user-facing. It exports a function, changes two shipped vignettes, and narrows one shipped help page
-- **Branch/PR:** m010-usable-server-probe
+- **Branch/PR:** m010-usable-server-probe, https://github.com/jmgirard/rlmstudio/pull/11
 
 ## Goal
 
