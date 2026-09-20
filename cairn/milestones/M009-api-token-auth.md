@@ -1,7 +1,7 @@
 # M009: The package can authenticate to LM Studio
 
 - **Status:** review
-- **Branch:** m009-api-token-auth
+- **Branch/PR:** m009-api-token-auth / https://github.com/jmgirard/rlmstudio/pull/10
 - **Priority:** high
 - **Depends on:** none
 - **Driving RR:** —
