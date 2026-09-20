@@ -60,6 +60,8 @@ lms_load <- function(
   ...,
   token = NULL
 ) {
+  rlm_check_id(model, "model")
+
   stop_if_no_server(host)
 
   # Check if the model is already loaded to prevent redundant API calls

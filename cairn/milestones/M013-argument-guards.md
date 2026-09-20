@@ -82,13 +82,13 @@ argument faults → rejected at the plan gate, not deferred.
       `cli::cli_abort(call = NULL)`, matching the guards at `R/embed.R:48` and
       `R/chat.R:383`. The aborts carry no condition class (plan gate). Add
       direct tests for every branch of both helpers.
-- [ ] T2: Call the identifier helper above `stop_if_no_server()` in the nine
+- [x] T2: Call the identifier helper above `stop_if_no_server()` in the nine
       functions with a `model` formal — `lms_embed`, `lms_chat`,
       `lms_chat_openresponses`, `lms_chat_openai`, `lms_chat_native`,
       `lms_chat_batch`, `lms_load`, `lms_download`, `lms_unload` — and in
       `lms_download_status`. Delete the `||` guards at `R/download.R:44` and
       `R/download.R:140`.
-- [ ] T3: Wire the text helper: the strict form into `lms_embed()` and
+- [x] T3: Wire the text helper: the strict form into `lms_embed()` and
       `lms_chat_batch()`, replacing today's guards, and the NA-only form into
       `lms_chat()`, `lms_chat_openresponses()`, and `lms_chat_native()`,
       applied only when the value is a character vector.
@@ -107,6 +107,7 @@ argument faults → rejected at the plan gate, not deferred.
 
 - 2026-09-20: created by /milestone-plan.
 - 2026-09-20: criteria audit ran in full mode (surface tier user-facing) and returned eleven findings. Seven had one clear answer and were fixed here: the whitespace rule contradicted its own case list; "any non-character value" quantified over every R type with nothing enumerating it; the placeholder-table criterion bound a test harness rather than the package; a local `devtools::check()` contradicted D-002 and D-005; "every NOTE justified" was unfalsifiable; the server-ordering probe tested a proxy; and the probe axes left positional supply and NA position unvaried. Three became gate questions and one was low-stakes wording.
+- 2026-09-20: T2 and T3 landed in one commit, because their edits interleave in the same files. Every guard sits above `stop_if_no_server()`. The two `||` guards in `R/download.R` are gone, and `lms_download_status()` now checks `job_id` before the `already_downloaded` shortcut. Suite 517 pass, 0 fail; no existing test asserted the two deleted messages.
 - 2026-09-20: plan gate chose unclassed aborts over a new `rlmstudio_bad_argument` condition class because a bad argument is a programming error a batch caller cannot recover from at runtime; falsified by a user who needs to catch an argument fault by class in a pipeline.
 - 2026-09-20: plan gate chose a text rule split by semantics over one character-only rule for all five functions because `input` is a named formal that GP4's dots cannot reach, so a type check there is a permanent API restriction; falsified by evidence that LM Studio rejects the structured OpenResponses input form.
 - 2026-09-20: plan gate chose to fold `lms_download_status(job_id)` into this scope over a candidate row because it carries the identical broken `||` guard; falsified by the two guards needing different rules.

@@ -46,6 +46,8 @@ lms_chat <- function(
   token = NULL
 ) {
   api_type <- match.arg(api_type)
+  rlm_check_id(model, "model")
+  rlm_check_no_na(input, "input")
 
   if (api_type == "openresponses") {
     return(lms_chat_openresponses(
@@ -129,6 +131,9 @@ lms_chat_openresponses <- function(
   ...,
   token = NULL
 ) {
+  rlm_check_id(model, "model")
+  rlm_check_no_na(input, "input")
+
   stop_if_no_server(host)
 
   body <- list(model = model, input = input, instructions = instructions)
@@ -242,6 +247,8 @@ lms_chat_openai <- function(
   ...,
   token = NULL
 ) {
+  rlm_check_id(model, "model")
+
   stop_if_no_server(host)
 
   body <- list(model = model, messages = messages)
@@ -306,6 +313,9 @@ lms_chat_native <- function(
   ...,
   token = NULL
 ) {
+  rlm_check_id(model, "model")
+  rlm_check_no_na(input, "input")
+
   stop_if_no_server(host)
 
   body <- list(model = model, input = input, system_prompt = system_prompt)
@@ -377,15 +387,11 @@ lms_chat_batch <- function(
   ...,
   token = NULL
 ) {
+  rlm_check_id(model, "model")
+  rlm_check_text(inputs, "inputs")
+
   stop_if_no_server(host)
   format <- match.arg(format)
-
-  if (!is.character(inputs) || length(inputs) == 0) {
-    cli::cli_abort(
-      "{.arg inputs} must be a non-empty character vector.",
-      call = NULL
-    )
-  }
 
   args <- list(...)
   has_logprobs <- isTRUE(args$logprobs)

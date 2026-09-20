@@ -45,12 +45,8 @@ lms_embed <- function(
   ...,
   token = NULL
 ) {
-  if (!is.character(input) || length(input) == 0) {
-    cli::cli_abort(
-      "{.arg input} must be a non-empty character vector.",
-      call = NULL
-    )
-  }
+  rlm_check_id(model, "model")
+  rlm_check_text(input, "input")
 
   stop_if_no_server(host)
 

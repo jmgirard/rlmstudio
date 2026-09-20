@@ -43,6 +43,8 @@ lms_unload <- function(
   ...,
   token = NULL
 ) {
+  rlm_check_id(model, "model")
+
   stop_if_no_server(host)
 
   # Build body and merge extra args from dots

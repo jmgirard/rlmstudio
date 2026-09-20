@@ -39,11 +39,9 @@ lms_download <- function(
   ...,
   token = NULL
 ) {
-  stop_if_no_server(host)
+  rlm_check_id(model, "model")
 
-  if (is.null(model) || model == "") {
-    cli::cli_abort("You must provide a valid model identifier or URL.")
-  }
+  stop_if_no_server(host)
 
   body <- list(
     model = model,
@@ -125,6 +123,8 @@ lms_download_status <- function(
   host = "http://localhost:1234",
   token = NULL
 ) {
+  rlm_check_id(job_id, "job_id")
+
   stop_if_no_server(host)
 
   if (identical(job_id, "already_downloaded")) {
@@ -134,10 +134,6 @@ lms_download_status <- function(
     )
     class(out) <- c("lms_download_status", "list")
     return(out)
-  }
-
-  if (is.null(job_id) || job_id == "") {
-    cli::cli_abort("You must provide a valid job_id.")
   }
 
   resp <- lms_client(host, token = token) |>
