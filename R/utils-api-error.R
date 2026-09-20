@@ -100,6 +100,41 @@ rlm_abort_api <- function(resp, label, token_sent = FALSE) {
   )
 }
 
+#' Abort on a response the wrapper cannot interpret
+#'
+#' The abort path for a response the server did not mark as a failure and that
+#' the wrapper still cannot read. The condition carries the class
+#' `rlmstudio_bad_response` so callers can catch it apart from
+#' `rlmstudio_api_error`, which means a response the server itself reported as
+#' a failure, and a `status` field holding the response status as an integer.
+#'
+#' `rlm_abort_api()` cannot serve this case. On a status below 400 it falls
+#' back to the whole body text, which for an embeddings response is every
+#' number of every vector, and it has no place to put the advice that follows
+#' (D-007).
+#'
+#' @param resp An httr2 response the caller has decided to abort on.
+#' @param label Character. The calling wrapper's own label, which opens the
+#'   message.
+#' @param detail Character. One clause naming what the body got wrong.
+#' @return Never returns. Always aborts.
+#'
+#' @noRd
+rlm_abort_bad_response <- function(resp, label, detail) {
+  cli::cli_abort(
+    c(
+      "x" = "{label}: {detail}",
+      "i" = paste(
+        "The server returned a response this package cannot read.",
+        "Call again with {.code simplify = FALSE} to get the body unchanged."
+      )
+    ),
+    class = "rlmstudio_bad_response",
+    status = as.integer(httr2::resp_status(resp)),
+    call = NULL
+  )
+}
+
 #' The hint text for a rejected call
 #'
 #' Kept apart from the abort so a test can read the two wordings without

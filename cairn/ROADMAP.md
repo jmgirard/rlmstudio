@@ -9,7 +9,7 @@ _Last hygiene pass: 2026-09-20 (M010 archived and set done, M008 pruned under te
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M012 | The package can turn text into embedding vectors | planned | none | high | milestones/M012-embeddings-wrapper.md |
+| M012 | The package can turn text into embedding vectors | in-progress | none | high | milestones/M012-embeddings-wrapper.md |
 | M010 | The package can tell a usable LM Studio server from an open port | done | none | high | milestones/archive/M010-usable-server-probe.md |
 | M011 | The macOS check job installs its dependencies again | done | none | high | milestones/archive/M011-macos-check-job.md |
 | M009 | The package can authenticate to LM Studio | done | none | high | milestones/archive/M009-api-token-auth.md |

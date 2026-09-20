@@ -1,13 +1,13 @@
 # M012: The package can turn text into embedding vectors
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP1, GP3, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — a new exported function and a new condition class
-- **Branch/PR:** —
+- **Branch/PR:** `m012-embeddings-wrapper`
 
 ## Goal
 
@@ -89,14 +89,14 @@ on `/v1/chat/completions` → the existing candidate row.
 
 ## Tasks
 
-- [ ] T1: Write `R/embed.R`. `lms_embed(model, input, host =
+- [x] T1: Write `R/embed.R`. `lms_embed(model, input, host =
       "http://localhost:1234", simplify = TRUE, ..., token = NULL)`: the AC7
       input check, `stop_if_no_server(host)`, a body of `model` and
       `as.list(input)` merged with `...`, POST to `v1/embeddings` through
       `lms_client()`, `req_error(is_error = \(resp) FALSE)`, a non-200 to
       `rlm_abort_api(resp, "Embeddings Failed", !is.null(rlm_token(token)))`.
       Follow `lms_chat_openresponses()` at `R/chat.R:123`.
-- [ ] T2: Write the `data`-block validator and the matrix assembly. Raise
+- [x] T2: Write the `data`-block validator and the matrix assembly. Raise
       `rlmstudio_bad_response` from a new helper beside `rlm_abort_api()` in
       `R/utils-api-error.R`. `resp_body_json()` parses with
       `simplifyVector = FALSE` (LESSONS, M005), so each embedding arrives as a
@@ -131,6 +131,9 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: plan gate chose one request for the whole input vector over a `chunk_size` argument with a progress bar, because the endpoint takes an array natively and chunking adds a second request-assembly path; falsified by a payload or context limit hit on a real corpus.
 - 2026-09-20: plan gate chose a single classed validator over a numbers-only check and over no guard, because base64 is one member of a family that also holds ragged and misindexed blocks, and a silently misaligned matrix corrupts a batch run; falsified by a live server producing a `data` block the validator rejects.
 - 2026-09-20: step 4 chose a new `rlmstudio_bad_response` class over reusing `rlmstudio_api_error` and over a bespoke unclassed abort, because `rlm_abort_api()` on an HTTP 200 returns the whole body as the message (LESSONS, M006) and cannot carry the `simplify = FALSE` guidance, and because a `status` field fixed at 200 tells a catching user nothing; falsified by a second malformed-body site wanting different handling. Recorded as D-007.
+- 2026-09-20: implement gate made three choices. The happy-path cassette is recorded live this session. The returned matrix carries no row or column names. The `data` block count runs against the input array the request sent, not against the `input` argument. An override through `...` therefore stays under the same guard.
+- 2026-09-20: minor amendment. T1 and T2 land in one checkpoint commit. The wrapper does not run until the matrix builder exists, so T1 alone cannot pass the `verify` slot.
+- 2026-09-20: T1 and T2 done. `R/embed.R` holds `lms_embed()`, `is_one_number()`, and `embed_matrix()`. `rlm_abort_bad_response()` sits beside `rlm_abort_api()` in `R/utils-api-error.R`. The `verify` slot ran clean: document() wrote NAMESPACE and lms_embed.Rd, test() gave 315 pass and 0 fail.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
 
 ## Decisions
