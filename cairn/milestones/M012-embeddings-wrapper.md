@@ -197,17 +197,7 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: claim audit: 41 claims read, 2 corrected — NEWS.md, R/conditions.R. Both stated the same false thing, in the changelog and on the condition help page. Each said every message of this class names `simplify = FALSE`. T13 made that untrue, because the parse failure passes its own hint and a test asserts the absence. Both now name the exception. The reader also checked the three counting claims and found them right. It did not test the two claims about what LM Studio does with `dimensions` and with `encoding_format`, because that needs a live server.
 - 2026-09-20: the second return is repaired and the status goes back to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 475 pass and 0 fail.
 
-- 2026-09-20: third review pass, in progress. Every criterion re-verified
-  against fresh evidence and ticked, AC1 included: the named-input repair
-  holds and a named character vector now goes out as a JSON array. The
-  consistency gate passed. cairn_validate exits 0 with two dispositioned
-  sizing advisories. document() gives no diff, pkgdown is clean, check()
-  gives 0 errors, 0 warnings and 0 notes, and test() gives 475 pass. Both
-  Sonnet lenses reported: the prior-review lens found nothing, the
-  blame-history lens returned one finding on the input-check order. The Opus
-  diff-bug lens is still running, so the findings list and the approval gate
-  are not reached yet.
-
+- 2026-09-20: third review pass. Every criterion re-verified against fresh evidence and ticked, AC1 included: the named-input repair holds and a named character vector now goes out as a JSON array. No criterion fails and the return floor does not fire. The consistency gate passed: cairn_validate exits 0 with two dispositioned sizing advisories, document() gives no diff, pkgdown is clean, check() gives 0 errors, 0 warnings and 0 notes, and test() gives 475 pass and 0 fail. All three lenses reported. Eleven findings are recorded in the Review section with recommended dispositions, four fix-now and seven reject.
 ## Decisions
 
 ## Review
@@ -316,6 +306,173 @@ Toolchain checks, from the `consistency-gate` slot of `cairn/PROFILE.md`:
 
 No criterion failed and no gate check failed.
 
+### Independent review
+
+Surface tier is user-facing, so the full three-lens fan-out ran again, each
+lens fresh-context and none having seen the implementation. All three were
+told to filter nothing and to rank their own findings.
+
+**[S] prior-review-record lens — no findings.** The GitHub probe
+(`gh api repos/jmgirard/rlmstudio/pulls/comments?per_page=1`) came back empty,
+so the secondary surface contributed nothing. On the archive it checked M005,
+M006, M007, M009 and M010, the milestones whose reviews touch these files, and
+reports every pattern they taught still held: M005's guard-before-subsetting
+(now `json_field()`), M006's shared failure-message table, M007's alias and
+`@inheritSection` pair, M009's token-wrapper table. It re-checked both earlier
+passes' dispositions against the current tree and reports every "fix now" item
+applied and no rejected or deferred item quietly re-applied.
+
+**[S] blame-history lens — one finding**, recorded below as finding 11. It
+read `git log` and `git blame` over the modified lines, the branch's fourteen
+commits, `DECISIONS.md`, `LESSONS.md`, `DESIGN.md` and the archive, and
+reports sound: the purely additive condition class against D-007, the `...`
+forwarding against GP4 and D-003, the request plumbing against every sibling
+wrapper, the M005 parse lesson, the M008 raw-bytes lesson in the test helper,
+and D-004 fixture provenance.
+
+**[O] diff-bug lens — ten findings**, recorded below in the lens's own
+ranking. It reports that it could find no path returning a wrong matrix. It
+also reports checking and finding correct: index placement correct by
+construction because the validator guarantees a permutation of 0 to n-1 before
+the assignment runs; the unnamed matrix by construction; the `unname()` repair
+and both of its probes; the cassette's three elements, 768 dimensions and
+absent token; the shared failure and token tables; six further validator
+probes of its own beyond the eighteen committed, all aborting with the class;
+`is_json_object()` telling `{}` from `[]`; `document()` regenerated
+byte-identical in an isolated `git archive` copy; and the `cli::format_inline()`
+frame rendering its counts and plurals rather than literal braces.
+
+### Findings
+
+The reviewer verified findings 1, 2, 3 and 11 against the implementation this
+session rather than against the lens's account of it. Finding 10 was tested
+and refuted.
+
+1. **[O] diff-bug.** Valid JSON served under a non-JSON content type is
+   misdiagnosed, and `simplify = FALSE` cannot rescue it. `R/embed.R:81-94`.
+   The `tryCatch()` wraps every error `resp_body_json()` raises, and that
+   function raises on two different causes: a real parse failure and httr2's
+   content-type rejection. **Verified this session:** a 200 carrying
+   `{"data":[{"index":0,"embedding":[0.1,0.2]}]}` under `text/plain` aborts
+   with "the response body did not parse as JSON" and the hint that something
+   other than LM Studio may be answering, under both `simplify = TRUE` and
+   `simplify = FALSE`. The body is good JSON and LM Studio may well be what
+   answered. The same response through `lms_chat_openresponses()` gives
+   httr2's own accurate `Unexpected content type "text/plain"`, so this
+   wrapper is the one that renames an accurate error into a false one.
+   Not an AC failure: no criterion covers the parse path, as the second pass
+   recorded when it added the guard. **Recommended disposition: fix now on
+   the branch** — separate the content-type cause from the parse cause.
+
+2. **[O] diff-bug.** A `data` field holding a JSON scalar reports "the
+   response carries no `data` block", which is false. `R/embed.R:192-194`.
+   The `!is.list(data)` clause covers both "absent" and "present but a
+   string, number or boolean". **Verified this session:** `{"data":"oops"}`,
+   `{"data":5}` and `{"data":true}` all abort with "the response carries no
+   data block", the same message as a body with no `data` field at all. This
+   also contradicts a claim on the record: commit `a255d1e` and the T14 work-
+   log line both say the misdescribing clause was split so that a `data` block
+   of the wrong JSON type says so. The split that landed covers only the JSON-
+   object case at `R/embed.R:195-197`, not the scalar case. Not an AC failure:
+   AC6 asks for the class, the integer `status` and a message naming
+   `simplify = FALSE`, and all three hold. **Recommended disposition: fix now
+   on the branch** — the clause and its probe, not the branch.
+
+3. **[O] diff-bug.** `NEWS.md` names a fault that a top-level JSON array does
+   not reach. `NEWS.md:5` against `R/embed.R:185-194`. A top-level JSON array
+   parses to an unnamed list, so `!is.list(resp_data)` passes it, and it falls
+   through to the no-`data`-block clause. **Verified this session.** The
+   branch's own probe expects "no data block", so the test agrees with the
+   code and the changelog is the outlier. It still aborts with the right
+   class, so the impact is a false changelog claim rather than a behavior
+   fault. **Recommended disposition: fix now on the branch** — the wording.
+
+4. **[O] diff-bug.** The help page's `encoding_format = "base64"` claim is
+   untested. `R/embed.R:16-18` and `man/lms_embed.Rd`. The page asserts LM
+   Studio honors `encoding_format = "base64"` and that the default path
+   therefore aborts, on the same page that asserts LM Studio *ignores*
+   `dimensions`. If it ignores this field too, the sentence is false. Two
+   claim audits on this milestone recorded the pair as untested for want of a
+   live server, and the reviewer could not reach one this session either: the
+   host answers nothing on port 1234. **Inspection only.** **Recommended
+   disposition: fix now on the branch** — narrow the sentence to what the
+   package knows, rather than ship a third untested assertion.
+
+5. **[O] diff-bug.** `model` is unguarded. `R/embed.R:57`. A missing `model`
+   dies with R's own `argument "model" is missing, with no default`, unclassed
+   and before any package check. `model = c("a","b")` sends
+   `{"model":["a","b"],...}`. **Verified by the lens.** No criterion covers
+   `model`, and the siblings are equally unguarded. **Recommended
+   disposition: reject, already routed** — the ROADMAP carries a candidate row
+   covering this wrapper and its siblings together, written on the second
+   return as T15.
+
+6. **[O] diff-bug.** An `NA` inside `input` passes the guard and goes out as
+   JSON `null`. `R/embed.R:47-52`. **Verified by the lens.** **Recommended
+   disposition: reject, already routed** — this is first-pass finding 9 and
+   its candidate row is on the ROADMAP.
+
+7. **[O] diff-bug.** The `input` abort carries no condition class.
+   `R/embed.R:48-51`. `DESIGN.md` says callers catch by class, and AC7 pins
+   message text instead. The lens flags it as the coupling the convention
+   warns against while noting it matches `lms_chat_batch()` at `R/chat.R:385`.
+   **Recommended disposition: reject, already dispositioned** — the AC7 mini
+   gate chose narrowing over widening and the work log records the asymmetry
+   as held on purpose, because closing it adds a condition class to a
+   user-facing surface this milestone did not scope.
+
+8. **[O] diff-bug.** One test asserts R's own argument matcher rather than the
+   package. `tests/testthat/test-embed.R`, "the dots cannot override the
+   inputs", which expects "matched by multiple actual arguments". No change to
+   `lms_embed()` can turn it red. **Recommended disposition: reject,
+   deliberate** — the T4 work-log line records it as a pin on the R behavior
+   the gate's premise rested on, kept knowingly. It is a premise pin, not a
+   behavior test, and nothing depends on it.
+
+9. **[O] diff-bug.** `simplify` is unvalidated: any non-`TRUE` value takes the
+   raw path. `R/embed.R:96`. **Recommended disposition: reject, same reason as
+   before** — this is first-pass finding 11, documented on `@param simplify`
+   and identical to `R/chat.R:150` and `R/chat.R:263`.
+
+10. **[O] diff-bug.** The work log's closing 475-pass count is not
+    reproducible. **Tested and refuted this session.**
+    `Rscript -e 'devtools::test()'`, the command the `verify` slot of
+    `cairn/PROFILE.md` names, gives 475 pass, 0 fail, 0 warn, 0 skip on this
+    branch head. The lens ran `pkgload::load_all()` plus
+    `testthat::test_dir()` instead and got 471 pass with 1 skip, which is a
+    difference between runners rather than a defect. **Recommended
+    disposition: reject, refuted.**
+
+11. **[S] blame-history.** `lms_embed()` runs its `input` check before
+    `stop_if_no_server()`, and every sibling does the opposite.
+    `R/embed.R:47-54`. **Verified this session:** `lms_download()` at
+    `R/download.R:42` and `:45`, `lms_download_status()` at `R/download.R:128`
+    and `:140`, and `lms_chat_batch()` at `R/chat.R:380` and `:384` all call
+    the server check first. Given both a bad `input` and no server,
+    `lms_embed()` names the argument where its siblings name the server.
+    **Recommended disposition: reject, already dispositioned** — the AC7
+    substantive amendment surfaced this divergence, dropped the false
+    cross-reference that claimed the two agreed, and deliberately bound no
+    ordering; the second-pass review recorded it as dispositioned there.
+
+
+
+### Outcome
+
+Every acceptance criterion passes against fresh evidence, AC1 included. The
+consistency gate passed with no failure. The return floor does not fire on the
+reviewer's reading: no finding demonstrates a criterion failing inside the
+domain its promise quantifies over. Findings 1, 2 and 3 are all message or
+changelog accuracy around aborts that already carry the right class and
+status, and no criterion reaches the parse path or the wording of a detail
+clause. Whether finding 1 is a load-bearing defect in what the package does
+for its users is the maintainer's judgment, and it is put to them at the
+approval gate. A return on it would be the third defect return on M012 and
+would reach the thrash rule's descope-or-park threshold, so the recommendation
+is to take findings 1 to 4 as fix-now work on the branch instead.
+
+Eleven findings, all recorded above with a disposition. Four recommended
+fix-now, seven recommended reject with a reason. Nothing is dropped.
 
 ### Second pass (2026-09-20, returned)
 
