@@ -36,7 +36,7 @@ Elicited by `/design-interview` on 2026-09-17 (Phase 1). Seeded by cairn-init fr
 Read from NAMESPACE and the pkgdown reference index on 2026-09-17.
 
 - Setup: `install_lmstudio`, `has_lms`, `check_lms_version`, `lms_path`.
-- Daemon and server: `lms_daemon_start`, `lms_daemon_stop`, `lms_daemon_status`, `with_lms_daemon`, `lms_server_start`, `lms_server_stop`, `lms_server_status`.
+- Daemon and server: `lms_daemon_start`, `lms_daemon_stop`, `lms_daemon_status`, `with_lms_daemon`, `lms_server_start`, `lms_server_stop`, `lms_server_status`, `lms_server_ready` (corrected M010).
 - Model management: `list_models`, `lms_download`, `lms_download_status`, `lms_load`, `lms_unload`, `lms_unload_all`.
 - Chat and inference: `lms_chat`, `lms_chat_batch`, `lms_chat_native`, `lms_chat_openai`, `lms_chat_openresponses`.
 - Analysis (experimental): `lms_score_expected`.
@@ -49,7 +49,7 @@ Observed in the code and agreed at the interview on 2026-09-17.
 - User-facing messages go through `cli`. The `rlmstudio.quiet` option and a local `quiet` argument silence them (`R/utils-msg.R`).
 - HTTP calls use `httr2`. JSON uses `jsonlite`. External processes use `processx`.
 - Every REST wrapper merges `...` into the request body. Dots are the intended escape hatch for API fields that the package does not name. If a field needs input checks or documentation, it becomes a named argument.
-- If the server is not running, a function aborts with a message that names `lms_server_start`. This is the intended posture. Every server-down abort carries the condition class `rlmstudio_no_server`.
+- If the server is not running, a function that needs the server aborts with a message that names `lms_server_start`. This is the intended posture. Every server-down abort carries the condition class `rlmstudio_no_server`. `lms_server_ready()` is the one exception. It reports on the server rather than using it, so it returns `FALSE` (corrected M010).
 - Every REST wrapper that handles a failed response aborts through `rlm_abort_api()` in `R/utils-api-error.R`. That abort carries the condition class `rlmstudio_api_error` and a `status` field holding the HTTP status as an integer. The helper reads `error` and `error$message` out of the parsed body and falls back to `HTTP Status <n>`. A caller catches an API failure by class rather than by message text.
 - Tests use testthat edition 3. Recorded HTTP fixtures (`httptest2`, under `tests/testthat/<name>/localhost-1234`) are the everyday contract. The helpers in `tests/testthat/helper-skips.R` skip the tests that need a live LM Studio. A CRAN release requires a full live run on a real machine and a new recording of stale fixtures.
 - Code is formatted with Air (`air.toml`).

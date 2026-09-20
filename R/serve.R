@@ -283,3 +283,95 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
   }
   invisible(TRUE)
 }
+
+#' Check whether a host answers as a usable LM Studio server
+#'
+#' Sends one GET request to the model list endpoint at `host` and reports
+#' whether the answer came from an LM Studio server that this package can use.
+#' The answer is `TRUE` only when the request returns HTTP status 200 and the
+#' response body carries a list of models. An empty list counts, because a
+#' fresh LM Studio install has no models downloaded yet and its server still
+#' works.
+#'
+#' Use this in place of a port check. Another process holding the port, a
+#' server that has not finished starting, and a server that rejects the token
+#' all answer the port and all report `FALSE` here.
+#'
+#' @param host Character. The base URL of the LM Studio server. Defaults to
+#'   "http://localhost:1234".
+#' @param timeout Numeric. The number of seconds to wait for the request
+#'   before giving up. Defaults to 2. A host that opens the port and never
+#'   answers reports `FALSE` after this many seconds.
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
+#'
+#' @return `TRUE` or `FALSE`, always one value. This function raises no
+#'   condition of its own for a network failure, a refused connection, an
+#'   unparsable body, or a failed status. All of those report `FALSE`. A
+#'   `token` that is not one character string and not `NULL` still aborts,
+#'   because that is a fault in the call rather than a fact about the server.
+#'
+#' @seealso [lms_server_start()] to start the server. [lms_server_status()]
+#'   for what the CLI reports about it.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#'
+#' if (lms_server_ready()) {
+#'   list_models()
+#' }
+#'
+#' # A server on another port, with a shorter wait
+#' lms_server_ready(host = "http://localhost:8080", timeout = 0.5)
+#' }
+lms_server_ready <- function(
+  host = "http://localhost:1234",
+  timeout = 2,
+  token = NULL
+) {
+  req <- lms_client(host, token = token) |>
+    httr2::req_url_path("api/v1/models") |>
+    httr2::req_timeout(timeout) |>
+    httr2::req_error(is_error = \(resp) FALSE)
+
+  tryCatch(
+    {
+      resp <- httr2::req_perform(req)
+
+      if (httr2::resp_status(resp) != 200L) {
+        return(FALSE)
+      }
+
+      is_model_list(httr2::resp_body_json(resp)[["models"]])
+    },
+    error = function(e) FALSE
+  )
+}
+
+#' Is this parsed value a list of models?
+#'
+#' @param models The value parsed out of the `models` key of a response body.
+#'
+#' @return Logical.
+#'
+#' @noRd
+is_model_list <- function(models) {
+  # A JSON array parses to a list with no names. A JSON object parses to a
+  # list with names, so a body that happens to hold a `models` object is not a
+  # model list.
+  if (!is.list(models) || !is.null(names(models))) {
+    return(FALSE)
+  }
+
+  # Every entry of a real model list is a JSON object, which parses to a named
+  # list. An array of bare strings or numbers is some other server's answer.
+  all(vapply(
+    models,
+    function(entry) is.list(entry) && !is.null(names(entry)),
+    logical(1)
+  ))
+}
