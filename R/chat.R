@@ -10,6 +10,9 @@
 #'   behavior.
 #' @param host Character. The base URL of the LM Studio server. Default is
 #'   "http://localhost:1234".
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param api_type Character. The LM Studio API endpoint to use. Options are
 #'   "openresponses" (default), "openai", or "native".
 #' @param logprobs Logical. Whether to return the log probabilities of the
@@ -39,7 +42,8 @@ lms_chat <- function(
   api_type = c("openresponses", "openai", "native"),
   logprobs = FALSE,
   simplify = TRUE,
-  ...
+  ...,
+  token = NULL
 ) {
   api_type <- match.arg(api_type)
 
@@ -51,7 +55,8 @@ lms_chat <- function(
       host = host,
       logprobs = logprobs,
       simplify = simplify,
-      ...
+      ...,
+      token = token
     ))
   }
 
@@ -68,7 +73,8 @@ lms_chat <- function(
       host = host,
       logprobs = logprobs,
       simplify = simplify,
-      ...
+      ...,
+      token = token
     ))
   }
 
@@ -84,7 +90,8 @@ lms_chat <- function(
       system_prompt = system_prompt,
       host = host,
       simplify = simplify,
-      ...
+      ...,
+      token = token
     ))
   }
 }
@@ -98,6 +105,9 @@ lms_chat <- function(
 #' @param input Character. The user prompt.
 #' @param instructions Character. Optional system instructions.
 #' @param host Character. Server URL.
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param logprobs Logical. Whether to return token probabilities.
 #' @param simplify Logical. If TRUE, parses output to text and dataframe. If
 #'   FALSE, returns raw list.
@@ -116,7 +126,8 @@ lms_chat_openresponses <- function(
   host = "http://localhost:1234",
   logprobs = FALSE,
   simplify = TRUE,
-  ...
+  ...,
+  token = NULL
 ) {
   stop_if_no_server(host)
 
@@ -128,7 +139,7 @@ lms_chat_openresponses <- function(
   body <- Filter(Negate(is.null), body)
   body <- utils::modifyList(body, list(...))
 
-  resp <- lms_client(host) |>
+  resp <- lms_client(host, token = token) |>
     httr2::req_url_path("v1/responses") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
@@ -207,6 +218,9 @@ lms_chat_openresponses <- function(
 #' @param model Character. The loaded model name.
 #' @param messages List. A structured list of role and content pairs.
 #' @param host Character. Server URL.
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param logprobs Logical. Whether to request logprobs (currently stubbed by LM
 #'   Studio).
 #' @param simplify Logical. If TRUE, parses output to text.
@@ -225,7 +239,8 @@ lms_chat_openai <- function(
   host = "http://localhost:1234",
   logprobs = FALSE,
   simplify = TRUE,
-  ...
+  ...,
+  token = NULL
 ) {
   stop_if_no_server(host)
 
@@ -237,7 +252,7 @@ lms_chat_openai <- function(
   body <- Filter(Negate(is.null), body)
   body <- utils::modifyList(body, list(...))
 
-  resp <- lms_client(host) |>
+  resp <- lms_client(host, token = token) |>
     httr2::req_url_path("v1/chat/completions") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
@@ -271,6 +286,9 @@ lms_chat_openai <- function(
 #' @param input Character. The user prompt.
 #' @param system_prompt Character. Optional system prompt.
 #' @param host Character. Server URL.
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
@@ -285,7 +303,8 @@ lms_chat_native <- function(
   system_prompt = NULL,
   host = "http://localhost:1234",
   simplify = TRUE,
-  ...
+  ...,
+  token = NULL
 ) {
   stop_if_no_server(host)
 
@@ -302,7 +321,7 @@ lms_chat_native <- function(
   }
   body <- utils::modifyList(body, dots)
 
-  resp <- lms_client(host) |>
+  resp <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/chat") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
@@ -328,6 +347,9 @@ lms_chat_native <- function(
 #' @param system_prompt Character. Optional system prompt.
 #' @param format Character. Output format: "vector", "list", or "data.frame".
 #' @param host Character. Server URL.
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param simplify Logical. If TRUE, parses outputs.
 #' @param quiet Logical. Whether to suppress the progress bar.
 #' @param ... Additional arguments passed to `lms_chat`.
@@ -352,7 +374,8 @@ lms_chat_batch <- function(
   host = "http://localhost:1234",
   simplify = TRUE,
   quiet = FALSE,
-  ...
+  ...,
+  token = NULL
 ) {
   stop_if_no_server(host)
   format <- match.arg(format)
@@ -384,7 +407,8 @@ lms_chat_batch <- function(
       system_prompt = system_prompt,
       host = host,
       simplify = simplify,
-      ...
+      ...,
+      token = token
     )
     if (!should_be_quiet) {
       cli::cli_progress_update(id = pb)

@@ -11,7 +11,8 @@ lms_chat_openresponses(
   host = "http://localhost:1234",
   logprobs = FALSE,
   simplify = TRUE,
-  ...
+  ...,
+  token = NULL
 )
 }
 \arguments{
@@ -29,6 +30,10 @@ lms_chat_openresponses(
 FALSE, returns raw list.}
 
 \item{...}{Additional API arguments (e.g., top_logprobs, temperature).}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 If \code{simplify = FALSE}, returns a list representing the raw JSON

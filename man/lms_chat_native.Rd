@@ -10,7 +10,8 @@ lms_chat_native(
   system_prompt = NULL,
   host = "http://localhost:1234",
   simplify = TRUE,
-  ...
+  ...,
+  token = NULL
 )
 }
 \arguments{
@@ -25,6 +26,10 @@ lms_chat_native(
 \item{simplify}{Logical. If TRUE, parses output to text.}
 
 \item{...}{Additional API arguments.}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 If \code{simplify = FALSE}, returns a list representing the raw JSON

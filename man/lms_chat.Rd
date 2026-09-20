@@ -12,7 +12,8 @@ lms_chat(
   api_type = c("openresponses", "openai", "native"),
   logprobs = FALSE,
   simplify = TRUE,
-  ...
+  ...,
+  token = NULL
 )
 }
 \arguments{
@@ -36,6 +37,10 @@ generated tokens. Default is FALSE.}
 TRUE.}
 
 \item{...}{Additional arguments passed to the selected API body.}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 Depending on the arguments provided:

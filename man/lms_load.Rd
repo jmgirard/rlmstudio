@@ -14,7 +14,8 @@ lms_load(
   echo_load_config = FALSE,
   force = FALSE,
   host = "http://localhost:1234",
-  ...
+  ...,
+  token = NULL
 )
 }
 \arguments{
@@ -47,6 +48,10 @@ instance into VRAM. Defaults to \code{FALSE}.}
 
 \item{...}{Additional arguments passed to the API request body (useful for
 future API parameters).}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 Invisibly returns a character string of the loaded model identifier

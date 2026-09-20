@@ -18,6 +18,9 @@
 #'   instance into VRAM. Defaults to \code{FALSE}.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param ... Additional arguments passed to the API request body (useful for
 #'   future API parameters).
 #'
@@ -54,7 +57,8 @@ lms_load <- function(
   echo_load_config = FALSE,
   force = FALSE,
   host = "http://localhost:1234",
-  ...
+  ...,
+  token = NULL
 ) {
   stop_if_no_server(host)
 
@@ -64,7 +68,8 @@ lms_load <- function(
       loaded = TRUE,
       detailed = TRUE,
       quiet = TRUE,
-      host = host
+      host = host,
+      token = token
     )
 
     if (nrow(active_models) > 0 && model %in% active_models$key) {
@@ -115,7 +120,7 @@ lms_load <- function(
     msg_done = "Model {.val {model}} loaded and verified."
   )
 
-  resp <- lms_client(host) |>
+  resp <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/models/load") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>

@@ -6,6 +6,9 @@
 #'   download (e.g., "Q4_K_M"). Only supported for Hugging Face links.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param ... Additional arguments passed to the request.
 #'
 #' @seealso [LM Studio Download Model
@@ -33,7 +36,8 @@ lms_download <- function(
   model,
   quantization = NULL,
   host = "http://localhost:1234",
-  ...
+  ...,
+  token = NULL
 ) {
   stop_if_no_server(host)
 
@@ -55,7 +59,7 @@ lms_download <- function(
     "Initiating download for model: {.val {model}}..."
   )
 
-  resp <- lms_client(host) |>
+  resp <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/models/download") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
@@ -93,6 +97,9 @@ lms_download <- function(
 #' @param job_id Character. The unique identifier for the download job.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #'
 #' @seealso [LM Studio Download Status
 #'   API](https://lmstudio.ai/docs/developer/rest/download-status)
@@ -113,7 +120,11 @@ lms_download <- function(
 #' status <- lms_download_status(job_id)
 #' print(status)
 #' }
-lms_download_status <- function(job_id, host = "http://localhost:1234") {
+lms_download_status <- function(
+  job_id,
+  host = "http://localhost:1234",
+  token = NULL
+) {
   stop_if_no_server(host)
 
   if (identical(job_id, "already_downloaded")) {
@@ -129,7 +140,7 @@ lms_download_status <- function(job_id, host = "http://localhost:1234") {
     cli::cli_abort("You must provide a valid job_id.")
   }
 
-  resp <- lms_client(host) |>
+  resp <- lms_client(host, token = token) |>
     httr2::req_url_path(paste0("api/v1/models/download/status/", job_id)) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
