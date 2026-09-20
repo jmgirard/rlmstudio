@@ -2,6 +2,7 @@
 #'
 #' @param model Character. The model to download. Accepts model catalog
 #'   identifiers (e.g., "openai/gpt-oss-20b") and exact Hugging Face links.
+#'   Must be one name, given as a single string.
 #' @param quantization Character. Optional. Quantization level of the model to
 #'   download (e.g., "Q4_K_M"). Only supported for Hugging Face links.
 #' @param host Character. The host address of the local server. Defaults to
@@ -39,11 +40,9 @@ lms_download <- function(
   ...,
   token = NULL
 ) {
-  stop_if_no_server(host)
+  rlm_check_id(model, "model")
 
-  if (is.null(model) || model == "") {
-    cli::cli_abort("You must provide a valid model identifier or URL.")
-  }
+  stop_if_no_server(host)
 
   body <- list(
     model = model,
@@ -94,7 +93,8 @@ lms_download <- function(
 
 #' Get the status of a download job
 #'
-#' @param job_id Character. The unique identifier for the download job.
+#' @param job_id Character. The unique identifier for the download job. Must be
+#'   one id, given as a single string.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -125,6 +125,8 @@ lms_download_status <- function(
   host = "http://localhost:1234",
   token = NULL
 ) {
+  rlm_check_id(job_id, "job_id")
+
   stop_if_no_server(host)
 
   if (identical(job_id, "already_downloaded")) {
@@ -134,10 +136,6 @@ lms_download_status <- function(
     )
     class(out) <- c("lms_download_status", "list")
     return(out)
-  }
-
-  if (is.null(job_id) || job_id == "") {
-    cli::cli_abort("You must provide a valid job_id.")
   }
 
   resp <- lms_client(host, token = token) |>

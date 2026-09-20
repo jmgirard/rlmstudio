@@ -1,6 +1,7 @@
 #' Load a model via REST API
 #'
-#' @param model Character. Unique identifier for the model to load.
+#' @param model Character. Unique identifier for the model to load. Must be
+#'   one name, given as a single string.
 #' @param context_length Integer. Maximum number of tokens that the model will
 #'   consider.
 #' @param eval_batch_size Integer. Number of input tokens to process together in
@@ -60,6 +61,8 @@ lms_load <- function(
   ...,
   token = NULL
 ) {
+  rlm_check_id(model, "model")
+
   stop_if_no_server(host)
 
   # Check if the model is already loaded to prevent redundant API calls

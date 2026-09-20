@@ -129,3 +129,16 @@ request_target <- function(req) {
     }
   )
 }
+
+# Mock httr2::req_perform() for the calling test so that any request at all
+# raises. A guard that runs before the request is what these tests are about,
+# so a request reaching this mock is the failure they exist to catch.
+local_no_request_allowed <- function(.env = parent.frame()) {
+  testthat::local_mocked_bindings(
+    req_perform = function(req, ...) {
+      stop("a request left the process", call. = FALSE)
+    },
+    .package = "httr2",
+    .env = .env
+  )
+}
