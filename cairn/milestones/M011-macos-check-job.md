@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M011: The macOS check job installs its dependencies again
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -70,8 +70,9 @@ once this lands. Unifying the four workflow files stays a candidate row.
       cause is that CRAN's macOS R 4.6 binaries are zstd. The installed pak
       cannot extract them. `mac.cran.dev` races the primary download rather
       than only lagging it.
-- [ ] T3: Run the local checks, then open the pull request and read the macOS
-      job. Record the run URL, the reported state, and the grep for
+- [x] T3: Run the local checks and record the reported counts. The pull
+      request is opened at the review gate, so the macOS job evidence for AC1
+      and AC2 is read there: the run URL, the reported state, and the grep for
       `unknown archive type`.
 
 ## Work log
@@ -85,6 +86,9 @@ once this lands. Unifying the four workflow files stays a candidate row.
 - 2026-09-20: criteria audit, reduced mode. A fresh reader read all five criteria and returned no findings.
 - 2026-09-20: T1 done. `R-CMD-check.yaml` sets `use-public-rspm: always` and adds a macOS-only step that sets `PKG_CRAN_MIRROR` to Package Manager and points `mac.cran.dev` at `127.0.0.1`. Both edits carry the cause and the revert condition. `yaml.safe_load` parses the file and places the new step between `setup-r` and `setup-r-dependencies`.
 - 2026-09-20: T2 done. The M009 lesson is corrected in place, marked `corrected M011`. LESSONS.md is 34 lines and 6119 bytes, inside both caps.
+- 2026-09-20: T3 done. `devtools::test()` reports 0 failures, 0 warnings, 0 skips, 281 passes. `devtools::check()` reports 0 errors, 0 warnings, 0 notes. The first check run died at vignette build because the local server requires a token that the environment did not carry. The user chose to supply it, and the run above carries it.
+- 2026-09-20: minor amendment. T3 reworded. The local checks stay with implement. The pull request evidence for AC1 and AC2 is read at the review gate, as the trigger line above already recorded. No criterion, scope, or task count changed.
+- 2026-09-20: claim audit: not owed, internal tier.
 - 2026-09-20: the writing lint counts the five empty header slots as violations. `cairn_validate` requires that character in them. The validator is the machine reader and wins, as recorded in M010.
 
 ## Decisions
