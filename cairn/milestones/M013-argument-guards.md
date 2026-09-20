@@ -1,13 +1,13 @@
 # M013: A bad model or text argument aborts with a message that names the mistake
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — the guards change what ten exported functions do with a bad argument
-- **Branch/PR:** —
+- **Branch/PR:** m013-argument-guards
 
 ## Goal
 
@@ -76,7 +76,7 @@ argument faults → rejected at the plan gate, not deferred.
 
 ## Tasks
 
-- [ ] T1: Add `R/utils-args.R` with two internal helpers: one for the
+- [x] T1: Add `R/utils-args.R` with two internal helpers: one for the
       character-scalar identifier rule and one for the text-vector rule. Each
       takes the value and the argument name and aborts through
       `cli::cli_abort(call = NULL)`, matching the guards at `R/embed.R:48` and
@@ -111,6 +111,7 @@ argument faults → rejected at the plan gate, not deferred.
 - 2026-09-20: plan gate chose a text rule split by semantics over one character-only rule for all five functions because `input` is a named formal that GP4's dots cannot reach, so a type check there is a permanent API restriction; falsified by evidence that LM Studio rejects the structured OpenResponses input form.
 - 2026-09-20: plan gate chose to fold `lms_download_status(job_id)` into this scope over a candidate row because it carries the identical broken `||` guard; falsified by the two guards needing different rules.
 - 2026-09-20: plan chose a NAMESPACE-driven enumerating test over nine per-function tests because a hand-written list is a proxy that a tenth wrapper escapes; falsified by the placeholder table growing harder to maintain than the guards it covers.
+- 2026-09-20: T1 done. `R/utils-args.R` holds `rlm_check_id()`, `rlm_check_text()`, and `rlm_check_no_na()`; `id_fault()` returns plain text rather than a cli string, so a name carrying braces cannot reach cli as a format string (LESSONS, M012). 32 direct tests in `tests/testthat/test-utils-args.R`; suite 517 pass, 0 fail.
 - 2026-09-20: plan chose to place each guard above `stop_if_no_server()` over leaving the server probe first because an argument fault is knowable without a server; falsified by a caller who relies on the server abort firing first (GP3).
 
 ## Decisions
