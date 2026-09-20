@@ -28,13 +28,13 @@ on `/v1/chat/completions` → the existing candidate row.
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_embed()` is exported and documented. A call with a character
+- [x] AC1: `lms_embed()` is exported and documented. A call with a character
       vector of n inputs, passing no `model` or `input` through `...`, sends
       exactly one HTTP request: a POST to the `v1/embeddings` path of `host`,
       whose JSON body carries `model` and an `input` array holding those n
       strings in the order given. At n = 1 the body carries a one-element
       array and not a bare string.
-- [ ] AC2: With `simplify = TRUE` (the default), on a response whose `data`
+- [x] AC2: With `simplify = TRUE` (the default), on a response whose `data`
       block holds one element per input, each carrying a whole unique `index`
       in 0 to n-1 and an `embedding` list of numbers of one common length d,
       `lms_embed()` returns a double matrix of n rows and d columns that
@@ -48,20 +48,20 @@ on `/v1/chat/completions` → the existing candidate row.
       each asserting the row values, both dimensions, the storage mode, and
       the absent names; and the AC6 control that the check stays silent on a
       block it accepts.
-- [ ] AC3: With `simplify = FALSE`, `lms_embed()` returns the parsed response
+- [x] AC3: With `simplify = FALSE`, `lms_embed()` returns the parsed response
       body unchanged, identical to what `httr2::resp_body_json()` produced for
       that body, and runs none of the AC6 checks: a body AC6 rejects still
       returns under `simplify = FALSE`.
-- [ ] AC4: `lms_embed()` aborts with condition class `rlmstudio_no_server` when
+- [x] AC4: `lms_embed()` aborts with condition class `rlmstudio_no_server` when
       the server check fails, and with class `rlmstudio_api_error` carrying an
       integer `status` field at the statuses the failure test sends, which are
       400 and 503.
-- [ ] AC5: `lms_embed()` takes a `token` argument positioned after `...`. Every
+- [x] AC5: `lms_embed()` takes a `token` argument positioned after `...`. Every
       request it issues carries an `Authorization: Bearer <token>` header when
       a token resolves from the argument, the `rlmstudio.token` option, or the
       `RLMSTUDIO_API_TOKEN` environment variable, and carries no
       `Authorization` header when none of the three holds a value.
-- [ ] AC6: Before building the matrix, `lms_embed()` checks the response `data`
+- [x] AC6: Before building the matrix, `lms_embed()` checks the response `data`
       block: one element per input, each carrying an `index` that is a whole
       number, unique, and within 0 to n-1, and an `embedding` that is a list of
       numbers, every one of the same length. A block failing any condition
@@ -73,12 +73,12 @@ on `/v1/chat/completions` → the existing candidate row.
       missing `index`, a fractional `index`, a duplicated `index`, an `index`
       of -1, an `index` of n, a `data` block shorter than the input vector,
       and one longer.
-- [ ] AC7: `lms_embed()` aborts when `input` is not a character vector or has
+- [x] AC7: `lms_embed()` aborts when `input` is not a character vector or has
       length zero, as `lms_chat_batch()` does at `R/chat.R:385`.
-- [ ] AC8: `rlmstudio_bad_response` has its own section and alias on the
+- [x] AC8: `rlmstudio_bad_response` has its own section and alias on the
       `rlmstudio-conditions` help page, and that section is inherited onto the
       `lms_embed()` help page.
-- [ ] AC9: The `verify` slot of `cairn/PROFILE.md` is clean: `devtools::document()`
+- [x] AC9: The `verify` slot of `cairn/PROFILE.md` is clean: `devtools::document()`
       produces no diff and `devtools::test()` passes.
 
 ## Coverage
@@ -153,7 +153,183 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: claim audit: 95 claims read, 6 corrected — NEWS.md, R/conditions.R, R/embed.R, tests/testthat/test-embed.R. The changelog claimed five faults abort where eight branches do, and it omitted the missing-block and fractional-index faults. The condition page said the status is usually 200 where it is always 200. A comment claimed one probe per reject condition while no probe reached the missing-block branch, so a twelfth probe was added. The live-cassette test compared two row pairs and claimed three. The `simplify` help implied two possible values where any value other than TRUE takes the raw path. A comment claimed the endpoint's own contract promises index placement, which nothing in the branch supports. The reader re-read all six and found them accurate.
 - 2026-09-20: all seven tasks done, status to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 436 pass and 0 fail.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
+- 2026-09-20: review checkpoint. Every acceptance criterion verified against fresh evidence and ticked. The consistency gate passed: cairn_validate exits 0 with one already-dispositioned sizing advisory, document() no diff, pkgdown clean, check() Status OK. Two of three review lenses reported; the diff-bug lens is still running.
 
 ## Decisions
 
 ## Review
+
+- AC1: **Pass.** `devtools::test()` run fresh this session: 436 pass, 0 fail, 0 skip.
+  In `tests/testthat/test-embed.R`, "lms_embed sends one POST to v1/embeddings
+  carrying the inputs" drives the call through the shared request recorder,
+  reads exactly one recorded request, and asserts method POST and path
+  `/v1/embeddings`. It reads the request's raw bytes rather than the simplified
+  parse, so the body's `model` field and an `input` list of the three strings in
+  the order given are both asserted. "a single input still travels as an array of
+  one" asserts at n = 1 that `input` parses as a list of length one holding the
+  string, which is the assertion that goes red if `as.list()` is dropped and
+  jsonlite auto-unboxes. The only other network touch on the path is
+  `is_server_running()` at `R/serve.R:237`, which opens a TCP socket rather than
+  sending an HTTP request, so the one recorded request is the whole HTTP traffic.
+  The exported status is confirmed by `NAMESPACE` and by `man/lms_embed.Rd`.
+- AC2: **Pass.** All five named cases run in `tests/testthat/test-embed.R`
+  through one shared helper, `expect_embedding_matrix()`, which asserts
+  matrix-ness, storage mode `double`, both dimensions, `dimnames()` being
+  `NULL`, and every row value. The cases are n = 1; n = 2 in arrival orders
+  0-1 and 1-0; and n = 3 in arrival orders 0-1-2 and 2-0-1. Because all five
+  call the same helper, no case can pass by asserting less than its
+  neighbours. The two out-of-order cases return the rows in input order, not
+  arrival order, which is the placement promise. The hand-built body carries
+  five fractional dimensions, so a coercion that dropped the fraction would
+  show. The live cassette in `tests/testthat/embed_live/` supplies the n = 3
+  in-order case: its test asserts a 3 x 768 double matrix with `NULL`
+  dimnames, one fractional value read off the recorded body, and that all
+  three row pairs differ. The AC6 control ("the response check stays silent
+  on a block it should accept") confirms the validator does not reject the
+  accepted block. The work log records that planting `out[i, ]` in place of
+  the index placement turned the n = 2 and n = 3 out-of-order cases red.
+
+- AC3: **Pass.** "simplify = FALSE returns the parsed body unchanged" compares
+  the return with `expect_identical()` against `httr2::resp_body_json()` run on
+  the same body, so the promise of an unchanged parse is checked by identity
+  and not by shape. "simplify = FALSE returns a body the response check
+  rejects" runs a ragged body twice: under the default it aborts with class
+  `rlmstudio_bad_response`, which is the control, and under
+  `simplify = FALSE` it returns that same body identically. That pair is what
+  shows none of the AC6 checks run on the raw path. The code path agrees:
+  `R/embed.R` returns `resp_data` before `embed_matrix()` is reached whenever
+  `simplify` is not `TRUE`.
+
+- AC4: **Pass.** "lms_embed aborts with class rlmstudio_no_server" mocks the
+  server probe to `FALSE` and asserts the class. "a failed response aborts
+  with class rlmstudio_api_error" loops over statuses 400 and 503, catches the
+  condition, and asserts the S3 class, that `status` is identical to the
+  integer sent, and that the server's message text reaches the user. The
+  wrapper reaches that abort through `rlm_abort_api()` on any status other
+  than 200, so the two probed statuses exercise the same single branch.
+
+- AC5: **Pass.** Argument position: the formals test in
+  `tests/testthat/test-token-wrappers.R` asserts for every wrapper in the
+  table, `lms_embed` now among them, that `token` is present and that where
+  the function takes `...` the `token` argument sits after it, so it can only
+  be matched by full name. Header present: `test-embed.R` asserts
+  `Authorization: Bearer embed-token` on the request when the token comes
+  from the argument, and the table-wide test asserts the same for `lms_embed`
+  with the option and the variable both cleared. Header absent:
+  `test-embed.R` and the table-wide negative test both assert no
+  `authorization` header when none of the three sources holds a value. The
+  option and variable sources were not driven through `lms_embed()` by any
+  committed test, only through `lms_client()` in `test-token.R`, so the
+  reviewer ran that probe directly this session: with only
+  `options(rlmstudio.token=)` set the request carried `Bearer option-token`;
+  with only `RLMSTUDIO_API_TOKEN` set it carried `Bearer variable-token`;
+  with neither set it carried no header. All three sources therefore verified
+  at `lms_embed()` itself.
+
+- AC6: **Pass.** `test-embed.R` runs twelve probes, one more than the eleven
+  the criterion names: the eleven listed, plus a body carrying no `data`
+  block at all. Each probe asserts the S3 class `rlmstudio_bad_response`,
+  that `status` is identical to the integer 200, that the message matches the
+  clause of the branch it means to fire, and that the message names
+  `simplify = FALSE`. Matching on the branch clause is what keeps a probe
+  from passing on the shared class after firing the wrong branch. The
+  validator in `R/embed.R` checks, in order: the `data` block is a list; its
+  length equals the count of inputs the request sent; every `index` is one
+  non-NA number; every index is whole; no index repeats; no index falls
+  outside 0 to n-1; every `embedding` is a non-empty list whose elements are
+  each one number; and all embeddings share one length. The passing control
+  test confirms the check stays silent on a block it accepts.
+
+- AC7: **Pass.** "lms_embed aborts on an input that is not a character vector"
+  fires four cases and matches the message in each: an integer vector, a
+  list, `NULL`, and `character(0)`. The abort in `R/embed.R` is the same
+  shape as the one `lms_chat_batch()` raises at `R/chat.R:382-387`, down to
+  the wording "must be a non-empty character vector" and `call = NULL`. One
+  ordering difference from the sibling, verified and not a criterion breach:
+  `lms_embed()` runs the input check before `stop_if_no_server()`, while
+  `lms_chat_batch()` runs the server check first. A test pins the
+  `lms_embed()` order, so a bad input reports the caller's mistake even with
+  no server running.
+
+- AC8: **Pass.** `man/rlmstudio-conditions.Rd` carries the alias
+  `rlmstudio_bad_response` beside the two existing aliases and a
+  `\section{Malformed response}` naming the class and its `status` field,
+  with a `tryCatch()` example that handles it. `man/lms_embed.Rd` carries
+  three inherited sections, "Server not running", "API failure", and
+  "Malformed response", each once. Both files regenerate from roxygen with no
+  diff, so the sections are not hand-edited.
+
+- AC9: **Pass.** `devtools::document()` run fresh this session left the
+  working tree clean, so no generated file is out of step with its roxygen
+  source. `devtools::test()` run fresh gave 436 pass, 0 fail, 0 warn, 0 skip.
+
+### Consistency gate
+
+Universal cairn-file checks:
+
+- `cairn_validate.py` exits 0. Every check passes. One advisory fires,
+  `sizing (split tripwires)`: 9 acceptance criteria against a tripwire of 7.
+  The work log already dispositioned it, keeping the wrapper and its response
+  validator in one milestone so no silent matrix-corruption path sits on the
+  default branch between two milestones. Advisories are not gate failures.
+- `cairn_impact.py` not run: this milestone changes no `DESIGN.md` principle.
+  It is listed as touching GP1, GP3, and GP4, and `DESIGN.md` has no diff.
+
+Toolchain checks, from the `consistency-gate` slot of `cairn/PROFILE.md`:
+
+- `devtools::document()` produces no diff. Clean.
+- Generated files not hand-edited: `NAMESPACE`, `man/lms_embed.Rd`, and
+  `man/rlmstudio-conditions.Rd` all regenerate identically, which the no-diff
+  run above is the check for. No `data/*.rda` in this package.
+- `README.Rmd` and `README.md` are untouched by this branch and were last
+  written by the same commit, so they are in sync.
+- `pkgdown::check_pkgdown()` reports no problems. `lms_embed` sits under a
+  new "Embeddings" title in `pkgdown/_pkgdown.yml`.
+- `NEWS.md` carries three entries for this milestone's user-visible changes,
+  in plain user-facing words with no milestone numbers.
+- New top-level directory `data-raw/` has its `.Rbuildignore` entry,
+  `^data-raw$`.
+- `devtools::check()` reports Status: OK. 0 errors, 0 warnings, 0 notes.
+
+No criterion failed and no gate check failed.
+
+### Independent review
+
+Surface tier is user-facing, so the full three-lens fan-out ran, each lens
+fresh-context and each on its own evidence base.
+
+**[S] blame-history lens — no findings of concern.** It read `git log` and
+`git blame` over every modified line, plus `DECISIONS.md`, `LESSONS.md`, and
+`DESIGN.md`. It reports that the wrapper follows the sibling pattern exactly,
+that the separate `rlmstudio_bad_response` class matches D-007's stated
+rationale, that the `rlmstudio_bad_response` alias satisfies the M007 lesson,
+and that the cassette generator satisfies the D-004 provenance rule. One
+low-confidence observation, reported as not a defect: the
+`rlmstudio_bad_response` section says "Today the status is always 200", which
+holds only while `lms_embed()` is the sole raiser. D-007 already records that
+coupling as accepted.
+
+**[S] prior-PR-comments lens — one finding.** Recorded below as finding 1. It
+found no prior-review regression on any other touched file, checking
+specifically against M007's missing-alias and delegation findings, M007's
+roxygen/DESCRIPTION failure, and M009's silently-discarded-token finding.
+
+**[O] diff-bug lens — still running at this checkpoint.**
+
+### Findings
+
+1. **[S] prior-PR-comments.** `lms_embed()` calls `rlm_abort_api()` but was
+   not added to the `api_error_callers` table in
+   `tests/testthat/test-api-error.R`, which has no diff on this branch.
+   `cairn/milestones/archive/M006-list-models-abort-path.md` records that
+   table as the pattern for every wrapper that calls `rlm_abort_api()`: it
+   drives eight wrappers over 22 body shapes at two statuses, and M008 added
+   a per-request host assertion to the same loop. `lms_embed()` instead gets
+   a one-off test over one body shape at two statuses. Failure scenario: a
+   later change to the message extraction in `rlm_abort_api()` breaks for the
+   body shapes `lms_embed()` sees and the shared table does not catch it.
+   Verified against the implementation: the table has eight entries and
+   `lms_embed` is absent; `R/embed.R` does call `rlm_abort_api()`; and the
+   harness would take a `lms_embed` entry unchanged. **Disposition: pending
+   at the approval gate.**
+
