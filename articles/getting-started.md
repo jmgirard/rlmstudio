@@ -3,7 +3,14 @@
 ``` r
 
 library(rlmstudio)
+
+# Two gates for the chunks below. The first says the CLI is on this machine.
+# The second says the REST API answered. It stays FALSE until the server has
+# been started and asked.
 lms_installed <- has_lms()
+lms_ready <- FALSE
+
+model <- "google/gemma-3-1b"
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -54,6 +61,19 @@ lms_server_start()
 #> ✔ LM Studio server started successfully on the default port.
 ```
 
+A started server is not the same as a server you can call. The port can
+be held by another process, the server can still be coming up, and a
+server that requires an API token turns your call away.
+[`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+asks the host for a model list and reports `TRUE` only for an answer LM
+Studio would give.
+
+``` r
+
+lms_ready <- lms_server_ready()
+lms_ready
+```
+
 ### 2. Finding and Managing Models
 
 The LM Studio GUI shines when it comes to discovering models. You can
@@ -66,7 +86,6 @@ you can download it and manage your inventory directly from R.
 ``` r
 
 # Download a model using its identifier
-model <- "google/gemma-3-1b"
 job_id <- lms_download(model)
 #> ✔ Initiating download for model: "google/gemma-3-1b"... [973ms]
 #> ✔ Download job started successfully. Job ID: "job_02c8a1f86e"
@@ -134,6 +153,13 @@ Studio GUI will also perform this cleanup if you forget.
 # Unload the model
 lms_unload(model)
 #> ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]
+```
+
+Stopping the server does not go through the REST API, so it runs
+whenever the CLI is here. That way a server this vignette started is
+stopped even if the readiness check said no.
+
+``` r
 
 # Stop the server
 lms_server_stop()

@@ -2,6 +2,35 @@
 
 ## rlmstudio (development version)
 
+- A new function,
+  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md),
+  reports whether a host answers as an LM Studio server you can use. It
+  sends one GET request to the model list endpoint and returns `TRUE`
+  only for an HTTP 200 whose body carries a list of models. An empty
+  list counts, because a fresh install has nothing downloaded and its
+  server still works. Every other answer returns `FALSE`: a refused
+  connection, a listener that never replies, a rejected token, a failed
+  status, and a body that is not a model list. The function raises
+  nothing of its own for any of these, so a caller can branch on the
+  value directly. A `timeout` argument sets how many seconds to wait,
+  and defaults to 2. A `token` argument works as it does on the other
+  functions that reach the REST API. A `token` that is not one character
+  string and not `NULL` still aborts.
+
+- The help page for the error conditions now says what the server check
+  actually reads. Functions that call the REST API open a TCP connection
+  to the host and port. Any process holding that port accepts the
+  connection, so `rlmstudio_no_server` is not raised even though no LM
+  Studio server is there. The call then fails later as an
+  `rlmstudio_api_error` or as a raw parse error. The page names
+  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+  as the stronger test. The same section appears on the help page of
+  every exported function that can raise the condition.
+
+- Both vignettes now ask whether the server answers before they call it.
+  A host that does not answer makes them skip their REST examples.
+  Before, a server that was not usable made the vignette fail to build.
+
 - The package can now authenticate to an LM Studio server that requires
   an API token. Eleven functions take a `token` argument. They are
   [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),

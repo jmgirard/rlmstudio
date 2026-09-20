@@ -129,11 +129,22 @@ returns a list containing the model's detailed load configuration.</p>
     <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
 
 
-<p>Functions that call the LM Studio REST API check that a server answers at
-the <code>host</code> address. A condition of class <code>rlmstudio_no_server</code> is raised
-when the LM Studio server is not running. Start the server with
+<p>Functions that call the LM Studio REST API first open a TCP connection to
+the hostname and port named in <code>host</code>. A condition of class
+<code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
+refused connection raises it. So do an address the package cannot parse and
+a hostname that does not resolve. An address that neither accepts nor
+refuses the connection also raises it. That case waits for the operating
+system to give up, which can take a minute. Start the server with
 <code><a href="lms_server_start.html">lms_server_start()</a></code>, or give <code>host</code> the address that your server listens
 on.</p>
+<p>The check reads the port and nothing else. Any process holding that port
+accepts the connection, so the condition is not raised even though no LM
+Studio server is there. The call then fails later, as an
+<code>rlmstudio_api_error</code> or as a raw parse error, rather than as
+<code>rlmstudio_no_server</code>. Use <code><a href="lms_server_ready.html">lms_server_ready()</a></code> for the stronger test: it
+asks the host for a model list and reports <code>TRUE</code> only for an answer that
+an LM Studio server would give.</p>
     </div>
     <div class="section level2">
     <h2 id="api-failure">API failure<a class="anchor" aria-label="anchor" href="#api-failure"></a></h2>

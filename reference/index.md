@@ -45,6 +45,8 @@ Control the LM Studio local REST API server.
   : Stop the LM Studio local server
 - [`lms_server_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_status.md)
   : Check the status of the LM Studio server
+- [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+  : Check whether a host answers as a usable LM Studio server
 
 ## Headless Daemon Management
 

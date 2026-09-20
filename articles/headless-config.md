@@ -3,7 +3,14 @@
 ``` r
 
 library(rlmstudio)
+
+# Two gates for the chunks below. The first says the CLI is on this machine.
+# The second says the REST API answered. It stays FALSE until the server has
+# been started and asked.
 lms_installed <- has_lms()
+lms_ready <- FALSE
+
+model <- "google/gemma-3-1b"
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -61,6 +68,19 @@ accept HTTP requests.
 lms_server_start()
 ```
 
+On a headless box the started server is the only thing you can see, so
+check that it answers before you call it.
+[`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+asks the host for a model list. It reports `FALSE` for a port held by
+another process, for a server that is still coming up, and for a server
+that turned your token away.
+
+``` r
+
+lms_ready <- lms_server_ready()
+lms_ready
+```
+
 ### 3. Finding and Managing Models
 
 Because you do not have the GUI’s visual search tool, you will need to
@@ -93,7 +113,7 @@ inference.
 ``` r
 
 # Load the model
-lms_load("google/gemma-3-1b", flash_attention = TRUE)
+lms_load(model, flash_attention = TRUE)
 ```
 
 ### 5. Chatting
@@ -103,7 +123,7 @@ Interact with the model exactly as you would in a desktop environment.
 ``` r
 
 response <- lms_chat(
-  model = "google/gemma-3-1b",
+  model = model,
   input = "Provide just the str_extract() pattern to match all text after the third comma.",
   system_prompt = "You are an expert R programmer familiar with the tidyverse."
 )
@@ -120,7 +140,14 @@ stack to free up memory and stop background processes.
 ``` r
 
 # 1. Unload the model from memory
-lms_unload("google/gemma-3-1b")
+lms_unload(model)
+```
+
+Stopping the server and the daemon does not go through the REST API, so
+it runs whenever the CLI is here. That way a stack this vignette started
+is torn down even if the readiness check said no.
+
+``` r
 
 # 2. Stop the API server
 lms_server_stop()
@@ -137,14 +164,21 @@ managing the daemon state manually can be tedious. The
 wrapper handles the setup and guaranteed teardown of the background
 engine automatically.
 
+This block starts its own server, so it asks again whether that server
+answers. The value measured earlier belongs to the server the teardown
+above has already stopped.
+
 ``` r
 
 # The daemon will start, the code will run, and the daemon will stop on exit.
 results <- with_lms_daemon({
   lms_server_start()
-  lms_load("google/gemma-3-1b")
 
-  res <- lms_chat("google/gemma-3-1b", "Is the daemon running?")
+  res <- NULL
+  if (lms_server_ready()) {
+    lms_load(model)
+    res <- lms_chat(model, "Is the daemon running?")
+  }
 
   lms_server_stop()
   res

@@ -69,7 +69,14 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jmgirard.github.io/rlmstudio/">rlmstudio</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Two gates for the chunks below. The first says the CLI is on this machine.</span></span>
+<span><span class="co"># The second says the REST API answered. It stays FALSE until the server has</span></span>
+<span><span class="co"># been started and asked.</span></span>
 <span><span class="va">lms_installed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/has_lms.html">has_lms</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">lms_ready</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span>
 <span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html" class="external-link">opts_chunk</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span></span>
 <span>  collapse <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -114,6 +121,14 @@ R.</p>
 <code class="sourceCode R"><span><span class="co"># Start the local server on the default port</span></span>
 <span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ LM Studio server started successfully on the default port.</span></span></code></pre></div>
+<p>A started server is not the same as a server you can call. The port
+can be held by another process, the server can still be coming up, and a
+server that requires an API token turns your call away.
+<code><a href="../reference/lms_server_ready.html">lms_server_ready()</a></code> asks the host for a model list and
+reports <code>TRUE</code> only for an answer LM Studio would give.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lms_ready</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_server_ready.html">lms_server_ready</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">lms_ready</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="finding-and-managing-models">2. Finding and Managing Models<a class="anchor" aria-label="anchor" href="#finding-and-managing-models"></a>
@@ -123,9 +138,8 @@ use its built-in search bar to browse Hugging Face, filter by
 compatibility, and select specific quantizations.</p>
 <p>However, if you already know the exact identifier of the model you
 want, you can download it and manage your inventory directly from R.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Download a model using its identifier</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span>
 <span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ Initiating download for model: "google/gemma-3-1b"... [973ms]</span></span>
 <span><span class="co">#&gt; ✔ Download job started successfully. Job ID: "job_02c8a1f86e"</span></span>
@@ -142,7 +156,7 @@ want, you can download it and manage your inventory directly from R.</p>
 memory. We include the optional <code>flash_attention = TRUE</code>
 argument here, which speeds up processing and reduces memory usage on
 supported hardware.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Standard load</span></span>
 <span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span>, flash_attention <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" loaded and verified. [30.8s]</span></span></code></pre></div>
@@ -165,7 +179,7 @@ programmer).</p></li>
 request independently. Every time you run the lms_chat() function, you
 are starting a brand new conversation. The model will not remember
 previous messages or context from earlier in your R script.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model</span>,</span>
 <span>  input <span class="op">=</span> <span class="st">"Say hello!"</span>,</span>
@@ -185,12 +199,15 @@ previous messages or context from earlier in your R script.</p>
 <p>To free up memory and system resources when you are finished, it is
 best practice to unload your models and stop the local server. Closing
 the LM Studio GUI will also perform this cleanup if you forget.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Unload the model</span></span>
 <span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]</span></span>
-<span></span>
-<span><span class="co"># Stop the server</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]</span></span></code></pre></div>
+<p>Stopping the server does not go through the REST API, so it runs
+whenever the CLI is here. That way a server this vignette started is
+stopped even if the readiness check said no.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Stop the server</span></span>
 <span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ LM Studio server stopped successfully.</span></span></code></pre></div>
 </div>
