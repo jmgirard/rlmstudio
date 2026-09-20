@@ -35,6 +35,11 @@ reference:
       - lms_chat_openresponses
       - lms_score_expected
 
+  - title: "Embeddings"
+    desc: "Turn text into the vectors an embedding model produces for it."
+    contents:
+      - lms_embed
+
   - title: "Model Management"
     desc: "Discover, download, load, and manage local models."
     contents:

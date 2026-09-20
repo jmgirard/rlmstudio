@@ -17,4 +17,5 @@
 ^\.positai$
 ^\.claude$
 ^cairn$
+^data-raw$
 ^CLAUDE\.md$

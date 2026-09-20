@@ -37,7 +37,7 @@ milestone.
 | `/api/v1/chat` | POST | `lms_chat_native()` | |
 | `/v1/chat/completions` | POST | `lms_chat_openai()` | |
 | `/v1/responses` | POST | `lms_chat_openresponses()` | |
-| `/v1/embeddings` | POST | none | No wrapper exists. |
+| `/v1/embeddings` | POST | `lms_embed()` | |
 | `/v1/completions` | POST | none | Legacy text completion from a bare prompt. |
 | `/v1/models` | GET | none | `list_models()` uses the native list instead. |
 | `/v1/messages` | POST | none | Anthropic compatible. Added in LM Studio 0.4.1. |
