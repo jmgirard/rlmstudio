@@ -66,11 +66,28 @@ local_guard_only <- function(.env = parent.frame()) {
 }
 
 id_probes <- list(
-  list(label = "two values", value = c("a", "b"), match = "2 values rather than one"),
-  list(label = "no values", value = character(0), match = "0 values rather than one"),
+  list(
+    label = "two values",
+    value = c("a", "b"),
+    match = "2 values rather than one"
+  ),
+  list(
+    label = "no values",
+    value = character(0),
+    match = "0 values rather than one"
+  ),
   list(label = "NA", value = NA_character_, match = "You gave NA"),
   list(label = "empty string", value = "", match = "an empty string"),
   list(label = "whitespace", value = "   ", match = "whitespace only"),
+  # `trimws()` does not strip either of these two, so they are the probes that
+  # hold the rule to the whole `[[:space:]]` class rather than to four bytes.
+  list(label = "form feed", value = "\f", match = "whitespace only"),
+  list(label = "vertical tab", value = "\v", match = "whitespace only"),
+  list(
+    label = "a one-by-one matrix",
+    value = matrix("a-model"),
+    match = "an array rather than a single string"
+  ),
   list(label = "NULL", value = NULL, match = "You gave NULL"),
   list(label = "a number", value = 42, match = "a numeric value"),
   list(label = "a logical", value = TRUE, match = "a logical value"),
@@ -163,17 +180,54 @@ test_that("a bad model or job id aborts, named, before any request", {
   }
 })
 
-test_that("omitting the guarded identifier aborts with a message naming it", {
+# This one is not a test of the guards. R raises its own missing-argument
+# error when the guard forces the promise, and that error already names the
+# argument, so the guard could be deleted and this would still pass. It is
+# kept because it pins the weaker fact the guards rely on: omitting the
+# argument never reaches the request.
+test_that("omitting the guarded identifier reaches no request, whoever aborts", {
   local_guard_only()
 
   for (name in guarded_exports(c("model", "job_id"))) {
     fn <- get(name, envir = asNamespace("rlmstudio"))
     args <- baseline_args(name)
     target <- intersect(c("model", "job_id"), names(args))[[1]]
-    expect_error(
+    err <- expect_error(
       do.call(fn, args[setdiff(names(args), target)]),
       target,
       info = paste(name, "without", target)
+    )
+    expect_no_match(
+      conditionMessage(err),
+      "a request left the process",
+      info = paste(name, "without", target, "reached a request")
+    )
+  }
+})
+
+test_that("an argument fault aborts even when the server is down", {
+  # `local_guard_only()` forces the server probe to succeed, so it cannot see
+  # this. The guards now run above `stop_if_no_server()`, which means a bad
+  # argument beats the server-down abort. Nothing else pins that order.
+  local_no_request_allowed()
+  testthat::local_mocked_bindings(
+    is_server_running = function(...) FALSE
+  )
+
+  for (name in guarded_exports(c("model", "job_id"))) {
+    fn <- get(name, envir = asNamespace("rlmstudio"))
+    args <- baseline_args(name)
+    target <- intersect(c("model", "job_id"), names(args))[[1]]
+    bad <- args
+    bad[target] <- list("")
+    err <- expect_error(
+      do.call(fn, bad),
+      "an empty string",
+      info = paste(name, "with a bad", target, "and no server")
+    )
+    expect_false(
+      inherits(err, "rlmstudio_no_server"),
+      info = paste(name, "raised the server condition rather than the guard")
     )
   }
 })
@@ -206,7 +260,8 @@ test_that("a text vector argument must be a non-empty character vector", {
     target <- strict_text[[name]]
     args <- baseline_args(name)
 
-    for (bad_value in list(1:3, list("a"), TRUE, character(0), NULL)) {
+    bad_values <- list(1:3, list("a"), TRUE, character(0), NULL, factor("a"))
+    for (bad_value in bad_values) {
       bad <- args
       bad[target] <- list(bad_value)
       expect_error(
@@ -254,6 +309,35 @@ test_that("an NA anywhere in a text vector argument aborts", {
       )
     }
   }
+})
+
+# `lms_chat()` delegates to `lms_chat_openresponses()` and to
+# `lms_chat_native()`, and both re-check what it checked, so the probes above
+# stay green with the guards in `lms_chat()` itself deleted. The `openai` route
+# is the exception: `lms_chat_openai()` guards `model` alone, so the check in
+# `lms_chat()` is the only one on that path. These probes are what make it
+# load-bearing.
+test_that("the openai route of lms_chat() carries its own guards", {
+  local_guard_only()
+
+  expect_error(
+    lms_chat("a-model", c("a", NA), api_type = "openai"),
+    "1 NA value\\."
+  )
+  expect_error(
+    lms_chat("a-model", c("a", NA), api_type = "openai"),
+    "input"
+  )
+  expect_error(
+    lms_chat(c("a", "b"), "a prompt", api_type = "openai"),
+    "2 values rather than one"
+  )
+  # A clean call on the same route must reach the request mock. Without this
+  # the two probes above would also pass if the route were simply broken.
+  expect_error(
+    lms_chat("a-model", "a prompt", api_type = "openai"),
+    "a request left the process"
+  )
 })
 
 test_that("the chat wrappers pass a non-character input through to the server", {

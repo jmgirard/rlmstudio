@@ -26,6 +26,31 @@ test_that("rlm_check_id names the argument and the rule for every fault", {
   expect_error(rlm_check_id(NA_character_, "model"), "You gave NA")
   expect_error(rlm_check_id("", "model"), "You gave an empty string")
   expect_error(rlm_check_id("  ", "model"), "whitespace only")
+  expect_error(rlm_check_id("\f", "model"), "whitespace only")
+  expect_error(rlm_check_id("\v", "model"), "whitespace only")
+  expect_error(
+    rlm_check_id(matrix("a-model"), "model"),
+    "an array rather than a single string"
+  )
+})
+
+test_that("id_fault picks the article that the class name takes", {
+  expect_error(rlm_check_id(1L, "model"), "You gave an integer value")
+  expect_error(rlm_check_id(1.5, "model"), "You gave a numeric value")
+  expect_identical(article_for("integer"), "an")
+  expect_identical(article_for("environment"), "an")
+  expect_identical(article_for("list"), "a")
+  expect_identical(article_for("factor"), "a")
+})
+
+test_that("a name carrying braces cannot reach cli as a format string", {
+  # The detail is interpolated as a value, so braces inside it are never read
+  # as cli markup. A raw `{x}` in the message text would abort differently.
+  expect_error(
+    rlm_check_id(c("model{x}", "other{.emph y}"), "model"),
+    "2 values rather than one"
+  )
+  expect_error(rlm_check_id(structure(1, class = "{weird}"), "model"), "value")
 })
 
 test_that("rlm_check_id reports the argument name it was given", {
@@ -48,7 +73,10 @@ test_that("rlm_check_text rejects an NA wherever it sits", {
   expect_error(rlm_check_text(c(NA, "b", "c"), "input"), "1 NA value\\.")
   expect_error(rlm_check_text(c("a", "b", NA), "input"), "1 NA value\\.")
   expect_error(rlm_check_text(c("a", NA, "c"), "input"), "1 NA value\\.")
-  expect_error(rlm_check_text(c(NA_character_, NA_character_), "input"), "2 NA values\\.")
+  expect_error(
+    rlm_check_text(c(NA_character_, NA_character_), "input"),
+    "2 NA values\\."
+  )
   expect_error(rlm_check_text(c("a", NA), "inputs"), "inputs")
 })
 

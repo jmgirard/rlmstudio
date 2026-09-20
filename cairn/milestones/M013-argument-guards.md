@@ -33,7 +33,7 @@ argument faults → rejected at the plan gate, not deferred.
 
 ## Acceptance criteria
 
-- [ ] AC1: Every exported function whose `formals()` carry `model` or `job_id`
+- [x] AC1: Every exported function whose `formals()` carry `model` or `job_id`
       aborts when that argument is not one character value holding at least one
       non-whitespace character. The probe set is a length-two character vector,
       a zero-length character vector, `NA_character_`, `""`, `"  "`, `NULL`, a
@@ -118,6 +118,8 @@ argument faults → rejected at the plan gate, not deferred.
 - 2026-09-20: plan chose a NAMESPACE-driven enumerating test over nine per-function tests because a hand-written list is a proxy that a tenth wrapper escapes; falsified by the placeholder table growing harder to maintain than the guards it covers.
 - 2026-09-20: T1 done. `R/utils-args.R` holds `rlm_check_id()`, `rlm_check_text()`, and `rlm_check_no_na()`; `id_fault()` returns plain text rather than a cli string, so a name carrying braces cannot reach cli as a format string (LESSONS, M012). 32 direct tests in `tests/testthat/test-utils-args.R`; suite 517 pass, 0 fail.
 - 2026-09-20: plan chose to place each guard above `stop_if_no_server()` over leaving the server probe first because an argument fault is knowable without a server; falsified by a caller who relies on the server abort firing first (GP3).
+- 2026-09-20: review ran. Three lenses reported 25 findings. Eleven were fixed on the branch, one became a candidate row, seven were rejected with reasons, and six were verified non-findings. One rejection is a refutation: `lms_unload_all()` already filters NA and empty keys before the loop. The return floor did not fire.
+- 2026-09-20: the eleven gate repairs landed. Suite 1186 pass, 0 fail, 0 skip, against 1017 before them. `devtools::document()` idempotent. `air format --check` clean on every file this branch touched. Four planted defects each turned the suite red, so the new checks discriminate.
 
 ## Decisions
 
@@ -128,17 +130,18 @@ had not moved under the branch.
 
 ### Criterion evidence
 
-- AC1: not met as worded. The ten named probes all abort. They abort on all ten
-  functions the NAMESPACE read returns. They abort when the value is supplied
-  by name and when it is supplied first and positionally. The domain assertion
-  names the same ten functions. The rule the criterion states is what fails,
-  not the probe set the criterion enumerates. The strings `"\f"` and `"\v"`
-  hold no non-whitespace character under R's `[[:space:]]` class.
-  `rlm_check_id()` passes both of them, because `trimws()` strips only space,
-  tab, carriage return, and line feed. A one-by-one character matrix passes as
-  well. See findings D5 and D6 below. The string `" "` does not break the
+- AC1: met after the gate repairs below. On the first pass it was not met as
+  worded. The ten named probes all aborted, on all ten functions the NAMESPACE
+  read returns, supplied by name and supplied first and positionally. The
+  domain assertion named the same ten functions. What failed was the rule the
+  criterion states, not the probe set it enumerates. The strings `"\f"` and
+  `"\v"` hold no non-whitespace character under R's `[[:space:]]` class.
+  `rlm_check_id()` passed both, because `trimws()` strips only space, tab,
+  carriage return, and line feed. A one-by-one character matrix passed as
+  well. See findings D5 and D6 below. The string `" "` never broke the
   rule. R does not class a non-breaking space as whitespace here, so that
-  string holds a non-whitespace character.
+  string holds a non-whitespace character. After the repairs, all thirteen
+  identifier probes abort on all ten functions.
 - AC2: met. 532 assertions ran across `test-arg-guards.R` and
   `test-utils-args.R`, with 0 failed and 0 skipped. The strict pair rejects a
   non-character value, a zero-length value, and an `NA`. The `NA` probes place
@@ -291,3 +294,39 @@ and the milestone stays in review. AC1's rule is falsified only outside its
 enumerated probe set, which is the shape of an amendment return. The criterion
 is kept as written and the code is repaired to meet it. The repair is a
 one-line widening of the whitespace test, not a promise the code cannot keep.
+
+### Repairs made at the gate
+
+The maintainer accepted the whole fix-now list at the triage gate on
+2026-09-20. All eleven landed on the branch. D7 became a candidate row.
+
+- `R/utils-args.R` reads the whole `[[:space:]]` class in place of `trimws()`,
+  rejects a value carrying a `dim` attribute, and picks the article from the
+  class name. The fault detail is now interpolated as a value rather than
+  passed as a literal bullet, so braces inside it cannot reach cli as markup.
+- `R/conditions.R` states that a function which checks its own arguments does
+  that before it opens the connection, and that such an abort carries no
+  condition class even when the server is down.
+- `tests/testthat/test-arg-guards.R` gains a form feed, a vertical tab, and a
+  one-by-one matrix in the identifier probes, a factor in the strict-text
+  probes, four probes on the `openai` route of `lms_chat()`, and a test that
+  runs every identifier probe with the server probe forced to fail. The
+  omitted-argument test is retitled to the weaker fact it actually pins.
+- `tests/testthat/test-utils-args.R` gains direct probes for the three widened
+  branches, for the article, and for a class name carrying braces.
+- `NEWS.md` narrows two sentences. The first now names `lms_load()` as the
+  exception that raised a bare R error, and the second now names the two
+  paths that stay unchecked.
+- `cairn/DECISIONS.md` gains D-008, which records the unclassed abort and the
+  order against the server probe, and names what falsifies each.
+- Air formatted the four files this branch touched.
+
+Four planted defects each turned the suite red, so the new checks discriminate.
+Deleting the `NA` check from `lms_chat()` breaks the `openai` probes. Putting
+`trimws()` back breaks the form-feed probe. Dropping the `dim` test breaks the
+matrix probe. Moving `stop_if_no_server()` back above the guard in
+`lms_unload()` breaks the server-down test.
+
+AC1 now holds as written, so its box is ticked. The re-run reports 1186 pass, 0
+fail, 0 warn, and 0 skip, against 1017 before the repairs. `devtools::check()`
+and `air format --check` results are recorded in the work log.

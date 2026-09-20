@@ -13,7 +13,10 @@ rlm_check_id <- function(value, arg) {
   fault <- id_fault(value)
   if (!is.null(fault)) {
     cli::cli_abort(
-      c("{.arg {arg}} must be one name, given as a single string.", "x" = fault),
+      c(
+        "{.arg {arg}} must be one name, given as a single string.",
+        "x" = "{fault}"
+      ),
       call = NULL
     )
   }
@@ -22,9 +25,9 @@ rlm_check_id <- function(value, arg) {
 
 #' Which rule did this model or job name break?
 #'
-#' Returns plain text rather than a cli string. cli interpolates the braces of
-#' the string it is handed (LESSONS, M012), and a name the caller chose can
-#' carry braces of its own, so the detail names no value back to the user.
+#' Returns plain text rather than a cli string. The caller interpolates the
+#' result as a value, so braces inside it are never read as a cli format
+#' string (LESSONS, M012). The detail also names no value back to the user.
 #'
 #' @param value The value the caller passed.
 #' @return A one-sentence detail, or `NULL` when the value is usable.
@@ -35,7 +38,11 @@ id_fault <- function(value) {
     return("You gave NULL.")
   }
   if (!is.character(value)) {
-    return(paste0("You gave a ", class(value)[[1]], " value."))
+    cls <- class(value)[[1]]
+    return(paste0("You gave ", article_for(cls), " ", cls, " value."))
+  }
+  if (!is.null(dim(value))) {
+    return("You gave an array rather than a single string.")
   }
   if (length(value) != 1L) {
     return(paste0("You gave ", length(value), " values rather than one."))
@@ -46,10 +53,23 @@ id_fault <- function(value) {
   if (!nzchar(value)) {
     return("You gave an empty string.")
   }
-  if (!nzchar(trimws(value))) {
+  # `trimws()` strips space, tab, carriage return, and line feed and nothing
+  # else, so a form feed or a vertical tab survives it. The rule is stated
+  # over the whole `[[:space:]]` class, so the test reads that class.
+  if (!grepl("[^[:space:]]", value)) {
     return("You gave a string of whitespace only.")
   }
   NULL
+}
+
+#' The indefinite article that a class name takes
+#'
+#' @param word Character. One class name.
+#' @return `"a"` or `"an"`.
+#'
+#' @noRd
+article_for <- function(word) {
+  if (grepl("^[aeiou]", word, ignore.case = TRUE)) "an" else "a"
 }
 
 #' Reject a text argument that is not a usable character vector
