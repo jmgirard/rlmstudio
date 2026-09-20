@@ -55,6 +55,42 @@ test_that("lms_client() sends no Authorization header when none resolves", {
   expect_null(auth_header(req))
 })
 
+test_that("printing a token-carrying request does not show the token", {
+  secret <- "print-should-not-show-this"
+
+  req <- lms_client("http://localhost:1234", token = secret)
+  rendered <- paste(utils::capture.output(print(req)), collapse = "\n")
+
+  # The negative on its own would pass against a request that carries no
+  # header at all, so assert that the header is there and redacted.
+  expect_false(grepl(secret, rendered, fixed = TRUE))
+  expect_match(rendered, "Authorization")
+  expect_match(rendered, "REDACTED")
+})
+
+test_that("an API failure raised from a token-carrying request hides the token", {
+  secret <- "abort-should-not-show-this"
+
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(401L, '{"error": "Unauthorized"}'))
+
+  condition <- tryCatch(
+    suppressMessages(list_models(quiet = TRUE, token = secret)),
+    rlmstudio_api_error = function(cnd) cnd
+  )
+
+  # Assert the identity of the failure before reading its message, so the
+  # negative below cannot pass against some other error.
+  expect_s3_class(condition, "rlmstudio_api_error")
+  expect_identical(condition$status, 401L)
+
+  rendered <- paste(
+    c(conditionMessage(condition), utils::capture.output(print(condition))),
+    collapse = "\n"
+  )
+  expect_false(grepl(secret, rendered, fixed = TRUE))
+})
+
 test_that("lms_client() reads the option and the variable, not just the argument", {
   withr::local_options(rlmstudio.token = NULL)
   withr::local_envvar(RLMSTUDIO_API_TOKEN = "variable-token")
