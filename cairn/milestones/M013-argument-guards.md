@@ -44,7 +44,7 @@ argument faults → rejected at the plan gate, not deferred.
       `model` or `job_id`; that test builds each call from a placeholder table
       and raises a failure, never a skip, when an enumerated function has a
       required formal the table holds no placeholder for.
-- [ ] AC2: `lms_embed()` and `lms_chat_batch()` abort when `input` or `inputs`
+- [x] AC2: `lms_embed()` and `lms_chat_batch()` abort when `input` or `inputs`
       is not a character vector, has length zero, or holds an `NA`, with probes
       for a length-one `NA_character_` and for an `NA` first, last, and alone
       among several values. `lms_chat()`, `lms_chat_openresponses()`, and
@@ -52,17 +52,17 @@ argument faults → rejected at the plan gate, not deferred.
       `NA`, and pass a non-character value through unchanged, so a structured
       OpenResponses message list still reaches the server. Each abort message
       names its own argument.
-- [ ] AC3: No HTTP request leaves the process for any abort in AC1 or AC2. The
+- [x] AC3: No HTTP request leaves the process for any abort in AC1 or AC2. The
       probes run with `httr2::req_perform` mocked through
       `tests/testthat/helper-mock-http.R` to raise on any request, and each
       call aborts naming its argument rather than raising from that mock or
       from the missing server.
-- [ ] AC4: The help page of each function named in AC1 and AC2 states the rule
+- [x] AC4: The help page of each function named in AC1 and AC2 states the rule
       for its guarded argument, and `devtools::document()` leaves no diff.
 - [ ] AC5: `devtools::test()` is clean, and the three `R-CMD-check.yaml` jobs
       pass on this milestone's pull request with zero errors and zero warnings.
       Any NOTE is written into the Review section with its cause.
-- [ ] AC6: `NEWS.md` carries an entry for the new argument checks, with no
+- [x] AC6: `NEWS.md` carries an entry for the new argument checks, with no
       milestone number in the user-facing text.
 
 ## Coverage
@@ -122,3 +122,172 @@ argument faults → rejected at the plan gate, not deferred.
 ## Decisions
 
 ## Review
+
+Run on 2026-09-20 against `m013-argument-guards` at c1eec6a. The default branch
+had not moved under the branch.
+
+### Criterion evidence
+
+- AC1: not met as worded. The ten named probes all abort. They abort on all ten
+  functions the NAMESPACE read returns. They abort when the value is supplied
+  by name and when it is supplied first and positionally. The domain assertion
+  names the same ten functions. The rule the criterion states is what fails,
+  not the probe set the criterion enumerates. The strings `"\f"` and `"\v"`
+  hold no non-whitespace character under R's `[[:space:]]` class.
+  `rlm_check_id()` passes both of them, because `trimws()` strips only space,
+  tab, carriage return, and line feed. A one-by-one character matrix passes as
+  well. See findings D5 and D6 below. The string `" "` does not break the
+  rule. R does not class a non-breaking space as whitespace here, so that
+  string holds a non-whitespace character.
+- AC2: met. 532 assertions ran across `test-arg-guards.R` and
+  `test-utils-args.R`, with 0 failed and 0 skipped. The strict pair rejects a
+  non-character value, a zero-length value, and an `NA`. The `NA` probes place
+  it alone, first, in the middle, last, and doubled. The three chat wrappers
+  reject the same `NA` positions. They pass a structured list through, which
+  proves itself by reaching the raising request mock. Each abort names its own
+  argument.
+- AC3: met. Every probe runs under `local_guard_only()`. That helper forces
+  `is_server_running()` to `TRUE`. It also mocks `httr2::req_perform` through
+  `local_no_request_allowed()` in `tests/testthat/helper-mock-http.R`, which
+  raises on any request. No probe raised from that mock.
+- AC4: met. All ten help pages state the rule for their guarded argument. The
+  rules were read out of `man/*.Rd` rather than out of the roxygen source.
+  Nine pages state the `model` rule, `lms_download_status` states the `job_id`
+  rule, and the five text functions state the `input` or `inputs` rule.
+  `devtools::document()` left `git status` clean.
+- AC5: the local half is met and the CI half is pending. `devtools::test()`
+  reports 1017 pass, 0 fail, 0 warn, and 0 skip. `devtools::check()` reports 0
+  errors, 0 warnings, and 0 notes, so no NOTE is owed a cause here. The three
+  `R-CMD-check.yaml` jobs run only on a pull request. This repo opens the pull
+  request after the merge approval, so the CI half is verified at the green-CI
+  requirement that comes before the merge.
+- AC6: met. `NEWS.md` carries three entries for the argument checks under the
+  development heading. No milestone number appears anywhere in the file. The
+  first entry overclaims one fact about old behavior. See finding D2 below.
+
+### Consistency gate
+
+`cairn_validate.py` exited 0. Every check returned PASS and every advisory
+returned OK. That includes `coverage complete` and `binding criteria`. The
+`release window` advisory did not fire. No `DESIGN.md` principle changed on
+this branch, so `cairn_impact.py` was skipped.
+
+The toolchain slot ran as follows. `devtools::document()` produced no diff. No
+generated file was hand-edited. The branch never touched `README.Rmd`, and it
+added no export, so no re-knit is owed. `pkgdown::check_pkgdown()` reports no
+problems. `NEWS.md` carries the changelog entry. The three added files are not
+top-level, so no `.Rbuildignore` entry is owed. `devtools::check()` is clean.
+
+One deviation from the Air convention stands. `air format --check` names the
+three files this branch adds as unformatted. The reformatting is line wrapping
+alone. The same command names five files the branch never touched, so the drift
+predates this branch.
+
+### Independent review
+
+Three fresh-context reviewers ran on distinct evidence bases. The prior-review
+lens found no archived `## Review` finding on the touched files that this diff
+regresses. Its GitHub probe returned no inline review comments at all, so that
+lens contributed no findings. The other two lenses reported 25 findings between
+them. Each one is logged below with its disposition. The D numbers are the
+diff-bug lens. The H numbers are the blame-history lens.
+
+- D1 fix now. `R/chat.R:51`. When `api_type` is `"openai"`, the
+  `rlm_check_no_na(input, "input")` call in `lms_chat()` is the only `NA` check
+  on that path, because `lms_chat_openai()` guards `model` alone. No probe in
+  `test-arg-guards.R` ever sets `api_type`, so deleting that line leaves the
+  file green. Confirmed two ways. The test file holds no occurrence of
+  `api_type`, and the call does abort today.
+- D5 fix now. `R/utils-args.R:56`. `trimws()` strips only space, tab, carriage
+  return, and line feed. A string of form feeds or vertical tabs therefore
+  passes a rule worded as "at least one non-whitespace character". Confirmed by
+  call. This finding is what leaves AC1 unmet.
+- D6 fix now. `R/utils-args.R:45`. The test `length(value) != 1L` does not read
+  `dim(value)`. So `matrix("a-model")` passes, and `jsonlite` then writes
+  `{"model":[["a-model"]]}`. Confirmed by call.
+- D11 fix now. `R/utils-args.R:42`. The article is fixed at "a". An integer
+  argument therefore reports "You gave a integer value." Confirmed by call.
+- D8 fix now. `tests/testthat/test-arg-guards.R:165`. The omitted-argument test
+  asserts only that the message names the argument. R's own missing-argument
+  error already satisfies that, so the test proves nothing about the guards
+  while its title says otherwise. The work log already corrected the comment in
+  `local_guard_only()` to admit this, and left the title standing.
+- D15 fix now. `tests/testthat/test-arg-guards.R:200`. The strict-text probes
+  omit a factor. A factor is the likeliest real accident, and the identifier
+  probes do include one.
+- D16 fix now. `R/utils-args.R:14`. The code passes `fault` as a literal
+  bullet. That is brace-safe only because the detail never embeds the caller's
+  value. Interpolating the detail instead makes the safety structural.
+- D2 fix now. `NEWS.md:4`. The closing sentence says that a two-name vector
+  "sent both to the server" on all eight unguarded functions. That holds for
+  `lms_load()` when no model is loaded, and when `force` is `TRUE`. It does not
+  hold when a model is loaded. `model %in% active_models$key` then feeds a
+  length-two logical to `&&`, and R raises its own coercion error first. The
+  sentence narrows.
+- D17 fix now. `NEWS.md:4`. The opening sentence reads wider than the code.
+  `lms_chat_openai(messages)` is out of scope, and a zero-length character
+  `input` still goes out on the three chat wrappers. Both gaps carry candidate
+  rows. The sentence fences them off.
+- D3 and H1 fix now, as one repair. `R/conditions.R:9` says that functions
+  which call the REST API "first open a TCP connection". That section is
+  inherited onto all ten guarded help pages. Every guard now runs above
+  `stop_if_no_server()`. A bad argument sent while the server is down therefore
+  raises an unclassed error rather than `rlmstudio_no_server`. The plan gate
+  traded GP3 knowingly, but nothing shipped pins the new order. The text is now
+  false, and `local_guard_only()` forces the server probe to succeed, so no
+  test covers the new order. Fix the section and add a test that pins the
+  order.
+- D4 and H2 fix now, as one repair. D-007 rejected a bespoke unclassed abort,
+  because a caller catches by class. M013 chose an unclassed abort. M013 also
+  reversed the order that M001 set deliberately, which put
+  `stop_if_no_server()` first. Both choices sit only in this milestone's work
+  log. Once the file is archived, DECISIONS.md holds no record of either.
+  Append a D-entry.
+- Air formatting, fix now. The three added files fail `air format --check` on
+  line wrapping alone, against a stated DESIGN convention. The repair is scoped
+  to those three files. The five pre-existing failures are not this branch's
+  work.
+- D7 follow-up. `tests/testthat/test-arg-guards.R:135`. An `expect_error()`
+  whose call raises a non-matching error aborts the enclosing `test_that()`. So
+  deleting all ten guards reports one failure at `lms_chat` and never probes
+  the other nine. The file still turns red. Only the diagnostics are coarse.
+- D9 rejected. The extra `expect_error(do.call(fn, bad), target)` is weak,
+  because "input" matches "inputs" and "model" appears in unrelated messages.
+  The `probe$match` assertion on the same inputs already carries the
+  discrimination. This is redundancy, not a defect.
+- D10 rejected. The NAMESPACE read catches only a formal spelled `model`,
+  `job_id`, `input`, or `inputs`. AC1 scopes the domain to exactly those
+  spellings. This is the criterion's stated reach, not a gap below it.
+- D12 rejected, refuted. `lms_unload_all()` already drops `NA` and empty keys at
+  `R/unload.R:143`. That filter runs before the loop that calls `lms_unload()`,
+  so no server-reported bad key reaches the new guard mid-sweep.
+- D13 rejected. Validating each batch item at three frames is redundant and
+  cheap. That redundancy is why D1 exists, and D1 is the repair.
+- D14 rejected. `lms_chat()` runs `match.arg()` before its guards, and
+  `lms_chat_batch()` runs it after. The two therefore report different
+  arguments when both are wrong. Each one reports a real fault, so neither is
+  wrong.
+- D18 not a finding. AC5's CI half cannot be judged locally, and the Review
+  section was empty when the lens read it. Both points are answered above.
+- H3 rejected. The two `R/download.R` messages changed text. The change is
+  intentional, it is disclosed in `NEWS.md`, and D-001 waives the deprecation
+  cycle before 1.0. No test on the default branch asserted either string.
+- H4 rejected. The `already_downloaded` shortcut in `lms_download_status()`
+  still sits after `stop_if_no_server()`, exactly as before. Only the `job_id`
+  check moved ahead of both. The lens also quoted the new call as
+  `rlm_check_id(job_id, "model")`. The code reads `rlm_check_id(job_id,
+  "job_id")`.
+- H5, H6, and H7 need no action. All three are verified non-findings.
+  `rlm_check_text()` keeps the message that `test-embed.R` asserts, and it
+  keeps the guard-before-server order that `lms_embed()` and `lms_chat_batch()`
+  already had. `local_no_request_allowed()` follows the same
+  `.package = "httr2"` pattern as the existing recorder, and it touches nothing
+  that D-004, D-005, or D-006 governs. The brace probe reaches the length
+  branch, so no caller value is interpolated.
+
+No actioned finding shows an acceptance criterion failing inside the domain of
+the procedure that criterion names. The return floor therefore does not fire,
+and the milestone stays in review. AC1's rule is falsified only outside its
+enumerated probe set, which is the shape of an amendment return. The criterion
+is kept as written and the code is repaired to meet it. The repair is a
+one-line widening of the whitespace test, not a promise the code cannot keep.
