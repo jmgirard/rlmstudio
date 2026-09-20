@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M010: The package can tell a usable LM Studio server from an open port
 
-- **Status:** blocked
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -128,6 +128,9 @@ rows.
 - 2026-09-20: gate triage chose to fix seven findings on the branch and file four as candidate rows. Both new tests were shown to go red on the defect they claim to catch. Re-verified on the tree that merges: check 0/0/0, test 315 passing, document no diff, validate green.
 - 2026-09-20: review checkpoint. All six criteria re-executed with fresh evidence and ticked. Consistency gate green. The three review lenses are still running, so the findings and triage are not yet written.
 - 2026-09-20: `cairn_validate` wants `—` in the Driving RR slot, so the three header slots keep their em-dashes. The writing lint counts them as violations. The validator is the machine reader and wins.
+- 2026-09-20: resumed. M011 merged the macOS dependency fix to the default branch, so the blocker cleared.
+- 2026-09-20: merged the default branch into this one at b6c8844. One conflict, in `cairn/ROADMAP.md`. Kept M011's done row. Dropped the macOS mirror candidate row that M011 resolved. Kept this branch's corrected token-table count and its three new candidate rows.
+- 2026-09-20: re-verified after the merge. `devtools::document()` left no diff. `devtools::test()` reported FAIL 0, WARN 0, SKIP 0, PASS 315. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes twice. The first run had the LM Studio server down. For the second run the server was up and answered 401 with code `invalid_api_key`. The calling environment set no `RLMSTUDIO_API_TOKEN` in either run.
 
 ## Decisions
 
