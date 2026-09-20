@@ -119,6 +119,7 @@ argument faults → rejected at the plan gate, not deferred.
 - 2026-09-20: T1 done. `R/utils-args.R` holds `rlm_check_id()`, `rlm_check_text()`, and `rlm_check_no_na()`; `id_fault()` returns plain text rather than a cli string, so a name carrying braces cannot reach cli as a format string (LESSONS, M012). 32 direct tests in `tests/testthat/test-utils-args.R`; suite 517 pass, 0 fail.
 - 2026-09-20: plan chose to place each guard above `stop_if_no_server()` over leaving the server probe first because an argument fault is knowable without a server; falsified by a caller who relies on the server abort firing first (GP3).
 - 2026-09-20: review ran. Three lenses reported 25 findings. Eleven were fixed on the branch, one became a candidate row, seven were rejected with reasons, and six were verified non-findings. One rejection is a refutation: `lms_unload_all()` already filters NA and empty keys before the loop. The return floor did not fire.
+- 2026-09-20: step-7 approval: m013-argument-guards approved for merge.
 - 2026-09-20: the eleven gate repairs landed. Suite 1186 pass, 0 fail, 0 skip, against 1017 before them. `devtools::document()` idempotent. `air format --check` clean on every file this branch touched. Four planted defects each turned the suite red, so the new checks discriminate.
 
 ## Decisions
