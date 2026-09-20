@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene pass: 2026-09-20 (M012 archived and set done, M009 pruned under terminal-row retention. Three lessons added on what raises from a JSON body parse, on what `as.list()` does to a named vector, and on which braces cli interpolates. No lesson retired, no Known issues entry owed, no candidate row extended. Caps and byte budgets checked by hand, validate green)_
+_Last hygiene pass: 2026-09-20 (M013 archived and set done, M011 pruned under terminal-row retention. One candidate row added on coarse test diagnostics. D-008 records the unclassed argument abort and its order against the server probe. One lesson added on what `trimws()` leaves behind. No lesson retired, no Known issues entry owed, no candidate row extended. Caps and byte budgets checked by hand, validate green)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene pass: 2026-09-20 (M012 archived and set done, M009 pruned under te
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M013 | A bad model or text argument aborts with a message that names the mistake | review | none | normal | milestones/M013-argument-guards.md |
+| M013 | A bad model or text argument aborts with a message that names the mistake | done | none | normal | milestones/archive/M013-argument-guards.md |
 | M012 | The package can turn text into embedding vectors | done | none | high | milestones/archive/M012-embeddings-wrapper.md |
 | M010 | The package can tell a usable LM Studio server from an open port | done | none | high | milestones/archive/M010-usable-server-probe.md |
-| M011 | The macOS check job installs its dependencies again | done | none | high | milestones/archive/M011-macos-check-job.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
