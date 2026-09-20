@@ -9,6 +9,7 @@ _Last hygiene pass: 2026-09-20 (M010 archived and set done, M008 pruned under te
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M012 | The package can turn text into embedding vectors | planned | none | high | milestones/M012-embeddings-wrapper.md |
 | M010 | The package can tell a usable LM Studio server from an open port | done | none | high | milestones/archive/M010-usable-server-probe.md |
 | M011 | The macOS check job installs its dependencies again | done | none | high | milestones/archive/M011-macos-check-job.md |
 | M009 | The package can authenticate to LM Studio | done | none | high | milestones/archive/M009-api-token-auth.md |
@@ -19,7 +20,7 @@ _Last hygiene pass: 2026-09-20 (M010 archived and set done, M008 pruned under te
      - idea, added YYYY-MM-DD, links
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
-- [high] `/v1/embeddings` has no wrapper. It is the one documented endpoint family with no coverage, and text embeddings serve the scoring-at-scale user directly, added 2026-09-19, cairn/references/lmstudio-api-surface.md
+- A `chunk_size` argument on `lms_embed()` with a progress bar, so a long input vector goes out as several requests. M012 sends the whole vector in one POST, added 2026-09-20, M012 plan gate
 - A `ttl` argument on `lms_load()` and the chat wrappers. It sets how long an idle model stays in memory and is the one documented load field the package does not name, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A `/api/v1/chat` response carries a `stats` block with `input_tokens`, `total_output_tokens`, `tokens_per_second`, and `time_to_first_token_seconds`. `lms_chat_native()` drops it. Surfacing it lets a batch run report throughput, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - Structured output on `/v1/chat/completions` through `response_format` with a JSON schema. A scoring run gets one parsed value per item instead of prose to parse, added 2026-09-19, cairn/references/lmstudio-api-surface.md
