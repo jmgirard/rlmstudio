@@ -114,10 +114,10 @@ on `/v1/chat/completions` → the existing candidate row.
       `lms_embed()` call under `httptest2::with_mock_dir()`, and commit the
       cassette with a `data-raw/` generator naming the model, the host, and the
       date, per the fixture-provenance rule in `cairn/PROFILE.md`.
-- [ ] T6: Add `lms_embed` to the wrapper table at
+- [x] T6: Add `lms_embed` to the wrapper table at
       `tests/testthat/test-token-wrappers.R:26` and change the name-list test
       at `test-token-wrappers.R:138` from twelve names to thirteen.
-- [ ] T7: Add `lms_embed` to `pkgdown/_pkgdown.yml` under a new "Embeddings"
+- [x] T7: Add `lms_embed` to `pkgdown/_pkgdown.yml` under a new "Embeddings"
       title, write the `NEWS.md` entry in plain user-facing words, and replace
       the "No wrapper exists" note on the `/v1/embeddings` row of
       `cairn/references/lmstudio-api-surface.md:40`.
@@ -137,6 +137,7 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: T3 done. `R/conditions.R` gained a "Malformed response" section and the `rlmstudio_bad_response` alias, and the tag lands that section on the `lms_embed()` page. Both `.Rd` files carry it once. The `verify` slot ran clean.
 - 2026-09-20: T4 done. `tests/testthat/test-embed.R` runs 84 expectations. Writing it found two defects. The detail clause reached the user with its cli braces intact. cli does not interpolate a value spliced into a message, so `embed_matrix()` now formats the clause in its own frame. The gate answer about counting the sent inputs rests on a false premise: `input` is a formal argument, so R rejects a call naming it twice and the dots can never override it. The body-derived count is kept as the safer read and a test now pins the R behavior.
 - 2026-09-20: check discrimination for T4. Planted `input = input` in place of `as.list(input)` and the single-input array test went red. Planted `out[i, ]` in place of the index placement and the three permutation expectations went red. Both were restored and the suite is green at 399 pass and 0 fail.
+- 2026-09-20: T6 and T7 done. The token wrapper table now carries `lms_embed` and the name list runs to thirteen. `_pkgdown.yml` gained an Embeddings title, `NEWS.md` gained three entries in user-facing words, and the `/v1/embeddings` row of the API surface page now names the wrapper. `pkgdown::check_pkgdown()` found no problems and the suite gave 405 pass and 0 fail.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
 
 ## Decisions

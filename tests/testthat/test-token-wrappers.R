@@ -20,7 +20,7 @@ wrapper_body <- paste0(
   '"loaded_instances": [{"identifier": "inst-1"}]}]}'
 )
 
-# The twelve exported functions that can reach the REST API, with the number of
+# The thirteen exported functions that can reach the REST API, with the number of
 # requests each one issues under these arguments. `call` takes a list of extra
 # arguments, which is either the token or nothing.
 wrapper_table <- list(
@@ -112,6 +112,13 @@ wrapper_table <- list(
       do.call(lms_chat_native, c(list("m", "hello", simplify = FALSE), extra))
     }
   ),
+  list(
+    name = "lms_embed",
+    requests = 1L,
+    call = function(extra) {
+      do.call(lms_embed, c(list("m", "hello", simplify = FALSE), extra))
+    }
+  ),
   # lms_server_ready() returns FALSE rather than aborting, so it is the one
   # entry here whose request can fail without the call failing. It still has to
   # carry the token, or a server that requires one reads as not ready.
@@ -135,7 +142,7 @@ drive_wrapper <- function(entry, extra) {
   recorder$requests
 }
 
-test_that("the wrapper table lists the twelve functions that reach the API", {
+test_that("the wrapper table lists the thirteen functions that reach the API", {
   expect_setequal(
     vapply(wrapper_table, function(e) e$name, character(1)),
     c(
@@ -150,6 +157,7 @@ test_that("the wrapper table lists the twelve functions that reach the API", {
       "lms_chat_openresponses",
       "lms_chat_openai",
       "lms_chat_native",
+      "lms_embed",
       "lms_server_ready"
     )
   )
