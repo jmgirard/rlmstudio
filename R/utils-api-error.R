@@ -103,7 +103,8 @@ rlm_abort_api <- function(resp, label, token_sent = FALSE) {
 #' The hint text for a rejected call
 #'
 #' Kept apart from the abort so a test can read the two wordings without
-#' raising, and so neither wording can pick up a token value by accident.
+#' raising, and so neither wording can pick up a token value by accident. The
+#' flag is the only input, so nothing here can reach a token.
 #'
 #' @param token_sent Logical. Whether the request carried an API token.
 #' @return One character string.

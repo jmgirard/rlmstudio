@@ -30,6 +30,22 @@ rendered_message <- function(condition) {
   cli::ansi_strip(conditionMessage(condition))
 }
 
+test_that("api_error_hint() returns one wording per branch", {
+  # The wordings are pinned here as well as through the abort, so a rewording
+  # is a deliberate change rather than something a message matcher lets by.
+  expect_identical(
+    cli::format_inline(api_error_hint(FALSE)),
+    paste(
+      "Set the `RLMSTUDIO_API_TOKEN` environment variable",
+      "or pass the `token` argument to send an API token."
+    )
+  )
+  expect_identical(
+    api_error_hint(TRUE),
+    "The server rejected the API token that was sent."
+  )
+})
+
 test_that("a rejected call with no token names the environment variable", {
   withr::local_envvar(RLMSTUDIO_API_TOKEN = "")
   withr::local_options(rlmstudio.token = NULL)

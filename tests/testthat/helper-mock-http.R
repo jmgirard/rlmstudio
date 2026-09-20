@@ -72,9 +72,12 @@ local_request_recorder <- function(
 #
 # Decide what a test should do when httpuv is missing. req_dry_run() needs
 # httpuv, which is a suggested package, so a bare machine skips the calling
-# test rather than failing it. CI installs httpuv, so a missing httpuv there
-# means a broken image, and a skip would let every assertion that reads a
-# request pass by not running. Returns one of "run", "fail", or "skip".
+# test rather than failing it. Under CI httpuv is expected to be there, so a
+# skip would let every assertion that reads a request pass by not running, and
+# nobody would see it. The check workflows install Suggests, which lists
+# httpuv; the headless workflow gets it through devtools instead, so a change
+# to either one can take it away silently. Failing is what makes that visible.
+# Returns one of "run", "fail", or "skip".
 #
 # Both inputs are arguments so a test can drive either branch without mocking
 # requireNamespace() or setting a variable for the whole session.
