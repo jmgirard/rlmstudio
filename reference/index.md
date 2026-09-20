@@ -73,6 +73,15 @@ Install, locate, and verify the LM Studio CLI installation.
 - [`lms_path()`](https://jmgirard.github.io/rlmstudio/reference/lms_path.md)
   : Get the absolute path to the LMS executable
 
+## Authentication
+
+How to send an API token to a server that requires one.
+
+- [`rlmstudio_token`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md)
+  [`RLMSTUDIO_API_TOKEN`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md)
+  [`rlmstudio.token`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md)
+  : Authenticating to an LM Studio server
+
 ## Error Conditions
 
 The condition classes that the REST API functions raise, and how to

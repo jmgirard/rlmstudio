@@ -15,7 +15,8 @@ lms_chat(
   api_type = c("openresponses", "openai", "native"),
   logprobs = FALSE,
   simplify = TRUE,
-  ...
+  ...,
+  token = NULL
 )
 ```
 
@@ -55,6 +56,13 @@ lms_chat(
 - ...:
 
   Additional arguments passed to the selected API body.
+
+- token:
+
+  Character or `NULL`. An API token for a server that requires
+  authentication. `NULL` reads the `rlmstudio.token` option and then the
+  `RLMSTUDIO_API_TOKEN` environment variable. See
+  [rlmstudio_token](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md).
 
 ## Value
 

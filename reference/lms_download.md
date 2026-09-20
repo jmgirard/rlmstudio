@@ -5,7 +5,13 @@ Download a model via REST API
 ## Usage
 
 ``` r
-lms_download(model, quantization = NULL, host = "http://localhost:1234", ...)
+lms_download(
+  model,
+  quantization = NULL,
+  host = "http://localhost:1234",
+  ...,
+  token = NULL
+)
 ```
 
 ## Arguments
@@ -28,6 +34,13 @@ lms_download(model, quantization = NULL, host = "http://localhost:1234", ...)
 - ...:
 
   Additional arguments passed to the request.
+
+- token:
+
+  Character or `NULL`. An API token for a server that requires
+  authentication. `NULL` reads the `rlmstudio.token` option and then the
+  `RLMSTUDIO_API_TOKEN` environment variable. See
+  [rlmstudio_token](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md).
 
 ## Value
 

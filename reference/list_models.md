@@ -11,7 +11,8 @@ list_models(
   type = c("llm", "embedding"),
   detailed = FALSE,
   quiet = FALSE,
-  host = "http://localhost:1234"
+  host = "http://localhost:1234",
+  token = NULL
 )
 ```
 
@@ -40,6 +41,13 @@ list_models(
 - host:
 
   Character. The host address of the local server.
+
+- token:
+
+  Character or `NULL`. An API token for a server that requires
+  authentication. `NULL` reads the `rlmstudio.token` option and then the
+  `RLMSTUDIO_API_TOKEN` environment variable. See
+  [rlmstudio_token](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md).
 
 ## Value
 

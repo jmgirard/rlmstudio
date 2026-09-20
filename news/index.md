@@ -2,6 +2,47 @@
 
 ## rlmstudio (development version)
 
+- The package can now authenticate to an LM Studio server that requires
+  an API token. Eleven functions take a `token` argument. They are
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md),
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+  and
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md).
+  Each one sends the value as a bearer token in the `Authorization`
+  header of every request it makes. When `token` is not given, the
+  package reads the `rlmstudio.token` option, and then the
+  `RLMSTUDIO_API_TOKEN` environment variable. When none of the three
+  holds a value, the request carries no `Authorization` header. A new
+  help topic, `rlmstudio_token`, is the source. On the nine of these
+  functions that take `...`, `token` sits after the dots. It is
+  therefore matched by name alone, and no existing argument moved
+  position.
+
+- A printed request shows the `Authorization` header as `<REDACTED>`
+  rather than showing the token. The package never puts the token into
+  the message of a failed REST call. That message does repeat the text
+  the server sent. An R backtrace also repeats your own calling line.
+  Neither one is under the package’s control.
+
+- A `token` argument that is not one character string and not `NULL` now
+  aborts. Before, a value such as a vector of two strings was discarded
+  without a message. The call then fell through to the option and the
+  environment variable.
+
+- A REST response with HTTP status 401 or 403 now adds a hint to the
+  abort. If the request carried no token, the hint names
+  `RLMSTUDIO_API_TOKEN` and the `token` argument. If the request carried
+  a token, the hint says that the server rejected it. Other statuses
+  gain no hint.
+
 - The help pages now document the two error condition classes that this
   package raises. A new help topic, `rlmstudio-conditions`, is the
   source. It names the situation that raises `rlmstudio_no_server` and
