@@ -87,3 +87,4 @@ Recorded 2026-09-17 at the design interview.
 
 - The headless CI job (`.github/workflows/test-headless.yaml`) installs no LM Studio. It runs only the tests that do not need a server.
 - `lms_chat_openai()` returns `NULL` logprobs because LM Studio stubs them on that endpoint. Only the OpenResponses endpoint yields the logprobs data frame that `lms_score_expected()` consumes.
+- The macOS check job reads every package from Posit Package Manager, which `R-CMD-check.yaml` sets as both the RSPM and the CRAN repo. That job therefore has no second source if Package Manager is down, and it loses the CRAN source-Archive fallback that the Ubuntu and Windows jobs keep. Accepted 2026-09-20 (M011) for as long as the zstd workaround stands.
