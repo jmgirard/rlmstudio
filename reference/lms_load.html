@@ -64,7 +64,8 @@
 
 
 <dl><dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
-<dd><p>Character. Unique identifier for the model to load.</p></dd>
+<dd><p>Character. Unique identifier for the model to load. Must be
+one name, given as a single string.</p></dd>
 
 
 <dt id="arg-context-length">context_length<a class="anchor" aria-label="anchor" href="#arg-context-length"></a></dt>
@@ -129,8 +130,11 @@ returns a list containing the model's detailed load configuration.</p>
     <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
 
 
-<p>Functions that call the LM Studio REST API first open a TCP connection to
-the hostname and port named in <code>host</code>. A condition of class
+<p>Functions that call the LM Studio REST API open a TCP connection to the
+hostname and port named in <code>host</code> before they send the request. A function
+that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
+<code>input</code>, or <code>inputs</code> aborts with an argument message and no condition class
+even when the server is down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor

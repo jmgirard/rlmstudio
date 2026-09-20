@@ -2,6 +2,57 @@
 
 ## rlmstudio (development version)
 
+- A model name or a job id that the server cannot use now aborts before
+  the request goes out. The message names the argument and the rule the
+  value broke. The check covers `model` on
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+  and
+  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md).
+  It covers `job_id` on
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md).
+  Each of these must be one name, given as a single string. These all
+  abort: a vector of two names, an empty character vector, `NA`, an
+  empty string, and a string of whitespace only. So do a one-by-one
+  matrix, `NULL`, and any value that is not a character string. Before,
+  eight of these functions had no check on `model` at all. A vector of
+  two names went to those as a JSON array of two. The error that came
+  back named neither the argument nor the mistake.
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  was the one exception. If a model was already loaded, it raised a bare
+  R error from its already-loaded test instead.
+
+- A missing value inside a text argument now aborts. `lms_embed(input)`
+  and `lms_chat_batch(inputs)` must hold at least one value and no `NA`.
+  On
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  and
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  a character `input` must hold no `NA`. A value of any other type still
+  passes through to the server on those three. The structured input form
+  that the OpenResponses endpoint accepts therefore still works. Two
+  things stay unchecked. `lms_chat_openai(messages)` takes a list, which
+  no rule here reaches. On the three chat wrappers above, a character
+  `input` of length zero still goes out as an empty JSON array. Before,
+  an `NA` went out as JSON `null`. The server then answered with an
+  error or a count that named neither the `NA` nor its position.
+
+- Two of these messages changed text.
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+  and
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  used to say “You must provide a valid model identifier or URL.” and
+  “You must provide a valid job_id.”. Those two checks also raised a
+  bare R error, rather than their own message, when the argument held
+  more than one value.
+
 - A new function,
   [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
   turns text into the vectors that an embedding model produces for it.

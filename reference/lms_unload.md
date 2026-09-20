@@ -13,7 +13,7 @@ lms_unload(model, host = "http://localhost:1234", ..., token = NULL)
 - model:
 
   Character. Unique identifier (`instance_id`) of the model instance to
-  unload.
+  unload. Must be one name, given as a single string.
 
 - host:
 
@@ -51,14 +51,17 @@ to clear everything.
 
 ## Server not running
 
-Functions that call the LM Studio REST API first open a TCP connection
-to the hostname and port named in `host`. A condition of class
-`rlmstudio_no_server` is raised when that connection cannot be opened. A
-refused connection raises it. So do an address the package cannot parse
-and a hostname that does not resolve. An address that neither accepts
-nor refuses the connection also raises it. That case waits for the
-operating system to give up, which can take a minute. Start the server
-with
+Functions that call the LM Studio REST API open a TCP connection to the
+hostname and port named in `host` before they send the request. A
+function that checks its own arguments does that first, so a bad
+`model`, `job_id`, `input`, or `inputs` aborts with an argument message
+and no condition class even when the server is down. A condition of
+class `rlmstudio_no_server` is raised when that connection cannot be
+opened. A refused connection raises it. So do an address the package
+cannot parse and a hostname that does not resolve. An address that
+neither accepts nor refuses the connection also raises it. That case
+waits for the operating system to give up, which can take a minute.
+Start the server with
 [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
 or give `host` the address that your server listens on.
 
