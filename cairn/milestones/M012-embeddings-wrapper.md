@@ -1,6 +1,6 @@
 # M012: The package can turn text into embedding vectors
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -154,6 +154,7 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: all seven tasks done, status to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 436 pass and 0 fail.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
 - 2026-09-20: review checkpoint. Every acceptance criterion verified against fresh evidence and ticked. The consistency gate passed: cairn_validate exits 0 with one already-dispositioned sizing advisory, document() no diff, pkgdown clean, check() Status OK. Two of three review lenses reported; the diff-bug lens is still running.
+- 2026-09-20: review returned the milestone to in-progress under the return floor. AC6 fails on two fresh-context findings, both verified against the implementation this session. A 200 body that is an atomic scalar, or whose `data` elements are atomic, raises an unclassed `simpleError` from `$` rather than aborting with `rlmstudio_bad_response`. And `$` partial matching reads a `database` field as the data block, so a response carrying no `data` block returns a matrix instead of aborting, which is the silent-wrong-matrix outcome D-007 exists to prevent. Nine further findings are recorded in the Review section with recommended dispositions. First defect return; the two AC2 amendment returns stay on their own track.
 
 ## Decisions
 
@@ -314,7 +315,12 @@ found no prior-review regression on any other touched file, checking
 specifically against M007's missing-alias and delegation findings, M007's
 roxygen/DESCRIPTION failure, and M009's silently-discarded-token finding.
 
-**[O] diff-bug lens — still running at this checkpoint.**
+**[O] diff-bug lens — ten findings.** Recorded below as findings 2 to 11, in
+the lens's own ranking. The reviewer also reports checking and finding correct:
+the index arithmetic and both range edges, the double coercion, the n = 1
+matrix shape, the `simplify = FALSE` passthrough, that `...` cannot override
+`model` or `input`, the token plumbing, AC8, AC9, and that the cassette holds
+no token.
 
 ### Findings
 
@@ -332,4 +338,127 @@ roxygen/DESCRIPTION failure, and M009's silently-discarded-token finding.
    `lms_embed` is absent; `R/embed.R` does call `rlm_abort_api()`; and the
    harness would take a `lms_embed` entry unchanged. **Disposition: pending
    at the approval gate.**
+
+2. **[O] diff-bug.** A 200 response whose body is not a list, or whose `data`
+   holds non-object elements, raises an unclassed `simpleError` instead of
+   `rlmstudio_bad_response`. `R/embed.R:148` (`data <- resp_data$data`) and
+   `:163`/`:180` (`el$index`, `el$embedding`). `$` on an atomic vector is an
+   error in R, and neither `resp_data` nor each `el` is type-checked before it
+   is subset. `api_error_message()` at `R/utils-api-error.R:47` already guards
+   this way with a comment saying why, so it is an idiom break as well.
+   **Verified this session against the implementation.** A body of `"hello"`
+   and a body of `{"data": ["a"]}` at n = 1 both give
+   `simpleError | $ operator is invalid for atomic vectors`. (The reviewer's
+   `{"data": [1, 2]}` example at n = 1 actually reaches the count branch and
+   aborts correctly; the defect is real but reaches it through the atomic-element
+   path, which the string case shows.) **Floor-qualifying: AC6 fails.** AC6
+   promises that a block failing any of its conditions aborts with class
+   `rlmstudio_bad_response`; a block of atomic elements carries no `index` and
+   so fails a named condition, and the abort carries neither the class nor the
+   `simplify = FALSE` guidance.
+
+3. **[O] diff-bug.** `$` partial matching makes the validator read the wrong
+   field. `R/embed.R:148`, `:163`, `:181`. A body with no `data` but with, say,
+   `database` is silently read as the data block; the same holds for `indexes`
+   and `embeddings` on an element. `[["data"]]` / `[["index"]]` /
+   `[["embedding"]]` would close this and part of finding 2. **Verified this
+   session:** `{"database": [{"index":0,"embedding":[0.1,0.2]}]}` at n = 1
+   returns a 1 x 2 matrix built from a field that is not `data`. **Floor-
+   qualifying: AC6 fails.** The response carries no `data` block, which is a
+   failing condition, and instead of aborting the wrapper returns a matrix.
+   This is exactly the silent-wrong-matrix outcome D-007 records the class as
+   existing to prevent.
+
+4. **[O] diff-bug.** The help page names two `...` examples that do not work as
+   a reader would expect. `R/embed.R:14-15`, rendered at `man/lms_embed.Rd`.
+   `encoding_format = "base64"` is a supported OpenAI field, and passing it
+   makes the default path abort every time — it is the base64 probe in
+   `test-embed.R`. `dimensions` is, by this milestone's own work log, silently
+   ignored by LM Studio. So both named examples are respectively fatal and a
+   no-op, and nothing on the page says so. D-003 accepts silently ignoring
+   unknown fields, but it does not cover the help page recommending a field
+   that guarantees an abort. **Verified:** the work-log entry of 2026-09-20
+   records the `dimensions` behavior, and the base64 probe records the abort.
+   **Recommended disposition: fix now on the return** — a documentation fix,
+   no AC covers the `...` examples.
+
+5. **[O] diff-bug.** A `data` block that is a JSON object rather than an array
+   is accepted. `R/embed.R:149` (`!is.list(data)`). A parsed JSON object is
+   also a list, and `length()` counts its members rather than array elements.
+   **Verified this session:** `{"data": {"a": {"index":0,"embedding":[0.1,0.2]}}}`
+   at n = 1 returns a 1 x 2 matrix. **Recommended disposition: fix now on the
+   return**, with the same type guard findings 2 and 3 need.
+
+6. **[O] diff-bug.** An empty `embedding` array is reported with a misleading
+   clause. `R/embed.R:182` folds `length(embedding) == 0L` into the "carries no
+   list of numbers" branch, but `[]` is a list of numbers, of zero of them. AC6
+   does not name the zero-length case at all, so the branch is unexercised by
+   any of the twelve probes. **Verified this session:**
+   `{"data": [{"index":0,"embedding":[]}]}` aborts with
+   `rlmstudio_bad_response` and the clause "carries no list of numbers".
+   **Recommended disposition: fix now on the return** — the guard is needed,
+   since `ncol = 0` would otherwise be built, so the repair is the message
+   wording and a probe, not the branch.
+
+7. **[O] diff-bug.** Dead statement. `R/embed.R:183` (`dimnames(out) <- NULL`).
+   `out` comes from `matrix(0, nrow, ncol)`, whose dimnames are already `NULL`,
+   and every value assigned into it is stripped of names by
+   `unlist(embedding, use.names = FALSE)`. The line can never change anything,
+   so AC2's absent-names promise is enforced by the matrix constructor rather
+   than by the line that looks like it enforces it. **Verified by inspection.**
+   **Recommended disposition: fix now on the return** — remove the line, or
+   keep it with a comment saying it is a belt-and-braces assertion.
+
+8. **[O] diff-bug.** AC7's cross-reference to `lms_chat_batch()` does not
+   describe what was built. `R/embed.R:57-62` against `R/chat.R:380-388`.
+   `lms_chat_batch()` calls `stop_if_no_server(host)` before the input check;
+   `lms_embed()` does the opposite, and a test pins the new order. **Verified
+   this session and already recorded in the AC7 evidence line above.** The embed
+   order is the better one. **Recommended disposition: amendment to AC7's
+   wording on the return**, through the gated protocol, since the divergence is
+   deliberate and the criterion's words are what no longer fit.
+
+9. **[O] diff-bug.** `NA_character_` inside `input` passes the contract check
+   and goes out as JSON `null`. `R/embed.R:57`. `is.character(c("a", NA))` is
+   `TRUE`. **Verified this session:** the request body sent for
+   `c("a", NA_character_)` is `{"model":"m","input":["a",null]}`. The user then
+   gets either a server error about the request or a count mismatch, and
+   neither names the `NA`. AC7 covers type and length only, so this is a gap in
+   the criterion as much as in the code. **Recommended disposition: fix now on
+   the return, with an AC7 amendment** naming the `NA` case.
+
+10. **[O] diff-bug.** A work-log claim the test does not support. The entry of
+    2026-09-20 for T5 says "The test reads it with the server stopped and the
+    token unset". The live-cassette test mocks `is_server_running` but never
+    unsets `RLMSTUDIO_API_TOKEN` or the `rlmstudio.token` option. **Verified
+    this session:** `test-embed.R` clears the token only at lines 428-429, in
+    the negative token test. The test passes either way because httptest2
+    matches on URL and body rather than headers, so the claim is harmless but
+    untrue, and this machine normally has `RLMSTUDIO_API_TOKEN` set.
+    **Recommended disposition: fix now on the return** — correct the work-log
+    claim, or make the test clear the token so the claim becomes true.
+
+11. **[O] diff-bug.** `@param simplify` is typed "Logical" but any non-`TRUE`
+    value silently takes the raw path. `R/embed.R:10-12`, code at `:88`
+    (`!isTRUE(simplify)`). **Verified by inspection.** The help text already
+    says "Any other value returns the parsed response body unchanged", and the
+    behavior matches `lms_chat_openresponses()`. **Recommended disposition:
+    reject** — documented, and consistent with the sibling wrappers.
+
+### Outcome
+
+The return floor fires. Findings 2 and 3 each demonstrate AC6 failing inside
+the domain its promise quantifies over, and the repair for both is a code fix
+rather than the widening of an author-recalled enumeration, so the widening
+test does not carve them out. Finding 3 is the more serious of the two: it
+returns a silently wrong matrix rather than aborting, which is the outcome
+D-007 records the condition class as existing to prevent.
+
+Status returns to `in-progress`. This is the first defect return on M012; the
+two amendment returns the work log records for AC2 stay on their own track and
+are not counted here, so the thrash rule does not fire.
+
+Every other finding is recorded above with a recommended disposition for the
+implement phase to take at its own gate. Nothing has been triaged as rejected
+by this review except where marked, and no finding has been dropped.
 
