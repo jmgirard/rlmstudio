@@ -92,7 +92,7 @@ argument faults → rejected at the plan gate, not deferred.
       `lms_chat_batch()`, replacing today's guards, and the NA-only form into
       `lms_chat()`, `lms_chat_openresponses()`, and `lms_chat_native()`,
       applied only when the value is a character vector.
-- [ ] T4: Write `tests/testthat/test-arg-guards.R`: read the exports from
+- [x] T4: Write `tests/testthat/test-arg-guards.R`: read the exports from
       NAMESPACE, keep the `model` and `job_id` formals, build each call from a
       placeholder table, fail when a required formal has no placeholder, and
       run the AC1 probe set under a `req_perform` mock that raises on any
@@ -108,6 +108,7 @@ argument faults → rejected at the plan gate, not deferred.
 - 2026-09-20: created by /milestone-plan.
 - 2026-09-20: criteria audit ran in full mode (surface tier user-facing) and returned eleven findings. Seven had one clear answer and were fixed here: the whitespace rule contradicted its own case list; "any non-character value" quantified over every R type with nothing enumerating it; the placeholder-table criterion bound a test harness rather than the package; a local `devtools::check()` contradicted D-002 and D-005; "every NOTE justified" was unfalsifiable; the server-ordering probe tested a proxy; and the probe axes left positional supply and NA position unvaried. Three became gate questions and one was low-stakes wording.
 - 2026-09-20: T2 and T3 landed in one commit, because their edits interleave in the same files. Every guard sits above `stop_if_no_server()`. The two `||` guards in `R/download.R` are gone, and `lms_download_status()` now checks `job_id` before the `already_downloaded` shortcut. Suite 517 pass, 0 fail; no existing test asserted the two deleted messages.
+- 2026-09-20: T4 done. `tests/testthat/test-arg-guards.R` reads the domain from `getNamespaceExports()` and `formals()`, and `local_guard_only()` forces the server probe to succeed while `local_no_request_allowed()` raises on any request, so an abort naming the argument can only have come from the guard. Deleting the guard in `R/unload.R` turns the file red, so it is load-bearing. `baseline_args()` takes its table as an argument, following D-006's pattern, and a test drives the missing-placeholder branch to prove it fails rather than skips.
 - 2026-09-20: plan gate chose unclassed aborts over a new `rlmstudio_bad_argument` condition class because a bad argument is a programming error a batch caller cannot recover from at runtime; falsified by a user who needs to catch an argument fault by class in a pipeline.
 - 2026-09-20: plan gate chose a text rule split by semantics over one character-only rule for all five functions because `input` is a named formal that GP4's dots cannot reach, so a type check there is a permanent API restriction; falsified by evidence that LM Studio rejects the structured OpenResponses input form.
 - 2026-09-20: plan gate chose to fold `lms_download_status(job_id)` into this scope over a candidate row because it carries the identical broken `||` guard; falsified by the two guards needing different rules.
