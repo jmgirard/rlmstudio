@@ -78,6 +78,19 @@ test_that("a server that answers 401 is not ready", {
   expect_identical(lms_server_ready(), FALSE)
 })
 
+test_that("a failed status is not ready even when the body looks right", {
+  # This is what makes the status check discriminate. The 401 case above sends
+  # a body with no `models` key, so it returns FALSE through the body test
+  # whether or not the status is read. Here the body would pass on its own, so
+  # deleting the status check turns this test red.
+  for (status in c(401L, 500L)) {
+    local_request_recorder(
+      mock_response(status, '{"models": [{"type": "llm", "key": "a"}]}')
+    )
+    expect_identical(lms_server_ready(), FALSE)
+  }
+})
+
 test_that("a 200 whose body carries no model list is not ready", {
   local_request_recorder(mock_response(200L, '{"object": "list"}'))
 
@@ -103,6 +116,26 @@ test_that("a model list with no models in it is still ready", {
 test_that("a JSON object under the models key is not a model list", {
   local_request_recorder(mock_response(200L, '{"models": {"a": 1}}'))
   expect_identical(lms_server_ready(), FALSE)
+})
+
+test_that("an array that is not an array of models is not a model list", {
+  # A real model list holds one JSON object per model. An array of bare
+  # strings or numbers under the same key is a different server answering, and
+  # telling those apart is what this function is for.
+  for (body in c('{"models": ["a", "b"]}', '{"models": [1, 2, 3]}')) {
+    local_request_recorder(mock_response(200L, body))
+    expect_identical(lms_server_ready(), FALSE)
+  }
+})
+
+test_that("a model list of several models is ready", {
+  local_request_recorder(
+    mock_response(
+      200L,
+      '{"models": [{"type": "llm", "key": "a"}, {"type": "llm", "key": "b"}]}'
+    )
+  )
+  expect_identical(lms_server_ready(), TRUE)
 })
 
 test_that("each token source reaches the Authorization header", {

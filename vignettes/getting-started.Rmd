@@ -59,7 +59,6 @@ for a model list and reports `TRUE` only for an answer LM Studio would give.
 ```{r check-ready, eval=lms_installed}
 lms_ready <- lms_server_ready()
 lms_ready
-#> [1] TRUE
 ```
 
 ### 2. Finding and Managing Models

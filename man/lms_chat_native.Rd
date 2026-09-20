@@ -43,9 +43,11 @@ Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats
 
 Functions that call the LM Studio REST API first open a TCP connection to
 the hostname and port named in \code{host}. A condition of class
-\code{rlmstudio_no_server} is raised when that connection is refused. Start the
-server with \code{\link[=lms_server_start]{lms_server_start()}}, or give \code{host} the address that your
-server listens on.
+\code{rlmstudio_no_server} is raised when that connection cannot be opened. A
+refused connection raises it. So do an address the package cannot parse, a
+hostname that does not resolve, and a connection that has not opened within
+half a second. Start the server with \code{\link[=lms_server_start]{lms_server_start()}}, or give \code{host}
+the address that your server listens on.
 
 The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM

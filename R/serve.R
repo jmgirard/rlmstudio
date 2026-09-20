@@ -346,13 +346,32 @@ lms_server_ready <- function(
         return(FALSE)
       }
 
-      models <- httr2::resp_body_json(resp)[["models"]]
-
-      # A JSON array parses to a list with no names. A JSON object parses to a
-      # list with names, so a body that happens to hold a `models` object is
-      # not a model list.
-      is.list(models) && is.null(names(models))
+      is_model_list(httr2::resp_body_json(resp)[["models"]])
     },
     error = function(e) FALSE
   )
+}
+
+#' Is this parsed value a list of models?
+#'
+#' @param models The value parsed out of the `models` key of a response body.
+#'
+#' @return Logical.
+#'
+#' @noRd
+is_model_list <- function(models) {
+  # A JSON array parses to a list with no names. A JSON object parses to a
+  # list with names, so a body that happens to hold a `models` object is not a
+  # model list.
+  if (!is.list(models) || !is.null(names(models))) {
+    return(FALSE)
+  }
+
+  # Every entry of a real model list is a JSON object, which parses to a named
+  # list. An array of bare strings or numbers is some other server's answer.
+  all(vapply(
+    models,
+    function(entry) is.list(entry) && !is.null(names(entry)),
+    logical(1)
+  ))
 }

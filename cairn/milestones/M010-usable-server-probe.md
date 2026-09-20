@@ -122,6 +122,7 @@ rows.
 - 2026-09-20: a fresh reader read every added line outside `cairn/`. The three wrong claims were all test comments. Everything in `NEWS.md`, `R/`, the twelve man pages, and both vignettes held.
 - 2026-09-20: the largest of the three. The comment said the five-second bound proved that the `timeout` argument does the work. It does not. httr2 and curl set no default timeout, so a build with the `req_timeout()` line deleted hangs on the silent socket instead of failing. The comment now says what the bound can catch, which is a timeout set to the wrong value.
 - 2026-09-20: the same reader re-read the three corrections once. Two held. The third was still wrong about which sources the last two token cases clear: they clear the source that otherwise wins, not a source below. Corrected, and the pass is closed.
+- 2026-09-20: gate triage chose to fix seven findings on the branch and file four as candidate rows. Both new tests were shown to go red on the defect they claim to catch. Re-verified on the tree that merges: check 0/0/0, test 315 passing, document no diff, validate green.
 - 2026-09-20: review checkpoint. All six criteria re-executed with fresh evidence and ticked. Consistency gate green. The three review lenses are still running, so the findings and triage are not yet written.
 - 2026-09-20: `cairn_validate` wants `—` in the Driving RR slot, so the three header slots keep their em-dashes. The writing lint counts them as violations. The validator is the machine reader and wins.
 
@@ -267,3 +268,54 @@ No finding demonstrates an acceptance criterion failing inside the domain of
 the procedure that criterion names. No finding triggers the return floor on its
 own. F2 and F4 are the two that bear on what the function does for its users.
 The gate decides them.
+
+### Gate-directed fixes
+
+The maintainer chose to fix seven findings on the branch and to file the rest.
+What landed:
+
+- F1 and F2: the body test moved into a new `is_model_list()` helper in
+  `R/serve.R`. It still requires a nameless list, and it now requires every
+  entry to be a named list, which is what a JSON object parses to. A new test
+  sends a valid model list under status 401 and 500, so the status check is now
+  the only thing returning `FALSE` there. A second new test sends
+  `{"models": ["a", "b"]}` and `{"models": [1, 2, 3]}` under status 200. A
+  third sends a list of two models.
+- F4: `with-daemon` in `vignettes/headless-config.Rmd` is now gated on
+  `lms_installed` and asks `lms_server_ready()` again inside the block, after
+  it starts its own server. Prose above it says why.
+- F6: the condition help page now ties the condition to a connection that
+  cannot be opened. It names the four ways that happens.
+- F7: the hardcoded `#> [1] TRUE` is gone from the `check-ready` chunk of
+  `vignettes/getting-started.Rmd`.
+- F11: `cairn/DESIGN.md` lists `lms_server_ready` in the daemon-and-server
+  family, and the abort convention now names it as the one exception.
+- F12 and F13: both candidate rows corrected in `cairn/ROADMAP.md`.
+- F3, F5, F8 and F9 became candidate rows.
+
+Check discrimination on the two new tests, by planting the defect each claims
+to catch. Delete the `resp_status(resp) != 200L` check, and the test named "a
+failed status is not ready even when the body looks right" goes red. The rest
+stay green. Replace the per-entry check with `TRUE`, and the test named "an
+array that is not an array of models" goes red. The rest stay green again. The
+restored tree runs green.
+
+An Air pass over `R/` and `tests/` also reformatted `R/utils-token.R`,
+`tests/testthat/test-mock-http-helper.R`, and untouched regions of
+`tests/testthat/test-token-wrappers.R`. None of that belongs to this
+milestone, so all three were reverted.
+
+### Re-verification after the fixes
+
+Run against the exact tree that merges, with `lms` on `PATH`, the server up and
+answering 401, and no `RLMSTUDIO_API_TOKEN` in the environment.
+
+- AC1 and AC2: `devtools::test()` reports FAIL 0, WARN 0, SKIP 0, PASS 315. The
+  count rose from 310 by the five new assertions.
+- AC3: the rendered `man/rlmstudio-conditions.Rd` keeps all three clauses the
+  criterion names, with the refused-connection sentence widened.
+- AC4: `devtools::check()` reports 0 errors, 0 warnings, 0 notes, status OK.
+- AC5: `devtools::document()` leaves no diff.
+- AC6: `NEWS.md` is unchanged by the fixes and still carries the three entries.
+- Consistency gate: `cairn_validate.py` exits 0 and
+  `pkgdown::check_pkgdown()` reports no problems.
