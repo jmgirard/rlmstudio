@@ -65,7 +65,7 @@ once this lands. Unifying the four workflow files stays a candidate row.
       `https://packagemanager.posit.co/cran/latest` and appends
       `127.0.0.1 mac.cran.dev` to `/etc/hosts`. Comment both edits with the
       cause and the revert condition. Change no other workflow file.
-- [ ] T2: Correct the 2026-09-20 (M009) lesson in `cairn/LESSONS.md` in place,
+- [x] T2: Correct the 2026-09-20 (M009) lesson in `cairn/LESSONS.md` in place,
       marked `corrected M011`. It names the mirror lag as the cause. The real
       cause is that CRAN's macOS R 4.6 binaries are zstd. The installed pak
       cannot extract them. `mac.cran.dev` races the primary download rather
@@ -84,6 +84,7 @@ once this lands. Unifying the four workflow files stays a candidate row.
 - 2026-09-20: evidence pinned 2026-09-20. `knitr_1.52.tgz` begins `28 b5 2f fd` at `cran.rstudio.com` and at `cloud.r-project.org`. It begins `1f 8b` at `packagemanager.posit.co`. The R 4.5 macOS build is `1f 8b`. jmgirard/circumplex#174 merged the same fix and its macOS job passed.
 - 2026-09-20: criteria audit, reduced mode. A fresh reader read all five criteria and returned no findings.
 - 2026-09-20: T1 done. `R-CMD-check.yaml` sets `use-public-rspm: always` and adds a macOS-only step that sets `PKG_CRAN_MIRROR` to Package Manager and points `mac.cran.dev` at `127.0.0.1`. Both edits carry the cause and the revert condition. `yaml.safe_load` parses the file and places the new step between `setup-r` and `setup-r-dependencies`.
+- 2026-09-20: T2 done. The M009 lesson is corrected in place, marked `corrected M011`. LESSONS.md is 34 lines and 6119 bytes, inside both caps.
 - 2026-09-20: the writing lint counts the five empty header slots as violations. `cairn_validate` requires that character in them. The validator is the machine reader and wins, as recorded in M010.
 
 ## Decisions
