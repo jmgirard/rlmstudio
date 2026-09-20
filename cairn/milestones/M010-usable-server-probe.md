@@ -343,3 +343,32 @@ macOS alone while Ubuntu release, Ubuntu devel, Ubuntu oldrel-1, and Windows
 release all passed. The three `main` runs before it passed on every platform.
 This branch did not cause the failure, and the ROADMAP already carries a
 candidate row for the mirror.
+
+### Re-verification on the merged tree (review resumed)
+
+PR #11 is open, so this pass re-ran every criterion at `5214913`, the head that
+carries the default-branch merge and the help-page correction. `origin/main` is
+`b6c8844` and is an ancestor of this branch, so nothing further had to be
+merged. Run with `lms` on `PATH`, the LM Studio server up on port 1234, and no
+`RLMSTUDIO_API_TOKEN` in the calling environment. A `curl` to `api/v1/models`
+immediately before the check answered 401 with code `invalid_api_key`.
+
+- AC1: fresh timing against a bare `serverSocket()` on port 38291. `timeout =
+  0.5` returned `FALSE` in 0.52 s, `timeout = 2` returned `FALSE` in 2.01 s. A
+  closed port returned `FALSE` in 0.00 s. Nothing raised. The five named cases
+  run inside the suite below, which skipped nothing.
+- AC2: `httpuv` 1.6.17 is installed and the run reports SKIP 0, so no token
+  test passed by not running.
+- AC3: the rendered `man/rlmstudio-conditions.Rd` names the probe as a TCP
+  connection to the hostname and port in `host`, says any process holding that
+  port accepts the connection so the condition is not raised, and names
+  `lms_server_ready()` as the stronger test.
+- AC4: `Rscript -e 'devtools::check()'` reported 0 errors, 0 warnings, 0 notes,
+  status OK, 17.9 s. The vignette rebuild passed.
+- AC5: `Rscript -e 'devtools::test()'` reported FAIL 0, WARN 0, SKIP 0, PASS
+  315. `Rscript -e 'devtools::document()'` left the working tree clean.
+- AC6: `NEWS.md` carries the three development-heading bullets for the new
+  function, the narrowed condition help page, and the vignette gating.
+- Consistency gate: `cairn_validate.py` exited 0, sixteen checks passed and
+  seven advisories read OK. `pkgdown::check_pkgdown()` found no problems. No
+  `DESIGN.md` principle changed, so `cairn_impact.py` stayed skipped.
