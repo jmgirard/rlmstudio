@@ -183,3 +183,87 @@ No driving review report, so no projection to measure against.
   `NEWS.md` carries the entry. The branch adds no top-level file, so no new
   `.Rbuildignore` entry is owed. `devtools::check()` was clean, recorded under
   AC4.
+
+### Independent review
+
+Three fresh-context lenses ran against the branch diff. Surface tier is
+user-facing, so all three were spawned.
+
+The blame-history lens found no case where the branch undoes a deliberate past
+commit, revives a fixed bug, or contradicts a recorded decision. It reported one
+actionable item, listed as F13 below. The prior-review lens found no prior-review
+evidence to regress: the archived review findings that touch these files come
+from M001, M007, and M009, and each still holds. Its probe for inline pull
+request comments returned an empty list, so the thread walk was skipped.
+
+The diff-bug lens reported twelve findings, ranked. Each one below carries the
+session's own verification and its disposition.
+
+- F1 (test discrimination): deleting the `resp_status(resp) != 200L` check
+  leaves the whole suite green. The 401 case sends `{"error": "unauthorized"}`,
+  which carries no `models` key. It therefore returns `FALSE` through the body
+  predicate alone, with or without the status check. Verified by reading the
+  fixture against the predicate. The live behavior is correct today, because
+  the status check is present. Disposition: fix now.
+- F2 (contract): `is.list(models) && is.null(names(models))` accepts any JSON
+  array. Measured: `{"models": ["a","b"]}` and `{"models": [1,2,3]}` both read
+  `TRUE`. Both `{"models": {}}` and `{"models": {"a": 1}}` read `FALSE`, the
+  empty object included. A foreign server whose body holds any `models` array reads
+  as ready, which is the case the milestone exists to catch. Disposition: fix
+  now.
+- F3 (contract): three input faults abort from outside the `tryCatch`, and the
+  help page names only `token` as an aborting case. Four measured aborts.
+  `lms_server_ready("localhost:1234")` aborts on "Failed to parse URL".
+  `timeout = 0` aborts on "`seconds` must be >1 ms." and `timeout = NA` aborts
+  on "`seconds` must be a number". `host = NULL` aborts on "`url` must be a
+  single string". The schemeless host matters most here. The port check this
+  function replaces, `is_server_running()`, normalizes a schemeless host and
+  returns `FALSE`. Disposition: user's call at the gate.
+- F4 (vignette): `with-daemon` at `vignettes/headless-config.Rmd:153` is gated
+  on `lms_ready`, measured at line 65. The `stop-stack` chunk at line 141 has
+  since stopped the server and the daemon. The chunk restarts the server and
+  calls `lms_load()` immediately, with no re-check. Verified from the chunk
+  order. This is the gap the branch's own candidate row names, so on a machine
+  where readiness read `TRUE` the vignette build can still fail. Disposition:
+  fix now.
+- F5 (vignette): the teardown chunks are gated on `lms_installed` alone, so a
+  build tears down a server the vignette did not start. The AC4 run shows this
+  happening. The old single `teardown` chunk carried the same gate, so the diff
+  did not introduce the behavior. The new prose is what is new, and it omits
+  the case. Disposition: correct the prose now, candidate row for the behavior.
+- F6 (docs): the narrowed help page says the condition is raised "when that
+  connection is refused". `is_server_running()` returns `FALSE` for an
+  unparsable URL, an empty hostname, and any `socketConnection()` error,
+  including its 0.5 second connect timeout. Verified by reading
+  `R/serve.R:237-262`. A defect inside an intentional change is still a defect.
+  Disposition: fix now.
+- F7 (vignette): `vignettes/getting-started.Rmd` hardcodes `#> [1] TRUE` inside
+  the `check-ready` chunk, which evaluates and echoes its own real output. On a
+  token-requiring server the rendered page shows both `TRUE` and `FALSE`. The
+  matching chunk in `headless-config.Rmd` omits the comment. Disposition: fix
+  now.
+- F8 (tests): `free_port()` is defined in both `test-server-ready.R` and
+  `test-serve.R` with different bodies, and `open_listener()` is a near-copy of
+  `local_listener()`. The repo's convention puts shared test helpers in
+  `helper-*.R`. Disposition: candidate row.
+- F9 (tests): `free_port()` binds a port, closes it, then assumes nothing takes
+  it, and both helpers draw from the session RNG through `sample()`.
+  Disposition: candidate row.
+- F10 (tests): the `req_error(is_error = \(resp) FALSE)` override changes
+  nothing any current test can see. The fix for F1 gives it work to do.
+  Disposition: absorbed into F1.
+- F11 (tracking): `cairn/DESIGN.md:39` still lists the daemon-and-server family
+  without `lms_server_ready`. Line 52 states without exception that a function
+  aborts for a server that is not running. Verified by reading the file.
+  Disposition: fix now.
+- F12 (tracking): a comma splice in the candidate row at `cairn/ROADMAP.md`.
+  Disposition: fix now.
+- F13 (tracking, from the blame lens): the candidate row about a guard for the
+  token wrapper table still says the table holds eleven names. This branch made
+  it twelve. The row's warning still stands. Only its count is stale.
+  Disposition: fix now.
+
+No finding demonstrates an acceptance criterion failing inside the domain of
+the procedure that criterion names. No finding triggers the return floor on its
+own. F2 and F4 are the two that bear on what the function does for its users.
+The gate decides them.
