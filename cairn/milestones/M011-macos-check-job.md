@@ -91,6 +91,7 @@ once this lands. Unifying the four workflow files stays a candidate row.
 - 2026-09-20: claim audit: not owed, internal tier.
 - 2026-09-20: the writing lint counts the five empty header slots as violations. `cairn_validate` requires that character in them. The validator is the machine reader and wins, as recorded in M010.
 - 2026-09-20: review checkpoint, partial. AC3, AC4, and AC5 verified against fresh evidence and ticked. AC1 and AC2 stay unticked and wait on the pull request's macOS job. The consistency gate is green. The independent review is still running.
+- 2026-09-20: review checkpoint. Three lenses ran. Two returned no findings. The diff-bug lens returned six, none of them a floor return. Four were fixed now in the workflow comment and the hosts lines, one was rejected as a duplicate of an existing candidate row, and one was noted. Status stays `review`.
 
 ## Decisions
 
@@ -132,3 +133,64 @@ once this lands. Unifying the four workflow files stays a candidate row.
 - `NEWS.md`: no entry owed. The milestone changes one CI workflow and ships no
   user-visible change.
 - `.Rbuildignore`: no new top-level file, and `check()` reports no notes.
+
+### Independent review
+
+Three fresh-context lenses. The diff touches an executable surface, a CI
+workflow with a shell `run:` block, so the full fan-out ran rather than the
+single-lens internal-tier route.
+
+- Blame-history lens: no findings. It confirms the `LESSONS.md` edit follows
+  that file's own in-place correction rule, that `git log` shows
+  `use-public-rspm` was never set before, so `always` reverts no earlier
+  choice, and that nothing in `DECISIONS.md` is contradicted. It adds one
+  non-blocking observation: the step edits `/etc/hosts` under `sudo`, which is
+  a real system change on the runner and is worth the maintainer's eye.
+- Prior-review-record lens: no findings. The `gh api` probe for inline review
+  comments returned an empty array, so no walk ran. The archived `M002` and
+  `M009` review sections hold the only prior findings on these files, and this
+  diff reintroduces or contradicts none of them.
+- Diff-bug lens: six findings, triaged below. It verified the mechanism
+  against the upstream `setup-r` and `pkgcache` sources and reports no
+  blocking correctness bug: `always` changes nothing for the Ubuntu and
+  Windows jobs, `PKG_CRAN_MIRROR` is the correct pak variable, the step
+  ordering and the `runner.os` literal are right, and a refused connection to
+  `127.0.0.1` fails fast rather than hanging.
+
+Findings and their disposition. The claims in findings 2 and 3 were checked
+against the `pkgcache` 2.2.5.9000 sources that the installed pak carries,
+not against the reviewer's account of them. `cmc__get_repos()` does assign
+`repos[["CRAN"]] <- cran_mirror`, strip trailing slashes, and then keep the
+first of any duplicated URLs, and both `packages_make_sources()` gates read
+`type == "cran"`. Both findings hold.
+
+1. "The hosts block is IPv4-only, and `mac.cran.dev` publishes an AAAA
+   record." Fixed now. The step writes an `::1` line beside the `127.0.0.1`
+   one.
+2. "The comment asserts a mechanism that the other half of the fix has
+   already disabled, which will mislead a reader deciding whether the hosts
+   line is still needed." Fixed now. The comment now states that the hosts
+   lines are a backstop, that no `cran`-typed repo survives while the two
+   URLs match exactly, and that the row returns if they ever differ.
+3. "The CRAN source-Archive fallback goes away on macOS, gated on the same
+   `cran` type." Rejected as a separate follow-up, and fixed as a
+   documentation gap. The consequence is now named in the comment. Its only
+   remedy is removing the workaround, which the existing candidate row
+   already carries, so a second row would duplicate it.
+4. "Package Manager becomes a single point of failure for the macOS job, and
+   the comment does not say so." Fixed now, as documentation. The comment
+   names the outage case. The plan gate already recorded Package Manager
+   dropping its gzip macOS binaries as the falsifier, and the candidate row
+   for pinning macOS to R 4.5 carries that case.
+5. "The revert instruction says to set `use-public-rspm` back to true, but
+   the default branch has no such line." Fixed now. The comment says to set
+   it to true rather than back to true, and the `setup-r` comment states what
+   the default does.
+6. "AC1 and AC2 remain unverified, and the gate should not close before the
+   pull request's macOS job is read." Noted, not a defect. This is what the
+   plan chose and what the Review section above records. Step 8 reads that
+   job, and the merge does not proceed on a red or unread macOS check.
+
+No finding demonstrates an acceptance criterion failing, and none is a
+load-bearing defect in what the package does for its users, so the return
+floor does not fire and the status stays `review`.

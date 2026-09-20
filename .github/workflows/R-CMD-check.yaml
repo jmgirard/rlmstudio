@@ -42,6 +42,7 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           # "always" routes macOS through Posit Package Manager too; see the
           # macOS step below for why, and for the two settings it still needs.
+          # The default is "true", which routes Linux and Windows but not macOS.
           use-public-rspm: always
 
       # Since 2026-09-20 CRAN serves its macOS R 4.6 binaries as zstd archives
@@ -49,20 +50,35 @@ jobs:
       # rejects them as "unknown archive type" (r-lib/pkgdepends#485). Package
       # Manager still serves gzip builds of the same versions. use-public-rspm:
       # always above puts it first, but setup-r keeps CRAN as a second repo, and
-      # pak still resolved two packages from it on the first try. So:
-      # PKG_CRAN_MIRROR makes pak read the CRAN entry as Package Manager too,
-      # and mac.cran.dev is blocked, because pkgcache attaches that host as a
-      # second download URL to every macOS CRAN binary and keeps whichever
-      # download finishes first (it serves CRAN's zstd file directly). Drop this
-      # step, and set use-public-rspm back to true, once a released pak extracts
-      # zstd.
+      # pak still resolved two packages from it on the first try. So
+      # PKG_CRAN_MIRROR makes pak read the CRAN entry as Package Manager too.
+      #
+      # The hosts lines are a backstop. pkgcache attaches mac.cran.dev as a
+      # second download URL to every macOS binary from a repo it types "cran",
+      # and keeps whichever download finishes first, and that host serves CRAN's
+      # zstd file directly. When PKG_CRAN_MIRROR holds the exact URL setup-r
+      # gave Package Manager, pkgcache drops the duplicate CRAN row and no
+      # "cran"-typed repo is left for the host to attach to. Should the two URLs
+      # ever differ, that row returns and the hosts lines are what stop it. Both
+      # families are blocked, because the host publishes an AAAA record as well.
+      #
+      # Two consequences to know. On macOS pak loses the CRAN source-Archive
+      # fallback, which is gated on the same "cran" type, so a dependency
+      # pinned to a version the Package Manager snapshot no longer carries
+      # fails there while Linux and Windows still resolve it. And Package
+      # Manager becomes the only source for the macOS job, so an outage there
+      # turns it red with nothing to fall back on.
+      #
+      # Drop this step, and set use-public-rspm to true, once a released pak
+      # extracts zstd.
       - name: Use Package Manager binaries on macOS
         if: runner.os == 'macOS'
         shell: bash
         run: |
           P3M='https://packagemanager.posit.co/cran/latest'
           echo "PKG_CRAN_MIRROR=${P3M}" >> "$GITHUB_ENV"
-          echo '127.0.0.1 mac.cran.dev' | sudo tee -a /etc/hosts > /dev/null
+          printf '%s\n%s\n' '127.0.0.1 mac.cran.dev' '::1 mac.cran.dev' \
+            | sudo tee -a /etc/hosts > /dev/null
           echo "PKG_CRAN_MIRROR set to ${P3M}; mac.cran.dev blocked"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
