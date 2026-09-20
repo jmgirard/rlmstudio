@@ -1,10 +1,11 @@
 # lms_server_ready() answers one question: does this host answer as a usable
-# LM Studio server? The five cases below are the five ways a host can answer,
-# from nothing listening at all to a real model list.
+# LM Studio server? The cases below run from nothing listening at all to a
+# real model list.
 #
-# The first two cases use a real TCP target. The other three mock the transport
-# through the shared recorder, because an HTTP status and a body shape are
-# properties of the response and not of the socket.
+# The first three cases use a real TCP target, because a refused connection
+# and a silent listener are properties of the socket. The rest mock the
+# transport through the shared recorder, because an HTTP status and a body
+# shape are properties of the response.
 
 # Bind a listening socket on a random high port and return both the connection
 # and the port it took. The caller closes the connection. A port in use makes
@@ -49,8 +50,11 @@ test_that("an open port whose listener never answers is not ready", {
   elapsed <- as.numeric(difftime(Sys.time(), started, units = "secs"))
 
   expect_identical(ready, FALSE)
-  # Without a request timeout this call waits on a socket that will never send
-  # a byte, so the bound is what proves the timeout argument load-bearing.
+  # What this bound can and cannot catch. httr2 and curl set no default
+  # timeout, so a version of the function with the req_timeout() line deleted
+  # hangs on this socket rather than failing here: the suite stops instead of
+  # going red. The bound does catch a timeout that is set but wrong, such as a
+  # hardcoded minute in place of the argument.
   expect_lt(elapsed, 5)
 })
 
@@ -102,10 +106,13 @@ test_that("a JSON object under the models key is not a model list", {
 })
 
 test_that("each token source reaches the Authorization header", {
-  # Four sources, four distinct values. Each case unsets the two sources below
-  # it, so a value that arrives could only have come from the source named.
-  # request_target() reads headers with redaction off, so a failure prints the
-  # literal value and names the source that leaked.
+  # Four sources, four distinct values. The first two cases fill the sources
+  # below the one under test with decoy values, so a wrapper that reaches past
+  # its argument sends a string that names the source it leaked from. The last
+  # two cases clear the sources that would otherwise win instead, because for
+  # the environment variable and for no token there is no decoy that a correct
+  # result could be told apart from. request_target() reads headers with
+  # redaction off, so a failure prints the literal value.
   cases <- list(
     list(
       source = "argument",

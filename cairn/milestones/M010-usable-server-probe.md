@@ -2,12 +2,12 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M010: The package can tell a usable LM Studio server from an open port
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
-- **Depends on:** none
-- **Driving RR:** none
+- **Depends on:** —
+- **Driving RR:** —
 - **Principles touched:** GP1, GP3
-- **Resolves:** none
+- **Resolves:** —
 - **Surface tier:** user-facing. It exports a function, changes two shipped vignettes, and narrows one shipped help page
 - **Branch/PR:** m010-usable-server-probe
 
@@ -117,6 +117,12 @@ rows.
 - 2026-09-20: T6 needed no GUI change. The machine's LM Studio already requires a token, and the calling environment sets none. Pinned at the check: `api/v1/models` answered 401 with code `invalid_api_key`, and `lms_server_ready()` reported FALSE.
 - 2026-09-20: `Rscript -e 'devtools::check()'` reported 0 errors, 0 warnings, and 0 notes in that state. `devtools::test()` reported 0 failures, 0 errors, 0 warnings, 310 passing. `devtools::document()` left no diff.
 - 2026-09-20: candidate row added for the gap between `lms_server_start()` returning and the REST API answering.
+
+- 2026-09-20: claim audit: 24 claims read, 3 corrected — tests/testthat/test-server-ready.R
+- 2026-09-20: a fresh reader read every added line outside `cairn/`. The three wrong claims were all test comments. Everything in `NEWS.md`, `R/`, the twelve man pages, and both vignettes held.
+- 2026-09-20: the largest of the three. The comment said the five-second bound proved that the `timeout` argument does the work. It does not. httr2 and curl set no default timeout, so a build with the `req_timeout()` line deleted hangs on the silent socket instead of failing. The comment now says what the bound can catch, which is a timeout set to the wrong value.
+- 2026-09-20: the same reader re-read the three corrections once. Two held. The third was still wrong about which sources the last two token cases clear: they clear the source that otherwise wins, not a source below. Corrected, and the pass is closed.
+- 2026-09-20: `cairn_validate` wants `—` in the Driving RR slot, so the three header slots keep their em-dashes. The writing lint counts them as violations. The validator is the machine reader and wins.
 
 ## Decisions
 
