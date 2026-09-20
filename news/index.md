@@ -3,6 +3,54 @@
 ## rlmstudio (development version)
 
 - A new function,
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+  turns text into the vectors that an embedding model produces for it.
+  Give it a loaded embedding model and a character vector of texts. The
+  whole vector goes out in one request to the server. By default the
+  return is a numeric matrix. It has one row per input text and one
+  column per embedding dimension, so it goes straight to
+  [`dist()`](https://rdrr.io/r/stats/dist.html) or
+  [`prcomp()`](https://rdrr.io/r/stats/prcomp.html). The matrix carries
+  no row or column names, so rows pair with inputs by position. The row
+  at each position holds the vector that the response reported for the
+  text at that position, whatever order the server answered in. With
+  `simplify = FALSE` the return is the parsed response body instead. A
+  `token` argument works as it does on the other functions that reach
+  the REST API. The `...` argument forwards any other field to the
+  request body.
+
+- [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  reads the response before it builds the matrix, and aborts rather than
+  returning a matrix it cannot trust. It aborts on each of these. The
+  response body is not JSON at all. The response body is a plain value
+  rather than an object or an array. The response carries no list of
+  vectors, which is also what a body sent as a bare array reports,
+  because such a body can carry no named field. The list of vectors is a
+  plain value rather than a list. The list of vectors arrived as a JSON
+  object rather than an array. It carries a different number of vectors
+  than there were texts. A vector carries no position, or a position
+  that is not a whole number. Two vectors carry the same position. A
+  position falls outside the range of the texts. A vector is not a list
+  of numbers. A vector is an empty list. An entry in the list of vectors
+  is not an object at all. The vectors are of unequal length. These
+  aborts carry the new condition class `rlmstudio_bad_response` and a
+  `status` field holding the HTTP status as an integer. Every message
+  but one names `simplify = FALSE`, which returns the body unchanged so
+  you can read what arrived. The exception is a body that is not JSON:
+  the parse runs before `simplify` is read, so that message instead
+  tells you to check what is answering on the host.
+
+- The help pages now document a third condition class.
+  `rlmstudio_bad_response` has its own section on the
+  `rlmstudio-conditions` page and its own alias, so
+  [`?rlmstudio_bad_response`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+  reaches it. The same section appears on the
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  page. The class means a response that the server did not report as a
+  failure and that the package still cannot read. That is a different
+  thing from `rlmstudio_api_error`.
+
+- A new function,
   [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md),
   reports whether a host answers as an LM Studio server you can use. It
   sends one GET request to the model list endpoint and returns `TRUE`

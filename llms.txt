@@ -193,6 +193,13 @@ prompts.
 - [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md)
   : Calculate Expected Scores and Uncertainty from Logprobs
 
+## Embeddings
+
+Turn text into the vectors an embedding model produces for it.
+
+- [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  : Turn Text into Embedding Vectors
+
 ## Model Management
 
 Discover, download, load, and manage local models.
@@ -267,6 +274,7 @@ catch them.
 - [`rlmstudio-conditions`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
   [`rlmstudio_no_server`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
   [`rlmstudio_api_error`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+  [`rlmstudio_bad_response`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
   : Error conditions raised by rlmstudio
 
 # Articles

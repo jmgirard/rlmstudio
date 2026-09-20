@@ -1,10 +1,65 @@
-# Error conditions raised by rlmstudio
+# Turn Text into Embedding Vectors
 
-The functions in this package that talk to the LM Studio REST API raise
-three condition classes of their own. Each one is raised through
-[`cli::cli_abort()`](https://cli.r-lib.org/reference/cli_abort.html), so
-each one is an R error that you can catch by class with
-[`base::tryCatch()`](https://rdrr.io/r/base/conditions.html).
+Sends one or more texts to an embedding model and returns the vector
+that the model produced for each one. The whole input vector travels in
+a single request.
+
+## Usage
+
+``` r
+lms_embed(
+  model,
+  input,
+  host = "http://localhost:1234",
+  simplify = TRUE,
+  ...,
+  token = NULL
+)
+```
+
+## Arguments
+
+- model:
+
+  Character. The loaded embedding model name.
+
+- input:
+
+  Character. The texts to embed. A vector of length `n` returns `n`
+  embeddings, in the order given.
+
+- host:
+
+  Character. Server URL.
+
+- simplify:
+
+  Logical. If `TRUE`, the default, returns a numeric matrix with one row
+  per input. Any other value returns the parsed response body unchanged.
+
+- ...:
+
+  Additional fields for the request body. LM Studio ignores a field it
+  does not recognize, and two OpenAI fields are worth naming for that
+  reason: LM Studio ignores `dimensions`, so asking for a narrower
+  vector has no effect. `encoding_format = "base64"` is untested against
+  LM Studio: a server that honors it returns embeddings this function
+  cannot read, and the default `simplify = TRUE` path then aborts.
+
+- token:
+
+  Character or `NULL`. An API token for a server that requires
+  authentication. `NULL` reads the `rlmstudio.token` option and then the
+  `RLMSTUDIO_API_TOKEN` environment variable. See
+  [rlmstudio_token](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md).
+
+## Value
+
+If `simplify = FALSE`, a list representing the raw JSON response.
+Otherwise, a double matrix with one row per input text and one column
+per embedding dimension. The row at position `i` holds the embedding
+that the response reported for the input at position `i`. The matrix
+carries no row or column names.
 
 ## Server not running
 
@@ -40,8 +95,7 @@ integer.
 A condition of class `rlmstudio_bad_response` is raised when the server
 answers with a status the wrapper accepts and a body the wrapper cannot
 read. It is raised where a wrapper checks the body before it reshapes
-it, rather than indexing straight into whatever arrived.
-[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+it, rather than indexing straight into whatever arrived. `lms_embed()`
 raises it: the vectors it returns are placed by the index that the
 response reports, so a block with a missing, repeated, or out-of-range
 index would otherwise pair a vector with the wrong text and give back a
@@ -59,17 +113,10 @@ before the argument is read, so its message points at the host instead.
 
 ``` r
 if (FALSE) { # \dontrun{
-tryCatch(
-  list_models(host = "http://localhost:9999"),
-  rlmstudio_no_server = function(cnd) {
-    message("The server is not running: ", conditionMessage(cnd))
-  },
-  rlmstudio_api_error = function(cnd) {
-    message("The API call failed with status ", cnd$status)
-  },
-  rlmstudio_bad_response = function(cnd) {
-    message("The response body could not be read: ", conditionMessage(cnd))
-  }
+vectors <- lms_embed(
+  model = "text-embedding-nomic-embed-text-v1.5",
+  input = c("the first document", "the second document")
 )
+dim(vectors)
 } # }
 ```
