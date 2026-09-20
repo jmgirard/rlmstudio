@@ -1,9 +1,9 @@
 #' Error conditions raised by rlmstudio
 #'
-#' The functions in this package that talk to the LM Studio REST API raise two
-#' condition classes of their own. Both are raised through [cli::cli_abort()],
-#' so each one is an R error that you can catch by class with
-#' [base::tryCatch()].
+#' The functions in this package that talk to the LM Studio REST API raise
+#' three condition classes of their own. Each one is raised through
+#' [cli::cli_abort()], so each one is an R error that you can catch by class
+#' with [base::tryCatch()].
 #'
 #' @section Server not running:
 #' Functions that call the LM Studio REST API first open a TCP connection to
@@ -30,8 +30,23 @@
 #' carries a `status` field, which holds the HTTP response status as an
 #' integer.
 #'
+#' @section Malformed response:
+#' A condition of class `rlmstudio_bad_response` is raised when the server
+#' answers with a status the wrapper accepts and a body the wrapper cannot
+#' read. It is raised where a wrapper checks the body before it reshapes it,
+#' rather than indexing straight into whatever arrived. [lms_embed()] raises
+#' it: the vectors it returns are placed by the index that the response
+#' reports, so a block with a missing, repeated, or out-of-range index would
+#' otherwise pair a vector with the wrong text and give back a matrix that is
+#' silently wrong.
+#'
+#' The condition carries a `status` field, which holds the HTTP response
+#' status as an integer. The status is usually 200, because the server did not
+#' report a failure. The message names the argument that returns the body
+#' unchanged, so you can read what actually arrived.
+#'
 #' @name rlmstudio-conditions
-#' @aliases rlmstudio_no_server rlmstudio_api_error
+#' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response
 #'
 #' @examples
 #' \dontrun{
@@ -42,6 +57,9 @@
 #'   },
 #'   rlmstudio_api_error = function(cnd) {
 #'     message("The API call failed with status ", cnd$status)
+#'   },
+#'   rlmstudio_bad_response = function(cnd) {
+#'     message("The response body could not be read: ", conditionMessage(cnd))
 #'   }
 #' )
 #' }

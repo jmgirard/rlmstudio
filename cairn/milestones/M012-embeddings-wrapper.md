@@ -102,7 +102,7 @@ on `/v1/chat/completions` → the existing candidate row.
       `simplifyVector = FALSE` (LESSONS, M005), so each embedding arrives as a
       list and `do.call(rbind, ...)` over those lists builds a list matrix, not
       a double one. Coerce per element.
-- [ ] T3: Add the third `@section` and the `@aliases` entry to `R/conditions.R`,
+- [x] T3: Add the third `@section` and the `@aliases` entry to `R/conditions.R`,
       put the two `@inheritSection` tags on `lms_embed()`, and run
       `devtools::document()`. The tag must stay on one physical line and the
       title must match character for character (LESSONS, M007).
@@ -134,6 +134,7 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: implement gate made three choices. The happy-path cassette is recorded live this session. The returned matrix carries no row or column names. The `data` block count runs against the input array the request sent, not against the `input` argument. An override through `...` therefore stays under the same guard.
 - 2026-09-20: minor amendment. T1 and T2 land in one checkpoint commit. The wrapper does not run until the matrix builder exists, so T1 alone cannot pass the `verify` slot.
 - 2026-09-20: T1 and T2 done. `R/embed.R` holds `lms_embed()`, `is_one_number()`, and `embed_matrix()`. `rlm_abort_bad_response()` sits beside `rlm_abort_api()` in `R/utils-api-error.R`. The `verify` slot ran clean: document() wrote NAMESPACE and lms_embed.Rd, test() gave 315 pass and 0 fail.
+- 2026-09-20: T3 done. `R/conditions.R` gained a "Malformed response" section and the `rlmstudio_bad_response` alias, and the tag lands that section on the `lms_embed()` page. Both `.Rd` files carry it once. The `verify` slot ran clean.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
 
 ## Decisions

@@ -22,6 +22,7 @@
 #'   row or column names.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #' @export
 #' @examples
 #' \dontrun{
