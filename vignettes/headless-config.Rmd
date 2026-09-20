@@ -9,7 +9,14 @@ vignette: >
 
 ```{r setup}
 library(rlmstudio)
+
+# Two gates for the chunks below. The first says the CLI is on this machine.
+# The second says the REST API answered. It stays FALSE until the server has
+# been started and asked.
 lms_installed <- has_lms()
+lms_ready <- FALSE
+
+model <- "google/gemma-3-1b"
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -50,17 +57,27 @@ With the daemon running, you can now spin up the REST API server to accept HTTP 
 lms_server_start()
 ```
 
+On a headless box the started server is the only thing you can see, so check
+that it answers before you call it. `lms_server_ready()` asks the host for a
+model list. It reports `FALSE` for a port held by another process, for a
+server that is still coming up, and for a server that turned your token away.
+
+```{r check-ready, eval=lms_installed}
+lms_ready <- lms_server_ready()
+lms_ready
+```
+
 ### 3. Finding and Managing Models
 
 Because you do not have the GUI's visual search tool, you will need to know the Hugging Face repository or the LM Studio catalog identifier for the model you want to use.
 
-```{r download, eval=lms_installed}
+```{r download, eval=lms_ready}
 # Download a model using its identifier
 job_id <- lms_download("qwen/qwen3-4b-2507")
 lms_download_status(job_id)
 ```
 
-```{r wait, echo=FALSE, eval=lms_installed}
+```{r wait, echo=FALSE, eval=lms_ready}
 if (job_id != "already_downloaded") {
   repeat {
     res <- lms_download_status(job_id)
@@ -75,7 +92,7 @@ if (job_id != "already_downloaded") {
 }
 ```
 
-```{r list, eval=lms_installed}
+```{r list, eval=lms_ready}
 # View all downloaded models
 models <- list_models()
 
@@ -89,18 +106,18 @@ unloaded_llms
 
 Allocate the model to your system's memory (RAM/VRAM) so it is ready for inference.
 
-```{r load, eval=lms_installed}
+```{r load, eval=lms_ready}
 # Load the model
-lms_load("google/gemma-3-1b", flash_attention = TRUE)
+lms_load(model, flash_attention = TRUE)
 ```
 
 ### 5. Chatting
 
 Interact with the model exactly as you would in a desktop environment.
 
-```{r chat, eval=lms_installed}
+```{r chat, eval=lms_ready}
 response <- lms_chat(
-  model = "google/gemma-3-1b",
+  model = model,
   input = "Provide just the str_extract() pattern to match all text after the third comma.",
   system_prompt = "You are an expert R programmer familiar with the tidyverse."
 )
@@ -112,10 +129,16 @@ cat(response)
 
 In a headless environment, managing your system resources is critical. When your script finishes, you should explicitly tear down the entire stack to free up memory and stop background processes.
 
-```{r teardown, eval=lms_installed}
+```{r unload, eval=lms_ready}
 # 1. Unload the model from memory
-lms_unload("google/gemma-3-1b")
+lms_unload(model)
+```
 
+Stopping the server and the daemon does not go through the REST API, so it
+runs whenever the CLI is here. That way a stack this vignette started is torn
+down even if the readiness check said no.
+
+```{r stop-stack, eval=lms_installed}
 # 2. Stop the API server
 lms_server_stop()
 
@@ -127,13 +150,13 @@ lms_daemon_stop()
 
 If you are writing a script that just needs to run a quick job and exit, managing the daemon state manually can be tedious. The `with_lms_daemon()` wrapper handles the setup and guaranteed teardown of the background engine automatically.
 
-```{r with-daemon, eval=lms_installed}
+```{r with-daemon, eval=lms_ready}
 # The daemon will start, the code will run, and the daemon will stop on exit.
 results <- with_lms_daemon({
   lms_server_start()
-  lms_load("google/gemma-3-1b")
+  lms_load(model)
 
-  res <- lms_chat("google/gemma-3-1b", "Is the daemon running?")
+  res <- lms_chat(model, "Is the daemon running?")
 
   lms_server_stop()
   res

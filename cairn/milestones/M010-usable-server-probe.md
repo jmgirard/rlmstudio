@@ -81,7 +81,7 @@ rows.
       `Rscript -e 'devtools::document()'`. Discovered sub-task: add a test
       that a foreign listener on the port passes the TCP probe. The same test
       shows the readiness check reporting FALSE there.
-- [ ] T5: Rebuild the gating in `vignettes/getting-started.Rmd` and
+- [x] T5: Rebuild the gating in `vignettes/getting-started.Rmd` and
       `vignettes/headless-config.Rmd`. Assign a readiness value once per
       vignette, after the server-start chunk. Gate every later REST chunk on
       it. Gate each teardown chunk on whether its own start chunk ran, never on
@@ -107,6 +107,12 @@ rows.
 - 2026-09-20: the two claims on that page were derived from runs, not composed. A local httpuv server answering 404 made `list_models()` raise `rlmstudio_api_error`. The same server answering 200 with an HTML body made it raise a raw `jsonlite` lexical error. `lms_server_ready()` reported FALSE against the second one.
 - 2026-09-20: minor amendment. T4 gained a discovered sub-task: one test showing a foreign listener passing `is_server_running()` and `stop_if_no_server()` while `lms_server_ready()` reports FALSE. No new dependency, so the httpuv runs above stayed out of the suite.
 - 2026-09-20: T4's roxygen block and export landed in the T2 commit. The function and its documentation are one edit. T4 keeps the conditions help-page narrowing. Minor reorder, no scope change.
+
+- 2026-09-20: T5 chunk list. `getting-started.Rmd` assigns `lms_ready` in `check-ready`, gated on `lms_installed`. Gated on `lms_ready`: `download`, `wait`, `load`, `simple-chat`, `unload`. Gated on `lms_installed`: `setup`, `check-status`, `start-server`, `stop-server`. The old `teardown` chunk split into `unload` and `stop-server`.
+- 2026-09-20: T5 chunk list. `headless-config.Rmd` assigns `lms_ready` in `check-ready`, gated on `lms_installed`. Gated on `lms_ready`: `download`, `wait`, `list`, `load`, `chat`, `unload`, `with-daemon`. Gated on `lms_installed`: `setup`, `check-status`, `start-daemon`, `start-server`, `stop-stack`. The old `teardown` chunk split into `unload` and `stop-stack`.
+- 2026-09-20: `model` moved to the setup chunk of both vignettes. It was assigned inside a chunk that readiness now gates, and the teardown chunk reads it.
+- 2026-09-20: T5 discrimination. The local server already requires a token and the calling environment sets none. `lms_server_ready()` therefore reported FALSE. Both vignettes built with every REST chunk skipped. A scratch copy with the assignment forced to TRUE died at the `download` chunk on `rlmstudio_api_error`. The gate controls the chunks in both directions.
+- 2026-09-20: `lms_server_start()` returns before the REST API answers. A probe run right after it can report FALSE on a healthy machine. That cost was not reached here, because the token requirement holds the answer FALSE either way. It is a candidate row, not a fix in this milestone.
 
 ## Decisions
 
