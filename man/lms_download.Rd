@@ -4,7 +4,13 @@
 \alias{lms_download}
 \title{Download a model via REST API}
 \usage{
-lms_download(model, quantization = NULL, host = "http://localhost:1234", ...)
+lms_download(
+  model,
+  quantization = NULL,
+  host = "http://localhost:1234",
+  ...,
+  token = NULL
+)
 }
 \arguments{
 \item{model}{Character. The model to download. Accepts model catalog
@@ -17,6 +23,10 @@ download (e.g., "Q4_K_M"). Only supported for Hugging Face links.}
 "http://localhost:1234".}
 
 \item{...}{Additional arguments passed to the request.}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 A character string containing the download \code{job_id}, or

@@ -4,7 +4,7 @@
 \alias{lms_unload}
 \title{Unload a model from memory via REST API}
 \usage{
-lms_unload(model, host = "http://localhost:1234", ...)
+lms_unload(model, host = "http://localhost:1234", ..., token = NULL)
 }
 \arguments{
 \item{model}{Character. Unique identifier (\code{instance_id}) of the model
@@ -14,6 +14,10 @@ instance to unload.}
 "http://localhost:1234".}
 
 \item{...}{Additional arguments passed to the API request body.}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 Invisibly returns a character string representing the unloaded

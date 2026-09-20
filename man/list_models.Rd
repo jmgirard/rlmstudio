@@ -9,7 +9,8 @@ list_models(
   type = c("llm", "embedding"),
   detailed = FALSE,
   quiet = FALSE,
-  host = "http://localhost:1234"
+  host = "http://localhost:1234",
+  token = NULL
 )
 }
 \arguments{
@@ -27,6 +28,10 @@ messages. Defaults to \code{FALSE}. Does not suppress the abort raised
 when the server is not running.}
 
 \item{host}{Character. The host address of the local server.}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 A \code{data.frame} containing information about the available

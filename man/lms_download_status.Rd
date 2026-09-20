@@ -4,13 +4,17 @@
 \alias{lms_download_status}
 \title{Get the status of a download job}
 \usage{
-lms_download_status(job_id, host = "http://localhost:1234")
+lms_download_status(job_id, host = "http://localhost:1234", token = NULL)
 }
 \arguments{
 \item{job_id}{Character. The unique identifier for the download job.}
 
 \item{host}{Character. The host address of the local server. Defaults to
 "http://localhost:1234".}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 An object of class \code{lms_download_status} containing the download

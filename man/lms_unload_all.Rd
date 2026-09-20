@@ -4,7 +4,7 @@
 \alias{lms_unload_all}
 \title{Unload all models from memory}
 \usage{
-lms_unload_all(host = "http://localhost:1234", ...)
+lms_unload_all(host = "http://localhost:1234", ..., token = NULL)
 }
 \arguments{
 \item{host}{Character. The host address of the local server. Defaults to
@@ -12,6 +12,10 @@ lms_unload_all(host = "http://localhost:1234", ...)
 
 \item{...}{Additional arguments passed to the API request body for each
 unload request.}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 Invisibly returns a character vector of the \code{instance_id}s that

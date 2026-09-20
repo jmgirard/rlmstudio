@@ -70,15 +70,58 @@ local_request_recorder <- function(
 # carries no body. Every request this package sends has a JSON body, so the
 # parse is safe here; a request whose body is not JSON would fail the parse.
 #
-# req_dry_run() needs httpuv, which is a suggested package, so a machine
-# without it skips the calling test rather than failing it.
+# Decide what a test should do when httpuv is missing. req_dry_run() needs
+# httpuv, which is a suggested package, so a bare machine skips the calling
+# test rather than failing it. Under CI httpuv is expected to be there, so a
+# skip would let every assertion that reads a request pass by not running, and
+# nobody would see it. The check workflows install Suggests, which lists
+# httpuv; the headless workflow gets it through devtools instead, so a change
+# to either one can take it away silently. Failing is what makes that visible.
+# Returns one of "run", "fail", or "skip".
+#
+# Both inputs are arguments so a test can drive either branch without mocking
+# requireNamespace() or setting a variable for the whole session.
+httpuv_absence_action <- function(
+  installed = requireNamespace("httpuv", quietly = TRUE),
+  ci = Sys.getenv("CI")
+) {
+  if (isTRUE(installed)) {
+    return("run")
+  }
+  if (nzchar(ci)) {
+    return("fail")
+  }
+  "skip"
+}
+
+# Act on the decision above. Returns invisibly when the caller may proceed,
+# raises when httpuv is missing under CI, and skips the calling test otherwise.
+require_httpuv <- function(action = httpuv_absence_action()) {
+  if (identical(action, "run")) {
+    return(invisible(TRUE))
+  }
+  if (identical(action, "fail")) {
+    stop(
+      "httpuv is not installed and CI is set. ",
+      "Every request assertion would pass by not running.",
+      call. = FALSE
+    )
+  }
+  testthat::skip("httpuv is not installed")
+}
+
+# `headers` is the request's headers as they go over the wire, read with
+# redaction turned off so an assertion can see an Authorization value. Names
+# arrive lowercased, so read `headers$authorization` rather than the sent
+# spelling.
 request_target <- function(req) {
-  testthat::skip_if_not_installed("httpuv")
-  out <- httr2::req_dry_run(req, quiet = TRUE)
+  require_httpuv()
+  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
   list(
     method = out$method,
     path = out$path,
     host = out$headers$host,
+    headers = out$headers,
     body = if (length(out$body) == 0L) {
       NULL
     } else {

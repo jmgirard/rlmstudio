@@ -68,6 +68,11 @@ reference:
       - check_lms_version
       - lms_path
 
+  - title: "Authentication"
+    desc: "How to send an API token to a server that requires one."
+    contents:
+      - rlmstudio_token
+
   - title: "Error Conditions"
     desc: "The condition classes that the REST API functions raise, and how to catch them."
     contents:

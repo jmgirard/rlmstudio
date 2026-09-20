@@ -4,6 +4,9 @@
 #'   instance to unload.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param ... Additional arguments passed to the API request body.
 #'
 #' @note If you have loaded multiple instances of the same model using
@@ -34,7 +37,12 @@
 #' # Unload a single specific model
 #' lms_unload("google/gemma-3-1b")
 #' }
-lms_unload <- function(model, host = "http://localhost:1234", ...) {
+lms_unload <- function(
+  model,
+  host = "http://localhost:1234",
+  ...,
+  token = NULL
+) {
   stop_if_no_server(host)
 
   # Build body and merge extra args from dots
@@ -45,7 +53,7 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
     msg_done = "Model {.val {model}} unloaded successfully."
   )
 
-  resp <- lms_client(host) |>
+  resp <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/models/unload") |>
     httr2::req_body_json(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
@@ -55,7 +63,7 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
     return(invisible(model))
   }
 
-  rlm_abort_api(resp, "API Unload Failed")
+  rlm_abort_api(resp, "API Unload Failed", !is.null(rlm_token(token)))
 }
 
 #' Unload all models from memory
@@ -64,6 +72,9 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #'
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param ... Additional arguments passed to the API request body for each
 #'   unload request.
 #'
@@ -93,7 +104,7 @@ lms_unload <- function(model, host = "http://localhost:1234", ...) {
 #' # Unload all currently loaded models to clear VRAM
 #' lms_unload_all()
 #' }
-lms_unload_all <- function(host = "http://localhost:1234", ...) {
+lms_unload_all <- function(host = "http://localhost:1234", ..., token = NULL) {
   stop_if_no_server(host)
 
   # Fetch currently active models
@@ -101,7 +112,8 @@ lms_unload_all <- function(host = "http://localhost:1234", ...) {
     loaded = TRUE,
     detailed = TRUE,
     quiet = TRUE,
-    host = host
+    host = host,
+    token = token
   )
 
   # Check if there is anything to unload
@@ -140,7 +152,7 @@ lms_unload_all <- function(host = "http://localhost:1234", ...) {
 
   # Loop through and unload each specific instance
   for (instance_id in loaded_keys) {
-    lms_unload(model = instance_id, host = host, ...)
+    lms_unload(model = instance_id, host = host, ..., token = token)
   }
 
   rlm_alert_success("All models unloaded successfully.")

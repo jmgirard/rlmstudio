@@ -69,18 +69,55 @@ api_error_message <- function(resp) {
 #' an API failure by class, and a `status` field holding the response status as
 #' an integer.
 #'
+#' A response with status 401 or 403 means the server refused the call on
+#' authentication grounds, so the abort adds a hint. The hint that fits depends
+#' on whether the request carried a token, which is why the caller reports it.
+#' The caller reports a flag rather than the token itself, so the value never
+#' reaches the function that builds the user-facing message.
+#'
 #' @param resp An httr2 response the caller has decided to abort on.
 #' @param label Character. The calling wrapper's own label, which opens the
 #'   message.
+#' @param token_sent Logical. Whether the request that produced `resp` carried
+#'   an API token.
 #' @return Never returns. Always aborts.
 #'
 #' @noRd
-rlm_abort_api <- function(resp, label) {
+rlm_abort_api <- function(resp, label, token_sent = FALSE) {
   msg <- api_error_message(resp)
+  status <- as.integer(httr2::resp_status(resp))
+
+  body <- c("x" = "{label}: {msg}")
+  if (status %in% c(401L, 403L)) {
+    body <- c(body, "i" = api_error_hint(token_sent))
+  }
+
   cli::cli_abort(
-    c("x" = "{label}: {msg}"),
+    body,
     class = "rlmstudio_api_error",
-    status = as.integer(httr2::resp_status(resp)),
+    status = status,
     call = NULL
+  )
+}
+
+#' The hint text for a rejected call
+#'
+#' Kept apart from the abort so a test can read the two wordings without
+#' raising, and so neither wording can pick up a token value by accident. The
+#' flag is the only input, so nothing here can reach a token.
+#'
+#' @param token_sent Logical. Whether the request carried an API token.
+#' @return One character string. The `FALSE` branch carries cli markup, so a
+#'   caller that does not interpolate it through cli reads the braces as text.
+#'   `rlm_abort_api()` hands it to `cli::cli_abort()`, which does interpolate.
+#'
+#' @noRd
+api_error_hint <- function(token_sent) {
+  if (isTRUE(token_sent)) {
+    return("The server rejected the API token that was sent.")
+  }
+  paste(
+    "Set the {.envvar RLMSTUDIO_API_TOKEN} environment variable",
+    "or pass the {.arg token} argument to send an API token."
   )
 }

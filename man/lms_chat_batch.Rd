@@ -12,7 +12,8 @@ lms_chat_batch(
   host = "http://localhost:1234",
   simplify = TRUE,
   quiet = FALSE,
-  ...
+  ...,
+  token = NULL
 )
 }
 \arguments{
@@ -31,6 +32,10 @@ lms_chat_batch(
 \item{quiet}{Logical. Whether to suppress the progress bar.}
 
 \item{...}{Additional arguments passed to \code{lms_chat}.}
+
+\item{token}{Character or \code{NULL}. An API token for a server that requires
+authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
+\code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 }
 \value{
 The return type depends on the \code{format} argument:

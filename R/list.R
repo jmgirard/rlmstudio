@@ -13,6 +13,9 @@
 #'   messages. Defaults to \code{FALSE}. Does not suppress the abort raised
 #'   when the server is not running.
 #' @param host Character. The host address of the local server.
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #'
 #' @seealso [LM Studio List Models
 #'   API](https://lmstudio.ai/docs/developer/rest/list)
@@ -49,17 +52,18 @@ list_models <- function(
   type = c("llm", "embedding"),
   detailed = FALSE,
   quiet = FALSE,
-  host = "http://localhost:1234"
+  host = "http://localhost:1234",
+  token = NULL
 ) {
   stop_if_no_server(host)
 
-  resp <- lms_client(host) |>
+  resp <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/models") |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
   if (httr2::resp_status(resp) != 200) {
-    rlm_abort_api(resp, "API List Failed")
+    rlm_abort_api(resp, "API List Failed", !is.null(rlm_token(token)))
   }
 
   raw_content <- httr2::resp_body_string(resp)
