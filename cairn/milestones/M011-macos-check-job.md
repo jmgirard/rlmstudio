@@ -91,6 +91,7 @@ once this lands. Unifying the four workflow files stays a candidate row.
 - 2026-09-20: claim audit: not owed, internal tier.
 - 2026-09-20: the writing lint counts the five empty header slots as violations. `cairn_validate` requires that character in them. The validator is the machine reader and wins, as recorded in M010.
 - 2026-09-20: review checkpoint, partial. AC3, AC4, and AC5 verified against fresh evidence and ticked. AC1 and AC2 stay unticked and wait on the pull request's macOS job. The consistency gate is green. The independent review is still running.
+- 2026-09-20: step-7 approval: m011-macos-check-job approved for merge.
 - 2026-09-20: review checkpoint. Three lenses ran. Two returned no findings. The diff-bug lens returned six, none of them a floor return. Four were fixed now in the workflow comment and the hosts lines, one was rejected as a duplicate of an existing candidate row, and one was noted. Status stays `review`.
 
 ## Decisions
