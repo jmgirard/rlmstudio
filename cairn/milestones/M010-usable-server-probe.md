@@ -139,6 +139,8 @@ rows.
 
 - 2026-09-20: resumed at the review gate. PR #11 is OPEN, `origin/main` had not moved past the merge already on this branch, so every criterion was re-executed at the branch head and recorded in the Review section. The PR conversation read was empty.
 
+- 2026-09-20: step-7 approval: m010-usable-server-probe approved for merge
+
 ## Decisions
 
 ## Review
