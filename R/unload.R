@@ -37,7 +37,12 @@
 #' # Unload a single specific model
 #' lms_unload("google/gemma-3-1b")
 #' }
-lms_unload <- function(model, host = "http://localhost:1234", ..., token = NULL) {
+lms_unload <- function(
+  model,
+  host = "http://localhost:1234",
+  ...,
+  token = NULL
+) {
   stop_if_no_server(host)
 
   # Build body and merge extra args from dots

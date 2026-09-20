@@ -37,6 +37,36 @@ test_that("rlm_token() returns NULL when no source is set", {
   expect_null(rlm_token())
 })
 
+test_that("rlm_token() aborts on a token argument of the wrong shape", {
+  # Falling through would discard a token the caller meant to send and reach
+  # for a different source. Ambient state holds a token here, so a fall-through
+  # returns that value instead of raising, which is what these cases catch.
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = "from-the-variable")
+  withr::local_options(rlmstudio.token = NULL)
+
+  expect_error(rlm_token(c("one", "two")), "must be one character string")
+  expect_error(rlm_token(123), "must be one character string")
+  expect_error(rlm_token(NA_character_), "must be one character string")
+  expect_error(rlm_token(list("one")), "must be one character string")
+
+  # The two shapes that stay legal. NULL is the default, and an empty string
+  # is documented as unset, so both fall through to the variable.
+  expect_identical(rlm_token(NULL), "from-the-variable")
+  expect_identical(rlm_token(""), "from-the-variable")
+})
+
+test_that("a wrapper passes a wrong-shaped token argument through to the abort", {
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = "from-the-variable")
+  withr::local_options(rlmstudio.token = NULL)
+
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  expect_error(
+    list_models(quiet = TRUE, token = c("one", "two")),
+    "must be one character string"
+  )
+})
+
 test_that("lms_client() sends a bearer token when one resolves", {
   withr::local_envvar(RLMSTUDIO_API_TOKEN = "")
   withr::local_options(rlmstudio.token = NULL)

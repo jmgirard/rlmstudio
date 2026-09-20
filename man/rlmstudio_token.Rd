@@ -21,14 +21,23 @@ A function reads three sources and uses the first one that holds a value.
 }
 
 When none of the three holds a value, the request carries no \code{Authorization}
-header. A source that is \code{NULL} or an empty string counts as unset.
+header. A source that is \code{NULL} or an empty string counts as unset. A
+\code{token} argument of any other shape, such as a vector of two strings or a
+number, aborts rather than falling through to the next source.
 }
 
 \section{Keeping the token out of your output}{
 
 The header is set with \code{\link[httr2:req_auth_bearer_token]{httr2::req_auth_bearer_token()}}, which marks it as
 redacted. Printing a request shows \verb{<REDACTED>} in place of the value, and
-the abort message of a failed call never carries the value.
+this package never puts the value into the message of a failed call.
+
+Two things this package does not control can still show the value. The
+message of a failed call repeats the text the server sent, so a server that
+echoes the token back puts it there. An R error also prints a backtrace,
+which repeats your own calling line, so a token you write as a literal
+appears in it. Read the token from an environment variable to keep it out
+of both.
 }
 
 \section{When the server rejects the call}{

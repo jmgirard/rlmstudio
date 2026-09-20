@@ -107,7 +107,9 @@ rlm_abort_api <- function(resp, label, token_sent = FALSE) {
 #' flag is the only input, so nothing here can reach a token.
 #'
 #' @param token_sent Logical. Whether the request carried an API token.
-#' @return One character string.
+#' @return One character string. The `FALSE` branch carries cli markup, so a
+#'   caller that does not interpolate it through cli reads the braces as text.
+#'   `rlm_abort_api()` hands it to `cli::cli_abort()`, which does interpolate.
 #'
 #' @noRd
 api_error_hint <- function(token_sent) {
