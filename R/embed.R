@@ -72,9 +72,10 @@ lms_embed <- function(
     return(resp_data)
   }
 
-  # The count comes from the body that was actually sent, not from the `input`
-  # argument, so a caller who overrides `input` through `...` is still checked
-  # against what the server was asked for.
+  # The count comes from the body that was actually sent rather than from the
+  # `input` argument. R rejects a call that names `input` twice, so today the
+  # two are always the same length; reading the body keeps them the same if a
+  # later change ever puts the inputs together some other way.
   embed_matrix(resp_data, length(body$input), resp)
 }
 
@@ -113,8 +114,16 @@ is_one_number <- function(x) {
 #'
 #' @noRd
 embed_matrix <- function(resp_data, n, resp) {
+  # Resolve the detail here rather than in the abort helper. cli interpolates
+  # the braces of the string it is handed, and not the braces of a value
+  # spliced into it, so a detail built in this frame has to be formatted in
+  # this frame or it reaches the user with its braces intact.
   fail <- function(detail) {
-    rlm_abort_bad_response(resp, "Embeddings Failed", detail)
+    rlm_abort_bad_response(
+      resp,
+      "Embeddings Failed",
+      cli::format_inline(detail, .envir = parent.frame())
+    )
   }
 
   data <- resp_data$data
