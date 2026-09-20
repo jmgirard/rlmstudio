@@ -132,6 +132,40 @@ test_that("a single input returns a matrix and not a vector", {
 })
 
 
+test_that("a response recorded from a live server builds the matrix", {
+  # The cassette in embed_live/ was recorded against a real LM Studio server
+  # running text-embedding-nomic-embed-text-v1.5. Regenerate it with
+  # data-raw/record-embed-cassette.R, which carries the full provenance.
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  httptest2::with_mock_dir("embed_live", {
+    out <- lms_embed(
+      model = "text-embedding-nomic-embed-text-v1.5",
+      input = c(
+        "the first document",
+        "the second document",
+        "the third document"
+      ),
+      host = "http://localhost:1234"
+    )
+
+    expect_true(is.matrix(out))
+    expect_type(out, "double")
+    expect_equal(dim(out), c(3L, 768L))
+    expect_null(dimnames(out))
+
+    # Read off the recorded body: the first number of the element whose index
+    # is 0. It is fractional, so a coercion that lost the fraction would show.
+    expect_equal(out[1, 1], 0.014852429740130901)
+
+    # Three different texts give three different vectors, so the matrix is not
+    # one row copied across.
+    expect_false(isTRUE(all.equal(out[1, ], out[2, ])))
+    expect_false(isTRUE(all.equal(out[2, ], out[3, ])))
+  })
+})
+
+
 # simplify = FALSE ----------------------------------------------------------
 
 test_that("simplify = FALSE returns the parsed body unchanged", {

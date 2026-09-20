@@ -110,7 +110,7 @@ on `/v1/chat/completions` → the existing candidate row.
       `local_request_recorder()` in `tests/testthat/helper-mock-http.R`: the
       request shape at n = 3 and n = 1, the permutation, `simplify = FALSE`,
       the two condition classes, the eleven AC6 probes, and the input contract.
-- [ ] T5: Record the happy-path cassette. Load an embedding model, run one
+- [x] T5: Record the happy-path cassette. Load an embedding model, run one
       `lms_embed()` call under `httptest2::with_mock_dir()`, and commit the
       cassette with a `data-raw/` generator naming the model, the host, and the
       date, per the fixture-provenance rule in `cairn/PROFILE.md`.
@@ -138,6 +138,8 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: T4 done. `tests/testthat/test-embed.R` runs 84 expectations. Writing it found two defects. The detail clause reached the user with its cli braces intact. cli does not interpolate a value spliced into a message, so `embed_matrix()` now formats the clause in its own frame. The gate answer about counting the sent inputs rests on a false premise: `input` is a formal argument, so R rejects a call naming it twice and the dots can never override it. The body-derived count is kept as the safer read and a test now pins the R behavior.
 - 2026-09-20: check discrimination for T4. Planted `input = input` in place of `as.list(input)` and the single-input array test went red. Planted `out[i, ]` in place of the index placement and the three permutation expectations went red. Both were restored and the suite is green at 399 pass and 0 fail.
 - 2026-09-20: T6 and T7 done. The token wrapper table now carries `lms_embed` and the name list runs to thirteen. `_pkgdown.yml` gained an Embeddings title, `NEWS.md` gained three entries in user-facing words, and the `/v1/embeddings` row of the API surface page now names the wrapper. `pkgdown::check_pkgdown()` found no problems and the suite gave 405 pass and 0 fail.
+- 2026-09-20: T5 done. The cassette in `tests/testthat/embed_live/` was recorded against a live server running text-embedding-nomic-embed-text-v1.5, with `data-raw/record-embed-cassette.R` as its generator and provenance. It holds three in-order elements of 768 fractional numbers each. It carries no request header and no token. A grep for the token value over the file found nothing. The test reads it with the server stopped and the token unset, and passes.
+- 2026-09-20: LM Studio ignores the `dimensions` field on `/v1/embeddings`. A request asking for 5 came back with 768. AC2 asks for a cassette of five dimensions, which no live recording can give, so the wording goes to the amendment gate.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
 
 ## Decisions
