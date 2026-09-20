@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M010: The package can tell a usable LM Studio server from an open port
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -130,7 +130,12 @@ rows.
 - 2026-09-20: `cairn_validate` wants `—` in the Driving RR slot, so the three header slots keep their em-dashes. The writing lint counts them as violations. The validator is the machine reader and wins.
 - 2026-09-20: resumed. M011 merged the macOS dependency fix to the default branch, so the blocker cleared.
 - 2026-09-20: merged the default branch into this one at b6c8844. One conflict, in `cairn/ROADMAP.md`. Kept M011's done row. Dropped the macOS mirror candidate row that M011 resolved. Kept this branch's corrected token-table count and its three new candidate rows.
+- 2026-09-20: claim audit: 65 claims read, 1 corrected — R/conditions.R, man/ (12 files)
+- 2026-09-20: the branch gained lines outside `cairn/` after the first claim audit, so a second fresh reader ran over the whole branch diff. One claim was wrong. The narrowed "Server not running" section said the condition is raised for a connection that has not opened within half a second.
+- 2026-09-20: `is_server_running()` passes `timeout = 0.5` to `socketConnection()`, and that argument does not bound the TCP connect. Measured against 10.255.255.1, a routable address that drops the attempt: the call returned FALSE after 60.01 seconds. The section now says the operating system decides that case and it can take a minute.
 - 2026-09-20: re-verified after the merge. `devtools::document()` left no diff. `devtools::test()` reported FAIL 0, WARN 0, SKIP 0, PASS 315. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes twice. The first run had the LM Studio server down. For the second run the server was up and answered 401 with code `invalid_api_key`. The calling environment set no `RLMSTUDIO_API_TOKEN` in either run.
+- 2026-09-20: re-verified again after the help-page correction. `devtools::document()` regenerated twelve man pages and then left no further diff. `devtools::test()` reported FAIL 0, WARN 0, SKIP 0, PASS 315. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes. A `curl` immediately before that run answered 401. The three clauses AC3 names are all still in the rendered page.
+- 2026-09-20: status moved to review. Every task is checked and the local checks are clean.
 
 ## Decisions
 

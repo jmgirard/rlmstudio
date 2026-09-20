@@ -9,7 +9,7 @@ _Last hygiene pass: 2026-09-20 (M011 archived and set done, M007 pruned under te
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M010 | The package can tell a usable LM Studio server from an open port | in-progress | none | high | milestones/M010-usable-server-probe.md |
+| M010 | The package can tell a usable LM Studio server from an open port | review | none | high | milestones/M010-usable-server-probe.md |
 | M011 | The macOS check job installs its dependencies again | done | none | high | milestones/archive/M011-macos-check-job.md |
 | M009 | The package can authenticate to LM Studio | done | none | high | milestones/archive/M009-api-token-auth.md |
 | M008 | Tests that fail on the branch they name | done | none | normal | milestones/archive/M008-test-discrimination.md |

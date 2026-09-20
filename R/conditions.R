@@ -9,10 +9,12 @@
 #' Functions that call the LM Studio REST API first open a TCP connection to
 #' the hostname and port named in `host`. A condition of class
 #' `rlmstudio_no_server` is raised when that connection cannot be opened. A
-#' refused connection raises it. So do an address the package cannot parse, a
-#' hostname that does not resolve, and a connection that has not opened within
-#' half a second. Start the server with [lms_server_start()], or give `host`
-#' the address that your server listens on.
+#' refused connection raises it. So do an address the package cannot parse and
+#' a hostname that does not resolve. An address that neither accepts nor
+#' refuses the connection also raises it. That case waits for the operating
+#' system to give up, which can take a minute. Start the server with
+#' [lms_server_start()], or give `host` the address that your server listens
+#' on.
 #'
 #' The check reads the port and nothing else. Any process holding that port
 #' accepts the connection, so the condition is not raised even though no LM
