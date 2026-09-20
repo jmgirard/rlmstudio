@@ -1,6 +1,6 @@
 # M009: The package can authenticate to LM Studio
 
-- **Status:** blocked
+- **Status:** in-progress
 - **Branch:** m009-api-token-auth
 - **Priority:** high
 - **Depends on:** none
@@ -46,7 +46,7 @@ Every exported function that reaches the LM Studio REST API can send an API toke
 - [x] T5: Test that `print()` of a token-carrying request does not contain the token string. Test that the abort message of a failure raised from such a request does not contain it either.
 - [x] T6: Give `rlm_abort_api()` (`R/utils-api-error.R:80`) a third argument carrying the token that was used. Pass it from the eight abort sites. Add the status-conditional hint. Test 401 and 403 with a token and without one, and test 400 as the silent control.
 - [x] T7: Write the `rlmstudio_token` doc-only topic with `@name` and `@aliases`. M007 found that a doc-only topic is reachable only under its `@name`. Add `@param token` to the eleven help pages. Add the pkgdown row beside `rlmstudio-conditions`. Write the `NEWS.md` entry. Run `devtools::document()`.
-- [ ] T8: Run the six AC6 cases against a live LM Studio with authentication enabled. Record the commands and their output in the Review section.
+- [x] T8: Run the six AC6 cases against a live LM Studio with authentication enabled. Record the commands and their output in the Review section.
 
 ## Work log
 
@@ -72,6 +72,10 @@ Every exported function that reaches the LM Studio REST API can send an API toke
 - 2026-09-20: minor reorder. The `rlmstudio_token` topic and the eleven `@param token` lines moved from T7 into T2, because `devtools::document()` reports an unresolved link until the topic exists. T7 keeps the pkgdown row and the NEWS entry.
 - 2026-09-20: claim audit: 58 claims read, 0 corrected — NEWS.md, R/token.R, R/utils-api-error.R, R/chat.R, R/download.R, R/list.R, R/load.R, R/unload.R, pkgdown/_pkgdown.yml, tests/testthat/helper-mock-http.R, tests/testthat/test-token.R, tests/testthat/test-token-wrappers.R, tests/testthat/test-token-rejected.R, tests/testthat/test-mock-http-helper.R.
 - 2026-09-20: the claim audit raised two prose items that were accurate but weak. The `api_error_hint()` comment named a test that did not exist, so the test was written. The httpuv comment said CI installs httpuv. That holds through Suggests on the two R CMD check workflows, and only through devtools on the headless one. The comment now says so. Suite 274 pass, 0 fail. `devtools::check()` reports 0 errors, 0 warnings, 0 notes.
+- 2026-09-20: T8 done. All six AC6 cases pass against a live LM Studio server with authentication on. Before the run, the server was seen to reject an unauthenticated call with 401 and to accept a bearer token with 200. `list_models()` and `lms_chat_native()` each succeeded with the token in `RLMSTUDIO_API_TOKEN`. Each succeeded again with the token passed as the argument. When no token resolved, each aborted with class `rlmstudio_api_error` and status 401. The no-token cases pinned ambient state with `withr`. The same run's successful cases show the server was answering, so the two 401 results are not a server-down artifact.
+- 2026-09-20: minor deviation on T8. The task said to record the run in the Review section. That section belongs to `/milestone-review` alone, so the outcome is recorded here instead. Review produces its own fresh evidence for AC6 in any case.
+- 2026-09-20: the live run needed two changes to the machine. The local server was started on port 1234. The only model on disk was an embedding model, and `lms_chat_native()` needs an LLM, so `google/gemma-3-1b` was downloaded. The user chose that model at a gate.
+- 2026-09-20: `devtools::check()` now fails on this machine. Both vignettes start the server and make live API calls while they build. With authentication on, those calls get 401. The package reads `RLMSTUDIO_API_TOKEN` on its own, so the vignettes build when that variable is set. The user chose to re-supply the token and run the check with it set. That run is still owed.
 - 2026-09-20: blocked on T8. The six live cases need an LM Studio server with authentication enabled. Nothing answers on `http://localhost:1234` in this session, and `lms` is not on the PATH. Turning on authentication and issuing a token are both actions in the LM Studio app. The user chose to mark the milestone blocked rather than start a server now.
 
 ## Decisions
