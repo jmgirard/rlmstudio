@@ -1,6 +1,6 @@
 # M012: The package can turn text into embedding vectors
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -193,6 +193,9 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: T13 done. The body parse sits inside a `tryCatch()` and a failed parse aborts with `rlmstudio_bad_response`. `rlm_abort_bad_response()` gained a `hint` argument, and this caller passes its own, because the parse runs before the `simplify` branch and the standing advice cannot help. Three probes cover an HTML page, an unparseable body, and the same body under `simplify = FALSE`. Removing the guard turned them red.
 - 2026-09-20: the four new tasks pushed the plan-owned sections to 163 lines against a cap of 150, so the Tasks section was compressed in one pass. The sizing tripwire now reads 15 tasks. Kept as one milestone for the reason already recorded: every task past T7 is a repair the review returned, and each belongs to the criterion it repairs.
 - 2026-09-20: T14 and T15 done. The input count is read by exact name. A `data` block of the wrong JSON type now says so rather than claiming there is no block. `NEWS.md` names the two faults it left out. The cassette generator checks its three packages and names them, rather than declaring a development tool in DESCRIPTION for a directory that never ships. The `model` candidate row is on the ROADMAP. The `verify` slot ran clean: document() gave no diff and test() gave 475 pass and 0 fail.
+
+- 2026-09-20: claim audit: 41 claims read, 2 corrected — NEWS.md, R/conditions.R. Both stated the same false thing, in the changelog and on the condition help page. Each said every message of this class names `simplify = FALSE`. T13 made that untrue, because the parse failure passes its own hint and a test asserts the absence. Both now name the exception. The reader also checked the three counting claims and found them right. It did not test the two claims about what LM Studio does with `dimensions` and with `encoding_format`, because that needs a live server.
+- 2026-09-20: the second return is repaired and the status goes back to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 475 pass and 0 fail.
 
 ## Decisions
 

@@ -56,7 +56,9 @@ The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: the one function that
 raises this condition reads the body only after a 200, and reports every
 other status as an \code{rlmstudio_api_error} instead. The message names the
-argument that returns the body unchanged, so you can read what arrived.
+argument that returns the body unchanged, so you can read what arrived,
+except when the body did not parse at all: that check runs before the
+argument is read, so its message points at the host instead.
 }
 
 \examples{

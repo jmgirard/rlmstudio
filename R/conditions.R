@@ -44,7 +44,9 @@
 #' status as an integer. Today the status is always 200: the one function that
 #' raises this condition reads the body only after a 200, and reports every
 #' other status as an `rlmstudio_api_error` instead. The message names the
-#' argument that returns the body unchanged, so you can read what arrived.
+#' argument that returns the body unchanged, so you can read what arrived,
+#' except when the body did not parse at all: that check runs before the
+#' argument is read, so its message points at the host instead.
 #'
 #' @name rlmstudio-conditions
 #' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response
