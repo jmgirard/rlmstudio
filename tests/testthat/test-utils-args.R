@@ -1,8 +1,12 @@
 test_that("rlm_check_id accepts one usable name", {
   expect_invisible(rlm_check_id("qwen3-4b", "model"))
   expect_identical(rlm_check_id("qwen3-4b", "model"), "qwen3-4b")
-  # A name with braces must not reach cli as a format string.
-  expect_identical(rlm_check_id("model{x}", "model"), "model{x}")
+  # A name with braces must not reach cli as a format string. The probe has to
+  # be a value that fails, or cli_abort() is never called and nothing is proved.
+  expect_error(
+    rlm_check_id(c("model{x}", "other"), "model"),
+    "2 values rather than one"
+  )
 })
 
 test_that("rlm_check_id names the argument and the rule for every fault", {

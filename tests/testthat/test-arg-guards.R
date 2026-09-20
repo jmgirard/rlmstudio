@@ -54,7 +54,9 @@ baseline_args <- function(name, table = arg_placeholders) {
 }
 
 # Force the server probe to succeed and make any request raise. What is left is
-# the guard: an abort that names the argument can only have come from it.
+# the guard: an abort carrying one of its details can only have come from it.
+# The one exception is the omitted-argument test below, whose abort is R's own
+# missing-argument error, raised when the guard forces the promise.
 local_guard_only <- function(.env = parent.frame()) {
   testthat::local_mocked_bindings(
     is_server_running = function(...) TRUE,
