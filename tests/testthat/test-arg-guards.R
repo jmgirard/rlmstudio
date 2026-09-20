@@ -175,3 +175,99 @@ test_that("omitting the guarded identifier aborts with a message naming it", {
     )
   }
 })
+
+# The split between the two text rules is what the plan gate settled, so it is
+# written out here. The enumeration above is what catches a sixth function
+# arriving with an `input` formal: its domain assertion turns red.
+strict_text <- list(
+  lms_embed = "input",
+  lms_chat_batch = "inputs"
+)
+loose_text <- list(
+  lms_chat = "input",
+  lms_chat_openresponses = "input",
+  lms_chat_native = "input"
+)
+
+test_that("the two text rules together cover the whole text domain", {
+  expect_setequal(
+    c(names(strict_text), names(loose_text)),
+    guarded_exports(c("input", "inputs"))
+  )
+})
+
+test_that("a text vector argument must be a non-empty character vector", {
+  local_guard_only()
+
+  for (name in names(strict_text)) {
+    fn <- get(name, envir = asNamespace("rlmstudio"))
+    target <- strict_text[[name]]
+    args <- baseline_args(name)
+
+    for (bad_value in list(1:3, list("a"), TRUE, character(0), NULL)) {
+      bad <- args
+      bad[target] <- list(bad_value)
+      expect_error(
+        do.call(fn, bad),
+        "non-empty character vector",
+        info = paste(name, "with", class(bad_value)[[1]])
+      )
+      expect_error(do.call(fn, bad), target, info = name)
+    }
+  }
+})
+
+test_that("an NA anywhere in a text vector argument aborts", {
+  local_guard_only()
+
+  na_probes <- list(
+    list(label = "alone", value = NA_character_, match = "1 NA value\\."),
+    list(label = "first", value = c(NA, "b", "c"), match = "1 NA value\\."),
+    list(label = "middle", value = c("a", NA, "c"), match = "1 NA value\\."),
+    list(label = "last", value = c("a", "b", NA), match = "1 NA value\\."),
+    list(
+      label = "all",
+      value = c(NA_character_, NA_character_),
+      match = "2 NA values\\."
+    )
+  )
+
+  for (name in c(names(strict_text), names(loose_text))) {
+    fn <- get(name, envir = asNamespace("rlmstudio"))
+    target <- c(strict_text, loose_text)[[name]]
+    args <- baseline_args(name)
+
+    for (probe in na_probes) {
+      bad <- args
+      bad[target] <- list(probe$value)
+      expect_error(
+        do.call(fn, bad),
+        probe$match,
+        info = paste(name, "with NA", probe$label)
+      )
+      expect_error(
+        do.call(fn, bad),
+        target,
+        info = paste(name, "with NA", probe$label, "names the argument")
+      )
+    }
+  }
+})
+
+test_that("the chat wrappers pass a non-character input through to the server", {
+  local_guard_only()
+
+  structured <- list(list(role = "user", content = "a prompt"))
+
+  for (name in names(loose_text)) {
+    fn <- get(name, envir = asNamespace("rlmstudio"))
+    args <- baseline_args(name)
+    args["input"] <- list(structured)
+    # Reaching the request mock is the proof: the guard let the value past.
+    expect_error(
+      do.call(fn, args),
+      "a request left the process",
+      info = paste(name, "with a structured input")
+    )
+  }
+})
