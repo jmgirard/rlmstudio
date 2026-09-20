@@ -38,14 +38,14 @@ once this lands. Unifying the four workflow files stays a candidate row.
 - [ ] AC2: The dependency-install step of that passing job logs no
       `unknown archive type` failure. Evidence: a grep of that job's log for
       that string, returning nothing.
-- [ ] AC3: The diff of this milestone against the default branch changes
+- [x] AC3: The diff of this milestone against the default branch changes
       exactly one file under `.github/workflows/`, and that file is
       `R-CMD-check.yaml`. Evidence: `git diff --name-only <base>...HEAD`
       filtered to that path.
-- [ ] AC4: `.github/workflows/R-CMD-check.yaml` carries a comment naming why
+- [x] AC4: `.github/workflows/R-CMD-check.yaml` carries a comment naming why
       the macOS-only step exists and the condition under which it is removed.
       Evidence: the comment quoted from the file on the merged tree.
-- [ ] AC5: `Rscript -e 'devtools::test()'` and `Rscript -e 'devtools::check()'`
+- [x] AC5: `Rscript -e 'devtools::test()'` and `Rscript -e 'devtools::check()'`
       are clean on the branch. Evidence: the reported failure, error, warning,
       and note counts.
 
@@ -90,7 +90,45 @@ once this lands. Unifying the four workflow files stays a candidate row.
 - 2026-09-20: minor amendment. T3 reworded. The local checks stay with implement. The pull request evidence for AC1 and AC2 is read at the review gate, as the trigger line above already recorded. No criterion, scope, or task count changed.
 - 2026-09-20: claim audit: not owed, internal tier.
 - 2026-09-20: the writing lint counts the five empty header slots as violations. `cairn_validate` requires that character in them. The validator is the machine reader and wins, as recorded in M010.
+- 2026-09-20: review checkpoint, partial. AC3, AC4, and AC5 verified against fresh evidence and ticked. AC1 and AC2 stay unticked and wait on the pull request's macOS job. The consistency gate is green. The independent review is still running.
 
 ## Decisions
 
 ## Review
+
+- AC1: pending. The `macos-latest (release)` job runs on the `pull_request`
+  trigger only, and no pull request exists before the review gate. Evidence is
+  read at step 8, from the `gh pr checks` line and its run URL.
+- AC2: pending, for the same reason. The grep of the job log runs against the
+  same run.
+- [x] AC3: `git diff --name-only origin/main...HEAD` returns four paths:
+  `.github/workflows/R-CMD-check.yaml`, `cairn/LESSONS.md`, `cairn/ROADMAP.md`,
+  and `cairn/milestones/M011-macos-check-job.md`. Filtered to
+  `.github/workflows/`, it returns exactly one path, and that path is
+  `R-CMD-check.yaml`. The other three are tracking files.
+- [x] AC4: the file carries both. The cause: CRAN serves its macOS R 4.6
+  binaries as zstd archives under the `.tgz` name, and the pak that
+  `setup-r-dependencies` installs rejects them as `unknown archive type`
+  (`r-lib/pkgdepends#485`). The revert condition, quoted from the file: "Drop
+  this step, and set use-public-rspm back to true, once a released pak extracts
+  zstd."
+- [x] AC5: run on the branch head with `RLMSTUDIO_API_TOKEN` set.
+  `devtools::test()` reports 0 failures, 0 warnings, 0 skips, 281 passes.
+  `devtools::check()` reports 0 errors, 0 warnings, 0 notes, status OK, on
+  rlmstudio 0.2.2.9000.
+
+### Consistency gate
+
+- `cairn_validate.py`: exit 0, all checks passed.
+- `cairn_impact.py`: not run. The milestone touches no DESIGN principle
+  (`Principles touched: —`).
+- `devtools::document()`: produces no diff. The working tree stays clean after
+  the run.
+- Generated files: the diff touches no `R/`, `man/`, `NAMESPACE`, `DESCRIPTION`,
+  or `data/` path, and the no-diff `document()` run confirms no drift.
+- README: `README.Rmd` and `README.md` were last written by the same commit and
+  this diff touches neither, so they stay in sync.
+- pkgdown: no `_pkgdown.yml` in the repo, so `check_pkgdown()` does not apply.
+- `NEWS.md`: no entry owed. The milestone changes one CI workflow and ships no
+  user-visible change.
+- `.Rbuildignore`: no new top-level file, and `check()` reports no notes.
