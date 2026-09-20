@@ -320,3 +320,16 @@ answering 401, and no `RLMSTUDIO_API_TOKEN` in the environment.
 - AC6: `NEWS.md` is unchanged by the fixes and still carries the three entries.
 - Consistency gate: `cairn_validate.py` exits 0 and
   `pkgdown::check_pkgdown()` reports no problems.
+
+### CI on PR #11
+
+Eleven checks passed. One failed: `macos-latest (release)`. The failure is in
+`r-lib/actions/setup-r-dependencies`, inside the `pak` subprocess, before the
+package is built. The log shows `mac.cran.dev` listed as the second source for
+every macOS binary.
+
+The same job is already red on `main`. Run 35522619704 on `main` failed on
+macOS alone while Ubuntu release, Ubuntu devel, Ubuntu oldrel-1, and Windows
+release all passed. The three `main` runs before it passed on every platform.
+This branch did not cause the failure, and the ROADMAP already carries a
+candidate row for the mirror.
