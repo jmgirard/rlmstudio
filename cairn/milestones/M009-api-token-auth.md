@@ -1,6 +1,7 @@
 # M009: The package can authenticate to LM Studio
 
-- **Status:** planned
+- **Status:** in-progress
+- **Branch:** m009-api-token-auth
 - **Priority:** high
 - **Depends on:** none
 - **Driving RR:** —
@@ -38,7 +39,7 @@ Every exported function that reaches the LM Studio REST API can send an API toke
 
 ## Tasks
 
-- [ ] T1: Add a `rlm_token()` resolver and a `token` argument to `lms_client()` (`R/chat.R:469`). Set the header with `httr2::req_auth_bearer_token()`. Test the four resolution states and the two header states. Use a dummy token string, because `redact_headers = FALSE` puts the literal value into failure output.
+- [x] T1: Add a `rlm_token()` resolver and a `token` argument to `lms_client()` (`R/chat.R:469`). Set the header with `httr2::req_auth_bearer_token()`. Test the four resolution states and the two header states. Use a dummy token string, because `redact_headers = FALSE` puts the literal value into failure output.
 - [ ] T2: Add a `token` argument to the eight direct callers of `lms_client()`. They are at `R/chat.R:131`, `R/chat.R:240`, `R/chat.R:305`, `R/list.R:56`, `R/load.R:118`, `R/unload.R:48`, `R/download.R:58`, and `R/download.R:132`. Forward the argument explicitly from the three delegators, `lms_chat()`, `lms_chat_batch()`, and `lms_unload_all()`. Do not let a token ride `...`, because dots go into the request body (GP4). A token there is sent as a body field.
 - [ ] T3: Extend `request_target()` to return the request headers unredacted. When `httpuv` is absent and `CI` is set, make the helper raise rather than skip. CI installs `httpuv`, so neither branch arises there on its own. Split the skip decision into a testable predicate rather than mocking `skip_if_not_installed()`. Test both branches.
 - [ ] T4: Assert the header on every request that each of the eleven functions issues, through the recorder. Two traps apply. `lms_load()` without `force = TRUE` sends two requests (M008). A test that mocks a delegate still passes with the delegating call site deleted (M003). For `lms_chat()`, `lms_chat_batch()`, and `lms_unload_all()`, delete the forwarding line in a scratch copy and make sure that the test goes red.
@@ -56,6 +57,11 @@ Every exported function that reaches the LM Studio REST API can send an API toke
 - 2026-09-19: plan chose `httr2::req_auth_bearer_token()` over `httr2::req_headers()`. A session run showed that it renders as `<REDACTED>` under `print(req)`, and that it yields the literal value only under `redact_headers = FALSE`. Falsified by httr2 dropping that redaction.
 - 2026-09-19: plan chose `RLMSTUDIO_API_TOKEN` over the `LM_API_TOKEN` name that the LM Studio curl examples use, because the package already reads `RLMSTUDIO_LMS_PATH` and `RLMSTUDIO_ALLOW_INSTALL`. Falsified by LM Studio standardizing a client-side variable name.
 - 2026-09-19: criteria audit ran in full mode, in a fresh-context [O] reader, over two rounds. Round one returned six findings. Four were fixed at the plan, and two went to the question gate. Round two ruled the `request_target()` criterion instrument-bound and moved it to T3. It also required AC6 to name its wrappers and its token sources. For the case where a token was sent, it required AC4 to fix the hint behavior.
+- 2026-09-20: /milestone-implement started. Branch m009-api-token-auth cut from main.
+- 2026-09-20: gate chose placing `token` after `...` as a named-only argument over placing it beside `host`. Several functions carry named arguments after `host`, and inserting there shifts their positions. Falsified by evidence that no caller passes those arguments by position.
+- 2026-09-20: gate chose passing a true/false flag to `rlm_abort_api()` over passing the token string. The secret then never enters the function that builds the user-facing message. This narrows T6, which had said the helper carries the token. Falsified by a hint that needs the token value itself.
+- 2026-09-20: gate chose the longer rejected-call hint wording. With no token sent, the hint is `Set the RLMSTUDIO_API_TOKEN environment variable or pass the token argument to send an API token`. With a token sent, it is `The server rejected the API token that was sent`. Status 400 gets no hint. Falsified by a user report that the wording is unclear.
+- 2026-09-20: T1 done. `rlm_token()` added in `R/utils-token.R`, and a `token` argument added to `lms_client()`. The header is set with `httr2::req_auth_bearer_token()`. Eight tests in `tests/testthat/test-token.R`. Dropping the bearer call turns three of them red. Suite 161 pass, 0 fail.
 
 ## Decisions
 

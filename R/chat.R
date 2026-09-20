@@ -454,6 +454,11 @@ lms_chat_batch <- function(
 #'
 #' @param host Character. The host address of the local server.
 #'   Defaults to "http://localhost:1234".
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` falls through to the `rlmstudio.token` option and
+#'   then to the `RLMSTUDIO_API_TOKEN` environment variable. When a token
+#'   resolves, the request carries it as a bearer token in the `Authorization`
+#'   header, which httr2 prints as `<REDACTED>`.
 #'
 #' @return An httr2 request object.
 #'
@@ -466,10 +471,17 @@ lms_chat_batch <- function(
 #' req <- lms_client("http://localhost:1234")
 #' # req is a base httr2 request object that can be further modified
 #' }
-lms_client <- function(host = "http://localhost:1234") {
-  httr2::request(host) |>
+lms_client <- function(host = "http://localhost:1234", token = NULL) {
+  req <- httr2::request(host) |>
     httr2::req_headers(
       "Content-Type" = "application/json",
       "Accept" = "application/json"
     )
+
+  resolved <- rlm_token(token)
+  if (is.null(resolved)) {
+    return(req)
+  }
+
+  httr2::req_auth_bearer_token(req, resolved)
 }
