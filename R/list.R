@@ -63,7 +63,7 @@ list_models <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) != 200) {
-    rlm_abort_api(resp, "API List Failed")
+    rlm_abort_api(resp, "API List Failed", !is.null(rlm_token(token)))
   }
 
   raw_content <- httr2::resp_body_string(resp)

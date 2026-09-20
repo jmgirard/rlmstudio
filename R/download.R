@@ -89,7 +89,7 @@ lms_download <- function(
     return(invisible(TRUE))
   }
 
-  rlm_abort_api(resp, "API Download Failed")
+  rlm_abort_api(resp, "API Download Failed", !is.null(rlm_token(token)))
 }
 
 #' Get the status of a download job
@@ -151,7 +151,7 @@ lms_download_status <- function(
     return(out)
   }
 
-  rlm_abort_api(resp, "API Status Request Failed")
+  rlm_abort_api(resp, "API Status Request Failed", !is.null(rlm_token(token)))
 }
 
 #' Print method for LM Studio download status

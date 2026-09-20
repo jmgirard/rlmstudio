@@ -207,7 +207,7 @@ lms_chat_openresponses <- function(
     return(content$text)
   }
 
-  rlm_abort_api(resp, "OpenResponses Failed")
+  rlm_abort_api(resp, "OpenResponses Failed", !is.null(rlm_token(token)))
 }
 
 #' Chat Completion via OpenAI Compatibility API
@@ -275,7 +275,7 @@ lms_chat_openai <- function(
     return(res_text)
   }
 
-  rlm_abort_api(resp, "OpenAI API Failed")
+  rlm_abort_api(resp, "OpenAI API Failed", !is.null(rlm_token(token)))
 }
 
 #' Chat Completion via Native API
@@ -335,7 +335,7 @@ lms_chat_native <- function(
     return(resp_data$output[[1]]$content)
   }
 
-  rlm_abort_api(resp, "Native API Failed")
+  rlm_abort_api(resp, "Native API Failed", !is.null(rlm_token(token)))
 }
 
 #' Batch Chat Completion with LM Studio

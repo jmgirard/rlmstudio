@@ -58,7 +58,7 @@ lms_unload <- function(model, host = "http://localhost:1234", ..., token = NULL)
     return(invisible(model))
   }
 
-  rlm_abort_api(resp, "API Unload Failed")
+  rlm_abort_api(resp, "API Unload Failed", !is.null(rlm_token(token)))
 }
 
 #' Unload all models from memory

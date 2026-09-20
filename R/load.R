@@ -136,5 +136,5 @@ lms_load <- function(
     }
   }
 
-  rlm_abort_api(resp, "API Load Failed")
+  rlm_abort_api(resp, "API Load Failed", !is.null(rlm_token(token)))
 }
