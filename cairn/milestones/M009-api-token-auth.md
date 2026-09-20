@@ -86,6 +86,8 @@ Every exported function that reaches the LM Studio REST API can send an API toke
 - 2026-09-20: PR #10 opened. Every check passes except `macos-latest (release)`, which fails in `setup-r-dependencies` before the package is built. pak carries `mac.cran.dev` as a secondary source for macOS binaries. That mirror answers 404 for `knitr_1.52` and `xfun_0.61`. pak writes the error page to disk as the archive. Two runs failed the same way. The repo's workflow configures no mirror, so nothing on this branch can fix it.
 - 2026-09-20: the user chose to wait for the mirror to sync rather than merge past the red check or change CI. The merge marker was removed, so a later merge needs a fresh approval. Nothing merged.
 - 2026-09-20: /milestone-review resumed on PR #10, which is open. The default branch had not moved, so the recorded evidence still matches the tree and step 3 was not re-run. `mac.cran.dev` still answers 404 for both files, and CI is unchanged. The PR conversation read came back empty, so the blocking rule did not fire.
+- 2026-09-20: step-7 approval: m009-api-token-auth approved for merge.
+- 2026-09-20: override: merged PR #10 with `macos-latest (release)` red. The job fails in `setup-r-dependencies` and never builds the package. Windows and all three Ubuntu versions are green, and `devtools::check()` on a macOS machine reports 0 errors, 0 warnings, and 0 notes. The user chose the override at the gate, seeing that.
 
 ## Decisions
 
