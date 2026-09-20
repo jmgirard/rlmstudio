@@ -21,8 +21,9 @@ lms_embed(
 
 \item{host}{Character. Server URL.}
 
-\item{simplify}{Logical. If \code{TRUE}, returns a numeric matrix with one row
-per input. If \code{FALSE}, returns the parsed response body unchanged.}
+\item{simplify}{Logical. If \code{TRUE}, the default, returns a numeric matrix
+with one row per input. Any other value returns the parsed response body
+unchanged.}
 
 \item{...}{Additional API arguments (e.g., \code{dimensions},
 \code{encoding_format}).}
@@ -84,9 +85,10 @@ otherwise pair a vector with the wrong text and give back a matrix that is
 silently wrong.
 
 The condition carries a \code{status} field, which holds the HTTP response
-status as an integer. The status is usually 200, because the server did not
-report a failure. The message names the argument that returns the body
-unchanged, so you can read what actually arrived.
+status as an integer. Today the status is always 200: the one function that
+raises this condition reads the body only after a 200, and reports every
+other status as an \code{rlmstudio_api_error} instead. The message names the
+argument that returns the body unchanged, so you can read what arrived.
 }
 
 \examples{

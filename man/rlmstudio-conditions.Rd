@@ -53,9 +53,10 @@ otherwise pair a vector with the wrong text and give back a matrix that is
 silently wrong.
 
 The condition carries a \code{status} field, which holds the HTTP response
-status as an integer. The status is usually 200, because the server did not
-report a failure. The message names the argument that returns the body
-unchanged, so you can read what actually arrived.
+status as an integer. Today the status is always 200: the one function that
+raises this condition reads the body only after a 200, and reports every
+other status as an \code{rlmstudio_api_error} instead. The message names the
+argument that returns the body unchanged, so you can read what arrived.
 }
 
 \examples{

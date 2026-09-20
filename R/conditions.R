@@ -41,9 +41,10 @@
 #' silently wrong.
 #'
 #' The condition carries a `status` field, which holds the HTTP response
-#' status as an integer. The status is usually 200, because the server did not
-#' report a failure. The message names the argument that returns the body
-#' unchanged, so you can read what actually arrived.
+#' status as an integer. Today the status is always 200: the one function that
+#' raises this condition reads the body only after a 200, and reports every
+#' other status as an `rlmstudio_api_error` instead. The message names the
+#' argument that returns the body unchanged, so you can read what arrived.
 #'
 #' @name rlmstudio-conditions
 #' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response

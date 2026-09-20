@@ -8,8 +8,9 @@
 #' @param input Character. The texts to embed. A vector of length `n` returns
 #'   `n` embeddings, in the order given.
 #' @param host Character. Server URL.
-#' @param simplify Logical. If `TRUE`, returns a numeric matrix with one row
-#'   per input. If `FALSE`, returns the parsed response body unchanged.
+#' @param simplify Logical. If `TRUE`, the default, returns a numeric matrix
+#'   with one row per input. Any other value returns the parsed response body
+#'   unchanged.
 #' @param ... Additional API arguments (e.g., `dimensions`,
 #'   `encoding_format`).
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -103,8 +104,9 @@ is_one_number <- function(x) {
 #' pair a vector with the wrong text and corrupt a whole batch without a
 #' message.
 #'
-#' The rows are placed by the `index` field of each element and not by arrival
-#' order, which is what the endpoint's own contract promises.
+#' The rows are placed by the `index` field of each element rather than by
+#' arrival order, so a server that answers out of order still pairs each
+#' vector with its own text.
 #'
 #' @param resp_data List. The parsed response body.
 #' @param n Integer. How many texts the request asked the server to embed.

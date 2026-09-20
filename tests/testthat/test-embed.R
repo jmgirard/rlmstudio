@@ -189,9 +189,10 @@ test_that("a response recorded from a live server builds the matrix", {
     expect_equal(out[1, 1], 0.014852429740130901)
 
     # Three different texts give three different vectors, so the matrix is not
-    # one row copied across.
+    # one row copied across. All three pairs are compared.
     expect_false(isTRUE(all.equal(out[1, ], out[2, ])))
     expect_false(isTRUE(all.equal(out[2, ], out[3, ])))
+    expect_false(isTRUE(all.equal(out[1, ], out[3, ])))
   })
 })
 
@@ -258,10 +259,18 @@ test_that("a failed response aborts with class rlmstudio_api_error", {
 
 # The response check --------------------------------------------------------
 
-# One row per condition the response check rejects. `detail` is the clause the
+# Twelve probes over the eight conditions the response check rejects, with
+# three of them aimed at the not-a-list-of-numbers branch and two at the
+# out-of-range branch. `detail` is the clause the
 # abort must report, so a probe that fired the wrong branch fails rather than
 # passing on the shared class.
 bad_bodies <- list(
+  list(
+    label = "a body with no data block",
+    input = "text",
+    body = '{"object": "list", "model": "test-embed"}',
+    detail = "no data block"
+  ),
   list(
     label = "an embedding sent as a base64 string",
     input = "text",
@@ -360,7 +369,7 @@ for (probe in bad_bodies) {
 }
 
 test_that("the response check stays silent on a block it should accept", {
-  # The passing control for the eleven probes above. It shares their path:
+  # The passing control for the twelve probes above. It shares their path:
   # three inputs, three elements, one index each, one common width. Nothing
   # here is rejected, so the probes above are rejecting on their own defect.
   expect_true(is.matrix(drive_embed(in_order_body, input = three_inputs)$value))

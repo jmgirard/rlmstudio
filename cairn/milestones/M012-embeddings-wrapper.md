@@ -1,6 +1,6 @@
 # M012: The package can turn text into embedding vectors
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -150,6 +150,8 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: re-audit: AC2 (full) — four findings. AC2 and AC6 demanded opposite outcomes for a base64 body reachable through the dots. The dimension count was deferred to whatever the fixture held. The placement promise ran over every n and every arrival order with no procedure enumerating them. No n = 2 permutation probe existed. All four fixed before the text was written.
 - 2026-09-20: re-audit: AC2 (full) — six findings on the fixed text. The case list read as a cross product of nine pairs, six of which do not exist. The n = 1 placement claim rested on no probe. The shape sentence was still universal. The n = 2 probe the amendment named did not exist yet. No criterion covered the absent row and column names. The domain was stated by reference to another criterion rather than in observable terms. All six fixed. This is the second re-entry, so no further reader runs on AC2.
 - 2026-09-20: the amendment added to T4. `expect_embedding_matrix()` asserts the size, the storage mode, the absent names, and every row. All five arrival-order cases run it, and the two n = 2 cases are new. Planting `out[i, ]` again turned the n = 2 out-of-order case red as well as the n = 3 one.
+- 2026-09-20: claim audit: 95 claims read, 6 corrected — NEWS.md, R/conditions.R, R/embed.R, tests/testthat/test-embed.R. The changelog claimed five faults abort where eight branches do, and it omitted the missing-block and fractional-index faults. The condition page said the status is usually 200 where it is always 200. A comment claimed one probe per reject condition while no probe reached the missing-block branch, so a twelfth probe was added. The live-cassette test compared two row pairs and claimed three. The `simplify` help implied two possible values where any value other than TRUE takes the raw path. A comment claimed the endpoint's own contract promises index placement, which nothing in the branch supports. The reader re-read all six and found them accurate.
+- 2026-09-20: all seven tasks done, status to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 436 pass and 0 fail.
 - 2026-09-20: the sizing tripwire fired at 9 acceptance criteria. Kept as one milestone: the only split line runs between the wrapper and its response validator, and shipping the wrapper first would put a silent matrix-corruption path on main for the length of a second milestone. The seven tasks each stay under one session.
 
 ## Decisions
