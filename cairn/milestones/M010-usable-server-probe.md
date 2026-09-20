@@ -2,14 +2,14 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M010: The package can tell a usable LM Studio server from an open port
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
-- **Depends on:** —
-- **Driving RR:** —
+- **Depends on:** none
+- **Driving RR:** none
 - **Principles touched:** GP1, GP3
-- **Resolves:** —
-- **Surface tier:** user-facing — it exports a function, changes two shipped vignettes, and narrows one shipped help page
-- **Branch/PR:** —
+- **Resolves:** none
+- **Surface tier:** user-facing. It exports a function, changes two shipped vignettes, and narrows one shipped help page
+- **Branch/PR:** m010-usable-server-probe
 
 ## Goal
 
@@ -65,12 +65,12 @@ rows.
 
 ## Tasks
 
-- [ ] T1: Write the five failing probe tests in a new
+- [x] T1: Write the five failing probe tests in a new
       `tests/testthat/test-server-ready.R`. Use a bare `serverSocket()` on a
       random high port for the silent listener, per the 2026-09-17 lesson. Use
       the shared recorder in `tests/testthat/helper-mock-http.R` for the three
       HTTP cases, per D-004.
-- [ ] T2: Add `lms_server_ready(host, token, timeout)` to `R/serve.R`. Resolve
+- [x] T2: Add `lms_server_ready(host, token, timeout)` to `R/serve.R`. Resolve
       the token through `rlm_token()`. Send a GET to `api/v1/models` through
       `lms_client()` (R/chat.R). Return `TRUE` only for a 200 whose parsed body
       carries a model list. Catch every error and return `FALSE`.
@@ -97,6 +97,10 @@ rows.
 - 2026-09-20: plan gate chose a new exported probe over an HTTP upgrade to the existing TCP probe. Every REST wrapper calls that probe first and then gains a round trip. A server that requires a token also reads as not running. Falsified by a measurement that puts the extra request near zero next to the call after it.
 - 2026-09-20: plan gate chose a staged audit run over a grep of the vignette chunk headers as the proof of the vignette fix. The grep promises a property of its own output. It also cannot reach the assignment that it quantifies over. Falsified by the maintainer being unable to put LM Studio into the failing state.
 - 2026-09-20: plan gate chose this scope over the embeddings wrapper and over the macOS mirror fix. A fragile package audit taxes the review gate of every later milestone. Falsified by the audit passing today in the token-requiring state.
+- 2026-09-20: implement gate settled three items. If its body carries a `models` JSON array, a 200 reads as ready. An empty array counts. The `timeout` default is 2 seconds. The new function joins the shared token-wrapper table. That table grows from eleven names to twelve.
+- 2026-09-20: T1 wrote eight tests in `tests/testthat/test-server-ready.R`. They cover the five planned cases, an empty model list, a JSON object under the `models` key, and the request target. All eight failed before T2 on `could not find function`.
+- 2026-09-20: T2 added `lms_server_ready(host, timeout, token)` to `R/serve.R`. The token resolves through `lms_client()`. That function calls `rlm_token()`. A malformed `token` therefore aborts and does not read as not ready. Timeout discrimination measured on a silent listener: 0.5 returned FALSE in 0.53 s, 2 returned FALSE in 2.02 s.
+- 2026-09-20: T4's roxygen block and export landed in the T2 commit. The function and its documentation are one edit. T4 keeps the conditions help-page narrowing. Minor reorder, no scope change.
 
 ## Decisions
 

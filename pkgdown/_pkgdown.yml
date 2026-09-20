@@ -51,6 +51,7 @@ reference:
       - lms_server_start
       - lms_server_stop
       - lms_server_status
+      - lms_server_ready
 
   - title: "Headless Daemon Management"
     desc: "Manage the background `llmster` daemon required for headless environments (e.g., remote servers, Docker)."
