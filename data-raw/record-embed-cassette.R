@@ -15,6 +15,21 @@
 # httptest2 records only when the target directory is absent, so the script
 # deletes it first. Only the response bodies are written to disk. No request
 # header, and therefore no API token, reaches the recorded files.
+#
+# The script needs pkgload, httptest2 and withr. httptest2 and withr are in
+# Suggests because the test suite needs them. pkgload is a development tool
+# that only this script uses, and this directory never ships, so it stays out
+# of DESCRIPTION and the script names it here instead.
+
+for (pkg in c("pkgload", "httptest2", "withr")) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    stop(
+      "This script needs the ", pkg, " package. ",
+      "Install it with install.packages(\"", pkg, "\").",
+      call. = FALSE
+    )
+  }
+}
 
 pkgload::load_all(quiet = TRUE)
 

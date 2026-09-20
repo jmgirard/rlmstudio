@@ -117,18 +117,24 @@ rlm_abort_api <- function(resp, label, token_sent = FALSE) {
 #' @param label Character. The calling wrapper's own label, which opens the
 #'   message.
 #' @param detail Character. One clause naming what the body got wrong.
+#' @param hint Character. The advice line that follows the clause. The default
+#'   points at `simplify = FALSE`, which is right for every fault found after
+#'   the body has parsed. A caller whose fault is the parse itself passes its
+#'   own hint, because `simplify = FALSE` cannot help there.
 #' @return Never returns. Always aborts.
 #'
 #' @noRd
-rlm_abort_bad_response <- function(resp, label, detail) {
+rlm_abort_bad_response <- function(
+  resp,
+  label,
+  detail,
+  hint = paste(
+    "The server returned a response this package cannot read.",
+    "Call again with {.code simplify = FALSE} to get the body unchanged."
+  )
+) {
   cli::cli_abort(
-    c(
-      "x" = "{label}: {detail}",
-      "i" = paste(
-        "The server returned a response this package cannot read.",
-        "Call again with {.code simplify = FALSE} to get the body unchanged."
-      )
-    ),
+    c("x" = "{label}: {detail}", "i" = hint),
     class = "rlmstudio_bad_response",
     status = as.integer(httr2::resp_status(resp)),
     call = NULL

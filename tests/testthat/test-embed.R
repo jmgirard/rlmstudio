@@ -89,6 +89,27 @@ test_that("a single input still travels as an array of one", {
   expect_identical(body$input[[1]], "only one")
 })
 
+test_that("a named input vector still travels as an array", {
+  # `setNames(df$text, df$id)` is an ordinary way to reach this function, and
+  # `as.list()` carries those names over. jsonlite writes a named list as a
+  # JSON object, so without `unname()` the body sends an object where the
+  # endpoint wants an array. `is.list()` cannot tell the two apart, so these
+  # assertions read the names.
+  one <- sent_body(drive_embed(
+    embed_body(embed_element(0, row_one)),
+    input = c(doc1 = "only one")
+  )$requests[[1]])
+  expect_null(names(one$input))
+  expect_identical(one$input[[1]], "only one")
+
+  two <- sent_body(drive_embed(
+    embed_body(embed_element(0, row_one), embed_element(1, row_two)),
+    input = c(a = "first", b = "second")
+  )$requests[[1]])
+  expect_null(names(two$input))
+  expect_equal(unlist(two$input), c("first", "second"))
+})
+
 
 # The returned matrix -------------------------------------------------------
 
@@ -265,9 +286,9 @@ test_that("a failed response aborts with class rlmstudio_api_error", {
 
 # The response check --------------------------------------------------------
 
-# Eighteen probes over the eleven conditions the response check rejects, with
+# Eighteen probes over the twelve conditions the response check rejects, with
 # three of them aimed at the not-a-list-of-numbers branch, two at the
-# out-of-range branch, four at the no-data-block branch, and two at the two
+# out-of-range branch, three at the no-data-block branch, and two at the two
 # branches that report a value that is not a JSON object, one for the whole
 # body and one for an element of the data block. `detail` is the clause the
 # abort must report, so a probe that fired the wrong branch fails rather than
@@ -294,7 +315,7 @@ bad_bodies <- list(
     label = "a data block sent as a JSON object",
     input = "text",
     body = '{"data": {"first": {"index": 0, "embedding": [0.1, 0.2]}}}',
-    detail = "no data block"
+    detail = "JSON object rather than an array"
   ),
   list(
     label = "a whole body that is a JSON array",
@@ -420,6 +441,49 @@ for (probe in bad_bodies) {
     })
   })
 }
+
+# A body that never parses cannot reach the probe table above, which hands
+# `embed_matrix()` an already-parsed body. These two drive the wrapper itself.
+test_that("a 200 whose body is not JSON aborts with the response class", {
+  for (case in list(
+    list(body = "<html>oops</html>", type = "text/html"),
+    list(body = "not json at all", type = "application/json")
+  )) {
+    condition <- tryCatch(
+      {
+        local_mocked_bindings(is_server_running = function(...) TRUE)
+        local_request_recorder(mock_response(
+          200L,
+          case$body,
+          content_type = case$type
+        ))
+        lms_embed("test-embed", input = "text")
+      },
+      condition = function(cnd) cnd
+    )
+
+    expect_s3_class(condition, "rlmstudio_bad_response")
+    expect_identical(condition$status, 200L)
+
+    message <- conditionMessage(condition)
+    expect_match(message, "did not parse as JSON", fixed = TRUE)
+
+    # The parse runs before the `simplify` branch, so the usual advice would
+    # send the caller down a path that fails the same way.
+    expect_no_match(message, "simplify = FALSE", fixed = TRUE)
+    expect_match(message, "may be answering on this host", fixed = TRUE)
+  }
+})
+
+test_that("simplify = FALSE cannot rescue a body that does not parse", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, "not json at all"))
+
+  expect_error(
+    lms_embed("test-embed", input = "text", simplify = FALSE),
+    class = "rlmstudio_bad_response"
+  )
+})
 
 test_that("the response check stays silent on a block it should accept", {
   # The passing control for the eighteen probes above. It shares their path:

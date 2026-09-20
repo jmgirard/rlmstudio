@@ -56,8 +56,10 @@ lms_embed <- function(
   # as.list() is what keeps a single input an array of one rather than a bare
   # string: jsonlite serializes an unnamed list as a JSON array whatever its
   # length, while auto-unboxing would turn a length-one character vector into
-  # a scalar.
-  body <- list(model = model, input = as.list(input))
+  # a scalar. unname() is what keeps the list unnamed: as.list() carries the
+  # vector's names over, and jsonlite writes a named list as a JSON object.
+  # `setNames(df$text, df$id)` is an ordinary way to reach this function.
+  body <- list(model = model, input = as.list(unname(input)))
   body <- utils::modifyList(body, list(...))
 
   resp <- lms_client(host, token = token) |>
@@ -70,7 +72,26 @@ lms_embed <- function(
     rlm_abort_api(resp, "Embeddings Failed", !is.null(rlm_token(token)))
   }
 
-  resp_data <- httr2::resp_body_json(resp)
+  # A 200 whose body is not JSON at all reaches here: a proxy or a captive
+  # portal answering on the host serves an HTML page under a success status.
+  # Left unguarded, httr2 or the jsonlite lexer raises an unclassed error, so
+  # the fault the whole check exists to name escapes it on a technicality.
+  # `simplify = FALSE` cannot rescue this one, because the parse runs first,
+  # so the hint says something the caller can act on instead.
+  resp_data <- tryCatch(
+    httr2::resp_body_json(resp),
+    error = function(cnd) {
+      rlm_abort_bad_response(
+        resp,
+        "Embeddings Failed",
+        "the response body did not parse as JSON.",
+        hint = paste(
+          "The server returned a response this package cannot read.",
+          "Something other than LM Studio may be answering on this host."
+        )
+      )
+    }
+  )
 
   if (!isTRUE(simplify)) {
     return(resp_data)
@@ -80,7 +101,7 @@ lms_embed <- function(
   # `input` argument. R rejects a call that names `input` twice, so today the
   # two are always the same length; reading the body keeps them the same if a
   # later change ever puts the inputs together some other way.
-  embed_matrix(resp_data, length(body$input), resp)
+  embed_matrix(resp_data, length(body[["input"]]), resp)
 }
 
 #' Is this value one number?
@@ -169,8 +190,11 @@ embed_matrix <- function(resp_data, n, resp) {
   # A JSON array parses to an unnamed list and a JSON object to a named one.
   # `length()` on the object form would count its members as though they were
   # array elements, so the names are what tell the two apart.
-  if (!is.list(data) || !is.null(names(data))) {
+  if (!is.list(data)) {
     fail("the response carries no {.field data} block.")
+  }
+  if (!is.null(names(data))) {
+    fail("the {.field data} block is a JSON object rather than an array.")
   }
   if (length(data) != n) {
     fail(

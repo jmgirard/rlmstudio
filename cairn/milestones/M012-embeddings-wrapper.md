@@ -86,7 +86,7 @@ on `/v1/chat/completions` → the existing candidate row.
 
 ## Coverage
 
-- AC1 → T1, T4
+- AC1 → T1, T4, T12
 - AC2 → T1, T2, T4, T5
 - AC3 → T1, T4
 - AC4 → T1, T4, T9
@@ -98,53 +98,52 @@ on `/v1/chat/completions` → the existing candidate row.
 
 ## Tasks
 
-- [x] T1: Write `R/embed.R`. `lms_embed(model, input, host =
-      "http://localhost:1234", simplify = TRUE, ..., token = NULL)`: the AC7
-      input check, `stop_if_no_server(host)`, a body of `model` and
-      `as.list(input)` merged with `...`, POST to `v1/embeddings` through
-      `lms_client()`, `req_error(is_error = \(resp) FALSE)`, a non-200 to
-      `rlm_abort_api(resp, "Embeddings Failed", !is.null(rlm_token(token)))`.
-      Follow `lms_chat_openresponses()` at `R/chat.R:123`.
-- [x] T2: Write the `data`-block validator and the matrix assembly. Raise
-      `rlmstudio_bad_response` from a new helper beside `rlm_abort_api()` in
-      `R/utils-api-error.R`. `resp_body_json()` parses with
-      `simplifyVector = FALSE` (LESSONS, M005), so each embedding arrives as a
-      list and `do.call(rbind, ...)` over those lists builds a list matrix, not
-      a double one. Coerce per element.
-- [x] T3: Add the third `@section` and the `@aliases` entry to `R/conditions.R`,
-      put the two `@inheritSection` tags on `lms_embed()`, and run
-      `devtools::document()`. The tag must stay on one physical line and the
-      title must match character for character (LESSONS, M007).
+- [x] T1: Write `R/embed.R`:
+      `lms_embed(model, input, host, simplify = TRUE, ..., token = NULL)`,
+      following `lms_chat_openresponses()` at `R/chat.R:123`. Input check,
+      `stop_if_no_server()`, a body merged with `...`, POST through
+      `lms_client()`, a non-200 to `rlm_abort_api()`.
+- [x] T2: Write the `data`-block validator and the matrix assembly, raising
+      `rlmstudio_bad_response` from a new helper in `R/utils-api-error.R`.
+      Each embedding arrives as a list (LESSONS, M005), so coerce per element.
+- [x] T3: Add the third `@section` and `@aliases` entry to `R/conditions.R`
+      and the `@inheritSection` tags to `lms_embed()`. The tag stays on one
+      line and the title matches character for character (LESSONS, M007).
 - [x] T4: Write `tests/testthat/test-embed.R` against
-      `local_request_recorder()` in `tests/testthat/helper-mock-http.R`: the
-      request shape at n = 3 and n = 1, the permutation, `simplify = FALSE`,
-      the two condition classes, the eleven AC6 probes, and the input contract.
-- [x] T5: Record the happy-path cassette. Load an embedding model, run one
-      `lms_embed()` call under `httptest2::with_mock_dir()`, and commit the
-      cassette with a `data-raw/` generator naming the model, the host, and the
-      date, per the fixture-provenance rule in `cairn/PROFILE.md`.
-- [x] T6: Add `lms_embed` to the wrapper table at
-      `tests/testthat/test-token-wrappers.R:26` and change the name-list test
-      at `test-token-wrappers.R:138` from twelve names to thirteen.
-- [x] T7: Add `lms_embed` to `pkgdown/_pkgdown.yml` under a new "Embeddings"
-      title, write the `NEWS.md` entry in plain user-facing words, and replace
-      the "No wrapper exists" note on the `/v1/embeddings` row of
-      `cairn/references/lmstudio-api-surface.md:40`.
+      `local_request_recorder()`: the request shape, the permutations,
+      `simplify = FALSE`, both condition classes, the AC6 probes, and the
+      input contract.
+- [x] T5: Record the happy-path cassette from a live server, with a
+      `data-raw/` generator carrying its provenance per `cairn/PROFILE.md`.
+- [x] T6: Add `lms_embed` to the token wrapper table and take its name list
+      from twelve to thirteen.
+- [x] T7: Add `lms_embed` to `pkgdown/_pkgdown.yml`, write the `NEWS.md`
+      entries, and replace the "No wrapper exists" note on the
+      `/v1/embeddings` row of the API surface page.
 - [x] T8: Repair the response check on the two returned failures. Read every
-      field by exact name rather than with `$`, and guard the body and each
-      element on being a JSON object. Also reject a `data` block sent as a
-      JSON object, give an empty embedding its own clause, and drop the dead
-      `dimnames()` line. Add six probes and plant the partial match back.
-- [x] T9: Add an `lms_embed` row to the shared failure-message table at
-      `tests/testthat/test-api-error.R:140`, so the wrapper runs every body
-      shape at both statuses like the other eight.
-- [x] T10: Correct the two `...` examples on the `lms_embed()` help page. One
-      always aborts and the server ignores the other. Make the live-cassette
-      test clear both token sources.
+      field by exact name, and guard the body and each element on being a JSON
+      object. Also reject a `data` block sent as an object, give an empty
+      embedding its own clause, and drop the dead `dimnames()` line.
+- [x] T9: Add an `lms_embed` row to the shared failure-message table, so the
+      wrapper runs every body shape at both statuses like the other eight.
+- [x] T10: Correct the two `...` examples on the help page. Make the
+      live-cassette test clear both token sources.
 - [x] T11: Amend AC7 through the gate and record the `NA` input case as a
-      roadmap candidate row. Change the four input probes to match the whole
-      abort sentence. A wrapper that named the wrong argument then stops
-      passing on the sibling's pattern.
+      candidate row. Change the four input probes to match the whole abort
+      sentence, so the sibling's pattern no longer passes them.
+- [x] T12: Send a named `input` vector as a JSON array. `as.list()` keeps the
+      names and jsonlite writes a named list as an object, so the fix is
+      `unname()`. Probe at n = 1 and n = 2 by reading the names off the sent
+      body, because `is.list()` cannot tell an array from an object.
+- [x] T13: Guard the body parse. A 200 that is not JSON raises an unclassed
+      error from `resp_body_json()`. Catch it and abort with the class. Give
+      the helper a `hint` argument, because the parse runs before the
+      `simplify` branch and the standing advice cannot help.
+- [x] T14: Read the input count by exact name. Split the misdescribing clause,
+      so a `data` block of the wrong JSON type says so. Name the changelog's
+      two missing faults. Make the cassette generator state its prerequisites.
+- [x] T15: Record the unguarded `model` argument as a candidate row covering
+      this wrapper and its siblings together.
 
 ## Work log
 
@@ -187,6 +186,13 @@ on `/v1/chat/completions` → the existing candidate row.
 - 2026-09-20: the return work is done and the status goes back to review. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 460 pass and 0 fail.
 
 - 2026-09-20: second review pass. Every criterion was re-verified against fresh evidence. AC1 fails and its box is unticked. A named character vector goes out as a JSON object rather than an array, because `as.list()` keeps the names and jsonlite writes a named list as an object. Verified this session against the implementation. That is inside the domain AC1 quantifies over, and the repair is a code fix, so the return floor fires. The consistency gate passed. cairn_validate exits 0 with two dispositioned sizing advisories. document() gives no diff and pkgdown is clean. check() gives 0 errors, 0 warnings and 0 notes, and test() gives 460 pass. Both Sonnet lenses reported clean. Eight further findings are recorded in the Review section with recommended dispositions. Second defect return; the three amendment returns stay on their own track.
+
+- 2026-09-20: implement gate on the second return took every recommended disposition. A 200 whose body does not parse aborts with the package class, and no criterion widens to cover it. The four smaller fixes land. The unguarded `model` argument goes to a candidate row.
+- 2026-09-20: minor amendment. T12 to T15 added for the second return, and AC1 now maps to T12 in the Coverage lines.
+- 2026-09-20: T12 done. `unname()` in `R/embed.R` drops the names `as.list()` carries over, so a named `input` vector goes out as a JSON array. Two probes read the names off the sent body at n = 1 and n = 2. Planting `as.list(input)` back turned three assertions red, and the restore is green.
+- 2026-09-20: T13 done. The body parse sits inside a `tryCatch()` and a failed parse aborts with `rlmstudio_bad_response`. `rlm_abort_bad_response()` gained a `hint` argument, and this caller passes its own, because the parse runs before the `simplify` branch and the standing advice cannot help. Three probes cover an HTML page, an unparseable body, and the same body under `simplify = FALSE`. Removing the guard turned them red.
+- 2026-09-20: the four new tasks pushed the plan-owned sections to 163 lines against a cap of 150, so the Tasks section was compressed in one pass. The sizing tripwire now reads 15 tasks. Kept as one milestone for the reason already recorded: every task past T7 is a repair the review returned, and each belongs to the criterion it repairs.
+- 2026-09-20: T14 and T15 done. The input count is read by exact name. A `data` block of the wrong JSON type now says so rather than claiming there is no block. `NEWS.md` names the two faults it left out. The cassette generator checks its three packages and names them, rather than declaring a development tool in DESCRIPTION for a directory that never ships. The `model` candidate row is on the ROADMAP. The `verify` slot ran clean: document() gave no diff and test() gave 475 pass and 0 fail.
 
 ## Decisions
 
