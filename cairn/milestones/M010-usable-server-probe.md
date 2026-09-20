@@ -1,0 +1,103 @@
+<!-- Section ownership + write-modes: see tracking-rules.md "Milestone-file
+     section ownership". A phase skill never rewrites another phase's section. -->
+# M010: The package can tell a usable LM Studio server from an open port
+
+- **Status:** planned
+- **Priority:** high
+- **Depends on:** —
+- **Driving RR:** —
+- **Principles touched:** GP1, GP3
+- **Resolves:** —
+- **Surface tier:** user-facing — it exports a function, changes two shipped vignettes, and narrows one shipped help page
+- **Branch/PR:** —
+
+## Goal
+
+`Rscript -e 'devtools::check()'` passes on a machine with LM Studio installed,
+whatever state that server is in.
+
+## Scope
+
+**In:** a new exported function that reports whether a host answers as a usable
+LM Studio server. New gating in both vignettes, built on that function. A
+narrowed "Server not running" section on the condition help page.
+
+**Out:** the pre-call probe inside the REST wrappers. It keeps the TCP probe it
+uses today. An HTTP round trip in front of every call is a cost this milestone
+does not take. The embeddings wrapper and the macOS mirror fix stay candidate
+rows.
+
+## Acceptance criteria
+
+- [ ] AC1: `lms_server_ready()` returns a length-one logical rather than
+      raising, inside the time its documented `timeout` argument sets. A test
+      drives five cases. The first case is a closed port. The second is an open
+      port whose listener never answers, a bare `serverSocket()`. The third is
+      an HTTP 401 response. The fourth is an HTTP 200 whose body is not a model
+      list. The fifth is an HTTP 200 that carries a model list. The first four
+      return `FALSE`. The fifth returns `TRUE`.
+- [ ] AC2: Tests drive all four token paths with distinct values. The four
+      paths are the `token` argument, the `rlmstudio.token` option, the
+      `RLMSTUDIO_API_TOKEN` environment variable, and no token at all. Each
+      test asserts through `request_target()` which value reaches the
+      `Authorization` header. The fourth path sends no such header. The run
+      that evidences this criterion has `httpuv` installed.
+- [ ] AC3: The rendered `man/rlmstudio-conditions.Rd` states that the probe
+      behind `rlmstudio_no_server` is a TCP connection to the host and port. It
+      states that another process holding that port suppresses the condition.
+      It names `lms_server_ready()` as the stronger test.
+- [ ] AC4: `Rscript -e 'devtools::check()'` reports 0 errors and 0 warnings on
+      a machine whose LM Studio server requires authentication and whose
+      calling environment sets no `RLMSTUDIO_API_TOKEN`.
+- [ ] AC5: `Rscript -e 'devtools::test()'` reports 0 failures, 0 errors, and 0
+      warnings. `Rscript -e 'devtools::document()'` produces no diff.
+- [ ] AC6: `NEWS.md` carries an entry for the new function and for the narrowed
+      condition help page.
+
+## Coverage
+
+- AC1 → T1, T2
+- AC2 → T2, T3
+- AC3 → T4
+- AC4 → T5, T6
+- AC5 → T6
+- AC6 → T6
+
+## Tasks
+
+- [ ] T1: Write the five failing probe tests in a new
+      `tests/testthat/test-server-ready.R`. Use a bare `serverSocket()` on a
+      random high port for the silent listener, per the 2026-09-17 lesson. Use
+      the shared recorder in `tests/testthat/helper-mock-http.R` for the three
+      HTTP cases, per D-004.
+- [ ] T2: Add `lms_server_ready(host, token, timeout)` to `R/serve.R`. Resolve
+      the token through `rlm_token()`. Send a GET to `api/v1/models` through
+      `lms_client()` (R/chat.R). Return `TRUE` only for a 200 whose parsed body
+      carries a model list. Catch every error and return `FALSE`.
+- [ ] T3: Add the four token-path assertions through `request_target()`,
+      following `tests/testthat/test-token-wrappers.R`.
+- [ ] T4: Write the roxygen block for `lms_server_ready()` and export it.
+      Narrow the "Server not running" section in `R/conditions.R:8`. Run
+      `Rscript -e 'devtools::document()'`.
+- [ ] T5: Rebuild the gating in `vignettes/getting-started.Rmd` and
+      `vignettes/headless-config.Rmd`. Assign a readiness value once per
+      vignette, after the server-start chunk. Gate every later REST chunk on
+      it. Gate each teardown chunk on whether its own start chunk ran, never on
+      readiness, so a failed probe never leaves the server up. Record the chunk
+      list in the work log.
+- [ ] T6: Turn on "Require authentication" in LM Studio. Unset
+      `RLMSTUDIO_API_TOKEN` in the calling environment. Run
+      `Rscript -e 'devtools::check()'`. Write the `NEWS.md` entry. Run
+      `Rscript -e 'devtools::test()'` and `Rscript -e 'devtools::document()'`.
+
+## Work log
+
+- 2026-09-20: created by /milestone-plan.
+- 2026-09-20: the criteria audit ran in full mode and returned nine findings. Eight had one right answer and were fixed before the criteria were written. The ninth went to the gate as the proof question.
+- 2026-09-20: plan gate chose a new exported probe over an HTTP upgrade to the existing TCP probe. Every REST wrapper calls that probe first and then gains a round trip. A server that requires a token also reads as not running. Falsified by a measurement that puts the extra request near zero next to the call after it.
+- 2026-09-20: plan gate chose a staged audit run over a grep of the vignette chunk headers as the proof of the vignette fix. The grep promises a property of its own output. It also cannot reach the assignment that it quantifies over. Falsified by the maintainer being unable to put LM Studio into the failing state.
+- 2026-09-20: plan gate chose this scope over the embeddings wrapper and over the macOS mirror fix. A fragile package audit taxes the review gate of every later milestone. Falsified by the audit passing today in the token-requiring state.
+
+## Decisions
+
+## Review

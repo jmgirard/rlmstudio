@@ -9,6 +9,7 @@ _Last hygiene pass: 2026-09-20 (M009 archived and set done, M006 pruned under te
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M010 | The package can tell a usable LM Studio server from an open port | planned | none | high | milestones/M010-usable-server-probe.md |
 | M009 | The package can authenticate to LM Studio | done | none | high | milestones/archive/M009-api-token-auth.md |
 | M008 | Tests that fail on the branch they name | done | none | normal | milestones/archive/M008-test-discrimination.md |
 | M007 | The abort contract reaches the help pages | done | none | normal | milestones/archive/M007-abort-contract-docs.md |
@@ -26,9 +27,8 @@ _Last hygiene pass: 2026-09-20 (M009 archived and set done, M006 pruned under te
 - A loaded-instance table, the view `lms ps` prints, flattened from the `loaded_instances` field that `list_models(detailed = TRUE)` already returns, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - Stateful chat on `/api/v1/chat`. The endpoint returns a `response_id` and continues a thread from `previous_response_id`. The package drops the id, so the thread is unreachable, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. A test that greps `R/` gates `devtools::test()` only, added 2026-09-18, M007 scope
-- The help text promises `rlmstudio_no_server` for a stopped LM Studio server. `is_server_running()` opens a TCP connection to the host and port. It does not make sure that the listener is LM Studio. A foreign process on the port suppresses the condition. Narrow the help text or tighten the probe, added 2026-09-18, M007 claim audit
 - [high] The macOS check job depends on `mac.cran.dev`, a mirror pak carries as a secondary source for macOS binaries. It lags CRAN and 404s new versions, which reds the job before the package is built. Pin a mirror or set `use-public-rspm`, added 2026-09-20, M009 merge, see the R-devel job disposition row below
-- [high] Both vignettes start the local server and make live API calls while they build, gated only on `has_lms()`. `R CMD check` therefore depends on whatever state that server happens to be in. On a server that requires a token and a machine with no `RLMSTUDIO_API_TOKEN` set, the check fails. Gate the chunks on a reachable and usable server, not on the CLI alone, added 2026-09-20, M009 T8
+- A guard that keeps the pre-call probe in the REST wrappers in step with the condition help page. M010 narrows that page and adds a stronger probe. The wrappers keep the TCP probe, so the two can drift, added 2026-09-20, M010 scope
 - The release walk needs a live-run step: full suite against a running LM Studio, then a re-record of stale fixtures, added 2026-09-17, DESIGN Conventions
 - A guard that keeps every new `stop_if_no_server()` call site covered by a class test, added 2026-09-18, M003 scope
 - A guard that keeps every REST wrapper handling a failed response listed in the failure table. The deleted guard read package sources that R CMD check does not ship, so it skipped there. It did run under `devtools::test()`, so it gated local runs (corrected M006 review), added 2026-09-18, M006 scope, see also the `stop_if_no_server()` guard row
