@@ -83,6 +83,8 @@ Every exported function that reaches the LM Studio REST API can send an API toke
 - 2026-09-20: three fresh-context reviewers returned eight findings between them. Five were fixed on the branch, two became candidate rows, and one was rejected as the criterion working as planned. No finding met the return floor.
 - 2026-09-20: D-006 recorded. It narrows D-005 on the httpuv skip, which the history lens and the prior-review lens both flagged as stale.
 - 2026-09-20: step-7 approval: m009-api-token-auth approved for merge.
+- 2026-09-20: PR #10 opened. Every check passes except `macos-latest (release)`, which fails in `setup-r-dependencies` before the package is built. pak carries `mac.cran.dev` as a secondary source for macOS binaries. That mirror answers 404 for `knitr_1.52` and `xfun_0.61`. pak writes the error page to disk as the archive. Two runs failed the same way. The repo's workflow configures no mirror, so nothing on this branch can fix it.
+- 2026-09-20: the user chose to wait for the mirror to sync rather than merge past the red check or change CI. The merge marker was removed, so a later merge needs a fresh approval. Nothing merged.
 
 ## Decisions
 
