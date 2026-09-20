@@ -137,6 +137,8 @@ rows.
 - 2026-09-20: re-verified again after the help-page correction. `devtools::document()` regenerated twelve man pages and then left no further diff. `devtools::test()` reported FAIL 0, WARN 0, SKIP 0, PASS 315. `devtools::check()` reported 0 errors, 0 warnings, and 0 notes. A `curl` immediately before that run answered 401. The three clauses AC3 names are all still in the rendered page.
 - 2026-09-20: status moved to review. Every task is checked and the local checks are clean.
 
+- 2026-09-20: resumed at the review gate. PR #11 is OPEN, `origin/main` had not moved past the merge already on this branch, so every criterion was re-executed at the branch head and recorded in the Review section. The PR conversation read was empty.
+
 ## Decisions
 
 ## Review
@@ -372,3 +374,8 @@ immediately before the check answered 401 with code `invalid_api_key`.
 - Consistency gate: `cairn_validate.py` exited 0, sixteen checks passed and
   seven advisories read OK. `pkgdown::check_pkgdown()` found no problems. No
   `DESIGN.md` principle changed, so `cairn_impact.py` stayed skipped.
+
+### PR conversation
+
+- conversation: PR #11 — empty read. No reviews, no conversation comments, and
+  no unresolved review threads.
