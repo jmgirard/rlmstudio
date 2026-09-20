@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M010: The package can tell a usable LM Studio server from an open port
 
-- **Status:** review
+- **Status:** blocked
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -122,6 +122,8 @@ rows.
 - 2026-09-20: a fresh reader read every added line outside `cairn/`. The three wrong claims were all test comments. Everything in `NEWS.md`, `R/`, the twelve man pages, and both vignettes held.
 - 2026-09-20: the largest of the three. The comment said the five-second bound proved that the `timeout` argument does the work. It does not. httr2 and curl set no default timeout, so a build with the `req_timeout()` line deleted hangs on the silent socket instead of failing. The comment now says what the bound can catch, which is a timeout set to the wrong value.
 - 2026-09-20: the same reader re-read the three corrections once. Two held. The third was still wrong about which sources the last two token cases clear: they clear the source that otherwise wins, not a source below. Corrected, and the pass is closed.
+- 2026-09-20: blocked: the macOS check job on PR #11 is red on the `mac.cran.dev` mirror, and the maintainer chose to fix that before merging. The fix is the `[high]` candidate row added 2026-09-20. The eleven other checks passed.
+- 2026-09-20: the merge-approval marker was deleted unmerged. The approval below stands as a record, and a fresh gate writes a new marker when the merge is taken up again.
 - 2026-09-20: step-7 approval: m010-usable-server-probe approved for merge
 - 2026-09-20: gate triage chose to fix seven findings on the branch and file four as candidate rows. Both new tests were shown to go red on the defect they claim to catch. Re-verified on the tree that merges: check 0/0/0, test 315 passing, document no diff, validate green.
 - 2026-09-20: review checkpoint. All six criteria re-executed with fresh evidence and ticked. Consistency gate green. The three review lenses are still running, so the findings and triage are not yet written.
