@@ -37,11 +37,19 @@ Download a model via REST API
 }
 \section{Server not running}{
 
-Functions that call the LM Studio REST API check that a server answers at
-the \code{host} address. A condition of class \code{rlmstudio_no_server} is raised
-when the LM Studio server is not running. Start the server with
-\code{\link[=lms_server_start]{lms_server_start()}}, or give \code{host} the address that your server listens
-on.
+Functions that call the LM Studio REST API first open a TCP connection to
+the hostname and port named in \code{host}. A condition of class
+\code{rlmstudio_no_server} is raised when that connection is refused. Start the
+server with \code{\link[=lms_server_start]{lms_server_start()}}, or give \code{host} the address that your
+server listens on.
+
+The check reads the port and nothing else. Any process holding that port
+accepts the connection, so the condition is not raised even though no LM
+Studio server is there. The call then fails later, as an
+\code{rlmstudio_api_error} or as a raw parse error, rather than as
+\code{rlmstudio_no_server}. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+asks the host for a model list and reports \code{TRUE} only for an answer that
+an LM Studio server would give.
 }
 
 \section{API failure}{

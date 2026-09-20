@@ -54,6 +54,20 @@ test_that("an open port whose listener never answers is not ready", {
   expect_lt(elapsed, 5)
 })
 
+test_that("a port held by something else passes the TCP probe and fails here", {
+  # This is the gap the condition help page now names. The TCP probe reads the
+  # port and nothing else, so a listener that is not LM Studio suppresses the
+  # `rlmstudio_no_server` condition. The readiness check is what tells them
+  # apart.
+  listener <- open_listener()
+  on.exit(close(listener$con), add = TRUE)
+  host <- paste0("http://127.0.0.1:", listener$port)
+
+  expect_true(is_server_running(host))
+  expect_silent(stop_if_no_server(host))
+  expect_identical(lms_server_ready(host = host, timeout = 1), FALSE)
+})
+
 test_that("a server that answers 401 is not ready", {
   local_request_recorder(mock_response(401L, '{"error": "unauthorized"}'))
 

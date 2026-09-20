@@ -6,11 +6,19 @@
 #' [base::tryCatch()].
 #'
 #' @section Server not running:
-#' Functions that call the LM Studio REST API check that a server answers at
-#' the `host` address. A condition of class `rlmstudio_no_server` is raised
-#' when the LM Studio server is not running. Start the server with
-#' [lms_server_start()], or give `host` the address that your server listens
-#' on.
+#' Functions that call the LM Studio REST API first open a TCP connection to
+#' the hostname and port named in `host`. A condition of class
+#' `rlmstudio_no_server` is raised when that connection is refused. Start the
+#' server with [lms_server_start()], or give `host` the address that your
+#' server listens on.
+#'
+#' The check reads the port and nothing else. Any process holding that port
+#' accepts the connection, so the condition is not raised even though no LM
+#' Studio server is there. The call then fails later, as an
+#' `rlmstudio_api_error` or as a raw parse error, rather than as
+#' `rlmstudio_no_server`. Use [lms_server_ready()] for the stronger test: it
+#' asks the host for a model list and reports `TRUE` only for an answer that
+#' an LM Studio server would give.
 #'
 #' @section API failure:
 #' A condition of class `rlmstudio_api_error` is raised when a REST call
