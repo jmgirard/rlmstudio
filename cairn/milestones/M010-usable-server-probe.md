@@ -87,7 +87,7 @@ rows.
       it. Gate each teardown chunk on whether its own start chunk ran, never on
       readiness, so a failed probe never leaves the server up. Record the chunk
       list in the work log.
-- [ ] T6: Turn on "Require authentication" in LM Studio. Unset
+- [x] T6: Turn on "Require authentication" in LM Studio. Unset
       `RLMSTUDIO_API_TOKEN` in the calling environment. Run
       `Rscript -e 'devtools::check()'`. Write the `NEWS.md` entry. Run
       `Rscript -e 'devtools::test()'` and `Rscript -e 'devtools::document()'`.
@@ -113,6 +113,10 @@ rows.
 - 2026-09-20: `model` moved to the setup chunk of both vignettes. It was assigned inside a chunk that readiness now gates, and the teardown chunk reads it.
 - 2026-09-20: T5 discrimination. The local server already requires a token and the calling environment sets none. `lms_server_ready()` therefore reported FALSE. Both vignettes built with every REST chunk skipped. A scratch copy with the assignment forced to TRUE died at the `download` chunk on `rlmstudio_api_error`. The gate controls the chunks in both directions.
 - 2026-09-20: `lms_server_start()` returns before the REST API answers. A probe run right after it can report FALSE on a healthy machine. That cost was not reached here, because the token requirement holds the answer FALSE either way. It is a candidate row, not a fix in this milestone.
+
+- 2026-09-20: T6 needed no GUI change. The machine's LM Studio already requires a token, and the calling environment sets none. Pinned at the check: `api/v1/models` answered 401 with code `invalid_api_key`, and `lms_server_ready()` reported FALSE.
+- 2026-09-20: `Rscript -e 'devtools::check()'` reported 0 errors, 0 warnings, and 0 notes in that state. `devtools::test()` reported 0 failures, 0 errors, 0 warnings, 310 passing. `devtools::document()` left no diff.
+- 2026-09-20: candidate row added for the gap between `lms_server_start()` returning and the REST API answering.
 
 ## Decisions
 
