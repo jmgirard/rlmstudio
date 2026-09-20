@@ -82,6 +82,7 @@ Every exported function that reaches the LM Studio REST API can send an API toke
 - 2026-09-20: consistency gate green. `cairn_validate` passes every check with no advisory. `document()` produces no diff and `check_pkgdown()` reports no problems.
 - 2026-09-20: three fresh-context reviewers returned eight findings between them. Five were fixed on the branch, two became candidate rows, and one was rejected as the criterion working as planned. No finding met the return floor.
 - 2026-09-20: D-006 recorded. It narrows D-005 on the httpuv skip, which the history lens and the prior-review lens both flagged as stale.
+- 2026-09-20: step-7 approval: m009-api-token-auth approved for merge.
 
 ## Decisions
 
