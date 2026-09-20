@@ -1,11 +1,17 @@
-# LM Studio API surface, and what rlmstudio does not wrap
+# LM Studio API surface, and what rlmstudio does not wrap (M009)
 
-Synthesis note. Read on 2026-09-19 from the official LM Studio documentation
-(`lmstudio.ai/docs`) and its source repository (`github.com/lmstudio-ai/docs`,
-branch `main`). Package coverage read from `R/` and `NAMESPACE` at commit
-c747098.
+**Provenance.** Ingested 2026-09-19 by M009 from the LM Studio documentation
+site (`https://lmstudio.ai/docs`) and its source repository
+(`github.com/lmstudio-ai/docs`, branch `main`). The pages were read against
+the package sources at commit c747098.
+Pagination: —.
+Extraction: read directly from the documentation source files named under
+Sources, and read against `R/` and `NAMESPACE` at commit c747098 — observed 2026-09-19.
 
-This page records the API surface as documented. It proposes nothing. A
+**Scope.** This page records the LM Studio API surface as documented, and maps
+it against what the package wraps. It is not a summary of one source, and it
+builds no plan. It is a reference and not an authority: status lives in
+`ROADMAP.md`, decisions in `DECISIONS.md`, and architecture in `DESIGN.md`. A
 feature that the project decides to build becomes a ROADMAP candidate or a
 milestone.
 
@@ -78,21 +84,23 @@ all.
   number per item can constrain the output this way instead of parsing prose.
 - **Model list fields.** `GET /api/v1/models` returns `key`, `display_name`,
   `publisher`, `architecture`, `quantization`, `size_bytes`, `params_string`,
-  `max_context_length`, `format`, `variants`, `selected_variant`, a
-  `capabilities` block (`vision`, `trained_for_tool_use`, `reasoning`), and
-  `loaded_instances` with each instance's configuration. `list_models()`
-  returns all of this when `detailed = TRUE`, and it derives a `state` column
-  from `loaded_instances`. It does not flatten the per-instance configuration
-  into rows, which is the table `lms ps` prints.
+  `max_context_length`, and `format`. It also returns `variants`,
+  `selected_variant`, a `capabilities` block, and `loaded_instances` with each
+  instance's configuration. The `capabilities` block carries `vision`,
+  `trained_for_tool_use`, and `reasoning`. With `detailed = TRUE`,
+  `list_models()` returns all of this, and it derives a `state` column from
+  `loaded_instances`. It does not flatten the per-instance configuration into
+  rows, which is the table `lms ps` prints.
 - **Streaming.** A chat request with `stream: true` returns Server Sent Events.
-  The named event types are `chat.start`, `model_load.start`,
-  `model_load.progress`, `model_load.end`, `prompt_processing.start`,
-  `prompt_processing.progress`, `prompt_processing.end`, `reasoning.start`,
-  `reasoning.delta`, `reasoning.end`, `tool_call.start`,
-  `tool_call.arguments`, `tool_call.success`, `tool_call.failure`,
-  `message.start`, `message.delta`, `message.end`, `error`, and `chat.end`.
-  The `chat.end` event carries the same aggregate result as a non-streaming
-  call.
+  There are nineteen named event types. Nine cover the run itself:
+  `chat.start`, `model_load.start`, `model_load.progress`, `model_load.end`,
+  `prompt_processing.start`, `prompt_processing.progress`,
+  `prompt_processing.end`, `error`, and `chat.end`. Three cover reasoning:
+  `reasoning.start`, `reasoning.delta`, and `reasoning.end`. Four cover tool
+  calls: `tool_call.start`, `tool_call.arguments`, `tool_call.success`, and
+  `tool_call.failure`. Three cover the message: `message.start`,
+  `message.delta`, and `message.end`. The `chat.end` event carries the same
+  aggregate result as a non-streaming call.
 - **MCP integrations.** `/api/v1/chat` accepts an `integrations` array. An
   entry is either a configured plugin (`{"type": "plugin", "id": ...,
   "allowed_tools": [...]}`) or an ephemeral MCP server (`{"type":

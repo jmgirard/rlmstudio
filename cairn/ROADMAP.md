@@ -9,6 +9,7 @@ _Last hygiene pass: 2026-09-19 (triage of 14 items. The API-error docs row dropp
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M009 | The package can authenticate to LM Studio | planned | none | high | milestones/M009-api-token-auth.md |
 | M008 | Tests that fail on the branch they name | done | none | normal | milestones/archive/M008-test-discrimination.md |
 | M007 | The abort contract reaches the help pages | done | none | normal | milestones/archive/M007-abort-contract-docs.md |
 | M006 | list_models() joins the shared REST abort path | done | none | normal | milestones/archive/M006-list-models-abort-path.md |
@@ -19,7 +20,6 @@ _Last hygiene pass: 2026-09-19 (triage of 14 items. The API-error docs row dropp
      - idea, added YYYY-MM-DD, links
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
-- [high] `lms_client()` sends no `Authorization` header, so every wrapper fails against an LM Studio 0.4.0 server with "Require authentication" on. Dots reach the body, not the headers, so a user cannot work around it. Add a token argument and an environment variable default, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [high] `/v1/embeddings` has no wrapper. It is the one documented endpoint family with no coverage, and text embeddings serve the scoring-at-scale user directly, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A `ttl` argument on `lms_load()` and the chat wrappers. It sets how long an idle model stays in memory and is the one documented load field the package does not name, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A `/api/v1/chat` response carries a `stats` block with `input_tokens`, `total_output_tokens`, `tokens_per_second`, and `time_to_first_token_seconds`. `lms_chat_native()` drops it. Surfacing it lets a batch run report throughput, added 2026-09-19, cairn/references/lmstudio-api-surface.md
@@ -33,7 +33,6 @@ _Last hygiene pass: 2026-09-19 (triage of 14 items. The API-error docs row dropp
 - A guard that keeps every REST wrapper handling a failed response listed in the failure table. The deleted guard read package sources that R CMD check does not ship, so it skipped there. It did run under `devtools::test()`, so it gated local runs (corrected M006 review), added 2026-09-18, M006 scope, see also the `stop_if_no_server()` guard row
 - A non-JSON failure body becomes the abort message in full, with no length bound. A proxy's HTML page reaches the user whole. A scalar JSON body reaches the user as the bare token, added 2026-09-18, M005 implement audit and M005 review finding 12
 - When only R-devel breaks, a red `ubuntu-latest (devel)` job still blocks the merge. Decide its disposition, added 2026-09-17, M002 review finding 6
-- `request_target()` calls `skip_if_not_installed("httpuv")`, so every host and body assertion silently empties on a machine without it. D-005 accepted this for contributors. Make the helper fail rather than skip when the `CI` environment variable is set, so a CI image that loses `httpuv` goes red instead of green, added 2026-09-19, M008 review finding 1
 - `request_target()` parses the request body as JSON with no guard, so a wrapper that ever sends a non-JSON body surfaces a raw `jsonlite` error from the helper rather than a named test failure. Catch the parse and return the raw string, added 2026-09-19, M008 review finding 6
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
