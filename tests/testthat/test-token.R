@@ -4,7 +4,7 @@
 # Read the Authorization header off a request as it would go over the wire.
 # Returns NULL when the request carries no such header.
 auth_header <- function(req) {
-  testthat::skip_if_not_installed("httpuv")
+  require_httpuv()
   out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
   out$headers$authorization
 }
