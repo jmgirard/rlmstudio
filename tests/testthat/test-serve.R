@@ -486,3 +486,75 @@ test_that("neither warning is silenced by the quiet option", {
   expect_warning(lms_server_start(port = 8080, wait = 1), "did not answer")
   expect_warning(lms_server_start(), "Could not tell which host")
 })
+
+# A processx::run stub that fails the test if the CLI is ever called. The
+# checks below must all fire before the server starts.
+forbid_cli <- function(env = parent.frame()) {
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) {
+      fail("processx::run() was called")
+      list(status = 0)
+    },
+    .package = "processx",
+    .env = env
+  )
+}
+
+test_that("a host the readiness request cannot be built from aborts first", {
+  forbid_cli()
+  bad_hosts <- list(
+    c("http://a:1", "http://b:2"),
+    NA_character_,
+    "",
+    1,
+    list("a"),
+    character(0),
+    "http://local host:1234",
+    "localhost:1234"
+  )
+
+  for (wait in c(10, 0)) {
+    for (host in bad_hosts) {
+      err <- expect_error(lms_server_start(host = host, wait = wait))
+      # The message names the argument, not httr2's own `url`.
+      expect_match(
+        conditionMessage(err),
+        "`host`",
+        fixed = TRUE,
+        info = paste(deparse(host), "wait", wait)
+      )
+      expect_false(any(grepl("^rlmstudio", class(err))))
+    }
+  }
+})
+
+test_that("a NULL host and a usable host pass the pre-start check", {
+  start_success()
+  fake_clock()
+  local_mocked_bindings(lms_server_ready = ready_stub(true_on = 1)$fn)
+
+  for (wait in c(10, 0)) {
+    suppressMessages({
+      expect_equal(lms_server_start(port = 8080, wait = wait), 0)
+      expect_equal(
+        lms_server_start(host = "http://localhost:1234", wait = wait),
+        0
+      )
+    })
+  }
+})
+
+test_that("a bad token aborts before the CLI runs, with host left NULL", {
+  forbid_cli()
+  bad_tokens <- list(c("a", "b"), NA_character_, 1)
+
+  for (wait in c(10, 0)) {
+    for (token in bad_tokens) {
+      expect_error(
+        lms_server_start(token = token, wait = wait),
+        "`token` must be one character string",
+        fixed = TRUE
+      )
+    }
+  }
+})

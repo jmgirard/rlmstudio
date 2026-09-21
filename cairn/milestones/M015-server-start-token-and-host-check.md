@@ -85,7 +85,7 @@ guards over the token table and the condition help page stay candidates.
       `lms_server_ready()`, in place of the fixed `token = NULL`. Add
       `lms_server_start` to the table in `tests/testthat/test-token-wrappers.R`
       and write the AC1 header test.
-- [ ] T3: Tests first for AC2 and AC3. Then call the T1 helper in
+- [x] T3: Tests first for AC2 and AC3. Then call the T1 helper in
       `lms_server_start()` next to `rlm_check_wait()`, before the CLI runs.
       Catch a `host` fault and abort again with a message that names `host`.
       Let the `rlm_token()` abort through. Delete the check in a scratch copy
@@ -107,6 +107,7 @@ guards over the token table and the condition help page stay candidates.
 - 2026-09-20: implement started. Pre-implementation gate chose a host abort that names `host` and quotes the httr2 or curl reason, and a probe-abort warning that quotes the abort message.
 - 2026-09-20: T1 done. `server_ready_request()` in `R/serve.R` builds the request, and `lms_server_ready()` calls it. `test-server-ready.R` is unchanged and green, and the full suite is green.
 - 2026-09-20: T2 done. `token` is the last formal of `lms_server_start()` and reaches `lms_server_ready()`. The token table lists fourteen functions, and a new test reads `Bearer t` and the option token off the readiness request. Setting the forward in `wait_for_server()` back to `NULL` turned three expectations red.
+- 2026-09-20: T3 done. `lms_server_start()` calls `rlm_token(token)` and then `rlm_check_ready_host(host)` before the CLI runs. The token check runs first, so the host check catches host faults alone. In a scratch copy, deleting either line turned its tests red. The full suite is green.
 
 ## Decisions
 

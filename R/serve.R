@@ -97,6 +97,14 @@ lms_server_start <- function(
   token = NULL
 ) {
   rlm_check_wait(wait)
+  # Faults in host and token are knowable without a server, and a start that
+  # has already run cannot be undone, so both are checked before the CLI runs.
+  # The token check runs first, so the host check below catches host faults
+  # alone.
+  rlm_token(token)
+  if (!is.null(host)) {
+    rlm_check_ready_host(host)
+  }
 
   args <- build_args_server_start(port = port, cors = cors)
 
@@ -123,6 +131,35 @@ lms_server_start <- function(
   }
 
   invisible(res$status)
+}
+
+#' Reject a host the readiness request cannot be built from
+#'
+#' Builds the request `lms_server_ready()` would send, and sends nothing. The
+#' build reads the token sources, but with `token = NULL` it reads only the
+#' option and the environment variable, and neither of those aborts. Any
+#' abort here therefore comes from `host`. The message names `host` and
+#' quotes the reason httr2 or curl gave, which names httr2's own `url`.
+#'
+#' @param host The value the caller passed. Not `NULL`.
+#' @return `host`, invisibly.
+#'
+#' @noRd
+rlm_check_ready_host <- function(host) {
+  tryCatch(
+    server_ready_request(host, timeout = 1, token = NULL),
+    error = function(e) {
+      reason <- conditionMessage(e)
+      cli::cli_abort(
+        c(
+          "{.arg host} must be a URL the readiness request can be built from.",
+          "x" = "{reason}"
+        ),
+        call = NULL
+      )
+    }
+  )
+  invisible(host)
 }
 
 #' Pick the host that the wait asks
