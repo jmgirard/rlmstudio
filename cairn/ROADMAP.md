@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene pass: 2026-09-20 (M016 dropped at its T1 premise check and archived, M013 row pruned, one candidate added)_
+_Last hygiene check: 2026-09-20 (M016 dropped and archived, stamp renamed so cairn_status reads it, inboxes empty, validate green)_
 
 ## Milestones
 
