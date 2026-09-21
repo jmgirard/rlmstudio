@@ -473,6 +473,8 @@ lms_chat_batch <- function(
   format <- match.arg(format)
 
   has_logprobs <- isTRUE(args$logprobs)
+  # Each result is a parsed reply of any shape, not one string.
+  has_parsed <- !is.null(schema) && isTRUE(simplify) && !has_logprobs
   should_be_quiet <- is_quiet(quiet)
 
   if (!should_be_quiet) {
@@ -506,6 +508,12 @@ lms_chat_batch <- function(
         "The {.val data.frame} format requires {.code simplify = TRUE}.",
         call = NULL
       )
+    }
+
+    if (has_parsed) {
+      df <- data.frame(input = inputs, stringsAsFactors = FALSE)
+      df$output <- results
+      return(df)
     }
 
     any_logprobs <- any(vapply(
@@ -543,6 +551,15 @@ lms_chat_batch <- function(
     if (!isTRUE(simplify)) {
       cli::cli_warn(
         "The {.val vector} format is not compatible with simplify = FALSE. Returning list."
+      )
+      return(results)
+    }
+    if (has_parsed) {
+      # A scalar reply would fit a vector, but a batch can mix reply shapes,
+      # and a vector that depends on what the model returned is not one a
+      # script can rely on (GP2).
+      cli::cli_warn(
+        "The {.val vector} format cannot store replies parsed from {.arg schema}. Returning list."
       )
       return(results)
     }

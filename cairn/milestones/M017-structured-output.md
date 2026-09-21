@@ -122,7 +122,7 @@ the schema content stays with the server (D-003).
 - [x] T4: Add `schema` to `lms_chat()`, the `api_type` check after the form
       check, and the forward to `lms_chat_openai()`. Probe the abort route,
       which has no delegate (LESSONS, M013).
-- [ ] T5: When `schema` is set, make `lms_chat_batch()` warn and return a
+- [x] T5: When `schema` is set, make `lms_chat_batch()` warn and return a
       list for `format = "vector"`. Make it return an `output` list-column for
       `format = "data.frame"`. Add a test per format.
 - [ ] T6: Document `schema`. A one-element array is written as `list()` or
@@ -145,6 +145,7 @@ the schema content stays with the server (D-003).
 - 2026-09-21: T2 done. An empty schema is sent as `{}` with empty names, because jsonlite writes `list()` as `[]`. A reply that names a temp file holding JSON is the probe that separates `parse_json()` from `fromJSON()`. With `fromJSON()` planted, only that probe failed. Suite: 244 tests, 0 failed, 0 skipped.
 - 2026-09-21: T3 done. The cassette `chat_schema_live` was recorded from `google/gemma-3-1b` at temperature 0 and holds the reply `{ "score": 3 }` with no auth header. The recorded test passed with the server stopped, so the cassette served it.
 - 2026-09-21: T4 done. `lms_chat()` forwards `schema` on the openai route. With either route check removed, the route test went red with `rlmstudio_no_server`. Suite: 248 tests, 0 failed, 0 skipped.
+- 2026-09-21: T5 done. With `has_parsed` planted as FALSE, the vector and data-frame batch tests failed six expectations. Suite: 251 tests, 0 failed, 0 skipped.
 
 ## Decisions
 

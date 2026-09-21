@@ -205,6 +205,49 @@ test_that("lms_chat() forwards a schema on the openai route", {
   expect_identical(sent$response_format$json_schema$schema, score_schema)
 })
 
+# Run lms_chat_batch() over two inputs against a mocked server that answers
+# every request with a reply whose content is `reply_text`.
+batch_with_reply <- function(reply_text, format) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, completion_body(quoted(reply_text))))
+  lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = format,
+    quiet = TRUE,
+    api_type = "openai",
+    schema = score_schema
+  )
+}
+
+test_that("batch format list returns one parsed reply per input", {
+  out <- batch_with_reply('{"score": 3}', "list")
+  expect_identical(out, list(list(score = 3L), list(score = 3L)))
+})
+
+test_that("batch format vector warns and returns the list for any reply", {
+  expect_warning(
+    out <- batch_with_reply('{"score": 3}', "vector"),
+    "cannot store replies parsed"
+  )
+  expect_identical(out, list(list(score = 3L), list(score = 3L)))
+
+  # A scalar reply would fit a vector, and still comes back as a list.
+  expect_warning(
+    out <- batch_with_reply("3", "vector"),
+    "cannot store replies parsed"
+  )
+  expect_identical(out, list(3L, 3L))
+})
+
+test_that("batch format data.frame holds parsed replies in a list-column", {
+  out <- batch_with_reply('{"score": 3}', "data.frame")
+  expect_s3_class(out, "data.frame")
+  expect_identical(out$input, c("first", "second"))
+  expect_type(out$output, "list")
+  expect_identical(out$output, list(list(score = 3L), list(score = 3L)))
+})
+
 test_that("a reply that does not parse is returned as text without a schema", {
   out <- call_with_reply(completion_body(quoted("a score of three")))
   expect_identical(out$value, "a score of three")
