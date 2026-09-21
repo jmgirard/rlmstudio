@@ -22,6 +22,9 @@
 #' @param simplify Logical. If TRUE, extracts the core text response. Default is
 #'   TRUE.
 #' @param ... Additional arguments passed to the selected API body.
+#' @param schema A JSON Schema that the reply must match, or `NULL`. It needs
+#'   `api_type = "openai"`, and any other `api_type` aborts before the request.
+#'   See [lms_chat_openai()] for its form and for what is returned.
 #' @return Depending on the arguments provided:
 #' \itemize{
 #'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
@@ -33,8 +36,11 @@
 #' [lms_chat_native()], according to `api_type`. It runs no request of its own.
 #' It can raise `rlmstudio_no_server` and `rlmstudio_api_error` through
 #' [lms_chat_openresponses()], [lms_chat_openai()], or [lms_chat_native()].
+#' With a `schema`, it can raise `rlmstudio_bad_response` through
+#' [lms_chat_openai()].
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #' @export
 lms_chat <- function(
   model,
@@ -238,15 +244,45 @@ lms_chat_openresponses <- function(
 #' @param logprobs Logical. Whether to request logprobs (currently stubbed by LM
 #'   Studio).
 #' @param simplify Logical. If TRUE, parses output to text.
-#' @param ... Additional API arguments.
+#' @param ... Additional API arguments. A `response_format` here cannot be
+#'   combined with `schema`.
+#' @param schema A JSON Schema, written as a named list, that the reply must
+#'   match, or `NULL` for a free text reply. It is sent as the `schema` field
+#'   of a `response_format` of type `"json_schema"`, with the name
+#'   `"response"` and `strict` set to `true`. A JSON array of one item must be
+#'   written as a list, such as `required = list("score")`, or wrapped in
+#'   [I()]. A plain vector of length one is sent as a single value, not as an
+#'   array. The package checks only that `schema` is a named list, an empty
+#'   list, or `NULL`. The server checks the schema itself.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. Otherwise, returns a character string containing the generated
 #'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
 #'   object with the log probabilities populated as \code{NULL} since they are
 #'   currently stubbed in the LM Studio OpenAI endpoint.
+#'
+#'   With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, the reply is
+#'   parsed with `jsonlite::parse_json(simplifyVector = TRUE)` and the parsed
+#'   value is returned. A JSON object becomes a named list, and an array of
+#'   numbers becomes a vector. With `simplify = FALSE` or `logprobs = TRUE`,
+#'   the reply stays a string.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #' @export
+#' @examples
+#' \dontrun{
+#' lms_chat_openai(
+#'   model = "google/gemma-3-1b",
+#'   messages = list(
+#'     list(role = "user", content = "Rate 'Great value.' from 1 to 5.")
+#'   ),
+#'   schema = list(
+#'     type = "object",
+#'     properties = list(score = list(type = "integer")),
+#'     required = list("score")
+#'   )
+#' )
+#' }
 lms_chat_openai <- function(
   model,
   messages,
@@ -428,19 +464,23 @@ lms_chat_native <- function(
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param simplify Logical. If TRUE, parses outputs.
 #' @param quiet Logical. Whether to suppress the progress bar.
-#' @param ... Additional arguments passed to `lms_chat`.
+#' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,
+#'   `logprobs`, or `schema`. A `schema` and the `api_type` it needs are
+#'   checked before the first call.
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
-#'   \item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}.
-#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included.
+#'   \item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
+#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, each element is the parsed reply.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies.
 #' }
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call. It can raise
-#' `rlmstudio_api_error` through [lms_chat()].
+#' `rlmstudio_api_error` through [lms_chat()]. With a `schema`, it can raise
+#' `rlmstudio_bad_response` through [lms_chat()].
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #' @export
 lms_chat_batch <- function(
   model,

@@ -125,7 +125,7 @@ the schema content stays with the server (D-003).
 - [x] T5: When `schema` is set, make `lms_chat_batch()` warn and return a
       list for `format = "vector"`. Make it return an `output` list-column for
       `format = "data.frame"`. Add a test per format.
-- [ ] T6: Document `schema`. A one-element array is written as `list()` or
+- [x] T6: Document `schema`. A one-element array is written as `list()` or
       `I()`, because `req_body_json()` unboxes a vector of length one. Rewrite
       the conditions page for two raisers. Add the `@inheritSection` to
       `lms_chat_openai()` and the raiser note to `lms_chat()` and
@@ -146,6 +146,7 @@ the schema content stays with the server (D-003).
 - 2026-09-21: T3 done. The cassette `chat_schema_live` was recorded from `google/gemma-3-1b` at temperature 0 and holds the reply `{ "score": 3 }` with no auth header. The recorded test passed with the server stopped, so the cassette served it.
 - 2026-09-21: T4 done. `lms_chat()` forwards `schema` on the openai route. With either route check removed, the route test went red with `rlmstudio_no_server`. Suite: 248 tests, 0 failed, 0 skipped.
 - 2026-09-21: T5 done. With `has_parsed` planted as FALSE, the vector and data-frame batch tests failed six expectations. Suite: 251 tests, 0 failed, 0 skipped.
+- 2026-09-21: T6 done. Roxygen, the conditions page, the DESIGN boundary line (D-009), and NEWS are written. The "Server not running" section now names `schema`, so every page that inherits it changed. `document()` leaves no diff. `devtools::check()` with the token set: 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 

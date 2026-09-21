@@ -17,7 +17,8 @@ with \code{\link[base:tryCatch]{base::tryCatch()}}.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, or \code{inputs} aborts with an argument message and no condition class
+\code{input}, \code{inputs}, or \code{schema} aborts with an argument message and no
+condition class
 even when the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
@@ -49,18 +50,26 @@ integer.
 A condition of class \code{rlmstudio_bad_response} is raised when the server
 answers with a status the wrapper accepts and a body the wrapper cannot
 read. It is raised where a wrapper checks the body before it reshapes it,
-rather than indexing straight into whatever arrived. \code{\link[=lms_embed]{lms_embed()}} raises
-it: the vectors it returns are placed by the index that the response
-reports, so a block with a missing, repeated, or out-of-range index would
-otherwise pair a vector with the wrong text and give back a matrix that is
-silently wrong.
+rather than indexing straight into whatever arrived. Two functions raise
+it.
+
+\code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
+it returns are placed by the index that the response reports, so a block
+with a missing, repeated, or out-of-range index would otherwise pair a
+vector with the wrong text and give back a matrix that is silently wrong.
+
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it when a \code{schema} was given and the reply
+content is not one string of valid JSON. It is raised only with \code{simplify = TRUE} and
+\code{logprobs = FALSE}, which are the two settings under which the reply is
+parsed. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}} can raise it through
+\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
 
 The condition carries a \code{status} field, which holds the HTTP response
-status as an integer. Today the status is always 200: the one function that
-raises this condition reads the body only after a 200, and reports every
-other status as an \code{rlmstudio_api_error} instead. The message names the
-argument that returns the body unchanged, so you can read what arrived,
-except when the body did not parse at all: that check runs before the
+status as an integer. Today the status is always 200: both functions read
+the body only after a 200, and report every other status as an
+\code{rlmstudio_api_error} instead. The message names the argument that returns
+the body unchanged, so you can read what arrived. The one exception is an
+embeddings body that did not parse at all: that check runs before the
 argument is read, so its message points at the host instead.
 }
 

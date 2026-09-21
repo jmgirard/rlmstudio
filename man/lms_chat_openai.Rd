@@ -11,6 +11,7 @@ lms_chat_openai(
   logprobs = FALSE,
   simplify = TRUE,
   ...,
+  schema = NULL,
   token = NULL
 )
 }
@@ -27,7 +28,17 @@ Studio).}
 
 \item{simplify}{Logical. If TRUE, parses output to text.}
 
-\item{...}{Additional API arguments.}
+\item{...}{Additional API arguments. A \code{response_format} here cannot be
+combined with \code{schema}.}
+
+\item{schema}{A JSON Schema, written as a named list, that the reply must
+match, or \code{NULL} for a free text reply. It is sent as the \code{schema} field
+of a \code{response_format} of type \code{"json_schema"}, with the name
+\code{"response"} and \code{strict} set to \code{true}. A JSON array of one item must be
+written as a list, such as \code{required = list("score")}, or wrapped in
+\code{\link[=I]{I()}}. A plain vector of length one is sent as a single value, not as an
+array. The package checks only that \code{schema} is a named list, an empty
+list, or \code{NULL}. The server checks the schema itself.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
@@ -39,6 +50,12 @@ response. Otherwise, returns a character string containing the generated
 text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
 object with the log probabilities populated as \code{NULL} since they are
 currently stubbed in the LM Studio OpenAI endpoint.
+
+With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, the reply is
+parsed with \code{jsonlite::parse_json(simplifyVector = TRUE)} and the parsed
+value is returned. A JSON object becomes a named list, and an array of
+numbers becomes a vector. With \code{simplify = FALSE} or \code{logprobs = TRUE},
+the reply stays a string.
 }
 \description{
 Direct interface to LM Studio's OpenAI-compatible endpoint. Uses the messages
@@ -49,7 +66,8 @@ array format.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, or \code{inputs} aborts with an argument message and no condition class
+\code{input}, \code{inputs}, or \code{schema} aborts with an argument message and no
+condition class
 even when the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
@@ -76,3 +94,46 @@ carries a \code{status} field, which holds the HTTP response status as an
 integer.
 }
 
+\section{Malformed response}{
+
+A condition of class \code{rlmstudio_bad_response} is raised when the server
+answers with a status the wrapper accepts and a body the wrapper cannot
+read. It is raised where a wrapper checks the body before it reshapes it,
+rather than indexing straight into whatever arrived. Two functions raise
+it.
+
+\code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
+it returns are placed by the index that the response reports, so a block
+with a missing, repeated, or out-of-range index would otherwise pair a
+vector with the wrong text and give back a matrix that is silently wrong.
+
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it when a \code{schema} was given and the reply
+content is not one string of valid JSON. It is raised only with \code{simplify = TRUE} and
+\code{logprobs = FALSE}, which are the two settings under which the reply is
+parsed. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}} can raise it through
+\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+
+The condition carries a \code{status} field, which holds the HTTP response
+status as an integer. Today the status is always 200: both functions read
+the body only after a 200, and report every other status as an
+\code{rlmstudio_api_error} instead. The message names the argument that returns
+the body unchanged, so you can read what arrived. The one exception is an
+embeddings body that did not parse at all: that check runs before the
+argument is read, so its message points at the host instead.
+}
+
+\examples{
+\dontrun{
+lms_chat_openai(
+  model = "google/gemma-3-1b",
+  messages = list(
+    list(role = "user", content = "Rate 'Great value.' from 1 to 5.")
+  ),
+  schema = list(
+    type = "object",
+    properties = list(score = list(type = "integer")),
+    required = list("score")
+  )
+)
+}
+}

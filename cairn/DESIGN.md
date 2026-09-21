@@ -15,7 +15,7 @@ Elicited by `/design-interview` on 2026-09-17 (Phase 1). Seeded by cairn-init fr
 ### Contract boundary
 
 - The package exposes what `lms` and the REST API offer, one wrapper per feature, plus a small amount of R-native analysis of the results. `lms_score_expected` is the only member of the analysis family. It is an experimental helper for one use case, not a general contract.
-- If a new function wraps an LM Studio feature or serves the scoring-at-scale workflow, it earns a place. General LLM helpers (prompt templates, structured-output parsers, evaluation loops) are out.
+- If a new function wraps an LM Studio feature or serves the scoring-at-scale workflow, it earns a place. General LLM helpers (prompt templates, parsers that pull structure out of free prose, evaluation loops) are out. A parse of the JSON that an endpoint returns for a structured-output request is part of wrapping that feature (D-009, corrected M017).
 - Out of scope: a GUI, model training, and anything the LM Studio CLI or API does not expose.
 
 ### Platforms
