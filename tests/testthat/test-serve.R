@@ -224,7 +224,11 @@ fake_clock <- function(env = parent.frame()) {
 ready_stub <- function(true_on = Inf) {
   calls <- list()
   fn <- function(host = "http://localhost:1234", timeout = 2, token = NULL) {
-    calls[[length(calls) + 1L]] <<- list(host = host, timeout = timeout)
+    calls[[length(calls) + 1L]] <<- list(
+      host = host,
+      timeout = timeout,
+      token = token
+    )
     length(calls) >= true_on
   }
   list(fn = fn, calls = function() calls)
@@ -252,15 +256,18 @@ test_that("wait_for_server sends one request when the first answers", {
   expect_identical(clock$slept(), numeric(0))
 })
 
-test_that("wait_for_server passes the host and the per-request timeout", {
+test_that("wait_for_server passes the host, the timeout, and a NULL token", {
   fake_clock()
   stub <- ready_stub(true_on = 1)
   local_mocked_bindings(lms_server_ready = stub$fn)
 
   wait_for_server("http://elsewhere:8080", wait = 10, timeout = 0.5)
+  # token = NULL is passed rather than left to the default, because the help
+  # page says the request passes it. That makes the sentence true of the call
+  # that is made.
   expect_identical(
     stub$calls()[[1]],
-    list(host = "http://elsewhere:8080", timeout = 0.5)
+    list(host = "http://elsewhere:8080", timeout = 0.5, token = NULL)
   )
 })
 

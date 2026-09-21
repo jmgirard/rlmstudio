@@ -225,6 +225,23 @@ test_that("a host that is a character NA aborts", {
   )
 })
 
+test_that("a host that is not one string aborts whatever the reason", {
+  # The page says the six it names are not the whole list. These three are
+  # the examples it gives, so their messages are pinned too.
+  expect_error(
+    lms_server_ready(host = 1),
+    "`url` must be a single string, not the number 1"
+  )
+  expect_error(
+    lms_server_ready(host = list("a")),
+    "`url` must be a single string, not a list"
+  )
+  expect_error(
+    lms_server_ready(host = character(0)),
+    "`url` must be a single string, not an empty character vector"
+  )
+})
+
 test_that("a host that cannot be parsed as a URL aborts", {
   expect_error(
     lms_server_ready(host = "http://exa mple:1234"),
@@ -242,11 +259,13 @@ test_that("a timeout below one millisecond aborts", {
 test_that("a timeout that is not one number aborts", {
   expect_error(
     lms_server_ready(timeout = "2"),
-    "`seconds` must be a number"
+    '`seconds` must be a number, not the string "2"'
   )
+  # The page says the message names either the value or its type. A string
+  # gets the value, a vector of two gets the type.
   expect_error(
     lms_server_ready(timeout = c(1, 2)),
-    "`seconds` must be a number"
+    "`seconds` must be a number, not a double vector"
   )
 })
 

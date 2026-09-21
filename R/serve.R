@@ -23,9 +23,12 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' with loaded models via HTTP API calls.
 #'
 #' The CLI returns before the REST API answers. By default this function then
-#' keeps asking the REST API whether it is ready, for up to `wait` seconds,
+#' keeps asking the REST API whether it is ready, for about `wait` seconds,
 #' and returns once it answers. A script that calls the REST API on the next
 #' line therefore no longer reports a missing server on a healthy machine.
+#' The budget is a floor rather than a hard cap. No new request starts once
+#' `wait` seconds have passed, so the call can overrun by at most the one
+#' second a request already in flight is allowed.
 #'
 #' @param port Integer. Port to run the server on. If not provided, LM Studio
 #'   uses the last used port.
@@ -376,9 +379,9 @@ server_status_port <- function() {
 #' further request, so the call can run past the budget only by the time a
 #' request already in flight needs, which `timeout` bounds.
 #'
-#' `token` is not passed on. `lms_server_ready()` reads `NULL` as the
-#' `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN` environment
-#' variable, which is what a caller of `lms_server_start()` gets.
+#' The request passes `token = NULL`. `lms_server_ready()` reads `NULL` as
+#' the `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN`
+#' environment variable, which is what a caller of `lms_server_start()` gets.
 #'
 #' @param host Character. The base URL to probe.
 #' @param wait Numeric. The number of seconds to keep asking for. A `wait` of
@@ -402,7 +405,8 @@ wait_for_server <- function(host, wait, timeout = 1, pause = 0.25) {
       return(FALSE)
     }
 
-    if (isTRUE(lms_server_ready(host = host, timeout = timeout))) {
+    ready <- lms_server_ready(host = host, timeout = timeout, token = NULL)
+    if (isTRUE(ready)) {
       return(TRUE)
     }
 
@@ -515,9 +519,10 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #' @section Call faults that abort:
 #'
 #' A fault in the call is not a fact about the server, so it aborts rather
-#' than reporting `FALSE`. These messages come from the packages underneath
-#' and name their own arguments, `url` for `host` and `seconds` for
-#' `timeout`. Six such faults reach you.
+#' than reporting `FALSE`. These messages come from the packages underneath.
+#' The httr2 ones name httr2's own arguments, `url` for `host` and `seconds`
+#' for `timeout`. The curl one names no argument at all. Six such faults are
+#' named below.
 #'
 #' * A `host` of `NULL`. httr2 reports that `url` must be a single string,
 #'   not `NULL`.
@@ -530,7 +535,13 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #' * A `timeout` below one millisecond. httr2 reports that `seconds` must be
 #'   greater than 1 ms.
 #' * A `timeout` that is not one number, such as a string or a vector of two.
-#'   httr2 reports that `seconds` must be a number, and names what you gave.
+#'   httr2 reports that `seconds` must be a number, and names either the
+#'   value or its type.
+#'
+#' Those six are not the whole list. Any `host` that is not one string aborts
+#' the same way, whatever the reason, and httr2 names what you gave. A `host`
+#' of `1`, a `host` of `list("a")`, and a `host` of `character(0)` each abort
+#' with their own wording.
 #'
 #' The `token` fault named above aborts the same way. It comes from this
 #' package rather than from httr2.

@@ -42,9 +42,10 @@ all answer the port and all report \code{FALSE} here.
 
 
 A fault in the call is not a fact about the server, so it aborts rather
-than reporting \code{FALSE}. These messages come from the packages underneath
-and name their own arguments, \code{url} for \code{host} and \code{seconds} for
-\code{timeout}. Six such faults reach you.
+than reporting \code{FALSE}. These messages come from the packages underneath.
+The httr2 ones name httr2's own arguments, \code{url} for \code{host} and \code{seconds}
+for \code{timeout}. The curl one names no argument at all. Six such faults are
+named below.
 \itemize{
 \item A \code{host} of \code{NULL}. httr2 reports that \code{url} must be a single string,
 not \code{NULL}.
@@ -57,8 +58,14 @@ curl reports "Failed to parse URL: Malformed input to a URL function".
 \item A \code{timeout} below one millisecond. httr2 reports that \code{seconds} must be
 greater than 1 ms.
 \item A \code{timeout} that is not one number, such as a string or a vector of two.
-httr2 reports that \code{seconds} must be a number, and names what you gave.
+httr2 reports that \code{seconds} must be a number, and names either the
+value or its type.
 }
+
+Those six are not the whole list. Any \code{host} that is not one string aborts
+the same way, whatever the reason, and httr2 names what you gave. A \code{host}
+of \code{1}, a \code{host} of \code{list("a")}, and a \code{host} of \code{character(0)} each abort
+with their own wording.
 
 The \code{token} fault named above aborts the same way. It comes from this
 package rather than from httr2.
