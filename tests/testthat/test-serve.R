@@ -117,3 +117,75 @@ test_that("lms_server_status warns on multiple logging flags", {
     "Only one logging control flag can be used at a time"
   )
 })
+
+# server_status_port() reads the port out of what the CLI reports. The two
+# live shapes below were recorded from `lms server status --json` on
+# 2026-09-20 against LM Studio CLI commit 69d945a. The output is one flat
+# JSON object, so the port sits at the top level of the parsed list.
+
+test_that("server_status_port reads the port out of the live status shape", {
+  local_mocked_bindings(
+    lms_server_status = function(...) list(running = TRUE, port = 1234L)
+  )
+  expect_identical(server_status_port(), 1234L)
+})
+
+test_that("server_status_port ignores the running flag", {
+  # The CLI reports the last used port while the server is stopped, and it can
+  # still report FALSE in the moment right after a start.
+  local_mocked_bindings(
+    lms_server_status = function(...) list(running = FALSE, port = 1234L)
+  )
+  expect_identical(server_status_port(), 1234L)
+})
+
+test_that("server_status_port returns NULL for a shape with no port", {
+  local_mocked_bindings(
+    lms_server_status = function(...) list(running = TRUE)
+  )
+  expect_null(server_status_port())
+})
+
+test_that("server_status_port returns NULL for the unparsed character shape", {
+  # lms_server_status() falls back to a character vector of lines when
+  # jsonlite is missing or the output does not parse.
+  local_mocked_bindings(
+    lms_server_status = function(...) c("{\"running\":true,", "\"port\":1234}")
+  )
+  expect_null(server_status_port())
+})
+
+test_that("server_status_port returns NULL for a port it cannot use", {
+  unusable <- list(
+    null_port = NULL,
+    two_ports = c(1234L, 5678L),
+    missing = NA_integer_,
+    logical_port = TRUE,
+    list_port = list(1234L),
+    zero = 0L,
+    too_high = 70000L,
+    fractional = 1234.5
+  )
+
+  for (name in names(unusable)) {
+    value <- unusable[[name]]
+    local_mocked_bindings(
+      lms_server_status = function(...) list(running = TRUE, port = value)
+    )
+    expect_null(server_status_port(), info = name)
+  }
+})
+
+test_that("server_status_port accepts a port sent as a string", {
+  local_mocked_bindings(
+    lms_server_status = function(...) list(running = TRUE, port = "8080")
+  )
+  expect_identical(server_status_port(), 8080L)
+})
+
+test_that("server_status_port returns NULL when the status call aborts", {
+  local_mocked_bindings(
+    lms_server_status = function(...) cli::cli_abort("no CLI here")
+  )
+  expect_null(server_status_port())
+})

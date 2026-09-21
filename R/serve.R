@@ -214,6 +214,52 @@ lms_server_status <- function(
   return(lines)
 }
 
+#' Read the port that the CLI reports for the local server
+#'
+#' `lms server status --json` prints one JSON object with two fields, `port`
+#' and `running`. `lms_server_status(json = TRUE)` parses it, so the port sits
+#' at the top level of the returned list. The `running` field is not read.
+#' The caller has already seen the CLI report a successful start, and that
+#' field can still read `FALSE` in the moment right after a start, which is
+#' the race this helper serves.
+#'
+#' The CLI reports the last used port even while the server is stopped, so a
+#' port comes back in both states.
+#'
+#' @return One integer port, or `NULL` when the status output carries no
+#'   usable port. `lms_server_status()` returns a character vector rather
+#'   than a list when jsonlite is missing or the output does not parse, and
+#'   that shape yields `NULL` too.
+#'
+#' @noRd
+server_status_port <- function() {
+  status <- tryCatch(
+    lms_server_status(json = TRUE),
+    error = function(e) NULL
+  )
+
+  if (!is.list(status)) {
+    return(NULL)
+  }
+
+  port <- status[["port"]]
+  # A logical is excluded on purpose. `as.integer(TRUE)` is 1, so a `port`
+  # field holding TRUE would otherwise read as port 1.
+  if (!is.numeric(port) && !is.character(port)) {
+    return(NULL)
+  }
+  if (length(port) != 1L) {
+    return(NULL)
+  }
+
+  port <- suppressWarnings(as.numeric(port))
+  if (is.na(port) || port != trunc(port) || port < 1 || port > 65535) {
+    return(NULL)
+  }
+
+  as.integer(port)
+}
+
 #' Check if the LM Studio server is reachable
 #'
 #' Opens a TCP connection to the hostname and port named in `host`. When

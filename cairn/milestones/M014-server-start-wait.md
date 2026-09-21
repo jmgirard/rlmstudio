@@ -1,6 +1,7 @@
 # M014: The server start call can wait until the REST API answers
 
-- **Status:** planned
+- **Status:** in-progress
+- **Branch:** m014-server-start-wait
 - **Priority:** normal
 - **Depends on:** none
 - **Driving RR:** —
@@ -89,7 +90,7 @@ This milestone only documents that behavior.
 
 ## Tasks
 
-- [ ] T1: Run `lms server status --json` against a live LM Studio. Record the
+- [x] T1: Run `lms server status --json` against a live LM Studio. Record the
       field path that holds the port in the work log. Add
       `server_status_port()` to `R/serve.R`. It reads that path out of
       `lms_server_status(json = TRUE)`. If the read yields no usable port, it
@@ -122,6 +123,8 @@ This milestone only documents that behavior.
 - 2026-09-20: plan gate chose reading the port from `lms_server_status(json = TRUE)` over two alternatives. They were probing port 1234, and skipping the wait for a call that gives no port. Reason: the default call is the one that hits the race. Falsified by a CLI status output that carries no port, or whose shape moves across LM Studio versions.
 - 2026-09-20: plan gate chose a warning over an abort at the end of a wait that ran out. Reason: a slow start on a healthy machine must not fail a script. Falsified by a user whose script runs past the warning and fails later in a way that hides the cause.
 - 2026-09-20: plan gate chose a default `wait` of 10 seconds over a default of 0. Reason: a script that never names the argument is the one that hits the race. Falsified by a caller that relies on the start call returning at once.
+- 2026-09-20: implement gate settled three choices. The port read ignores the running flag. The poll pause is 0.25 seconds and each readiness request waits 1 second. Neither warning carries a catchable class.
+- 2026-09-20: T1 done. `lms server status --json` prints one flat JSON object. It reads `{"running":false,"port":1234}`. Recorded against LM Studio CLI commit 69d945a. The port sits at the top level. `server_status_port()` reads `status[["port"]]`. The CLI reports the last used port while the server is stopped. Eleven tests in `tests/testthat/test-serve.R`. Three planted defects turned six of them red first.
 
 ## Decisions
 
