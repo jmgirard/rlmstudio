@@ -104,6 +104,7 @@ drops it the same way.
 - 2026-09-20: created by /milestone-plan.
 - 2026-09-20: criteria audit (full mode, fresh [O] reader) returned 5 findings on the first draft and 1 on the re-check. The JSON shape joined the premise task. Quiet does not silence the warning. Three status faults stop the polling. The wait check became a call-order promise. A missing status field drops the milestone.
 - 2026-09-20: plan gate chose to plan M016 with a premise task over keeping the daemon wait as a candidate. The desktop app blocked a check in the plan session. Falsified by T1 showing that `lms daemon up` returns only once the daemon runs.
+- 2026-09-20: implement started on m016-daemon-start-wait. T1 paused: the desktop app (0.4.25+1) ignored an osascript quit and a SIGTERM, and `lms daemon down` refused with "The daemon is currently running as part of LM Studio". The user quits the app by hand.
 
 ## Decisions
 
