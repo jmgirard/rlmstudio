@@ -9,6 +9,7 @@ _Last hygiene check: 2026-09-20 (M016 dropped and archived, stamp renamed so cai
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | planned | none | normal | milestones/M017-structured-output.md |
 | M016 | The daemon start call can wait until the daemon reports running | dropped | none | normal | milestones/archive/M016-daemon-start-wait.md |
 | M015 | The server start call takes a token and checks its wait arguments before it starts | done | none | normal | milestones/archive/M015-server-start-token-and-host-check.md |
 | M014 | The server start call can wait until the REST API answers | done | none | normal | milestones/archive/M014-server-start-wait.md |
@@ -27,7 +28,8 @@ _Last hygiene check: 2026-09-20 (M016 dropped and archived, stamp renamed so cai
 - The chat wrappers send an `input` of length two as a JSON array rather than one prompt. M013 leaves the length alone, because narrowing a named formal is a permanent API restriction. Decide whether a length rule belongs there, added 2026-09-20, M013 plan gate
 - A `ttl` argument on `lms_load()` and the chat wrappers. It sets how long an idle model stays in memory and is the one documented load field the package does not name, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A `/api/v1/chat` response carries a `stats` block with `input_tokens`, `total_output_tokens`, `tokens_per_second`, and `time_to_first_token_seconds`. `lms_chat_native()` drops it. Surfacing it lets a batch run report throughput, added 2026-09-19, cairn/references/lmstudio-api-surface.md
-- Structured output on `/v1/chat/completions` through `response_format` with a JSON schema. A scoring run gets one parsed value per item instead of prose to parse, added 2026-09-19, cairn/references/lmstudio-api-surface.md
+- Structured output on `/v1/responses` and `/api/v1/chat`. M017 covers `/v1/chat/completions` only, the one endpoint the LM Studio docs describe for it. Promote once the docs or a live request show that another endpoint honors a schema, added 2026-09-21, M017 scope
+- Bind parsed batch replies into data-frame columns. With `schema`, `lms_chat_batch(format = "data.frame")` returns an `output` list-column after M017, added 2026-09-21, M017 scope
 - A loaded-instance table, the view `lms ps` prints, flattened from the `loaded_instances` field that `list_models(detailed = TRUE)` already returns, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - Stateful chat on `/api/v1/chat`. The endpoint returns a `response_id` and continues a thread from `previous_response_id`. The package drops the id, so the thread is unreachable, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. A test that greps `R/` gates `devtools::test()` only, added 2026-09-18, M007 scope
