@@ -267,6 +267,9 @@ lms_chat_openai <- function(
   }
 
   body <- Filter(Negate(is.null), body)
+  if (!is.null(schema)) {
+    body$response_format <- schema_response_format(schema)
+  }
   body <- utils::modifyList(body, list(...))
 
   resp <- lms_client(host, token = token) |>
@@ -289,10 +292,58 @@ lms_chat_openai <- function(
         new_lms_chat_result(text = res_text, logprobs = NULL)
       ))
     }
+    if (!is.null(schema)) {
+      return(parse_schema_reply(resp, res_text, "OpenAI API Failed"))
+    }
     return(res_text)
   }
 
   rlm_abort_api(resp, "OpenAI API Failed", !is.null(rlm_token(token)))
+}
+
+#' Build the structured-output field of a chat completions request
+#'
+#' The shape LM Studio documents for `/v1/chat/completions`. An empty `schema`
+#' is given empty names, because jsonlite writes an unnamed empty list as the
+#' array `[]` and a named one as the object `{}`.
+#'
+#' @param schema A named list or an empty list, already checked by
+#'   `rlm_check_schema()`.
+#' @return A list for the `response_format` field of the request body.
+#'
+#' @noRd
+schema_response_format <- function(schema) {
+  if (length(schema) == 0L) {
+    schema <- structure(list(), names = character())
+  }
+  list(
+    type = "json_schema",
+    json_schema = list(name = "response", strict = TRUE, schema = schema)
+  )
+}
+
+#' Parse the JSON reply to a structured-output request
+#'
+#' `jsonlite::parse_json()` rather than `jsonlite::fromJSON()`, because
+#' `fromJSON()` fetches a string that looks like a URL and reads a string that
+#' names a file on disk. A model reply is text the package did not write.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param content The reply content read out of the response.
+#' @param label Character. The calling wrapper's label, which opens the message.
+#' @return The parsed reply.
+#'
+#' @noRd
+parse_schema_reply <- function(resp, content, label) {
+  if (!is.character(content) || length(content) != 1L || is.na(content)) {
+    rlm_abort_bad_response(resp, label, "The reply content is not one string.")
+  }
+  tryCatch(
+    jsonlite::parse_json(content, simplifyVector = TRUE),
+    error = function(cnd) {
+      rlm_abort_bad_response(resp, label, "The reply content is not valid JSON.")
+    }
+  )
 }
 
 #' Chat Completion via Native API

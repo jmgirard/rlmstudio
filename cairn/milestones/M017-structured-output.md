@@ -108,7 +108,7 @@ the schema content stays with the server (D-003).
       its probe.
       Extend `tests/testthat/test-arg-guards.R` with a counting probe stub
       (LESSONS, M015).
-- [ ] T2: In `lms_chat_openai()` (`R/chat.R:246`), build `response_format`
+- [x] T2: In `lms_chat_openai()` (`R/chat.R:246`), build `response_format`
       from `schema`. Parse the content with `jsonlite::parse_json()`. Do not
       use `fromJSON()`, because it fetches a reply that looks like a URL and
       reads a reply that names a file. Abort through
@@ -142,6 +142,7 @@ the schema content stays with the server (D-003).
 - 2026-09-21: plan chose a fixed `json_schema$name` of `"response"` over a `schema_name` argument, because the name does not change the output. Falsified by a server that rejects the name or uses it.
 - 2026-09-21: implement started on `m017-structured-output`. The question gate was skipped, because the plan left no choice open and no dependency changes.
 - 2026-09-21: T1 done. `rlm_check_schema()` and `rlm_check_schema_route()` run above the probe in all three functions. With the batch check removed, the form and clash tests went red with `rlmstudio_no_server`.
+- 2026-09-21: T2 done. An empty schema is sent as `{}` with empty names, because jsonlite writes `list()` as `[]`. A reply that names a temp file holding JSON is the probe that separates `parse_json()` from `fromJSON()`. With `fromJSON()` planted, only that probe failed. Suite: 244 tests, 0 failed, 0 skipped.
 
 ## Decisions
 

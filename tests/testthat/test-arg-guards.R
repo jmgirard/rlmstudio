@@ -401,7 +401,7 @@ schema_probes <- list(
   ),
   list(
     label = "a list with an NA name",
-    value = stats::setNames(list("object"), NA),
+    value = structure(list("object"), names = NA_character_),
     match = "has no name"
   ),
   list(label = "a data frame", value = data.frame(a = 1), match = "a data frame")
