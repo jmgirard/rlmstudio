@@ -558,3 +558,93 @@ test_that("a bad token aborts before the CLI runs, with host left NULL", {
     }
   }
 })
+
+# Run expr and return its value with every warning it raised, muffled.
+collect_warnings <- function(expr) {
+  warnings <- list()
+  value <- withCallingHandlers(
+    expr,
+    warning = function(w) {
+      warnings[[length(warnings) + 1L]] <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, warnings = warnings)
+}
+
+test_that("an abort from the probe during the wait becomes one warning", {
+  start_success()
+  fake_clock()
+  local_mocked_bindings(
+    lms_server_ready = function(...) cli::cli_abort("probe broke")
+  )
+
+  out <- suppressMessages(
+    collect_warnings(lms_server_start(host = "http://127.0.0.1:9999"))
+  )
+  expect_identical(out$value, 0)
+  expect_length(out$warnings, 1L)
+  message <- conditionMessage(out$warnings[[1]])
+  expect_match(message, "could not ask", ignore.case = TRUE)
+  expect_match(message, "127.0.0.1:9999", fixed = TRUE)
+  # The abort's own message is quoted.
+  expect_match(message, "probe broke", fixed = TRUE)
+})
+
+test_that("a warning raised by the probe before it aborts is not doubled", {
+  start_success()
+  fake_clock()
+  local_mocked_bindings(
+    lms_server_ready = function(...) {
+      cli::cli_warn("probe warned")
+      cli::cli_abort("probe broke")
+    }
+  )
+
+  out <- suppressMessages(
+    collect_warnings(lms_server_start(host = "http://127.0.0.1:9999"))
+  )
+  expect_identical(out$value, 0)
+  expect_length(out$warnings, 1L)
+  expect_match(conditionMessage(out$warnings[[1]]), "could not ask",
+    ignore.case = TRUE
+  )
+})
+
+test_that("none of the three wait warnings carries the token", {
+  secret <- "secret-token-xyz"
+  start_success()
+  fake_clock()
+
+  # The wait runs out.
+  local_mocked_bindings(lms_server_ready = ready_stub(true_on = Inf)$fn)
+  out <- suppressMessages(collect_warnings(
+    lms_server_start(port = 8080, wait = 1, token = secret)
+  ))
+  expect_length(out$warnings, 1L)
+  expect_match(conditionMessage(out$warnings[[1]]), "did not answer in time")
+  expect_no_match(conditionMessage(out$warnings[[1]]), secret, fixed = TRUE)
+
+  # No host was found.
+  local_mocked_bindings(lms_server_status = function(...) list(running = TRUE))
+  out <- suppressMessages(collect_warnings(lms_server_start(token = secret)))
+  expect_length(out$warnings, 1L)
+  expect_match(
+    conditionMessage(out$warnings[[1]]),
+    "Could not tell which host to ask"
+  )
+  expect_no_match(conditionMessage(out$warnings[[1]]), secret, fixed = TRUE)
+
+  # The probe aborted.
+  local_mocked_bindings(
+    lms_server_ready = function(...) cli::cli_abort("probe broke")
+  )
+  out <- suppressMessages(collect_warnings(
+    lms_server_start(port = 8080, token = secret)
+  ))
+  expect_length(out$warnings, 1L)
+  expect_match(conditionMessage(out$warnings[[1]]), "could not ask",
+    ignore.case = TRUE
+  )
+  expect_no_match(conditionMessage(out$warnings[[1]]), secret, fixed = TRUE)
+})

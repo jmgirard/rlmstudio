@@ -211,7 +211,29 @@ warn_unless_ready <- function(host = NULL, port = NULL, wait = 10,
     return(invisible(FALSE))
   }
 
-  if (wait_for_server(target, wait = wait, token = token)) {
+  # The pre-start checks leave no known way for lms_server_ready() to abort
+  # here, so this is a fallback. The start already ran and cannot be undone,
+  # so the abort becomes one warning. suppressWarnings() sits inside the
+  # tryCatch() so that a warning the probe raises before it aborts does not
+  # reach the user as a second warning for the same fault.
+  ready <- tryCatch(
+    suppressWarnings(wait_for_server(target, wait = wait, token = token)),
+    error = function(e) e
+  )
+
+  if (inherits(ready, "error")) {
+    reason <- conditionMessage(ready)
+    cli::cli_warn(c(
+      "Could not ask the LM Studio server at {.url {target}} whether it is
+       ready.",
+      "x" = "{reason}",
+      "i" = "The server was started. Call {.fn lms_server_ready} to ask
+             again."
+    ))
+    return(invisible(FALSE))
+  }
+
+  if (ready) {
     return(invisible(TRUE))
   }
 

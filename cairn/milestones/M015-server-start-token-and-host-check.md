@@ -90,7 +90,7 @@ guards over the token table and the condition help page stay candidates.
       Catch a `host` fault and abort again with a message that names `host`.
       Let the `rlm_token()` abort through. Delete the check in a scratch copy
       and make sure that the tests go red.
-- [ ] T4: Tests first for AC4 and AC5. Catch an abort from the probe in
+- [x] T4: Tests first for AC4 and AC5. Catch an abort from the probe in
       `warn_unless_ready()` and raise one `cli::cli_warn()` that names the
       host. Wrap the read so that a warning from the probe does not double the
       warning (LESSONS, M014).
@@ -108,6 +108,7 @@ guards over the token table and the condition help page stay candidates.
 - 2026-09-20: T1 done. `server_ready_request()` in `R/serve.R` builds the request, and `lms_server_ready()` calls it. `test-server-ready.R` is unchanged and green, and the full suite is green.
 - 2026-09-20: T2 done. `token` is the last formal of `lms_server_start()` and reaches `lms_server_ready()`. The token table lists fourteen functions, and a new test reads `Bearer t` and the option token off the readiness request. Setting the forward in `wait_for_server()` back to `NULL` turned three expectations red.
 - 2026-09-20: T3 done. `lms_server_start()` calls `rlm_token(token)` and then `rlm_check_ready_host(host)` before the CLI runs. The token check runs first, so the host check catches host faults alone. In a scratch copy, deleting either line turned its tests red. The full suite is green.
+- 2026-09-20: T4 done. `warn_unless_ready()` turns an abort from the wait into one `cli_warn()` that names the host and quotes the abort message, with `suppressWarnings()` inside the `tryCatch()`. Removing `suppressWarnings()` turned the double-warning test red. The AC5 probe-abort case uses a mocked abort message that holds no token, so it checks only the text the package composes.
 
 ## Decisions
 
