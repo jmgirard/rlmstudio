@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene pass: 2026-09-20 (M015 done and archived, M012 row pruned, one lesson added, validate green)_
+_Last hygiene pass: 2026-09-20 (M016 dropped at its T1 premise check and archived, M013 row pruned, one candidate added)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene pass: 2026-09-20 (M015 done and archived, M012 row pruned, one les
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M016 | The daemon start call can wait until the daemon reports running | in-progress | none | normal | milestones/M016-daemon-start-wait.md |
+| M016 | The daemon start call can wait until the daemon reports running | dropped | none | normal | milestones/archive/M016-daemon-start-wait.md |
 | M015 | The server start call takes a token and checks its wait arguments before it starts | done | none | normal | milestones/archive/M015-server-start-token-and-host-check.md |
 | M014 | The server start call can wait until the REST API answers | done | none | normal | milestones/archive/M014-server-start-wait.md |
-| M013 | A bad model or text argument aborts with a message that names the mistake | done | none | normal | milestones/archive/M013-argument-guards.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -22,6 +21,7 @@ _Last hygiene pass: 2026-09-20 (M015 done and archived, M012 row pruned, one les
      See tracking-rules "Candidate priority token". -->
 - `lms_server_start()` with `host = NULL` does not check the host it builds from `port` before the CLI runs. A `port` of `"abc"` or `99999` makes the probe abort. If the CLI accepts such a port, the call warns after the start rather than aborting before it, added 2026-09-20, M015 review finding 4
 - The argument-guard loops in `tests/testthat/test-arg-guards.R` report one failure for ten functions. A non-matching error aborts the whole `test_that()` block. The first broken function then hides the other nine. The file still turns red. The diagnostics alone are coarse, added 2026-09-20, M013 review finding 7
+- Run `lms daemon up` then `lms daemon status --json` on a headless llmster install, as on Linux. On macOS with the desktop app installed, `up` returned only once the daemon ran, so M016 dropped its wait. If `up` returns early there, a wait on `lms_daemon_start()` has a reason, added 2026-09-20, milestones/archive/M016-daemon-start-wait.md
 - A `chunk_size` argument on `lms_embed()` with a progress bar, so a long input vector goes out as several requests. M012 sends the whole vector in one POST, added 2026-09-20, M012 plan gate
 - `lms_chat_openai()` takes its prompt as `messages`, a list, so M013's text guard does not reach it. A malformed messages list still goes to the server unchecked, added 2026-09-20, M013 scope
 - The chat wrappers send an `input` of length two as a JSON array rather than one prompt. M013 leaves the length alone, because narrowing a named formal is a permanent API restriction. Decide whether a length rule belongs there, added 2026-09-20, M013 plan gate
