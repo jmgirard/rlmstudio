@@ -60,12 +60,12 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' The request carries `token`, read as described under that argument.
 #'
-#' Two faults in the call abort before the CLI runs, with any `wait`. One is
-#' a `host` that is not `NULL` and that the readiness request cannot be built
-#' from, such as a vector of two strings, `NA`, an empty string, or
-#' `"localhost:1234"`, which lacks `http://`. That message names `host` and
-#' quotes the reason httr2 or curl gave. The other is a `token` that is not
-#' one character string and not `NULL`.
+#' Beside a bad `wait`, two faults in the call abort before the CLI runs,
+#' with any `wait`. One is a `host` that is not `NULL` and that the readiness
+#' request cannot be built from, such as a vector of two strings, `NA`, an
+#' empty string, or `"localhost:1234"`, which lacks `http://`. That message
+#' names `host` and quotes the reason httr2 or curl gave. The other is a
+#' `token` that is not one character string and not `NULL`.
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -109,8 +109,8 @@ lms_server_start <- function(
   rlm_check_wait(wait)
   # Faults in host and token are knowable without a server, and a start that
   # has already run cannot be undone, so both are checked before the CLI runs.
-  # The token check runs first, so the host check below catches host faults
-  # alone.
+  # The host check builds its request with token = NULL, so it never sees the
+  # caller's token. That token is checked here on its own.
   rlm_token(token)
   if (!is.null(host)) {
     rlm_check_ready_host(host)

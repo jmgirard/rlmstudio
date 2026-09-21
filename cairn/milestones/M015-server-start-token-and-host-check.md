@@ -112,6 +112,8 @@ guards over the token table and the condition help page stay candidates.
 - 2026-09-20: T5 done. The `?lms_server_start` page documents `token`, the two pre-start aborts, and the third warning. The quiet-option test now covers all three warnings. NEWS.md has three new bullets, and the old sentence saying that the request passes `token = NULL` is gone. `document()` gave no further diff. `devtools::check()` with the token set gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-20: claim audit: 26 claims read, 3 corrected — R/serve.R, tests/testthat/test-serve.R, NEWS.md. The reader re-read all six changed lines and all hold. It found that a malformed caller `port` can still reach the probe-abort warning when the CLI accepts it, because `port` stays out of scope. The AC4 premise "no known trigger" is therefore not strictly true. Its tested promise still holds, and the criterion text was not amended.
 - 2026-09-20: re-verified after the wording fixes. `devtools::test()` is green, `devtools::check()` with the token set gave 0 errors, 0 warnings, and 0 notes, and `document()` gave no diff. Status is now review.
+- 2026-09-20: review: all six criteria verified, and the three reviewers reported 11 findings in total. Findings 1, 2, 5, and 6 were fixed at the gate, finding 4 became a candidate row, and the other six were rejected.
+- 2026-09-20: step-7 approval: m015-server-start-token-and-host-check approved for merge.
 
 ## Decisions
 
@@ -142,3 +144,12 @@ Three fresh reviewers ran. The [S] blame-history reviewer and the [S] prior-revi
 9. `token = ""` falls through to the option, and the `token` help text does not say so. Proposed: reject, because every wrapper shares this and the diff did not add it.
 10. A quoted cli message can carry color codes inside the warning bullet. Proposed: reject as cosmetic.
 11. The `lms_server_start` row in the token table has no fake clock and relies on a ready response. Proposed: reject, because every table driver in that file answers ready.
+
+### Gate outcome
+
+The maintainer accepted every proposed disposition at the merge gate on 2026-09-20. Findings 1, 2, 5, and 6 were fixed on the branch. Finding 4 is a new ROADMAP candidate row. Findings 3, 7, 8, 9, 10, and 11 are rejected for the reasons above.
+
+- Fix for 1: `forbid_cli()` now counts its calls and stops. The host and token tests assert a count of zero after their loops. In a scratch copy with the host check and the host message match both removed, the host test went red on the count alone.
+- Fix for 2: a new test mocks `server_ready_request()` to fail with a fixed reason and matches that reason in the abort. With the `"x" = "{reason}"` line removed in a scratch copy, that test went red.
+- Fixes for 5 and 6: the help text now names a bad `wait` beside the two pre-start faults, and the comment above `rlm_token(token)` gives the right reason.
+- After the fixes, `devtools::document()` rewrote `man/lms_server_start.Rd` to match the new roxygen text. `devtools::check()` with the token set gave 0 errors, 0 warnings, and 0 notes, and its test run passed.

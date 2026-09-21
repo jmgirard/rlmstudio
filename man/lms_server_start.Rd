@@ -66,12 +66,12 @@ read, and the host is \verb{http://localhost:} plus that port.
 
 The request carries \code{token}, read as described under that argument.
 
-Two faults in the call abort before the CLI runs, with any \code{wait}. One is
-a \code{host} that is not \code{NULL} and that the readiness request cannot be built
-from, such as a vector of two strings, \code{NA}, an empty string, or
-\code{"localhost:1234"}, which lacks \verb{http://}. That message names \code{host} and
-quotes the reason httr2 or curl gave. The other is a \code{token} that is not
-one character string and not \code{NULL}.
+Beside a bad \code{wait}, two faults in the call abort before the CLI runs,
+with any \code{wait}. One is a \code{host} that is not \code{NULL} and that the readiness
+request cannot be built from, such as a vector of two strings, \code{NA}, an
+empty string, or \code{"localhost:1234"}, which lacks \verb{http://}. That message
+names \code{host} and quotes the reason httr2 or curl gave. The other is a
+\code{token} that is not one character string and not \code{NULL}.
 
 A wait that runs out does not abort. The server was already started and
 that cannot be undone, so the function raises a warning and returns the

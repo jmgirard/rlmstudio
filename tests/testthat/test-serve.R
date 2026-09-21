@@ -492,21 +492,25 @@ test_that("none of the three warnings is silenced by the quiet option", {
   expect_warning(lms_server_start(port = 8080), "Could not ask")
 })
 
-# A processx::run stub that fails the test if the CLI is ever called. The
-# checks below must all fire before the server starts.
+# A processx::run stub that counts its calls and then stops. The checks below
+# must all fire before the server starts, so each test asserts a count of zero
+# after its loop. A fail() inside the stub would not do this, because
+# expect_error() accepts that failure as the expected error.
 forbid_cli <- function(env = parent.frame()) {
+  calls <- 0L
   local_mocked_bindings(
     run = function(command, args, error_on_status) {
-      fail("processx::run() was called")
-      list(status = 0)
+      calls <<- calls + 1L
+      stop("processx::run() was called")
     },
     .package = "processx",
     .env = env
   )
+  function() calls
 }
 
 test_that("a host the readiness request cannot be built from aborts first", {
-  forbid_cli()
+  cli_calls <- forbid_cli()
   bad_hosts <- list(
     c("http://a:1", "http://b:2"),
     NA_character_,
@@ -532,6 +536,19 @@ test_that("a host the readiness request cannot be built from aborts first", {
       expect_false(any(grepl("^rlmstudio", class(err))))
     }
   }
+  expect_identical(cli_calls(), 0L)
+})
+
+test_that("the host abort quotes the reason the request build gave", {
+  cli_calls <- forbid_cli()
+  local_mocked_bindings(
+    server_ready_request = function(...) stop("reason from the build")
+  )
+
+  err <- expect_error(lms_server_start(host = "http://localhost:1234"))
+  expect_match(conditionMessage(err), "`host`", fixed = TRUE)
+  expect_match(conditionMessage(err), "reason from the build", fixed = TRUE)
+  expect_identical(cli_calls(), 0L)
 })
 
 test_that("a NULL host and a usable host pass the pre-start check", {
@@ -551,7 +568,7 @@ test_that("a NULL host and a usable host pass the pre-start check", {
 })
 
 test_that("a bad token aborts before the CLI runs, with host left NULL", {
-  forbid_cli()
+  cli_calls <- forbid_cli()
   bad_tokens <- list(c("a", "b"), NA_character_, 1)
 
   for (wait in c(10, 0)) {
@@ -563,6 +580,7 @@ test_that("a bad token aborts before the CLI runs, with host left NULL", {
       )
     }
   }
+  expect_identical(cli_calls(), 0L)
 })
 
 # Run expr and return its value with every warning it raised, muffled.
