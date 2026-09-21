@@ -115,7 +115,7 @@ the schema content stays with the server (D-003).
       `rlm_abort_bad_response()` (`R/utils-api-error.R:127`). Write
       `tests/testthat/test-chat-schema.R` on the shared recorder. Read the
       raw body bytes as `test-embed.R` does.
-- [ ] T3: Write `data-raw/record-schema-cassette.R` on the model of
+- [x] T3: Write `data-raw/record-schema-cassette.R` on the model of
       `data-raw/record-embed-cassette.R`. Record one structured reply from a
       live LM Studio into a new cassette directory. Add the recorded tests for
       AC2. The live run needs `RLMSTUDIO_API_TOKEN` set (LESSONS, M009).
@@ -143,6 +143,7 @@ the schema content stays with the server (D-003).
 - 2026-09-21: implement started on `m017-structured-output`. The question gate was skipped, because the plan left no choice open and no dependency changes.
 - 2026-09-21: T1 done. `rlm_check_schema()` and `rlm_check_schema_route()` run above the probe in all three functions. With the batch check removed, the form and clash tests went red with `rlmstudio_no_server`.
 - 2026-09-21: T2 done. An empty schema is sent as `{}` with empty names, because jsonlite writes `list()` as `[]`. A reply that names a temp file holding JSON is the probe that separates `parse_json()` from `fromJSON()`. With `fromJSON()` planted, only that probe failed. Suite: 244 tests, 0 failed, 0 skipped.
+- 2026-09-21: T3 done. The cassette `chat_schema_live` was recorded from `google/gemma-3-1b` at temperature 0 and holds the reply `{ "score": 3 }` with no auth header. The recorded test passed with the server stopped, so the cassette served it.
 
 ## Decisions
 

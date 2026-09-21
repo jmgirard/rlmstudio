@@ -155,6 +155,44 @@ test_that("a reply naming a file is not read from disk", {
   expect_identical(err$status, 200L)
 })
 
+test_that("a structured reply recorded from a live server parses", {
+  # The cassette in chat_schema_live/ was recorded against a real LM Studio
+  # server running google/gemma-3-1b. Regenerate it with
+  # data-raw/record-schema-cassette.R, which carries the full provenance. The
+  # request below must match the script's request byte for byte, because
+  # httptest2 finds the cassette by a hash of the request body.
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = NA)
+  withr::local_options(rlmstudio.token = NULL)
+
+  live_call <- function(simplify) {
+    lms_chat_openai(
+      model = "google/gemma-3-1b",
+      messages = list(
+        list(
+          role = "user",
+          content = "Rate how positive this review is from 1 to 5: 'Great value.'"
+        )
+      ),
+      host = "http://localhost:1234",
+      simplify = simplify,
+      temperature = 0,
+      schema = score_schema
+    )
+  }
+
+  httptest2::with_mock_dir("chat_schema_live", {
+    parsed <- live_call(simplify = TRUE)
+    raw <- live_call(simplify = FALSE)
+  })
+
+  content <- raw$choices[[1]]$message$content
+  expect_type(content, "character")
+  expect_identical(parsed, jsonlite::parse_json(content, simplifyVector = TRUE))
+  # Stated apart from the parser: the recorded reply is `{ "score": 3 }`.
+  expect_identical(parsed, list(score = 3L))
+})
+
 test_that("a reply that does not parse is returned as text without a schema", {
   out <- call_with_reply(completion_body(quoted("a score of three")))
   expect_identical(out$value, "a score of three")
