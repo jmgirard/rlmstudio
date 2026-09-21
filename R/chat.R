@@ -45,11 +45,14 @@ lms_chat <- function(
   logprobs = FALSE,
   simplify = TRUE,
   ...,
+  schema = NULL,
   token = NULL
 ) {
   api_type <- match.arg(api_type)
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_schema(schema, ...names())
+  rlm_check_schema_route(schema, api_type)
 
   if (api_type == "openresponses") {
     return(lms_chat_openresponses(
@@ -250,9 +253,11 @@ lms_chat_openai <- function(
   logprobs = FALSE,
   simplify = TRUE,
   ...,
+  schema = NULL,
   token = NULL
 ) {
   rlm_check_id(model, "model")
+  rlm_check_schema(schema, ...names())
 
   stop_if_no_server(host)
 
@@ -399,10 +404,22 @@ lms_chat_batch <- function(
   rlm_check_id(model, "model")
   rlm_check_text(inputs, "inputs")
 
+  # `lms_chat()` checks `schema` too, but only after the server probe below
+  # has run. Checking here keeps an argument fault ahead of it (D-008). `[[`
+  # rather than `$`, because `$` would match a partial name such as `sch`.
+  args <- list(...)
+  schema <- args[["schema"]]
+  rlm_check_schema(schema, names(args))
+  api_type <- args[["api_type"]]
+  if (is.null(api_type)) {
+    api_type <- "openresponses"
+  }
+  api_type <- match.arg(api_type, c("openresponses", "openai", "native"))
+  rlm_check_schema_route(schema, api_type)
+
   stop_if_no_server(host)
   format <- match.arg(format)
 
-  args <- list(...)
   has_logprobs <- isTRUE(args$logprobs)
   should_be_quiet <- is_quiet(quiet)
 

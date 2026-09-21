@@ -1,13 +1,13 @@
 # M017: The OpenAI chat call takes a JSON schema and returns the parsed answer
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** IP1, GP1, GP2, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — new argument and return shape on three exported chat functions
-- **Branch/PR:** —
+- **Branch/PR:** m017-structured-output
 
 ## Goal
 
@@ -100,7 +100,7 @@ the schema content stays with the server (D-003).
 
 ## Tasks
 
-- [ ] T1: Add `rlm_check_schema()` to `R/utils-args.R`. It holds the form
+- [x] T1: Add `rlm_check_schema()` to `R/utils-args.R`. It holds the form
       check and the `response_format` clash as unclassed aborts (D-008). Call
       it above the server probe in `lms_chat_openai()` and `lms_chat()`.
       In `lms_chat_batch()`, read `list(...)[["schema"]]`, because `$` matches
@@ -140,6 +140,8 @@ the schema content stays with the server (D-003).
 - 2026-09-21: plan gate chose to parse the reply over returning the JSON string, because a scoring run wants one value per item. Falsified by users who need the raw string where `simplify = FALSE` does not serve.
 - 2026-09-21: plan gate chose an abort in `lms_chat()` on a non-openai `api_type` over a silent route to the OpenAI endpoint. With that route, the default depends on another argument. Falsified by LM Studio documenting structured output on `/v1/responses`.
 - 2026-09-21: plan chose a fixed `json_schema$name` of `"response"` over a `schema_name` argument, because the name does not change the output. Falsified by a server that rejects the name or uses it.
+- 2026-09-21: implement started on `m017-structured-output`. The question gate was skipped, because the plan left no choice open and no dependency changes.
+- 2026-09-21: T1 done. `rlm_check_schema()` and `rlm_check_schema_route()` run above the probe in all three functions. With the batch check removed, the form and clash tests went red with `rlmstudio_no_server`.
 
 ## Decisions
 

@@ -135,6 +135,94 @@ article_for <- function(word) {
   if (grepl("^[aeiou]", word, ignore.case = TRUE)) "an" else "a"
 }
 
+#' Reject a schema that cannot be sent as a JSON object
+#'
+#' `schema` becomes the `schema` field of the `response_format` body, which
+#' LM Studio reads as a JSON Schema object. jsonlite writes a named list as an
+#' object and an unnamed list as an array, so the check is on the names. The
+#' content of the schema is left to the server (D-003). A `response_format` in
+#' `...` is refused alongside `schema`, because `utils::modifyList()` merges
+#' the two field by field and sends a mix of both.
+#'
+#' @param value The value the caller passed as `schema`.
+#' @param dot_names Character. The names of the caller's `...`.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_schema <- function(value, dot_names = character()) {
+  fault <- schema_fault(value)
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "{.arg schema} must be a named list, an empty list, or {.code NULL}.",
+        "x" = "{fault}"
+      ),
+      call = NULL
+    )
+  }
+  if (!is.null(value) && "response_format" %in% dot_names) {
+    cli::cli_abort(
+      "Give either {.arg schema} or a {.field response_format} in {.arg ...}, not both.",
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
+#' Which rule did this schema break?
+#'
+#' Returns plain text rather than a cli string, for the reason `id_fault()`
+#' states.
+#'
+#' @param value The value the caller passed.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+schema_fault <- function(value) {
+  if (is.null(value)) {
+    return(NULL)
+  }
+  if (is.data.frame(value)) {
+    return("You gave a data frame.")
+  }
+  if (!is.list(value)) {
+    cls <- class(value)[[1]]
+    return(paste0("You gave ", article_for(cls), " ", cls, " value."))
+  }
+  if (length(value) == 0L) {
+    return(NULL)
+  }
+  nms <- names(value)
+  if (is.null(nms) || anyNA(nms) || !all(nzchar(nms))) {
+    return("You gave a list with at least one element that has no name.")
+  }
+  NULL
+}
+
+#' Reject a schema sent to an endpoint that does not take one
+#'
+#' LM Studio documents structured output on `/v1/chat/completions` alone, which
+#' is the `"openai"` route of `lms_chat()`.
+#'
+#' @param schema The value the caller passed as `schema`.
+#' @param api_type Character. The route, already matched.
+#' @return `schema`, invisibly.
+#'
+#' @noRd
+rlm_check_schema_route <- function(schema, api_type) {
+  if (!is.null(schema) && !identical(api_type, "openai")) {
+    cli::cli_abort(
+      c(
+        "{.arg schema} needs {.code api_type = \"openai\"}.",
+        "x" = "You gave {.code api_type = {.str {api_type}}}.",
+        "i" = "LM Studio takes a JSON schema on its OpenAI chat endpoint only."
+      ),
+      call = NULL
+    )
+  }
+  invisible(schema)
+}
+
 #' Reject a text argument that is not a usable character vector
 #'
 #' The strict rule, for the arguments that are genuinely vectors of text:
