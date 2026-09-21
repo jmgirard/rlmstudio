@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-20 (M016 dropped and archived, stamp renamed so cai
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | planned | none | normal | milestones/M017-structured-output.md |
+| M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | review | none | normal | milestones/M017-structured-output.md |
 | M016 | The daemon start call can wait until the daemon reports running | dropped | none | normal | milestones/archive/M016-daemon-start-wait.md |
 | M015 | The server start call takes a token and checks its wait arguments before it starts | done | none | normal | milestones/archive/M015-server-start-token-and-host-check.md |
 | M014 | The server start call can wait until the REST API answers | done | none | normal | milestones/archive/M014-server-start-wait.md |
@@ -45,6 +45,9 @@ _Last hygiene check: 2026-09-20 (M016 dropped and archived, stamp renamed so cai
 - The eight abort sites call `rlm_token(token)` again to decide the hint. `lms_client()` already resolved it. Ambient state that changes between the two reads gives the wrong hint, added 2026-09-20, M009 review finding 5
 - `request_target()` now returns headers with redaction off for every caller. The older callers do not pin `RLMSTUDIO_API_TOKEN`. Nothing prints those headers today. Give them an opt-in accessor, added 2026-09-20, M009 review finding 6
 - A guard that keeps the token wrapper table covering every exported function that reaches the REST API. The table is a fixed list of twelve names. A thirteenth wrapper added later escapes it, added 2026-09-20, M009 review finding 8, count corrected M010, see the two sibling guard rows above
+- With a `schema`, one batch reply that fails to parse aborts `lms_chat_batch()` and loses every reply so far. A reply cut off by `max_tokens` reads as "not valid JSON". The call does not read `finish_reason`. The abort hint says to call again with `simplify = FALSE`, but a model can reply differently the second time. No test runs a batch with mixed replies, added 2026-09-21, M017 review findings R5, R6, R11
+- A nested empty list in `schema`, such as `properties = list()`, is sent as `[]`, which is not a JSON Schema object. Only a top-level `list()` becomes `{}`. The docs name the one-element vector case only, added 2026-09-21, M017 review finding R7
+- A chat completions response with an empty or missing `choices` fails with a subscript error and no package class. The M017 NEWS line on reply content reads broader than that, added 2026-09-21, M017 review finding R10
 - [low] Remove the macOS Package Manager workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. Promote once a released pak extracts zstd archives, added 2026-09-20, M011 scope, r-lib/pkgdepends#485
 - [low] Pin the macOS check job to R 4.5, whose CRAN binaries are still gzip. This is the alternative M011 rejected. If Posit Package Manager stops serving gzip macOS binaries, or drops its R 4.6 path, promote this row, added 2026-09-20, M011 plan gate
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md

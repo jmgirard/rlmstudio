@@ -13,6 +13,7 @@ lms_chat(
   logprobs = FALSE,
   simplify = TRUE,
   ...,
+  schema = NULL,
   token = NULL
 )
 }
@@ -40,6 +41,10 @@ TRUE.}
 
 \item{...}{Additional arguments passed to the selected API body.}
 
+\item{schema}{A JSON Schema that the reply must match, or \code{NULL}. It needs
+\code{api_type = "openai"}, and any other \code{api_type} aborts before the request.
+See \code{\link[=lms_chat_openai]{lms_chat_openai()}} for its form and for what is returned.}
+
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
@@ -48,7 +53,7 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 Depending on the arguments provided:
 \itemize{
 \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
-\item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response.
+\item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response. With a \code{schema}, it returns the reply parsed into an R value instead.
 \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
 }
 }
@@ -62,13 +67,16 @@ This function calls \code{\link[=lms_chat_openresponses]{lms_chat_openresponses(
 \code{\link[=lms_chat_native]{lms_chat_native()}}, according to \code{api_type}. It runs no request of its own.
 It can raise \code{rlmstudio_no_server} and \code{rlmstudio_api_error} through
 \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, or \code{\link[=lms_chat_native]{lms_chat_native()}}.
+With a \code{schema}, it can raise \code{rlmstudio_bad_response} through
+\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
 }
 \section{Server not running}{
 
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, or \code{inputs} aborts with an argument message and no condition class
+\code{input}, \code{inputs}, or \code{schema} aborts with an argument message and no
+condition class
 even when the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
@@ -93,5 +101,33 @@ A condition of class \code{rlmstudio_api_error} is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a \code{status} field, which holds the HTTP response status as an
 integer.
+}
+
+\section{Malformed response}{
+
+A condition of class \code{rlmstudio_bad_response} is raised when the server
+answers with a status the wrapper accepts and a body the wrapper cannot
+read. It is raised where a wrapper checks the body before it reshapes it,
+rather than indexing straight into whatever arrived. Two functions raise
+it.
+
+\code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
+it returns are placed by the index that the response reports, so a block
+with a missing, repeated, or out-of-range index would otherwise pair a
+vector with the wrong text and give back a matrix that is silently wrong.
+
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it when a \code{schema} was given and the reply
+content is not one string of valid JSON. It is raised only with \code{simplify = TRUE} and
+\code{logprobs = FALSE}, which are the two settings under which the reply is
+parsed. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}} can raise it through
+\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+
+The condition carries a \code{status} field, which holds the HTTP response
+status as an integer. Today the status is always 200: both functions read
+the body only after a 200, and report every other status as an
+\code{rlmstudio_api_error} instead. The message names the argument that returns
+the body unchanged, so you can read what arrived. The one exception is an
+embeddings body that did not parse at all: that check runs before the
+argument is read, so its message points at the host instead.
 }
 

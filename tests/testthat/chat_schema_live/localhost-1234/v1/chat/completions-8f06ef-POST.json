@@ -1,0 +1,33 @@
+{
+    "id": "chatcmpl-3w6zzv7u4so65f7tyikzyv",
+    "object": "chat.completion",
+    "created": 1790032914,
+    "model": "google/gemma-3-1b",
+    "choices": [
+        {
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "{ \"score\": 3 }",
+                "reasoning_content": "",
+                "tool_calls": [
+
+                ]
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+        }
+    ],
+    "usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 9,
+        "total_tokens": 35,
+        "completion_tokens_details": {
+            "reasoning_tokens": 0
+        }
+    },
+    "stats": {
+
+    },
+    "system_fingerprint": "google/gemma-3-1b"
+}
