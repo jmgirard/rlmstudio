@@ -530,8 +530,10 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #'   single string, not a character vector.
 #' * A `host` that is a character `NA`. httr2 reports that `url` must be a
 #'   single string, not a character `NA`.
-#' * A `host` that cannot be parsed as a URL, such as one holding a space.
-#'   curl reports "Failed to parse URL: Malformed input to a URL function".
+#' * A `host` that is one string but cannot be parsed as a URL. curl reports
+#'   that it failed to parse the URL and names the reason. A `host` holding a
+#'   space gives "Malformed input to a URL function". An empty `host` gives
+#'   "No host part in the URL".
 #' * A `timeout` below one millisecond. httr2 reports that `seconds` must be
 #'   greater than 1 ms.
 #' * A `timeout` that is not one number, such as a string or a vector of two.
@@ -539,9 +541,10 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #'   value or its type.
 #'
 #' Those six are not the whole list. Any `host` that is not one string aborts
-#' the same way, whatever the reason, and httr2 names what you gave. A `host`
-#' of `1`, a `host` of `list("a")`, and a `host` of `character(0)` each abort
-#' with their own wording.
+#' the same way, whatever the reason, and httr2 names either the value or its
+#' type. A `host` of `1` gives "not the number 1". A `host` of `list("a")`
+#' gives "not a list". A `host` of `character(0)` gives "not an empty
+#' character vector".
 #'
 #' The `token` fault named above aborts the same way. It comes from this
 #' package rather than from httr2.

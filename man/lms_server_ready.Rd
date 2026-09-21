@@ -53,8 +53,10 @@ not \code{NULL}.
 single string, not a character vector.
 \item A \code{host} that is a character \code{NA}. httr2 reports that \code{url} must be a
 single string, not a character \code{NA}.
-\item A \code{host} that cannot be parsed as a URL, such as one holding a space.
-curl reports "Failed to parse URL: Malformed input to a URL function".
+\item A \code{host} that is one string but cannot be parsed as a URL. curl reports
+that it failed to parse the URL and names the reason. A \code{host} holding a
+space gives "Malformed input to a URL function". An empty \code{host} gives
+"No host part in the URL".
 \item A \code{timeout} below one millisecond. httr2 reports that \code{seconds} must be
 greater than 1 ms.
 \item A \code{timeout} that is not one number, such as a string or a vector of two.
@@ -63,9 +65,10 @@ value or its type.
 }
 
 Those six are not the whole list. Any \code{host} that is not one string aborts
-the same way, whatever the reason, and httr2 names what you gave. A \code{host}
-of \code{1}, a \code{host} of \code{list("a")}, and a \code{host} of \code{character(0)} each abort
-with their own wording.
+the same way, whatever the reason, and httr2 names either the value or its
+type. A \code{host} of \code{1} gives "not the number 1". A \code{host} of \code{list("a")}
+gives "not a list". A \code{host} of \code{character(0)} gives "not an empty
+character vector".
 
 The \code{token} fault named above aborts the same way. It comes from this
 package rather than from httr2.

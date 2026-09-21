@@ -243,9 +243,14 @@ test_that("a host that is not one string aborts whatever the reason", {
 })
 
 test_that("a host that cannot be parsed as a URL aborts", {
+  # curl names the reason, so the page quotes two of them rather than one.
   expect_error(
     lms_server_ready(host = "http://exa mple:1234"),
-    "Failed to parse URL"
+    "Failed to parse URL: Malformed input to a URL function"
+  )
+  expect_error(
+    lms_server_ready(host = ""),
+    "Failed to parse URL: No host part in the URL"
   )
 })
 
