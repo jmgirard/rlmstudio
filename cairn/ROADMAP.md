@@ -9,6 +9,8 @@ _Last hygiene pass: 2026-09-20 (M014 done and archived, M010 row pruned, two les
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M015 | The server start call takes a token and checks its wait arguments before it starts | planned | none | normal | milestones/M015-server-start-token-and-host-check.md |
+| M016 | The daemon start call can wait until the daemon reports running | planned | none | normal | milestones/M016-daemon-start-wait.md |
 | M014 | The server start call can wait until the REST API answers | done | none | normal | milestones/archive/M014-server-start-wait.md |
 | M013 | A bad model or text argument aborts with a message that names the mistake | done | none | normal | milestones/archive/M013-argument-guards.md |
 | M012 | The package can turn text into embedding vectors | done | none | high | milestones/archive/M012-embeddings-wrapper.md |
@@ -32,9 +34,6 @@ _Last hygiene pass: 2026-09-20 (M014 done and archived, M010 row pruned, two les
 - Building either vignette stops an LM Studio server the vignette did not start. The teardown chunks run whenever the CLI is present, added 2026-09-20, M010 review finding 5
 - The port helpers in `tests/testthat/test-server-ready.R` and `tests/testthat/test-serve.R` are near-duplicates that belong in a `helper-` file. Both pick a port through `sample()`. That moves the session RNG and collides reproducibly under a seed, added 2026-09-20, M010 review findings 8 and 9
 - A guard that keeps the pre-call probe in the REST wrappers in step with the condition help page. M010 narrows that page and adds a stronger probe. The wrappers keep the TCP probe, so the two can drift, added 2026-09-20, M010 scope
-- A wait on `lms_daemon_start()` and `with_lms_daemon()`, like the one M014 gives `lms_server_start()`. The daemon call returns before the daemon is usable in the same way, added 2026-09-20, M014 scope
-- A `token` argument on `lms_server_start()`, so that the readiness probe M014 adds can reach a server that requires one. M014 passes `token = NULL`, which reads the option and the environment variable only, added 2026-09-20, M014 scope
-- A guard on the `host` argument of `lms_server_start()`. A `host` that `lms_server_ready()` rejects, such as a vector of two strings, aborts after the CLI has already started the server. That is the abort after a start that M014 avoids for a wait that runs out. No M014 criterion covers it, added 2026-09-20, M014 implement
 - The release walk needs a live-run step: full suite against a running LM Studio, then a re-record of stale fixtures, added 2026-09-17, DESIGN Conventions
 - A guard that keeps every new `stop_if_no_server()` call site covered by a class test, added 2026-09-18, M003 scope
 - A guard that keeps every REST wrapper handling a failed response listed in the failure table. The deleted guard read package sources that R CMD check does not ship, so it skipped there. It did run under `devtools::test()`, so it gated local runs (corrected M006 review), added 2026-09-18, M006 scope, see also the `stop_if_no_server()` guard row
