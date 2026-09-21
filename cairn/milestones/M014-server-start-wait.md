@@ -137,6 +137,7 @@ This milestone only documents that behavior.
 - 2026-09-20: all six tasks done, status set to review. Final figures on `faba0bb`. `devtools::document()` gives no diff. `devtools::test()` is clean at 1291 passes, 0 failures, 0 skips. `devtools::check()` reports 0 errors, 0 warnings, and 0 notes in 1m 33.6s.
 - 2026-09-20: T5 note. roxygen refused a fenced quote holding backticks and reported a block quote. The six lines now report each message as prose rather than as a quoted string.
 
+- 2026-09-20: step-7 approval: m014-server-start-wait approved for merge
 ## Decisions
 
 ## Review
