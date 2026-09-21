@@ -28,7 +28,7 @@ This milestone only documents that behavior.
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_server_start()` takes a `wait` argument, a number of seconds.
+- [x] AC1: `lms_server_start()` takes a `wait` argument, a number of seconds.
       Its default is 10. Two conditions open the wait. The CLI must report
       success, and the call must have a host to probe. The call then asks
       `lms_server_ready()` again and again until it reports `TRUE`. No new
@@ -36,13 +36,13 @@ This milestone only documents that behavior.
       pass. After the first `TRUE`, the call sends no further readiness
       request. With `wait = 0`, the call sends no readiness request and
       returns the CLI exit code.
-- [ ] AC2: If `wait` is not one number, the call aborts before the CLI runs.
+- [x] AC2: If `wait` is not one number, the call aborts before the CLI runs.
       A `wait` of `NA`, a negative `wait`, and a `wait` that is not finite all
       abort the same way. The message names `wait` and the rule the value
       broke. The abort carries no rlmstudio condition class. It carries only
       the classes that `cli::cli_abort()` attaches. That is what D-008 settled
       for an argument fault.
-- [ ] AC3: The wait picks the host it probes in this order. If the caller
+- [x] AC3: The wait picks the host it probes in this order. If the caller
       gives a `host`, that host wins. If the caller gives no `host` and gives
       a `port`, the host is `http://localhost:<port>`. If the caller gives
       neither, the call reads the port that `lms_server_status(json = TRUE)`
@@ -51,7 +51,7 @@ This milestone only documents that behavior.
       passes `token = NULL`. It therefore reads the `rlmstudio.token` option
       and then the `RLMSTUDIO_API_TOKEN` environment variable. The help page
       of `lms_server_start()` states this order.
-- [ ] AC4: Take a `wait` above zero. If that many seconds pass with no
+- [x] AC4: Take a `wait` above zero. If that many seconds pass with no
       readiness request reporting `TRUE`, the call does not abort. It returns
       the CLI exit code and raises a warning. The warning names the host it
       probed. It also names the `wait` argument. A second case raises its own
@@ -62,19 +62,19 @@ This milestone only documents that behavior.
       `rlmstudio.quiet` option does not silence either one. This trades GP3
       and GP6. Aborting cannot undo a start that already ran. A wait that ran
       out is a fault rather than progress chatter.
-- [ ] AC5: The help page of `lms_server_ready()` names call faults that abort
+- [x] AC5: The help page of `lms_server_ready()` names call faults that abort
       it rather than returning `FALSE`. It names these six. A `host` of
       `NULL`. A `host` of more than one string. A `host` that is a character
       `NA`. A `host` that curl cannot parse as a URL. A `timeout` below one
       millisecond. A `timeout` that is not one number. The page attributes the
       URL message to curl and the other messages to httr2. The `token` fault
       that the page already names stays.
-- [ ] AC6: `NEWS.md` carries an entry for the new `wait` and `host` arguments.
+- [x] AC6: `NEWS.md` carries an entry for the new `wait` and `host` arguments.
       The entry also covers the new default behavior. The `start-server` chunk
       of `vignettes/getting-started.Rmd` shows the waiting call. So does the
       `start-server` chunk of `vignettes/headless-config.Rmd`. In each file,
       the `check-ready` chunk stays as the gate that later chunks read.
-- [ ] AC7: `Rscript -e 'devtools::document()'` produces no diff.
+- [x] AC7: `Rscript -e 'devtools::document()'` produces no diff.
       `Rscript -e 'devtools::test()'` is clean.
       `Rscript -e 'devtools::check()'` reports zero errors and zero warnings.
 
@@ -140,3 +140,15 @@ This milestone only documents that behavior.
 ## Decisions
 
 ## Review
+
+Fresh evidence on `48754da`, branch level with `origin/main` (no merge needed). Suite: `devtools::test()` 1291 passes, 0 failures, 0 skips, 0 warnings, with the live LM Studio server and the API token set.
+
+- AC1: `lms_server_start()` runs `rlm_check_wait()` first, aborts on a non-zero CLI exit before the wait, and calls `warn_unless_ready()` only for `wait > 0` (R/serve.R:88-120). `wait_host()` returning `NULL` sends no request. Passing tests in test-serve.R: `wait_for_server` stops at the first TRUE, sends one request when the first answers, starts no request after the budget, sends none for a wait of zero; `lms_server_start` sends no readiness request for a wait of zero and returns after three requests when the third answers.
+- AC2: `rlm_check_wait()` aborts through `cli::cli_abort(call = NULL)` with no class. Passing tests: test-utils-args.R names the argument and rule for every fault (NULL, string, two values, array, NA, NaN, Inf, negative) and asserts no rlmstudio class; test-serve.R "a bad wait aborts before the CLI runs" shows the stubbed CLI never ran.
+- AC3: `wait_host()` gives host, then `http://localhost:<port>`, then the status-read port (R/serve.R:131-144); `wait_for_server()` passes `token = NULL`. Passing tests: "wait_host follows the documented order", "wait_for_server passes the host, the timeout, and a NULL token", seven `server_status_port` tests. man/lms_server_start.Rd:43 carries the section "Which host the wait asks" with the order and the token sources.
+- AC4: `warn_unless_ready()` raises both warnings through `cli::cli_warn()` and returns without aborting. Passing tests: "warns rather than aborts when the wait runs out" (message names `localhost:8080` and `wait`, return 0), "warns when it cannot tell which host to ask" (no request sent, message names the port read, `host`, `port`), "neither warning is silenced by the quiet option".
+- AC5: man/lms_server_ready.Rd:41 section "Call faults that abort" names the six faults, attributes the URL parse message to curl and the rest to httr2, and keeps the `token` fault. Seven passing tests in test-server-ready.R pin each message.
+- AC6: NEWS.md carries five bullets on `wait`, `host`, the default wait, the warnings, and the readiness faults. Both `start-server` chunks call `lms_server_start(wait = 30)`. Both `check-ready` chunks appear only as unchanged context in the diff and still assign `lms_ready`.
+- AC7: `devtools::document()` left `git status` clean. `devtools::test()` as above. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes in 40s.
+- Consistency gate: `cairn_validate.py` exit 0, all checks pass. No DESIGN.md principle changed, so `cairn_impact` skipped. `document()` no diff. README.Rmd untouched by the branch. No pkgdown site. NEWS.md has the entry and no milestone ids. No new top-level files. `check()` clean as in AC7.
+- Independent review: three lenses. The diff-bug lens reported 10 findings, the blame-history lens 4, the prior-review lens none (no archived finding regressed, no GitHub review threads). Triage is recorded below once the maintainer rules at the gate.
