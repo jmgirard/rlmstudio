@@ -512,6 +512,29 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #'   `token` that is not one character string and not `NULL` still aborts,
 #'   because that is a fault in the call rather than a fact about the server.
 #'
+#' @section Call faults that abort:
+#'
+#' A fault in the call is not a fact about the server, so it aborts rather
+#' than reporting `FALSE`. These messages come from the packages underneath
+#' and name their own arguments, `url` for `host` and `seconds` for
+#' `timeout`. Six such faults reach you.
+#'
+#' * A `host` of `NULL`. httr2 reports that `url` must be a single string,
+#'   not `NULL`.
+#' * A `host` of more than one string. httr2 reports that `url` must be a
+#'   single string, not a character vector.
+#' * A `host` that is a character `NA`. httr2 reports that `url` must be a
+#'   single string, not a character `NA`.
+#' * A `host` that cannot be parsed as a URL, such as one holding a space.
+#'   curl reports "Failed to parse URL: Malformed input to a URL function".
+#' * A `timeout` below one millisecond. httr2 reports that `seconds` must be
+#'   greater than 1 ms.
+#' * A `timeout` that is not one number, such as a string or a vector of two.
+#'   httr2 reports that `seconds` must be a number, and names what you gave.
+#'
+#' The `token` fault named above aborts the same way. It comes from this
+#' package rather than from httr2.
+#'
 #' @seealso [lms_server_start()] to start the server. [lms_server_status()]
 #'   for what the CLI reports about it.
 #'

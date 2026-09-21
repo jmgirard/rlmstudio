@@ -107,7 +107,7 @@ This milestone only documents that behavior.
       Check `wait` before `processx::run()` runs. Pick the host as AC3 states.
       Warn as AC4 states. Test `wait = 0`, a stub that answers on the third
       try, the give-up warning, and the unknown-port warning.
-- [ ] T5: Write the roxygen for `wait`, for `host`, and for the host order.
+- [x] T5: Write the roxygen for `wait`, for `host`, and for the host order.
       Add the six call faults to the `lms_server_ready()` page. Write a test
       per fault that asserts the message text. Run `devtools::document()`.
 - [ ] T6: Write the `NEWS.md` entry. Update the `start-server` chunk and the
@@ -129,6 +129,8 @@ This milestone only documents that behavior.
 - 2026-09-20: T3 done. `wait_for_server()` in `R/serve.R`. Its tests replace `base::Sys.time()` and `base::Sys.sleep()` with one fake clock that only a sleep moves forward. No test sleeps and the budget arithmetic is exact. The last sleep is trimmed to what the budget has left. Six tests. Two planted defects turned three of them red first.
 - 2026-09-20: T4 done. `lms_server_start()` takes `wait` and `host` after `cors`, so no existing argument moved position. Two helpers carry the work, `wait_host()` for the host order and `warn_unless_ready()` for the two warnings. Eleven tests added in `tests/testthat/test-serve.R`. The old exit code case now passes `wait = 0`, because a default wait there reaches the network. Two planted defects turned eight tests red first.
 - 2026-09-20: T4 left a gap that no criterion covers. A `host` that `lms_server_ready()` rejects, such as a vector of two strings, aborts after the CLI has already started the server. That is the abort after a start that AC4 avoids for the timeout case. Recorded as a candidate row rather than widened into this milestone.
+- 2026-09-20: T5 done. The six call faults were run live first, and the page quotes what each package actually printed. Seven tests in `tests/testthat/test-server-ready.R` pin the message text. The messages name `url` and `seconds`, not `host` and `timeout`, so the page says so. A planted defect that swallowed every abort turned seven tests red first.
+- 2026-09-20: T5 note. roxygen refused a fenced quote holding backticks and reported a block quote. The six lines now report each message as prose rather than as a quoted string.
 
 ## Decisions
 

@@ -38,6 +38,32 @@ Use this in place of a port check. Another process holding the port, a
 server that has not finished starting, and a server that rejects the token
 all answer the port and all report \code{FALSE} here.
 }
+\section{Call faults that abort}{
+
+
+A fault in the call is not a fact about the server, so it aborts rather
+than reporting \code{FALSE}. These messages come from the packages underneath
+and name their own arguments, \code{url} for \code{host} and \code{seconds} for
+\code{timeout}. Six such faults reach you.
+\itemize{
+\item A \code{host} of \code{NULL}. httr2 reports that \code{url} must be a single string,
+not \code{NULL}.
+\item A \code{host} of more than one string. httr2 reports that \code{url} must be a
+single string, not a character vector.
+\item A \code{host} that is a character \code{NA}. httr2 reports that \code{url} must be a
+single string, not a character \code{NA}.
+\item A \code{host} that cannot be parsed as a URL, such as one holding a space.
+curl reports "Failed to parse URL: Malformed input to a URL function".
+\item A \code{timeout} below one millisecond. httr2 reports that \code{seconds} must be
+greater than 1 ms.
+\item A \code{timeout} that is not one number, such as a string or a vector of two.
+httr2 reports that \code{seconds} must be a number, and names what you gave.
+}
+
+The \code{token} fault named above aborts the same way. It comes from this
+package rather than from httr2.
+}
+
 \examples{
 \dontrun{
 lms_server_start()

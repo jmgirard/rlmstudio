@@ -198,6 +198,58 @@ test_that("each token source reaches the Authorization header", {
   }
 })
 
+# A fault in the call is not a fact about the server, so it aborts rather
+# than reporting FALSE. The help page names these six and says which package
+# each message comes from, so each message text is pinned here. A message
+# that moves under a dependency update turns these red, which is the point:
+# the page would otherwise quote text the packages no longer produce.
+
+test_that("a host of NULL aborts rather than reporting FALSE", {
+  expect_error(
+    lms_server_ready(host = NULL),
+    "`url` must be a single string, not `NULL`"
+  )
+})
+
+test_that("a host of more than one string aborts", {
+  expect_error(
+    lms_server_ready(host = c("http://a:1", "http://b:2")),
+    "`url` must be a single string, not a character vector"
+  )
+})
+
+test_that("a host that is a character NA aborts", {
+  expect_error(
+    lms_server_ready(host = NA_character_),
+    "`url` must be a single string, not a character `NA`"
+  )
+})
+
+test_that("a host that cannot be parsed as a URL aborts", {
+  expect_error(
+    lms_server_ready(host = "http://exa mple:1234"),
+    "Failed to parse URL"
+  )
+})
+
+test_that("a timeout below one millisecond aborts", {
+  expect_error(
+    lms_server_ready(timeout = 0.0005),
+    "`seconds` must be >1 ms"
+  )
+})
+
+test_that("a timeout that is not one number aborts", {
+  expect_error(
+    lms_server_ready(timeout = "2"),
+    "`seconds` must be a number"
+  )
+  expect_error(
+    lms_server_ready(timeout = c(1, 2)),
+    "`seconds` must be a number"
+  )
+})
+
 test_that("the probe reads the model list from api/v1/models", {
   recorder <- local_request_recorder(mock_response(200L, '{"models": []}'))
 
