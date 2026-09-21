@@ -150,6 +150,7 @@ the schema content stays with the server (D-003).
 - 2026-09-21: claim audit: 78 claims read, 5 corrected — R/chat.R, NEWS.md, data-raw/record-schema-cassette.R
 - 2026-09-21: the claim audit found that a top-level `on.exit()` never runs under Rscript, so the recorder script left the model loaded. It now unloads in a `finally` clause. The same reader re-read the five corrections and found all of them matching.
 - 2026-09-21: implement complete. Suite: 251 tests, 0 failed, 0 skipped. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
+- 2026-09-21: review: AC1-AC7 verified, gate triage accepted. R1, R2, R4, R13 fixed on the branch, R12 rejected after the gate as the NEWS convention, three candidate rows added.
 
 ## Decisions
 
@@ -166,18 +167,20 @@ Fresh run 2026-09-21 on `m017-structured-output` at 283999a, level with `origin/
 - AC7: `man/rlmstudio-conditions.Rd` names `lms_embed()` and `lms_chat_openai()` as the two raisers of `rlmstudio_bad_response`. `man/lms_chat_openai.Rd` carries the "Malformed response" section. `NEWS.md` has three `schema` entries. `devtools::document()` left `git status` clean. `devtools::check()` with the token set: 0 errors, 0 warnings, 0 notes.
 - Consistency gate: `cairn_validate.py` passed, exit 0. No DESIGN principle changed, so `cairn_impact` was skipped. README.md and README.Rmd are untouched and share one commit. The repo has no `_pkgdown.yml`. The branch adds no top-level file, and `data-raw/` is already in `.Rbuildignore`.
 
-Independent review, three fresh reviewers. The blame-history reader found nothing that undoes a past milestone or a D-entry. The prior-review reader checked the M013 findings on the same files and found none reintroduced. GitHub holds no human review comments. The diff reader reported 13 findings, ranked most severe first. Proposed dispositions, pending the gate:
+Independent review, three fresh reviewers. The blame-history reader found nothing that undoes a past milestone or a D-entry. The prior-review reader checked the M013 findings on the same files and found none reintroduced. GitHub holds no human review comments. The diff reader reported 13 findings, ranked most severe first. The user accepted the proposed triage at the gate on 2026-09-21. Final dispositions:
 
-- R1: `lms_chat_batch()` reads `args[["api_type"]]` by exact name, but `lms_chat()` matches a shortened name such as `api = "openai"`. The batch then aborts on a call that `lms_chat()` accepts. Proposed: fix now.
-- R2: `args$logprobs` in the batch misses a shortened `log = TRUE` that `lms_chat()` matches. The `output` column then holds `lms_chat_result` objects. The logprobs read predates the branch. Proposed: fix now with R1.
-- R3: The default `format = "vector"` warns on every batch call with a schema. AC6 plans this. Proposed: reject, planned behavior.
-- R4: The `lms_chat()` `@return` still says `simplify = TRUE` with `logprobs = FALSE` returns one string. With a schema it returns a parsed value. Proposed: fix now.
-- R5: One reply that fails to parse aborts the whole batch and loses the results so far. A reply cut off by `max_tokens` shows as "not valid JSON" with no mention of `finish_reason`. Proposed: follow-up candidate row.
-- R6: The abort hint says to call again with `simplify = FALSE`, but a second call to a model can return a different reply. Proposed: follow-up, folded into the R5 row.
-- R7: Only a top-level empty schema becomes `{}`. A nested `properties = list()` goes out as `[]`. Proposed: follow-up candidate row.
-- R8: A `schema` given by position falls into `...` without a name and `modifyList()` drops it without a message. This is how `...` already behaved. Proposed: reject, pre-existing.
-- R9: Duplicate names and a classed list pass the form check. The server judges schema content (D-003). Proposed: reject.
-- R10: An empty or missing `choices` fails with a subscript error and no package class. The NEWS line about bad content reads broader than that. Proposed: follow-up candidate row.
-- R11: Some expected values come from `parse_json()` itself, batch tests send one reply to every input, and the `NULL` case in the valid-schema test cannot fail. Fixed values are stated apart for the object and `"null"` replies, which meets the check-discrimination rule. Proposed: reject, mixed-batch coverage folded into the R5 row.
-- R12: NEWS adds a blank line between the new bullets and the older ones, and one roxygen line in `R/conditions.R` runs long. The vector-format NEWS claim is already qualified by `logprobs = FALSE`. Proposed: fix the blank line now, reject the rest as style.
-- R13: The recorder script deletes the old cassette before `lms_load()` runs. If the load or the recording fails, the cassette is gone with no replacement. Proposed: fix now.
+- R1: `lms_chat_batch()` reads `args[["api_type"]]` by exact name, but `lms_chat()` matches a shortened name such as `api = "openai"`. The batch then aborts on a call that `lms_chat()` accepts. Fixed: the new `rlm_chat_dots()` runs `match.call()` against `lms_chat()` over the same dots. The test "batch reads shortened argument names as lms_chat() does" failed before the fix and passes after.
+- R2: `args$logprobs` in the batch misses a shortened `log = TRUE` that `lms_chat()` matches. The `output` column then holds `lms_chat_result` objects. The logprobs read predates the branch. Fixed with R1. The same test fails with the old raw-dots read planted and passes after.
+- R3: The default `format = "vector"` warns on every batch call with a schema. AC6 plans this. Rejected, planned behavior.
+- R4: The `lms_chat()` `@return` still says `simplify = TRUE` with `logprobs = FALSE` returns one string. With a schema it returns a parsed value. Fixed in the roxygen and `man/lms_chat.Rd`.
+- R5: One reply that fails to parse aborts the whole batch and loses the results so far. A reply cut off by `max_tokens` shows as "not valid JSON" with no mention of `finish_reason`. Follow-up: candidate row added to ROADMAP.
+- R6: The abort hint says to call again with `simplify = FALSE`, but a second call to a model can return a different reply. Follow-up, folded into the R5 row.
+- R7: Only a top-level empty schema becomes `{}`. A nested `properties = list()` goes out as `[]`. Follow-up: candidate row added to ROADMAP.
+- R8: A `schema` given by position falls into `...` without a name and `modifyList()` drops it without a message. This is how `...` already behaved. Rejected, pre-existing.
+- R9: Duplicate names and a classed list pass the form check. The server judges schema content (D-003). Rejected.
+- R10: An empty or missing `choices` fails with a subscript error and no package class. The NEWS line about bad content reads broader than that. Follow-up: candidate row added to ROADMAP.
+- R11: Some expected values come from `parse_json()` itself, batch tests send one reply to every input, and the `NULL` case in the valid-schema test cannot fail. Fixed values are stated apart for the object and `"null"` replies, which meets the check-discrimination rule. Rejected, and mixed-batch coverage folded into the R5 row.
+- R12: NEWS adds a blank line between the new bullets and the older ones, and one roxygen line in `R/conditions.R` runs long. The vector-format NEWS claim is already qualified by `logprobs = FALSE`. Rejected after the gate: every group of NEWS bullets in the file is set apart by a blank line, so the line follows the file's convention. The long roxygen line is style.
+- R13: The recorder script deletes the old cassette before `lms_load()` runs. If the load or the recording fails, the cassette is gone with no replacement. Fixed: the script records into `chat_schema_live_new` and replaces the old directory only after success. Run live with the server down, the load aborted and the old cassette stayed. Run live with the server up, the new cassette replaced it and changed only `id` and `created`. The committed cassette was then restored from git.
+
+After the fixes: `devtools::test()` with the token set gives 252 test blocks, 1538 expectations, 0 failed, 0 skipped. `devtools::document()` rewrote only `man/lms_chat.Rd`, for R4. `devtools::check()` gives 0 errors, 0 warnings, 0 notes.

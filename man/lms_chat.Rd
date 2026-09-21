@@ -53,7 +53,7 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 Depending on the arguments provided:
 \itemize{
 \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
-\item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response.
+\item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response. With a \code{schema}, it returns the reply parsed into an R value instead.
 \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
 }
 }

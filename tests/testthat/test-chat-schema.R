@@ -248,6 +248,36 @@ test_that("batch format data.frame holds parsed replies in a list-column", {
   expect_identical(out$output, list(list(score = 3L), list(score = 3L)))
 })
 
+test_that("batch reads shortened argument names as lms_chat() does", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, completion_body(quoted('{"score": 3}'))))
+
+  # `api` is how lms_chat() would take `api_type`, so the route check passes.
+  out <- lms_chat_batch(
+    "a-model",
+    "first",
+    format = "list",
+    quiet = TRUE,
+    api = "openai",
+    schema = score_schema
+  )
+  expect_identical(out, list(list(score = 3L)))
+
+  # `log` is how lms_chat() would take `logprobs`, so the reply is not parsed
+  # and the vector format names logprobs, not the schema.
+  expect_warning(
+    lms_chat_batch(
+      "a-model",
+      "first",
+      quiet = TRUE,
+      api_type = "openai",
+      log = TRUE,
+      schema = score_schema
+    ),
+    "cannot store logprobs"
+  )
+})
+
 test_that("a reply that does not parse is returned as text without a schema", {
   out <- call_with_reply(completion_body(quoted("a score of three")))
   expect_identical(out$value, "a score of three")

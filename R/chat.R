@@ -28,7 +28,7 @@
 #' @return Depending on the arguments provided:
 #' \itemize{
 #'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
-#'   \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response.
+#'   \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response. With a \code{schema}, it returns the reply parsed into an R value instead.
 #'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
 #' }
 #' @details
@@ -499,8 +499,9 @@ lms_chat_batch <- function(
   # `lms_chat()` checks `schema` too, but only after the server probe below
   # has run. Checking here keeps an argument fault ahead of it (D-008). `[[`
   # rather than `$`, because `$` would match a longer name that starts with
-  # `schema`, such as `schemas`.
-  args <- list(...)
+  # `schema`, such as `schemas`. The names are first matched as `lms_chat()`
+  # will match them, so a shortened `api = "openai"` counts here too.
+  args <- rlm_chat_dots(list(...))
   schema <- args[["schema"]]
   rlm_check_schema(schema, names(args))
   api_type <- args[["api_type"]]
@@ -513,7 +514,7 @@ lms_chat_batch <- function(
   stop_if_no_server(host)
   format <- match.arg(format)
 
-  has_logprobs <- isTRUE(args$logprobs)
+  has_logprobs <- isTRUE(args[["logprobs"]])
   # Each result is a parsed reply of any shape, not one string.
   has_parsed <- !is.null(schema) && isTRUE(simplify) && !has_logprobs
   should_be_quiet <- is_quiet(quiet)
@@ -614,6 +615,27 @@ lms_chat_batch <- function(
   }
 
   results
+}
+
+#' Name the dots of lms_chat_batch() as lms_chat() will match them
+#'
+#' `lms_chat_batch()` passes its `...` on to `lms_chat()`, whose `api_type` and
+#' `logprobs` come before its own `...` and so match a shortened name. This
+#' runs R's own argument matching over the same call, so `api` comes back as
+#' `api_type`. The arguments that `lms_chat_batch()` passes by name are
+#' matched first and then dropped, as in the real call.
+#'
+#' @param dots The list of `...` values.
+#' @return `dots`, with each name replaced by the `lms_chat()` argument it
+#'   matches.
+#' @noRd
+rlm_chat_dots <- function(dots) {
+  fixed <- c("model", "input", "system_prompt", "host", "simplify", "token")
+  placeholders <- vector("list", length(fixed))
+  names(placeholders) <- fixed
+  call <- as.call(c(list(quote(lms_chat)), placeholders, dots))
+  matched <- as.list(match.call(lms_chat, call))[-1]
+  matched[setdiff(names(matched), fixed)]
 }
 
 #' Create a base request for the LM Studio API

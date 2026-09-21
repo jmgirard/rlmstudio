@@ -15,7 +15,8 @@
 #   Rscript data-raw/record-schema-cassette.R
 #
 # httptest2 records only when the target directory is absent, so the script
-# deletes it first. Only the response bodies are written to disk. No request
+# records into a fresh directory beside it. The old cassette is replaced only
+# after the new recording succeeds. Only the response bodies are written to disk. No request
 # header, and therefore no API token, reaches the recorded files. The model is
 # loaded before recording starts and unloaded after it ends, so neither call is
 # recorded.
@@ -50,14 +51,15 @@ schema <- list(
 )
 
 target <- file.path("tests", "testthat", "chat_schema_live")
-unlink(target, recursive = TRUE)
+fresh <- paste0(target, "_new")
+unlink(fresh, recursive = TRUE)
 
 # `on.exit()` at the top level of a script run by Rscript never runs, so the
 # unload sits in a `finally` clause instead.
 lms_load(model, host = host)
 tryCatch(
   withr::with_dir(file.path("tests", "testthat"), {
-    httptest2::with_mock_dir("chat_schema_live", {
+    httptest2::with_mock_dir(basename(fresh), {
       out <- lms_chat_openai(
         model = model,
         messages = messages,
@@ -70,3 +72,9 @@ tryCatch(
   }),
   finally = lms_unload(model, host = host)
 )
+
+# Reached only when the recording above succeeded.
+unlink(target, recursive = TRUE)
+if (!file.rename(fresh, target)) {
+  stop("Could not move ", fresh, " to ", target, ".", call. = FALSE)
+}
