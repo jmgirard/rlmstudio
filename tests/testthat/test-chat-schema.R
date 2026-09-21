@@ -193,6 +193,18 @@ test_that("a structured reply recorded from a live server parses", {
   expect_identical(parsed, list(score = 3L))
 })
 
+test_that("lms_chat() forwards a schema on the openai route", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(
+    mock_response(200L, completion_body(quoted('{"score": 4}')))
+  )
+  value <- lms_chat("a-model", "Rate this.", api_type = "openai", schema = score_schema)
+
+  expect_identical(value, list(score = 4L))
+  sent <- jsonlite::parse_json(sent_json(recorder$requests[[1]]))
+  expect_identical(sent$response_format$json_schema$schema, score_schema)
+})
+
 test_that("a reply that does not parse is returned as text without a schema", {
   out <- call_with_reply(completion_body(quoted("a score of three")))
   expect_identical(out$value, "a score of three")

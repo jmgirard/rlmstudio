@@ -469,3 +469,49 @@ test_that("a valid schema passes the form check and reaches the server probe", {
   }
   expect_identical(probe$calls, length(schema_calls) * length(valid))
 })
+
+# The two functions that route, each called with a valid schema. `api_type` is
+# left out when `route` is NULL, so the default route is probed as the caller
+# would meet it.
+route_calls <- list(
+  lms_chat = function(route) {
+    args <- list("a-model", "hi", schema = list(type = "object"))
+    if (!is.null(route)) args$api_type <- route
+    do.call(lms_chat, args)
+  },
+  lms_chat_batch = function(route) {
+    args <- list("a-model", "hi", schema = list(type = "object"))
+    if (!is.null(route)) args$api_type <- route
+    do.call(lms_chat_batch, args)
+  }
+)
+
+test_that("a schema on a route other than openai aborts before the probe", {
+  probe <- local_counting_probe()
+
+  for (name in names(route_calls)) {
+    for (route in list("openresponses", "native", NULL)) {
+      label <- paste(name, "with", if (is.null(route)) "the default" else route)
+      err <- expect_error(
+        route_calls[[name]](route),
+        'api_type = "openai"',
+        fixed = TRUE,
+        info = label
+      )
+      expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+    }
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("the form check runs before the route check", {
+  probe <- local_counting_probe()
+
+  # The default route is not openai, so both checks have a fault to report.
+  expect_error(lms_chat("a-model", "hi", schema = "object"), "a character value")
+  expect_error(
+    lms_chat_batch("a-model", "hi", schema = "object"),
+    "a character value"
+  )
+  expect_identical(probe$calls, 0L)
+})

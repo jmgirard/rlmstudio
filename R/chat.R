@@ -81,6 +81,7 @@ lms_chat <- function(
       logprobs = logprobs,
       simplify = simplify,
       ...,
+      schema = schema,
       token = token
     ))
   }
