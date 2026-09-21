@@ -4,7 +4,13 @@
 \alias{lms_server_start}
 \title{Start the LM Studio local server}
 \usage{
-lms_server_start(port = NULL, cors = FALSE, wait = 10, host = NULL)
+lms_server_start(
+  port = NULL,
+  cors = FALSE,
+  wait = 10,
+  host = NULL,
+  token = NULL
+)
 }
 \arguments{
 \item{port}{Integer. Port to run the server on. If not provided, LM Studio
@@ -22,6 +28,11 @@ not one number, zero or more, aborts before the CLI runs.}
 look for the server that was started. It does not change where the CLI
 starts it, which only \code{port} does. \code{NULL} picks a host as described
 below.}
+
+\item{token}{Character or \code{NULL}. An API token for the readiness request,
+for a server that requires authentication. \code{NULL} reads the
+\code{rlmstudio.token} option and then the \code{RLMSTUDIO_API_TOKEN} environment
+variable. See \link{rlmstudio_token}.}
 }
 \value{
 Invisibly returns an integer representing the system exit code
@@ -53,9 +64,7 @@ The host is picked in this order.
 read, and the host is \verb{http://localhost:} plus that port.
 }
 
-The request passes \code{token = NULL}, so it reads the \code{rlmstudio.token}
-option and then the \code{RLMSTUDIO_API_TOKEN} environment variable. See
-\link{rlmstudio_token}.
+The request carries \code{token}, read as described under that argument.
 
 A wait that runs out does not abort. The server was already started and
 that cannot be undone, so the function raises a warning and returns the

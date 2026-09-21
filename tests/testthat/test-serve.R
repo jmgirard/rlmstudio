@@ -269,18 +269,20 @@ test_that("wait_for_server sends one request when the first answers", {
   expect_identical(clock$slept(), numeric(0))
 })
 
-test_that("wait_for_server passes the host, the timeout, and a NULL token", {
+test_that("wait_for_server passes the host, the timeout, and the token", {
   fake_clock()
   stub <- ready_stub(true_on = 1)
   local_mocked_bindings(lms_server_ready = stub$fn)
 
   wait_for_server("http://elsewhere:8080", wait = 10, timeout = 0.5)
-  # token = NULL is passed rather than left to the default, because the help
-  # page says the request passes it. That makes the sentence true of the call
-  # that is made.
+  wait_for_server("http://elsewhere:8080", wait = 10, token = "t")
   expect_identical(
     stub$calls()[[1]],
     list(host = "http://elsewhere:8080", timeout = 0.5, token = NULL)
+  )
+  expect_identical(
+    stub$calls()[[2]],
+    list(host = "http://elsewhere:8080", timeout = 1, token = "t")
   )
 })
 

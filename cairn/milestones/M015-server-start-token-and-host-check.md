@@ -80,7 +80,7 @@ guards over the token table and the condition help page stay candidates.
       near line 578) into one internal helper. `lms_server_ready()` calls it
       and keeps its return values and aborts. The existing
       `test-server-ready.R` tests stay green unchanged.
-- [ ] T2: Add `token = NULL` as the last formal of `lms_server_start()`. Pass
+- [x] T2: Add `token = NULL` as the last formal of `lms_server_start()`. Pass
       it through `warn_unless_ready()` and `wait_for_server()` to
       `lms_server_ready()`, in place of the fixed `token = NULL`. Add
       `lms_server_start` to the table in `tests/testthat/test-token-wrappers.R`
@@ -106,6 +106,7 @@ guards over the token table and the condition help page stay candidates.
 - 2026-09-20: plan gate chose a warning over an abort for a probe abort during the wait. An abort cannot undo the start. Falsified by a caller who needs that fault to stop the script.
 - 2026-09-20: implement started. Pre-implementation gate chose a host abort that names `host` and quotes the httr2 or curl reason, and a probe-abort warning that quotes the abort message.
 - 2026-09-20: T1 done. `server_ready_request()` in `R/serve.R` builds the request, and `lms_server_ready()` calls it. `test-server-ready.R` is unchanged and green, and the full suite is green.
+- 2026-09-20: T2 done. `token` is the last formal of `lms_server_start()` and reaches `lms_server_ready()`. The token table lists fourteen functions, and a new test reads `Bearer t` and the option token off the readiness request. Setting the forward in `wait_for_server()` back to `NULL` turned three expectations red.
 
 ## Decisions
 

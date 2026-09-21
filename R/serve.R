@@ -44,6 +44,10 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'   look for the server that was started. It does not change where the CLI
 #'   starts it, which only `port` does. `NULL` picks a host as described
 #'   below.
+#' @param token Character or `NULL`. An API token for the readiness request,
+#'   for a server that requires authentication. `NULL` reads the
+#'   `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN` environment
+#'   variable. See [rlmstudio_token].
 #'
 #' @section Which host the wait asks:
 #'
@@ -54,9 +58,7 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' * With neither, the port that `lms_server_status(json = TRUE)` reports is
 #'   read, and the host is `http://localhost:` plus that port.
 #'
-#' The request passes `token = NULL`, so it reads the `rlmstudio.token`
-#' option and then the `RLMSTUDIO_API_TOKEN` environment variable. See
-#' [rlmstudio_token].
+#' The request carries `token`, read as described under that argument.
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -91,7 +93,8 @@ lms_server_start <- function(
   port = NULL,
   cors = FALSE,
   wait = 10,
-  host = NULL
+  host = NULL,
+  token = NULL
 ) {
   rlm_check_wait(wait)
 
@@ -116,7 +119,7 @@ lms_server_start <- function(
   }
 
   if (wait > 0) {
-    warn_unless_ready(host = host, port = port, wait = wait)
+    warn_unless_ready(host = host, port = port, wait = wait, token = token)
   }
 
   invisible(res$status)
@@ -153,11 +156,13 @@ wait_host <- function(host = NULL, port = NULL) {
 #' @param host Character or `NULL`. What the caller gave.
 #' @param port What the caller gave.
 #' @param wait Numeric. The budget in seconds.
+#' @param token Character or `NULL`. Passed to `lms_server_ready()`.
 #'
 #' @return `TRUE` when the server answered, `FALSE` otherwise, invisibly.
 #'
 #' @noRd
-warn_unless_ready <- function(host = NULL, port = NULL, wait = 10) {
+warn_unless_ready <- function(host = NULL, port = NULL, wait = 10,
+                              token = NULL) {
   target <- wait_host(host = host, port = port)
 
   if (is.null(target)) {
@@ -169,7 +174,7 @@ warn_unless_ready <- function(host = NULL, port = NULL, wait = 10) {
     return(invisible(FALSE))
   }
 
-  if (wait_for_server(target, wait = wait)) {
+  if (wait_for_server(target, wait = wait, token = token)) {
     return(invisible(TRUE))
   }
 
@@ -384,21 +389,23 @@ server_status_port <- function() {
 #' further request, so the call can run past the budget only by the time a
 #' request already in flight needs, which `timeout` bounds.
 #'
-#' The request passes `token = NULL`. `lms_server_ready()` reads `NULL` as
-#' the `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN`
-#' environment variable, which is what a caller of `lms_server_start()` gets.
+#' The request passes `token` on. `lms_server_ready()` reads `NULL` as the
+#' `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN` environment
+#' variable.
 #'
 #' @param host Character. The base URL to probe.
 #' @param wait Numeric. The number of seconds to keep asking for. A `wait` of
 #'   zero sends no request at all.
 #' @param timeout Numeric. How long one request waits for an answer.
 #' @param pause Numeric. How long to sleep between two requests.
+#' @param token Character or `NULL`. Passed to `lms_server_ready()`.
 #'
 #' @return `TRUE` when a request reported the server ready inside the budget,
 #'   `FALSE` otherwise.
 #'
 #' @noRd
-wait_for_server <- function(host, wait, timeout = 1, pause = 0.25) {
+wait_for_server <- function(host, wait, timeout = 1, pause = 0.25,
+                            token = NULL) {
   if (wait <= 0) {
     return(FALSE)
   }
@@ -410,7 +417,7 @@ wait_for_server <- function(host, wait, timeout = 1, pause = 0.25) {
       return(FALSE)
     }
 
-    ready <- lms_server_ready(host = host, timeout = timeout, token = NULL)
+    ready <- lms_server_ready(host = host, timeout = timeout, token = token)
     if (isTRUE(ready)) {
       return(TRUE)
     }
