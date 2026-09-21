@@ -157,6 +157,19 @@ test_that("server_status_port returns NULL for the unparsed character shape", {
   expect_null(server_status_port())
 })
 
+test_that("server_status_port raises no warning when the output does not parse", {
+  # lms_server_status() warns before it falls back to the character shape.
+  # The caller raises its own warning for a missing port, so this one would
+  # be a second warning about the same fault.
+  local_mocked_bindings(
+    lms_server_status = function(...) {
+      cli::cli_warn("Failed to parse JSON output.")
+      c("not json")
+    }
+  )
+  expect_no_warning(expect_null(server_status_port()))
+})
+
 test_that("server_status_port returns NULL for a port it cannot use", {
   unusable <- list(
     null_port = NULL,
@@ -407,6 +420,34 @@ test_that("lms_server_start warns when it cannot tell which host to ask", {
   expect_match(conditionMessage(warning), "port")
 })
 
+test_that("lms_server_start asks the host the caller gave", {
+  start_success()
+  fake_clock()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(
+    lms_server_ready = stub$fn,
+    lms_server_status = function(...) list(running = TRUE, port = 5555L)
+  )
+
+  suppressMessages(
+    lms_server_start(port = 8080, host = "http://127.0.0.1:9999")
+  )
+  expect_identical(stub$calls()[[1]]$host, "http://127.0.0.1:9999")
+})
+
+test_that("lms_server_start asks the port the status read reports", {
+  start_success()
+  fake_clock()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(
+    lms_server_ready = stub$fn,
+    lms_server_status = function(...) list(running = TRUE, port = 5555L)
+  )
+
+  suppressMessages(lms_server_start())
+  expect_identical(stub$calls()[[1]]$host, "http://localhost:5555")
+})
+
 test_that("a bad wait aborts before the CLI runs", {
   ran <- FALSE
   local_mocked_bindings(
@@ -420,7 +461,13 @@ test_that("a bad wait aborts before the CLI runs", {
   expect_error(lms_server_start(wait = -1), "negative number of seconds")
   expect_error(lms_server_start(wait = "10"), "character value")
   expect_error(lms_server_start(wait = NA), "missing value")
+  expect_error(lms_server_start(wait = Inf), "not finite")
   expect_false(ran)
+
+  # D-008: the abort that reaches the caller carries no rlmstudio class.
+  err <- tryCatch(lms_server_start(wait = -1), condition = function(e) e)
+  expect_s3_class(err, "rlang_error")
+  expect_false(any(grepl("^rlmstudio", class(err))))
 })
 
 test_that("neither warning is silenced by the quiet option", {

@@ -26,9 +26,11 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' keeps asking the REST API whether it is ready, for about `wait` seconds,
 #' and returns once it answers. A script that calls the REST API on the next
 #' line therefore no longer reports a missing server on a healthy machine.
-#' The budget is a floor rather than a hard cap. No new request starts once
-#' `wait` seconds have passed, so the call can overrun by at most the one
-#' second a request already in flight is allowed.
+#' The budget is not a hard cap. No new request starts once `wait` seconds
+#' have passed, but a request already in flight is allowed one second to
+#' finish. With no `host` and no `port`, the function first asks the CLI
+#' which port the server uses, and that read runs before the `wait` seconds
+#' start to count.
 #'
 #' @param port Integer. Port to run the server on. If not provided, LM Studio
 #'   uses the last used port.
@@ -341,12 +343,15 @@ lms_server_status <- function(
 #' @return One integer port, or `NULL` when the status output carries no
 #'   usable port. `lms_server_status()` returns a character vector rather
 #'   than a list when jsonlite is missing or the output does not parse, and
-#'   that shape yields `NULL` too.
+#'   that shape yields `NULL` too. The warning that `lms_server_status()`
+#'   raises for output that does not parse is muffled.
 #'
 #' @noRd
 server_status_port <- function() {
+  # The parse warning is muffled because the caller warns about a missing
+  # port itself, and two warnings about one fault read as two faults.
   status <- tryCatch(
-    lms_server_status(json = TRUE),
+    suppressWarnings(lms_server_status(json = TRUE)),
     error = function(e) NULL
   )
 

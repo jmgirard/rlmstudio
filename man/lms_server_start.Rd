@@ -36,9 +36,11 @@ The CLI returns before the REST API answers. By default this function then
 keeps asking the REST API whether it is ready, for about \code{wait} seconds,
 and returns once it answers. A script that calls the REST API on the next
 line therefore no longer reports a missing server on a healthy machine.
-The budget is a floor rather than a hard cap. No new request starts once
-\code{wait} seconds have passed, so the call can overrun by at most the one
-second a request already in flight is allowed.
+The budget is not a hard cap. No new request starts once \code{wait} seconds
+have passed, but a request already in flight is allowed one second to
+finish. With no \code{host} and no \code{port}, the function first asks the CLI
+which port the server uses, and that read runs before the \code{wait} seconds
+start to count.
 }
 \section{Which host the wait asks}{
 

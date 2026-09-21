@@ -152,3 +152,18 @@ Fresh evidence on `48754da`, branch level with `origin/main` (no merge needed). 
 - AC7: `devtools::document()` left `git status` clean. `devtools::test()` as above. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes in 40s.
 - Consistency gate: `cairn_validate.py` exit 0, all checks pass. No DESIGN.md principle changed, so `cairn_impact` skipped. `document()` no diff. README.Rmd untouched by the branch. No pkgdown site. NEWS.md has the entry and no milestone ids. No new top-level files. `check()` clean as in AC7.
 - Independent review: three lenses. The diff-bug lens reported 10 findings, the blame-history lens 4, the prior-review lens none (no archived finding regressed, no GitHub review threads). Triage is recorded below once the maintainer rules at the gate.
+- Triage, as ruled by the maintainer at the gate:
+  - [O1] A bad `host` aborts after the server started: follow-up, the existing candidate row on a `host` guard.
+  - [O2] An unparsed status output raised two warnings: fixed. `server_status_port()` muffles the parse warning; a new test failed first on the second warning.
+  - [O3] "a floor rather than a hard cap" was wrong: fixed in the help page and NEWS.md.
+  - [O4] The one-second overrun claim ignored the port read: fixed; the help page and NEWS.md now say the read runs before the wait counts.
+  - [O5] Each probe allows 1 s against the 2 s default: rejected, a choice recorded at the implement gate.
+  - [O6] A `wait` of about 1e-9 sends no request: rejected, below any real use.
+  - [O7] `host` ignored when `wait = 0`: rejected, the help page states that `wait = 0` sends no request.
+  - [O8] Host paths untested through the exported call: fixed, two tests added.
+  - [O9] No-class check absent at the exported call: fixed, added with an `Inf` case.
+  - [O10] Unclear vignette sentence: fixed, getting-started.Rmd rewritten.
+  - [S1] NA checked before type in `wait_fault()`: noted, the code comment states why.
+  - [S2] M010 vignette sentence replaced: noted, an intended rewrite with the same warning.
+  - [S3] Same as O1: follow-up, same row. [S4] Exit-code test now passes `wait = 0`: noted, the wait path has its own tests.
+- After the fixes: `document()` no diff, `test()` 1298 passes and 0 failures, `check()` 0 errors, 0 warnings, 0 notes in 38.8s.
