@@ -9,7 +9,7 @@ _Last hygiene pass: 2026-09-20 (M015 done and archived, M012 row pruned, one les
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M016 | The daemon start call can wait until the daemon reports running | planned | none | normal | milestones/M016-daemon-start-wait.md |
+| M016 | The daemon start call can wait until the daemon reports running | in-progress | none | normal | milestones/M016-daemon-start-wait.md |
 | M015 | The server start call takes a token and checks its wait arguments before it starts | done | none | normal | milestones/archive/M015-server-start-token-and-host-check.md |
 | M014 | The server start call can wait until the REST API answers | done | none | normal | milestones/archive/M014-server-start-wait.md |
 | M013 | A bad model or text argument aborts with a message that names the mistake | done | none | normal | milestones/archive/M013-argument-guards.md |

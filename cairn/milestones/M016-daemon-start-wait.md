@@ -1,13 +1,13 @@
 # M016: The daemon start call can wait until the daemon reports running
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** none
 - **Driving RR:** —
 - **Principles touched:** GP3, GP5, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing. It adds an argument to two exported functions and changes the moment they return.
-- **Branch/PR:** —
+- **Branch/PR:** m016-daemon-start-wait
 
 ## Goal
 
