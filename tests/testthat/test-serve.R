@@ -521,7 +521,8 @@ test_that("a host the readiness request cannot be built from aborts first", {
   for (wait in c(10, 0)) {
     for (host in bad_hosts) {
       err <- expect_error(lms_server_start(host = host, wait = wait))
-      # The message names the argument, not httr2's own `url`.
+      # The first line names the argument. The quoted reason below it can
+      # still name httr2's own `url`.
       expect_match(
         conditionMessage(err),
         "`host`",

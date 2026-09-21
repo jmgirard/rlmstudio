@@ -62,10 +62,10 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' Two faults in the call abort before the CLI runs, with any `wait`. One is
 #' a `host` that is not `NULL` and that the readiness request cannot be built
-#' from, such as a vector of two strings, `NA`, an empty string, or a URL
-#' with no scheme. That message names `host` and quotes the reason httr2 or
-#' curl gave. The other is a `token` that is not one character string and
-#' not `NULL`.
+#' from, such as a vector of two strings, `NA`, an empty string, or
+#' `"localhost:1234"`, which lacks `http://`. That message names `host` and
+#' quotes the reason httr2 or curl gave. The other is a `token` that is not
+#' one character string and not `NULL`.
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -149,7 +149,8 @@ lms_server_start <- function(
 #' build reads the token sources, but with `token = NULL` it reads only the
 #' option and the environment variable, and neither of those aborts. Any
 #' abort here therefore comes from `host`. The message names `host` and
-#' quotes the reason httr2 or curl gave, which names httr2's own `url`.
+#' quotes the reason httr2 or curl gave. An httr2 reason names httr2's own
+#' `url`, and a curl reason names no argument.
 #'
 #' @param host The value the caller passed. Not `NULL`.
 #' @return `host`, invisibly.
@@ -221,11 +222,13 @@ warn_unless_ready <- function(host = NULL, port = NULL, wait = 10,
     return(invisible(FALSE))
   }
 
-  # The pre-start checks leave no known way for lms_server_ready() to abort
-  # here, so this is a fallback. The start already ran and cannot be undone,
-  # so the abort becomes one warning. suppressWarnings() sits inside the
-  # tryCatch() so that a warning the probe raises before it aborts does not
-  # reach the user as a second warning for the same fault.
+  # The pre-start checks cover a host the caller gave, but not one built from
+  # a malformed port, which is left to the CLI. Such a host can still make
+  # lms_server_ready() abort here if the CLI accepted the port. The start
+  # already ran and cannot be undone, so the abort becomes one warning.
+  # suppressWarnings() sits inside the tryCatch() so that a warning the probe
+  # raises before it aborts does not reach the user as a second warning for
+  # the same fault.
   ready <- tryCatch(
     suppressWarnings(wait_for_server(target, wait = wait, token = token)),
     error = function(e) e
@@ -669,10 +672,11 @@ lms_server_ready <- function(
 
 #' Build the readiness request without sending it
 #'
-#' `lms_server_ready()` sends the request this builds. `lms_server_start()`
-#' builds it once before the CLI runs, so a `host` the build rejects aborts
-#' before a server starts. Any fault in `host`, `timeout`, or `token` aborts
-#' here, with the message of the package that raised it.
+#' `lms_server_ready()` sends the request this builds. When the caller gave a
+#' `host`, `lms_server_start()` builds it once before the CLI runs, so such a
+#' `host` the build rejects aborts before a server starts. Any fault in
+#' `host`, `timeout`, or `token` aborts here, with the message of the
+#' package that raised it.
 #'
 #' @param host Character. The base URL of the LM Studio server.
 #' @param timeout Numeric. The number of seconds the request may wait.

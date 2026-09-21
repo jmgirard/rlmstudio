@@ -1,6 +1,6 @@
 # M015: The server start call takes a token and checks its wait arguments before it starts
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** none
 - **Driving RR:** —
@@ -110,6 +110,8 @@ guards over the token table and the condition help page stay candidates.
 - 2026-09-20: T3 done. `lms_server_start()` calls `rlm_token(token)` and then `rlm_check_ready_host(host)` before the CLI runs. The token check runs first, so the host check catches host faults alone. In a scratch copy, deleting either line turned its tests red. The full suite is green.
 - 2026-09-20: T4 done. `warn_unless_ready()` turns an abort from the wait into one `cli_warn()` that names the host and quotes the abort message, with `suppressWarnings()` inside the `tryCatch()`. Removing `suppressWarnings()` turned the double-warning test red. The AC5 probe-abort case uses a mocked abort message that holds no token, so it checks only the text the package composes.
 - 2026-09-20: T5 done. The `?lms_server_start` page documents `token`, the two pre-start aborts, and the third warning. The quiet-option test now covers all three warnings. NEWS.md has three new bullets, and the old sentence saying that the request passes `token = NULL` is gone. `document()` gave no further diff. `devtools::check()` with the token set gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-20: claim audit: 26 claims read, 3 corrected — R/serve.R, tests/testthat/test-serve.R, NEWS.md. The reader re-read all six changed lines and all hold. It found that a malformed caller `port` can still reach the probe-abort warning when the CLI accepts it, because `port` stays out of scope. The AC4 premise "no known trigger" is therefore not strictly true. Its tested promise still holds, and the criterion text was not amended.
+- 2026-09-20: re-verified after the wording fixes. `devtools::test()` is green, `devtools::check()` with the token set gave 0 errors, 0 warnings, and 0 notes, and `document()` gave no diff. Status is now review.
 
 ## Decisions
 
