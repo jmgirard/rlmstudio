@@ -1,6 +1,6 @@
 # M014: The server start call can wait until the REST API answers
 
-- **Status:** in-progress
+- **Status:** review
 - **Branch:** m014-server-start-wait
 - **Priority:** normal
 - **Depends on:** none
@@ -134,6 +134,7 @@ This milestone only documents that behavior.
 - 2026-09-20: claim audit: 127 claims read, 5 corrected. Files: `R/serve.R`, `NEWS.md`, `man/lms_server_ready.Rd`, `man/lms_server_start.Rd`.
 - 2026-09-20: the audit corrections. The `wait` budget is a floor, not a hard cap, and both the help page and `NEWS.md` now say so. The six named readiness faults are not the whole list. The page now says that any `host` which is not one string aborts the same way. The curl parse message names no argument, unlike the httr2 ones. The message for a `timeout` that is not one number names the value or its type. `wait_for_server()` now passes `token = NULL` explicitly, so the sentence that says it does is true of the call that is made.
 - 2026-09-20: the re-read of the five corrections. All five hold. It found two imprecisions in the correction text itself and both are fixed. httr2 names either the value or its type for a bad `host`, not always the value. curl names the parse reason, so a `host` holding a space and an empty `host` give different messages, and the page now quotes both.
+- 2026-09-20: all six tasks done, status set to review. Final figures on `faba0bb`. `devtools::document()` gives no diff. `devtools::test()` is clean at 1291 passes, 0 failures, 0 skips. `devtools::check()` reports 0 errors, 0 warnings, and 0 notes in 1m 33.6s.
 - 2026-09-20: T5 note. roxygen refused a fenced quote holding backticks and reported a block quote. The six lines now report each message as prose rather than as a quoted string.
 
 ## Decisions

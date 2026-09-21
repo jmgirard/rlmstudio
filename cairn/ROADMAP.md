@@ -9,7 +9,7 @@ _Last hygiene pass: 2026-09-20 (M014 planned. Two candidate rows absorbed into i
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M014 | The server start call can wait until the REST API answers | in-progress | none | normal | milestones/M014-server-start-wait.md |
+| M014 | The server start call can wait until the REST API answers | review | none | normal | milestones/M014-server-start-wait.md |
 | M013 | A bad model or text argument aborts with a message that names the mistake | done | none | normal | milestones/archive/M013-argument-guards.md |
 | M012 | The package can turn text into embedding vectors | done | none | high | milestones/archive/M012-embeddings-wrapper.md |
 | M010 | The package can tell a usable LM Studio server from an open port | done | none | high | milestones/archive/M010-usable-server-probe.md |
