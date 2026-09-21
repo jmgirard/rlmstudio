@@ -151,6 +151,7 @@ the schema content stays with the server (D-003).
 - 2026-09-21: the claim audit found that a top-level `on.exit()` never runs under Rscript, so the recorder script left the model loaded. It now unloads in a `finally` clause. The same reader re-read the five corrections and found all of them matching.
 - 2026-09-21: implement complete. Suite: 251 tests, 0 failed, 0 skipped. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
 - 2026-09-21: review: AC1-AC7 verified, gate triage accepted. R1, R2, R4, R13 fixed on the branch, R12 rejected after the gate as the NEWS convention, three candidate rows added.
+- 2026-09-21: step-7 approval: m017-structured-output approved for merge
 
 ## Decisions
 
