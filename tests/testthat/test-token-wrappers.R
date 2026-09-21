@@ -20,9 +20,9 @@ wrapper_body <- paste0(
   '"loaded_instances": [{"identifier": "inst-1"}]}]}'
 )
 
-# The thirteen exported functions that can reach the REST API, with the number of
-# requests each one issues under these arguments. `call` takes a list of extra
-# arguments, which is either the token or nothing.
+# The fourteen exported functions that can reach the REST API, with the number
+# of requests each one issues under these arguments. `call` takes a list of
+# extra arguments, which is either the token or nothing.
 wrapper_table <- list(
   list(
     name = "list_models",
@@ -126,6 +126,19 @@ wrapper_table <- list(
     name = "lms_server_ready",
     requests = 1L,
     call = function(extra) do.call(lms_server_ready, extra)
+  ),
+  # lms_server_start() runs the CLI first, so the CLI is stubbed here. Its one
+  # request is the readiness request, which the shared body answers as ready.
+  list(
+    name = "lms_server_start",
+    requests = 1L,
+    call = function(extra) {
+      local_mocked_bindings(
+        run = function(command, args, error_on_status) list(status = 0),
+        .package = "processx"
+      )
+      do.call(lms_server_start, c(list(port = 8080), extra))
+    }
   )
 )
 
@@ -142,7 +155,7 @@ drive_wrapper <- function(entry, extra) {
   recorder$requests
 }
 
-test_that("the wrapper table lists the thirteen functions that reach the API", {
+test_that("the wrapper table lists the fourteen functions that reach the API", {
   expect_setequal(
     vapply(wrapper_table, function(e) e$name, character(1)),
     c(
@@ -158,7 +171,8 @@ test_that("the wrapper table lists the thirteen functions that reach the API", {
       "lms_chat_openai",
       "lms_chat_native",
       "lms_embed",
-      "lms_server_ready"
+      "lms_server_ready",
+      "lms_server_start"
     )
   )
 })
@@ -254,4 +268,31 @@ test_that("no request a wrapper issues carries a header when no token resolves",
 
     expect_identical(present, rep(FALSE, entry$requests), info = entry$name)
   }
+})
+
+test_that("lms_server_start sends its token, or the option, on the readiness request", {
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = "")
+  withr::local_options(rlmstudio.token = "option-token")
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) list(status = 0),
+    .package = "processx"
+  )
+
+  # An explicit token wins over the option.
+  recorder <- local_request_recorder(mock_response(200L, wrapper_body))
+  suppressMessages(lms_server_start(port = 8080, token = "t"))
+  expect_length(recorder$requests, 1L)
+  expect_identical(
+    request_target(recorder$requests[[1]])$headers$authorization,
+    "Bearer t"
+  )
+
+  # With token = NULL, the request carries the option.
+  recorder <- local_request_recorder(mock_response(200L, wrapper_body))
+  suppressMessages(lms_server_start(port = 8080, token = NULL))
+  expect_length(recorder$requests, 1L)
+  expect_identical(
+    request_target(recorder$requests[[1]])$headers$authorization,
+    "Bearer option-token"
+  )
 })

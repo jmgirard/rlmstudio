@@ -44,6 +44,10 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'   look for the server that was started. It does not change where the CLI
 #'   starts it, which only `port` does. `NULL` picks a host as described
 #'   below.
+#' @param token Character or `NULL`. An API token for the readiness request,
+#'   for a server that requires authentication. `NULL` reads the
+#'   `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN` environment
+#'   variable. See [rlmstudio_token].
 #'
 #' @section Which host the wait asks:
 #'
@@ -54,15 +58,23 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' * With neither, the port that `lms_server_status(json = TRUE)` reports is
 #'   read, and the host is `http://localhost:` plus that port.
 #'
-#' The request passes `token = NULL`, so it reads the `rlmstudio.token`
-#' option and then the `RLMSTUDIO_API_TOKEN` environment variable. See
-#' [rlmstudio_token].
+#' The request carries `token`, read as described under that argument.
+#'
+#' Beside a bad `wait`, two faults in the call abort before the CLI runs,
+#' with any `wait`. One is a `host` that is not `NULL` and that the readiness
+#' request cannot be built from, such as a vector of two strings, `NA`, an
+#' empty string, or `"localhost:1234"`, which lacks `http://`. That message
+#' names `host` and quotes the reason httr2 or curl gave. The other is a
+#' `token` that is not one character string and not `NULL`.
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
 #' CLI exit code. A call with no `host` and no `port` whose port read yields
-#' nothing raises its own warning and sends no readiness request. Neither
-#' warning is silenced by the `rlmstudio.quiet` option.
+#' nothing raises its own warning and sends no readiness request. If the
+#' readiness check itself aborts during the wait, the function raises a
+#' third warning. It names the host, quotes the abort message, and the
+#' function returns the CLI exit code. None of the three warnings is
+#' silenced by the `rlmstudio.quiet` option.
 #'
 #' @seealso [LM Studio CLI Server Start
 #'   Documentation](https://lmstudio.ai/docs/cli/serve/server-start).
@@ -91,9 +103,18 @@ lms_server_start <- function(
   port = NULL,
   cors = FALSE,
   wait = 10,
-  host = NULL
+  host = NULL,
+  token = NULL
 ) {
   rlm_check_wait(wait)
+  # Faults in host and token are knowable without a server, and a start that
+  # has already run cannot be undone, so both are checked before the CLI runs.
+  # The host check builds its request with token = NULL, so it never sees the
+  # caller's token. That token is checked here on its own.
+  rlm_token(token)
+  if (!is.null(host)) {
+    rlm_check_ready_host(host)
+  }
 
   args <- build_args_server_start(port = port, cors = cors)
 
@@ -116,10 +137,40 @@ lms_server_start <- function(
   }
 
   if (wait > 0) {
-    warn_unless_ready(host = host, port = port, wait = wait)
+    warn_unless_ready(host = host, port = port, wait = wait, token = token)
   }
 
   invisible(res$status)
+}
+
+#' Reject a host the readiness request cannot be built from
+#'
+#' Builds the request `lms_server_ready()` would send, and sends nothing. The
+#' build reads the token sources, but with `token = NULL` it reads only the
+#' option and the environment variable, and neither of those aborts. Any
+#' abort here therefore comes from `host`. The message names `host` and
+#' quotes the reason httr2 or curl gave. An httr2 reason names httr2's own
+#' `url`, and a curl reason names no argument.
+#'
+#' @param host The value the caller passed. Not `NULL`.
+#' @return `host`, invisibly.
+#'
+#' @noRd
+rlm_check_ready_host <- function(host) {
+  tryCatch(
+    server_ready_request(host, timeout = 1, token = NULL),
+    error = function(e) {
+      reason <- conditionMessage(e)
+      cli::cli_abort(
+        c(
+          "{.arg host} must be a URL the readiness request can be built from.",
+          "x" = "{reason}"
+        ),
+        call = NULL
+      )
+    }
+  )
+  invisible(host)
 }
 
 #' Pick the host that the wait asks
@@ -153,11 +204,13 @@ wait_host <- function(host = NULL, port = NULL) {
 #' @param host Character or `NULL`. What the caller gave.
 #' @param port What the caller gave.
 #' @param wait Numeric. The budget in seconds.
+#' @param token Character or `NULL`. Passed to `lms_server_ready()`.
 #'
 #' @return `TRUE` when the server answered, `FALSE` otherwise, invisibly.
 #'
 #' @noRd
-warn_unless_ready <- function(host = NULL, port = NULL, wait = 10) {
+warn_unless_ready <- function(host = NULL, port = NULL, wait = 10,
+                              token = NULL) {
   target <- wait_host(host = host, port = port)
 
   if (is.null(target)) {
@@ -169,7 +222,31 @@ warn_unless_ready <- function(host = NULL, port = NULL, wait = 10) {
     return(invisible(FALSE))
   }
 
-  if (wait_for_server(target, wait = wait)) {
+  # The pre-start checks cover a host the caller gave, but not one built from
+  # a malformed port, which is left to the CLI. Such a host can still make
+  # lms_server_ready() abort here if the CLI accepted the port. The start
+  # already ran and cannot be undone, so the abort becomes one warning.
+  # suppressWarnings() sits inside the tryCatch() so that a warning the probe
+  # raises before it aborts does not reach the user as a second warning for
+  # the same fault.
+  ready <- tryCatch(
+    suppressWarnings(wait_for_server(target, wait = wait, token = token)),
+    error = function(e) e
+  )
+
+  if (inherits(ready, "error")) {
+    reason <- conditionMessage(ready)
+    cli::cli_warn(c(
+      "Could not ask the LM Studio server at {.url {target}} whether it is
+       ready.",
+      "x" = "{reason}",
+      "i" = "The server was started. Call {.fn lms_server_ready} to ask
+             again."
+    ))
+    return(invisible(FALSE))
+  }
+
+  if (ready) {
     return(invisible(TRUE))
   }
 
@@ -384,21 +461,23 @@ server_status_port <- function() {
 #' further request, so the call can run past the budget only by the time a
 #' request already in flight needs, which `timeout` bounds.
 #'
-#' The request passes `token = NULL`. `lms_server_ready()` reads `NULL` as
-#' the `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN`
-#' environment variable, which is what a caller of `lms_server_start()` gets.
+#' The request passes `token` on. `lms_server_ready()` reads `NULL` as the
+#' `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN` environment
+#' variable.
 #'
 #' @param host Character. The base URL to probe.
 #' @param wait Numeric. The number of seconds to keep asking for. A `wait` of
 #'   zero sends no request at all.
 #' @param timeout Numeric. How long one request waits for an answer.
 #' @param pause Numeric. How long to sleep between two requests.
+#' @param token Character or `NULL`. Passed to `lms_server_ready()`.
 #'
 #' @return `TRUE` when a request reported the server ready inside the budget,
 #'   `FALSE` otherwise.
 #'
 #' @noRd
-wait_for_server <- function(host, wait, timeout = 1, pause = 0.25) {
+wait_for_server <- function(host, wait, timeout = 1, pause = 0.25,
+                            token = NULL) {
   if (wait <= 0) {
     return(FALSE)
   }
@@ -410,7 +489,7 @@ wait_for_server <- function(host, wait, timeout = 1, pause = 0.25) {
       return(FALSE)
     }
 
-    ready <- lms_server_ready(host = host, timeout = timeout, token = NULL)
+    ready <- lms_server_ready(host = host, timeout = timeout, token = token)
     if (isTRUE(ready)) {
       return(TRUE)
     }
@@ -575,10 +654,7 @@ lms_server_ready <- function(
   timeout = 2,
   token = NULL
 ) {
-  req <- lms_client(host, token = token) |>
-    httr2::req_url_path("api/v1/models") |>
-    httr2::req_timeout(timeout) |>
-    httr2::req_error(is_error = \(resp) FALSE)
+  req <- server_ready_request(host, timeout = timeout, token = token)
 
   tryCatch(
     {
@@ -592,6 +668,28 @@ lms_server_ready <- function(
     },
     error = function(e) FALSE
   )
+}
+
+#' Build the readiness request without sending it
+#'
+#' `lms_server_ready()` sends the request this builds. When the caller gave a
+#' `host`, `lms_server_start()` builds it once before the CLI runs, so such a
+#' `host` the build rejects aborts before a server starts. Any fault in
+#' `host`, `timeout`, or `token` aborts here, with the message of the
+#' package that raised it.
+#'
+#' @param host Character. The base URL of the LM Studio server.
+#' @param timeout Numeric. The number of seconds the request may wait.
+#' @param token Character or `NULL`. Passed to `lms_client()`.
+#'
+#' @return An httr2 request object.
+#'
+#' @noRd
+server_ready_request <- function(host, timeout = 2, token = NULL) {
+  lms_client(host, token = token) |>
+    httr2::req_url_path("api/v1/models") |>
+    httr2::req_timeout(timeout) |>
+    httr2::req_error(is_error = \(resp) FALSE)
 }
 
 #' Is this parsed value a list of models?

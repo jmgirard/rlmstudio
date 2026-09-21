@@ -269,18 +269,20 @@ test_that("wait_for_server sends one request when the first answers", {
   expect_identical(clock$slept(), numeric(0))
 })
 
-test_that("wait_for_server passes the host, the timeout, and a NULL token", {
+test_that("wait_for_server passes the host, the timeout, and the token", {
   fake_clock()
   stub <- ready_stub(true_on = 1)
   local_mocked_bindings(lms_server_ready = stub$fn)
 
   wait_for_server("http://elsewhere:8080", wait = 10, timeout = 0.5)
-  # token = NULL is passed rather than left to the default, because the help
-  # page says the request passes it. That makes the sentence true of the call
-  # that is made.
+  wait_for_server("http://elsewhere:8080", wait = 10, token = "t")
   expect_identical(
     stub$calls()[[1]],
     list(host = "http://elsewhere:8080", timeout = 0.5, token = NULL)
+  )
+  expect_identical(
+    stub$calls()[[2]],
+    list(host = "http://elsewhere:8080", timeout = 1, token = "t")
   )
 })
 
@@ -470,9 +472,9 @@ test_that("a bad wait aborts before the CLI runs", {
   expect_false(any(grepl("^rlmstudio", class(err))))
 })
 
-test_that("neither warning is silenced by the quiet option", {
-  # GP6 is traded here. Both warnings go through cli_warn(), not through the
-  # helpers in R/utils-msg.R that read the option.
+test_that("none of the three warnings is silenced by the quiet option", {
+  # GP6 is traded here. All three warnings go through cli_warn(), not through
+  # the helpers in R/utils-msg.R that read the option.
   withr::local_options(rlmstudio.quiet = TRUE)
   start_success()
   fake_clock()
@@ -483,4 +485,190 @@ test_that("neither warning is silenced by the quiet option", {
 
   expect_warning(lms_server_start(port = 8080, wait = 1), "did not answer")
   expect_warning(lms_server_start(), "Could not tell which host")
+
+  local_mocked_bindings(
+    lms_server_ready = function(...) cli::cli_abort("probe broke")
+  )
+  expect_warning(lms_server_start(port = 8080), "Could not ask")
+})
+
+# A processx::run stub that counts its calls and then stops. The checks below
+# must all fire before the server starts, so each test asserts a count of zero
+# after its loop. A fail() inside the stub would not do this, because
+# expect_error() accepts that failure as the expected error.
+forbid_cli <- function(env = parent.frame()) {
+  calls <- 0L
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) {
+      calls <<- calls + 1L
+      stop("processx::run() was called")
+    },
+    .package = "processx",
+    .env = env
+  )
+  function() calls
+}
+
+test_that("a host the readiness request cannot be built from aborts first", {
+  cli_calls <- forbid_cli()
+  bad_hosts <- list(
+    c("http://a:1", "http://b:2"),
+    NA_character_,
+    "",
+    1,
+    list("a"),
+    character(0),
+    "http://local host:1234",
+    "localhost:1234"
+  )
+
+  for (wait in c(10, 0)) {
+    for (host in bad_hosts) {
+      err <- expect_error(lms_server_start(host = host, wait = wait))
+      # The first line names the argument. The quoted reason below it can
+      # still name httr2's own `url`.
+      expect_match(
+        conditionMessage(err),
+        "`host`",
+        fixed = TRUE,
+        info = paste(deparse(host), "wait", wait)
+      )
+      expect_false(any(grepl("^rlmstudio", class(err))))
+    }
+  }
+  expect_identical(cli_calls(), 0L)
+})
+
+test_that("the host abort quotes the reason the request build gave", {
+  cli_calls <- forbid_cli()
+  local_mocked_bindings(
+    server_ready_request = function(...) stop("reason from the build")
+  )
+
+  err <- expect_error(lms_server_start(host = "http://localhost:1234"))
+  expect_match(conditionMessage(err), "`host`", fixed = TRUE)
+  expect_match(conditionMessage(err), "reason from the build", fixed = TRUE)
+  expect_identical(cli_calls(), 0L)
+})
+
+test_that("a NULL host and a usable host pass the pre-start check", {
+  start_success()
+  fake_clock()
+  local_mocked_bindings(lms_server_ready = ready_stub(true_on = 1)$fn)
+
+  for (wait in c(10, 0)) {
+    suppressMessages({
+      expect_equal(lms_server_start(port = 8080, wait = wait), 0)
+      expect_equal(
+        lms_server_start(host = "http://localhost:1234", wait = wait),
+        0
+      )
+    })
+  }
+})
+
+test_that("a bad token aborts before the CLI runs, with host left NULL", {
+  cli_calls <- forbid_cli()
+  bad_tokens <- list(c("a", "b"), NA_character_, 1)
+
+  for (wait in c(10, 0)) {
+    for (token in bad_tokens) {
+      expect_error(
+        lms_server_start(token = token, wait = wait),
+        "`token` must be one character string",
+        fixed = TRUE
+      )
+    }
+  }
+  expect_identical(cli_calls(), 0L)
+})
+
+# Run expr and return its value with every warning it raised, muffled.
+collect_warnings <- function(expr) {
+  warnings <- list()
+  value <- withCallingHandlers(
+    expr,
+    warning = function(w) {
+      warnings[[length(warnings) + 1L]] <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, warnings = warnings)
+}
+
+test_that("an abort from the probe during the wait becomes one warning", {
+  start_success()
+  fake_clock()
+  local_mocked_bindings(
+    lms_server_ready = function(...) cli::cli_abort("probe broke")
+  )
+
+  out <- suppressMessages(
+    collect_warnings(lms_server_start(host = "http://127.0.0.1:9999"))
+  )
+  expect_identical(out$value, 0)
+  expect_length(out$warnings, 1L)
+  message <- conditionMessage(out$warnings[[1]])
+  expect_match(message, "could not ask", ignore.case = TRUE)
+  expect_match(message, "127.0.0.1:9999", fixed = TRUE)
+  # The abort's own message is quoted.
+  expect_match(message, "probe broke", fixed = TRUE)
+})
+
+test_that("a warning raised by the probe before it aborts is not doubled", {
+  start_success()
+  fake_clock()
+  local_mocked_bindings(
+    lms_server_ready = function(...) {
+      cli::cli_warn("probe warned")
+      cli::cli_abort("probe broke")
+    }
+  )
+
+  out <- suppressMessages(
+    collect_warnings(lms_server_start(host = "http://127.0.0.1:9999"))
+  )
+  expect_identical(out$value, 0)
+  expect_length(out$warnings, 1L)
+  expect_match(conditionMessage(out$warnings[[1]]), "could not ask",
+    ignore.case = TRUE
+  )
+})
+
+test_that("none of the three wait warnings carries the token", {
+  secret <- "secret-token-xyz"
+  start_success()
+  fake_clock()
+
+  # The wait runs out.
+  local_mocked_bindings(lms_server_ready = ready_stub(true_on = Inf)$fn)
+  out <- suppressMessages(collect_warnings(
+    lms_server_start(port = 8080, wait = 1, token = secret)
+  ))
+  expect_length(out$warnings, 1L)
+  expect_match(conditionMessage(out$warnings[[1]]), "did not answer in time")
+  expect_no_match(conditionMessage(out$warnings[[1]]), secret, fixed = TRUE)
+
+  # No host was found.
+  local_mocked_bindings(lms_server_status = function(...) list(running = TRUE))
+  out <- suppressMessages(collect_warnings(lms_server_start(token = secret)))
+  expect_length(out$warnings, 1L)
+  expect_match(
+    conditionMessage(out$warnings[[1]]),
+    "Could not tell which host to ask"
+  )
+  expect_no_match(conditionMessage(out$warnings[[1]]), secret, fixed = TRUE)
+
+  # The probe aborted.
+  local_mocked_bindings(
+    lms_server_ready = function(...) cli::cli_abort("probe broke")
+  )
+  out <- suppressMessages(collect_warnings(
+    lms_server_start(port = 8080, token = secret)
+  ))
+  expect_length(out$warnings, 1L)
+  expect_match(conditionMessage(out$warnings[[1]]), "could not ask",
+    ignore.case = TRUE
+  )
+  expect_no_match(conditionMessage(out$warnings[[1]]), secret, fixed = TRUE)
 })

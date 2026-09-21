@@ -9,7 +9,7 @@ _Last hygiene pass: 2026-09-20 (M014 done and archived, M010 row pruned, two les
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M015 | The server start call takes a token and checks its wait arguments before it starts | planned | none | normal | milestones/M015-server-start-token-and-host-check.md |
+| M015 | The server start call takes a token and checks its wait arguments before it starts | review | none | normal | milestones/M015-server-start-token-and-host-check.md |
 | M016 | The daemon start call can wait until the daemon reports running | planned | none | normal | milestones/M016-daemon-start-wait.md |
 | M014 | The server start call can wait until the REST API answers | done | none | normal | milestones/archive/M014-server-start-wait.md |
 | M013 | A bad model or text argument aborts with a message that names the mistake | done | none | normal | milestones/archive/M013-argument-guards.md |
@@ -21,6 +21,7 @@ _Last hygiene pass: 2026-09-20 (M014 done and archived, M010 row pruned, two les
      - idea, added YYYY-MM-DD, links
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
+- `lms_server_start()` with `host = NULL` does not check the host it builds from `port` before the CLI runs. A `port` of `"abc"` or `99999` makes the probe abort. If the CLI accepts such a port, the call warns after the start rather than aborting before it, added 2026-09-20, M015 review finding 4
 - The argument-guard loops in `tests/testthat/test-arg-guards.R` report one failure for ten functions. A non-matching error aborts the whole `test_that()` block. The first broken function then hides the other nine. The file still turns red. The diagnostics alone are coarse, added 2026-09-20, M013 review finding 7
 - A `chunk_size` argument on `lms_embed()` with a progress bar, so a long input vector goes out as several requests. M012 sends the whole vector in one POST, added 2026-09-20, M012 plan gate
 - `lms_chat_openai()` takes its prompt as `messages`, a list, so M013's text guard does not reach it. A malformed messages list still goes to the server unchecked, added 2026-09-20, M013 scope
