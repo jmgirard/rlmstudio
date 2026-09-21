@@ -30,11 +30,11 @@ guards over the token table and the condition help page stay candidates.
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_server_start(token = "t")` sends `Authorization: Bearer t` on
+- [x] AC1: `lms_server_start(token = "t")` sends `Authorization: Bearer t` on
       its readiness request. With `token = NULL`, it sends the value of the
       `rlmstudio.token` option. A test reads the header off the recorded
       readiness request in both cases.
-- [ ] AC2: Before `processx::run()` runs, `lms_server_start()` builds its
+- [x] AC2: Before `processx::run()` runs, `lms_server_start()` builds its
       readiness request from a non-`NULL` `host`. It uses the same helper as
       `lms_server_ready()`. If the build rejects `host`, the call aborts with a
       message that names `host`. `lms_server_ready()` keeps its own messages.
@@ -43,22 +43,22 @@ guards over the token table and the condition help page stay candidates.
       The values are two strings, `NA_character_`, `""`, `1`, `list("a")`,
       `character(0)`, `"http://local host:1234"`, and `"localhost:1234"`. The
       values `NULL` and `"http://localhost:1234"` pass.
-- [ ] AC3: Before `processx::run()` runs, `lms_server_start()` passes `token`
+- [x] AC3: Before `processx::run()` runs, `lms_server_start()` passes `token`
       to `rlm_token()`. This holds for `host = NULL` too. A rejected `token` aborts
       there, with `wait = 10` and with `wait = 0`. A test runs two strings,
       `NA_character_`, and `1` against the same stub, with `host` left at
       `NULL`. It matches the message against `token`.
-- [ ] AC4: With AC2 and AC3 in place, an abort from `lms_server_ready()`
+- [x] AC4: With AC2 and AC3 in place, an abort from `lms_server_ready()`
       during the wait has no known trigger. This criterion is the fallback for
       one. If `lms_server_ready()` aborts during the wait, `lms_server_start()`
       raises one warning that names the host. It then returns the CLI exit
       code. A test mocks `lms_server_ready()` to abort. It asserts the return
       value, one warning, and the warning message.
-- [ ] AC5: `lms_server_start()` raises three warnings: the wait ran out, no
+- [x] AC5: `lms_server_start()` raises three warnings: the wait ran out, no
       host was found, and the probe aborted. With `token = "secret-token-xyz"`,
       none of the three carries the token in its `conditionMessage()`. A test
       asserts this for all three.
-- [ ] AC6: `?lms_server_start` documents `token`. It states that two faults
+- [x] AC6: `?lms_server_start` documents `token`. It states that two faults
       abort before the CLI runs. One is a `host` that the readiness request
       cannot be built from. The other is a `token` that is not one string or
       `NULL`. NEWS.md has
@@ -116,3 +116,29 @@ guards over the token table and the condition help page stay candidates.
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-09-20 on branch head ee37644, which already contains `origin/main` (0e09922).
+
+- AC1: `test-token-wrappers.R` "lms_server_start sends its token, or the option, on the readiness request" passed, 4 expectations, 0 skipped. It reads `Bearer t` with `token = "t"` and `Bearer option-token` with `token = NULL` off the one recorded request. The table test lists fourteen functions and passed.
+- AC2: `R/serve.R` calls `rlm_check_ready_host(host)` for a non-`NULL` host before `processx::run()`. That helper and `lms_server_ready()` both build through `server_ready_request()`. `test-serve.R` "a host the readiness request cannot be built from aborts first" passed with 48 expectations. It runs the eight listed values at `wait = 10` and `wait = 0` and matches `` `host` `` in each message. A `processx::run` stub fails the test on any call. "a NULL host and a usable host pass the pre-start check" passed with 4 expectations. `test-server-ready.R` is unchanged on the branch and passed. In a scratch copy, replacing the host check with `invisible(NULL)` turned that one test red.
+- AC3: `R/serve.R` calls `rlm_token(token)` before the host check and before `processx::run()`, with `host` at any value. `test-serve.R` "a bad token aborts before the CLI runs, with host left NULL" passed with 6 expectations. It runs two strings, `NA_character_`, and `1` at both wait values against the failing stub and matches "`token` must be one character string". In a scratch copy, removing the `rlm_token(token)` call turned that one test red.
+- AC4: `test-serve.R` "an abort from the probe during the wait becomes one warning" passed with 5 expectations. It mocks `lms_server_ready()` to abort. It asserts a return value of 0 and one warning. The warning holds the host `127.0.0.1:9999`, the quoted abort text, and the matched phrase "could not ask". "a warning raised by the probe before it aborts is not doubled" passed with 3 expectations. In a scratch copy, removing the `suppressWarnings()` wrapper turned that one test red.
+- AC5: `test-serve.R` "none of the three wait warnings carries the token" passed with 9 expectations. It passes `token = "secret-token-xyz"` and raises each of the three warnings in turn. For each it asserts one warning, matches the warning's own text, and asserts that `conditionMessage()` does not hold the token. The probe-abort case uses a mocked abort message without the token, so it covers only the text the package writes.
+- AC6: `man/lms_server_start.Rd` has a `token` item at line 32. Its section at line 69 names the two faults that abort before the CLI runs. They are a `host` the request cannot be built from and a `token` that is not one string or `NULL`. NEWS.md has three new bullets for `token`, the pre-start checks, and the probe-abort warning. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes in 37.7 s, and its `document()` step left the tree clean.
+- Consistency gate: `cairn_validate.py` exited 0 with all checks passed. `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. README.Rmd and README.md are untouched on the branch. No new top-level files. No DESIGN principle changed, so `cairn_impact.py` was skipped.
+
+### Independent review
+
+Three fresh reviewers ran. The [S] blame-history reviewer and the [S] prior-review reviewer reported no findings. The prior-review reviewer found that the diff closes M014 finding O1 and follows M014 finding O2 and the M009 token wording. The [O] diff-bug reviewer reported 11 findings, ranked below. Findings 1 and 2 were confirmed by command. Dispositions are proposed here and decided at the merge gate.
+
+1. `forbid_cli()` in `test-serve.R` calls `fail()` inside `expect_error()`, which counts that call as the expected error. The AC2 and AC3 tests go red on a stub call only through their message match. Proposed: fix now, with a flag the test asserts after the loop.
+2. No test checks that the host abort quotes the httr2 or curl reason. With the `"x" = "{reason}"` line removed, the serve tests stayed green. Proposed: fix now, with one expectation on a known reason.
+3. The AC5 probe-abort case uses a mocked message without the token, so it cannot detect a leak passed through from the probe. The work log records this. Proposed: reject, because the package composes no token text, and M009 keeps the token out of the probe's own aborts.
+4. A malformed `port` with `host = NULL` reaches the probe-abort warning when the CLI accepts it. The claim audit found this. Proposed: follow-up as a new candidate row for a pre-start check of the host built from `port`.
+5. The help page says two faults abort before the CLI runs, but a bad `wait` does too. Proposed: fix now, by naming `wait` beside them.
+6. The comment above `rlm_token(token)` in `R/serve.R` gives a wrong reason for the order, because the host check always passes `token = NULL`. Proposed: fix now.
+7. `suppressWarnings()` drops every probe warning during the wait, not only one before an abort. Proposed: reject, because `lms_server_ready()` raises no warning on its return paths and the LESSONS M014 pattern calls for this wrapper.
+8. The host abort omits `parent = e`, so `rlang::last_error()` loses the httr2 or curl condition. Proposed: reject, because the reason is already quoted and a parent prints it twice.
+9. `token = ""` falls through to the option, and the `token` help text does not say so. Proposed: reject, because every wrapper shares this and the diff did not add it.
+10. A quoted cli message can carry color codes inside the warning bullet. Proposed: reject as cosmetic.
+11. The `lms_server_start` row in the token table has no fake clock and relies on a ready response. Proposed: reject, because every table driver in that file answers ready.
