@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene pass: 2026-09-20 (M013 archived and set done, M011 pruned under terminal-row retention. One candidate row added on coarse test diagnostics. D-008 records the unclassed argument abort and its order against the server probe. One lesson added on what `trimws()` leaves behind. No lesson retired, no Known issues entry owed, no candidate row extended. Caps and byte budgets checked by hand, validate green)_
+_Last hygiene pass: 2026-09-20 (M014 planned. Two candidate rows absorbed into it, the one on the start call returning early and the one on the undocumented readiness faults. Two new rows record what M014 leaves out, a daemon wait and a token argument on the start call. No decision added, no lesson retired, no Known issues entry owed. Caps and byte budgets checked by hand, validate green)_
 
 ## Milestones
 
@@ -9,6 +9,7 @@ _Last hygiene pass: 2026-09-20 (M013 archived and set done, M011 pruned under te
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M014 | The server start call can wait until the REST API answers | planned | none | normal | milestones/M014-server-start-wait.md |
 | M013 | A bad model or text argument aborts with a message that names the mistake | done | none | normal | milestones/archive/M013-argument-guards.md |
 | M012 | The package can turn text into embedding vectors | done | none | high | milestones/archive/M012-embeddings-wrapper.md |
 | M010 | The package can tell a usable LM Studio server from an open port | done | none | high | milestones/archive/M010-usable-server-probe.md |
@@ -29,11 +30,11 @@ _Last hygiene pass: 2026-09-20 (M013 archived and set done, M011 pruned under te
 - A loaded-instance table, the view `lms ps` prints, flattened from the `loaded_instances` field that `list_models(detailed = TRUE)` already returns, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - Stateful chat on `/api/v1/chat`. The endpoint returns a `response_id` and continues a thread from `previous_response_id`. The package drops the id, so the thread is unreachable, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. A test that greps `R/` gates `devtools::test()` only, added 2026-09-18, M007 scope
-- `lms_server_ready()` aborts on four input faults that the help page does not name. A schemeless `host`, a `timeout` of 0 or `NA`, and a `NULL` host all abort from outside the catch. The port check it replaces normalizes a schemeless host and returns FALSE, added 2026-09-20, M010 review finding 3
 - Building either vignette stops an LM Studio server the vignette did not start. The teardown chunks run whenever the CLI is present, added 2026-09-20, M010 review finding 5
 - The port helpers in `tests/testthat/test-server-ready.R` and `tests/testthat/test-serve.R` are near-duplicates that belong in a `helper-` file. Both pick a port through `sample()`. That moves the session RNG and collides reproducibly under a seed, added 2026-09-20, M010 review findings 8 and 9
 - A guard that keeps the pre-call probe in the REST wrappers in step with the condition help page. M010 narrows that page and adds a stronger probe. The wrappers keep the TCP probe, so the two can drift, added 2026-09-20, M010 scope
-- `lms_server_start()` returns before the REST API answers. A `lms_server_ready()` call right after it reports FALSE on a healthy machine. A vignette or script then skips work it can do. Give the check a bounded wait, or document the retry loop, added 2026-09-20, M010 T5 (corrected M010)
+- A wait on `lms_daemon_start()` and `with_lms_daemon()`, like the one M014 gives `lms_server_start()`. The daemon call returns before the daemon is usable in the same way, added 2026-09-20, M014 scope
+- A `token` argument on `lms_server_start()`, so that the readiness probe M014 adds can reach a server that requires one. M014 passes `token = NULL`, which reads the option and the environment variable only, added 2026-09-20, M014 scope
 - The release walk needs a live-run step: full suite against a running LM Studio, then a re-record of stale fixtures, added 2026-09-17, DESIGN Conventions
 - A guard that keeps every new `stop_if_no_server()` call site covered by a class test, added 2026-09-18, M003 scope
 - A guard that keeps every REST wrapper handling a failed response listed in the failure table. The deleted guard read package sources that R CMD check does not ship, so it skipped there. It did run under `devtools::test()`, so it gated local runs (corrected M006 review), added 2026-09-18, M006 scope, see also the `stop_if_no_server()` guard row
