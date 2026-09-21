@@ -110,7 +110,7 @@ This milestone only documents that behavior.
 - [x] T5: Write the roxygen for `wait`, for `host`, and for the host order.
       Add the six call faults to the `lms_server_ready()` page. Write a test
       per fault that asserts the message text. Run `devtools::document()`.
-- [ ] T6: Write the `NEWS.md` entry. Update the `start-server` chunk and the
+- [x] T6: Write the `NEWS.md` entry. Update the `start-server` chunk and the
       prose above it in both vignettes. If `README.Rmd` changes, run
       `devtools::build_readme()`. Run `devtools::test()` and
       `devtools::check()`.
@@ -130,6 +130,7 @@ This milestone only documents that behavior.
 - 2026-09-20: T4 done. `lms_server_start()` takes `wait` and `host` after `cors`, so no existing argument moved position. Two helpers carry the work, `wait_host()` for the host order and `warn_unless_ready()` for the two warnings. Eleven tests added in `tests/testthat/test-serve.R`. The old exit code case now passes `wait = 0`, because a default wait there reaches the network. Two planted defects turned eight tests red first.
 - 2026-09-20: T4 left a gap that no criterion covers. A `host` that `lms_server_ready()` rejects, such as a vector of two strings, aborts after the CLI has already started the server. That is the abort after a start that AC4 avoids for the timeout case. Recorded as a candidate row rather than widened into this milestone.
 - 2026-09-20: T5 done. The six call faults were run live first, and the page quotes what each package actually printed. Seven tests in `tests/testthat/test-server-ready.R` pin the message text. The messages name `url` and `seconds`, not `host` and `timeout`, so the page says so. A planted defect that swallowed every abort turned seven tests red first.
+- 2026-09-20: T6 done. Five `NEWS.md` bullets. Both `start-server` chunks now pass `wait = 30`, and the prose above each one says what the wait covers. Each `check-ready` chunk stays as the gate the later chunks read. `README.Rmd` needed no change, so `build_readme()` did not run. `devtools::document()` gives no diff, `devtools::test()` is clean at 1287 passes, and `devtools::check()` reports 0 errors, 0 warnings, and 0 notes in 1m 39.5s.
 - 2026-09-20: T5 note. roxygen refused a fenced quote holding backticks and reported a block quote. The six lines now report each message as prose rather than as a quoted string.
 
 ## Decisions
