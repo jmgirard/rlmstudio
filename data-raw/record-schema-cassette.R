@@ -49,21 +49,24 @@ schema <- list(
   required = list("score")
 )
 
-lms_load(model, host = host)
-on.exit(lms_unload(model, host = host), add = TRUE)
-
 target <- file.path("tests", "testthat", "chat_schema_live")
 unlink(target, recursive = TRUE)
 
-withr::with_dir(file.path("tests", "testthat"), {
-  httptest2::with_mock_dir("chat_schema_live", {
-    out <- lms_chat_openai(
-      model = model,
-      messages = messages,
-      host = host,
-      temperature = 0,
-      schema = schema
-    )
-    message("recorded a reply that parsed to: ", deparse(out))
-  })
-})
+# `on.exit()` at the top level of a script run by Rscript never runs, so the
+# unload sits in a `finally` clause instead.
+lms_load(model, host = host)
+tryCatch(
+  withr::with_dir(file.path("tests", "testthat"), {
+    httptest2::with_mock_dir("chat_schema_live", {
+      out <- lms_chat_openai(
+        model = model,
+        messages = messages,
+        host = host,
+        temperature = 0,
+        schema = schema
+      )
+      message("recorded a reply that parsed to: ", deparse(out))
+    })
+  }),
+  finally = lms_unload(model, host = host)
+)

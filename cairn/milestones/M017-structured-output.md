@@ -1,6 +1,6 @@
 # M017: The OpenAI chat call takes a JSON schema and returns the parsed answer
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -147,6 +147,9 @@ the schema content stays with the server (D-003).
 - 2026-09-21: T4 done. `lms_chat()` forwards `schema` on the openai route. With either route check removed, the route test went red with `rlmstudio_no_server`. Suite: 248 tests, 0 failed, 0 skipped.
 - 2026-09-21: T5 done. With `has_parsed` planted as FALSE, the vector and data-frame batch tests failed six expectations. Suite: 251 tests, 0 failed, 0 skipped.
 - 2026-09-21: T6 done. Roxygen, the conditions page, the DESIGN boundary line (D-009), and NEWS are written. The "Server not running" section now names `schema`, so every page that inherits it changed. `document()` leaves no diff. `devtools::check()` with the token set: 0 errors, 0 warnings, 0 notes.
+- 2026-09-21: claim audit: 78 claims read, 5 corrected — R/chat.R, NEWS.md, data-raw/record-schema-cassette.R
+- 2026-09-21: the claim audit found that a top-level `on.exit()` never runs under Rscript, so the recorder script left the model loaded. It now unloads in a `finally` clause. The same reader re-read the five corrections and found all of them matching.
+- 2026-09-21: implement complete. Suite: 251 tests, 0 failed, 0 skipped. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
 
 ## Decisions
 

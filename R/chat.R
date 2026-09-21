@@ -470,7 +470,7 @@ lms_chat_native <- function(
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
-#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, each element is the parsed reply.
+#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply.
 #'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies.
 #' }
 #' @details
@@ -498,7 +498,8 @@ lms_chat_batch <- function(
 
   # `lms_chat()` checks `schema` too, but only after the server probe below
   # has run. Checking here keeps an argument fault ahead of it (D-008). `[[`
-  # rather than `$`, because `$` would match a partial name such as `sch`.
+  # rather than `$`, because `$` would match a longer name that starts with
+  # `schema`, such as `schemas`.
   args <- list(...)
   schema <- args[["schema"]]
   rlm_check_schema(schema, names(args))
