@@ -47,7 +47,7 @@ with loaded models via HTTP API calls.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">lms_server_start</span><span class="op">(</span>port <span class="op">=</span> <span class="cn">NULL</span>, cors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">lms_server_start</span><span class="op">(</span>port <span class="op">=</span> <span class="cn">NULL</span>, cors <span class="op">=</span> <span class="cn">FALSE</span>, wait <span class="op">=</span> <span class="fl">10</span>, host <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -63,6 +63,20 @@ uses the last used port.</p></dd>
 <dd><p>Logical. Enable CORS support for web application development.
 Defaults to FALSE.</p></dd>
 
+
+<dt id="arg-wait">wait<a class="anchor" aria-label="anchor" href="#arg-wait"></a></dt>
+<dd><p>Numeric. How many seconds to keep asking the REST API whether
+it is ready. Defaults to 10. With <code>wait = 0</code> the function sends no
+readiness request and returns as soon as the CLI does. A <code>wait</code> that is
+not one number, zero or more, aborts before the CLI runs.</p></dd>
+
+
+<dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
+<dd><p>Character or <code>NULL</code>. The base URL to ask. This says where to
+look for the server that was started. It does not change where the CLI
+starts it, which only <code>port</code> does. <code>NULL</code> picks a host as described
+below.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -70,18 +84,55 @@ Defaults to FALSE.</p></dd>
 (<code>0</code> for success).</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The CLI returns before the REST API answers. By default this function then
+keeps asking the REST API whether it is ready, for about <code>wait</code> seconds,
+and returns once it answers. A script that calls the REST API on the next
+line therefore no longer reports a missing server on a healthy machine.
+The budget is not a hard cap. No new request starts once <code>wait</code> seconds
+have passed, but a request already in flight is allowed one second to
+finish. With no <code>host</code> and no <code>port</code>, the function first asks the CLI
+which port the server uses, and that read runs before the <code>wait</code> seconds
+start to count.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="which-host-the-wait-asks">Which host the wait asks<a class="anchor" aria-label="anchor" href="#which-host-the-wait-asks"></a></h2>
+
+
+
+<p>The host is picked in this order.</p><ul><li><p>A <code>host</code> you give wins.</p></li>
+<li><p>With no <code>host</code> and a <code>port</code>, the host is <code>http://localhost:&lt;port&gt;</code>.</p></li>
+<li><p>With neither, the port that <code>lms_server_status(json = TRUE)</code> reports is
+read, and the host is <code>http://localhost:</code> plus that port.</p></li>
+</ul><p>The request passes <code>token = NULL</code>, so it reads the <code>rlmstudio.token</code>
+option and then the <code>RLMSTUDIO_API_TOKEN</code> environment variable. See
+<a href="rlmstudio_token.html">rlmstudio_token</a>.</p>
+<p>A wait that runs out does not abort. The server was already started and
+that cannot be undone, so the function raises a warning and returns the
+CLI exit code. A call with no <code>host</code> and no <code>port</code> whose port read yields
+nothing raises its own warning and sends no readiness request. Neither
+warning is silenced by the <code>rlmstudio.quiet</code> option.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><a href="https://lmstudio.ai/docs/cli/serve/server-start" class="external-link">LM Studio CLI Server Start Documentation</a></p></div>
+    <div class="dont-index"><p><a href="https://lmstudio.ai/docs/cli/serve/server-start" class="external-link">LM Studio CLI Server Start Documentation</a>.
+<code><a href="lms_server_ready.html">lms_server_ready()</a></code> for the readiness check this function calls.</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Start server on the default port</span></span></span>
+<span class="r-in"><span><span class="co"># Start server on the default port and wait for the REST API</span></span></span>
 <span class="r-in"><span><span class="fu">lms_server_start</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Start server on a custom port with CORS enabled</span></span></span>
 <span class="r-in"><span><span class="fu">lms_server_start</span><span class="op">(</span>port <span class="op">=</span> <span class="fl">8080</span>, cors <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Return as soon as the CLI does, without waiting</span></span></span>
+<span class="r-in"><span><span class="fu">lms_server_start</span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Wait longer, and ask a host the rules above would not pick</span></span></span>
+<span class="r-in"><span><span class="fu">lms_server_start</span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">60</span>, host <span class="op">=</span> <span class="st">"http://127.0.0.1:1234"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

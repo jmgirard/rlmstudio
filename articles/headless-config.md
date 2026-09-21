@@ -60,16 +60,20 @@ lms_daemon_start()
 ### 2. Start the Local Server
 
 With the daemon running, you can now spin up the REST API server to
-accept HTTP requests.
+accept HTTP requests. The CLI returns before the REST API answers, so
+[`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
+keeps asking the REST API whether it is ready and returns once it
+answers. A headless box is often the slow one, so allow it more than the
+default 10 seconds.
 
 ``` r
 
-# Start the local server on the default port
-lms_server_start()
+# Start the local server on the default port, and allow 30 seconds for it
+lms_server_start(wait = 30)
 ```
 
-On a headless box the started server is the only thing you can see, so
-check that it answers before you call it.
+A wait that runs out raises a warning and returns, so on a headless box
+you still check that the server answers before you call it.
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 asks the host for a model list. It reports `FALSE` for a port held by
 another process, for a server that is still coming up, and for a server

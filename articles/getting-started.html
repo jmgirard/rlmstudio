@@ -115,17 +115,22 @@ open the official download page.</p>
 </h3>
 <p>You have two options for starting the local server. You can open the
 LM Studio desktop application, navigate to the Developer or Local Server
-tab, and click “Start”. Alternatively, you can start it directly from
-R.</p>
+tab, and click “Start”. Alternatively, you can start it directly from R.
+The CLI returns before the REST API answers, so
+<code><a href="../reference/lms_server_start.html">lms_server_start()</a></code> keeps asking the REST API whether it is
+ready and returns once it answers. The <code>wait</code> argument sets
+how many seconds it keeps asking, and defaults to 10.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Start the local server on the default port</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Start the local server on the default port, and allow 30 seconds for it</span></span>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ LM Studio server started successfully on the default port.</span></span></code></pre></div>
-<p>A started server is not the same as a server you can call. The port
-can be held by another process, the server can still be coming up, and a
-server that requires an API token turns your call away.
+<p>A wait that runs out raises a warning and returns rather than
+aborting, so the start call alone does not prove that the server is
+usable. Check that it answers before you call it.
 <code><a href="../reference/lms_server_ready.html">lms_server_ready()</a></code> asks the host for a model list and
-reports <code>TRUE</code> only for an answer LM Studio would give.</p>
+reports <code>TRUE</code> only for an answer LM Studio would give. It
+reports <code>FALSE</code> for a port held by another process and for a
+server that turns your token away.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lms_ready</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_server_ready.html">lms_server_ready</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">lms_ready</span></span></code></pre></div>

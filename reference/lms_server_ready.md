@@ -47,6 +47,44 @@ Use this in place of a port check. Another process holding the port, a
 server that has not finished starting, and a server that rejects the
 token all answer the port and all report `FALSE` here.
 
+## Call faults that abort
+
+A fault in the call is not a fact about the server, so it aborts rather
+than reporting `FALSE`. These messages come from the packages
+underneath. The httr2 ones name httr2's own arguments, `url` for `host`
+and `seconds` for `timeout`. The curl one names no argument at all. Six
+such faults are named below.
+
+- A `host` of `NULL`. httr2 reports that `url` must be a single string,
+  not `NULL`.
+
+- A `host` of more than one string. httr2 reports that `url` must be a
+  single string, not a character vector.
+
+- A `host` that is a character `NA`. httr2 reports that `url` must be a
+  single string, not a character `NA`.
+
+- A `host` that is one string but cannot be parsed as a URL. curl
+  reports that it failed to parse the URL and names the reason. A `host`
+  holding a space gives "Malformed input to a URL function". An empty
+  `host` gives "No host part in the URL".
+
+- A `timeout` below one millisecond. httr2 reports that `seconds` must
+  be greater than 1 ms.
+
+- A `timeout` that is not one number, such as a string or a vector of
+  two. httr2 reports that `seconds` must be a number, and names either
+  the value or its type.
+
+Those six are not the whole list. Any `host` that is not one string
+aborts the same way, whatever the reason, and httr2 names either the
+value or its type. A `host` of `1` gives "not the number 1". A `host` of
+`list("a")` gives "not a list". A `host` of `character(0)` gives "not an
+empty character vector".
+
+The `token` fault named above aborts the same way. It comes from this
+package rather than from httr2.
+
 ## See also
 
 [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)

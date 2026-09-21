@@ -98,6 +98,38 @@ server that has not finished starting, and a server that rejects the token
 all answer the port and all report <code>FALSE</code> here.</p>
     </div>
     <div class="section level2">
+    <h2 id="call-faults-that-abort">Call faults that abort<a class="anchor" aria-label="anchor" href="#call-faults-that-abort"></a></h2>
+
+
+
+<p>A fault in the call is not a fact about the server, so it aborts rather
+than reporting <code>FALSE</code>. These messages come from the packages underneath.
+The httr2 ones name httr2's own arguments, <code>url</code> for <code>host</code> and <code>seconds</code>
+for <code>timeout</code>. The curl one names no argument at all. Six such faults are
+named below.</p><ul><li><p>A <code>host</code> of <code>NULL</code>. httr2 reports that <code>url</code> must be a single string,
+not <code>NULL</code>.</p></li>
+<li><p>A <code>host</code> of more than one string. httr2 reports that <code>url</code> must be a
+single string, not a character vector.</p></li>
+<li><p>A <code>host</code> that is a character <code>NA</code>. httr2 reports that <code>url</code> must be a
+single string, not a character <code>NA</code>.</p></li>
+<li><p>A <code>host</code> that is one string but cannot be parsed as a URL. curl reports
+that it failed to parse the URL and names the reason. A <code>host</code> holding a
+space gives "Malformed input to a URL function". An empty <code>host</code> gives
+"No host part in the URL".</p></li>
+<li><p>A <code>timeout</code> below one millisecond. httr2 reports that <code>seconds</code> must be
+greater than 1 ms.</p></li>
+<li><p>A <code>timeout</code> that is not one number, such as a string or a vector of two.
+httr2 reports that <code>seconds</code> must be a number, and names either the
+value or its type.</p></li>
+</ul><p>Those six are not the whole list. Any <code>host</code> that is not one string aborts
+the same way, whatever the reason, and httr2 names either the value or its
+type. A <code>host</code> of <code>1</code> gives "not the number 1". A <code>host</code> of <code>list("a")</code>
+gives "not a list". A <code>host</code> of <code>character(0)</code> gives "not an empty
+character vector".</p>
+<p>The <code>token</code> fault named above aborts the same way. It comes from this
+package rather than from httr2.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="lms_server_start.html">lms_server_start()</a></code> to start the server. <code><a href="lms_server_status.html">lms_server_status()</a></code>
 for what the CLI reports about it.</p></div>

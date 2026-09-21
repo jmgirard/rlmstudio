@@ -121,12 +121,15 @@ attempting to load models or start the API server.</p>
 <h3 id="start-the-local-server">2. Start the Local Server<a class="anchor" aria-label="anchor" href="#start-the-local-server"></a>
 </h3>
 <p>With the daemon running, you can now spin up the REST API server to
-accept HTTP requests.</p>
+accept HTTP requests. The CLI returns before the REST API answers, so
+<code><a href="../reference/lms_server_start.html">lms_server_start()</a></code> keeps asking the REST API whether it is
+ready and returns once it answers. A headless box is often the slow one,
+so allow it more than the default 10 seconds.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Start the local server on the default port</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>On a headless box the started server is the only thing you can see,
-so check that it answers before you call it.
+<code class="sourceCode R"><span><span class="co"># Start the local server on the default port, and allow 30 seconds for it</span></span>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></code></pre></div>
+<p>A wait that runs out raises a warning and returns, so on a headless
+box you still check that the server answers before you call it.
 <code><a href="../reference/lms_server_ready.html">lms_server_ready()</a></code> asks the host for a model list. It
 reports <code>FALSE</code> for a port held by another process, for a
 server that is still coming up, and for a server that turned your token
