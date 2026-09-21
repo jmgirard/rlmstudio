@@ -87,7 +87,8 @@ before the first call. It can raise <code>rlmstudio_api_error</code> through
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, or <code>inputs</code> aborts with an argument message and no condition class
+<code>input</code>, <code>inputs</code>, or <code>schema</code> aborts with an argument message and no
+condition class
 even when the server is down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and

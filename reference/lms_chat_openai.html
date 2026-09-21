@@ -54,6 +54,7 @@ array format.</p>
 <span>  logprobs <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  simplify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  schema <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -85,7 +86,19 @@ Studio).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional API arguments.</p></dd>
+<dd><p>Additional API arguments. A <code>response_format</code> here cannot be
+combined with <code>schema</code>.</p></dd>
+
+
+<dt id="arg-schema">schema<a class="anchor" aria-label="anchor" href="#arg-schema"></a></dt>
+<dd><p>A JSON Schema, written as a named list, that the reply must
+match, or <code>NULL</code> for a free text reply. It is sent as the <code>schema</code> field
+of a <code>response_format</code> of type <code>"json_schema"</code>, with the name
+<code>"response"</code> and <code>strict</code> set to <code>true</code>. A JSON array of one item must be
+written as a list, such as <code>required = list("score")</code>, or wrapped in
+<code><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I()</a></code>. A plain vector of length one is sent as a single value, not as an
+array. The package checks only that <code>schema</code> is a named list, an empty
+list, or <code>NULL</code>. The server checks the schema itself.</p></dd>
 
 
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
@@ -101,6 +114,11 @@ response. Otherwise, returns a character string containing the generated
 text. If <code>logprobs = TRUE</code>, it returns an <code>lms_chat_result</code>
 object with the log probabilities populated as <code>NULL</code> since they are
 currently stubbed in the LM Studio OpenAI endpoint.</p>
+<p>With a <code>schema</code>, <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code>, the reply is
+parsed with <code>jsonlite::parse_json(simplifyVector = TRUE)</code> and the parsed
+value is returned. A JSON object becomes a named list, and an array of
+numbers becomes a vector. With <code>simplify = FALSE</code> or <code>logprobs = TRUE</code>,
+the reply stays a string.</p>
     </div>
     <div class="section level2">
     <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
@@ -109,7 +127,8 @@ currently stubbed in the LM Studio OpenAI endpoint.</p>
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, or <code>inputs</code> aborts with an argument message and no condition class
+<code>input</code>, <code>inputs</code>, or <code>schema</code> aborts with an argument message and no
+condition class
 even when the server is down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
@@ -135,7 +154,50 @@ returns a response that the wrapper treats as a failure. The condition
 carries a <code>status</code> field, which holds the HTTP response status as an
 integer.</p>
     </div>
+    <div class="section level2">
+    <h2 id="malformed-response">Malformed response<a class="anchor" aria-label="anchor" href="#malformed-response"></a></h2>
 
+
+<p>A condition of class <code>rlmstudio_bad_response</code> is raised when the server
+answers with a status the wrapper accepts and a body the wrapper cannot
+read. It is raised where a wrapper checks the body before it reshapes it,
+rather than indexing straight into whatever arrived. Two functions raise
+it.</p>
+<p><code><a href="lms_embed.html">lms_embed()</a></code> raises it on an embeddings block it cannot trust. The vectors
+it returns are placed by the index that the response reports, so a block
+with a missing, repeated, or out-of-range index would otherwise pair a
+vector with the wrong text and give back a matrix that is silently wrong.</p>
+<p><code>lms_chat_openai()</code> raises it when a <code>schema</code> was given and the reply
+content is not one string of valid JSON. It is raised only with <code>simplify = TRUE</code> and
+<code>logprobs = FALSE</code>, which are the two settings under which the reply is
+parsed. <code><a href="lms_chat.html">lms_chat()</a></code> and <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> can raise it through
+<code>lms_chat_openai()</code>.</p>
+<p>The condition carries a <code>status</code> field, which holds the HTTP response
+status as an integer. Today the status is always 200: both functions read
+the body only after a 200, and report every other status as an
+<code>rlmstudio_api_error</code> instead. The message names the argument that returns
+the body unchanged, so you can read what arrived. The one exception is an
+embeddings body that did not parse at all: that check runs before the
+argument is read, so its message points at the host instead.</p>
+    </div>
+
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">lms_chat_openai</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"google/gemma-3-1b"</span>,</span></span>
+<span class="r-in"><span>  messages <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>role <span class="op">=</span> <span class="st">"user"</span>, content <span class="op">=</span> <span class="st">"Rate 'Great value.' from 1 to 5."</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>,</span></span>
+<span class="r-in"><span>  schema <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    type <span class="op">=</span> <span class="st">"object"</span>,</span></span>
+<span class="r-in"><span>    properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"integer"</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    required <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"score"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

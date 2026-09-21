@@ -2,6 +2,40 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  has a new `schema` argument for structured output. Give it a JSON
+  Schema written as a named list. The request then asks the server for a
+  reply that matches the schema. With `simplify = TRUE`, the call
+  returns the reply parsed into an R value, for example
+  `list(score = 3L)`, rather than a string. With `simplify = FALSE` or
+  `logprobs = TRUE`, the reply stays a string. A plain vector of length
+  one is sent as a single value. Write a JSON array of one item as a
+  list, such as `required = list("score")`.
+
+- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  takes `schema` too and passes it to
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
+  It needs `api_type = "openai"`, because LM Studio documents structured
+  output on that endpoint only. Any other `api_type` with a `schema`
+  aborts before the request.
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  passes `schema` on through `...`. When `simplify = TRUE` and
+  `logprobs = FALSE`, the reply is parsed. In that case,
+  `format = "list"` returns one parsed reply per input. With
+  `format = "data.frame"`, the `output` column is a list of parsed
+  replies. With `format = "vector"`, the call warns and returns the
+  list.
+
+- A `schema` must be a named list, an empty list, or `NULL`. Any other
+  value aborts before the request, and so does a `schema` given together
+  with a `response_format` in `...`. The reply is parsed only with a
+  `schema`, `simplify = TRUE`, and `logprobs = FALSE`. There, reply
+  content that is not one string of valid JSON aborts with the condition
+  class `rlmstudio_bad_response`.
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  is now the second function that raises it, after
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md).
+
 - [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
   now waits for the REST API to answer before it returns. The CLI
   reports success as soon as it asks for the server. The REST API

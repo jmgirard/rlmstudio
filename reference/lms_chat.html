@@ -59,6 +59,7 @@ selected API type.</p>
 <span>  logprobs <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  simplify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  schema <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -106,6 +107,12 @@ TRUE.</p></dd>
 <dd><p>Additional arguments passed to the selected API body.</p></dd>
 
 
+<dt id="arg-schema">schema<a class="anchor" aria-label="anchor" href="#arg-schema"></a></dt>
+<dd><p>A JSON Schema that the reply must match, or <code>NULL</code>. It needs
+<code>api_type = "openai"</code>, and any other <code>api_type</code> aborts before the request.
+See <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> for its form and for what is returned.</p></dd>
+
+
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
 <dd><p>Character or <code>NULL</code>. An API token for a server that requires
 authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option and then the
@@ -115,7 +122,7 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Depending on the arguments provided:</p><ul><li><p>If <code>simplify = FALSE</code>, returns a parsed list of the raw JSON response.</p></li>
-<li><p>If <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>, returns a single character string containing the model's text response.</p></li>
+<li><p>If <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>, returns a single character string containing the model's text response. With a <code>schema</code>, it returns the reply parsed into an R value instead.</p></li>
 <li><p>If <code>simplify = TRUE</code> and <code>logprobs = TRUE</code> (and the chosen API type supports it), returns an object of class <code>lms_chat_result</code> containing both the text and a data.frame of token probabilities.</p></li>
 </ul></div>
     <div class="section level2">
@@ -123,7 +130,9 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <p>This function calls <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>, <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>, or
 <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, according to <code>api_type</code>. It runs no request of its own.
 It can raise <code>rlmstudio_no_server</code> and <code>rlmstudio_api_error</code> through
-<code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>, <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>, or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>.</p>
+<code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>, <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>, or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>.
+With a <code>schema</code>, it can raise <code>rlmstudio_bad_response</code> through
+<code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
@@ -132,7 +141,8 @@ It can raise <code>rlmstudio_no_server</code> and <code>rlmstudio_api_error</cod
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, or <code>inputs</code> aborts with an argument message and no condition class
+<code>input</code>, <code>inputs</code>, or <code>schema</code> aborts with an argument message and no
+condition class
 even when the server is down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
@@ -157,6 +167,32 @@ an LM Studio server would give.</p>
 returns a response that the wrapper treats as a failure. The condition
 carries a <code>status</code> field, which holds the HTTP response status as an
 integer.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="malformed-response">Malformed response<a class="anchor" aria-label="anchor" href="#malformed-response"></a></h2>
+
+
+<p>A condition of class <code>rlmstudio_bad_response</code> is raised when the server
+answers with a status the wrapper accepts and a body the wrapper cannot
+read. It is raised where a wrapper checks the body before it reshapes it,
+rather than indexing straight into whatever arrived. Two functions raise
+it.</p>
+<p><code><a href="lms_embed.html">lms_embed()</a></code> raises it on an embeddings block it cannot trust. The vectors
+it returns are placed by the index that the response reports, so a block
+with a missing, repeated, or out-of-range index would otherwise pair a
+vector with the wrong text and give back a matrix that is silently wrong.</p>
+<p><code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> raises it when a <code>schema</code> was given and the reply
+content is not one string of valid JSON. It is raised only with <code>simplify = TRUE</code> and
+<code>logprobs = FALSE</code>, which are the two settings under which the reply is
+parsed. <code>lms_chat()</code> and <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> can raise it through
+<code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>.</p>
+<p>The condition carries a <code>status</code> field, which holds the HTTP response
+status as an integer. Today the status is always 200: both functions read
+the body only after a 200, and report every other status as an
+<code>rlmstudio_api_error</code> instead. The message names the argument that returns
+the body unchanged, so you can read what arrived. The one exception is an
+embeddings body that did not parse at all: that check runs before the
+argument is read, so its message points at the host instead.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
