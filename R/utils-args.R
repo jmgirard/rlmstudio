@@ -23,6 +23,69 @@ rlm_check_id <- function(value, arg) {
   invisible(value)
 }
 
+#' Reject a wait that is not one usable number of seconds
+#'
+#' `lms_server_start(wait =)` names a number of seconds, so the check runs
+#' before the CLI runs. A fault in the argument is knowable without starting
+#' anything, and a start that has already run cannot be undone.
+#'
+#' @param value The value the caller passed.
+#' @param arg Character. The argument name to report.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_wait <- function(value, arg = "wait") {
+  fault <- wait_fault(value)
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "{.arg {arg}} must be one number of seconds, zero or more.",
+        "x" = "{fault}"
+      ),
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
+#' Which rule did this wait break?
+#'
+#' Returns plain text rather than a cli string, for the reason `id_fault()`
+#' states. `NaN` is reported as a missing value, because `is.na(NaN)` is
+#' `TRUE` and the two are the same fault to a caller.
+#'
+#' @param value The value the caller passed.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+wait_fault <- function(value) {
+  if (is.null(value)) {
+    return("You gave NULL.")
+  }
+  # A bare `NA` is a logical, so this runs ahead of the type check. A caller
+  # who wrote `wait = NA` is told about the missing value, not the type.
+  if (is.atomic(value) && length(value) == 1L && is.na(value)) {
+    return("You gave a missing value.")
+  }
+  if (!is.numeric(value)) {
+    cls <- class(value)[[1]]
+    return(paste0("You gave ", article_for(cls), " ", cls, " value."))
+  }
+  if (!is.null(dim(value))) {
+    return("You gave an array rather than a single number.")
+  }
+  if (length(value) != 1L) {
+    return(paste0("You gave ", length(value), " values rather than one."))
+  }
+  if (!is.finite(value)) {
+    return("You gave a value that is not finite.")
+  }
+  if (value < 0) {
+    return("You gave a negative number of seconds.")
+  }
+  NULL
+}
+
 #' Which rule did this model or job name break?
 #'
 #' Returns plain text rather than a cli string. The caller interpolates the

@@ -94,3 +94,56 @@ test_that("rlm_check_no_na rejects an NA inside a character vector", {
   expect_error(rlm_check_no_na(c("a", NA), "input"), "1 NA value\\.")
   expect_identical(rlm_check_no_na(character(0), "input"), character(0))
 })
+
+test_that("rlm_check_wait accepts a usable number of seconds", {
+  expect_invisible(rlm_check_wait(10))
+  expect_identical(rlm_check_wait(10), 10)
+  expect_identical(rlm_check_wait(0), 0)
+  expect_identical(rlm_check_wait(0L), 0L)
+  expect_identical(rlm_check_wait(2.5), 2.5)
+})
+
+test_that("rlm_check_wait names the argument and the rule for every fault", {
+  expect_error(rlm_check_wait(NULL), "You gave NULL")
+  expect_error(rlm_check_wait("10"), "You gave a character value")
+  expect_error(rlm_check_wait(TRUE), "You gave a logical value")
+  expect_error(rlm_check_wait(list(10)), "You gave a list value")
+  expect_error(
+    rlm_check_wait(matrix(10)),
+    "an array rather than a single number"
+  )
+  expect_error(rlm_check_wait(c(1, 2)), "You gave 2 values rather than one")
+  expect_error(
+    rlm_check_wait(numeric(0)),
+    "You gave 0 values rather than one"
+  )
+  expect_error(rlm_check_wait(NA), "You gave a missing value")
+  expect_error(rlm_check_wait(NA_real_), "You gave a missing value")
+  # is.na(NaN) is TRUE, so NaN reports as the missing value it is.
+  expect_error(rlm_check_wait(NaN), "You gave a missing value")
+  expect_error(rlm_check_wait(Inf), "not finite")
+  expect_error(rlm_check_wait(-Inf), "not finite")
+  expect_error(rlm_check_wait(-1), "a negative number of seconds")
+
+  # Every message names the argument, and the name follows the `arg` given.
+  expect_error(rlm_check_wait(-1), "wait")
+  expect_error(rlm_check_wait(-1, "pause"), "pause")
+})
+
+test_that("a rlm_check_wait abort carries no rlmstudio condition class", {
+  # D-008: an argument fault is a programming error, so a caller has nothing
+  # to catch it for. Only the classes cli_abort() attaches may be present.
+  faults <- list(NULL, "10", NA, NaN, Inf, -1, c(1, 2), matrix(10))
+
+  for (i in seq_along(faults)) {
+    err <- tryCatch(
+      rlm_check_wait(faults[[i]]),
+      condition = function(e) e
+    )
+    expect_s3_class(err, "rlang_error")
+    expect_false(
+      any(grepl("^rlmstudio", class(err))),
+      info = paste("fault", i, "classes:", paste(class(err), collapse = ", "))
+    )
+  }
+})

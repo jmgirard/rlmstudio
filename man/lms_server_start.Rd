@@ -4,7 +4,7 @@
 \alias{lms_server_start}
 \title{Start the LM Studio local server}
 \usage{
-lms_server_start(port = NULL, cors = FALSE)
+lms_server_start(port = NULL, cors = FALSE, wait = 10, host = NULL)
 }
 \arguments{
 \item{port}{Integer. Port to run the server on. If not provided, LM Studio
@@ -12,6 +12,16 @@ uses the last used port.}
 
 \item{cors}{Logical. Enable CORS support for web application development.
 Defaults to FALSE.}
+
+\item{wait}{Numeric. How many seconds to keep asking the REST API whether
+it is ready. Defaults to 10. With \code{wait = 0} the function sends no
+readiness request and returns as soon as the CLI does. A \code{wait} that is
+not one number, zero or more, aborts before the CLI runs.}
+
+\item{host}{Character or \code{NULL}. The base URL to ask. This says where to
+look for the server that was started. It does not change where the CLI
+starts it, which only \code{port} does. \code{NULL} picks a host as described
+below.}
 }
 \value{
 Invisibly returns an integer representing the system exit code
@@ -21,15 +31,55 @@ Invisibly returns an integer representing the system exit code
 Launches the LM Studio local server via the CLI, allowing you to interact
 with loaded models via HTTP API calls.
 }
+\details{
+The CLI returns before the REST API answers. By default this function then
+keeps asking the REST API whether it is ready, for about \code{wait} seconds,
+and returns once it answers. A script that calls the REST API on the next
+line therefore no longer reports a missing server on a healthy machine.
+The budget is not a hard cap. No new request starts once \code{wait} seconds
+have passed, but a request already in flight is allowed one second to
+finish. With no \code{host} and no \code{port}, the function first asks the CLI
+which port the server uses, and that read runs before the \code{wait} seconds
+start to count.
+}
+\section{Which host the wait asks}{
+
+
+The host is picked in this order.
+\itemize{
+\item A \code{host} you give wins.
+\item With no \code{host} and a \code{port}, the host is \verb{http://localhost:<port>}.
+\item With neither, the port that \code{lms_server_status(json = TRUE)} reports is
+read, and the host is \verb{http://localhost:} plus that port.
+}
+
+The request passes \code{token = NULL}, so it reads the \code{rlmstudio.token}
+option and then the \code{RLMSTUDIO_API_TOKEN} environment variable. See
+\link{rlmstudio_token}.
+
+A wait that runs out does not abort. The server was already started and
+that cannot be undone, so the function raises a warning and returns the
+CLI exit code. A call with no \code{host} and no \code{port} whose port read yields
+nothing raises its own warning and sends no readiness request. Neither
+warning is silenced by the \code{rlmstudio.quiet} option.
+}
+
 \examples{
 \dontrun{
-# Start server on the default port
+# Start server on the default port and wait for the REST API
 lms_server_start()
 
 # Start server on a custom port with CORS enabled
 lms_server_start(port = 8080, cors = TRUE)
+
+# Return as soon as the CLI does, without waiting
+lms_server_start(wait = 0)
+
+# Wait longer, and ask a host the rules above would not pick
+lms_server_start(wait = 60, host = "http://127.0.0.1:1234")
 }
 }
 \seealso{
-\href{https://lmstudio.ai/docs/cli/serve/server-start}{LM Studio CLI Server Start Documentation}
+\href{https://lmstudio.ai/docs/cli/serve/server-start}{LM Studio CLI Server Start Documentation}.
+\code{\link[=lms_server_ready]{lms_server_ready()}} for the readiness check this function calls.
 }

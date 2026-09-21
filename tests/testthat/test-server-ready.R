@@ -198,6 +198,82 @@ test_that("each token source reaches the Authorization header", {
   }
 })
 
+# A fault in the call is not a fact about the server, so it aborts rather
+# than reporting FALSE. The help page names these six and says which package
+# each message comes from, so each message text is pinned here. A message
+# that moves under a dependency update turns these red, which is the point:
+# the page would otherwise quote text the packages no longer produce.
+
+test_that("a host of NULL aborts rather than reporting FALSE", {
+  expect_error(
+    lms_server_ready(host = NULL),
+    "`url` must be a single string, not `NULL`"
+  )
+})
+
+test_that("a host of more than one string aborts", {
+  expect_error(
+    lms_server_ready(host = c("http://a:1", "http://b:2")),
+    "`url` must be a single string, not a character vector"
+  )
+})
+
+test_that("a host that is a character NA aborts", {
+  expect_error(
+    lms_server_ready(host = NA_character_),
+    "`url` must be a single string, not a character `NA`"
+  )
+})
+
+test_that("a host that is not one string aborts whatever the reason", {
+  # The page says the six it names are not the whole list. These three are
+  # the examples it gives, so their messages are pinned too.
+  expect_error(
+    lms_server_ready(host = 1),
+    "`url` must be a single string, not the number 1"
+  )
+  expect_error(
+    lms_server_ready(host = list("a")),
+    "`url` must be a single string, not a list"
+  )
+  expect_error(
+    lms_server_ready(host = character(0)),
+    "`url` must be a single string, not an empty character vector"
+  )
+})
+
+test_that("a host that cannot be parsed as a URL aborts", {
+  # curl names the reason, so the page quotes two of them rather than one.
+  expect_error(
+    lms_server_ready(host = "http://exa mple:1234"),
+    "Failed to parse URL: Malformed input to a URL function"
+  )
+  expect_error(
+    lms_server_ready(host = ""),
+    "Failed to parse URL: No host part in the URL"
+  )
+})
+
+test_that("a timeout below one millisecond aborts", {
+  expect_error(
+    lms_server_ready(timeout = 0.0005),
+    "`seconds` must be >1 ms"
+  )
+})
+
+test_that("a timeout that is not one number aborts", {
+  expect_error(
+    lms_server_ready(timeout = "2"),
+    '`seconds` must be a number, not the string "2"'
+  )
+  # The page says the message names either the value or its type. A string
+  # gets the value, a vector of two gets the type.
+  expect_error(
+    lms_server_ready(timeout = c(1, 2)),
+    "`seconds` must be a number, not a double vector"
+  )
+})
+
 test_that("the probe reads the model list from api/v1/models", {
   recorder <- local_request_recorder(mock_response(200L, '{"models": []}'))
 
