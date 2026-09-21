@@ -40,9 +40,29 @@
   reports is read instead. A call that reaches that last case and finds
   no usable port sends no readiness request. It raises its own warning
   instead. That warning names the failed port read, the `host` argument,
-  and the `port` argument. The readiness request passes `token = NULL`.
-  It therefore reads the `rlmstudio.token` option and then the
-  `RLMSTUDIO_API_TOKEN` environment variable.
+  and the `port` argument.
+
+- A new `token` argument on
+  [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
+  is sent on the readiness request. It serves a server that requires
+  authentication. With `token = NULL`, the request reads the
+  `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN`
+  environment variable.
+
+- [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
+  now checks `host` and `token` before the CLI runs. A fault in either
+  one therefore aborts before any server starts. A `token` that is not
+  one character string and not `NULL` aborts. A `host` that the
+  readiness request cannot be built from also aborts. The message names
+  `host` and quotes the reason from httr2 or curl. Some examples are a
+  vector of two strings, `NA`, an empty string, and a number. A URL with
+  a space in it and `"localhost:1234"`, which lacks `http://`, abort
+  too. Both checks also run with `wait = 0`.
+
+- If the readiness check aborts during the wait,
+  [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
+  raises one warning and returns the CLI exit code. The warning names
+  the host and quotes the abort message.
 
 - The help page of
   [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)

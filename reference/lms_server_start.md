@@ -6,7 +6,13 @@ interact with loaded models via HTTP API calls.
 ## Usage
 
 ``` r
-lms_server_start(port = NULL, cors = FALSE, wait = 10, host = NULL)
+lms_server_start(
+  port = NULL,
+  cors = FALSE,
+  wait = 10,
+  host = NULL,
+  token = NULL
+)
 ```
 
 ## Arguments
@@ -33,6 +39,14 @@ lms_server_start(port = NULL, cors = FALSE, wait = 10, host = NULL)
   Character or `NULL`. The base URL to ask. This says where to look for
   the server that was started. It does not change where the CLI starts
   it, which only `port` does. `NULL` picks a host as described below.
+
+- token:
+
+  Character or `NULL`. An API token for the readiness request, for a
+  server that requires authentication. `NULL` reads the
+  `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN`
+  environment variable. See
+  [rlmstudio_token](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md).
 
 ## Value
 
@@ -62,15 +76,23 @@ The host is picked in this order.
 - With neither, the port that `lms_server_status(json = TRUE)` reports
   is read, and the host is `http://localhost:` plus that port.
 
-The request passes `token = NULL`, so it reads the `rlmstudio.token`
-option and then the `RLMSTUDIO_API_TOKEN` environment variable. See
-[rlmstudio_token](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md).
+The request carries `token`, read as described under that argument.
+
+Beside a bad `wait`, two faults in the call abort before the CLI runs,
+with any `wait`. One is a `host` that is not `NULL` and that the
+readiness request cannot be built from, such as a vector of two strings,
+`NA`, an empty string, or `"localhost:1234"`, which lacks `http://`.
+That message names `host` and quotes the reason httr2 or curl gave. The
+other is a `token` that is not one character string and not `NULL`.
 
 A wait that runs out does not abort. The server was already started and
 that cannot be undone, so the function raises a warning and returns the
 CLI exit code. A call with no `host` and no `port` whose port read
-yields nothing raises its own warning and sends no readiness request.
-Neither warning is silenced by the `rlmstudio.quiet` option.
+yields nothing raises its own warning and sends no readiness request. If
+the readiness check itself aborts during the wait, the function raises a
+third warning. It names the host, quotes the abort message, and the
+function returns the CLI exit code. None of the three warnings is
+silenced by the `rlmstudio.quiet` option.
 
 ## See also
 
