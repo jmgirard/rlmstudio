@@ -575,10 +575,7 @@ lms_server_ready <- function(
   timeout = 2,
   token = NULL
 ) {
-  req <- lms_client(host, token = token) |>
-    httr2::req_url_path("api/v1/models") |>
-    httr2::req_timeout(timeout) |>
-    httr2::req_error(is_error = \(resp) FALSE)
+  req <- server_ready_request(host, timeout = timeout, token = token)
 
   tryCatch(
     {
@@ -592,6 +589,27 @@ lms_server_ready <- function(
     },
     error = function(e) FALSE
   )
+}
+
+#' Build the readiness request without sending it
+#'
+#' `lms_server_ready()` sends the request this builds. `lms_server_start()`
+#' builds it once before the CLI runs, so a `host` the build rejects aborts
+#' before a server starts. Any fault in `host`, `timeout`, or `token` aborts
+#' here, with the message of the package that raised it.
+#'
+#' @param host Character. The base URL of the LM Studio server.
+#' @param timeout Numeric. The number of seconds the request may wait.
+#' @param token Character or `NULL`. Passed to `lms_client()`.
+#'
+#' @return An httr2 request object.
+#'
+#' @noRd
+server_ready_request <- function(host, timeout = 2, token = NULL) {
+  lms_client(host, token = token) |>
+    httr2::req_url_path("api/v1/models") |>
+    httr2::req_timeout(timeout) |>
+    httr2::req_error(is_error = \(resp) FALSE)
 }
 
 #' Is this parsed value a list of models?

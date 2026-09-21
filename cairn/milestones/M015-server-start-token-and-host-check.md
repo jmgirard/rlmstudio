@@ -1,13 +1,13 @@
 # M015: The server start call takes a token and checks its wait arguments before it starts
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** none
 - **Driving RR:** —
 - **Principles touched:** IP1, GP3, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing. It adds an argument to an exported function and moves two aborts to before the server starts.
-- **Branch/PR:** —
+- **Branch/PR:** m015-server-start-token-and-host-check
 
 ## Goal
 
@@ -76,7 +76,7 @@ guards over the token table and the condition help page stay candidates.
 
 ## Tasks
 
-- [ ] T1: Move the request build out of `lms_server_ready()` (`R/serve.R`,
+- [x] T1: Move the request build out of `lms_server_ready()` (`R/serve.R`,
       near line 578) into one internal helper. `lms_server_ready()` calls it
       and keeps its return values and aborts. The existing
       `test-server-ready.R` tests stay green unchanged.
@@ -104,6 +104,8 @@ guards over the token table and the condition help page stay candidates.
 - 2026-09-20: criteria audit (full mode, fresh [O] reader) returned 7 findings on the first draft and a re-check after the gate. Fixed: token faults tested at both wait values, three warnings rather than two, and a malformed host moved to the pre-start check.
 - 2026-09-20: plan gate chose a pre-start build of the readiness request over a shape-only check on `host`. A malformed URL is a call fault knowable without a server, and D-008 puts such faults first. Falsified by a host that the build accepts and the probe rejects at build time.
 - 2026-09-20: plan gate chose a warning over an abort for a probe abort during the wait. An abort cannot undo the start. Falsified by a caller who needs that fault to stop the script.
+- 2026-09-20: implement started. Pre-implementation gate chose a host abort that names `host` and quotes the httr2 or curl reason, and a probe-abort warning that quotes the abort message.
+- 2026-09-20: T1 done. `server_ready_request()` in `R/serve.R` builds the request, and `lms_server_ready()` calls it. `test-server-ready.R` is unchanged and green, and the full suite is green.
 
 ## Decisions
 
