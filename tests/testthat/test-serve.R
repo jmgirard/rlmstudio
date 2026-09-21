@@ -472,9 +472,9 @@ test_that("a bad wait aborts before the CLI runs", {
   expect_false(any(grepl("^rlmstudio", class(err))))
 })
 
-test_that("neither warning is silenced by the quiet option", {
-  # GP6 is traded here. Both warnings go through cli_warn(), not through the
-  # helpers in R/utils-msg.R that read the option.
+test_that("none of the three warnings is silenced by the quiet option", {
+  # GP6 is traded here. All three warnings go through cli_warn(), not through
+  # the helpers in R/utils-msg.R that read the option.
   withr::local_options(rlmstudio.quiet = TRUE)
   start_success()
   fake_clock()
@@ -485,6 +485,11 @@ test_that("neither warning is silenced by the quiet option", {
 
   expect_warning(lms_server_start(port = 8080, wait = 1), "did not answer")
   expect_warning(lms_server_start(), "Could not tell which host")
+
+  local_mocked_bindings(
+    lms_server_ready = function(...) cli::cli_abort("probe broke")
+  )
+  expect_warning(lms_server_start(port = 8080), "Could not ask")
 })
 
 # A processx::run stub that fails the test if the CLI is ever called. The

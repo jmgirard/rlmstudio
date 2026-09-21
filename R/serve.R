@@ -60,11 +60,21 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' The request carries `token`, read as described under that argument.
 #'
+#' Two faults in the call abort before the CLI runs, with any `wait`. One is
+#' a `host` that is not `NULL` and that the readiness request cannot be built
+#' from, such as a vector of two strings, `NA`, an empty string, or a URL
+#' with no scheme. That message names `host` and quotes the reason httr2 or
+#' curl gave. The other is a `token` that is not one character string and
+#' not `NULL`.
+#'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
 #' CLI exit code. A call with no `host` and no `port` whose port read yields
-#' nothing raises its own warning and sends no readiness request. Neither
-#' warning is silenced by the `rlmstudio.quiet` option.
+#' nothing raises its own warning and sends no readiness request. If the
+#' readiness check itself aborts during the wait, the function raises a
+#' third warning. It names the host, quotes the abort message, and the
+#' function returns the CLI exit code. None of the three warnings is
+#' silenced by the `rlmstudio.quiet` option.
 #'
 #' @seealso [LM Studio CLI Server Start
 #'   Documentation](https://lmstudio.ai/docs/cli/serve/server-start).
