@@ -189,3 +189,109 @@ test_that("server_status_port returns NULL when the status call aborts", {
   )
   expect_null(server_status_port())
 })
+
+# wait_for_server() reads the clock and sleeps. Both come from base, so both
+# are replaced here by one fake clock that only a sleep moves forward. No
+# test sleeps, and the budget arithmetic is exact rather than timing
+# dependent.
+fake_clock <- function(env = parent.frame()) {
+  seconds <- 0
+  slept <- numeric(0)
+
+  local_mocked_bindings(
+    Sys.time = function() {
+      as.POSIXct(seconds, origin = "1970-01-01", tz = "UTC")
+    },
+    Sys.sleep = function(time) {
+      slept <<- c(slept, time)
+      seconds <<- seconds + time
+      invisible(NULL)
+    },
+    .package = "base",
+    .env = env
+  )
+
+  list(
+    slept = function() slept,
+    elapsed = function() seconds
+  )
+}
+
+# A readiness stub that answers FALSE until the nth call and records every
+# host and timeout it saw.
+ready_stub <- function(true_on = Inf) {
+  calls <- list()
+  fn <- function(host = "http://localhost:1234", timeout = 2, token = NULL) {
+    calls[[length(calls) + 1L]] <<- list(host = host, timeout = timeout)
+    length(calls) >= true_on
+  }
+  list(fn = fn, calls = function() calls)
+}
+
+test_that("wait_for_server stops at the first TRUE", {
+  clock <- fake_clock()
+  stub <- ready_stub(true_on = 3)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  expect_true(wait_for_server("http://localhost:1234", wait = 10))
+  # Three requests, and no fourth after the TRUE.
+  expect_length(stub$calls(), 3)
+  # Two sleeps, one between each pair of requests, at the chosen pause.
+  expect_identical(clock$slept(), c(0.25, 0.25))
+})
+
+test_that("wait_for_server sends one request when the first answers", {
+  clock <- fake_clock()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  expect_true(wait_for_server("http://localhost:1234", wait = 10))
+  expect_length(stub$calls(), 1)
+  expect_identical(clock$slept(), numeric(0))
+})
+
+test_that("wait_for_server passes the host and the per-request timeout", {
+  fake_clock()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  wait_for_server("http://elsewhere:8080", wait = 10, timeout = 0.5)
+  expect_identical(
+    stub$calls()[[1]],
+    list(host = "http://elsewhere:8080", timeout = 0.5)
+  )
+})
+
+test_that("wait_for_server starts no request after the budget passes", {
+  clock <- fake_clock()
+  stub <- ready_stub(true_on = Inf)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  expect_false(wait_for_server("http://localhost:1234", wait = 1))
+  # A budget of 1 second at a pause of 0.25 allows four requests. The fifth
+  # would start at exactly the deadline, so it never starts.
+  expect_length(stub$calls(), 4)
+  expect_identical(clock$elapsed(), 1)
+})
+
+test_that("wait_for_server never sleeps past the deadline", {
+  clock <- fake_clock()
+  stub <- ready_stub(true_on = Inf)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  expect_false(wait_for_server("http://localhost:1234", wait = 0.6))
+  # The last sleep is trimmed to what the budget has left. The subtraction
+  # that trims it is floating point, so this compares with a tolerance.
+  expect_equal(clock$slept(), c(0.25, 0.25, 0.1))
+  expect_equal(clock$elapsed(), 0.6)
+})
+
+test_that("wait_for_server sends no request for a wait of zero", {
+  clock <- fake_clock()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  expect_false(wait_for_server("http://localhost:1234", wait = 0))
+  expect_length(stub$calls(), 0)
+  expect_identical(clock$slept(), numeric(0))
+})

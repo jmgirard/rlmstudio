@@ -260,6 +260,51 @@ server_status_port <- function() {
   as.integer(port)
 }
 
+#' Ask the server whether it is ready, again and again, until a budget runs out
+#'
+#' Sends one readiness request, and on a `FALSE` sleeps and sends another. It
+#' stops at the first `TRUE`. Once `wait` seconds have passed it starts no
+#' further request, so the call can run past the budget only by the time a
+#' request already in flight needs, which `timeout` bounds.
+#'
+#' `token` is not passed on. `lms_server_ready()` reads `NULL` as the
+#' `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN` environment
+#' variable, which is what a caller of `lms_server_start()` gets.
+#'
+#' @param host Character. The base URL to probe.
+#' @param wait Numeric. The number of seconds to keep asking for. A `wait` of
+#'   zero sends no request at all.
+#' @param timeout Numeric. How long one request waits for an answer.
+#' @param pause Numeric. How long to sleep between two requests.
+#'
+#' @return `TRUE` when a request reported the server ready inside the budget,
+#'   `FALSE` otherwise.
+#'
+#' @noRd
+wait_for_server <- function(host, wait, timeout = 1, pause = 0.25) {
+  if (wait <= 0) {
+    return(FALSE)
+  }
+
+  deadline <- Sys.time() + wait
+
+  repeat {
+    if (Sys.time() >= deadline) {
+      return(FALSE)
+    }
+
+    if (isTRUE(lms_server_ready(host = host, timeout = timeout))) {
+      return(TRUE)
+    }
+
+    remaining <- as.numeric(difftime(deadline, Sys.time(), units = "secs"))
+    if (remaining <= 0) {
+      return(FALSE)
+    }
+    Sys.sleep(min(pause, remaining))
+  }
+}
+
 #' Check if the LM Studio server is reachable
 #'
 #' Opens a TCP connection to the hostname and port named in `host`. When

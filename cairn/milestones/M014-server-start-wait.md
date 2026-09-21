@@ -99,7 +99,7 @@ This milestone only documents that behavior.
 - [x] T2: Add `rlm_check_wait()` to `R/utils-args.R`, beside `rlm_check_id()`
       at `R/utils-args.R:12`. Test every rejected value that AC2 names. Test
       that the abort carries no rlmstudio class.
-- [ ] T3: Add `wait_for_server()` to `R/serve.R`. It polls
+- [x] T3: Add `wait_for_server()` to `R/serve.R`. It polls
       `lms_server_ready()` and sleeps between tries. It stops at the first
       `TRUE`. After the budget, it starts no new request. Its tests stub
       `lms_server_ready()` and `base::Sys.sleep()`, so no test sleeps.
@@ -126,6 +126,7 @@ This milestone only documents that behavior.
 - 2026-09-20: implement gate settled three choices. The port read ignores the running flag. The poll pause is 0.25 seconds and each readiness request waits 1 second. Neither warning carries a catchable class.
 - 2026-09-20: T1 done. `lms server status --json` prints one flat JSON object. It reads `{"running":false,"port":1234}`. Recorded against LM Studio CLI commit 69d945a. The port sits at the top level. `server_status_port()` reads `status[["port"]]`. The CLI reports the last used port while the server is stopped. Eleven tests in `tests/testthat/test-serve.R`. Three planted defects turned six of them red first.
 - 2026-09-20: T2 done. `rlm_check_wait()` and `wait_fault()` in `R/utils-args.R`. A bare `NA` is a logical, so the missing value check runs ahead of the type check. A caller who wrote `wait = NA` reads about the missing value. Eighteen tests in `tests/testthat/test-utils-args.R`. A planted condition class turned the unclassed test red first.
+- 2026-09-20: T3 done. `wait_for_server()` in `R/serve.R`. Its tests replace `base::Sys.time()` and `base::Sys.sleep()` with one fake clock that only a sleep moves forward. No test sleeps and the budget arithmetic is exact. The last sleep is trimmed to what the budget has left. Six tests. Two planted defects turned three of them red first.
 
 ## Decisions
 
