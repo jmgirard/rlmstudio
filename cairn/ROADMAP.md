@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-20 (M016 dropped and archived, stamp renamed so cairn_status reads it, inboxes empty, validate green)_
+_Last hygiene check: 2026-09-21 (M017 done and archived, M014 row pruned, three review candidates added, three lessons, validate green)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-20 (M016 dropped and archived, stamp renamed so cai
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | review | none | normal | milestones/M017-structured-output.md |
+| M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | done | none | normal | milestones/archive/M017-structured-output.md |
 | M016 | The daemon start call can wait until the daemon reports running | dropped | none | normal | milestones/archive/M016-daemon-start-wait.md |
 | M015 | The server start call takes a token and checks its wait arguments before it starts | done | none | normal | milestones/archive/M015-server-start-token-and-host-check.md |
-| M014 | The server start call can wait until the REST API answers | done | none | normal | milestones/archive/M014-server-start-wait.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
