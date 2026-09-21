@@ -22,13 +22,46 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' Launches the LM Studio local server via the CLI, allowing you to interact
 #' with loaded models via HTTP API calls.
 #'
+#' The CLI returns before the REST API answers. By default this function then
+#' keeps asking the REST API whether it is ready, for up to `wait` seconds,
+#' and returns once it answers. A script that calls the REST API on the next
+#' line therefore no longer reports a missing server on a healthy machine.
+#'
 #' @param port Integer. Port to run the server on. If not provided, LM Studio
 #'   uses the last used port.
 #' @param cors Logical. Enable CORS support for web application development.
 #'   Defaults to FALSE.
+#' @param wait Numeric. How many seconds to keep asking the REST API whether
+#'   it is ready. Defaults to 10. With `wait = 0` the function sends no
+#'   readiness request and returns as soon as the CLI does. A `wait` that is
+#'   not one number, zero or more, aborts before the CLI runs.
+#' @param host Character or `NULL`. The base URL to ask. This says where to
+#'   look for the server that was started. It does not change where the CLI
+#'   starts it, which only `port` does. `NULL` picks a host as described
+#'   below.
+#'
+#' @section Which host the wait asks:
+#'
+#' The host is picked in this order.
+#'
+#' * A `host` you give wins.
+#' * With no `host` and a `port`, the host is `http://localhost:<port>`.
+#' * With neither, the port that `lms_server_status(json = TRUE)` reports is
+#'   read, and the host is `http://localhost:` plus that port.
+#'
+#' The request passes `token = NULL`, so it reads the `rlmstudio.token`
+#' option and then the `RLMSTUDIO_API_TOKEN` environment variable. See
+#' [rlmstudio_token].
+#'
+#' A wait that runs out does not abort. The server was already started and
+#' that cannot be undone, so the function raises a warning and returns the
+#' CLI exit code. A call with no `host` and no `port` whose port read yields
+#' nothing raises its own warning and sends no readiness request. Neither
+#' warning is silenced by the `rlmstudio.quiet` option.
 #'
 #' @seealso [LM Studio CLI Server Start
-#'   Documentation](https://lmstudio.ai/docs/cli/serve/server-start)
+#'   Documentation](https://lmstudio.ai/docs/cli/serve/server-start).
+#'   [lms_server_ready()] for the readiness check this function calls.
 #'
 #' @return Invisibly returns an integer representing the system exit code
 #'   (\code{0} for success).
@@ -37,13 +70,26 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' @examples
 #' \dontrun{
-#' # Start server on the default port
+#' # Start server on the default port and wait for the REST API
 #' lms_server_start()
 #'
 #' # Start server on a custom port with CORS enabled
 #' lms_server_start(port = 8080, cors = TRUE)
+#'
+#' # Return as soon as the CLI does, without waiting
+#' lms_server_start(wait = 0)
+#'
+#' # Wait longer, and ask a host the rules above would not pick
+#' lms_server_start(wait = 60, host = "http://127.0.0.1:1234")
 #' }
-lms_server_start <- function(port = NULL, cors = FALSE) {
+lms_server_start <- function(
+  port = NULL,
+  cors = FALSE,
+  wait = 10,
+  host = NULL
+) {
+  rlm_check_wait(wait)
+
   args <- build_args_server_start(port = port, cors = cors)
 
   res <- processx::run(lms_path(), args, error_on_status = FALSE)
@@ -64,7 +110,70 @@ lms_server_start <- function(port = NULL, cors = FALSE) {
     )
   }
 
+  if (wait > 0) {
+    warn_unless_ready(host = host, port = port, wait = wait)
+  }
+
   invisible(res$status)
+}
+
+#' Pick the host that the wait asks
+#'
+#' @param host Character or `NULL`. What the caller gave.
+#' @param port What the caller gave.
+#'
+#' @return One base URL, or `NULL` when no port could be found.
+#'
+#' @noRd
+wait_host <- function(host = NULL, port = NULL) {
+  if (!is.null(host)) {
+    return(host)
+  }
+  if (is.null(port)) {
+    port <- server_status_port()
+  }
+  if (is.null(port)) {
+    return(NULL)
+  }
+  paste0("http://localhost:", port)
+}
+
+#' Wait for the server, and warn rather than abort when it does not answer
+#'
+#' The warnings go through `cli::cli_warn()` and not through the helpers in
+#' `R/utils-msg.R`, so the `rlmstudio.quiet` option does not silence them.
+#' GP6 is traded against GP3 here. Aborting cannot undo a start that already
+#' ran, and a wait that ran out is a fault rather than progress chatter.
+#'
+#' @param host Character or `NULL`. What the caller gave.
+#' @param port What the caller gave.
+#' @param wait Numeric. The budget in seconds.
+#'
+#' @return `TRUE` when the server answered, `FALSE` otherwise, invisibly.
+#'
+#' @noRd
+warn_unless_ready <- function(host = NULL, port = NULL, wait = 10) {
+  target <- wait_host(host = host, port = port)
+
+  if (is.null(target)) {
+    cli::cli_warn(c(
+      "Could not tell which host to ask whether the server is ready.",
+      "x" = "The CLI status output reported no port this package can use.",
+      "i" = "Give {.arg host} or {.arg port} to say where the server is."
+    ))
+    return(invisible(FALSE))
+  }
+
+  if (wait_for_server(target, wait = wait)) {
+    return(invisible(TRUE))
+  }
+
+  cli::cli_warn(c(
+    "The LM Studio server at {.url {target}} did not answer in time.",
+    "i" = "It was asked for {wait} second{?s}. Raise {.arg wait} to allow
+           longer."
+  ))
+  invisible(FALSE)
 }
 
 #' Build arguments for lms_server_stop

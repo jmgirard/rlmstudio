@@ -103,7 +103,7 @@ This milestone only documents that behavior.
       `lms_server_ready()` and sleeps between tries. It stops at the first
       `TRUE`. After the budget, it starts no new request. Its tests stub
       `lms_server_ready()` and `base::Sys.sleep()`, so no test sleeps.
-- [ ] T4: Wire `wait` and `host` into `lms_server_start()` at `R/serve.R:46`.
+- [x] T4: Wire `wait` and `host` into `lms_server_start()` at `R/serve.R:46`.
       Check `wait` before `processx::run()` runs. Pick the host as AC3 states.
       Warn as AC4 states. Test `wait = 0`, a stub that answers on the third
       try, the give-up warning, and the unknown-port warning.
@@ -127,6 +127,8 @@ This milestone only documents that behavior.
 - 2026-09-20: T1 done. `lms server status --json` prints one flat JSON object. It reads `{"running":false,"port":1234}`. Recorded against LM Studio CLI commit 69d945a. The port sits at the top level. `server_status_port()` reads `status[["port"]]`. The CLI reports the last used port while the server is stopped. Eleven tests in `tests/testthat/test-serve.R`. Three planted defects turned six of them red first.
 - 2026-09-20: T2 done. `rlm_check_wait()` and `wait_fault()` in `R/utils-args.R`. A bare `NA` is a logical, so the missing value check runs ahead of the type check. A caller who wrote `wait = NA` reads about the missing value. Eighteen tests in `tests/testthat/test-utils-args.R`. A planted condition class turned the unclassed test red first.
 - 2026-09-20: T3 done. `wait_for_server()` in `R/serve.R`. Its tests replace `base::Sys.time()` and `base::Sys.sleep()` with one fake clock that only a sleep moves forward. No test sleeps and the budget arithmetic is exact. The last sleep is trimmed to what the budget has left. Six tests. Two planted defects turned three of them red first.
+- 2026-09-20: T4 done. `lms_server_start()` takes `wait` and `host` after `cors`, so no existing argument moved position. Two helpers carry the work, `wait_host()` for the host order and `warn_unless_ready()` for the two warnings. Eleven tests added in `tests/testthat/test-serve.R`. The old exit code case now passes `wait = 0`, because a default wait there reaches the network. Two planted defects turned eight tests red first.
+- 2026-09-20: T4 left a gap that no criterion covers. A `host` that `lms_server_ready()` rejects, such as a vector of two strings, aborts after the CLI has already started the server. That is the abort after a start that AC4 avoids for the timeout case. Recorded as a candidate row rather than widened into this milestone.
 
 ## Decisions
 

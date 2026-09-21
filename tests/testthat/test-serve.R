@@ -17,8 +17,10 @@ test_that("lms_server_start handles success and failure", {
   mock_run_success <- function(command, args, error_on_status) list(status = 0)
   local_mocked_bindings(run = mock_run_success, .package = "processx")
 
+  # wait = 0 keeps this case about the exit code. The wait has its own cases
+  # below, and a default wait here would reach the network.
   suppressMessages({
-    expect_equal(lms_server_start(port = 8080), 0)
+    expect_equal(lms_server_start(port = 8080, wait = 0), 0)
   })
 
   mock_run_fail <- function(command, args, error_on_status) list(status = 1)
@@ -294,4 +296,137 @@ test_that("wait_for_server sends no request for a wait of zero", {
   expect_false(wait_for_server("http://localhost:1234", wait = 0))
   expect_length(stub$calls(), 0)
   expect_identical(clock$slept(), numeric(0))
+})
+
+test_that("wait_host follows the documented order", {
+  # A host given wins over everything.
+  expect_identical(
+    wait_host(host = "http://elsewhere:9999", port = 8080),
+    "http://elsewhere:9999"
+  )
+  # No host and a port builds the host from the port.
+  expect_identical(wait_host(port = 8080), "http://localhost:8080")
+  # Neither reads the port the CLI reports.
+  local_mocked_bindings(
+    lms_server_status = function(...) list(running = TRUE, port = 4321L)
+  )
+  expect_identical(wait_host(), "http://localhost:4321")
+})
+
+test_that("wait_host returns NULL when the port read yields nothing", {
+  local_mocked_bindings(
+    lms_server_status = function(...) list(running = TRUE)
+  )
+  expect_null(wait_host())
+  # A host given still wins, so the failed read never reaches this case.
+  local_mocked_bindings(
+    lms_server_status = function(...) cli::cli_abort("no CLI here")
+  )
+  expect_identical(wait_host(host = "http://a:1"), "http://a:1")
+})
+
+# The four cases the start call itself owns. processx::run is stubbed, so no
+# server is started, and the clock is faked, so no test sleeps.
+start_success <- function() {
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) list(status = 0),
+    .package = "processx",
+    .env = parent.frame()
+  )
+}
+
+test_that("lms_server_start sends no readiness request for a wait of zero", {
+  start_success()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  suppressMessages({
+    expect_equal(lms_server_start(port = 8080, wait = 0), 0)
+  })
+  expect_length(stub$calls(), 0)
+})
+
+test_that("lms_server_start returns quietly once the server answers", {
+  start_success()
+  fake_clock()
+  stub <- ready_stub(true_on = 3)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  suppressMessages({
+    expect_no_warning(expect_equal(lms_server_start(port = 8080), 0))
+  })
+  expect_length(stub$calls(), 3)
+  # The host came from the port.
+  expect_identical(stub$calls()[[1]]$host, "http://localhost:8080")
+})
+
+test_that("lms_server_start warns rather than aborts when the wait runs out", {
+  start_success()
+  fake_clock()
+  stub <- ready_stub(true_on = Inf)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+
+  suppressMessages({
+    warning <- expect_warning(
+      expect_equal(lms_server_start(port = 8080, wait = 1), 0),
+      "did not answer in time"
+    )
+  })
+  # The warning names the host it asked and the argument to raise.
+  expect_match(conditionMessage(warning), "localhost:8080")
+  expect_match(conditionMessage(warning), "wait")
+  expect_match(conditionMessage(warning), "1 second\\b")
+})
+
+test_that("lms_server_start warns when it cannot tell which host to ask", {
+  start_success()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(
+    lms_server_ready = stub$fn,
+    lms_server_status = function(...) list(running = TRUE)
+  )
+
+  suppressMessages({
+    warning <- expect_warning(
+      expect_equal(lms_server_start(), 0),
+      "Could not tell which host to ask"
+    )
+  })
+  # No readiness request goes out in this case.
+  expect_length(stub$calls(), 0)
+  # The warning names the failed port read and both arguments.
+  expect_match(conditionMessage(warning), "no port this package can use")
+  expect_match(conditionMessage(warning), "host")
+  expect_match(conditionMessage(warning), "port")
+})
+
+test_that("a bad wait aborts before the CLI runs", {
+  ran <- FALSE
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) {
+      ran <<- TRUE
+      list(status = 0)
+    },
+    .package = "processx"
+  )
+
+  expect_error(lms_server_start(wait = -1), "negative number of seconds")
+  expect_error(lms_server_start(wait = "10"), "character value")
+  expect_error(lms_server_start(wait = NA), "missing value")
+  expect_false(ran)
+})
+
+test_that("neither warning is silenced by the quiet option", {
+  # GP6 is traded here. Both warnings go through cli_warn(), not through the
+  # helpers in R/utils-msg.R that read the option.
+  withr::local_options(rlmstudio.quiet = TRUE)
+  start_success()
+  fake_clock()
+  local_mocked_bindings(
+    lms_server_ready = ready_stub(true_on = Inf)$fn,
+    lms_server_status = function(...) list(running = TRUE)
+  )
+
+  expect_warning(lms_server_start(port = 8080, wait = 1), "did not answer")
+  expect_warning(lms_server_start(), "Could not tell which host")
 })
