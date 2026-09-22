@@ -260,3 +260,37 @@ test_that("a lost server keeps a stored failure in its results", {
   expect_identical(res$cnd$results[[2]], "reply 2")
   expect_null(res$cnd$results[[3]])
 })
+
+# Stub lms_chat() so that its second call raises `cnd`. The stub counts its
+# calls, because a stub that failed the test by raising would itself be
+# caught by expect_error() (LESSONS, M015).
+test_that("an error of any other class still aborts the batch unchanged", {
+  raised <- list(
+    plain = simpleError("a plain R error"),
+    other_class = structure(
+      class = c("some_other_error", "rlang_error", "error", "condition"),
+      list(message = "an error from elsewhere", trace = NULL, parent = NULL)
+    )
+  )
+  for (name in names(raised)) {
+    calls <- 0L
+    testthat::local_mocked_bindings(
+      is_server_running = function(...) TRUE,
+      lms_chat = function(...) {
+        calls <<- calls + 1L
+        if (calls == 2L) {
+          stop(raised[[name]])
+        }
+        "a reply"
+      }
+    )
+    # tryCatch() rather than expect_error(), which adds a backtrace to the
+    # condition it catches and so would never return the one raised.
+    caught <- tryCatch(
+      lms_chat_batch("a-model", batch_inputs, format = "list", quiet = TRUE),
+      error = identity
+    )
+    expect_identical(caught, raised[[name]], info = name)
+    expect_identical(calls, 2L, info = name)
+  }
+})
