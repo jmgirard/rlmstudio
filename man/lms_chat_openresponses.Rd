@@ -175,6 +175,12 @@ holds only a tool call has \code{null} content. This case is raised without a
 \code{schema}, and with \code{logprobs = TRUE} with or without one. In the second and
 third cases, if the server reports the finish reason \code{"length"}, the token
 limit cut the reply off. The message then says so and names \code{max_tokens}.
+
+With \code{simplify = TRUE}, \code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}},
+and \code{\link[=lms_chat_openai]{lms_chat_openai()}} also raise it for a body that is a bare JSON value,
+such as \code{5}, \code{"s"}, or \code{true}. The message says that the response body is
+not a JSON object. A body of \code{null} gets the message about its missing
+\code{output} or \code{choices} field instead.
 \code{\link[=lms_chat]{lms_chat()}} can raise the condition through all three chat functions.
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input

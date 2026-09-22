@@ -981,7 +981,7 @@ reply_columns$openai <- reply_columns$openresponses
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
 #'   \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. With \code{api_type = "native"}, seven more columns follow, described below.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow, as described below.
 #' }
 #'
 #' With `api_type = "native"` and `format = "data.frame"`, the data frame ends
@@ -997,11 +997,36 @@ reply_columns$openai <- reply_columns$openresponses
 #' a field out, such as `model_load_time_seconds`. Such a cell does not fail
 #' the input and gives no warning.
 #'
-#' A reply with no readable answer text fails its input, whatever its `stats`
-#' and `response_id` hold. The row of an input that failed holds `NA` in all
-#' seven columns. If every input failed, the seven columns are still there,
-#' `response_id` as character and the other six as double. The other routes
-#' and formats add no such column.
+#' With `api_type = "openresponses"` or `api_type = "openai"` and
+#' `format = "data.frame"`, the data frame ends with four columns read from
+#' each reply: `response_id`, `input_tokens`, `total_output_tokens`, and
+#' `reasoning_output_tokens`. These are the first four native column names,
+#' but the servers send the values under other names:
+#' \itemize{
+#'   \item `response_id` is the reply's `id` on both routes.
+#'   \item `input_tokens` is `usage.input_tokens` on the OpenResponses route
+#'     and `usage.prompt_tokens` on the OpenAI route.
+#'   \item `total_output_tokens` is `usage.output_tokens` on the OpenResponses
+#'     route and `usage.completion_tokens` on the OpenAI route.
+#'   \item `reasoning_output_tokens` is
+#'     `usage.output_tokens_details.reasoning_tokens` on the OpenResponses
+#'     route and `usage.completion_tokens_details.reasoning_tokens` on the
+#'     OpenAI route.
+#' }
+#' The columns are there for every setting of `logprobs` and `schema`.
+#' `response_id` is character, and the three counts are double. The `NA`
+#' rule is the one for the native columns: a cell is `NA` when its field is
+#' absent or is not one value of the column type, and an empty string is
+#' kept. If `usage` is absent or is not a JSON object, all three count cells
+#' are `NA`. If the details object is absent or is not a JSON object, only
+#' `reasoning_output_tokens` is `NA`. Such a cell does not fail the input and
+#' gives no warning.
+#'
+#' A reply with no readable answer text fails its input, whatever its other
+#' fields hold. The row of an input that failed holds `NA` in every column
+#' read from the reply. If every input failed, those columns are still there,
+#' `response_id` as character and the others as double. The vector and list
+#' formats add no such column.
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call.

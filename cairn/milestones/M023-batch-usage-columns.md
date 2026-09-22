@@ -51,7 +51,7 @@ On the OpenResponses and OpenAI routes, a data-frame `lms_chat_batch()` returns 
 - [x] T2: In `R/chat.R`, move the `simplify = TRUE` branch of `lms_chat_openresponses()` (lines 191-215) into a shared reader. Do the same for `lms_chat_openai()` (lines 318-375). The single calls use these readers. Add one body check that all three routes run first, for AC6. Single calls keep every other result and message.
 - [x] T3: In `lms_chat_batch()`, make the data-frame batch on both routes call with `simplify = FALSE`. Read the answer through the T2 readers, then read `id` and `usage` with `[[` (M018 lesson). Add the columns on the `schema` exit (line 1100) and on the main path. The `results` field of a lost-server abort keeps its present content.
 - [x] T4: Add the list of `choices` faults and the bare-value bodies to the helper file. Write the tests for AC5 and AC6. Change the column-name expectations at `test-chat-batch.R:179`, `:207`, `:349`, and `:792-821` to the new columns, and pin the other columns by value.
-- [ ] T5: Write the roxygen of `lms_chat_batch()`, and replace the sentence "The other routes and formats add no such column". Run `devtools::document()`. Add the two NEWS entries.
+- [x] T5: Write the roxygen of `lms_chat_batch()`, and replace the sentence "The other routes and formats add no such column". Run `devtools::document()`. Add the two NEWS entries.
 - [ ] T6: Run `devtools::test()`, `devtools::check()`, and `devtools::document()`.
 
 ## Work log
@@ -65,6 +65,7 @@ On the OpenResponses and OpenAI routes, a data-frame `lms_chat_batch()` returns 
 - 2026-09-22: T2 done. `responses_reply_value()` and `openai_reply_value()` hold the `simplify = TRUE` readers. `check_body_object()` runs first in `chat_message_items()` and in `openai_reply_value()`, and it passes `null` and top-level arrays. `devtools::test()` shows failures only in the new T1 tests, and 5033 expectations pass.
 - 2026-09-22: T3 done. Every data-frame batch now reads the body through `read_reply()` in `lms_chat_batch()`, and `add_reply_columns()` adds the route's columns on both exits. The T1 tests pass. Four old tests in `test-chat-batch.R` fail only on the column names that T4 changes.
 - 2026-09-22: T4 done. `openai_choices_faults()` and `bare_bodies` are in the helper file. The AC5 tests are in `test-chat-batch-usage.R`, and the AC6 tests are in a new `test-bare-body.R`. The four old tests now expect the usage columns. `devtools::test()` passes with 6232 expectations. A no-op `check_body_object()` made the AC6 tests error with the base R subscript error. Swapped OpenAI count fields failed 72 expectations in `test-chat-batch-usage.R`. Both plants were reverted.
+- 2026-09-22: T5 done. The `lms_chat_batch()` help page maps each column to its field on each route. The shared "Malformed response" section names the bare-value case. `NEWS.md` has the two entries. A grep of `man/lms_chat_batch.Rd` finds all four column names and all six source field names.
 
 ## Decisions
 
