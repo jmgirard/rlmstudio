@@ -178,6 +178,7 @@ claim audit: 78 claims read, 2 corrected — NEWS.md, R/conditions.R, R/chat.R, 
 - 2026-09-22: review pass 2 checkpoint (in progress). Fresh evidence recorded for all seven criteria, and AC4 now passes. The package check and three reviewers are still running.
 - 2026-09-22: review pass 2 pre-gate checkpoint. All seven criteria verified and ticked, gate green, three reviewers done, 8 findings for triage.
 - 2026-09-22: gate triage: the user chose fix now for findings 1, 2, 4, 5, 6, and 8, a candidate row for 3, and reject for 7. The guard now requires a `message` object, fields are read with `[[`, the hint names `finish_reason` only when it is not `NULL`, and the wording says reply content. The new tests failed first. Suite 1843 pass. `devtools::check()` 0 errors, 0 warnings, 0 notes.
+- step-7 approval: m018-failed-structured-reply approved for merge
 
 ## Decisions
 
