@@ -1,13 +1,13 @@
 # M021: An unreadable OpenResponses reply names its fault
 
-- **Status:** planned
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes what exported chat functions return and raise
-- **Branch/PR:** —
+- **Branch/PR:** m021-openresponses-reply-faults
 
 ## Goal
 
@@ -15,9 +15,9 @@ A reply that `lms_chat_openresponses()` cannot read aborts with `rlmstudio_bad_r
 
 ## Scope
 
-**In:** Checks on the `logprobs` value of each `output_text` part, with one message per broken rule and exact-name reads of its fields. A cut-off message for an unreadable OpenResponses reply that the server marks as cut off by the token limit. Unreadable native and OpenResponses replies abort with the detail of the first check they fail, and the tests pin that detail per shape. Help page, `@return` text, and NEWS.
+**In:** Checks on the `logprobs` value of each `output_text` part, with one message per broken rule and exact-name reads of its fields. Unreadable native and OpenResponses replies abort with the detail of the first check they fail, and the tests pin that detail per shape. Help page, `@return` text, and NEWS.
 
-**Out:** The native route's cut-off message. Its docs name no field for a cut-off, so it becomes a candidate row. A cut-off reply whose text is readable still returns the partial text with no sign, which is a candidate row. A condition field for the cut-off reason is not added, because `simplify = FALSE` returns the body.
+**Out:** The cut-off message on both routes. A live cut-off reply from `/v1/responses` carries `status` `"completed"` and `incomplete_details` `null`. The native docs name no cut-off field. So each route becomes a candidate row. A cut-off reply whose text is readable still returns the partial text with no sign, which is a candidate row.
 
 ## Acceptance criteria
 
@@ -30,33 +30,32 @@ R5: the `top_logprobs` of a step is absent, `null`, or an array of JSON objects.
 R6: the `token` and `logprob` of each of those objects follow R3 and R4.
 The checks go over the parts in order, then the steps of a part in order, then the candidates of a step in order.
 
-- [ ] AC1: Take a reply whose `output_text` part carries a `logprobs` value that breaks a rule. With `simplify = TRUE` and `logprobs = TRUE`, `lms_chat_openresponses()` raises `rlmstudio_bad_response` for it. The message names the first rule broken. The bad value can be in the first part, a later part, or a part of a later message item. The bad field can be in the first step or in a step after good steps. It can also be in a `top_logprobs` entry, or in a candidate after good candidates. A `logprobs` value on a part of another type, such as a refusal, is not checked. With `logprobs = FALSE`, a reply that breaks a rule returns its text.
-- [ ] AC2: A `logprobs` value that follows R1 to R6 gives the same return value as before, with one change. Fields are now read by exact name, so a step that holds a `tokenX` field and no `token` field reads `NA` for its token. The same holds for `logprob`, `top_logprobs`, and the fields of a candidate. A `null` or absent token or logprob still gives `NA`.
-- [ ] AC3: `lms_chat_batch()` with `logprobs = TRUE` on the OpenResponses route stores the AC1 condition in the slot of the failed input. It keeps the replies of the other inputs and warns once, as it does for other failed inputs.
-- [ ] AC4: Take a reply that fails one of the checks in `chat_message_items()`, `responses_text_parts()`, or `join_reply_texts()`. It carries `status` `"incomplete"` and `incomplete_details.reason` `"max_output_tokens"`. Its `rlmstudio_bad_response` message says that the token limit cut the reply off and names `max_output_tokens`, in place of the shape detail. The shape detail stays in three cases: `status` is not `"incomplete"`, the reason is absent, or the reason is another value. A reply that breaks a `logprobs` rule keeps the rule message.
-- [ ] AC5: Each unreadable native or OpenResponses reply aborts with the detail sentence of the first check it fails. The checks run in this order: the `output` array, its items, the message items, the `content` of a message, its parts, the `output_text` parts, and the answer texts.
-- [ ] AC6: The `rlmstudio-conditions` help page, the `@return` text of `lms_chat_openresponses()`, and `NEWS.md` state the AC1, AC2, and AC4 behavior.
-- [ ] AC7: `devtools::test()` and `devtools::check()` pass with no errors, warnings, or notes beyond those on the default branch.
+- [x] AC1: Take a reply whose `output_text` part carries a `logprobs` value that breaks a rule. With `simplify = TRUE` and `logprobs = TRUE`, `lms_chat_openresponses()` raises `rlmstudio_bad_response` for it. The message names the first rule broken. The bad value can be in the first part, a later part, or a part of a later message item. The bad field can be in the first step or in a step after good steps. It can also be in a `top_logprobs` entry, or in a candidate after good candidates. A `logprobs` value on a part of another type, such as a refusal, is not checked. With `logprobs = FALSE`, a reply that breaks a rule returns its text.
+- [x] AC2: A `logprobs` value that follows R1 to R6 gives the same return value as before, with one change. Fields are now read by exact name, so a step that holds a `tokenX` field and no `token` field reads `NA` for its token. The same holds for `logprob`, `top_logprobs`, and the fields of a candidate. A `null` or absent token or logprob still gives `NA`.
+- [x] AC3: `lms_chat_batch()` with `logprobs = TRUE` on the OpenResponses route stores the AC1 condition in the slot of the failed input. It keeps the replies of the other inputs and warns once, as it does for other failed inputs.
+- [x] AC4: Each unreadable native or OpenResponses reply aborts with the detail sentence of the first check it fails. The checks run in this order: the `output` array, its items, the message items, the `content` of a message, its parts, the `output_text` parts, and the answer texts.
+- [x] AC5: The `rlmstudio-conditions` help page, the `@return` text of `lms_chat_openresponses()`, and `NEWS.md` state the AC1 and AC2 behavior.
+- [x] AC6: `devtools::test()` and `devtools::check()` pass with no errors, warnings, or notes beyond those on the default branch.
 
 ## Coverage
 
-- AC1 → T2, T3
+- AC1 → T2, T3, T7
 - AC2 → T2, T3
 - AC3 → T4
-- AC4 → T1, T5
+- AC4 → T5
 - AC5 → T6
-- AC6 → T7
-- AC7 → T7
+- AC6 → T6
 
 ## Tasks
 
-- [ ] T1: Write a `data-raw/` script that sends a cut-off request with `max_output_tokens` of 5 to `/v1/responses` and to `/api/v1/chat`. If a reasoning model is on the machine, use it as well, so that a reply can end before any message item. Commit the OpenResponses reply as a cassette. Log which fields the native reply carries, and write them into the native candidate row. If the OpenResponses reply has no `status` `"incomplete"` or no reason `"max_output_tokens"`, stop. Then move AC4 and T5 to a candidate row through the amendment gate.
-- [ ] T2: In `R/chat.R` near lines 188 to 238, add a helper that checks a part's `logprobs` value against R1 to R6 in the stated order. It aborts through `rlm_abort_bad_response()` with one message per rule and builds the rows with `[[` reads.
-- [ ] T3: In `tests/testthat/helper-chat-bodies.R`, add a table of values that break each rule, with two JSON types per rule. R1 takes an object and a number, and R2 takes `[5]`. Test every location that AC1 names, the refusal part, and `logprobs = FALSE`. Test the exact-name reads and the `null` and absent fields of AC2. The existing logprobs tests and the `chat_integration` replays must pass unchanged.
-- [ ] T4: In `tests/testthat/test-chat-batch.R`, run three inputs with `format = "list"`. The second reply carries `[5]`. Assert the R2 condition in slot 2, the replies in slots 1 and 3, and one warning.
-- [ ] T5: Read `status` and `incomplete_details` once in `lms_chat_openresponses()`, and pass the cut-off state to the three helpers that AC4 names. Test every shape in `responses_unreadable()` with the cut-off fields, and the three cases that keep the shape detail.
-- [ ] T6: Pair each shape in `native_unreadable()` and `responses_unreadable()` with the detail sentence of its first failed check. Assert that sentence per shape in `tests/testthat/test-chat.R`.
-- [ ] T7: Update `R/conditions.R` lines 67 to 77, the `@return` text at `R/chat.R` lines 136 to 139, and `NEWS.md`. Run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
+- [x] T1: Send a cut-off request with `max_output_tokens` of 5 to `/v1/responses` and to `/api/v1/chat`. Use each chat model on the machine. If a reasoning model is there, use it as well. Log which fields each reply carries, and write them into the cut-off candidate row. The OpenResponses reply had no `status` `"incomplete"`. So the cut-off criterion and its task moved to that row through the amendment gate. No script or cassette is committed.
+- [x] T2: In `R/chat.R` near lines 188 to 238, add a helper that checks a part's `logprobs` value against R1 to R6 in the stated order. It aborts through `rlm_abort_bad_response()` with one message per rule and builds the rows with `[[` reads.
+- [x] T3: In `tests/testthat/helper-chat-bodies.R`, add a table of values that break each rule, with two JSON types per rule. R1 takes an object and a number, and R2 takes `[5]`. Test every location that AC1 names, the refusal part, and `logprobs = FALSE`. Test the exact-name reads and the `null` and absent fields of AC2. The existing logprobs tests and the `chat_integration` replays must pass unchanged.
+- [x] T4: In `tests/testthat/test-chat-batch.R`, run three inputs with `format = "list"`. The second reply carries `[5]`. Assert the R2 condition in slot 2, the replies in slots 1 and 3, and one warning.
+- [x] T5: Pair each shape in `native_unreadable()` and `responses_unreadable()` with the detail sentence of its first failed check. Assert that sentence per shape in `tests/testthat/test-chat.R`.
+- [x] T6: Update `R/conditions.R` lines 67 to 77, the `@return` text at `R/chat.R` lines 136 to 139, and `NEWS.md`. Run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
+- [x] T7: In `check_part_logprobs()`, check the candidates of a step one at a time. A candidate that is not a JSON object breaks R5. A candidate with a bad `token` or `logprob` breaks R6. Keep the R5 check that `top_logprobs` is an array before the walk. Define the helper functions once, outside the loop. Add a test in which a bad candidate token comes before a candidate that is not an object, and assert R6. Show the test fails on the current code. (Review findings O1 and O10.)
+- [x] T8: Add tests for a `null` step, a `null` candidate, and an explicit `"logprobs": null`. Add tests for a `{}` value, a `{}` `top_logprobs`, and a `{}` step, which is readable. Add a test for one part with a bad `text` and a bad `logprobs`, and assert the text detail. Run `devtools::test()` and `devtools::check()`. (Review findings O2, O3, and O5.)
 
 ## Work log
 
@@ -65,7 +64,89 @@ The checks go over the parts in order, then the steps of a part in order, then t
 - 2026-09-22: plan gate chose a candidate row for the native cut-off. It rejected a guess from `stats.total_output_tokens` against the request's `max_output_tokens`. The docs name no cut-off field, and the guess misreads a reply that ends at the limit. Falsified by a live native reply that carries a cut-off field.
 - 2026-09-22: plan gate chose this: a T1 reply from `/v1/responses` with no cut-off marker moves AC4 to a candidate row. It rejected code against the OpenAI fields anyway, because no live test can show that such code works. Falsified by a T1 recording that carries the marker, which keeps AC4.
 - 2026-09-22: plan kept the `logprobs` rule message on a cut-off reply and rejected the cut-off message there. A cut-off does not change the JSON type of a field. Falsified by a live cut-off reply whose `logprobs` breaks a rule.
+- 2026-09-22: started by /milestone-implement on branch m021-openresponses-reply-faults. No implementation question was open, so the question gate was skipped.
+- 2026-09-22: T1 probe with `max_output_tokens` 5 and temperature 0, on google/gemma-3-1b and qwen/qwen3-4b-2507. `/v1/responses` returned 4 tokens with `status` `"completed"` and `incomplete_details` `null`. `/api/v1/chat` returned only `model_instance_id`, `output`, `stats`, and `response_id`. Neither model is a reasoning model.
+- 2026-09-22: amendment (substantive) at the mini gate: old AC4 and T5 removed, and the cut-off message moved to the candidate row with the native one. AC5 to AC7 became AC4 to AC6, and T6 and T7 became T5 and T6. Scope In lost the cut-off line, and Scope Out names both routes.
+- re-audit: AC5 (full) — one finding: the wording does not say whether each of the three places states both behaviors. It is read as each place, and the wording is unchanged. It also listed the Scope, Coverage, and T1 references to old AC4, which the amendment fixed.
+- 2026-09-22: T2 and T3 done. `check_part_logprobs()` and `logprobs_frame()` in `R/chat.R`, with tests of every rule and location in `tests/testthat/test-chat.R`. The new tests failed before the change. The old and new frame builders gave identical frames on the two recorded replies and on 500 random readable values. `devtools::test()` passed 3840. The suite unloaded the live gemma model, which became a candidate row.
+- 2026-09-22: T4 done. The batch test in `tests/testthat/test-chat-batch.R` passes, and it fails with the base R error `$ operator is invalid for atomic vectors` on the `main` version of `R/chat.R`.
+- 2026-09-22: T5 done. `helper-chat-bodies.R` pairs every native and OpenResponses unreadable shape with its detail sentence, and `test-chat.R` asserts that sentence and no other. A plant that swapped two detail sentences in `R/chat.R` gave 10 failures.
+- 2026-09-22: T6 done. The conditions page, the `@return` text of `lms_chat_openresponses()`, and NEWS state the rules and the exact-name reads. The NEWS "before" claims were read off the `main` code on a `[5]` value and a `tokenX` field. `devtools::test()` passed 4398, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- claim audit: 38 claims read, 2 corrected — R/conditions.R, NEWS.md, tests/testthat/test-chat.R
+- 2026-09-22: the claim audit found that a `null` step or candidate now aborts, which the docs had said passes. The conditions page and NEWS now say so, and the reader read the corrected text again and found no problem. After the fix, `devtools::test()` passed 4398, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
+- 2026-09-22: defect return 1, from review. AC1 fails on finding O1: a bad candidate token before a candidate that is not an object names R5, not R6. The maintainer chose to fix the code. T7 and T8 added, and status set to in-progress.
+- 2026-09-22: resumed by /milestone-implement. No question was open. T7 done: `check_part_logprobs()` checks the candidates of a step one at a time, and the helper defined in the loop is gone. The new test named R5 and not R6 on the old code, and it passes now. `devtools::test()` passed 4407.
+- 2026-09-22: T8 done: tests for a `null` step, a `null` candidate, `{}` as the value and as `top_logprobs`, a `null` value, a `{}` step, and a bad text with bad logprobs. A plant that let a `null` step pass and a plant that checked logprobs before the text each turned their test red. `devtools::test()` passed 4461, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- claim audit: 14 claims read, 4 corrected — R/chat.R, R/conditions.R, NEWS.md
+- 2026-09-22: the audit found that "first rule" read as rule-number order after T7. The wording now gives the walk order, and the re-read found one more false sentence in the `check_part_logprobs()` notes, which is fixed. `devtools::test()` passed 4461, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
+- 2026-09-22: second review pass. AC1 ticked. The docs fixes for P1 and P2 were made at the gate.
+- step-7 approval: m021-openresponses-reply-faults approved for merge
 
 ## Decisions
 
 ## Review
+
+Sync: 2026-09-22, the branch contains `origin/main` (d3fe11e), so no merge was needed. Run with a live LM Studio server and `RLMSTUDIO_API_TOKEN` set.
+
+- AC1: `devtools::test()` passed the four new tests in `tests/testthat/test-chat.R`. They cover every rule at the first part, a later part, and a later message item. They cover a bad step first and after good steps, a bad `top_logprobs` entry, and a candidate after good candidates. They also cover the refusal part and `logprobs = FALSE`. Not ticked: review finding O1 gives an input on which the rule named is not the first one broken in walk order.
+- AC2: the test "reads logprobs fields by their exact names" passed. It covers `tokenX`, `logprobX`, `top_logprobsX`, candidate `tokenX` and `logprobX`, and `null` and absent fields. The `chat_integration` replays passed unchanged. The diff reviewer found that the frame builder gives the same values and column types as the `main` builder.
+- AC3: the batch test "a reply that breaks a logprobs rule fails only its own input" passed: the R2 condition in slot 2, replies in slots 1 and 3, and one warning.
+- AC4: the native and OpenResponses unreadable-shape tests passed. Each shape asserts its own detail sentence and none of the other seven.
+- AC5: read on the branch: `R/conditions.R` lines 76 to 95, the `@return` text of `lms_chat_openresponses()` in `R/chat.R` lines 142 to 151, and the two new `NEWS.md` bullets each state the rules, the first-rule message, the unchecked refusal part, `logprobs = FALSE`, and the exact-name reads.
+- AC6: `devtools::test()` gave 4398 passed, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+
+Consistency gate: `cairn_validate.py` passed (exit 0). `devtools::document()` left no diff. README.Rmd and README.md are untouched by the branch. No `_pkgdown.yml`. `NEWS.md` has entries for the change, with no milestone numbers. No new top-level files. No DESIGN principle changed, so `cairn_impact` was skipped.
+
+Independent review (three fresh reviewers): the blame-history reviewer found no regression. The prior-review reviewer found no reintroduced fault, and GitHub holds no PR review comments. The diff reviewer reported 11 findings, ranked:
+
+- O1: `check_part_logprobs()` tests R5 over all candidates of a step before any R6 check, but it checks steps and parts one at a time. A step whose first candidate has token `5` and whose second candidate is `5` reports R5. The same pattern over steps reports R3, and a test pins that. A probe on the branch gives this result.
+- O2: no test covers a `null` step or a `null` candidate, which the conditions page and NEWS now describe. A probe shows both abort.
+- O3: no test covers an explicit `"logprobs": null`, a `{}` value, a `{}` `top_logprobs`, or a `{}` step, which is readable.
+- O4: the refusal-part test and the `logprobs = FALSE` loop also pass on `main`.
+- O5: no test covers the order between a bad `text` and a bad `logprobs` on one part.
+- O6: each unreadable shape breaks exactly one check, so the AC4 tests still pass after a swap of two adjacent checks.
+- O7: if every logprob is a whole number, `step_logprob` is an integer column. This is the same as `main`.
+- O8: the conditions page lists the rules without "absent, null, or". The sentence before the list says it.
+- O9: the shared "Malformed response" section puts the logprobs rules on the help pages of `lms_embed()`, `lms_chat_native()`, `lms_chat_openai()`, and `lms_chat()`.
+- O10: `is_object_array` is defined inside the step loop.
+- O11: AC3 is tested with `format = "list"` only.
+
+Triage at the gate, 2026-09-22, by the maintainer:
+
+- O1: fix now, as a defect return to implementation (T7). AC1 stays unticked.
+- O2, O3, O5: fix now (T8). O10: fix now (T7).
+- O6: follow-up, a new candidate row.
+- O9: follow-up, a new candidate row that cites the M007 choice of one shared section.
+- O4: rejected. The two tests guard the no-check cases that AC1 names.
+- O7: rejected. The integer column also occurs on `main`, and AC2 asks for the same return value as before.
+- O8: rejected. The sentence before the list says that `null` or absent passes.
+- O11: rejected. AC3 asks only for the slot condition, and every batch format stores failed inputs through one path.
+
+### Second pass, 2026-09-22
+
+Sync: the branch contains `origin/main`, so no merge was needed. Run with a live LM Studio server and `RLMSTUDIO_API_TOKEN` set. `devtools::test()` gave 4461 passed, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+
+- AC1: five logprobs tests in `tests/testthat/test-chat.R` passed. They cover every rule and location, candidates, the in-step and cross-step order, `null` and `{}` values, the refusal part, and `logprobs = FALSE`. The O1 input, a bad candidate token before a candidate that is not an object, names R6. The diff reviewer probed the O1 input, its reverse, faults across steps and parts, and `{}`, `null`, and wrong-type values. Each named the first rule broken in walk order.
+- AC2 to AC4: the tests named in the first pass passed again in the 4461 run.
+- AC5: the conditions page, the `@return` text, and NEWS were read again after the T7 and T8 edits. They state the rules, the walk order, the unchecked refusal part, `logprobs = FALSE`, and the exact-name reads.
+- AC6: the test and check results above.
+
+Consistency gate: `cairn_validate.py` passed (exit 0). `devtools::document()` left no diff. The branch does not touch README or `_pkgdown.yml`, and adds no top-level file. NEWS has the entries. No DESIGN principle changed.
+
+Independent review (three fresh reviewers): the blame-history and prior-review reviewers found no regression. The prior-review reviewer found that O1, O2, O3, O5, and O10 are fixed and that no rejected item was reversed. The diff reviewer found no correctness fault and reported 5 findings, ranked:
+
+- P1: the text of every part is checked before any logprobs check. Part 1 with `logprobs` `[5]` and part 2 with a bad `text` gives the text message. The code matches AC4, but the conditions page does not say that text comes first.
+- P2: the user docs do not say that R3, R4, and the array test of R5 run before the candidates of a step. The code comment says it.
+- P3: `check_part_logprobs()` defines local `is_string` and `is_number` in place of `is_one_string()` and `is_one_number()`.
+- P4: `R/chat.R` lines 150 and 595 are 110 and 100 characters long.
+- P5: one R5 message covers a `top_logprobs` that is not an array and a candidate that is not an object.
+
+P1 does not fail AC1. The input breaks a text check, which AC4 orders before the logprobs rules.
+
+Triage at the gate, 2026-09-22, by the maintainer:
+
+- P1, P2: fix now. The conditions page and NEWS now say that text comes first and that a step's own fields come before its candidates. A probe with `[5]` in part 1 and a bad `text` in part 2 gave the text message. After the fix, `devtools::test()` passed 4461, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- P3: rejected. It is style only, with no change in behavior.
+- P4: rejected. It is style only, and the file already has other long lines.
+- P5: follow-up, a new candidate row.
+- conversation: no PR existed at the gate, so no PR conversation was read.

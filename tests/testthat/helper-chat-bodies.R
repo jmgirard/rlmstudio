@@ -63,6 +63,53 @@ logprob_step <- function(token, logprob = -0.5) {
   )
 }
 
+# A logprobs step as a JSON object. Each field is given as JSON text, and
+# `NULL` leaves the field out.
+step_json <- function(token = quoted("t"), logprob = "-0.5", top = "[]") {
+  json_object(token = token, logprob = logprob, top_logprobs = top)
+}
+
+# A `top_logprobs` candidate as a JSON object, built like step_json().
+candidate_json <- function(token = quoted("c"), logprob = "-1") {
+  json_object(token = token, logprob = logprob)
+}
+
+# A JSON object from fields given as JSON text. A `NULL` field is left out.
+json_object <- function(...) {
+  fields <- Filter(Negate(is.null), list(...))
+  pairs <- sprintf('"%s": %s', names(fields), unlist(fields))
+  sprintf("{%s}", paste(pairs, collapse = ", "))
+}
+
+# A JSON array of the given JSON texts.
+json_array <- function(...) sprintf("[%s]", paste(c(...), collapse = ", "))
+
+# `logprobs` values that break one rule each, two JSON types per rule. R1
+# entries are whole values. The other entries are one bad step, which a test
+# places in an array. The R6 entries put the bad candidate after a good one.
+logprobs_breaks <- function() {
+  list(
+    list(rule = "R1", label = "an object", value = '{"a": 1}'),
+    list(rule = "R1", label = "a number", value = "5"),
+    list(rule = "R2", label = "a number step", step = "5"),
+    list(rule = "R2", label = "an array step", step = "[]"),
+    list(rule = "R3", label = "a number token", step = step_json(token = "5")),
+    list(rule = "R3", label = "a boolean token", step = step_json(token = "true")),
+    list(rule = "R4", label = "a string logprob", step = step_json(logprob = quoted("-0.5"))),
+    list(rule = "R4", label = "a boolean logprob", step = step_json(logprob = "true")),
+    list(rule = "R5", label = "an object top_logprobs", step = step_json(top = candidate_json())),
+    list(rule = "R5", label = "a number candidate", step = step_json(top = json_array(candidate_json(), "5"))),
+    list(
+      rule = "R6", label = "a number candidate token",
+      step = step_json(top = json_array(candidate_json(), candidate_json(token = "5")))
+    ),
+    list(
+      rule = "R6", label = "a string candidate logprob",
+      step = step_json(top = json_array(candidate_json(), candidate_json(logprob = quoted("x"))))
+    )
+  )
+}
+
 # Items that carry no answer text. The native docs list `tool_call`,
 # `reasoning`, and `invalid_tool_call` beside `message`.
 reasoning_item <- '{"type": "reasoning", "content": "thinking"}'
@@ -138,6 +185,69 @@ responses_unreadable <- function() {
   shapes[["an output_text part with no text field"]] <-
     output_body(responses_message('{"type": "output_text"}'))
   shapes
+}
+
+# The detail sentence of the first check each unreadable shape fails, keyed by
+# the shape names above. The checks run in this order: the `output` array, its
+# items, the message items, the `content` of a message, its parts, the
+# `output_text` parts, and the answer texts. The sentences are written out
+# here, apart from the code, so a test fails if a shape reaches the wrong check.
+unreadable_details <- c(
+  output = "The response holds no `output` array of reply items.",
+  item = "An item of the `output` array is not a JSON object.",
+  message = "The reply holds no message item, so it has no answer text.",
+  content = "The `content` of a message item is not an array of parts.",
+  part = "A part of a message item is not a JSON object.",
+  output_text = "The reply holds no `output_text` part, so it has no answer text.",
+  native_text = "The `content` of a message item is not one string.",
+  responses_text = "The `text` of an `output_text` part is not one string."
+)
+
+# The check each shared shape fails first, before the answer texts.
+shared_unreadable_checks <- c(
+  "no output field" = "output",
+  "an empty output array" = "output",
+  "an output object" = "output",
+  "an output string" = "output",
+  "an item that is a string" = "item",
+  "an item that is a number" = "item",
+  "no message item" = "message"
+)
+
+# The detail sentence for each shape of `shapes`. A shape that is not listed
+# fails at the answer texts, which is `text_check`.
+unreadable_detail_for <- function(shapes, checks, text_check) {
+  # A misspelled label would otherwise fall to `text_check` unseen.
+  unknown <- setdiff(names(checks), names(shapes))
+  if (length(unknown) > 0L) {
+    stop("No shape is named: ", paste(unknown, collapse = ", "), call. = FALSE)
+  }
+  vapply(
+    names(shapes),
+    function(label) {
+      check <- if (label %in% names(checks)) checks[[label]] else text_check
+      unreadable_details[[check]]
+    },
+    character(1)
+  )
+}
+
+native_unreadable_details <- function() {
+  unreadable_detail_for(native_unreadable(), shared_unreadable_checks, "native_text")
+}
+
+responses_unreadable_details <- function() {
+  checks <- c(
+    shared_unreadable_checks,
+    "a message with no content field" = "content",
+    "a message content that is a string" = "content",
+    "a message content that is an object" = "content",
+    "a part that is a string" = "part",
+    "a part that is a number" = "part",
+    "an empty content array" = "output_text",
+    "no output_text part" = "output_text"
+  )
+  unreadable_detail_for(responses_unreadable(), checks, "responses_text")
 }
 
 # Chat completions replies whose content is not one string. Each entry holds
