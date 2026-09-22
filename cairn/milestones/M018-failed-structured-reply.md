@@ -108,7 +108,7 @@ still aborts on an empty `choices`, because no parse is in play there.
       Add the two fields, the `"length"` detail, and the new hint to both
       aborts. `rlm_abort_bad_response()` in `R/utils-api-error.R:127` takes
       the extra fields. Add the AC2 and AC3 mocked tests.
-- [ ] T4: Add `data-raw/record-cutoff-cassette.R`, modeled on
+- [x] T4: Add `data-raw/record-cutoff-cassette.R`, modeled on
       `data-raw/record-schema-cassette.R`, with a small `max_tokens`. Clean
       up in a `tryCatch()` `finally` clause (LESSONS, M017). Record the
       fixture with LM Studio running and add the replay test. The test
@@ -140,6 +140,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: implement gate: the user allowed starting the LM Studio server for the T4 recording. If the model is already loaded, the script skips the load and the unload.
 - 2026-09-21: T1 done. `local_request_sequence()` serves a list of responses in turn and raises past its end. Both recorders share `local_mock_perform()`. Suite 1542 pass.
 - 2026-09-21: T2 and T3 done in one commit, because both edit the same lines of `lms_chat_openai()`. The detail clause carries plain backticks, because cli does not read markup inside an inserted value. Suite 1612 pass.
+- 2026-09-21: T4 done. The live gemma-3-1b reply with `max_tokens` 5 came back as `{"why":` with `finish_reason` `"length"`. The script records with `simplify = FALSE`, because the abort would stop the recording. The server was started for the recording and stopped after it, and the loaded model stayed loaded.
 
 ## Decisions
 

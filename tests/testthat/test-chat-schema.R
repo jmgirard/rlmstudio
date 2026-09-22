@@ -282,6 +282,55 @@ test_that("a structured reply recorded from a live server parses", {
   expect_identical(parsed, list(score = 3L))
 })
 
+test_that("a reply that LM Studio cut off at the token limit names max_tokens", {
+  # The cassette in chat_cutoff_live/ was recorded against a real LM Studio
+  # server running google/gemma-3-1b with max_tokens 5. Regenerate it with
+  # data-raw/record-cutoff-cassette.R, which carries the full provenance. The
+  # request below must match the script's request byte for byte.
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = NA)
+  withr::local_options(rlmstudio.token = NULL)
+
+  live_call <- function(simplify) {
+    lms_chat_openai(
+      model = "google/gemma-3-1b",
+      messages = list(
+        list(
+          role = "user",
+          content = paste(
+            "Rate how positive this review is from 1 to 5 and explain why:",
+            "'Great value.'"
+          )
+        )
+      ),
+      host = "http://localhost:1234",
+      simplify = simplify,
+      temperature = 0,
+      max_tokens = 5,
+      schema = list(
+        type = "object",
+        properties = list(
+          why = list(type = "string"),
+          score = list(type = "integer")
+        ),
+        required = list("why", "score")
+      )
+    )
+  }
+
+  httptest2::with_mock_dir("chat_cutoff_live", {
+    raw <- live_call(simplify = FALSE)
+    err <- expect_error(live_call(simplify = TRUE), class = "rlmstudio_bad_response")
+  })
+
+  # The value comes from LM Studio, not from a hand-written body.
+  expect_identical(raw$choices[[1]]$finish_reason, "length")
+  expect_match(conditionMessage(err), "token limit cut the reply off")
+  expect_match(conditionMessage(err), "max_tokens")
+  expect_identical(err$finish_reason, "length")
+  expect_identical(err$content, raw$choices[[1]]$message$content)
+})
+
 test_that("lms_chat() forwards a schema on the openai route", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   recorder <- local_request_recorder(
