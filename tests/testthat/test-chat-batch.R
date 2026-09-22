@@ -285,9 +285,9 @@ test_that("a lost server keeps a stored failure in its results", {
   expect_null(res$cnd$results[[3]])
 })
 
-test_that("a reply with null content keeps its slot as NA in text results", {
-  # The server answers input 1 with `"content": null`, which lms_chat() returns
-  # as NULL rather than as a failure, and fails input 2.
+test_that("a reply with null content fails its input as NA in text results", {
+  # The server answers input 1 with `"content": null`, which has no answer
+  # text and so fails, and fails input 2 with an API error.
   null_reply <- mock_response(200L, completion_body("null"))
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
@@ -298,7 +298,7 @@ test_that("a reply with null content keeps its slot as NA in text results", {
   ))
   expect_warning(
     out <- lms_chat_batch("a-model", batch_inputs, format = "vector", quiet = TRUE, api_type = "openai"),
-    "1 input failed, at position 2\\."
+    "2 inputs failed, at positions 1 and 2\\."
   )
   expect_identical(out, c(NA, NA, "reply 3"))
 
@@ -309,9 +309,21 @@ test_that("a reply with null content keeps its slot as NA in text results", {
   ))
   expect_warning(
     out <- lms_chat_batch("a-model", batch_inputs, format = "data.frame", quiet = TRUE, api_type = "openai"),
-    "1 input failed, at position 2\\."
+    "2 inputs failed, at positions 1 and 2\\."
   )
   expect_identical(out$output, c(NA, NA, "reply 3"))
+
+  local_request_sequence(list(
+    null_reply,
+    fail_response("rlmstudio_api_error", parsed = FALSE),
+    openai_ok(3L)
+  ))
+  expect_warning(
+    out <- lms_chat_batch("a-model", batch_inputs, format = "list", quiet = TRUE, api_type = "openai"),
+    "2 inputs failed, at positions 1 and 2\\."
+  )
+  expect_s3_class(out[[1]], "rlmstudio_bad_response")
+  expect_null(out[[1]]$content)
 })
 
 test_that("a logprobs data frame keeps its column when no reply carried logprobs", {

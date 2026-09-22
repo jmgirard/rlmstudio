@@ -643,3 +643,45 @@ test_that("a reply that does not parse is returned as text without a schema", {
   out <- call_with_reply(completion_body(quoted("a score of three")))
   expect_identical(out$value, "a score of three")
 })
+
+test_that("reply content that is not one string aborts as a bad response", {
+  # `content` is the value the condition carries, as httr2 parses it.
+  contents <- list(
+    list(label = "null", json = "null", content = NULL),
+    list(label = "absent", json = NULL, content = NULL),
+    list(label = "a number", json = "5", content = 5L),
+    list(label = "a boolean", json = "true", content = TRUE),
+    list(label = "an array", json = '["p", "q"]', content = list("p", "q")),
+    list(label = "an object", json = '{"a": 1}', content = list(a = 1L))
+  )
+  # A schema with logprobs = FALSE parses the reply instead, which the tests
+  # above cover.
+  settings <- list(
+    list(label = "no schema", args = list()),
+    list(label = "logprobs", args = list(logprobs = TRUE)),
+    list(label = "a schema and logprobs", args = list(schema = score_schema, logprobs = TRUE))
+  )
+  for (case in contents) {
+    body <- if (is.null(case$json)) {
+      paste0(
+        '{"id": "chatcmpl-1", "choices": [{"index": 0, ',
+        '"message": {"role": "assistant"}, "finish_reason": "stop"}]}'
+      )
+    } else {
+      completion_body(case$json)
+    }
+    for (setting in settings) {
+      info <- paste(case$label, "with", setting$label)
+      err <- expect_error(
+        do.call(call_with_reply, c(list(body), setting$args)),
+        class = "rlmstudio_bad_response",
+        info = info
+      )
+      expect_identical(err$status, 200L, info = info)
+      expect_match(conditionMessage(err), "OpenAI API Failed", info = info)
+      expect_true("content" %in% names(err), info = info)
+      expect_identical(err$content, case$content, info = info)
+      expect_identical(err$finish_reason, "stop", info = info)
+    }
+  }
+})

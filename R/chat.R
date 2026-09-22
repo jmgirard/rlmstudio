@@ -358,6 +358,21 @@ lms_chat_openai <- function(
       )
     }
     res_text <- choices[[1]][["message"]][["content"]]
+    finish_reason <- choices[[1]][["finish_reason"]]
+
+    # A reply that is returned as text must be one string. Content that is
+    # `null` or absent, as with a reply that holds only a tool call, has no
+    # answer text (D-012). A schema reply without logprobs is checked by
+    # parse_schema_reply() below instead.
+    if ((is.null(schema) || isTRUE(logprobs)) && !is_one_string(res_text)) {
+      abort_unread_reply(
+        resp,
+        res_text,
+        "OpenAI API Failed",
+        "The reply content is not one string.",
+        finish_reason
+      )
+    }
 
     if (isTRUE(logprobs)) {
       # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
@@ -370,7 +385,7 @@ lms_chat_openai <- function(
         resp,
         res_text,
         "OpenAI API Failed",
-        finish_reason = choices[[1]][["finish_reason"]]
+        finish_reason = finish_reason
       ))
     }
     return(res_text)
@@ -421,43 +436,62 @@ schema_response_format <- function(schema) {
 #' @noRd
 parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
   abort_unread <- function(detail) {
-    if (identical(finish_reason, "length")) {
-      detail <- paste(
-        "The token limit cut the reply off before it was complete.",
-        "Raise `max_tokens` to allow a longer reply."
-      )
-    }
-    # The detail is inserted into the message as text, so cli markup in it
-    # would print as written. The hint below is a template of its own.
-    # A NULL content has no text to point at, so its hint says so. A NULL
-    # finish reason is not pointed at either.
-    hint <- if (is.null(content)) {
-      "The reply has no text, so the {.field content} field of the condition is {.code NULL}."
-    } else {
-      "The reply content is in the {.field content} field of the condition."
-    }
-    if (!is.null(finish_reason)) {
-      hint <- paste(
-        hint,
-        "The finish reason is in its {.field finish_reason} field."
-      )
-    }
-    rlm_abort_bad_response(
-      resp,
-      label,
-      detail,
-      hint = hint,
-      content = content,
-      finish_reason = finish_reason
-    )
+    abort_unread_reply(resp, content, label, detail, finish_reason)
   }
 
-  if (!is.character(content) || length(content) != 1L || is.na(content)) {
+  if (!is_one_string(content)) {
     abort_unread("The reply content is not one string.")
   }
   tryCatch(
     jsonlite::parse_json(content, simplifyVector = TRUE),
     error = function(cnd) abort_unread("The reply content is not valid JSON.")
+  )
+}
+
+#' Abort on a chat completions reply that cannot be read
+#'
+#' The abort carries the reply content and the finish reason as fields, so a
+#' caller can read what the model wrote without sending the request again. A
+#' finish reason of `"length"` means the server stopped the reply at the token
+#' limit, which is the likely reason the reply is incomplete, so the message
+#' says so in place of `detail`.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param content The reply content read out of the response.
+#' @param label Character. The calling wrapper's label, which opens the message.
+#' @param detail Character. What is wrong with the reply.
+#' @param finish_reason The `finish_reason` of the first choice, or `NULL`.
+#'
+#' @noRd
+abort_unread_reply <- function(resp, content, label, detail, finish_reason) {
+  if (identical(finish_reason, "length")) {
+    detail <- paste(
+      "The token limit cut the reply off before it was complete.",
+      "Raise `max_tokens` to allow a longer reply."
+    )
+  }
+  # The detail is inserted into the message as text, so cli markup in it
+  # would print as written. The hint below is a template of its own.
+  # A NULL content has no text to point at, so its hint says so. A NULL
+  # finish reason is not pointed at either.
+  hint <- if (is.null(content)) {
+    "The reply has no text, so the {.field content} field of the condition is {.code NULL}."
+  } else {
+    "The reply content is in the {.field content} field of the condition."
+  }
+  if (!is.null(finish_reason)) {
+    hint <- paste(
+      hint,
+      "The finish reason is in its {.field finish_reason} field."
+    )
+  }
+  rlm_abort_bad_response(
+    resp,
+    label,
+    detail,
+    hint = hint,
+    content = content,
+    finish_reason = finish_reason
   )
 }
 
