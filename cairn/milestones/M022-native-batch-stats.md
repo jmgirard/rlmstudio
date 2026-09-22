@@ -2,14 +2,14 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M022: A native chat batch reports each reply's stats and response id
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes the columns that an exported function returns
-- **Branch/PR:** —
+- **Branch/PR:** m022-native-batch-stats
 
 ## Goal
 
