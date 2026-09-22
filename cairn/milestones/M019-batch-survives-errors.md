@@ -153,3 +153,13 @@ Pass 2, 2026-09-22, on head `52db6b7`, with `main` already merged in. Full suite
 - AC5 pass 2: The pass-1 test passes unchanged.
 - AC6 pass 2: The grep returned 14 lines that mention a batch, 7 in `R/` and 7 in `NEWS.md`. I read each one. None says that an API failure or an unreadable reply from one input aborts the batch. The new line `R/conditions.R:40` covers `httr2_failure`. `devtools::document()` left no diff. `devtools::check()` with the token gave 0 errors, 0 warnings, and 0 notes.
 - Consistency gate pass 2: `cairn_validate.py` passed, with one sizing advisory for 11 tasks. `README.Rmd` did not change, and no `_pkgdown.yml` exists.
+
+Pass 2 independent review: three new fresh reviewers. The prior-review lens found each fix-now finding from pass 1 fixed and no repeat. The history lens found no conflict with a decision, lesson, or past milestone. The diff lens found no criterion broken. Findings, ranked, with the proposed disposition:
+
+- P1: `NEWS.md` line 8 puts "The `logprobs` column then holds `NULL` for that input" after the sentence about a data frame without `logprobs`, so it describes a case that does not exist. Proposed: fix now by moving the sentence next to the failed-input text.
+- P2: T8 changed what users get. A data frame with `logprobs = TRUE` now always has a `logprobs` column, even when no reply carried logprobs, for example on the native route. `NEWS.md` does not say so. Proposed: fix now with one sentence.
+- P3: The roxygen and `NEWS.md` say a `null` reply holds `NA` only in a vector or a data frame without `logprobs`. On the OpenResponses route a reply with `text: null` also holds `NA` in a data frame with `logprobs = TRUE`. Proposed: fix now by stating the rule as a reply that `lms_chat()` returns as `NULL`.
+- P4: A reply whose content is not one string, such as `5` or `["p","q"]`, still changes the result type or makes the vector longer than `inputs`. The warning then names the wrong slot. This predates M019. Proposed: follow-up, added to the O4 candidate row.
+- P5: A `null` reply becomes `NA` with no warning, so a user cannot tell it from a failed input without `format = "list"`. The history lens noted the same case. The roxygen documents it, and a `null` reply is not a failure. Proposed: reject as documented design.
+- P6: AC2 was unticked. The reviewer read the file before the pass-2 tick. Proposed: reject as stale.
+- P7: With a data frame and `simplify = FALSE`, the stored failures are never reported before the abort. Proposed: follow-up, added to the O5 candidate row.
