@@ -606,8 +606,17 @@ lms_chat_batch <- function(
     on.exit(cli::cli_progress_done(id = pb), add = TRUE)
   }
 
+  # A failed input loses its own answer, not the whole batch. Its slot keeps
+  # the condition, and an `rlmstudio_bad_response` carries the reply content.
+  # Every other error still aborts, because it says nothing about one input
+  # alone. The backtrace is dropped, because it makes each failed slot large
+  # and says nothing about the input.
+  keep_failure <- function(cnd) {
+    cnd$trace <- NULL
+    cnd
+  }
   results <- lapply(inputs, function(input) {
-    call_chat <- function() {
+    res <- tryCatch(
       lms_chat(
         model = model,
         input = input,
@@ -616,63 +625,78 @@ lms_chat_batch <- function(
         simplify = simplify,
         ...,
         token = token
-      )
-    }
-    # A reply that does not parse loses one answer, not the whole batch. Its
-    # slot keeps the condition, which carries the reply content. Every other
-    # error still aborts, because it says nothing about one input alone. The
-    # backtrace is dropped, because it makes each failed slot large and says
-    # nothing about the reply.
-    res <- if (has_parsed) {
-      tryCatch(
-        call_chat(),
-        rlmstudio_bad_response = function(cnd) {
-          cnd$trace <- NULL
-          cnd
-        }
-      )
-    } else {
-      call_chat()
-    }
+      ),
+      rlmstudio_api_error = keep_failure,
+      rlmstudio_bad_response = keep_failure
+    )
     if (!should_be_quiet) {
       cli::cli_progress_update(id = pb)
     }
     res
   })
 
-  failed <- which(vapply(
-    results,
-    inherits,
-    logical(1),
-    "rlmstudio_bad_response"
-  ))
+  if (format == "data.frame" && !isTRUE(simplify)) {
+    cli::cli_abort(
+      "The {.val data.frame} format requires {.code simplify = TRUE}.",
+      call = NULL
+    )
+  }
+
+  is_failed <- function(x) {
+    inherits(x, c("rlmstudio_api_error", "rlmstudio_bad_response"))
+  }
+  failed <- which(vapply(results, is_failed, logical(1)))
+
+  # Why the vector format returns a list, where it cannot hold the results.
+  # A scalar parsed reply would fit a vector, but a batch can mix reply
+  # shapes, and a vector that depends on what the model returned is not one a
+  # script can rely on (GP2).
+  vector_fallback <- NULL
+  if (format == "vector") {
+    if (!isTRUE(simplify)) {
+      vector_fallback <- "The {.val vector} format is not compatible with simplify = FALSE. Returning list."
+    } else if (has_parsed) {
+      vector_fallback <- "The {.val vector} format cannot store replies parsed from {.arg schema}. Returning list."
+    } else if (has_logprobs) {
+      vector_fallback <- "The {.val vector} format cannot store logprobs dataframes. Returning list."
+    }
+  }
+  # Where the result is text, a failed slot holds NA rather than the
+  # condition, so the result type does not depend on what failed (GP2).
+  holds_na <- isTRUE(simplify) &&
+    !has_parsed &&
+    (format == "data.frame" || (format == "vector" && is.null(vector_fallback)))
+  na_if_failed <- function(x) if (is_failed(x)) NA_character_ else x
+
   if (length(failed) > 0L) {
     # Shown whatever `quiet` says, because it is the only signal that some
-    # answers are missing (D-010). The positions are joined here, because cli
-    # shortens a vector of more than 20 values and would drop some of them.
+    # answers are missing (D-010, D-011). The positions are joined here,
+    # because cli shortens a vector of more than 20 values and would drop
+    # some of them.
     positions <- cli::ansi_collapse(failed, trunc = Inf)
-    msg <- c(
-      "Could not read the structured reply for {length(failed)} input{?s}, at {cli::qty(length(failed))}position{?s} {positions}.",
-      "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with any reply content in its {.field content} field."
-    )
-    # A vector batch skips its own warning below, so this one says it too.
-    if (format == "vector") {
+    msg <- "{length(failed)} input{?s} failed, at {cli::qty(length(failed))}position{?s} {positions}."
+    if (holds_na) {
       msg <- c(
         msg,
-        "i" = "The {.val vector} format cannot store these results. Returning list."
+        "i" = "Each of those elements holds {.code NA}. Use {.code format = \"list\"} to keep the conditions."
+      )
+    } else {
+      msg <- c(
+        msg,
+        "i" = "Each of those elements holds the {.cls rlmstudio_api_error} or {.cls rlmstudio_bad_response} condition. A {.cls rlmstudio_bad_response} keeps any reply content in its {.field content} field."
       )
     }
+    # One warning is enough, so a vector batch that returns a list says why
+    # here rather than in a second warning.
+    if (!is.null(vector_fallback)) {
+      msg <- c(msg, "i" = vector_fallback)
+    }
     cli::cli_warn(msg)
+  } else if (!is.null(vector_fallback)) {
+    cli::cli_warn(vector_fallback)
   }
 
   if (format == "data.frame") {
-    if (!isTRUE(simplify)) {
-      cli::cli_abort(
-        "The {.val data.frame} format requires {.code simplify = TRUE}.",
-        call = NULL
-      )
-    }
-
     if (has_parsed) {
       df <- data.frame(input = inputs, stringsAsFactors = FALSE)
       df$output <- results
@@ -691,12 +715,14 @@ lms_chat_batch <- function(
         input = inputs,
         output = vapply(
           results,
-          function(x) if (inherits(x, "lms_chat_result")) x$text else x,
+          function(x) {
+            if (inherits(x, "lms_chat_result")) x$text else na_if_failed(x)
+          },
           character(1)
         ),
         stringsAsFactors = FALSE
       )
-      # Add the logprobs as a list-column
+      # Add the logprobs as a list-column. A failed input has none.
       df$logprobs <- lapply(results, function(x) {
         if (inherits(x, "lms_chat_result")) x$logprobs else NULL
       })
@@ -704,38 +730,14 @@ lms_chat_batch <- function(
     } else {
       return(data.frame(
         input = inputs,
-        output = unlist(results),
+        output = unlist(lapply(results, na_if_failed)),
         stringsAsFactors = FALSE
       ))
     }
   }
 
-  if (format == "vector") {
-    if (!isTRUE(simplify)) {
-      cli::cli_warn(
-        "The {.val vector} format is not compatible with simplify = FALSE. Returning list."
-      )
-      return(results)
-    }
-    if (has_parsed) {
-      # A scalar reply would fit a vector, but a batch can mix reply shapes,
-      # and a vector that depends on what the model returned is not one a
-      # script can rely on (GP2). A batch with a failed reply has already
-      # warned, and one warning is enough.
-      if (length(failed) == 0L) {
-        cli::cli_warn(
-          "The {.val vector} format cannot store replies parsed from {.arg schema}. Returning list."
-        )
-      }
-      return(results)
-    }
-    if (has_logprobs) {
-      cli::cli_warn(
-        "The {.val vector} format cannot store logprobs dataframes. Returning list."
-      )
-      return(results)
-    }
-    return(unlist(results))
+  if (format == "vector" && is.null(vector_fallback)) {
+    return(unlist(lapply(results, na_if_failed)))
   }
 
   results

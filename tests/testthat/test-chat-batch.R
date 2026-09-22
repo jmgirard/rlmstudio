@@ -1,0 +1,213 @@
+# How lms_chat_batch() treats an input that fails. A live server does not fail
+# on demand, so the server is mocked through the shared recorder (D-004).
+
+batch_inputs <- c("first", "second", "third")
+failure_classes <- c("rlmstudio_api_error", "rlmstudio_bad_response")
+
+# A chat completions response that succeeds at position `i`: a score for a
+# schema batch, text otherwise. Each position gets its own value, so a slot
+# cannot pass by holding a neighbor's reply.
+openai_ok <- function(i, schema = FALSE) {
+  content <- if (schema) sprintf('{"score": %d}', i) else sprintf("reply %d", i)
+  mock_response(200L, completion_body(quoted(content)))
+}
+
+# An OpenResponses response that succeeds at position `i`. With `logprobs`,
+# the reply carries one token and its log probability.
+openresponses_ok <- function(i, logprobs = FALSE) {
+  lp <- if (logprobs) {
+    ', "logprobs": [{"token": "r", "logprob": -0.5, "top_logprobs": []}]'
+  } else {
+    ""
+  }
+  mock_response(
+    200L,
+    sprintf('{"output": [{"content": [{"text": "reply %d"%s}]}]}', i, lp)
+  )
+}
+
+# A response that makes lms_chat() raise `cls`. A parsed schema reply fails as
+# text that is not JSON. A reply that is never parsed fails as a response with
+# no `choices` field.
+fail_response <- function(cls, parsed) {
+  switch(
+    cls,
+    rlmstudio_api_error = mock_response(400L, '{"error": "bad request"}'),
+    rlmstudio_bad_response = if (parsed) {
+      mock_response(200L, completion_body(quoted("not json")))
+    } else {
+      mock_response(200L, '{"id": "chatcmpl-1"}')
+    }
+  )
+}
+
+# Run lms_chat_batch() over three inputs. The inputs at `fail_at` fail with
+# the matching class in `cls`, and the others succeed with `ok(i)`. Returns
+# the result, the warnings, and the number of requests sent.
+run_failing_batch <- function(
+  fail_at,
+  cls,
+  format,
+  schema = FALSE,
+  simplify = TRUE,
+  logprobs = FALSE,
+  api_type = "openai",
+  quiet = TRUE,
+  ok = function(i) openai_ok(i, schema)
+) {
+  parsed <- schema && simplify && !logprobs
+  responses <- lapply(seq_along(batch_inputs), ok)
+  responses[fail_at] <- lapply(cls, fail_response, parsed = parsed)
+
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(responses)
+  args <- list(
+    "a-model",
+    batch_inputs,
+    format = format,
+    simplify = simplify,
+    quiet = quiet,
+    api_type = api_type
+  )
+  if (schema) {
+    args$schema <- score_schema
+  }
+  if (logprobs) {
+    args$logprobs <- TRUE
+  }
+  warnings <- testthat::capture_warnings(
+    out <- do.call(lms_chat_batch, args)
+  )
+  list(out = out, warnings = warnings, requests = length(recorder$requests))
+}
+
+# A stored condition has the class it was raised with and no backtrace, which
+# would make each failed slot large.
+expect_failed_slot <- function(x, cls, info = NULL) {
+  expect_s3_class(x, cls)
+  expect_null(x$trace, info = info)
+  if (cls == "rlmstudio_api_error") {
+    expect_identical(x$status, 400L, info = info)
+  }
+}
+
+test_that("a failed input in any format does not end the batch", {
+  for (cls in failure_classes) {
+    for (schema in c(FALSE, TRUE)) {
+      for (format in c("list", "vector", "data.frame")) {
+        for (fail_at in 2:3) {
+          info <- paste(cls, format, "schema:", schema, "fail_at:", fail_at)
+          res <- run_failing_batch(fail_at, cls, format, schema = schema)
+          expect_identical(res$requests, 3L, info = info)
+
+          got <- if (format == "data.frame") res$out$output else res$out
+          if (format == "data.frame") {
+            expect_identical(res$out$input, batch_inputs, info = info)
+          }
+          holds_na <- !schema && format != "list"
+          if (holds_na) {
+            expected <- sprintf("reply %d", 1:3)
+            expected[fail_at] <- NA_character_
+            expect_identical(got, expected, info = info)
+          } else {
+            expect_type(got, "list")
+            expect_length(got, 3L)
+            for (i in setdiff(1:3, fail_at)) {
+              expected <- if (schema) list(score = i) else sprintf("reply %d", i)
+              expect_identical(got[[i]], expected, info = info)
+            }
+            expect_failed_slot(got[[fail_at]], cls, info = info)
+          }
+
+          expect_length(res$warnings, 1L)
+          expect_match(
+            res$warnings,
+            sprintf("1 input failed, at position %d\\.", fail_at),
+            info = info
+          )
+          if (holds_na) {
+            expect_match(res$warnings, 'format = "list"', fixed = TRUE, info = info)
+          } else {
+            expect_no_match(res$warnings, 'format = "list"', fixed = TRUE, info = info)
+          }
+        }
+      }
+    }
+  }
+})
+
+test_that("a failed input does not end a batch with simplify = FALSE", {
+  res <- run_failing_batch(2L, "rlmstudio_api_error", "list", simplify = FALSE)
+  expect_identical(res$requests, 3L)
+  # The raw response of each input that succeeded.
+  expect_identical(res$out[[1]]$choices[[1]]$message$content, "reply 1")
+  expect_failed_slot(res$out[[2]], "rlmstudio_api_error")
+  expect_identical(res$out[[3]]$choices[[1]]$message$content, "reply 3")
+  expect_length(res$warnings, 1L)
+  expect_match(res$warnings, "1 input failed, at position 2\\.")
+  expect_no_match(res$warnings, 'format = "list"', fixed = TRUE)
+})
+
+test_that("a failed input does not end a batch on the default api_type", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    openresponses_ok(1L),
+    fail_response("rlmstudio_api_error"),
+    openresponses_ok(3L)
+  ))
+  expect_warning(
+    out <- lms_chat_batch("a-model", batch_inputs, format = "list", quiet = TRUE),
+    "1 input failed, at position 2\\."
+  )
+  expect_length(recorder$requests, 3L)
+  # The route is the one the default api_type takes.
+  expect_identical(request_target(recorder$requests[[3]])$path, "/v1/responses")
+  expect_identical(out[[1]], "reply 1")
+  expect_failed_slot(out[[2]], "rlmstudio_api_error")
+  expect_identical(out[[3]], "reply 3")
+})
+
+test_that("a failed input leaves NULL logprobs in a data frame", {
+  for (cls in failure_classes) {
+    res <- run_failing_batch(2L, cls, "data.frame", logprobs = TRUE)
+    expect_identical(res$requests, 3L, info = cls)
+    expect_named(res$out, c("input", "output", "logprobs"))
+    expect_identical(res$out$output, c("reply 1", NA, "reply 3"), info = cls)
+    expect_null(res$out$logprobs[[2]])
+    expect_length(res$warnings, 1L)
+    expect_match(res$warnings, "1 input failed, at position 2\\.", info = cls)
+    expect_match(res$warnings, 'format = "list"', fixed = TRUE, info = cls)
+  }
+
+  # The openai route leaves every logprobs slot NULL, so this route shows the
+  # inputs that succeeded keep theirs.
+  res <- run_failing_batch(
+    2L,
+    "rlmstudio_api_error",
+    "data.frame",
+    logprobs = TRUE,
+    api_type = "openresponses",
+    ok = function(i) openresponses_ok(i, logprobs = TRUE)
+  )
+  expect_identical(res$out$output, c("reply 1", NA, "reply 3"))
+  expect_s3_class(res$out$logprobs[[1]], "data.frame")
+  expect_null(res$out$logprobs[[2]])
+  expect_s3_class(res$out$logprobs[[3]], "data.frame")
+})
+
+test_that("one warning names every failed input of either class", {
+  withr::local_options(rlmstudio.quiet = TRUE)
+  res <- run_failing_batch(
+    c(1L, 3L),
+    c("rlmstudio_api_error", "rlmstudio_bad_response"),
+    "list",
+    schema = TRUE,
+    quiet = TRUE
+  )
+  expect_identical(res$requests, 3L)
+  expect_failed_slot(res$out[[1]], "rlmstudio_api_error")
+  expect_identical(res$out[[2]], list(score = 2L))
+  expect_failed_slot(res$out[[3]], "rlmstudio_bad_response")
+  expect_length(res$warnings, 1L)
+  expect_match(res$warnings, "2 inputs failed, at positions 1 and 3\\.")
+})

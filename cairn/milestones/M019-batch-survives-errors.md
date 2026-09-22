@@ -63,9 +63,9 @@
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Write the AC1 to AC3 tests first, in a new batch test file, with `local_request_sequence()` from `tests/testthat/helper-mock-http.R`. Build a 400 response for `rlmstudio_api_error` and an unparseable schema reply for `rlmstudio_bad_response`. Watch them fail on the current code.
-- [ ] T2: In `lms_chat_batch()` (`R/chat.R:609`), catch both classes in every setting, not only when `has_parsed` is true. Drop the backtrace as now. Build the vector and the no-schema data frame with `NA_character_` in a failed slot, and `NULL` logprobs there (`R/chat.R:682`, `R/chat.R:738`).
-- [ ] T3: Rewrite the warning (`R/chat.R:649`) to cover both classes. Keep the positions joined with `cli::ansi_collapse(trunc = Inf)`. Add the `format = "list"` line where the result holds `NA_character_`. Keep one warning per batch. Where a failure already warned, the vector format's own list warnings must not add a second one about failed inputs.
+- [x] T1: Write the AC1 to AC3 tests first, in a new batch test file, with `local_request_sequence()` from `tests/testthat/helper-mock-http.R`. Build a 400 response for `rlmstudio_api_error` and an unparseable schema reply for `rlmstudio_bad_response`. Watch them fail on the current code.
+- [x] T2: In `lms_chat_batch()` (`R/chat.R:609`), catch both classes in every setting, not only when `has_parsed` is true. Drop the backtrace as now. Build the vector and the no-schema data frame with `NA_character_` in a failed slot, and `NULL` logprobs there (`R/chat.R:682`, `R/chat.R:738`).
+- [x] T3: Rewrite the warning (`R/chat.R:649`) to cover both classes. Keep the positions joined with `cli::ansi_collapse(trunc = Inf)`. Add the `format = "list"` line where the result holds `NA_character_`. Keep one warning per batch. Where a failure already warned, the vector format's own list warnings must not add a second one about failed inputs.
 - [ ] T4: Write the AC4 tests. Then catch `rlmstudio_no_server` around the per-input call, set `results`, and signal the same condition again. Mock `is_server_running` with a counter, because `lms_chat_batch()` probes once before the first input (LESSONS M003).
 - [ ] T5: Write the AC5 tests with a counting stub for `lms_chat()`, not `fail()` (LESSONS M015). Confirm that the two classes other than rlmstudio pass through the handlers.
 - [ ] T6: Update the `lms_chat_batch()` roxygen `@return` and `@details` (`R/chat.R:540`). In `R/conditions.R`, update the "API failure" and "Malformed response" sections, and add the `results` field to "Server not running". Rewrite `NEWS.md` lines 7 and 8 and add one entry. Run `devtools::document()`.
@@ -87,6 +87,8 @@
 - 2026-09-22: plan gate chose to abort on a lost server with the replies attached over storing it and going on, because a lost server fails every later input and GP3 says a missing server is an error. Falsified by a user who needs the batch to resume after the server restarts mid-run.
 - 2026-09-22: plan gate chose `NA_character_` in a failed vector or data-frame slot over a data-frame `error` column or a switch to a list, because the result type then does not depend on what failed (GP2). Falsified by users who need the condition from a data-frame batch and cannot rerun with `format = "list"`.
 - 2026-09-22: plan gate chose no `on_error` argument over adding one, because an argument is hard to remove and the warning already marks the failures. Falsified by a user who needs a batch to stop at the first failure.
+- 2026-09-22: implement started on branch m019-batch-survives-errors. Question gate skipped, because the plan left no API, naming, or dependency choice open.
+- 2026-09-22: T1 to T3 done in one checkpoint. `tests/testthat/test-chat-batch.R` failed on the old code with the abort, then passed. The shared chat bodies moved to `tests/testthat/helper-chat-bodies.R`. Two M018 tests that asserted the old abort were removed. The `data.frame` plus `simplify = FALSE` abort now runs before the failed-input warning, so that setting no longer warns and then aborts. Every vector fallback to a list now folds into the one failed-input warning, not only the `schema` one. Full suite: 0 failed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

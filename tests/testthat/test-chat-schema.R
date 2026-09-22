@@ -12,35 +12,7 @@ sent_json <- function(req) {
   rawToChar(out$body)
 }
 
-# A chat completions response whose reply content is `content_json`, a JSON
-# value written out as text: a quoted string, or `null`. `finish_reason` is
-# written as a JSON string, and `NULL` leaves the field out.
-completion_body <- function(content_json, finish_reason = "stop") {
-  finish <- if (is.null(finish_reason)) {
-    ""
-  } else {
-    sprintf(', "finish_reason": "%s"', finish_reason)
-  }
-  sprintf(
-    paste0(
-      '{"id": "chatcmpl-1", "object": "chat.completion", "choices": ',
-      '[{"index": 0, "message": {"role": "assistant", "content": %s}%s}]}'
-    ),
-    content_json,
-    finish
-  )
-}
-
-# The reply content as the JSON string the server would send for `text`.
-quoted <- function(text) {
-  as.character(jsonlite::toJSON(text, auto_unbox = TRUE))
-}
-
-score_schema <- list(
-  type = "object",
-  properties = list(score = list(type = "integer")),
-  required = list("score")
-)
+# completion_body(), quoted(), and score_schema live in helper-chat-bodies.R.
 
 # Call lms_chat_openai() against a mocked server that answers every request
 # with `body`. Returns the value and the captured requests.
@@ -641,18 +613,6 @@ test_that("a batch with no failed reply keeps the vector format warning", {
   expect_identical(out, rep(list(list(score = 3L)), 3L))
 })
 
-test_that("an API error in a batch still aborts", {
-  responses <- list(
-    mock_response(200L, completion_body(quoted('{"score": 3}'))),
-    mock_response(500L, '{"error": "the model crashed"}'),
-    mock_response(200L, completion_body(quoted('{"score": 3}')))
-  )
-  expect_error(
-    batch_with_sequence(responses),
-    class = "rlmstudio_api_error"
-  )
-})
-
 test_that("a server that stops during a batch still aborts", {
   # The batch probes once before the loop, and each call probes again. The
   # third probe is the second call's, so the server goes away mid-batch.
@@ -677,29 +637,6 @@ test_that("a server that stops during a batch still aborts", {
   )
   expect_identical(probes, 3L)
   expect_length(recorder$requests, 1L)
-})
-
-test_that("a batch without a schema aborts on a response with no choices", {
-  responses <- list(
-    mock_response(200L, completion_body(quoted("one"))),
-    mock_response(200L, '{"id": "chatcmpl-1"}'),
-    mock_response(200L, completion_body(quoted("three")))
-  )
-  for (format in c("list", "vector")) {
-    testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-    local_request_sequence(responses)
-    expect_error(
-      lms_chat_batch(
-        "a-model",
-        c("first", "second", "third"),
-        format = format,
-        quiet = TRUE,
-        api_type = "openai"
-      ),
-      class = "rlmstudio_bad_response",
-      info = format
-    )
-  }
 })
 
 test_that("a reply that does not parse is returned as text without a schema", {
