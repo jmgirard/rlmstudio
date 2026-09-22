@@ -63,6 +63,100 @@ logprob_step <- function(token, logprob = -0.5) {
   )
 }
 
+# Items that carry no answer text. The native docs list `tool_call`,
+# `reasoning`, and `invalid_tool_call` beside `message`.
+reasoning_item <- '{"type": "reasoning", "content": "thinking"}'
+tool_call_item <- paste0(
+  '{"type": "tool_call", "tool": "t", "arguments": {}, "output": "x"}'
+)
+invalid_tool_call_item <- paste0(
+  '{"type": "invalid_tool_call", "reason": "r", ',
+  '"metadata": {"type": "invalid_name", "tool_name": "t"}}'
+)
+unknown_item <- '{"type": "something_new", "content": "not the answer"}'
+untyped_item <- '{"content": "not the answer"}'
+
+# An OpenResponses reasoning item, in the shape of the OpenAI Responses API.
+responses_reasoning_item <- paste0(
+  '{"type": "reasoning", "summary": [], ',
+  '"content": [{"type": "reasoning_text", "text": "thinking"}]}'
+)
+refusal_part <- '{"type": "refusal", "refusal": "no"}'
+
+# Reply text values that are not one string, as JSON.
+not_a_string <- c(
+  number = "5",
+  boolean = "true",
+  array = '["p", "q"]',
+  object = '{"a": 1}',
+  null = "null"
+)
+
+# The shapes with no readable answer text that the native and OpenResponses
+# routes share. `message` builds a message item from one JSON text value.
+shared_unreadable <- function(message) {
+  shapes <- list(
+    "no output field" = "{}",
+    "an empty output array" = output_body(),
+    "an output object" = sprintf('{"output": %s}', message(quoted("a"))),
+    "an output string" = '{"output": "a"}',
+    "an item that is a string" = output_body('"a"'),
+    "an item that is a number" = output_body("5"),
+    "no message item" = output_body(reasoning_item, tool_call_item)
+  )
+  for (kind in names(not_a_string)) {
+    value <- not_a_string[[kind]]
+    shapes[[paste("text that is", kind, "alone")]] <- output_body(message(value))
+    shapes[[paste("text that is", kind, "beside a readable message")]] <-
+      output_body(message(quoted("a")), message(value))
+  }
+  shapes
+}
+
+# Native replies with no readable answer text, named by their shape.
+native_unreadable <- function() {
+  shapes <- shared_unreadable(native_message)
+  shapes[["a message with no content field"]] <- output_body('{"type": "message"}')
+  shapes
+}
+
+# OpenResponses replies with no readable answer text, named by their shape.
+responses_unreadable <- function() {
+  shapes <- shared_unreadable(function(value) {
+    responses_message(output_text(value))
+  })
+  shapes[["a message with no content field"]] <-
+    output_body('{"type": "message", "role": "assistant"}')
+  shapes[["a message content that is a string"]] <-
+    output_body('{"type": "message", "content": "a"}')
+  shapes[["a message content that is an object"]] <-
+    output_body(sprintf('{"type": "message", "content": %s}', output_text(quoted("a"))))
+  shapes[["a part that is a string"]] <- output_body(responses_message('"a"'))
+  shapes[["a part that is a number"]] <- output_body(responses_message("5"))
+  shapes[["an empty content array"]] <- output_body(responses_message())
+  shapes[["no output_text part"]] <- output_body(responses_message(refusal_part))
+  shapes[["an output_text part with no text field"]] <-
+    output_body(responses_message('{"type": "output_text"}'))
+  shapes
+}
+
+# Chat completions replies whose content is not one string. Each entry holds
+# the body and the `content` value the abort carries, as httr2 parses it.
+openai_unreadable <- function() {
+  absent <- paste0(
+    '{"id": "chatcmpl-1", "choices": [{"index": 0, ',
+    '"message": {"role": "assistant"}, "finish_reason": "stop"}]}'
+  )
+  list(
+    "null" = list(body = completion_body("null"), content = NULL),
+    "absent" = list(body = absent, content = NULL),
+    "a number" = list(body = completion_body("5"), content = 5L),
+    "a boolean" = list(body = completion_body("true"), content = TRUE),
+    "an array" = list(body = completion_body('["p", "q"]'), content = list("p", "q")),
+    "an object" = list(body = completion_body('{"a": 1}'), content = list(a = 1L))
+  )
+}
+
 score_schema <- list(
   type = "object",
   properties = list(score = list(type = "integer")),

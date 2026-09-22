@@ -186,27 +186,8 @@ call_with_body <- function(fun, body, ...) {
   fun("a-model", "hi", ...)
 }
 
-# Items that carry no answer text. The native docs list `tool_call`,
-# `reasoning`, and `invalid_tool_call` beside `message`.
-reasoning_item <- '{"type": "reasoning", "content": "thinking"}'
-tool_call_item <- paste0(
-  '{"type": "tool_call", "tool": "t", "arguments": {}, "output": "x"}'
-)
-invalid_tool_call_item <- paste0(
-  '{"type": "invalid_tool_call", "reason": "r", ',
-  '"metadata": {"type": "invalid_name", "tool_name": "t"}}'
-)
-unknown_item <- '{"type": "something_new", "content": "not the answer"}'
-untyped_item <- '{"content": "not the answer"}'
-
-# Reply text values that are not one string, as JSON.
-not_a_string <- c(
-  number = "5",
-  boolean = "true",
-  array = '["p", "q"]',
-  object = '{"a": 1}',
-  null = "null"
-)
+# The item bodies and the tables of unreadable replies live in
+# helper-chat-bodies.R, which the batch tests share.
 
 test_that("lms_chat_native returns the text of every message item in order", {
   bodies <- list(
@@ -255,33 +236,6 @@ test_that("lms_chat_native returns the text of every message item in order", {
   }
 })
 
-# The shapes with no readable answer text that both routes share. `message`
-# builds a message item from one JSON text value.
-shared_unreadable <- function(message) {
-  shapes <- list(
-    "no output field" = "{}",
-    "an empty output array" = output_body(),
-    "an output object" = sprintf('{"output": %s}', message(quoted("a"))),
-    "an output string" = '{"output": "a"}',
-    "an item that is a string" = output_body('"a"'),
-    "an item that is a number" = output_body("5"),
-    "no message item" = output_body(reasoning_item, tool_call_item)
-  )
-  for (kind in names(not_a_string)) {
-    value <- not_a_string[[kind]]
-    shapes[[paste("text that is", kind, "alone")]] <- output_body(message(value))
-    shapes[[paste("text that is", kind, "beside a readable message")]] <-
-      output_body(message(quoted("a")), message(value))
-  }
-  shapes
-}
-
-native_unreadable <- function() {
-  shapes <- shared_unreadable(native_message)
-  shapes[["a message with no content field"]] <- output_body('{"type": "message"}')
-  shapes
-}
-
 test_that("lms_chat_native aborts as a bad response when a reply has no readable text", {
   shapes <- native_unreadable()
   for (label in names(shapes)) {
@@ -306,13 +260,6 @@ test_that("lms_chat_native returns an unreadable reply unchanged with simplify =
     )
   }
 })
-
-# An OpenResponses reasoning item, in the shape of the OpenAI Responses API.
-responses_reasoning_item <- paste0(
-  '{"type": "reasoning", "summary": [], ',
-  '"content": [{"type": "reasoning_text", "text": "thinking"}]}'
-)
-refusal_part <- '{"type": "refusal", "refusal": "no"}'
 
 test_that("lms_chat_openresponses returns the text of every output_text part in order", {
   bodies <- list(
@@ -384,25 +331,6 @@ test_that("lms_chat_openresponses takes logprobs from every output_text part in 
   expect_identical(res$text, "ab")
   expect_identical(res$logprobs$step_token, "b")
 })
-
-responses_unreadable <- function() {
-  shapes <- shared_unreadable(function(value) {
-    responses_message(output_text(value))
-  })
-  shapes[["a message with no content field"]] <-
-    output_body('{"type": "message", "role": "assistant"}')
-  shapes[["a message content that is a string"]] <-
-    output_body('{"type": "message", "content": "a"}')
-  shapes[["a message content that is an object"]] <-
-    output_body(sprintf('{"type": "message", "content": %s}', output_text(quoted("a"))))
-  shapes[["a part that is a string"]] <- output_body(responses_message('"a"'))
-  shapes[["a part that is a number"]] <- output_body(responses_message("5"))
-  shapes[["an empty content array"]] <- output_body(responses_message())
-  shapes[["no output_text part"]] <- output_body(responses_message(refusal_part))
-  shapes[["an output_text part with no text field"]] <-
-    output_body(responses_message('{"type": "output_text"}'))
-  shapes
-}
 
 test_that("lms_chat_openresponses aborts as a bad response when a reply has no readable text", {
   shapes <- responses_unreadable()

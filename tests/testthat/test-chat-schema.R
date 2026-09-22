@@ -645,15 +645,7 @@ test_that("a reply that does not parse is returned as text without a schema", {
 })
 
 test_that("reply content that is not one string aborts as a bad response", {
-  # `content` is the value the condition carries, as httr2 parses it.
-  contents <- list(
-    list(label = "null", json = "null", content = NULL),
-    list(label = "absent", json = NULL, content = NULL),
-    list(label = "a number", json = "5", content = 5L),
-    list(label = "a boolean", json = "true", content = TRUE),
-    list(label = "an array", json = '["p", "q"]', content = list("p", "q")),
-    list(label = "an object", json = '{"a": 1}', content = list(a = 1L))
-  )
+  contents <- openai_unreadable()
   # A schema with logprobs = FALSE parses the reply instead, which the tests
   # above cover.
   settings <- list(
@@ -661,19 +653,12 @@ test_that("reply content that is not one string aborts as a bad response", {
     list(label = "logprobs", args = list(logprobs = TRUE)),
     list(label = "a schema and logprobs", args = list(schema = score_schema, logprobs = TRUE))
   )
-  for (case in contents) {
-    body <- if (is.null(case$json)) {
-      paste0(
-        '{"id": "chatcmpl-1", "choices": [{"index": 0, ',
-        '"message": {"role": "assistant"}, "finish_reason": "stop"}]}'
-      )
-    } else {
-      completion_body(case$json)
-    }
+  for (label in names(contents)) {
+    case <- contents[[label]]
     for (setting in settings) {
-      info <- paste(case$label, "with", setting$label)
+      info <- paste(label, "with", setting$label)
       err <- expect_error(
-        do.call(call_with_reply, c(list(body), setting$args)),
+        do.call(call_with_reply, c(list(case$body), setting$args)),
         class = "rlmstudio_bad_response",
         info = info
       )

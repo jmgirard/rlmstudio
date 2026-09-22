@@ -438,3 +438,73 @@ test_that("an error of any other class still aborts the batch unchanged", {
     expect_identical(calls, 2L, info = name)
   }
 })
+
+# Run a two-input batch whose first reply reads as "reply 1" and whose second
+# is `body`. Returns the result and the warnings.
+run_unreadable_batch <- function(ok, body, format, api_type, logprobs = FALSE) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(ok, mock_response(200L, body)))
+  args <- list(
+    "a-model",
+    c("first", "second"),
+    format = format,
+    quiet = TRUE,
+    api_type = api_type
+  )
+  if (logprobs) {
+    args$logprobs <- TRUE
+  }
+  warnings <- testthat::capture_warnings(out <- do.call(lms_chat_batch, args))
+  list(out = out, warnings = warnings)
+}
+
+test_that("a reply with no readable text fails only its own input on every route", {
+  routes <- list(
+    native = list(
+      ok = mock_response(200L, output_body(native_message(quoted("reply 1")))),
+      bodies = native_unreadable()
+    ),
+    openresponses = list(
+      ok = openresponses_ok(1L),
+      bodies = responses_unreadable()
+    ),
+    openai = list(
+      ok = openai_ok(1L),
+      bodies = lapply(openai_unreadable(), `[[`, "body")
+    )
+  )
+  for (api_type in names(routes)) {
+    route <- routes[[api_type]]
+    for (label in names(route$bodies)) {
+      for (format in c("list", "vector", "data.frame")) {
+        info <- paste(api_type, format, label)
+        res <- run_unreadable_batch(route$ok, route$bodies[[label]], format, api_type)
+        expect_identical(length(res$warnings), 1L, info = info)
+        expect_match(res$warnings[[1]], "1 input failed, at position 2\\.", info = info)
+        if (format == "list") {
+          expect_identical(length(res$out), 2L, info = info)
+          expect_identical(res$out[[1]], "reply 1", info = info)
+          expect_failed_slot(res$out[[2]], "rlmstudio_bad_response", info = info)
+        } else if (format == "vector") {
+          expect_identical(res$out, c("reply 1", NA), info = info)
+        } else {
+          expect_identical(res$out$output, c("reply 1", NA), info = info)
+        }
+      }
+    }
+  }
+})
+
+test_that("an OpenAI reply with null content fails its input in a logprobs data frame", {
+  res <- run_unreadable_batch(
+    openai_ok(1L),
+    completion_body("null"),
+    "data.frame",
+    "openai",
+    logprobs = TRUE
+  )
+  expect_length(res$warnings, 1L)
+  expect_match(res$warnings[[1]], "1 input failed, at position 2\\.")
+  expect_identical(res$out$output, c("reply 1", NA))
+  expect_identical(res$out$logprobs, list(NULL, NULL))
+})
