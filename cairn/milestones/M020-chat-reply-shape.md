@@ -125,3 +125,14 @@ Fresh run on 2026-09-22, branch head e98750b, level with `origin/main`: `devtool
 - AC7: Review read the branch's `R/conditions.R` and `R/chat.R`. The "Malformed response" section says "Four functions raise it" and names `lms_embed()`, `lms_chat_native()`, `lms_chat_openresponses()`, and `lms_chat_openai()`. It gives the AC3 cases for the first two chat wrappers. It gives a third `lms_chat_openai()` case with its `content` and `finish_reason` values. Both wrappers carry `@inheritSection rlmstudio-conditions Malformed response`. The three `@return` blocks state the AC1, AC2, and AC4 rules. The `lms_chat()` details name all three routes, and the `lms_chat_batch()` `NULL`-to-`NA` sentence is gone. A fresh `devtools::document()` left `git status` clean.
 
 Consistency gate, 2026-09-22: `cairn_validate.py` exits 0, and coverage is complete. `DESIGN.md` is unchanged, so no impact report runs. `devtools::document()` gives no diff, and no generated file was edited by hand. The branch does not touch `README.Rmd`, and the repo has no pkgdown site. `NEWS.md` has four entries and no milestone ids. The branch adds no new top-level file. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gives 0 errors, 0 warnings, and 0 notes. The vignettes built against the live server.
+
+Independent review, 2026-09-22, three fresh reviewers. The history reviewer found nothing. The prior-review reviewer found no regression, and the repo has no PR review threads. The diff reviewer found no criterion failure and ranked eight findings:
+
+- O1: A malformed OpenResponses `logprobs` value, such as an object or `[5]`, still fails with an unclassed base R error and stops a batch. This predates the branch.
+- O2: Native and OpenResponses aborts give no token-limit hint and carry no `content` or `finish_reason` fields, unlike the OpenAI route.
+- O3: The AC3 tables assert class, label, and status but not the detail text, so a shape that aborts on the wrong check still passes.
+- O4: The AC5 logprobs data-frame test expects `list(NULL, NULL)`, which the OpenAI stub also gives on success. The `NA` output and the warning pin the failure.
+- O5: No test covers the token-limit message for OpenAI content that is not one string without a schema. A probe shows that it works.
+- O6: In the conditions page, "The `content` of each such message must be an array of JSON objects" reads as if it covers native replies too.
+- O7: `na_if_failed()` still maps `NULL` to `NA`, and `lms_chat_openai()` keeps a local `is_object` beside `is_json_object()`. Neither changes behavior.
+- O8: No other help or NEWS claim contradicts the code. The `man/lms_embed.Rd` change comes from the inherited section and is correct.
