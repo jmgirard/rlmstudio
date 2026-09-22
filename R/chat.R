@@ -589,7 +589,7 @@ join_reply_texts <- function(resp, texts, label, detail) {
 #' 6. The `token` and `logprob` of each of those objects follow rules 3 and 4.
 #'
 #' The parts are checked in order, then the steps of a part, then the
-#' candidates of a step. The first broken rule aborts, with one message per
+#' candidates of a step, one at a time. The first broken rule aborts, with one message per
 #' rule. Fields are read with `[[`, because `$` would read a field whose name
 #' only starts with the one asked for.
 #'
@@ -609,6 +609,12 @@ check_part_logprobs <- function(resp, parts, label) {
         "or with {.code simplify = FALSE} to get the body unchanged."
       )
     )
+  }
+  abort_top_logprobs <- function() {
+    abort_rule(paste(
+      "The `top_logprobs` of a `logprobs` step is not an array of JSON",
+      "objects."
+    ))
   }
   # A field that is absent or `null` reads as NULL.
   is_null_or <- function(x, test) is.null(x) || test(x)
@@ -633,16 +639,15 @@ check_part_logprobs <- function(resp, parts, label) {
         abort_rule("The `logprob` of a `logprobs` step is not a number.")
       }
       candidates <- step[["top_logprobs"]]
-      is_object_array <- function(x) {
-        is_json_array(x) && all(vapply(x, is_json_object, logical(1)))
+      if (!is_null_or(candidates, is_json_array)) {
+        abort_top_logprobs()
       }
-      if (!is_null_or(candidates, is_object_array)) {
-        abort_rule(paste(
-          "The `top_logprobs` of a `logprobs` step is not an array of JSON",
-          "objects."
-        ))
-      }
+      # One candidate at a time, as for the steps, so a bad field in one
+      # candidate is named before a later candidate that is not an object.
       for (candidate in candidates) {
+        if (!is_json_object(candidate)) {
+          abort_top_logprobs()
+        }
         if (
           !is_null_or(candidate[["token"]], is_string) ||
             !is_null_or(candidate[["logprob"]], is_number)

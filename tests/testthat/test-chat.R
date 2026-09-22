@@ -457,6 +457,15 @@ test_that("the logprobs rules are checked in order within a step and across step
     "R4",
     info = "a step that breaks R4 and R5"
   )
+  # The candidates of a step are checked one at a time, as the steps are, so
+  # a bad candidate token comes before a later candidate that is not an object.
+  expect_logprobs_rule(
+    one_part(json_array(
+      step_json(top = json_array(candidate_json(token = "5"), "5"))
+    )),
+    "R6",
+    info = "a bad candidate token before a candidate that is not an object"
+  )
   # A bad candidate in the first step comes before a bad second step.
   expect_logprobs_rule(
     one_part(json_array(

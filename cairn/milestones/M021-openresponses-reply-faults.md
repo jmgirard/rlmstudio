@@ -54,7 +54,7 @@ The checks go over the parts in order, then the steps of a part in order, then t
 - [x] T4: In `tests/testthat/test-chat-batch.R`, run three inputs with `format = "list"`. The second reply carries `[5]`. Assert the R2 condition in slot 2, the replies in slots 1 and 3, and one warning.
 - [x] T5: Pair each shape in `native_unreadable()` and `responses_unreadable()` with the detail sentence of its first failed check. Assert that sentence per shape in `tests/testthat/test-chat.R`.
 - [x] T6: Update `R/conditions.R` lines 67 to 77, the `@return` text at `R/chat.R` lines 136 to 139, and `NEWS.md`. Run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
-- [ ] T7: In `check_part_logprobs()`, check the candidates of a step one at a time. A candidate that is not a JSON object breaks R5. A candidate with a bad `token` or `logprob` breaks R6. Keep the R5 check that `top_logprobs` is an array before the walk. Define the helper functions once, outside the loop. Add a test in which a bad candidate token comes before a candidate that is not an object, and assert R6. Show the test fails on the current code. (Review findings O1 and O10.)
+- [x] T7: In `check_part_logprobs()`, check the candidates of a step one at a time. A candidate that is not a JSON object breaks R5. A candidate with a bad `token` or `logprob` breaks R6. Keep the R5 check that `top_logprobs` is an array before the walk. Define the helper functions once, outside the loop. Add a test in which a bad candidate token comes before a candidate that is not an object, and assert R6. Show the test fails on the current code. (Review findings O1 and O10.)
 - [ ] T8: Add tests for a `null` step, a `null` candidate, and an explicit `"logprobs": null`. Add tests for a `{}` value, a `{}` `top_logprobs`, and a `{}` step, which is readable. Add a test for one part with a bad `text` and a bad `logprobs`, and assert the text detail. Run `devtools::test()` and `devtools::check()`. (Review findings O2, O3, and O5.)
 
 ## Work log
@@ -75,6 +75,7 @@ The checks go over the parts in order, then the steps of a part in order, then t
 - claim audit: 38 claims read, 2 corrected — R/conditions.R, NEWS.md, tests/testthat/test-chat.R
 - 2026-09-22: the claim audit found that a `null` step or candidate now aborts, which the docs had said passes. The conditions page and NEWS now say so, and the reader read the corrected text again and found no problem. After the fix, `devtools::test()` passed 4398, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
 - 2026-09-22: defect return 1, from review. AC1 fails on finding O1: a bad candidate token before a candidate that is not an object names R5, not R6. The maintainer chose to fix the code. T7 and T8 added, and status set to in-progress.
+- 2026-09-22: resumed by /milestone-implement. No question was open. T7 done: `check_part_logprobs()` checks the candidates of a step one at a time, and the helper defined in the loop is gone. The new test named R5 and not R6 on the old code, and it passes now. `devtools::test()` passed 4407.
 
 ## Decisions
 
