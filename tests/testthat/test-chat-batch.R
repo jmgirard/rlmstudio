@@ -280,6 +280,23 @@ test_that("a lost server keeps a stored failure in its results", {
   expect_null(res$cnd$results[[3]])
 })
 
+test_that("a connection that fails after the check passes adds no results field", {
+  # The check passes, but nothing listens on port 1, so the request itself
+  # fails to connect, as it would for a server that stops mid-request.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  cnd <- expect_error(
+    lms_chat_batch(
+      "a-model",
+      batch_inputs,
+      host = "http://127.0.0.1:1",
+      quiet = TRUE,
+      api_type = "openai"
+    ),
+    class = "httr2_failure"
+  )
+  expect_false("results" %in% names(cnd))
+})
+
 # Stub lms_chat() so that its second call raises `cnd`. The stub counts its
 # calls, because a stub that failed the test by raising would itself be
 # caught by the tryCatch() below (LESSONS, M015).

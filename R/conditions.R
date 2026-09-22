@@ -29,13 +29,15 @@
 #' an LM Studio server would give.
 #'
 #' [lms_chat_batch()] checks the server once before its first input, and
-#' [lms_chat()] checks it again for each input. If the server goes away during
-#' the batch, the batch aborts with `rlmstudio_no_server`, and no request goes
-#' out after that. The condition then carries a `results` field, a list as
+#' [lms_chat()] checks it again for each input. If that check finds the server
+#' gone during the batch, the batch aborts with `rlmstudio_no_server`, and no
+#' request goes out after that. The condition then carries a `results` field, a list as
 #' long as `inputs`. Its elements before the lost input hold the values that
 #' `format = "list"` returns for those inputs. The element of the lost input
 #' and every element after it are `NULL`. The check before the first input
-#' adds no `results` field.
+#' adds no `results` field. A connection that fails after the check passes,
+#' such as a server that stops during a request, raises an `httr2_failure`
+#' error instead. That error aborts the batch and carries no `results` field.
 #'
 #' @section API failure:
 #' A condition of class `rlmstudio_api_error` is raised when a REST call
