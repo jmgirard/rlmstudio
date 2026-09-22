@@ -96,19 +96,35 @@ it returns are placed by the index that the response reports, so a block
 with a missing, repeated, or out-of-range index would otherwise pair a
 vector with the wrong text and give back a matrix that is silently wrong.
 
-\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it when a \code{schema} was given and the reply
-content is not one string of valid JSON. It is raised only with \code{simplify = TRUE} and
-\code{logprobs = FALSE}, which are the two settings under which the reply is
-parsed. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}} can raise it through
-\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in two cases, both only with
+\code{simplify = TRUE}. The first case is a response with no \code{choices} field or
+an empty one, so there is no reply to read. This case is raised with or
+without a \code{schema}, and with \code{logprobs = TRUE} as well. The second case is
+a reply that does not parse. A \code{schema} was given, \code{logprobs = FALSE}, and
+the reply content is not one string of valid JSON. If the server reports
+the finish reason \code{"length"}, the token limit cut the reply off. The message
+then says so and names \code{max_tokens}. \code{\link[=lms_chat]{lms_chat()}} can raise the condition
+through \code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} raises it only where it does not store the condition in
+an element of its result. With a \code{schema}, \code{simplify = TRUE}, and
+\code{logprobs = FALSE}, a failed input's element holds the condition, and the
+batch warns once and goes on. With any other settings, the condition
+aborts the batch.
 
 The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: both functions read
 the body only after a 200, and report every other status as an
-\code{rlmstudio_api_error} instead. The message names the argument that returns
-the body unchanged, so you can read what arrived. The one exception is an
-embeddings body that did not parse at all: that check runs before the
-argument is read, so its message points at the host instead.
+\code{rlmstudio_api_error} instead. A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} also
+carries two more fields. The \code{content} field holds the reply content, and
+the \code{finish_reason} field holds the finish reason that the server reported.
+Either one is \code{NULL} where the response has none, and both are \code{NULL} for a
+response with no \code{choices}. For a reply that does not parse, the message
+names the \code{content} field, so you can read what the model wrote without a
+second request. The other messages name \code{simplify = FALSE}, which returns
+the body unchanged, with one exception. An embeddings body that did not
+parse at all is checked before that argument is read, so its message
+points at the host instead.
 }
 
 \examples{

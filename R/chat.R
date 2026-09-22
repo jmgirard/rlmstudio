@@ -323,8 +323,9 @@ lms_chat_openai <- function(
       return(resp_data)
     }
 
-    # A 200 with no reply in it would otherwise fail on the `[[1]]` below with
-    # a subscript error that names neither the response nor the field.
+    # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
+    # empty list fails there with a subscript error that names neither the
+    # response nor the field, and a missing field gives back NULL as the reply.
     choices <- resp_data$choices
     if (!is.list(choices) || length(choices) == 0L) {
       rlm_abort_bad_response(
@@ -516,14 +517,22 @@ lms_chat_native <- function(
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
-#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies.
+#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply, or the condition for a reply that could not be read.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of a reply that could not be read.
 #' }
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call. It can raise
-#' `rlmstudio_api_error` through [lms_chat()]. With a `schema`, it can raise
-#' `rlmstudio_bad_response` through [lms_chat()].
+#' `rlmstudio_no_server` and `rlmstudio_api_error` through [lms_chat()], and
+#' either one aborts the batch.
+#'
+#' With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, a reply that
+#' cannot be read does not abort the batch. The element for that input holds
+#' the `rlmstudio_bad_response` condition. Its `content` field holds the reply
+#' text. The other elements hold their parsed replies, in input order. The
+#' call then gives one warning that names the count and the positions of the
+#' failed inputs. That warning shows even with `quiet = TRUE`. With any other
+#' settings, `rlmstudio_bad_response` from [lms_chat()] aborts the batch.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response

@@ -123,7 +123,7 @@ still aborts on an empty `choices`, because no parse is in play there.
       (`R/chat.R:514`) and the first two calls (`R/chat.R:299`).
 - [x] T6: Write the nested empty-object sentence in the `schema` docs and
       add the AC6 test.
-- [ ] T7: Rewrite `R/conditions.R:49-61` and the batch `@details` at
+- [x] T7: Rewrite `R/conditions.R:49-61` and the batch `@details` at
       `R/chat.R:476-480`. Edit the unreleased NEWS bullets for `schema` in
       place. Map each NEWS claim to a test named in AC1 to AC6. Run
       `devtools::document()` and `devtools::check()`.
@@ -143,6 +143,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: T4 done. The live gemma-3-1b reply with `max_tokens` 5 came back as `{"why":` with `finish_reason` `"length"`. The script records with `simplify = FALSE`, because with `simplify = TRUE` the abort stops the recording. The server was started for the recording and stopped after it, and the loaded model stayed loaded.
 - 2026-09-21: T5 done. If the batch parses replies, it catches `rlmstudio_bad_response`. Otherwise it does not, so a batch without a `schema` still aborts. Suite 1657 pass.
 - 2026-09-21: T6 done. The test also pins that a bare `list()` goes out as `[]`, the reason the docs give. Suite 1659 pass.
+- 2026-09-21: T7 done. NEWS map: nested empty object to the AC6 test, the two fields to the AC2 test, the `max_tokens` message to the AC3 tests, no `choices` to the AC1 test, the batch bullet to the AC4 and AC5 tests. A run on main showed the old behavior: an empty `choices` gave `subscript out of bounds`, and a missing one returned `NULL`. `devtools::check()` 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 
