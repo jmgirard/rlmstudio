@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M019: A failed input no longer ends a chat batch
 
-- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -38,7 +38,7 @@
      a "Deviations from RR<NN>" table ends this section. -->
 
 - [x] AC1: An `rlmstudio_api_error` or an `rlmstudio_bad_response` that `lms_chat()` raises for one input no longer aborts `lms_chat_batch()`. The batch sends a request for every later input and returns. Tests run a three-input batch with `api_type = "openai"`, where both classes can arise, once per class in six settings. These are `format = "list"`, `"vector"`, and `"data.frame"`, each with and without a `schema`. The second response fails in each run, and one more run per format fails the third. Two more settings test `rlmstudio_api_error` alone. The first is `simplify = FALSE` with `format = "list"`, because that setting never reads the reply. The second is the default `api_type` with `format = "list"`. One more setting, `logprobs = TRUE` with `format = "data.frame"`, tests both classes. Each test asserts three requests sent.
-- [x] AC2: The failed input keeps its position in the result. In a returned list, and in the `output` list-column that a `schema` produces, the element holds the condition with its backtrace removed. With `format = "vector"`, `simplify = TRUE`, and no `schema` or `logprobs`, the result is a character vector as long as `inputs`. It holds `NA_character_` at the failed position. With `format = "data.frame"` and no `schema`, the `output` column holds `NA_character_` in that row. With `logprobs = TRUE` the `logprobs` column holds `NULL` there. The AC1 tests assert the value at each failed and each successful position.
+- [ ] AC2: The failed input keeps its position in the result. In a returned list, and in the `output` list-column that a `schema` produces, the element holds the condition with its backtrace removed. With `format = "vector"`, `simplify = TRUE`, and no `schema` or `logprobs`, the result is a character vector as long as `inputs`. It holds `NA_character_` at the failed position. With `format = "data.frame"` and no `schema`, the `output` column holds `NA_character_` in that row. With `logprobs = TRUE` the `logprobs` column holds `NULL` there. The AC1 tests assert the value at each failed and each successful position.
 - [x] AC3: A batch with one or more failed inputs gives exactly one warning about failed inputs. This holds for any mix of the two classes. It names the count and every failed position, and it shows with `quiet = TRUE`. Where the result holds `NA_character_` in place of the condition, the warning names `format = "list"` as the way to keep the conditions. Each AC1 test asserts that warning, and the vector and data-frame tests without a `schema` assert the `format = "list"` text. One test fails position 1 with `rlmstudio_api_error` and position 3 with `rlmstudio_bad_response`. Under `quiet = TRUE`, it asserts one warning that names both positions.
 - [x] AC4: An `rlmstudio_no_server` that `lms_chat()` raises for input k still aborts `lms_chat_batch()` with that class and message. No request goes out after it. The condition carries a new `results` field, a list as long as `inputs`. Its elements 1 to k - 1 hold the values that `format = "list"` returns for those inputs. Its elements from k on are `NULL`. The tests mock the server probe with a call counter. The batch's own probe is call 1 and passes. One test fails the probe for input 2 (k = 2) and one fails it for input 1 (k = 1). Each asserts the class, the request count, and the field.
 - [x] AC5: An error of any other class from `lms_chat()` still aborts `lms_chat_batch()` unchanged. Two tests stub `lms_chat()` with a call counter that raises for the second of three inputs. One raises a plain R error, and one raises an rlang error with a class that is not an rlmstudio class. Each asserts with `expect_identical()` that the caught condition is the one raised, and that the stub ran twice.
@@ -50,11 +50,11 @@
      top-to-bottom). Review reads to fence evidence — tracking-rules "AC fencing". -->
 
 - AC1 → T1, T2
-- AC2 → T1, T2
+- AC2 → T1, T2, T8
 - AC3 → T1, T3
 - AC4 → T4
 - AC5 → T5
-- AC6 → T6, T7
+- AC6 → T6, T7, T9, T10
 
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
@@ -70,6 +70,9 @@
 - [x] T5: Write the AC5 tests with a counting stub for `lms_chat()`, not `fail()` (LESSONS M015). Confirm that the two classes other than rlmstudio pass through the handlers.
 - [x] T6: Update the `lms_chat_batch()` roxygen `@return` and `@details` (`R/chat.R:540`). In `R/conditions.R`, update the "API failure" and "Malformed response" sections, and add the `results` field to "Server not running". Rewrite `NEWS.md` lines 7 and 8 and add one entry. Run `devtools::document()`.
 - [x] T7: Run the AC6 grep and read each hit. Run `devtools::test()`, then `devtools::check()` with the token set.
+- [ ] T8: Review O1. With `format = "data.frame"` and `logprobs = TRUE`, build the `logprobs` column even when every input fails (`R/chat.R:723`). Test it first: a batch in which every input fails, asserting the column and its `NULL` slots.
+- [ ] T9: Review O2. Narrow the "Server not running" paragraph in `R/conditions.R` and the matching `NEWS.md` entry to a server that the check before an input finds gone. A drop during a request raises another error and carries no `results`. Run `devtools::document()`.
+- [ ] T10: Review O7, O8, and O9 in `tests/testthat/test-chat-batch.R`. Add a test that named `inputs` keep their names in a list, a vector, and the `results` field. Assert the "Returning list" text in the vector-with-`schema` warning. Give `expect_length(res$warnings, 1L)` its `info`. Pass `parsed` in the `fail_response()` call on the default `api_type`. Run `devtools::test()` and `devtools::check()` with the token.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates.
@@ -95,6 +98,7 @@
 - 2026-09-22: T7 done. The AC6 grep returned 13 lines that mention a batch, and none says an API failure or an unreadable reply aborts it. The development `NEWS.md` entry on one failure path still says the batch's failures "change in the same way", which holds for the class and `status` of the stored condition. `devtools::document()` left no diff. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes.
 - claim audit: 22 claims read, 4 corrected — R/chat.R, NEWS.md, tests/testthat/test-chat-batch.R
 - 2026-09-22: claim audit corrections: a data frame with `schema` and `logprobs = TRUE` also holds `NA`, the `results` field also holds stored failures, and the AC5 comment names `tryCatch()`. The same fresh reader re-read all four as true. Left as is: a data frame with `simplify = FALSE` runs every input and then aborts on the argument, with no failed-input warning.
+- 2026-09-22: review returned M019 to in-progress (defect return 1). AC2 fails: with `format = "data.frame"` and `logprobs = TRUE`, a batch in which every input fails has no `logprobs` column. The gate added T8 to T10 for that fix, the lost-server help text, and three test gaps.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
@@ -129,3 +133,4 @@ Independent review: three fresh reviewers, full fan-out (user-facing tier). Find
 - O9: `fail_response("rlmstudio_api_error")` at `test-chat-batch.R:162` omits `parsed` and works only because `switch()` does not evaluate the other branch. Proposed: fix now.
 - S1: The warning's first sentence no longer names a condition class. T3 planned this, and the second line names both classes. Proposed: reject as planned.
 - Prior-review lens: no prior-review regression. The archive held the only review record, and the PR-comment probe returned nothing.
+- Gate, 2026-09-22: the user chose "Send back and fix". O1, O2, O7, O8 (first two parts), and O9 are fix now, as tasks T8 to T10. O3, O4, and O5 are follow-up candidate rows. O6, S1, and the third part of O8 are rejected for the reasons above.

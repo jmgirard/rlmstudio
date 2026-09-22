@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-22 (M018 done and archived, M015 row pruned, one re
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M019 | A failed input no longer ends a chat batch | review | none | normal | milestones/M019-batch-survives-errors.md |
+| M019 | A failed input no longer ends a chat batch | in-progress | none | normal | milestones/M019-batch-survives-errors.md |
 | M018 | A failed structured reply keeps its text and no longer ends a batch | done | none | normal | milestones/archive/M018-failed-structured-reply.md |
 | M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | done | none | normal | milestones/archive/M017-structured-output.md |
 | M016 | The daemon start call can wait until the daemon reports running | dropped | none | normal | milestones/archive/M016-daemon-start-wait.md |
@@ -46,6 +46,9 @@ _Last hygiene check: 2026-09-22 (M018 done and archived, M015 row pruned, one re
 - `request_target()` now returns headers with redaction off for every caller. The older callers do not pin `RLMSTUDIO_API_TOKEN`. Nothing prints those headers today. Give them an opt-in accessor, added 2026-09-20, M009 review finding 6
 - A guard that keeps the token wrapper table covering every exported function that reaches the REST API. The table is a fixed list of twelve names. A thirteenth wrapper added later escapes it, added 2026-09-20, M009 review finding 8, count corrected M010, see the two sibling guard rows above
 - A structured reply that the token limit cut off but that is still valid JSON, such as `"12"`, parses with no sign of the cut-off. Decide whether a `finish_reason` of `"length"` warns or aborts even when the parse succeeds, added 2026-09-22, M018 review pass 2 finding 3
+- A bad token (401) or a model that is not loaded (404) fails every input of `lms_chat_batch()` in the same way. The batch then sends every request and warns at the end. Decide whether a failure that holds for every input stops the batch early, added 2026-09-22, M019 review finding O3
+- The OpenResponses and native chat routes do not check the reply shape. `{"output": []}` aborts `lms_chat_batch()` with "subscript out of bounds". A reply with no `text` gives a vector shorter than `inputs`, added 2026-09-22, M019 review finding O4
+- `lms_chat_batch(format = "data.frame", simplify = FALSE)` sends every request and then aborts on the argument. Check the argument before the first request, added 2026-09-22, M019 review finding O5
 - [low] Remove the macOS Package Manager workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. Promote once a released pak extracts zstd archives, added 2026-09-20, M011 scope, r-lib/pkgdepends#485
 - [low] Pin the macOS check job to R 4.5, whose CRAN binaries are still gzip. This is the alternative M011 rejected. If Posit Package Manager stops serving gzip macOS binaries, or drops its R 4.6 path, promote this row, added 2026-09-20, M011 plan gate
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
