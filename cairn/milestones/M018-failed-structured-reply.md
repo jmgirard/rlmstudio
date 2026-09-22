@@ -33,7 +33,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 
 ## Acceptance criteria
 
-- [ ] AC1: With `simplify = TRUE`, `lms_chat_openai()` aborts with class
+- [x] AC1: With `simplify = TRUE`, `lms_chat_openai()` aborts with class
       `rlmstudio_bad_response` and `status` 200 on two body shapes: a 200
       body with no `choices` field, and one with an empty `choices` list.
       This holds with and without a `schema`, and with `logprobs = TRUE`.
@@ -42,7 +42,7 @@ still aborts on an empty `choices`, because no parse is in play there.
       the three settings. It asserts the class and `status` 200. It also
       asserts that `content` and `finish_reason` are in `names(err)` and are
       `NULL`.
-- [ ] AC2: Both aborts that `parse_schema_reply()` raises carry two fields.
+- [x] AC2: Both aborts that `parse_schema_reply()` raises carry two fields.
       The first abort is for content that is not one string, and the second
       is for content that is not valid JSON. The `content` field holds the
       reply content, or `NULL` where there is none. The `finish_reason`
@@ -50,7 +50,7 @@ still aborts on an empty `choices`, because no parse is in play there.
       has none. The hint names the `content` field and no longer tells the
       user to call again. A test asserts both fields and the hint on an
       invalid JSON string and on a JSON `null` content.
-- [ ] AC3: In both aborts of AC2, a `finish_reason` of `"length"` gives a
+- [x] AC3: In both aborts of AC2, a `finish_reason` of `"length"` gives a
       message that says the token limit cut the reply off and names
       `max_tokens`. Any other `finish_reason` gives the existing detail and
       no `max_tokens`. A test asserts both messages on the same content, so
@@ -69,15 +69,15 @@ still aborts on an empty `choices`, because no parse is in play there.
       A test serves the replies invalid,
       valid, invalid in each format and asserts each element's identity and
       the warning text.
-- [ ] AC5: An `rlmstudio_api_error` or an `rlmstudio_no_server` from one
+- [x] AC5: An `rlmstudio_api_error` or an `rlmstudio_no_server` from one
       input still aborts `lms_chat_batch()` with that class. A test fails the
       second of three inputs with each class and asserts the class.
-- [ ] AC6: The `schema` docs of `lms_chat_openai()` state that an empty
+- [x] AC6: The `schema` docs of `lms_chat_openai()` state that an empty
       object nested in the schema, such as `properties`, is written
       `setNames(list(), character())`, because `list()` is sent as `[]`. A
       test pins it: a schema with that `properties` is sent with
       `properties` as `{}`, read from the request bytes.
-- [ ] AC7: The `rlmstudio-conditions` help page names the `content` and
+- [x] AC7: The `rlmstudio-conditions` help page names the `content` and
       `finish_reason` fields and the empty-`choices` case. It says that
       `lms_chat_batch()` raises the class only where AC4 does not store the
       condition in a slot. It no longer says
@@ -147,6 +147,73 @@ still aborts on an empty `choices`, because no parse is in play there.
 - claim audit: 52 claims read, 4 corrected — data-raw/record-cutoff-cassette.R, R/chat.R, NEWS.md, man/lms_chat.Rd, man/lms_chat_batch.Rd
 - 2026-09-21: the re-read of the 4 corrected claims found that all hold. Left open: a `choices` sent as a non-empty JSON object passes the guard and fails with a base R error. No criterion promises that case. Final `devtools::check()` 0 errors, 0 warnings, 0 notes. Status set to review.
 
+- 2026-09-21: review checkpoint. Six criteria verified and ticked. AC4 is unticked, because the warning cuts the position list past 20 failures. `devtools::check()` still runs.
+
 ## Decisions
 
 ## Review
+
+Sync: branch contains `origin/main` (b2e8ea3), no merge needed. Suite
+`devtools::test()`: 1659 pass, 0 fail, 0 skip, 0 warn.
+
+- AC1: "a 200 with no reply in choices aborts as a bad response" fires both
+  bodies under no schema, a schema, and `logprobs = TRUE` (36 expectations,
+  pass). Asserts class, `status` 200, both names in `names(err)`, both `NULL`.
+- AC2: "an unreadable reply carries its content and finish reason" (20 pass)
+  asserts both fields on invalid JSON text and JSON `null`, the hint naming
+  the `content` field, and no "Call again". If the response has no finish
+  reason, the test asserts `finish_reason` as `NULL`.
+- AC3: "a reply cut off at the token limit names max_tokens" (14 pass) gives
+  the same content with `"length"` and `"stop"` for both aborts. The replay
+  test on `chat_cutoff_live` (6 pass) asserts the recorded `finish_reason`
+  `"length"` and the `max_tokens` message.
+- AC4: three tests (35 pass) serve invalid, valid, invalid in list, vector,
+  and data.frame. They assert each element by identity. They assert one
+  warning with "2 inputs" and "positions 1 and 3". They cover `quiet = TRUE`,
+  the `rlmstudio.quiet` option, and the vector warning with no failure. Left
+  unticked: review finding 4 shows the warning
+  cuts the position list past 20 failures (probe: 25 failures read "18, …,
+  24, and 25"), so the warning does not name every position.
+- AC5: "an API error in a batch still aborts" and "a server that stops during
+  a batch still aborts" (4 pass) fail the second of three inputs and assert
+  `rlmstudio_api_error` and `rlmstudio_no_server`.
+- AC6: `man/lms_chat_openai.Rd` `schema` text states the
+  `setNames(list(), character())` rule. The test (2 pass) reads
+  `"properties":{}` and `"properties":[]` from the request bytes.
+- AC7: `R/conditions.R` names `content`, `finish_reason`, and empty
+  `choices`, says the batch raises only where it does not store the condition,
+  and drops the "every message names `simplify = FALSE`" claim.
+  `man/lms_chat_batch.Rd` states the failed element and that other errors
+  abort. NEWS bullets 3 to 5 describe AC1 to AC4.
+
+Gate: `cairn_validate.py` exit 0. `devtools::document()` no diff. No
+DESIGN principle changed, so `cairn_impact` skipped. README not touched. No
+`_pkgdown.yml`. `data-raw/` is in `.Rbuildignore`. NEWS has entries. `devtools::check()`:
+0 errors, 0 warnings, 0 notes.
+
+Reviewers: [S] prior-review found no regression of the M017 findings. [S]
+blame-history found nothing that undoes past work or breaks a D-entry. [O]
+diff-bug findings, ranked, with the proposed disposition (the gate decides):
+
+1. A `choices` array of non-objects, such as `[1]`, fails with a base R
+   error, so it ends a schema batch. Probe confirmed. Proposed: fix now.
+2. A JSON-object `choices` is read as an array and returns `named list()`
+   with no error. Probe confirmed. Proposed: fix now, same guard as 1.
+3. Each stored condition keeps its rlang backtrace, about 59 KB (probe).
+   Proposed: fix now, drop the trace before storing.
+4. The warning cuts the position list past 20 failures. Probe confirmed.
+   This fails AC4. Proposed: return, fix now.
+5. With a failure, a vector batch does not say it returned a list. Proposed:
+   fix now.
+6. The hint says the reply text is in `content` when `content` is `NULL`.
+   Proposed: fix now.
+7. No test moves the progress bar past a caught failure. Proposed: fix now.
+8. NEWS still says `lms_chat_openai()` is the second function to raise the
+   class, and omits the no-schema batch abort on a missing `choices`.
+   Proposed: fix now.
+9. The `lms_chat()` docs omit "with `simplify = TRUE`" for the class.
+   Proposed: fix now.
+10. The recording script leaves a partial directory if the live call fails.
+    The next run deletes it. Proposed: reject, low impact.
+11. The replay test depends on the request bytes. Proposed: reject, the
+    test comment states it and httptest2 works this way.
