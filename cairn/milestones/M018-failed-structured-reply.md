@@ -57,7 +57,7 @@ still aborts on an empty `choices`, because no parse is in play there.
       only `finish_reason` differs, for each of the two aborts. A reply that
       LM Studio cuts off at the token limit gets the `max_tokens` message.
       A test shows this by replaying a recorded cut-off reply.
-- [ ] AC4: With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, an
+- [x] AC4: With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, an
       `rlmstudio_bad_response` from one input no longer aborts
       `lms_chat_batch()`. The failed input's element holds that condition, in
       the returned list for `format = "list"` and `"vector"`, and in the
@@ -175,6 +175,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-22: T9 extended (minor amendment). The `choices` guard also rejects a first element that is an array, such as `[[{...}]]` or `[[]]`, which before gave back `NULL` as the reply. Two comments no longer state a backtrace size in kilobytes, and the NEWS bullet names `lms_chat_openai()` without an order. Suite 1727 pass.
 claim audit: 78 claims read, 2 corrected — NEWS.md, R/conditions.R, R/chat.R, man/rlmstudio-conditions.Rd, man/lms_chat_batch.Rd
 - 2026-09-22: the claim audit re-read covers the 2 corrections. The `choices` wording now names the first element only, because the guard reads only `choices[[1]]`. The hint and batch docs say reply content, because `content` can hold a non-string JSON value. Left open: `{"choices":[{}]}` passes the guard and returns `NULL`. Suite 1727 pass. `devtools::check()` 0 errors, 0 warnings, 0 notes. Status set to review.
+- 2026-09-22: review pass 2 checkpoint (in progress). Fresh evidence recorded for all seven criteria, and AC4 now passes. The package check and three reviewers are still running.
 
 ## Decisions
 
@@ -244,3 +245,43 @@ diff-bug findings, ranked, with the proposed disposition (the gate decides):
     The next run deletes it. Proposed: reject, low impact.
 11. The replay test depends on the request bytes. Proposed: reject, the
     test comment states it and httptest2 works this way.
+
+### Pass 2 (2026-09-22)
+
+Sync: no PR exists. The branch contains `origin/main` (b2e8ea3), no merge
+needed. Suite `devtools::test()`: 1727 pass, 0 fail, 0 skip, 0 warn, live
+LM Studio tests included.
+
+- AC1: "a 200 with no reply in choices aborts as a bad response" (36 pass)
+  fires both bodies under no schema, a schema, and `logprobs = TRUE`. It
+  asserts the class, `status` 200, and both fields as `NULL` in `names(err)`.
+- AC2: "an unreadable reply carries its content and finish reason" (23 pass)
+  asserts both fields on invalid JSON text and on JSON `null`. It asserts the
+  hint that names the `content` field, and no "Call again".
+- AC3: "a reply cut off at the token limit names max_tokens" (14 pass) gives
+  both aborts the same content with `"length"` and `"stop"`. The replay of
+  the recorded LM Studio reply (6 pass) asserts `finish_reason` `"length"`
+  and the `max_tokens` message.
+- AC4: "a batch keeps going past a structured reply that does not parse" (38
+  pass) serves invalid, valid, invalid in list, vector, and data.frame. It
+  asserts each element by identity and one warning with "2 inputs" and
+  "positions 1 and 3". "the failed reply warning ignores quiet" (2 pass)
+  covers `quiet = TRUE` and the `rlmstudio.quiet` option. "a batch with no
+  failed reply keeps the vector format warning" (3 pass) covers the vector
+  case. "the failed reply warning names every position past 20" (5 pass)
+  asserts positions 1 to 24 and 25 in full with no ellipsis, so pass 1's
+  failure is gone.
+- AC5: "an API error in a batch still aborts" (1 pass) and "a server that
+  stops during a batch still aborts" (3 pass) fail the second of three
+  inputs and assert `rlmstudio_api_error` and `rlmstudio_no_server`.
+- AC6: the `schema` docs in `R/chat.R` state the
+  `setNames(list(), character())` rule. "a nested empty object is sent as {}
+  when written with empty names" (2 pass) reads `{}` and `[]` from the
+  request bytes.
+- AC7: `R/conditions.R:49-75` names `content`, `finish_reason`, and the
+  missing or empty `choices`. It says the batch raises only where it does not
+  store the condition. Only the unparsed-reply message names `content`, so the
+  old claim that every message names `simplify = FALSE` is gone. The
+  `lms_chat_batch()` details state what a failed element holds and that other
+  errors abort. NEWS bullets 4 to 6 describe AC1 to AC4.
+
