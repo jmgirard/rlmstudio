@@ -249,6 +249,13 @@ test_that("a server lost before the first input leaves every result NULL", {
   expect_identical(res$cnd$results, list(NULL, NULL, NULL))
 })
 
+test_that("a server down before the batch starts adds no results field", {
+  res <- run_lost_server_batch(0L, list())
+  expect_identical(res$probes, 1L)
+  expect_identical(res$requests, 0L)
+  expect_false("results" %in% names(res$cnd))
+})
+
 test_that("a lost server keeps a stored failure in its results", {
   res <- run_lost_server_batch(
     3L,

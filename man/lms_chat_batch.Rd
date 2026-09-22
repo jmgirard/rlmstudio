@@ -44,9 +44,9 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \value{
 The return type depends on the \code{format} argument:
 \itemize{
-\item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
-\item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply, or the condition for a reply that could not be read.
-\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of a reply that could not be read.
+\item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
+\item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
+\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed.
 }
 }
 \description{
@@ -54,17 +54,24 @@ Process a vector of inputs sequentially through LM Studio.
 }
 \details{
 This function calls \code{\link[=lms_chat]{lms_chat()}} once for each element of \code{inputs}. It
-raises \code{rlmstudio_no_server} itself, before the first call. It can raise
-\code{rlmstudio_no_server} and \code{rlmstudio_api_error} through \code{\link[=lms_chat]{lms_chat()}}, and
-either one aborts the batch.
+raises \code{rlmstudio_no_server} itself, before the first call.
 
-With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, a reply that
-cannot be read does not abort the batch. The element for that input holds
-the \code{rlmstudio_bad_response} condition. Its \code{content} field holds the reply
-content as the server sent it, or \code{NULL} where the response held none. The other elements hold their parsed replies, in input order. The
-call then gives one warning that names the count and the positions of the
-failed inputs. That warning shows even with \code{quiet = TRUE}. With any other
-settings, \code{rlmstudio_bad_response} from \code{\link[=lms_chat]{lms_chat()}} aborts the batch.
+An \code{rlmstudio_api_error} or an \code{rlmstudio_bad_response} that \code{\link[=lms_chat]{lms_chat()}}
+raises for one input does not abort the batch. The batch goes on to the
+next input. Where the result is a list, or the \code{output} list-column that a
+\code{schema} gives, the element for that input holds the condition without its
+backtrace. An \code{rlmstudio_bad_response} for a reply that does not parse
+keeps the reply content in its \code{content} field. Where the result is text,
+as with \code{format = "vector"} or a data frame without a \code{schema}, the element
+holds \code{NA}, and the \code{logprobs} column holds \code{NULL}. Use \code{format = "list"} to
+keep the conditions. The call then gives one warning that names the count
+and the positions of the failed inputs. That warning shows even with
+\code{quiet = TRUE}.
+
+An \code{rlmstudio_no_server} from \code{\link[=lms_chat]{lms_chat()}} still aborts the batch. Its
+\code{results} field holds the results so far, as described in the "Server not
+running" section below. An error of any other class aborts the batch
+unchanged.
 }
 \section{Server not running}{
 
@@ -89,6 +96,15 @@ Studio server is there. The call then fails later, as an
 \code{rlmstudio_no_server}. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
 asks the host for a model list and reports \code{TRUE} only for an answer that
 an LM Studio server would give.
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} checks the server once before its first input, and
+\code{\link[=lms_chat]{lms_chat()}} checks it again for each input. If the server goes away during
+the batch, the batch aborts with \code{rlmstudio_no_server}, and no request goes
+out after that. The condition then carries a \code{results} field, a list as
+long as \code{inputs}. Its elements before the lost input hold the values that
+\code{format = "list"} returns for those inputs. The element of the lost input
+and every element after it are \code{NULL}. The check before the first input
+adds no \code{results} field.
 }
 
 \section{API failure}{
@@ -97,6 +113,10 @@ A condition of class \code{rlmstudio_api_error} is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a \code{status} field, which holds the HTTP response status as an
 integer.
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input
+holds the condition, or \code{NA} where the result is text, and the batch warns
+once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 }
 
 \section{Malformed response}{
@@ -123,11 +143,9 @@ the finish reason \code{"length"}, the token limit cut the reply off. The messag
 then says so and names \code{max_tokens}. \code{\link[=lms_chat]{lms_chat()}} can raise the condition
 through \code{\link[=lms_chat_openai]{lms_chat_openai()}}.
 
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} raises it only where it does not store the condition in
-an element of its result. With a \code{schema}, \code{simplify = TRUE}, and
-\code{logprobs = FALSE}, a failed input's element holds the condition, and the
-batch warns once and goes on. With any other settings, the condition
-aborts the batch.
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input
+holds the condition, or \code{NA} where the result is text, and the batch warns
+once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 
 The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: both functions read

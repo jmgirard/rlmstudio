@@ -539,23 +539,30 @@ lms_chat_native <- function(
 #'   checked before the first call.
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
-#'   \item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
-#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply, or the condition for a reply that could not be read.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of a reply that could not be read.
+#'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
+#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed.
 #' }
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
-#' raises `rlmstudio_no_server` itself, before the first call. It can raise
-#' `rlmstudio_no_server` and `rlmstudio_api_error` through [lms_chat()], and
-#' either one aborts the batch.
+#' raises `rlmstudio_no_server` itself, before the first call.
 #'
-#' With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, a reply that
-#' cannot be read does not abort the batch. The element for that input holds
-#' the `rlmstudio_bad_response` condition. Its `content` field holds the reply
-#' content as the server sent it, or `NULL` where the response held none. The other elements hold their parsed replies, in input order. The
-#' call then gives one warning that names the count and the positions of the
-#' failed inputs. That warning shows even with `quiet = TRUE`. With any other
-#' settings, `rlmstudio_bad_response` from [lms_chat()] aborts the batch.
+#' An `rlmstudio_api_error` or an `rlmstudio_bad_response` that [lms_chat()]
+#' raises for one input does not abort the batch. The batch goes on to the
+#' next input. Where the result is a list, or the `output` list-column that a
+#' `schema` gives, the element for that input holds the condition without its
+#' backtrace. An `rlmstudio_bad_response` for a reply that does not parse
+#' keeps the reply content in its `content` field. Where the result is text,
+#' as with `format = "vector"` or a data frame without a `schema`, the element
+#' holds `NA`, and the `logprobs` column holds `NULL`. Use `format = "list"` to
+#' keep the conditions. The call then gives one warning that names the count
+#' and the positions of the failed inputs. That warning shows even with
+#' `quiet = TRUE`.
+#'
+#' An `rlmstudio_no_server` from [lms_chat()] still aborts the batch. Its
+#' `results` field holds the results so far, as described in the "Server not
+#' running" section below. An error of any other class aborts the batch
+#' unchanged.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
