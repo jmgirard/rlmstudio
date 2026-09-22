@@ -138,6 +138,17 @@ lms_chat <- function(
 #'   text and a data frame of the probabilities of every such part, in order.
 #'   If no part carries them, it returns the string. A reply with no readable
 #'   answer text raises `rlmstudio_bad_response`, as described below.
+#'
+#'   The data frame has one row for each candidate in the `top_logprobs` of
+#'   each step, or one row with `NA` candidates for a step with none. Each
+#'   field is read by its exact name. A field that is `null` or absent gives
+#'   `NA`, and so does a field whose name only starts with the one asked for,
+#'   such as `tokenX`. With `logprobs = TRUE`, the `logprobs` value of each
+#'   `"output_text"` part must follow six rules, which the section below
+#'   lists. A value that breaks one raises `rlmstudio_bad_response`, and the
+#'   message names the first rule it breaks. Parts of other types are not
+#'   checked. With `logprobs = FALSE`, the value is not read, and the call
+#'   returns the text.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response

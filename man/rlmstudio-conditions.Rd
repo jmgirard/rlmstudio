@@ -85,6 +85,26 @@ each part of type \code{"output_text"}. For \code{\link[=lms_chat_openresponses]
 \code{content} of each message must be an array of JSON objects, and the
 messages together must hold at least one \code{"output_text"} part.
 
+With \code{simplify = TRUE} and \code{logprobs = TRUE}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}
+also raises it for a \code{logprobs} value that breaks one of these rules. The
+\code{logprobs} value of each \code{"output_text"} part is checked. A field that is
+\code{null} or absent passes each rule.
+\enumerate{
+\item The value is an array.
+\item Each step in the array is a JSON object.
+\item The \code{token} of a step is a string.
+\item The \code{logprob} of a step is a number.
+\item The \code{top_logprobs} of a step is an array of JSON objects.
+\item The \code{token} and \code{logprob} of each of those objects follow rules 3 and 4.
+}
+
+The parts are checked in order, then the steps of a part, then the
+candidates of a step. The message names the first rule that is broken.
+Parts of other types, such as a refusal, are not checked, and with
+\code{logprobs = FALSE} no part is checked. Fields are read by their exact
+names, so a field whose name only starts with the one asked for, such as
+\code{tokenX}, reads as absent and gives \code{NA} in the data frame.
+
 \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in three cases, all only with
 \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
 missing, empty, or not an array, or whose first element is not a JSON

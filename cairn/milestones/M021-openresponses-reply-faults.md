@@ -53,7 +53,7 @@ The checks go over the parts in order, then the steps of a part in order, then t
 - [x] T3: In `tests/testthat/helper-chat-bodies.R`, add a table of values that break each rule, with two JSON types per rule. R1 takes an object and a number, and R2 takes `[5]`. Test every location that AC1 names, the refusal part, and `logprobs = FALSE`. Test the exact-name reads and the `null` and absent fields of AC2. The existing logprobs tests and the `chat_integration` replays must pass unchanged.
 - [x] T4: In `tests/testthat/test-chat-batch.R`, run three inputs with `format = "list"`. The second reply carries `[5]`. Assert the R2 condition in slot 2, the replies in slots 1 and 3, and one warning.
 - [x] T5: Pair each shape in `native_unreadable()` and `responses_unreadable()` with the detail sentence of its first failed check. Assert that sentence per shape in `tests/testthat/test-chat.R`.
-- [ ] T6: Update `R/conditions.R` lines 67 to 77, the `@return` text at `R/chat.R` lines 136 to 139, and `NEWS.md`. Run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
+- [x] T6: Update `R/conditions.R` lines 67 to 77, the `@return` text at `R/chat.R` lines 136 to 139, and `NEWS.md`. Run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
 
 ## Work log
 
@@ -69,6 +69,7 @@ The checks go over the parts in order, then the steps of a part in order, then t
 - 2026-09-22: T2 and T3 done. `check_part_logprobs()` and `logprobs_frame()` in `R/chat.R`, with tests of every rule and location in `tests/testthat/test-chat.R`. The new tests failed before the change. The old and new frame builders gave identical frames on the two recorded replies and on 500 random readable values. `devtools::test()` passed 3840. The suite unloaded the live gemma model, which became a candidate row.
 - 2026-09-22: T4 done. The batch test in `tests/testthat/test-chat-batch.R` passes, and it fails with the base R error `$ operator is invalid for atomic vectors` on the `main` version of `R/chat.R`.
 - 2026-09-22: T5 done. `helper-chat-bodies.R` pairs every native and OpenResponses unreadable shape with its detail sentence, and `test-chat.R` asserts that sentence and no other. A plant that swapped two detail sentences in `R/chat.R` gave 10 failures.
+- 2026-09-22: T6 done. The conditions page, the `@return` text of `lms_chat_openresponses()`, and NEWS state the rules and the exact-name reads. The NEWS "before" claims were read off the `main` code on a `[5]` value and a `tokenX` field. `devtools::test()` passed 4398, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 

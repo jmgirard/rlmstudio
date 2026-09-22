@@ -73,6 +73,25 @@
 #' `content` of each message must be an array of JSON objects, and the
 #' messages together must hold at least one `"output_text"` part.
 #'
+#' With `simplify = TRUE` and `logprobs = TRUE`, [lms_chat_openresponses()]
+#' also raises it for a `logprobs` value that breaks one of these rules. The
+#' `logprobs` value of each `"output_text"` part is checked. A field that is
+#' `null` or absent passes each rule.
+#'
+#' 1. The value is an array.
+#' 2. Each step in the array is a JSON object.
+#' 3. The `token` of a step is a string.
+#' 4. The `logprob` of a step is a number.
+#' 5. The `top_logprobs` of a step is an array of JSON objects.
+#' 6. The `token` and `logprob` of each of those objects follow rules 3 and 4.
+#'
+#' The parts are checked in order, then the steps of a part, then the
+#' candidates of a step. The message names the first rule that is broken.
+#' Parts of other types, such as a refusal, are not checked, and with
+#' `logprobs = FALSE` no part is checked. Fields are read by their exact
+#' names, so a field whose name only starts with the one asked for, such as
+#' `tokenX`, reads as absent and gives `NA` in the data frame.
+#'
 #' [lms_chat_openai()] raises it in three cases, all only with
 #' `simplify = TRUE`. The first case is a response whose `choices` field is
 #' missing, empty, or not an array, or whose first element is not a JSON
