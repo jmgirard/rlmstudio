@@ -2,14 +2,14 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M023: A data-frame chat batch reports each reply's id and token counts on the OpenResponses and OpenAI routes
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes the columns that an exported function returns
-- **Branch/PR:** —
+- **Branch/PR:** m023-batch-usage-columns
 
 ## Goal
 
@@ -47,7 +47,7 @@ On the OpenResponses and OpenAI routes, a data-frame `lms_chat_batch()` returns 
 
 ## Tasks
 
-- [ ] T1: In `tests/testthat/helper-chat-bodies.R`, add builders for an OpenResponses body and an OpenAI body that hold `id` and `usage`. Write the tests for AC1 to AC4 in `tests/testthat/test-chat-batch.R`, and see them fail.
+- [x] T1: In `tests/testthat/helper-chat-bodies.R`, add builders for an OpenResponses body and an OpenAI body that hold `id` and `usage`. Write the tests for AC1 to AC4 in `tests/testthat/test-chat-batch.R`, and see them fail.
 - [ ] T2: In `R/chat.R`, move the `simplify = TRUE` branch of `lms_chat_openresponses()` (lines 191-215) into a shared reader. Do the same for `lms_chat_openai()` (lines 318-375). The single calls use these readers. Add one body check that all three routes run first, for AC6. Single calls keep every other result and message.
 - [ ] T3: In `lms_chat_batch()`, make the data-frame batch on both routes call with `simplify = FALSE`. Read the answer through the T2 readers, then read `id` and `usage` with `[[` (M018 lesson). Add the columns on the `schema` exit (line 1100) and on the main path. The `results` field of a lost-server abort keeps its present content.
 - [ ] T4: Add the list of `choices` faults and the bare-value bodies to the helper file. Write the tests for AC5 and AC6. Change the column-name expectations at `test-chat-batch.R:179`, `:207`, `:349`, and `:792-821` to the new columns, and pin the other columns by value.
@@ -61,6 +61,7 @@ On the OpenResponses and OpenAI routes, a data-frame `lms_chat_batch()` returns 
 - 2026-09-22: plan gate chose the native column names over each server's own field names, because batches from different routes then stack. Falsified by users who need the server's names, or by counts that differ in meaning across routes.
 - 2026-09-22: plan gate chose columns for every setting of `logprobs` and `schema` over plain-text batches only, so the columns depend on route and format alone. Falsified by a reply reader that cannot serve both the single call and the batch.
 - 2026-09-22: plan gate folded in the bare-value fix over a separate hotfix, because the new body readers are where its check goes. Falsified by a review that finds the two changes hard to review together.
+- 2026-09-22: T1 done. The builders are in `helper-chat-bodies.R`. The AC1 to AC4 tests are in a new file, `tests/testthat/test-chat-batch-usage.R`, not in `test-chat-batch.R` as T1 said, because that file holds 900 lines. Seven of the eight tests fail on the missing columns with no errors. The lost-server test passes, because it pins the present `results` field.
 
 ## Decisions
 

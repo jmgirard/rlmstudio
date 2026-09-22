@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-22 (M022 done and archived, M019 row pruned, one re
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M023 | A data-frame chat batch reports each reply's id and token counts on the OpenResponses and OpenAI routes | planned | none | normal | milestones/M023-batch-usage-columns.md |
+| M023 | A data-frame chat batch reports each reply's id and token counts on the OpenResponses and OpenAI routes | in-progress | none | normal | milestones/M023-batch-usage-columns.md |
 | M022 | A native chat batch reports each reply's stats and response id | done | none | normal | milestones/archive/M022-native-batch-stats.md |
 | M021 | An unreadable OpenResponses reply names its fault | done | none | normal | milestones/archive/M021-openresponses-reply-faults.md |
 | M020 | A chat reply without readable answer text fails that input, not the batch | done | none | normal | milestones/archive/M020-chat-reply-shape.md |
