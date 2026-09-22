@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M022: A native chat batch reports each reply's stats and response id
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -75,6 +75,8 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - 2026-09-22: implement resumed after review return 1. At the question gate, the user chose to move the tests into `test-chat-batch.R` over an AC1 amendment. The user also chose to fix findings O2, O3, O4, O6, O9, and O11 in this pass. The minor amendment added T7 and T8 and mapped them in Coverage.
 - 2026-09-22: T7 moved the 12 stats tests into `tests/testthat/test-chat-batch.R` and deleted `test-chat-batch-stats.R`. The file gave 30 tests, 0 failed. A plant that unwrapped `response_id` turned 2 checks red. A planted warning in `native_reply_fields()` turned 28 checks red, which includes the `expect_no_warning()` checks.
 - 2026-09-22: T8 added the four rules to the `lms_chat_batch()` help page, read `response_id` with `[[`, and wrapped two long roxygen lines. `devtools::test()` gave 316 tests, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. `devtools::document()` made no further diff.
+- 2026-09-22: claim audit: 66 claims read, 2 corrected — tests/testthat/test-chat-batch.R. The comment above `bad_values()` and the title of the stats-shape test now match the cases they hold. The re-read found both accurate.
+- 2026-09-22: implement pass 2 complete. Status set to review.
 
 ## Decisions
 

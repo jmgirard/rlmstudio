@@ -657,8 +657,9 @@ test_that("a native data frame keeps the row names that named inputs give", {
   expect_identical(row.names(native$out), row.names(openai$out))
 })
 
-# Values that are not one JSON string or one JSON number. `other_scalar` is
-# the scalar of the wrong type for the field. `inner` is one value of the right
+# Values that are not one value of the field's type: a JSON string for
+# `response_id`, a JSON number for a stats field. `other_scalar` is the
+# scalar of the wrong type for the field. `inner` is one value of the right
 # type, so the array and the object would read as the field if unwrapped.
 bad_values <- function(other_scalar, inner) {
   list(
@@ -709,7 +710,7 @@ test_that("an empty reply id is kept as an empty string", {
   expect_identical(res$out$response_id, "")
 })
 
-test_that("a stats value that is not an object gives NA in all six columns", {
+test_that("a stats value that is not an object, or is an empty object, gives NA in all six columns", {
   shapes <- list(
     absent = NULL,
     null = "null",
