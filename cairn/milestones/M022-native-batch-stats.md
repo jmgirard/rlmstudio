@@ -77,6 +77,8 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - 2026-09-22: T8 added the four rules to the `lms_chat_batch()` help page, read `response_id` with `[[`, and wrapped two long roxygen lines. `devtools::test()` gave 316 tests, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. `devtools::document()` made no further diff.
 - 2026-09-22: claim audit: 66 claims read, 2 corrected — tests/testthat/test-chat-batch.R. The comment above `bad_values()` and the title of the stats-shape test now match the cases they hold. The re-read found both accurate.
 - 2026-09-22: implement pass 2 complete. Status set to review.
+- 2026-09-22: review pass 2 found all seven criteria passing. At the gate, the user took the proposed dispositions. P2, P3, P5, and P6 were fixed on the branch, with D-013 and a candidate row for P8.
+- 2026-09-22: step-7 approval: m022-native-batch-stats approved for merge
 
 ## Decisions
 
@@ -134,3 +136,9 @@ Pass 2 reviewer findings, merged across the three lenses and ranked. No finding 
 - P10 (diff-bug): new test lines are not Air-formatted. `test-chat-batch.R` already fails the Air check on `main`. Proposed: reject as existing drift.
 - P11 (prior-review): the AC1 test checks warnings with `capture_warnings()`, not `expect_no_warning()`. Proposed: reject, because AC2 names `expect_no_warning()` and the AC2 tests use it.
 - S (blame-history): no conflict with past milestones, D-007, D-010, D-011, D-012, or the lessons. The prior-review lens used the milestone Review record and did not run the GitHub probe.
+
+Gate triage, 2026-09-22. The user took every proposed disposition above.
+
+- Fixed: P2 as D-013. P3 by wrapping the `lapply()` call, and `air format --check R/chat.R` now passes. P5 by asserting the kept `output` and `expect_no_warning()` in the empty `response_id` test. P6 by asserting the exact stats values of both rows in the failed-input test. The batch test file gave 1254 expectations, 0 failed.
+- Follow-up: P8 as a candidate row.
+- Rejected with the reasons above: P1, P4, P7, P9, P10, P11.

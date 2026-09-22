@@ -706,7 +706,9 @@ test_that("a field that is not one value of its column type gives NA", {
 })
 
 test_that("an empty reply id is kept as an empty string", {
-  res <- run_stats_batch(list(native_reply("kept", response_id = quoted(""))))
+  body <- native_reply("kept", response_id = quoted(""))
+  expect_no_warning(res <- run_stats_batch(list(body), capture = FALSE))
+  expect_identical(res$out$output, "kept")
   expect_identical(res$out$response_id, "")
 })
 
@@ -755,9 +757,12 @@ test_that("a failed input holds NA in every reply column", {
       expect_identical(res$out$output, c("reply 1", NA), info = info)
       expect_reply_column_types(res$out, info)
       expect_identical(res$out$response_id, c("resp_1", NA), info = info)
-      for (col in stats_columns) {
-        expect_true(is.na(res$out[[col]][2]), info = paste(info, col))
-        expect_false(is.na(res$out[[col]][1]), info = paste(info, col))
+      # Row 1 holds the default values of `native_stats()`.
+      first_row <- c(21, 3, 0, 284.5, 0.237, 1.5)
+      for (j in seq_along(stats_columns)) {
+        col <- stats_columns[[j]]
+        expected <- c(first_row[[j]], NA_real_)
+        expect_identical(res$out[[col]], expected, info = paste(info, col))
       }
       failure <- grep("input failed", res$warnings, value = TRUE)
       expect_identical(length(failure), 1L, info = info)

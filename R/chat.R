@@ -836,7 +836,10 @@ native_reply_fields <- function(resp_data) {
   number_or_na <- function(x) {
     if (is.numeric(x) && length(x) == 1L) as.double(x) else NA_real_
   }
-  numbers <- lapply(native_stats_fields, \(field) number_or_na(stats_obj[[field]]))
+  numbers <- lapply(
+    native_stats_fields,
+    \(field) number_or_na(stats_obj[[field]])
+  )
   names(numbers) <- native_stats_fields
   c(list(response_id = if (is_one_string(id)) id else NA_character_), numbers)
 }
