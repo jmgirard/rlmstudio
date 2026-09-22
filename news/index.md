@@ -2,6 +2,20 @@
 
 ## rlmstudio (development version)
 
+- With `api_type = "native"` and `format = "data.frame"`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now returns seven more columns at the end of the data frame. The first
+  is `response_id`, the id of the reply on the server. The other six
+  come from the `stats` object of the reply. They are `input_tokens`,
+  `total_output_tokens`, `reasoning_output_tokens`, `tokens_per_second`,
+  `time_to_first_token_seconds`, and `model_load_time_seconds`.
+  `response_id` is character, and the other six are double. If a field
+  is absent or has the wrong type, its cell is `NA`, with no warning.
+  The answer in `output` is kept. The row of an input that failed holds
+  `NA` in all seven columns. If every input failed, the columns are
+  still there. The other routes, the other formats, and single calls
+  return what they did before.
+
 - With `simplify = TRUE` and `logprobs = TRUE`,
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
   now checks the `logprobs` value of each `"output_text"` part before it

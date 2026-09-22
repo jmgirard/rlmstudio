@@ -94,7 +94,11 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>If <code>simplify = FALSE</code>, returns a list representing the raw JSON
-response. If <code>simplify = TRUE</code>, returns one character string: the
+response. The body can hold a <code>response_id</code> for the reply and a <code>stats</code>
+object of token counts and timings. With <code>api_type = "native"</code> and
+<code>format = "data.frame"</code>, <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> returns the id and six of
+the <code>stats</code> fields as columns. If <code>simplify = TRUE</code>,
+returns one character string: the
 <code>content</code> of every item of type <code>"message"</code> in the <code>output</code> array, pasted
 together in order with no separator. Items of other types, such as
 reasoning and tool calls, are skipped. A reply with no readable answer

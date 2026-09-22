@@ -55,11 +55,16 @@ lms_chat_native(
 ## Value
 
 If `simplify = FALSE`, returns a list representing the raw JSON
-response. If `simplify = TRUE`, returns one character string: the
-`content` of every item of type `"message"` in the `output` array,
-pasted together in order with no separator. Items of other types, such
-as reasoning and tool calls, are skipped. A reply with no readable
-answer text raises `rlmstudio_bad_response`, as described below.
+response. The body can hold a `response_id` for the reply and a `stats`
+object of token counts and timings. With `api_type = "native"` and
+`format = "data.frame"`,
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+returns the id and six of the `stats` fields as columns. If
+`simplify = TRUE`, returns one character string: the `content` of every
+item of type `"message"` in the `output` array, pasted together in order
+with no separator. Items of other types, such as reasoning and tool
+calls, are skipped. A reply with no readable answer text raises
+`rlmstudio_bad_response`, as described below.
 
 ## Server not running
 

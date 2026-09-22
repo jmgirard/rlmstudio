@@ -107,8 +107,25 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The return type depends on the <code>format</code> argument:</p><ul><li><p><code>"vector"</code>: A character vector of responses, with <code>NA</code> for an input that failed. This format is only supported if <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>. With a <code>schema</code>, it warns and returns the list instead.</p></li>
 <li><p><code>"list"</code>: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a <code>schema</code>, <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code>, each element that did not fail is the parsed reply.</p></li>
-<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code>, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed.</p></li>
-</ul></div>
+<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code>, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed. With <code>api_type = "native"</code>, seven more columns follow, described below.</p></li>
+</ul><p>With <code>api_type = "native"</code> and <code>format = "data.frame"</code>, the data frame ends
+with seven columns read from each reply: <code>response_id</code>, <code>input_tokens</code>,
+<code>total_output_tokens</code>, <code>reasoning_output_tokens</code>, <code>tokens_per_second</code>,
+<code>time_to_first_token_seconds</code>, and <code>model_load_time_seconds</code>.
+<code>response_id</code> is character, and it identifies the reply on the server. The
+other six are double, and they come from the <code>stats</code> object of the reply.
+A cell is <code>NA</code> when its field is absent or is not one value of the column
+type, a string for <code>response_id</code> and a number for the others. An empty
+string is a string, so an empty <code>response_id</code> is kept. If <code>stats</code> is absent
+or is not a JSON object, all six stats cells are <code>NA</code>. The server can leave
+a field out, such as <code>model_load_time_seconds</code>. Such a cell does not fail
+the input and gives no warning.</p>
+<p>A reply with no readable answer text fails its input, whatever its <code>stats</code>
+and <code>response_id</code> hold. The row of an input that failed holds <code>NA</code> in all
+seven columns. If every input failed, the seven columns are still there,
+<code>response_id</code> as character and the other six as double. The other routes
+and formats add no such column.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function calls <code><a href="lms_chat.html">lms_chat()</a></code> once for each element of <code>inputs</code>. It

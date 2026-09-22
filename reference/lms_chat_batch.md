@@ -82,7 +82,28 @@ The return type depends on the `format` argument:
   an additional list-column named `logprobs` is included, with `NULL`
   for an input that failed. With a `schema` and `logprobs = FALSE`,
   `output` is a list-column of parsed replies, with the condition in
-  place of an input that failed.
+  place of an input that failed. With `api_type = "native"`, seven more
+  columns follow, described below.
+
+With `api_type = "native"` and `format = "data.frame"`, the data frame
+ends with seven columns read from each reply: `response_id`,
+`input_tokens`, `total_output_tokens`, `reasoning_output_tokens`,
+`tokens_per_second`, `time_to_first_token_seconds`, and
+`model_load_time_seconds`. `response_id` is character, and it identifies
+the reply on the server. The other six are double, and they come from
+the `stats` object of the reply. A cell is `NA` when its field is absent
+or is not one value of the column type, a string for `response_id` and a
+number for the others. An empty string is a string, so an empty
+`response_id` is kept. If `stats` is absent or is not a JSON object, all
+six stats cells are `NA`. The server can leave a field out, such as
+`model_load_time_seconds`. Such a cell does not fail the input and gives
+no warning.
+
+A reply with no readable answer text fails its input, whatever its
+`stats` and `response_id` hold. The row of an input that failed holds
+`NA` in all seven columns. If every input failed, the seven columns are
+still there, `response_id` as character and the other six as double. The
+other routes and formats add no such column.
 
 ## Details
 
