@@ -212,7 +212,7 @@ test_that("an unreadable reply carries its content and finish reason", {
       label = "invalid JSON text",
       json = quoted("a score of"),
       content = "a score of",
-      hint = "reply text is in the content field"
+      hint = "reply content is in the content field"
     ),
     list(
       label = "a JSON null content",
@@ -235,7 +235,7 @@ test_that("an unreadable reply carries its content and finish reason", {
     message <- gsub("\\s+", " ", conditionMessage(err))
     expect_match(message, case$hint, info = case$label)
     if (is.null(case$content)) {
-      expect_no_match(message, "reply text is in", info = case$label)
+      expect_no_match(message, "reply content is in", info = case$label)
     }
     expect_match(message, "finish_reason field", info = case$label)
     expect_no_match(conditionMessage(err), "Call again", info = case$label)

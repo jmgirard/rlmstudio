@@ -61,7 +61,7 @@ either one aborts the batch.
 With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, a reply that
 cannot be read does not abort the batch. The element for that input holds
 the \code{rlmstudio_bad_response} condition. Its \code{content} field holds the reply
-text, or \code{NULL} where the response held no reply. The other elements hold their parsed replies, in input order. The
+content as the server sent it, or \code{NULL} where the response held none. The other elements hold their parsed replies, in input order. The
 call then gives one warning that names the count and the positions of the
 failed inputs. That warning shows even with \code{quiet = TRUE}. With any other
 settings, \code{rlmstudio_bad_response} from \code{\link[=lms_chat]{lms_chat()}} aborts the batch.
@@ -114,7 +114,8 @@ vector with the wrong text and give back a matrix that is silently wrong.
 
 \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in two cases, both only with
 \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
-missing, empty, or not an array of objects, so there is no reply to read. This case is raised with or
+missing, empty, or not an array, or whose first element is not a JSON
+object, so there is no reply to read. This case is raised with or
 without a \code{schema}, and with \code{logprobs = TRUE} as well. The second case is
 a reply that does not parse. A \code{schema} was given, \code{logprobs = FALSE}, and
 the reply content is not one string of valid JSON. If the server reports

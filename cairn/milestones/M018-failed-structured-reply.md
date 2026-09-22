@@ -1,6 +1,6 @@
 # M018: A failed structured reply keeps its text and no longer ends a batch
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -173,6 +173,8 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: T12 done. The test mocks `cli::cli_progress_update()` and asserts 3 updates for invalid, valid, invalid. It passed on the branch code and failed on a planted skip of the update for a failed input. Suite 1709 pass.
 - 2026-09-21: T13 done. NEWS no longer calls `lms_chat_openai()` the second raiser, and it names the malformed `choices` shapes and the no-schema batch abort. A new test backs that abort in list and vector format. `lms_chat()` docs add `simplify = TRUE`, and the conditions page names the malformed shapes. Suite 1711 pass. `devtools::check()` 0 errors, 0 warnings, 0 notes.
 - 2026-09-22: T9 extended (minor amendment). The `choices` guard also rejects a first element that is an array, such as `[[{...}]]` or `[[]]`, which before gave back `NULL` as the reply. Two comments no longer state a backtrace size in kilobytes, and the NEWS bullet names `lms_chat_openai()` without an order. Suite 1727 pass.
+claim audit: 78 claims read, 2 corrected — NEWS.md, R/conditions.R, R/chat.R, man/rlmstudio-conditions.Rd, man/lms_chat_batch.Rd
+- 2026-09-22: the claim audit re-read covers the 2 corrections. The `choices` wording now names the first element only, because the guard reads only `choices[[1]]`. The hint and batch docs say reply content, because `content` can hold a non-string JSON value. Left open: `{"choices":[{}]}` passes the guard and returns `NULL`. Suite 1727 pass. `devtools::check()` 0 errors, 0 warnings, 0 notes. Status set to review.
 
 ## Decisions
 

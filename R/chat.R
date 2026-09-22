@@ -426,7 +426,7 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
       )
     } else {
       paste(
-        "The reply text is in the {.field content} field of the condition,",
+        "The reply content is in the {.field content} field of the condition,",
         "and the finish reason is in its {.field finish_reason} field."
       )
     }
@@ -548,7 +548,7 @@ lms_chat_native <- function(
 #' With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, a reply that
 #' cannot be read does not abort the batch. The element for that input holds
 #' the `rlmstudio_bad_response` condition. Its `content` field holds the reply
-#' text, or `NULL` where the response held no reply. The other elements hold their parsed replies, in input order. The
+#' content as the server sent it, or `NULL` where the response held none. The other elements hold their parsed replies, in input order. The
 #' call then gives one warning that names the count and the positions of the
 #' failed inputs. That warning shows even with `quiet = TRUE`. With any other
 #' settings, `rlmstudio_bad_response` from [lms_chat()] aborts the batch.
