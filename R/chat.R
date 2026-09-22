@@ -170,16 +170,24 @@ lms_chat_openresponses <- function(
       return(resp_data)
     }
 
-    content <- resp_data$output[[1]]$content[[1]]
+    label <- "OpenResponses Failed"
+    parts <- responses_text_parts(resp, resp_data, label)
+    text <- join_reply_texts(
+      resp,
+      lapply(parts, \(part) part[["text"]]),
+      label,
+      "The `text` of an `output_text` part is not one string."
+    )
+    # The steps of every part in order. A part without logprobs adds none.
+    steps <- unlist(
+      lapply(parts, \(part) part[["logprobs"]]),
+      recursive = FALSE
+    )
 
-    if (
-      isTRUE(logprobs) &&
-        !is.null(content$logprobs) &&
-        length(content$logprobs) > 0
-    ) {
+    if (isTRUE(logprobs) && length(steps) > 0) {
       logprobs_df <- do.call(
         rbind,
-        lapply(content$logprobs, function(step) {
+        lapply(steps, function(step) {
           step_tok <- if (is.null(step$token)) NA_character_ else step$token
           step_lp <- if (is.null(step$logprob)) NA_real_ else step$logprob
 
@@ -219,11 +227,11 @@ lms_chat_openresponses <- function(
 
       # Use S3 Constructor and Validator
       return(validate_lms_chat_result(
-        new_lms_chat_result(text = content$text, logprobs = logprobs_df)
+        new_lms_chat_result(text = text, logprobs = logprobs_df)
       ))
     }
 
-    return(content$text)
+    return(text)
   }
 
   rlm_abort_api(resp, "OpenResponses Failed", !is.null(rlm_token(token)))
@@ -493,6 +501,46 @@ chat_message_items <- function(resp, resp_data, label) {
     )
   }
   messages
+}
+
+#' Read the output_text parts of an OpenResponses reply
+#'
+#' An OpenResponses message item holds an array of parts. The answer is in the
+#' parts of type `"output_text"`. A part of any other type, such as a
+#' `refusal`, is skipped.
+#'
+#' @inheritParams chat_message_items
+#' @return A list of the `output_text` parts of every message item, in order,
+#'   never empty.
+#'
+#' @noRd
+responses_text_parts <- function(resp, resp_data, label) {
+  messages <- chat_message_items(resp, resp_data, label)
+  contents <- lapply(messages, \(item) item[["content"]])
+  if (!all(vapply(contents, is_json_array, logical(1)))) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The `content` of a message item is not an array of parts."
+    )
+  }
+  parts <- unlist(contents, recursive = FALSE)
+  if (!all(vapply(parts, is_json_object, logical(1)))) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "A part of a message item is not a JSON object."
+    )
+  }
+  parts <- Filter(\(part) identical(part[["type"]], "output_text"), parts)
+  if (length(parts) == 0L) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The reply holds no `output_text` part, so it has no answer text."
+    )
+  }
+  parts
 }
 
 #' Join the answer texts of a reply, or abort if one is not a string

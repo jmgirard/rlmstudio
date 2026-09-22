@@ -306,3 +306,124 @@ test_that("lms_chat_native returns an unreadable reply unchanged with simplify =
     )
   }
 })
+
+# An OpenResponses reasoning item, in the shape of the OpenAI Responses API.
+responses_reasoning_item <- paste0(
+  '{"type": "reasoning", "summary": [], ',
+  '"content": [{"type": "reasoning_text", "text": "thinking"}]}'
+)
+refusal_part <- '{"type": "refusal", "refusal": "no"}'
+
+test_that("lms_chat_openresponses returns the text of every output_text part in order", {
+  bodies <- list(
+    list(
+      label = "reasoning before the message",
+      body = output_body(
+        responses_reasoning_item,
+        responses_message(output_text(quoted("answer")))
+      ),
+      text = "answer"
+    ),
+    list(
+      label = "two message items",
+      body = output_body(
+        responses_message(output_text(quoted("a"))),
+        tool_call_item,
+        responses_message(output_text(quoted("b")))
+      ),
+      text = "ab"
+    ),
+    list(
+      label = "a refusal part between two output_text parts",
+      body = output_body(responses_message(
+        output_text(quoted("a")),
+        refusal_part,
+        output_text(quoted("b"))
+      )),
+      text = "ab"
+    )
+  )
+  for (case in bodies) {
+    expect_identical(
+      call_with_body(lms_chat_openresponses, case$body),
+      case$text,
+      info = case$label
+    )
+    # With no logprobs in the reply, logprobs = TRUE still returns the string.
+    expect_identical(
+      call_with_body(lms_chat_openresponses, case$body, logprobs = TRUE),
+      case$text,
+      info = paste(case$label, "with logprobs = TRUE")
+    )
+  }
+})
+
+test_that("lms_chat_openresponses takes logprobs from every output_text part in order", {
+  body <- output_body(
+    responses_reasoning_item,
+    responses_message(
+      output_text(quoted("a"), sprintf("[%s]", logprob_step("a"))),
+      refusal_part,
+      output_text(quoted("b"), sprintf("[%s]", logprob_step("b")))
+    ),
+    responses_message(
+      output_text(quoted("c"), sprintf("[%s]", logprob_step("c")))
+    )
+  )
+  res <- call_with_body(lms_chat_openresponses, body, logprobs = TRUE)
+  expect_s3_class(res, "lms_chat_result")
+  expect_identical(res$text, "abc")
+  expect_identical(res$logprobs$step_token, c("a", "b", "c"))
+
+  # A part without logprobs adds text but no rows.
+  body <- output_body(responses_message(
+    output_text(quoted("a")),
+    output_text(quoted("b"), sprintf("[%s]", logprob_step("b")))
+  ))
+  res <- call_with_body(lms_chat_openresponses, body, logprobs = TRUE)
+  expect_identical(res$text, "ab")
+  expect_identical(res$logprobs$step_token, "b")
+})
+
+responses_unreadable <- function() {
+  shapes <- shared_unreadable(function(value) {
+    responses_message(output_text(value))
+  })
+  shapes[["a message with no content field"]] <-
+    output_body('{"type": "message", "role": "assistant"}')
+  shapes[["a message content that is a string"]] <-
+    output_body('{"type": "message", "content": "a"}')
+  shapes[["a message content that is an object"]] <-
+    output_body(sprintf('{"type": "message", "content": %s}', output_text(quoted("a"))))
+  shapes[["a part that is a string"]] <- output_body(responses_message('"a"'))
+  shapes[["a part that is a number"]] <- output_body(responses_message("5"))
+  shapes[["an empty content array"]] <- output_body(responses_message())
+  shapes[["no output_text part"]] <- output_body(responses_message(refusal_part))
+  shapes[["an output_text part with no text field"]] <-
+    output_body(responses_message('{"type": "output_text"}'))
+  shapes
+}
+
+test_that("lms_chat_openresponses aborts as a bad response when a reply has no readable text", {
+  shapes <- responses_unreadable()
+  for (logprobs in c(FALSE, TRUE)) {
+    for (label in names(shapes)) {
+      info <- paste(label, "logprobs:", logprobs)
+      err <- expect_error(
+        call_with_body(lms_chat_openresponses, shapes[[label]], logprobs = logprobs),
+        class = "rlmstudio_bad_response",
+        info = info
+      )
+      expect_match(conditionMessage(err), "OpenResponses Failed", info = info)
+      expect_identical(err$status, 200L, info = info)
+    }
+  }
+})
+
+test_that("lms_chat_openresponses returns an unreadable reply unchanged with simplify = FALSE", {
+  shapes <- responses_unreadable()
+  for (label in names(shapes)) {
+    out <- call_with_body(lms_chat_openresponses, shapes[[label]], simplify = FALSE)
+    expect_identical(out, jsonlite::parse_json(shapes[[label]]), info = label)
+  }
+})
