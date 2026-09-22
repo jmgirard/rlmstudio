@@ -15,14 +15,10 @@ openai_ok <- function(i, schema = FALSE) {
 # An OpenResponses response that succeeds at position `i`. With `logprobs`,
 # the reply carries one token and its log probability.
 openresponses_ok <- function(i, logprobs = FALSE) {
-  lp <- if (logprobs) {
-    ', "logprobs": [{"token": "r", "logprob": -0.5, "top_logprobs": []}]'
-  } else {
-    ""
-  }
+  lp <- if (logprobs) sprintf("[%s]", logprob_step("r")) else NULL
   mock_response(
     200L,
-    sprintf('{"output": [{"content": [{"text": "reply %d"%s}]}]}', i, lp)
+    output_body(responses_message(output_text(quoted(sprintf("reply %d", i)), lp)))
   )
 }
 
@@ -289,9 +285,9 @@ test_that("a lost server keeps a stored failure in its results", {
   expect_null(res$cnd$results[[3]])
 })
 
-test_that("a reply with null content keeps its slot as NA in text results", {
-  # The server answers input 1 with `"content": null`, which lms_chat() returns
-  # as NULL rather than as a failure, and fails input 2.
+test_that("a reply with null content fails its input as NA in text results", {
+  # The server answers input 1 with `"content": null`, which has no answer
+  # text and so fails, and fails input 2 with an API error.
   null_reply <- mock_response(200L, completion_body("null"))
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
@@ -302,7 +298,7 @@ test_that("a reply with null content keeps its slot as NA in text results", {
   ))
   expect_warning(
     out <- lms_chat_batch("a-model", batch_inputs, format = "vector", quiet = TRUE, api_type = "openai"),
-    "1 input failed, at position 2\\."
+    "2 inputs failed, at positions 1 and 2\\."
   )
   expect_identical(out, c(NA, NA, "reply 3"))
 
@@ -313,27 +309,42 @@ test_that("a reply with null content keeps its slot as NA in text results", {
   ))
   expect_warning(
     out <- lms_chat_batch("a-model", batch_inputs, format = "data.frame", quiet = TRUE, api_type = "openai"),
-    "1 input failed, at position 2\\."
+    "2 inputs failed, at positions 1 and 2\\."
   )
   expect_identical(out$output, c(NA, NA, "reply 3"))
+
+  local_request_sequence(list(
+    null_reply,
+    fail_response("rlmstudio_api_error", parsed = FALSE),
+    openai_ok(3L)
+  ))
+  expect_warning(
+    out <- lms_chat_batch("a-model", batch_inputs, format = "list", quiet = TRUE, api_type = "openai"),
+    "2 inputs failed, at positions 1 and 2\\."
+  )
+  expect_s3_class(out[[1]], "rlmstudio_bad_response")
+  expect_null(out[[1]]$content)
 })
 
 test_that("a logprobs data frame keeps its column when no reply carried logprobs", {
-  # Replies with no logprobs, and one with null text, on the route that
-  # returns them as plain text or NULL.
+  # Replies with no logprobs, on the route that returns them as plain text,
+  # and one with null text, which fails that input.
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_sequence(list(
     openresponses_ok(1L),
-    mock_response(200L, '{"output": [{"content": [{"text": null}]}]}'),
+    mock_response(200L, output_body(responses_message(output_text("null")))),
     openresponses_ok(3L)
   ))
-  out <- lms_chat_batch(
-    "a-model",
-    batch_inputs,
-    format = "data.frame",
-    logprobs = TRUE,
-    quiet = TRUE,
-    api_type = "openresponses"
+  expect_warning(
+    out <- lms_chat_batch(
+      "a-model",
+      batch_inputs,
+      format = "data.frame",
+      logprobs = TRUE,
+      quiet = TRUE,
+      api_type = "openresponses"
+    ),
+    "1 input failed, at position 2\\."
   )
   expect_named(out, c("input", "output", "logprobs"))
   expect_identical(out$output, c("reply 1", NA, "reply 3"))
@@ -426,4 +437,74 @@ test_that("an error of any other class still aborts the batch unchanged", {
     expect_identical(caught, raised[[name]], info = name)
     expect_identical(calls, 2L, info = name)
   }
+})
+
+# Run a two-input batch whose first reply reads as "reply 1" and whose second
+# is `body`. Returns the result and the warnings.
+run_unreadable_batch <- function(ok, body, format, api_type, logprobs = FALSE) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(ok, mock_response(200L, body)))
+  args <- list(
+    "a-model",
+    c("first", "second"),
+    format = format,
+    quiet = TRUE,
+    api_type = api_type
+  )
+  if (logprobs) {
+    args$logprobs <- TRUE
+  }
+  warnings <- testthat::capture_warnings(out <- do.call(lms_chat_batch, args))
+  list(out = out, warnings = warnings)
+}
+
+test_that("a reply with no readable text fails only its own input on every route", {
+  routes <- list(
+    native = list(
+      ok = mock_response(200L, output_body(native_message(quoted("reply 1")))),
+      bodies = native_unreadable()
+    ),
+    openresponses = list(
+      ok = openresponses_ok(1L),
+      bodies = responses_unreadable()
+    ),
+    openai = list(
+      ok = openai_ok(1L),
+      bodies = lapply(openai_unreadable(), `[[`, "body")
+    )
+  )
+  for (api_type in names(routes)) {
+    route <- routes[[api_type]]
+    for (label in names(route$bodies)) {
+      for (format in c("list", "vector", "data.frame")) {
+        info <- paste(api_type, format, label)
+        res <- run_unreadable_batch(route$ok, route$bodies[[label]], format, api_type)
+        expect_identical(length(res$warnings), 1L, info = info)
+        expect_match(res$warnings[[1]], "1 input failed, at position 2\\.", info = info)
+        if (format == "list") {
+          expect_identical(length(res$out), 2L, info = info)
+          expect_identical(res$out[[1]], "reply 1", info = info)
+          expect_failed_slot(res$out[[2]], "rlmstudio_bad_response", info = info)
+        } else if (format == "vector") {
+          expect_identical(res$out, c("reply 1", NA), info = info)
+        } else {
+          expect_identical(res$out$output, c("reply 1", NA), info = info)
+        }
+      }
+    }
+  }
+})
+
+test_that("an OpenAI reply with null content fails its input in a logprobs data frame", {
+  res <- run_unreadable_batch(
+    openai_ok(1L),
+    completion_body("null"),
+    "data.frame",
+    "openai",
+    logprobs = TRUE
+  )
+  expect_length(res$warnings, 1L)
+  expect_match(res$warnings[[1]], "1 input failed, at position 2\\.")
+  expect_identical(res$out$output, c("reply 1", NA))
+  expect_identical(res$out$logprobs, list(NULL, NULL))
 })

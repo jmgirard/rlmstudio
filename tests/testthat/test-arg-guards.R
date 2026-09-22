@@ -515,3 +515,29 @@ test_that("the form check runs before the route check", {
   )
   expect_identical(probe$calls, 0L)
 })
+
+test_that("a batch format that simplify = FALSE cannot fill aborts before the server probe", {
+  probe <- local_counting_probe()
+
+  err <- expect_error(
+    lms_chat_batch("a-model", "hi", format = "data.frame", simplify = FALSE),
+    "requires"
+  )
+  expect_match(conditionMessage(err), "simplify = TRUE", fixed = TRUE)
+  # No package class on an argument fault (D-008).
+  expect_false(any(grepl("^rlmstudio_", class(err))))
+
+  err <- expect_error(
+    lms_chat_batch("a-model", "hi", format = "table"),
+    "should be one of"
+  )
+  expect_false(any(grepl("^rlmstudio_", class(err))))
+  expect_identical(probe$calls, 0L)
+
+  # The same call with a format that simplify = FALSE can fill reaches it.
+  expect_error(
+    lms_chat_batch("a-model", "hi", format = "list", simplify = FALSE),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(probe$calls, 1L)
+})

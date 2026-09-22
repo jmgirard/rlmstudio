@@ -643,3 +643,53 @@ test_that("a reply that does not parse is returned as text without a schema", {
   out <- call_with_reply(completion_body(quoted("a score of three")))
   expect_identical(out$value, "a score of three")
 })
+
+test_that("content that is not one string names max_tokens at the token limit without a schema", {
+  for (logprobs in c(FALSE, TRUE)) {
+    info <- paste("logprobs:", logprobs)
+    cut <- expect_error(
+      call_with_reply(completion_body("null", "length"), logprobs = logprobs),
+      class = "rlmstudio_bad_response",
+      info = info
+    )
+    expect_match(conditionMessage(cut), "token limit cut the reply off", info = info)
+    expect_match(conditionMessage(cut), "max_tokens", info = info)
+    expect_identical(cut$finish_reason, "length", info = info)
+
+    # A finish reason of "stop" keeps the not-one-string detail.
+    done <- expect_error(
+      call_with_reply(completion_body("null", "stop"), logprobs = logprobs),
+      class = "rlmstudio_bad_response",
+      info = info
+    )
+    expect_match(conditionMessage(done), "is not one string", info = info)
+    expect_no_match(conditionMessage(done), "max_tokens")
+  }
+})
+
+test_that("reply content that is not one string aborts as a bad response", {
+  contents <- openai_unreadable()
+  # A schema with logprobs = FALSE parses the reply instead, which the tests
+  # above cover.
+  settings <- list(
+    list(label = "no schema", args = list()),
+    list(label = "logprobs", args = list(logprobs = TRUE)),
+    list(label = "a schema and logprobs", args = list(schema = score_schema, logprobs = TRUE))
+  )
+  for (label in names(contents)) {
+    case <- contents[[label]]
+    for (setting in settings) {
+      info <- paste(label, "with", setting$label)
+      err <- expect_error(
+        do.call(call_with_reply, c(list(case$body), setting$args)),
+        class = "rlmstudio_bad_response",
+        info = info
+      )
+      expect_identical(err$status, 200L, info = info)
+      expect_match(conditionMessage(err), "OpenAI API Failed", info = info)
+      expect_true("content" %in% names(err), info = info)
+      expect_identical(err$content, case$content, info = info)
+      expect_identical(err$finish_reason, "stop", info = info)
+    }
+  }
+})

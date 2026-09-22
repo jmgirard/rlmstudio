@@ -53,7 +53,7 @@
 #' A condition of class `rlmstudio_bad_response` is raised when the server
 #' answers with a status the wrapper accepts and a body the wrapper cannot
 #' read. It is raised where a wrapper checks the body before it reshapes it,
-#' rather than indexing straight into whatever arrived. Two functions raise
+#' rather than indexing straight into whatever arrived. Four functions raise
 #' it.
 #'
 #' [lms_embed()] raises it on an embeddings block it cannot trust. The vectors
@@ -61,34 +61,51 @@
 #' with a missing, repeated, or out-of-range index would otherwise pair a
 #' vector with the wrong text and give back a matrix that is silently wrong.
 #'
-#' [lms_chat_openai()] raises it in two cases, both only with
+#' [lms_chat_native()] and [lms_chat_openresponses()] raise it with
+#' `simplify = TRUE` when the reply holds no readable answer text. Both read
+#' the answer from the items of type `"message"` in the `output` array. They
+#' raise it when `output` is missing, empty, or not an array, or when an item
+#' in it is not a JSON object. They also raise it when no item has the type
+#' `"message"`, as in a reply that holds only reasoning or a tool call. The
+#' text of a message must be one string. For [lms_chat_native()] that is the
+#' `content` of the item. For [lms_chat_openresponses()] it is the `text` of
+#' each part of type `"output_text"`. For [lms_chat_openresponses()] only, the
+#' `content` of each message must be an array of JSON objects, and the
+#' messages together must hold at least one `"output_text"` part.
+#'
+#' [lms_chat_openai()] raises it in three cases, all only with
 #' `simplify = TRUE`. The first case is a response whose `choices` field is
 #' missing, empty, or not an array, or whose first element is not a JSON
-#' object with a `message` object in it, so there is no reply to read. This case is raised with or
-#' without a `schema`, and with `logprobs = TRUE` as well. The second case is
-#' a reply that does not parse. A `schema` was given, `logprobs = FALSE`, and
-#' the reply content is not one string of valid JSON. If the server reports
-#' the finish reason `"length"`, the token limit cut the reply off. The message
-#' then says so and names `max_tokens`. [lms_chat()] can raise the condition
-#' through [lms_chat_openai()].
+#' object with a `message` object in it, so there is no reply to read. This
+#' case is raised with or without a `schema`, and with `logprobs = TRUE` as
+#' well. The second case is a reply that does not parse. A `schema` was
+#' given, `logprobs = FALSE`, and the reply content is not one string of valid
+#' JSON. The third case is reply content that is not one string, such as
+#' `null`, a missing `content` field, a number, or an array. A reply that
+#' holds only a tool call has `null` content. This case is raised without a
+#' `schema`, and with `logprobs = TRUE` with or without one. In the second and
+#' third cases, if the server reports the finish reason `"length"`, the token
+#' limit cut the reply off. The message then says so and names `max_tokens`.
+#' [lms_chat()] can raise the condition through all three chat functions.
 #'
 #' [lms_chat_batch()] does not abort on it. The element of the failed input
 #' holds the condition, or `NA` where the result is text, and the batch warns
 #' once and goes on. See the details of [lms_chat_batch()].
 #'
 #' The condition carries a `status` field, which holds the HTTP response
-#' status as an integer. Today the status is always 200: both functions read
-#' the body only after a 200, and report every other status as an
-#' `rlmstudio_api_error` instead. A condition from [lms_chat_openai()] also
-#' carries two more fields. The `content` field holds the reply content, and
-#' the `finish_reason` field holds the finish reason that the server reported.
-#' Either one is `NULL` where the response has none, and both are `NULL` for a
-#' response with no `choices`. For a reply that does not parse, the message
-#' names the `content` field, so you can read what the model wrote without a
-#' second request. The other messages name `simplify = FALSE`, which returns
-#' the body unchanged, with one exception. An embeddings body that did not
-#' parse at all is checked before that argument is read, so its message
-#' points at the host instead.
+#' status as an integer. Today the status is always 200: each of these
+#' functions reads the body only after a 200, and reports every other status
+#' as an `rlmstudio_api_error` instead. A condition from [lms_chat_openai()]
+#' also carries two more fields. The `content` field holds the reply content,
+#' and the `finish_reason` field holds the finish reason of the first choice.
+#' Both are `NULL` for a response with no `choices`. In the third case,
+#' `content` holds the value that was read, which is `NULL` for `null` or
+#' missing content. For the second and third cases, the message names the
+#' `content` field, so you can read what the model wrote without a second
+#' request. The other messages name `simplify = FALSE`, which returns the body
+#' unchanged, with one exception. An embeddings body that did not parse at
+#' all is checked before that argument is read, so its message points at the
+#' host instead.
 #'
 #' @name rlmstudio-conditions
 #' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response

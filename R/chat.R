@@ -36,8 +36,8 @@
 #' [lms_chat_native()], according to `api_type`. It runs no request of its own.
 #' It can raise `rlmstudio_no_server` and `rlmstudio_api_error` through
 #' [lms_chat_openresponses()], [lms_chat_openai()], or [lms_chat_native()].
-#' With `api_type = "openai"` and `simplify = TRUE`, it can raise
-#' `rlmstudio_bad_response` through [lms_chat_openai()].
+#' With `simplify = TRUE`, it can raise `rlmstudio_bad_response` through any
+#' of the three, for a reply that holds no readable answer text.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
@@ -129,11 +129,18 @@ lms_chat <- function(
 #'   FALSE, returns raw list.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature).
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. Otherwise, returns a character string containing the generated
-#'   text. If \code{logprobs = TRUE}, returns an object of class
-#'   \code{lms_chat_result} incorporating both the text and probability data.
+#'   response. Otherwise, returns one character string: the `text` of every
+#'   part of type `"output_text"` in the items of type `"message"`, pasted
+#'   together in order with no separator. Reasoning items, tool calls, and
+#'   parts of other types, such as a refusal, are skipped. If
+#'   \code{logprobs = TRUE} and at least one of those parts carries log
+#'   probabilities, returns an object of class \code{lms_chat_result} with that
+#'   text and a data frame of the probabilities of every such part, in order.
+#'   If no part carries them, it returns the string. A reply with no readable
+#'   answer text raises `rlmstudio_bad_response`, as described below.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #' @export
 lms_chat_openresponses <- function(
   model,
@@ -170,16 +177,24 @@ lms_chat_openresponses <- function(
       return(resp_data)
     }
 
-    content <- resp_data$output[[1]]$content[[1]]
+    label <- "OpenResponses Failed"
+    parts <- responses_text_parts(resp, resp_data, label)
+    text <- join_reply_texts(
+      resp,
+      lapply(parts, \(part) part[["text"]]),
+      label,
+      "The `text` of an `output_text` part is not one string."
+    )
+    # The steps of every part in order. A part without logprobs adds none.
+    steps <- unlist(
+      lapply(parts, \(part) part[["logprobs"]]),
+      recursive = FALSE
+    )
 
-    if (
-      isTRUE(logprobs) &&
-        !is.null(content$logprobs) &&
-        length(content$logprobs) > 0
-    ) {
+    if (isTRUE(logprobs) && length(steps) > 0) {
       logprobs_df <- do.call(
         rbind,
-        lapply(content$logprobs, function(step) {
+        lapply(steps, function(step) {
           step_tok <- if (is.null(step$token)) NA_character_ else step$token
           step_lp <- if (is.null(step$logprob)) NA_real_ else step$logprob
 
@@ -219,11 +234,11 @@ lms_chat_openresponses <- function(
 
       # Use S3 Constructor and Validator
       return(validate_lms_chat_result(
-        new_lms_chat_result(text = content$text, logprobs = logprobs_df)
+        new_lms_chat_result(text = text, logprobs = logprobs_df)
       ))
     }
 
-    return(content$text)
+    return(text)
   }
 
   rlm_abort_api(resp, "OpenResponses Failed", !is.null(rlm_token(token)))
@@ -260,7 +275,10 @@ lms_chat_openresponses <- function(
 #'   response. Otherwise, returns a character string containing the generated
 #'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
 #'   object with the log probabilities populated as \code{NULL} since they are
-#'   currently stubbed in the LM Studio OpenAI endpoint.
+#'   currently stubbed in the LM Studio OpenAI endpoint. With
+#'   \code{simplify = TRUE}, reply content that is not one string, such as the
+#'   `null` content of a reply that holds only a tool call, raises
+#'   `rlmstudio_bad_response`.
 #'
 #'   With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, the reply is
 #'   parsed with `jsonlite::parse_json(simplifyVector = TRUE)` and the parsed
@@ -350,6 +368,21 @@ lms_chat_openai <- function(
       )
     }
     res_text <- choices[[1]][["message"]][["content"]]
+    finish_reason <- choices[[1]][["finish_reason"]]
+
+    # A reply that is returned as text must be one string. Content that is
+    # `null` or absent, as with a reply that holds only a tool call, has no
+    # answer text (D-012). A schema reply without logprobs is checked by
+    # parse_schema_reply() below instead.
+    if ((is.null(schema) || isTRUE(logprobs)) && !is_one_string(res_text)) {
+      abort_unread_reply(
+        resp,
+        res_text,
+        "OpenAI API Failed",
+        "The reply content is not one string.",
+        finish_reason
+      )
+    }
 
     if (isTRUE(logprobs)) {
       # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
@@ -362,7 +395,7 @@ lms_chat_openai <- function(
         resp,
         res_text,
         "OpenAI API Failed",
-        finish_reason = choices[[1]][["finish_reason"]]
+        finish_reason = finish_reason
       ))
     }
     return(res_text)
@@ -413,38 +446,10 @@ schema_response_format <- function(schema) {
 #' @noRd
 parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
   abort_unread <- function(detail) {
-    if (identical(finish_reason, "length")) {
-      detail <- paste(
-        "The token limit cut the reply off before it was complete.",
-        "Raise `max_tokens` to allow a longer reply."
-      )
-    }
-    # The detail is inserted into the message as text, so cli markup in it
-    # would print as written. The hint below is a template of its own.
-    # A NULL content has no text to point at, so its hint says so. A NULL
-    # finish reason is not pointed at either.
-    hint <- if (is.null(content)) {
-      "The reply has no text, so the {.field content} field of the condition is {.code NULL}."
-    } else {
-      "The reply content is in the {.field content} field of the condition."
-    }
-    if (!is.null(finish_reason)) {
-      hint <- paste(
-        hint,
-        "The finish reason is in its {.field finish_reason} field."
-      )
-    }
-    rlm_abort_bad_response(
-      resp,
-      label,
-      detail,
-      hint = hint,
-      content = content,
-      finish_reason = finish_reason
-    )
+    abort_unread_reply(resp, content, label, detail, finish_reason)
   }
 
-  if (!is.character(content) || length(content) != 1L || is.na(content)) {
+  if (!is_one_string(content)) {
     abort_unread("The reply content is not one string.")
   }
   tryCatch(
@@ -452,6 +457,156 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
     error = function(cnd) abort_unread("The reply content is not valid JSON.")
   )
 }
+
+#' Abort on a chat completions reply that cannot be read
+#'
+#' The abort carries the reply content and the finish reason as fields, so a
+#' caller can read what the model wrote without sending the request again. A
+#' finish reason of `"length"` means the server stopped the reply at the token
+#' limit, which is the likely reason the reply is incomplete, so the message
+#' says so in place of `detail`.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param content The reply content read out of the response.
+#' @param label Character. The calling wrapper's label, which opens the message.
+#' @param detail Character. What is wrong with the reply.
+#' @param finish_reason The `finish_reason` of the first choice, or `NULL`.
+#'
+#' @noRd
+abort_unread_reply <- function(resp, content, label, detail, finish_reason) {
+  if (identical(finish_reason, "length")) {
+    detail <- paste(
+      "The token limit cut the reply off before it was complete.",
+      "Raise `max_tokens` to allow a longer reply."
+    )
+  }
+  # The detail is inserted into the message as text, so cli markup in it
+  # would print as written. The hint below is a template of its own.
+  # A NULL content has no text to point at, so its hint says so. A NULL
+  # finish reason is not pointed at either.
+  hint <- if (is.null(content)) {
+    "The reply has no text, so the {.field content} field of the condition is {.code NULL}."
+  } else {
+    "The reply content is in the {.field content} field of the condition."
+  }
+  if (!is.null(finish_reason)) {
+    hint <- paste(
+      hint,
+      "The finish reason is in its {.field finish_reason} field."
+    )
+  }
+  rlm_abort_bad_response(
+    resp,
+    label,
+    detail,
+    hint = hint,
+    content = content,
+    finish_reason = finish_reason
+  )
+}
+
+#' Read the message items of a native or OpenResponses reply
+#'
+#' Both endpoints return an `output` array of typed items. A reasoning model
+#' puts a `reasoning` item before the message, and a call with tools puts
+#' `tool_call` items between messages, so the answer is read from the items of
+#' type `"message"` and never from the first item. An item of any other type,
+#' or with no `type`, is skipped. Fields are read with `[[`, because `$` would
+#' read a field whose name only starts with the one asked for.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param label Character. The calling wrapper's label, which opens the message.
+#' @return A list of the message items, never empty.
+#'
+#' @noRd
+chat_message_items <- function(resp, resp_data, label) {
+  output <- resp_data[["output"]]
+  if (!is_json_array(output) || length(output) == 0L) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The response holds no `output` array of reply items."
+    )
+  }
+  if (!all(vapply(output, is_json_object, logical(1)))) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "An item of the `output` array is not a JSON object."
+    )
+  }
+  messages <- Filter(\(item) identical(item[["type"]], "message"), output)
+  if (length(messages) == 0L) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The reply holds no message item, so it has no answer text."
+    )
+  }
+  messages
+}
+
+#' Read the output_text parts of an OpenResponses reply
+#'
+#' An OpenResponses message item holds an array of parts. The answer is in the
+#' parts of type `"output_text"`. A part of any other type, such as a
+#' `refusal`, is skipped.
+#'
+#' @inheritParams chat_message_items
+#' @return A list of the `output_text` parts of every message item, in order,
+#'   never empty.
+#'
+#' @noRd
+responses_text_parts <- function(resp, resp_data, label) {
+  messages <- chat_message_items(resp, resp_data, label)
+  contents <- lapply(messages, \(item) item[["content"]])
+  if (!all(vapply(contents, is_json_array, logical(1)))) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The `content` of a message item is not an array of parts."
+    )
+  }
+  parts <- unlist(contents, recursive = FALSE)
+  if (!all(vapply(parts, is_json_object, logical(1)))) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "A part of a message item is not a JSON object."
+    )
+  }
+  parts <- Filter(\(part) identical(part[["type"]], "output_text"), parts)
+  if (length(parts) == 0L) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The reply holds no `output_text` part, so it has no answer text."
+    )
+  }
+  parts
+}
+
+#' Join the answer texts of a reply, or abort if one is not a string
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param texts A list of the text values read out of the reply.
+#' @param label Character. The calling wrapper's label.
+#' @param detail Character. What the abort says is not one string.
+#' @return One string, the texts pasted together with no separator.
+#'
+#' @noRd
+join_reply_texts <- function(resp, texts, label, detail) {
+  if (!all(vapply(texts, is_one_string, logical(1)))) {
+    rlm_abort_bad_response(resp, label, detail)
+  }
+  paste(unlist(texts), collapse = "")
+}
+
+# A parsed JSON body keeps an array as an unnamed list, the counterpart of
+# `is_json_object()` in R/embed.R.
+is_json_array <- function(x) is.list(x) && is.null(names(x))
+is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 
 #' Chat Completion via Native API
 #'
@@ -469,10 +624,14 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. If \code{simplify = TRUE}, returns a character string containing
-#'   the model's text output.
+#'   response. If \code{simplify = TRUE}, returns one character string: the
+#'   `content` of every item of type `"message"` in the `output` array, pasted
+#'   together in order with no separator. Items of other types, such as
+#'   reasoning and tool calls, are skipped. A reply with no readable answer
+#'   text raises `rlmstudio_bad_response`, as described below.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #' @export
 lms_chat_native <- function(
   model,
@@ -512,7 +671,14 @@ lms_chat_native <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-    return(resp_data$output[[1]]$content)
+    label <- "Native API Failed"
+    messages <- chat_message_items(resp, resp_data, label)
+    return(join_reply_texts(
+      resp,
+      lapply(messages, \(item) item[["content"]]),
+      label,
+      "The `content` of a message item is not one string."
+    ))
   }
 
   rlm_abort_api(resp, "Native API Failed", !is.null(rlm_token(token)))
@@ -557,9 +723,9 @@ lms_chat_native <- function(
 #' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and
 #' with a data frame whose replies are not parsed (no `schema`, or
 #' `logprobs = TRUE`). The `logprobs` column holds `NULL` for a failed input.
-#' A reply that [lms_chat()] returns as `NULL`, such as one whose content is
-#' `null`, also holds `NA` in a text result. Use `format = "list"` to keep the
-#' conditions. The call then gives one warning that names the count
+#' A reply with no readable answer text, such as one whose content is `null`,
+#' fails as an `rlmstudio_bad_response` in the same way. Use `format = "list"`
+#' to keep the conditions. The call gives one warning that names the count
 #' and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`.
 #'
@@ -600,8 +766,17 @@ lms_chat_batch <- function(
   api_type <- match.arg(api_type, c("openresponses", "openai", "native"))
   rlm_check_schema_route(schema, api_type)
 
-  stop_if_no_server(host)
+  # An argument fault, so it aborts before the server probe (D-008) and before
+  # any request is sent.
   format <- match.arg(format)
+  if (format == "data.frame" && !isTRUE(simplify)) {
+    cli::cli_abort(
+      "The {.val data.frame} format requires {.code simplify = TRUE}.",
+      call = NULL
+    )
+  }
+
+  stop_if_no_server(host)
 
   has_logprobs <- isTRUE(args[["logprobs"]])
   # Each result is a parsed reply of any shape, not one string.
@@ -656,13 +831,6 @@ lms_chat_batch <- function(
     }
   }
 
-  if (format == "data.frame" && !isTRUE(simplify)) {
-    cli::cli_abort(
-      "The {.val data.frame} format requires {.code simplify = TRUE}.",
-      call = NULL
-    )
-  }
-
   is_failed <- function(x) {
     inherits(x, c("rlmstudio_api_error", "rlmstudio_bad_response"))
   }
@@ -687,8 +855,9 @@ lms_chat_batch <- function(
   holds_na <- isTRUE(simplify) &&
     !has_parsed &&
     (format == "data.frame" || (format == "vector" && is.null(vector_fallback)))
-  # A NULL reply, such as `"content": null`, is not a failure, but it becomes
-  # NA too, so the text result stays as long as `inputs`.
+  # A reply with `"content": null` now fails (D-012), so no text reply is NULL
+  # with `simplify = TRUE`. A NULL would still become NA here, so the text
+  # result stays as long as `inputs`.
   na_if_failed <- function(x) {
     if (is.null(x) || is_failed(x)) NA_character_ else x
   }
