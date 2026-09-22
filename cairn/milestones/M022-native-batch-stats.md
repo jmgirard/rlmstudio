@@ -119,3 +119,18 @@ Review pass 2, 2026-09-22. `origin/main` has not moved since the branch was cut,
 - AC6: PASS. A grep of `man/lms_chat_batch.Rd` finds each of the seven names. The `lms_chat_batch()` page names the route and format. It gives the `NA` rules for a bad field and a non-object `stats`, and it keeps an empty `response_id`. It also states the three AC3 rules. An unreadable reply fails whatever its fields hold. A failed row is `NA` in all seven columns. If every input failed, the columns keep their types. The `lms_chat_native()` page says that the `simplify = FALSE` body can hold `response_id` and `stats`. The word "can" follows the live probe, where the server left out `model_load_time_seconds`. `NEWS.md` has the entry, with no milestone number.
 - AC7: PASS. `devtools::test()` gave 4810 expectations, 0 failed, 0 skipped. `devtools::check()` with the API token set gave 0 errors, 0 warnings, and 0 notes. `devtools::document()` made no diff.
 - Consistency gate: `cairn_validate.py` exit 0, all checks passed. No DESIGN principle changed. No pkgdown site exists. The branch does not touch `README.Rmd` or `README.md`. The NEWS entry names no milestone. The branch adds no top-level file.
+
+Pass 2 reviewer findings, merged across the three lenses and ranked. No finding shows a criterion failing. The proposed disposition of each goes to the merge gate.
+
+- P1 (diff-bug, prior-review): the `lms_chat_native()` page says the body "can hold" `response_id` and `stats`, where AC6 says "with" them. This is O8 again. Proposed: reject, because the live probe saw the server leave a field out. The AC6 evidence above judges the page to meet the criterion.
+- P2 (all three lenses): no DECISIONS entry records the new native data-frame shape or the silent `NA`. D-011 cited a shape change as a reason against an `error` column. This is O7 again. Proposed: fix now with a new D-entry.
+- P3 (diff-bug, prior-review): `R/chat.R:839` is 86 characters, and `air format --check` flags it. `main` is clean for this file. Proposed: fix now.
+- P4 (diff-bug): the batch reads the text through a fake 200 response, `ok_resp`, whose URL is `https://example.com`. The abort helper reads only the status today. Proposed: reject, because it is correct now and no test can see the fake response.
+- P5 (diff-bug): the empty `response_id` test asserts only the cell, not the kept `output` or no warning. Proposed: fix now.
+- P6 (diff-bug): the failed-input test uses `is.na()` and `!is.na()` for the stats cells, not exact values. Proposed: fix now.
+- P7 (diff-bug): a JSON `1e400` is kept as `Inf`, and a 20-digit integer loses precision. Both follow AC2. Proposed: reject.
+- P8 (diff-bug): a 200 body that is a bare scalar, such as `5`, fails in `chat_message_items()` with a base error, not `rlmstudio_bad_response`. That error ends the whole batch. It predates the branch. Proposed: follow-up candidate row.
+- P9 (diff-bug, prior-review): `body` and `text` stay in the batch frame after the loop. This is O10 again. Proposed: reject, because each input overwrites them first.
+- P10 (diff-bug): new test lines are not Air-formatted. `test-chat-batch.R` already fails the Air check on `main`. Proposed: reject as existing drift.
+- P11 (prior-review): the AC1 test checks warnings with `capture_warnings()`, not `expect_no_warning()`. Proposed: reject, because AC2 names `expect_no_warning()` and the AC2 tests use it.
+- S (blame-history): no conflict with past milestones, D-007, D-010, D-011, D-012, or the lessons. The prior-review lens used the milestone Review record and did not run the GitHub probe.
