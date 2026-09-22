@@ -188,7 +188,9 @@ test_that("a choices field that is not an array of objects aborts as a bad respo
   bodies <- list(
     list(label = "a JSON object", body = '{"choices": {"a": {"message": {"content": "{}"}}}}'),
     list(label = "an array of numbers", body = '{"choices": [1]}'),
-    list(label = "an array of strings", body = '{"choices": ["{}"]}')
+    list(label = "an array of strings", body = '{"choices": ["{}"]}'),
+    list(label = "an array of arrays", body = '{"choices": [[{"message": {"content": "{}"}}]]}'),
+    list(label = "an array of empty arrays", body = '{"choices": [[]]}')
   )
   for (body in bodies) {
     for (schema in list(NULL, score_schema)) {
@@ -496,8 +498,8 @@ expect_failed_slots <- function(elements) {
   expect_identical(elements[[2]], list(score = 3L))
   expect_s3_class(elements[[3]], "rlmstudio_bad_response")
   expect_identical(elements[[3]]$content, "not json three")
-  # A stored condition keeps no backtrace, which would add tens of kilobytes
-  # per failed input.
+  # A stored condition keeps no backtrace, which would make each failed slot
+  # large.
   expect_null(elements[[1]]$trace)
   expect_null(elements[[3]]$trace)
 }

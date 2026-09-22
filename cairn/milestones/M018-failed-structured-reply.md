@@ -172,6 +172,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: T11 done. A vector batch with a failure adds "Returning list." to its one warning. A `NULL` content gets a hint that says the reply has no text. Both tests failed first. Suite 1699 pass.
 - 2026-09-21: T12 done. The test mocks `cli::cli_progress_update()` and asserts 3 updates for invalid, valid, invalid. It passed on the branch code and failed on a planted skip of the update for a failed input. Suite 1709 pass.
 - 2026-09-21: T13 done. NEWS no longer calls `lms_chat_openai()` the second raiser, and it names the malformed `choices` shapes and the no-schema batch abort. A new test backs that abort in list and vector format. `lms_chat()` docs add `simplify = TRUE`, and the conditions page names the malformed shapes. Suite 1711 pass. `devtools::check()` 0 errors, 0 warnings, 0 notes.
+- 2026-09-22: T9 extended (minor amendment). The `choices` guard also rejects a first element that is an array, such as `[[{...}]]` or `[[]]`, which before gave back `NULL` as the reply. Two comments no longer state a backtrace size in kilobytes, and the NEWS bullet names `lms_chat_openai()` without an order. Suite 1727 pass.
 
 ## Decisions
 

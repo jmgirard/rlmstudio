@@ -327,14 +327,16 @@ lms_chat_openai <- function(
     # empty list fails there with a subscript error that names neither the
     # response nor the field. A missing field gives back NULL as the reply,
     # which a plain call returns and a `logprobs` call fails on. A JSON object
-    # in place of the array would be read by its first value, and a first
-    # element that is not an object fails on `$` with a base R error.
+    # in place of the array would be read by its first value. A first element
+    # that is a plain value fails on `$` with a base R error, and one that is
+    # an array gives back NULL as the reply.
     choices <- resp_data$choices
     if (
       !is.list(choices) ||
         length(choices) == 0L ||
         !is.null(names(choices)) ||
-        !is.list(choices[[1]])
+        !is.list(choices[[1]]) ||
+        is.null(names(choices[[1]]))
     ) {
       rlm_abort_bad_response(
         resp,
@@ -615,8 +617,8 @@ lms_chat_batch <- function(
     # A reply that does not parse loses one answer, not the whole batch. Its
     # slot keeps the condition, which carries the reply text. Every other
     # error still aborts, because it says nothing about one input alone. The
-    # backtrace is dropped, because it adds tens of kilobytes to each failed
-    # slot and says nothing about the reply.
+    # backtrace is dropped, because it makes each failed slot large and says
+    # nothing about the reply.
     res <- if (has_parsed) {
       tryCatch(
         call_chat(),
