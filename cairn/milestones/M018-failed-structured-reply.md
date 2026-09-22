@@ -176,6 +176,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 claim audit: 78 claims read, 2 corrected — NEWS.md, R/conditions.R, R/chat.R, man/rlmstudio-conditions.Rd, man/lms_chat_batch.Rd
 - 2026-09-22: the claim audit re-read covers the 2 corrections. The `choices` wording now names the first element only, because the guard reads only `choices[[1]]`. The hint and batch docs say reply content, because `content` can hold a non-string JSON value. Left open: `{"choices":[{}]}` passes the guard and returns `NULL`. Suite 1727 pass. `devtools::check()` 0 errors, 0 warnings, 0 notes. Status set to review.
 - 2026-09-22: review pass 2 checkpoint (in progress). Fresh evidence recorded for all seven criteria, and AC4 now passes. The package check and three reviewers are still running.
+- 2026-09-22: review pass 2 pre-gate checkpoint. All seven criteria verified and ticked, gate green, three reviewers done, 8 findings for triage.
 
 ## Decisions
 
@@ -284,4 +285,38 @@ LM Studio tests included.
   old claim that every message names `simplify = FALSE` is gone. The
   `lms_chat_batch()` details state what a failed element holds and that other
   errors abort. NEWS bullets 4 to 6 describe AC1 to AC4.
+
+Gate: `cairn_validate.py` exit 0, with two advisories: 13 tasks past the
+split tripwire, and the fixed-shape `claim audit:` line. `devtools::check()`
+0 errors, 0 warnings, 0 notes. It runs `document()`, and the tree stayed
+clean, so `document()` gives no diff. No DESIGN principle changed, so
+`cairn_impact` was skipped. README is not touched. No `_pkgdown.yml`. The
+new `data-raw/` script is under the `.Rbuildignore` entry. NEWS has entries.
+
+Reviewers: [S] blame-history found nothing that undoes past work or breaks
+a D-entry (D-007 and D-010 checked). [S] prior-review found all nine pass-1
+fixes in the diff and no regression, and the GitHub probe found no review
+comments. [O] diff-bug found no failing criterion. Its findings, ranked, with
+the proposed disposition (the gate decides):
+
+1. A `message` that is not an object, such as `"x"` or `5`, fails on `$`
+   with a base R error, so it ends a schema batch. Probe confirmed. Proposed:
+   fix now, extend the guard to `message`.
+2. A first choice with no `message`, or `"message": null`, passes the guard.
+   Without a schema it returns `NULL`, so a vector batch comes back short.
+   With `logprobs = TRUE` it fails with a base R error. Probe confirmed.
+   Proposed: fix now, same guard as 1.
+3. A cut-off reply that is still valid JSON, such as `"12"`, parses with no
+   signal of the cut-off. Probe confirmed. Proposed: follow-up candidate row.
+4. `$` partial matching reads `choicesX` as `choices` and `content_parts` as
+   `content`. Probe confirmed. Proposed: fix now, read with `[[`.
+5. With `NULL` content and no finish reason, the hint points at a
+   `finish_reason` field that is also `NULL`. Proposed: fix now.
+6. NEWS and the batch warning say "reply text", but `content` can hold any
+   JSON value. Proposed: fix now.
+7. A data frame with failed conditions prints each one as a long row.
+   Proposed: reject, the plan gate chose to store the condition.
+8. A NEWS line in the development section says the help documents two
+   condition classes, but there are three. It predates the branch. Proposed:
+   fix now, one word.
 
