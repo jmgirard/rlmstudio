@@ -103,6 +103,8 @@ Every chat route reads its answer from the message items, and a reply without on
 - 2026-09-22: T8 done. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set: 0 errors, 0 warnings, 0 notes. The vignettes built against the live server.
 - 2026-09-22: claim audit: 85 claims read, 2 corrected — R/chat.R, R/conditions.R. The same reader re-read both and confirmed them. `devtools::test()` 3134 passed and `devtools::check()` clean after the fix.
 - 2026-09-22: all tasks done, status set to review.
+- 2026-09-22: review fix-now: O5 test and O6 help wording, three candidate rows for O1 to O3.
+- 2026-09-22: step-7 approval: m020-chat-reply-shape approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
@@ -136,3 +138,16 @@ Independent review, 2026-09-22, three fresh reviewers. The history reviewer foun
 - O6: In the conditions page, "The `content` of each such message must be an array of JSON objects" reads as if it covers native replies too.
 - O7: `na_if_failed()` still maps `NULL` to `NA`, and `lms_chat_openai()` keeps a local `is_object` beside `is_json_object()`. Neither changes behavior.
 - O8: No other help or NEWS claim contradicts the code. The `man/lms_embed.Rd` change comes from the inherited section and is correct.
+
+Triage at the merge gate, 2026-09-22, by the maintainer. No finding meets the return floor.
+
+- O1: follow-up, as a new candidate row.
+- O2: follow-up, as a new candidate row.
+- O3: follow-up, as a new candidate row.
+- O4: rejected. The `NA` output and the one warning already pin the failed slot.
+- O5: fixed now. A new test in `test-chat-schema.R` covers `null` content with finish reason `"length"` and no schema, with `logprobs` off and on. With `finish_reason` dropped from the call, the test failed 6 times.
+- O6: fixed now. The sentence now says "For `lms_chat_openresponses()` only".
+- O7: rejected. Neither item changes behavior.
+- O8: noted. It requests nothing.
+
+After the fixes: `devtools::test()` 0 failed, 0 skipped, 3148 passed. `devtools::check()` 0 errors, 0 warnings, 0 notes.

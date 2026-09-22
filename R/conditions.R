@@ -69,9 +69,9 @@
 #' `"message"`, as in a reply that holds only reasoning or a tool call. The
 #' text of a message must be one string. For [lms_chat_native()] that is the
 #' `content` of the item. For [lms_chat_openresponses()] it is the `text` of
-#' each part of type `"output_text"`. The `content` of each such message must
-#' be an array of JSON objects, and the messages together must hold at least
-#' one `"output_text"` part.
+#' each part of type `"output_text"`. For [lms_chat_openresponses()] only, the
+#' `content` of each message must be an array of JSON objects, and the
+#' messages together must hold at least one `"output_text"` part.
 #'
 #' [lms_chat_openai()] raises it in three cases, all only with
 #' `simplify = TRUE`. The first case is a response whose `choices` field is
