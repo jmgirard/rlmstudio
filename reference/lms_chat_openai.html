@@ -196,6 +196,26 @@ text of a message must be one string. For <code><a href="lms_chat_native.html">l
 each part of type <code>"output_text"</code>. For <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> only, the
 <code>content</code> of each message must be an array of JSON objects, and the
 messages together must hold at least one <code>"output_text"</code> part.</p>
+<p>With <code>simplify = TRUE</code> and <code>logprobs = TRUE</code>, <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>
+also raises it for a <code>logprobs</code> value that breaks one of these rules. The
+<code>logprobs</code> value of each <code>"output_text"</code> part is checked. A <code>logprobs</code>
+value, <code>token</code>, <code>logprob</code>, or <code>top_logprobs</code> that is <code>null</code> or absent
+passes its rule. A <code>null</code> step or candidate breaks rule 2 or rule 5.</p><ol><li><p>The value is an array.</p></li>
+<li><p>Each step in the array is a JSON object.</p></li>
+<li><p>The <code>token</code> of a step is a string.</p></li>
+<li><p>The <code>logprob</code> of a step is a number.</p></li>
+<li><p>The <code>top_logprobs</code> of a step is an array of JSON objects.</p></li>
+<li><p>The <code>token</code> and <code>logprob</code> of each of those objects follow rules 3 and 4.</p></li>
+</ol><p>The parts are checked in order, then the steps of a part, then the
+candidates of a step, one at a time. Within a step, rules 3 and 4 and the
+array test of rule 5 come before the candidates. The message names the
+first broken rule that this order reaches. These checks run only after the
+text of every <code>"output_text"</code> part is read, so a reply that also has a bad
+<code>text</code> in any part gets the text message.
+Parts of other types, such as a refusal, are not checked, and with
+<code>logprobs = FALSE</code> no part is checked. Fields are read by their exact
+names, so a field whose name only starts with the one asked for, such as
+<code>tokenX</code>, reads as absent and gives <code>NA</code> in the data frame.</p>
 <p><code>lms_chat_openai()</code> raises it in three cases, all only with
 <code>simplify = TRUE</code>. The first case is a response whose <code>choices</code> field is
 missing, empty, or not an array, or whose first element is not a JSON

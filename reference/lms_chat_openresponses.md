@@ -71,6 +71,17 @@ text and a data frame of the probabilities of every such part, in order.
 If no part carries them, it returns the string. A reply with no readable
 answer text raises `rlmstudio_bad_response`, as described below.
 
+The data frame has one row for each candidate in the `top_logprobs` of
+each step, or one row with `NA` candidates for a step with none. Each
+field is read by its exact name. A field that is `null` or absent gives
+`NA`, and so does a field whose name only starts with the one asked for,
+such as `tokenX`. With `logprobs = TRUE`, the `logprobs` value of each
+`"output_text"` part must follow six rules, which the section below
+lists. A value that breaks one raises `rlmstudio_bad_response`, and the
+message names the first broken rule in the order the section below
+gives. Parts of other types are not checked. With `logprobs = FALSE`,
+the value is not read, and the call returns the text.
+
 ## Server not running
 
 Functions that call the LM Studio REST API open a TCP connection to the
@@ -151,6 +162,37 @@ the `text` of each part of type `"output_text"`. For
 `lms_chat_openresponses()` only, the `content` of each message must be
 an array of JSON objects, and the messages together must hold at least
 one `"output_text"` part.
+
+With `simplify = TRUE` and `logprobs = TRUE`, `lms_chat_openresponses()`
+also raises it for a `logprobs` value that breaks one of these rules.
+The `logprobs` value of each `"output_text"` part is checked. A
+`logprobs` value, `token`, `logprob`, or `top_logprobs` that is `null`
+or absent passes its rule. A `null` step or candidate breaks rule 2 or
+rule 5.
+
+1.  The value is an array.
+
+2.  Each step in the array is a JSON object.
+
+3.  The `token` of a step is a string.
+
+4.  The `logprob` of a step is a number.
+
+5.  The `top_logprobs` of a step is an array of JSON objects.
+
+6.  The `token` and `logprob` of each of those objects follow rules 3
+    and 4.
+
+The parts are checked in order, then the steps of a part, then the
+candidates of a step, one at a time. Within a step, rules 3 and 4 and
+the array test of rule 5 come before the candidates. The message names
+the first broken rule that this order reaches. These checks run only
+after the text of every `"output_text"` part is read, so a reply that
+also has a bad `text` in any part gets the text message. Parts of other
+types, such as a refusal, are not checked, and with `logprobs = FALSE`
+no part is checked. Fields are read by their exact names, so a field
+whose name only starts with the one asked for, such as `tokenX`, reads
+as absent and gives `NA` in the data frame.
 
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
 raises it in three cases, all only with `simplify = TRUE`. The first
