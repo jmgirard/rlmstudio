@@ -63,6 +63,53 @@ logprob_step <- function(token, logprob = -0.5) {
   )
 }
 
+# A logprobs step as a JSON object. Each field is given as JSON text, and
+# `NULL` leaves the field out.
+step_json <- function(token = quoted("t"), logprob = "-0.5", top = "[]") {
+  json_object(token = token, logprob = logprob, top_logprobs = top)
+}
+
+# A `top_logprobs` candidate as a JSON object, built like step_json().
+candidate_json <- function(token = quoted("c"), logprob = "-1") {
+  json_object(token = token, logprob = logprob)
+}
+
+# A JSON object from fields given as JSON text. A `NULL` field is left out.
+json_object <- function(...) {
+  fields <- Filter(Negate(is.null), list(...))
+  pairs <- sprintf('"%s": %s', names(fields), unlist(fields))
+  sprintf("{%s}", paste(pairs, collapse = ", "))
+}
+
+# A JSON array of the given JSON texts.
+json_array <- function(...) sprintf("[%s]", paste(c(...), collapse = ", "))
+
+# `logprobs` values that break one rule each, two JSON types per rule. R1
+# entries are whole values. The other entries are one bad step, which a test
+# places in an array. The R6 entries put the bad candidate after a good one.
+logprobs_breaks <- function() {
+  list(
+    list(rule = "R1", label = "an object", value = '{"a": 1}'),
+    list(rule = "R1", label = "a number", value = "5"),
+    list(rule = "R2", label = "a number step", step = "5"),
+    list(rule = "R2", label = "an array step", step = "[]"),
+    list(rule = "R3", label = "a number token", step = step_json(token = "5")),
+    list(rule = "R3", label = "a boolean token", step = step_json(token = "true")),
+    list(rule = "R4", label = "a string logprob", step = step_json(logprob = quoted("-0.5"))),
+    list(rule = "R4", label = "a boolean logprob", step = step_json(logprob = "true")),
+    list(rule = "R5", label = "an object top_logprobs", step = step_json(top = candidate_json())),
+    list(rule = "R5", label = "a number candidate", step = step_json(top = json_array(candidate_json(), "5"))),
+    list(
+      rule = "R6", label = "a number candidate token",
+      step = step_json(top = json_array(candidate_json(), candidate_json(token = "5")))
+    ),
+    list(
+      rule = "R6", label = "a string candidate logprob",
+      step = step_json(top = json_array(candidate_json(), candidate_json(logprob = quoted("x"))))
+    )
+  )
+}
+
 # Items that carry no answer text. The native docs list `tool_call`,
 # `reasoning`, and `invalid_tool_call` beside `message`.
 reasoning_item <- '{"type": "reasoning", "content": "thinking"}'

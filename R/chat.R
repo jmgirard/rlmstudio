@@ -185,60 +185,23 @@ lms_chat_openresponses <- function(
       label,
       "The `text` of an `output_text` part is not one string."
     )
+    if (!isTRUE(logprobs)) {
+      return(text)
+    }
+
+    check_part_logprobs(resp, parts, label)
     # The steps of every part in order. A part without logprobs adds none.
     steps <- unlist(
       lapply(parts, \(part) part[["logprobs"]]),
       recursive = FALSE
     )
-
-    if (isTRUE(logprobs) && length(steps) > 0) {
-      logprobs_df <- do.call(
-        rbind,
-        lapply(steps, function(step) {
-          step_tok <- if (is.null(step$token)) NA_character_ else step$token
-          step_lp <- if (is.null(step$logprob)) NA_real_ else step$logprob
-
-          if (is.null(step$top_logprobs) || length(step$top_logprobs) == 0) {
-            return(data.frame(
-              step_token = step_tok,
-              step_logprob = step_lp,
-              candidate_token = NA_character_,
-              candidate_logprob = NA_real_,
-              stringsAsFactors = FALSE
-            ))
-          }
-
-          do.call(
-            rbind,
-            lapply(step$top_logprobs, function(cand) {
-              data.frame(
-                step_token = step_tok,
-                step_logprob = step_lp,
-                candidate_token = if (is.null(cand$token)) {
-                  NA_character_
-                } else {
-                  cand$token
-                },
-                candidate_logprob = if (is.null(cand$logprob)) {
-                  NA_real_
-                } else {
-                  cand$logprob
-                },
-                stringsAsFactors = FALSE
-              )
-            })
-          )
-        })
-      )
-      rownames(logprobs_df) <- NULL
-
-      # Use S3 Constructor and Validator
-      return(validate_lms_chat_result(
-        new_lms_chat_result(text = text, logprobs = logprobs_df)
-      ))
+    if (length(steps) == 0L) {
+      return(text)
     }
 
-    return(text)
+    return(validate_lms_chat_result(
+      new_lms_chat_result(text = text, logprobs = logprobs_frame(steps))
+    ))
   }
 
   rlm_abort_api(resp, "OpenResponses Failed", !is.null(rlm_token(token)))
@@ -601,6 +564,126 @@ join_reply_texts <- function(resp, texts, label, detail) {
     rlm_abort_bad_response(resp, label, detail)
   }
   paste(unlist(texts), collapse = "")
+}
+
+#' Check the logprobs of the output_text parts of an OpenResponses reply
+#'
+#' The value of each part must follow six rules, checked in this order:
+#' 1. It is absent, `null`, or an array.
+#' 2. Each step in the array is a JSON object.
+#' 3. The `token` of a step is absent, `null`, or a string.
+#' 4. The `logprob` of a step is absent, `null`, or a number.
+#' 5. The `top_logprobs` of a step is absent, `null`, or an array of JSON
+#'    objects.
+#' 6. The `token` and `logprob` of each of those objects follow rules 3 and 4.
+#'
+#' The parts are checked in order, then the steps of a part, then the
+#' candidates of a step. The first broken rule aborts, with one message per
+#' rule. Fields are read with `[[`, because `$` would read a field whose name
+#' only starts with the one asked for.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param parts The `output_text` parts, from `responses_text_parts()`.
+#' @param label Character. The calling wrapper's label.
+#'
+#' @noRd
+check_part_logprobs <- function(resp, parts, label) {
+  abort_rule <- function(detail) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      detail,
+      hint = paste(
+        "Call again with {.code logprobs = FALSE} to get the text alone,",
+        "or with {.code simplify = FALSE} to get the body unchanged."
+      )
+    )
+  }
+  # A field that is absent or `null` reads as NULL.
+  is_null_or <- function(x, test) is.null(x) || test(x)
+  is_string <- function(x) is.character(x) && length(x) == 1L
+  is_number <- function(x) is.numeric(x) && length(x) == 1L
+
+  for (part in parts) {
+    steps <- part[["logprobs"]]
+    if (!is_null_or(steps, is_json_array)) {
+      abort_rule("The `logprobs` of an `output_text` part is not an array.")
+    }
+    for (step in steps) {
+      if (!is_json_object(step)) {
+        abort_rule(
+          "A step in the `logprobs` of an `output_text` part is not a JSON object."
+        )
+      }
+      if (!is_null_or(step[["token"]], is_string)) {
+        abort_rule("The `token` of a `logprobs` step is not a string.")
+      }
+      if (!is_null_or(step[["logprob"]], is_number)) {
+        abort_rule("The `logprob` of a `logprobs` step is not a number.")
+      }
+      candidates <- step[["top_logprobs"]]
+      is_object_array <- function(x) {
+        is_json_array(x) && all(vapply(x, is_json_object, logical(1)))
+      }
+      if (!is_null_or(candidates, is_object_array)) {
+        abort_rule(paste(
+          "The `top_logprobs` of a `logprobs` step is not an array of JSON",
+          "objects."
+        ))
+      }
+      for (candidate in candidates) {
+        if (
+          !is_null_or(candidate[["token"]], is_string) ||
+            !is_null_or(candidate[["logprob"]], is_number)
+        ) {
+          abort_rule(paste(
+            "A candidate in `top_logprobs` has a `token` that is not a string",
+            "or a `logprob` that is not a number."
+          ))
+        }
+      }
+    }
+  }
+}
+
+#' Build the logprobs data frame of an OpenResponses reply
+#'
+#' One row per candidate of each step, or one row with `NA` candidates for a
+#' step with no candidates. A field that is absent or `null` gives `NA`.
+#' Fields are read by exact name with `[[`.
+#'
+#' @param steps The steps of every `output_text` part in order, already
+#'   checked by `check_part_logprobs()`.
+#' @return A data frame with the columns `step_token`, `step_logprob`,
+#'   `candidate_token`, and `candidate_logprob`.
+#'
+#' @noRd
+logprobs_frame <- function(steps) {
+  or_na <- function(x, na) if (is.null(x)) na else x
+  rows <- lapply(steps, function(step) {
+    candidates <- step[["top_logprobs"]]
+    if (length(candidates) == 0L) {
+      candidates <- list(NULL)
+    }
+    data.frame(
+      step_token = or_na(step[["token"]], NA_character_),
+      step_logprob = or_na(step[["logprob"]], NA_real_),
+      # unlist() rather than vapply(), so a JSON integer stays an integer
+      # and rbind() promotes the column as it did for one frame per row.
+      candidate_token = unlist(lapply(
+        candidates,
+        \(cand) or_na(cand[["token"]], NA_character_)
+      )),
+      candidate_logprob = unlist(lapply(
+        candidates,
+        \(cand) or_na(cand[["logprob"]], NA_real_)
+      )),
+      stringsAsFactors = FALSE
+    )
+  })
+  frame <- do.call(rbind, rows)
+  rownames(frame) <- NULL
+  frame
 }
 
 # A parsed JSON body keeps an array as an unnamed list, the counterpart of
