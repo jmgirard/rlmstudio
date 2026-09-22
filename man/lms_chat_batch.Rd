@@ -56,10 +56,17 @@ with seven columns read from each reply: \code{response_id}, \code{input_tokens}
 \code{response_id} is character, and it identifies the reply on the server. The
 other six are double, and they come from the \code{stats} object of the reply.
 A cell is \code{NA} when its field is absent or is not one value of the column
-type, a string for \code{response_id} and a number for the others. The server
-can leave a field out, such as \code{model_load_time_seconds}. Such a cell does
-not fail the input and gives no warning. The row of an input that failed holds \code{NA} in all seven columns.
-The other routes and formats add no such column.
+type, a string for \code{response_id} and a number for the others. An empty
+string is a string, so an empty \code{response_id} is kept. If \code{stats} is absent
+or is not a JSON object, all six stats cells are \code{NA}. The server can leave
+a field out, such as \code{model_load_time_seconds}. Such a cell does not fail
+the input and gives no warning.
+
+A reply with no readable answer text fails its input, whatever its \code{stats}
+and \code{response_id} hold. The row of an input that failed holds \code{NA} in all
+seven columns. If every input failed, the seven columns are still there,
+\code{response_id} as character and the other six as double. The other routes
+and formats add no such column.
 }
 \description{
 Process a vector of inputs sequentially through LM Studio.

@@ -819,8 +819,8 @@ native_stats_fields <- c(
 #'
 #' These values are extra to the answer, so a value of the wrong type gives
 #' `NA` and never fails the input. A live reply can leave a field out, such
-#' as `model_load_time_seconds`. Fields are read with `[[`, because `$` would read a field whose name only
-#' starts with the one asked for.
+#' as `model_load_time_seconds`. Fields are read with `[[`, because `$` would
+#' read a field whose name only starts with the one asked for.
 #'
 #' @param resp_data The parsed response body.
 #' @return A list with `response_id`, one string or `NA_character_`, and the
@@ -874,10 +874,17 @@ native_reply_fields <- function(resp_data) {
 #' `response_id` is character, and it identifies the reply on the server. The
 #' other six are double, and they come from the `stats` object of the reply.
 #' A cell is `NA` when its field is absent or is not one value of the column
-#' type, a string for `response_id` and a number for the others. The server
-#' can leave a field out, such as `model_load_time_seconds`. Such a cell does
-#' not fail the input and gives no warning. The row of an input that failed holds `NA` in all seven columns.
-#' The other routes and formats add no such column.
+#' type, a string for `response_id` and a number for the others. An empty
+#' string is a string, so an empty `response_id` is kept. If `stats` is absent
+#' or is not a JSON object, all six stats cells are `NA`. The server can leave
+#' a field out, such as `model_load_time_seconds`. Such a cell does not fail
+#' the input and gives no warning.
+#'
+#' A reply with no readable answer text fails its input, whatever its `stats`
+#' and `response_id` hold. The row of an input that failed holds `NA` in all
+#' seven columns. If every input failed, the seven columns are still there,
+#' `response_id` as character and the other six as double. The other routes
+#' and formats add no such column.
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call.
@@ -1123,7 +1130,7 @@ lms_chat_batch <- function(
     if (native_frame) {
       df$response_id <- vapply(
         reply_fields,
-        \(x) if (is.null(x)) NA_character_ else x$response_id,
+        \(x) if (is.null(x)) NA_character_ else x[["response_id"]],
         character(1)
       )
       for (field in native_stats_fields) {

@@ -53,7 +53,7 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - [x] T5: Write the roxygen for `lms_chat_batch()` and `lms_chat_native()`. Run `devtools::document()`. Add the NEWS entry.
 - [x] T6: Run `devtools::test()`, `devtools::check()`, and `devtools::document()`.
 - [x] T7: Move the tests of `tests/testthat/test-chat-batch-stats.R` into `tests/testthat/test-chat-batch.R`, and delete the file. Assert no warning in the AC2 tests with `expect_no_warning()`. Use `["resp_x"]` and `{"a": "resp_x"}` for the `response_id` array and object cases. On the other routes, assert `output` and no warning. If every input failed, assert the full column order.
-- [ ] T8: Add four rules to the `lms_chat_batch()` help page. A `stats` value that is not an object gives `NA` in all six cells. A reply with no readable answer text fails, whatever its fields hold. An empty `response_id` is kept. If every input failed, the columns stay. Read `response_id` with `[[` in the batch. Wrap the roxygen lines over 80 characters. Run `devtools::test()`, `devtools::check()`, and `devtools::document()`.
+- [x] T8: Add four rules to the `lms_chat_batch()` help page. A `stats` value that is not an object gives `NA` in all six cells. A reply with no readable answer text fails, whatever its fields hold. An empty `response_id` is kept. If every input failed, the columns stay. Read `response_id` with `[[` in the batch. Wrap the roxygen lines over 80 characters. Run `devtools::test()`, `devtools::check()`, and `devtools::document()`.
 
 ## Work log
 
@@ -74,6 +74,7 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - 2026-09-22: review return 1 (defect). Three criteria fail as written. AC1 names `tests/testthat/test-chat-batch.R`, but the tests are in `test-chat-batch-stats.R`. AC2 names `expect_no_warning()`, but the tests compare `capture_warnings()` to `character()`. The `lms_chat_batch()` help page leaves out two NA rules that AC6 asks for. AC3, AC4, AC5, and AC7 passed. The Review section lists all 13 reviewer findings.
 - 2026-09-22: implement resumed after review return 1. At the question gate, the user chose to move the tests into `test-chat-batch.R` over an AC1 amendment. The user also chose to fix findings O2, O3, O4, O6, O9, and O11 in this pass. The minor amendment added T7 and T8 and mapped them in Coverage.
 - 2026-09-22: T7 moved the 12 stats tests into `tests/testthat/test-chat-batch.R` and deleted `test-chat-batch-stats.R`. The file gave 30 tests, 0 failed. A plant that unwrapped `response_id` turned 2 checks red. A planted warning in `native_reply_fields()` turned 28 checks red, which includes the `expect_no_warning()` checks.
+- 2026-09-22: T8 added the four rules to the `lms_chat_batch()` help page, read `response_id` with `[[`, and wrapped two long roxygen lines. `devtools::test()` gave 316 tests, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. `devtools::document()` made no further diff.
 
 ## Decisions
 
