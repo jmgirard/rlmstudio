@@ -13,15 +13,21 @@ sent_json <- function(req) {
 }
 
 # A chat completions response whose reply content is `content_json`, a JSON
-# value written out as text: a quoted string, or `null`.
-completion_body <- function(content_json) {
+# value written out as text: a quoted string, or `null`. `finish_reason` is
+# written as a JSON string, and `NULL` leaves the field out.
+completion_body <- function(content_json, finish_reason = "stop") {
+  finish <- if (is.null(finish_reason)) {
+    ""
+  } else {
+    sprintf(', "finish_reason": "%s"', finish_reason)
+  }
   sprintf(
     paste0(
       '{"id": "chatcmpl-1", "object": "chat.completion", "choices": ',
-      '[{"index": 0, "message": {"role": "assistant", "content": %s}, ',
-      '"finish_reason": "stop"}]}'
+      '[{"index": 0, "message": {"role": "assistant", "content": %s}%s}]}'
     ),
-    content_json
+    content_json,
+    finish
   )
 }
 
@@ -74,6 +80,17 @@ test_that("no schema sends no response_format", {
 test_that("an empty schema is sent as an empty JSON object", {
   out <- call_with_reply(completion_body(quoted("{}")), schema = list())
   expect_match(sent_json(out$requests[[1]]), '"schema":{}', fixed = TRUE)
+})
+
+test_that("a nested empty object is sent as {} when written with empty names", {
+  schema <- list(type = "object", properties = setNames(list(), character()))
+  out <- call_with_reply(completion_body(quoted("{}")), schema = schema)
+  expect_match(sent_json(out$requests[[1]]), '"properties":{}', fixed = TRUE)
+
+  # The documented reason: a bare list() goes out as an array.
+  schema <- list(type = "object", properties = list())
+  out <- call_with_reply(completion_body(quoted("{}")), schema = schema)
+  expect_match(sent_json(out$requests[[1]]), '"properties":[]', fixed = TRUE)
 })
 
 test_that("the reply is parsed with jsonlite::parse_json() and simplified", {
@@ -140,6 +157,157 @@ test_that("a reply that is not one JSON string aborts as a bad response", {
   }
 })
 
+test_that("a 200 with no reply in choices aborts as a bad response", {
+  bodies <- list(
+    list(label = "no choices field", body = '{"id": "chatcmpl-1"}'),
+    list(label = "an empty choices list", body = '{"id": "chatcmpl-1", "choices": []}')
+  )
+  settings <- list(
+    list(label = "no schema", args = list()),
+    list(label = "a schema", args = list(schema = score_schema)),
+    list(label = "logprobs", args = list(logprobs = TRUE))
+  )
+  for (body in bodies) {
+    for (setting in settings) {
+      info <- paste(body$label, "with", setting$label)
+      err <- expect_error(
+        do.call(call_with_reply, c(list(body$body), setting$args)),
+        class = "rlmstudio_bad_response",
+        info = info
+      )
+      expect_identical(err$status, 200L, info = info)
+      expect_match(conditionMessage(err), "choices", info = info)
+      expect_true(all(c("content", "finish_reason") %in% names(err)), info = info)
+      expect_null(err$content, info = info)
+      expect_null(err$finish_reason, info = info)
+    }
+  }
+})
+
+test_that("a choices field that is not an array of objects aborts as a bad response", {
+  bodies <- list(
+    list(label = "a JSON object", body = '{"choices": {"a": {"message": {"content": "{}"}}}}'),
+    list(label = "an array of numbers", body = '{"choices": [1]}'),
+    list(label = "an array of strings", body = '{"choices": ["{}"]}'),
+    list(label = "an array of arrays", body = '{"choices": [[{"message": {"content": "{}"}}]]}'),
+    list(label = "an array of empty arrays", body = '{"choices": [[]]}'),
+    list(label = "a message that is a string", body = '{"choices": [{"message": "x"}]}'),
+    list(label = "a message that is a number", body = '{"choices": [{"message": 5}]}'),
+    list(label = "a message that is null", body = '{"choices": [{"message": null}]}'),
+    list(label = "a choice with no message", body = '{"choices": [{"index": 0}]}'),
+    list(label = "an empty choice", body = '{"choices": [{}]}'),
+    list(label = "a field that only starts with choices", body = '{"choicesX": [{"message": {"content": "{}"}}]}'),
+    list(label = "a field that only starts with message", body = '{"choices": [{"messageX": {"content": "{}"}}]}')
+  )
+  settings <- list(
+    list(schema = NULL),
+    list(schema = score_schema),
+    list(logprobs = TRUE)
+  )
+  for (body in bodies) {
+    for (setting in settings) {
+      err <- expect_error(
+        do.call(call_with_reply, c(list(body$body), setting)),
+        class = "rlmstudio_bad_response",
+        info = body$label
+      )
+      expect_identical(err$status, 200L, info = body$label)
+      expect_match(conditionMessage(err), "choices", info = body$label)
+      expect_null(err$content, info = body$label)
+    }
+  }
+})
+
+test_that("an unreadable reply carries its content and finish reason", {
+  cases <- list(
+    list(
+      label = "invalid JSON text",
+      json = quoted("a score of"),
+      content = "a score of",
+      hint = "reply content is in the content field"
+    ),
+    list(
+      label = "a JSON null content",
+      json = "null",
+      content = NULL,
+      hint = "reply has no text"
+    )
+  )
+  for (case in cases) {
+    err <- expect_error(
+      call_with_reply(completion_body(case$json), schema = score_schema),
+      class = "rlmstudio_bad_response",
+      info = case$label
+    )
+    expect_true(all(c("content", "finish_reason") %in% names(err)), info = case$label)
+    expect_identical(err$content, case$content, info = case$label)
+    expect_identical(err$finish_reason, "stop", info = case$label)
+    # The hint points at the field and no longer sends the user back to call.
+    # A NULL content gets a hint that does not point at text that is not there.
+    message <- gsub("\\s+", " ", conditionMessage(err))
+    expect_match(message, case$hint, info = case$label)
+    if (is.null(case$content)) {
+      expect_no_match(message, "reply content is in", info = case$label)
+    }
+    expect_match(message, "finish_reason field", info = case$label)
+    expect_no_match(conditionMessage(err), "Call again", info = case$label)
+    expect_no_match(conditionMessage(err), "simplify = FALSE", info = case$label)
+
+    # A response without a finish reason gives the field as NULL.
+    err <- expect_error(
+      call_with_reply(completion_body(case$json, finish_reason = NULL), schema = score_schema),
+      class = "rlmstudio_bad_response",
+      info = case$label
+    )
+    expect_true("finish_reason" %in% names(err), info = case$label)
+    expect_null(err$finish_reason, info = case$label)
+    # The hint does not point at a finish_reason field that is NULL.
+    message <- gsub("\\s+", " ", conditionMessage(err))
+    expect_no_match(message, "finish_reason field", info = case$label)
+  }
+})
+
+test_that("reply fields are read by their exact names", {
+  # R's `$` would read a field that only starts with the name asked for.
+  body <- paste0(
+    '{"choices": [{"message": {"content_parts": "{}"}, ',
+    '"finish_reasonX": "length"}]}'
+  )
+  err <- expect_error(
+    call_with_reply(body, schema = score_schema),
+    class = "rlmstudio_bad_response"
+  )
+  expect_null(err$content)
+  expect_null(err$finish_reason)
+  expect_no_match(conditionMessage(err), "max_tokens")
+})
+
+test_that("a reply cut off at the token limit names max_tokens", {
+  cases <- list(
+    list(label = "not one string", json = "null", detail = "is not one string"),
+    list(label = "not valid JSON", json = quoted('{"score": '), detail = "is not valid JSON")
+  )
+  for (case in cases) {
+    cut <- expect_error(
+      call_with_reply(completion_body(case$json, "length"), schema = score_schema),
+      class = "rlmstudio_bad_response",
+      info = case$label
+    )
+    expect_match(conditionMessage(cut), "token limit cut the reply off", info = case$label)
+    expect_match(conditionMessage(cut), "max_tokens", info = case$label)
+    expect_identical(cut$finish_reason, "length", info = case$label)
+
+    # The same content with another finish reason keeps the existing detail.
+    done <- expect_error(
+      call_with_reply(completion_body(case$json, "stop"), schema = score_schema),
+      class = "rlmstudio_bad_response",
+      info = case$label
+    )
+    expect_match(conditionMessage(done), case$detail, info = case$label)
+    expect_no_match(conditionMessage(done), "max_tokens", info = case$label)
+  }
+})
+
 test_that("a reply naming a file is not read from disk", {
   # `jsonlite::fromJSON()` would read this file and return its contents as the
   # answer. The URL case above cannot show the difference offline, because a
@@ -191,6 +359,55 @@ test_that("a structured reply recorded from a live server parses", {
   expect_identical(parsed, jsonlite::parse_json(content, simplifyVector = TRUE))
   # Stated apart from the parser: the recorded reply is `{ "score": 3 }`.
   expect_identical(parsed, list(score = 3L))
+})
+
+test_that("a reply that LM Studio cut off at the token limit names max_tokens", {
+  # The cassette in chat_cutoff_live/ was recorded against a real LM Studio
+  # server running google/gemma-3-1b with max_tokens 5. Regenerate it with
+  # data-raw/record-cutoff-cassette.R, which carries the full provenance. The
+  # request below must match the script's request byte for byte.
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = NA)
+  withr::local_options(rlmstudio.token = NULL)
+
+  live_call <- function(simplify) {
+    lms_chat_openai(
+      model = "google/gemma-3-1b",
+      messages = list(
+        list(
+          role = "user",
+          content = paste(
+            "Rate how positive this review is from 1 to 5 and explain why:",
+            "'Great value.'"
+          )
+        )
+      ),
+      host = "http://localhost:1234",
+      simplify = simplify,
+      temperature = 0,
+      max_tokens = 5,
+      schema = list(
+        type = "object",
+        properties = list(
+          why = list(type = "string"),
+          score = list(type = "integer")
+        ),
+        required = list("why", "score")
+      )
+    )
+  }
+
+  httptest2::with_mock_dir("chat_cutoff_live", {
+    raw <- live_call(simplify = FALSE)
+    err <- expect_error(live_call(simplify = TRUE), class = "rlmstudio_bad_response")
+  })
+
+  # The value comes from LM Studio, not from a hand-written body.
+  expect_identical(raw$choices[[1]]$finish_reason, "length")
+  expect_match(conditionMessage(err), "token limit cut the reply off")
+  expect_match(conditionMessage(err), "max_tokens")
+  expect_identical(err$finish_reason, "length")
+  expect_identical(err$content, raw$choices[[1]]$message$content)
 })
 
 test_that("lms_chat() forwards a schema on the openai route", {
@@ -276,6 +493,213 @@ test_that("batch reads shortened argument names as lms_chat() does", {
     ),
     "cannot store logprobs"
   )
+})
+
+# Run lms_chat_batch() over three inputs against a mocked server that answers
+# them with `responses`, in order.
+batch_with_sequence <- function(responses, format = "list", quiet = TRUE) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(responses)
+  lms_chat_batch(
+    "a-model",
+    c("first", "second", "third"),
+    format = format,
+    quiet = quiet,
+    api_type = "openai",
+    schema = score_schema
+  )
+}
+
+invalid_valid_invalid <- function() {
+  list(
+    mock_response(200L, completion_body(quoted("not json one"))),
+    mock_response(200L, completion_body(quoted('{"score": 3}'))),
+    mock_response(200L, completion_body(quoted("not json three")))
+  )
+}
+
+# The elements a batch returns for invalid_valid_invalid(), checked by
+# identity: the conditions carry their own reply text, and the middle element
+# is the parsed reply.
+expect_failed_slots <- function(elements) {
+  expect_length(elements, 3L)
+  expect_s3_class(elements[[1]], "rlmstudio_bad_response")
+  expect_identical(elements[[1]]$content, "not json one")
+  expect_identical(elements[[2]], list(score = 3L))
+  expect_s3_class(elements[[3]], "rlmstudio_bad_response")
+  expect_identical(elements[[3]]$content, "not json three")
+  # A stored condition keeps no backtrace, which would make each failed slot
+  # large.
+  expect_null(elements[[1]]$trace)
+  expect_null(elements[[3]]$trace)
+}
+
+test_that("a batch keeps going past a structured reply that does not parse", {
+  for (format in c("list", "vector")) {
+    warnings <- testthat::capture_warnings(
+      out <- batch_with_sequence(invalid_valid_invalid(), format)
+    )
+    # One warning only, and the vector format does not add its own.
+    expect_length(warnings, 1L)
+    expect_match(warnings, "2 inputs", info = format)
+    expect_match(warnings, "positions 1 and 3", info = format)
+    expect_match(warnings, "any reply content", info = format)
+    # The one warning also says that a vector batch came back as a list.
+    if (format == "vector") {
+      expect_match(warnings, "Returning list", info = format)
+    } else {
+      expect_no_match(warnings, "Returning list", info = format)
+    }
+    expect_type(out, "list")
+    expect_failed_slots(out)
+  }
+
+  warnings <- testthat::capture_warnings(
+    out <- batch_with_sequence(invalid_valid_invalid(), "data.frame")
+  )
+  expect_length(warnings, 1L)
+  expect_match(warnings, "positions 1 and 3")
+  expect_s3_class(out, "data.frame")
+  expect_identical(out$input, c("first", "second", "third"))
+  expect_failed_slots(out$output)
+})
+
+test_that("a batch keeps going past a message that is not an object", {
+  responses <- list(
+    mock_response(200L, completion_body(quoted('{"score": 3}'))),
+    mock_response(200L, '{"choices": [{"message": "x"}]}'),
+    mock_response(200L, completion_body(quoted('{"score": 3}')))
+  )
+  expect_warning(
+    out <- batch_with_sequence(responses),
+    "position 2"
+  )
+  expect_identical(out[[1]], list(score = 3L))
+  expect_s3_class(out[[2]], "rlmstudio_bad_response")
+  expect_identical(out[[3]], list(score = 3L))
+})
+
+test_that("the failed reply warning ignores quiet", {
+  # quiet = TRUE is what batch_with_sequence() passes. The option is the other
+  # way to silence the package, so it is set here with quiet left at FALSE.
+  withr::local_options(rlmstudio.quiet = TRUE)
+  expect_warning(
+    batch_with_sequence(invalid_valid_invalid(), "list", quiet = FALSE),
+    "positions 1 and 3"
+  )
+  expect_warning(
+    batch_with_sequence(invalid_valid_invalid(), "list", quiet = TRUE),
+    "positions 1 and 3"
+  )
+})
+
+test_that("the progress bar moves past a failed input", {
+  withr::local_options(rlmstudio.quiet = FALSE)
+  updates <- 0L
+  testthat::local_mocked_bindings(
+    cli_progress_update = function(...) updates <<- updates + 1L,
+    .package = "cli"
+  )
+  expect_warning(
+    out <- batch_with_sequence(invalid_valid_invalid(), "list", quiet = FALSE),
+    "positions 1 and 3"
+  )
+  # One update per input, the two failed ones included.
+  expect_identical(updates, 3L)
+  expect_failed_slots(out)
+})
+
+test_that("the failed reply warning names every position past 20", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, completion_body(quoted("not json"))))
+  warnings <- testthat::capture_warnings(
+    lms_chat_batch(
+      "a-model",
+      as.character(1:25),
+      format = "list",
+      quiet = TRUE,
+      api_type = "openai",
+      schema = score_schema
+    )
+  )
+  expect_length(warnings, 1L)
+  # cli wraps a long message, so the line breaks are read as spaces.
+  text <- gsub("\\s+", " ", warnings)
+  expect_match(text, "25 inputs")
+  expect_match(text, paste0("positions ", toString(1:24), ", and 25"), fixed = TRUE)
+  expect_no_match(text, "…", fixed = TRUE)
+  expect_no_match(text, "...", fixed = TRUE)
+})
+
+test_that("a batch with no failed reply keeps the vector format warning", {
+  valid <- mock_response(200L, completion_body(quoted('{"score": 3}')))
+  warnings <- testthat::capture_warnings(
+    out <- batch_with_sequence(list(valid, valid, valid), "vector")
+  )
+  expect_length(warnings, 1L)
+  expect_match(warnings, "cannot store replies parsed")
+  expect_identical(out, rep(list(list(score = 3L)), 3L))
+})
+
+test_that("an API error in a batch still aborts", {
+  responses <- list(
+    mock_response(200L, completion_body(quoted('{"score": 3}'))),
+    mock_response(500L, '{"error": "the model crashed"}'),
+    mock_response(200L, completion_body(quoted('{"score": 3}')))
+  )
+  expect_error(
+    batch_with_sequence(responses),
+    class = "rlmstudio_api_error"
+  )
+})
+
+test_that("a server that stops during a batch still aborts", {
+  # The batch probes once before the loop, and each call probes again. The
+  # third probe is the second call's, so the server goes away mid-batch.
+  probes <- 0L
+  testthat::local_mocked_bindings(is_server_running = function(...) {
+    probes <<- probes + 1L
+    probes < 3L
+  })
+  valid <- mock_response(200L, completion_body(quoted('{"score": 3}')))
+  recorder <- local_request_sequence(list(valid, valid, valid))
+
+  expect_error(
+    lms_chat_batch(
+      "a-model",
+      c("first", "second", "third"),
+      format = "list",
+      quiet = TRUE,
+      api_type = "openai",
+      schema = score_schema
+    ),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(probes, 3L)
+  expect_length(recorder$requests, 1L)
+})
+
+test_that("a batch without a schema aborts on a response with no choices", {
+  responses <- list(
+    mock_response(200L, completion_body(quoted("one"))),
+    mock_response(200L, '{"id": "chatcmpl-1"}'),
+    mock_response(200L, completion_body(quoted("three")))
+  )
+  for (format in c("list", "vector")) {
+    testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+    local_request_sequence(responses)
+    expect_error(
+      lms_chat_batch(
+        "a-model",
+        c("first", "second", "third"),
+        format = format,
+        quiet = TRUE,
+        api_type = "openai"
+      ),
+      class = "rlmstudio_bad_response",
+      info = format
+    )
+  }
 })
 
 test_that("a reply that does not parse is returned as text without a schema", {

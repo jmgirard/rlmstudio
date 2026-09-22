@@ -27,11 +27,38 @@ local_request_recorder <- function(
   response = mock_response(),
   .env = parent.frame()
 ) {
+  local_mock_perform(function(n) response, .env = .env)
+}
+
+# Mock httr2::req_perform() like local_request_recorder(), but answer the
+# first request with `responses[[1]]`, the second with `responses[[2]]`, and so
+# on. A request past the end of the list raises, so a test that sends more
+# requests than it planned for fails rather than reusing a reply.
+local_request_sequence <- function(responses, .env = parent.frame()) {
+  local_mock_perform(
+    function(n) {
+      if (n > length(responses)) {
+        stop(
+          "request ", n, " arrived, but only ", length(responses),
+          " responses were given",
+          call. = FALSE
+        )
+      }
+      responses[[n]]
+    },
+    .env = .env
+  )
+}
+
+# The shared body of the two recorders above. `respond` takes the position of
+# the request, counted from 1, and returns the response to serve.
+local_mock_perform <- function(respond, .env) {
   recorder <- new.env(parent = emptyenv())
   recorder$requests <- list()
 
   perform <- function(req, ...) {
     recorder$requests[[length(recorder$requests) + 1L]] <- req
+    response <- respond(length(recorder$requests))
 
     # Apply the request's own error policy, the way req_perform() does. Without
     # this, a caller that drops its req_error() line still sees every mocked

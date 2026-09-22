@@ -36,8 +36,8 @@
 #' [lms_chat_native()], according to `api_type`. It runs no request of its own.
 #' It can raise `rlmstudio_no_server` and `rlmstudio_api_error` through
 #' [lms_chat_openresponses()], [lms_chat_openai()], or [lms_chat_native()].
-#' With a `schema`, it can raise `rlmstudio_bad_response` through
-#' [lms_chat_openai()].
+#' With `api_type = "openai"` and `simplify = TRUE`, it can raise
+#' `rlmstudio_bad_response` through [lms_chat_openai()].
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
@@ -252,8 +252,10 @@ lms_chat_openresponses <- function(
 #'   `"response"` and `strict` set to `true`. A JSON array of one item must be
 #'   written as a list, such as `required = list("score")`, or wrapped in
 #'   [I()]. A plain vector of length one is sent as a single value, not as an
-#'   array. The package checks only that `schema` is a named list, an empty
-#'   list, or `NULL`. The server checks the schema itself.
+#'   array. An empty object nested in the schema, such as `properties`, is
+#'   written `setNames(list(), character())`, because `list()` is sent as the
+#'   empty array `[]`. The package checks only that `schema` is a named list,
+#'   an empty list, or `NULL`. The server checks the schema itself.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. Otherwise, returns a character string containing the generated
 #'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
@@ -321,7 +323,33 @@ lms_chat_openai <- function(
       return(resp_data)
     }
 
-    res_text <- resp_data$choices[[1]]$message$content
+    # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
+    # empty list fails there with a subscript error that names neither the
+    # response nor the field. A missing field gives back NULL as the reply,
+    # which a plain call returns and a `logprobs` call fails on. A JSON object
+    # in place of the array would be read by its first value. A first element
+    # that is a plain value fails on `$` with a base R error, and one that is
+    # an array gives back NULL as the reply. The same holds for its `message`.
+    # Fields are read with `[[`, because `$` would read a field whose name only
+    # starts with the one asked for.
+    choices <- resp_data[["choices"]]
+    is_object <- function(x) is.list(x) && !is.null(names(x))
+    if (
+      !is.list(choices) ||
+        length(choices) == 0L ||
+        !is.null(names(choices)) ||
+        !is_object(choices[[1]]) ||
+        !is_object(choices[[1]][["message"]])
+    ) {
+      rlm_abort_bad_response(
+        resp,
+        "OpenAI API Failed",
+        "The response holds no readable reply in its `choices` field.",
+        content = NULL,
+        finish_reason = NULL
+      )
+    }
+    res_text <- choices[[1]][["message"]][["content"]]
 
     if (isTRUE(logprobs)) {
       # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
@@ -330,7 +358,12 @@ lms_chat_openai <- function(
       ))
     }
     if (!is.null(schema)) {
-      return(parse_schema_reply(resp, res_text, "OpenAI API Failed"))
+      return(parse_schema_reply(
+        resp,
+        res_text,
+        "OpenAI API Failed",
+        finish_reason = choices[[1]][["finish_reason"]]
+      ))
     }
     return(res_text)
   }
@@ -365,21 +398,58 @@ schema_response_format <- function(schema) {
 #' `fromJSON()` fetches a string that looks like a URL and reads a string that
 #' names a file on disk. A model reply is text the package did not write.
 #'
+#' Both aborts carry the reply content and the finish reason as fields, so a
+#' caller can read what the model wrote without sending the request again. A
+#' finish reason of `"length"` means the server stopped the reply at the token
+#' limit, which is the likely reason the JSON is incomplete, so the message
+#' says so in place of the generic detail.
+#'
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param content The reply content read out of the response.
 #' @param label Character. The calling wrapper's label, which opens the message.
+#' @param finish_reason The `finish_reason` of the first choice, or `NULL`.
 #' @return The parsed reply.
 #'
 #' @noRd
-parse_schema_reply <- function(resp, content, label) {
+parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
+  abort_unread <- function(detail) {
+    if (identical(finish_reason, "length")) {
+      detail <- paste(
+        "The token limit cut the reply off before it was complete.",
+        "Raise `max_tokens` to allow a longer reply."
+      )
+    }
+    # The detail is inserted into the message as text, so cli markup in it
+    # would print as written. The hint below is a template of its own.
+    # A NULL content has no text to point at, so its hint says so. A NULL
+    # finish reason is not pointed at either.
+    hint <- if (is.null(content)) {
+      "The reply has no text, so the {.field content} field of the condition is {.code NULL}."
+    } else {
+      "The reply content is in the {.field content} field of the condition."
+    }
+    if (!is.null(finish_reason)) {
+      hint <- paste(
+        hint,
+        "The finish reason is in its {.field finish_reason} field."
+      )
+    }
+    rlm_abort_bad_response(
+      resp,
+      label,
+      detail,
+      hint = hint,
+      content = content,
+      finish_reason = finish_reason
+    )
+  }
+
   if (!is.character(content) || length(content) != 1L || is.na(content)) {
-    rlm_abort_bad_response(resp, label, "The reply content is not one string.")
+    abort_unread("The reply content is not one string.")
   }
   tryCatch(
     jsonlite::parse_json(content, simplifyVector = TRUE),
-    error = function(cnd) {
-      rlm_abort_bad_response(resp, label, "The reply content is not valid JSON.")
-    }
+    error = function(cnd) abort_unread("The reply content is not valid JSON.")
   )
 }
 
@@ -470,14 +540,22 @@ lms_chat_native <- function(
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
-#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies.
+#'   \item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply, or the condition for a reply that could not be read.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of a reply that could not be read.
 #' }
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call. It can raise
-#' `rlmstudio_api_error` through [lms_chat()]. With a `schema`, it can raise
-#' `rlmstudio_bad_response` through [lms_chat()].
+#' `rlmstudio_no_server` and `rlmstudio_api_error` through [lms_chat()], and
+#' either one aborts the batch.
+#'
+#' With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, a reply that
+#' cannot be read does not abort the batch. The element for that input holds
+#' the `rlmstudio_bad_response` condition. Its `content` field holds the reply
+#' content as the server sent it, or `NULL` where the response held none. The other elements hold their parsed replies, in input order. The
+#' call then gives one warning that names the count and the positions of the
+#' failed inputs. That warning shows even with `quiet = TRUE`. With any other
+#' settings, `rlmstudio_bad_response` from [lms_chat()] aborts the batch.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
@@ -529,20 +607,63 @@ lms_chat_batch <- function(
   }
 
   results <- lapply(inputs, function(input) {
-    res <- lms_chat(
-      model = model,
-      input = input,
-      system_prompt = system_prompt,
-      host = host,
-      simplify = simplify,
-      ...,
-      token = token
-    )
+    call_chat <- function() {
+      lms_chat(
+        model = model,
+        input = input,
+        system_prompt = system_prompt,
+        host = host,
+        simplify = simplify,
+        ...,
+        token = token
+      )
+    }
+    # A reply that does not parse loses one answer, not the whole batch. Its
+    # slot keeps the condition, which carries the reply content. Every other
+    # error still aborts, because it says nothing about one input alone. The
+    # backtrace is dropped, because it makes each failed slot large and says
+    # nothing about the reply.
+    res <- if (has_parsed) {
+      tryCatch(
+        call_chat(),
+        rlmstudio_bad_response = function(cnd) {
+          cnd$trace <- NULL
+          cnd
+        }
+      )
+    } else {
+      call_chat()
+    }
     if (!should_be_quiet) {
       cli::cli_progress_update(id = pb)
     }
     res
   })
+
+  failed <- which(vapply(
+    results,
+    inherits,
+    logical(1),
+    "rlmstudio_bad_response"
+  ))
+  if (length(failed) > 0L) {
+    # Shown whatever `quiet` says, because it is the only signal that some
+    # answers are missing (D-010). The positions are joined here, because cli
+    # shortens a vector of more than 20 values and would drop some of them.
+    positions <- cli::ansi_collapse(failed, trunc = Inf)
+    msg <- c(
+      "Could not read the structured reply for {length(failed)} input{?s}, at {cli::qty(length(failed))}position{?s} {positions}.",
+      "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with any reply content in its {.field content} field."
+    )
+    # A vector batch skips its own warning below, so this one says it too.
+    if (format == "vector") {
+      msg <- c(
+        msg,
+        "i" = "The {.val vector} format cannot store these results. Returning list."
+      )
+    }
+    cli::cli_warn(msg)
+  }
 
   if (format == "data.frame") {
     if (!isTRUE(simplify)) {
@@ -599,10 +720,13 @@ lms_chat_batch <- function(
     if (has_parsed) {
       # A scalar reply would fit a vector, but a batch can mix reply shapes,
       # and a vector that depends on what the model returned is not one a
-      # script can rely on (GP2).
-      cli::cli_warn(
-        "The {.val vector} format cannot store replies parsed from {.arg schema}. Returning list."
-      )
+      # script can rely on (GP2). A batch with a failed reply has already
+      # warned, and one warning is enough.
+      if (length(failed) == 0L) {
+        cli::cli_warn(
+          "The {.val vector} format cannot store replies parsed from {.arg schema}. Returning list."
+        )
+      }
       return(results)
     }
     if (has_logprobs) {

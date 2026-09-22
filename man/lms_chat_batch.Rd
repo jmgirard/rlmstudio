@@ -45,8 +45,8 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 The return type depends on the \code{format} argument:
 \itemize{
 \item \code{"vector"}: A character vector of responses. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
-\item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply.
-\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies.
+\item \code{"list"}: A list where each element is the response corresponding to the provided input. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element is the parsed reply, or the condition for a reply that could not be read.
+\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of a reply that could not be read.
 }
 }
 \description{
@@ -55,8 +55,16 @@ Process a vector of inputs sequentially through LM Studio.
 \details{
 This function calls \code{\link[=lms_chat]{lms_chat()}} once for each element of \code{inputs}. It
 raises \code{rlmstudio_no_server} itself, before the first call. It can raise
-\code{rlmstudio_api_error} through \code{\link[=lms_chat]{lms_chat()}}. With a \code{schema}, it can raise
-\code{rlmstudio_bad_response} through \code{\link[=lms_chat]{lms_chat()}}.
+\code{rlmstudio_no_server} and \code{rlmstudio_api_error} through \code{\link[=lms_chat]{lms_chat()}}, and
+either one aborts the batch.
+
+With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, a reply that
+cannot be read does not abort the batch. The element for that input holds
+the \code{rlmstudio_bad_response} condition. Its \code{content} field holds the reply
+content as the server sent it, or \code{NULL} where the response held none. The other elements hold their parsed replies, in input order. The
+call then gives one warning that names the count and the positions of the
+failed inputs. That warning shows even with \code{quiet = TRUE}. With any other
+settings, \code{rlmstudio_bad_response} from \code{\link[=lms_chat]{lms_chat()}} aborts the batch.
 }
 \section{Server not running}{
 
@@ -104,18 +112,35 @@ it returns are placed by the index that the response reports, so a block
 with a missing, repeated, or out-of-range index would otherwise pair a
 vector with the wrong text and give back a matrix that is silently wrong.
 
-\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it when a \code{schema} was given and the reply
-content is not one string of valid JSON. It is raised only with \code{simplify = TRUE} and
-\code{logprobs = FALSE}, which are the two settings under which the reply is
-parsed. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}} can raise it through
-\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in two cases, both only with
+\code{simplify = TRUE}. The first case is a response whose \code{choices} field is
+missing, empty, or not an array, or whose first element is not a JSON
+object with a \code{message} object in it, so there is no reply to read. This case is raised with or
+without a \code{schema}, and with \code{logprobs = TRUE} as well. The second case is
+a reply that does not parse. A \code{schema} was given, \code{logprobs = FALSE}, and
+the reply content is not one string of valid JSON. If the server reports
+the finish reason \code{"length"}, the token limit cut the reply off. The message
+then says so and names \code{max_tokens}. \code{\link[=lms_chat]{lms_chat()}} can raise the condition
+through \code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} raises it only where it does not store the condition in
+an element of its result. With a \code{schema}, \code{simplify = TRUE}, and
+\code{logprobs = FALSE}, a failed input's element holds the condition, and the
+batch warns once and goes on. With any other settings, the condition
+aborts the batch.
 
 The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: both functions read
 the body only after a 200, and report every other status as an
-\code{rlmstudio_api_error} instead. The message names the argument that returns
-the body unchanged, so you can read what arrived. The one exception is an
-embeddings body that did not parse at all: that check runs before the
-argument is read, so its message points at the host instead.
+\code{rlmstudio_api_error} instead. A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} also
+carries two more fields. The \code{content} field holds the reply content, and
+the \code{finish_reason} field holds the finish reason that the server reported.
+Either one is \code{NULL} where the response has none, and both are \code{NULL} for a
+response with no \code{choices}. For a reply that does not parse, the message
+names the \code{content} field, so you can read what the model wrote without a
+second request. The other messages name \code{simplify = FALSE}, which returns
+the body unchanged, with one exception. An embeddings body that did not
+parse at all is checked before that argument is read, so its message
+points at the host instead.
 }
 
