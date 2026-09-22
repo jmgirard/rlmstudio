@@ -9,6 +9,7 @@ _Last hygiene check: 2026-09-22 (M020 done and archived, M017 row pruned, three 
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M021 | An unreadable OpenResponses reply names its fault | planned | none | normal | milestones/M021-openresponses-reply-faults.md |
 | M020 | A chat reply without readable answer text fails that input, not the batch | done | none | normal | milestones/archive/M020-chat-reply-shape.md |
 | M019 | A failed input no longer ends a chat batch | done | none | normal | milestones/archive/M019-batch-survives-errors.md |
 | M018 | A failed structured reply keeps its text and no longer ends a batch | done | none | normal | milestones/archive/M018-failed-structured-reply.md |
@@ -46,9 +47,8 @@ _Last hygiene check: 2026-09-22 (M020 done and archived, M017 row pruned, three 
 - A guard that keeps the token wrapper table covering every exported function that reaches the REST API. The table is a fixed list of twelve names. A thirteenth wrapper added later escapes it, added 2026-09-20, M009 review finding 8, count corrected M010, see the two sibling guard rows above
 - A structured reply that the token limit cut off but that is still valid JSON, such as `"12"`, parses with no sign of the cut-off. Decide whether a `finish_reason` of `"length"` warns or aborts even when the parse succeeds, added 2026-09-22, M018 review pass 2 finding 3
 - A bad token (401) or a model that is not loaded (404) fails every input of `lms_chat_batch()` in the same way. The batch then sends every request and warns at the end. Decide whether a failure that holds for every input stops the batch early, added 2026-09-22, M019 review finding O3
-- With `logprobs = TRUE`, a malformed OpenResponses `logprobs` value, such as an object or `[5]`, fails with an unclassed base R error. `lms_chat_batch()` then stops and loses the earlier replies. Raise `rlmstudio_bad_response` instead, added 2026-09-22, M020 review finding O1
-- The token limit can cut off a native or OpenResponses reply before any message item. That reply aborts with "holds no message item" and no hint about the limit. The OpenAI route names `max_tokens`. Decide whether those two routes read the finish reason and carry it in the condition, added 2026-09-22, M020 review finding O2
-- The native and OpenResponses unreadable-reply tables in `tests/testthat/test-chat.R` assert the condition class but not which check fired. A shape that aborts on the wrong check still passes. Assert the detail text per shape, added 2026-09-22, M020 review finding O3
+- A native reply that the token limit cut off before any message item aborts with no hint about the limit. The `/api/v1/chat` docs name no field for a cut-off. Promote once a live native reply shows such a field. M021 T1 records what the reply carries, added 2026-09-22, M021 plan gate
+- A cut-off OpenResponses or native reply whose text is readable returns the partial text with no sign of the cut-off. Decide whether it warns. See the sibling row on a cut-off structured reply that still parses, added 2026-09-22, M021 scope
 - [low] Remove the macOS Package Manager workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. Promote once a released pak extracts zstd archives, added 2026-09-20, M011 scope, r-lib/pkgdepends#485
 - [low] Pin the macOS check job to R 4.5, whose CRAN binaries are still gzip. This is the alternative M011 rejected. If Posit Package Manager stops serving gzip macOS binaries, or drops its R 4.6 path, promote this row, added 2026-09-20, M011 plan gate
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
