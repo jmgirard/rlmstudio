@@ -752,8 +752,17 @@ lms_chat_batch <- function(
   api_type <- match.arg(api_type, c("openresponses", "openai", "native"))
   rlm_check_schema_route(schema, api_type)
 
-  stop_if_no_server(host)
+  # An argument fault, so it aborts before the server probe (D-008) and before
+  # any request is sent.
   format <- match.arg(format)
+  if (format == "data.frame" && !isTRUE(simplify)) {
+    cli::cli_abort(
+      "The {.val data.frame} format requires {.code simplify = TRUE}.",
+      call = NULL
+    )
+  }
+
+  stop_if_no_server(host)
 
   has_logprobs <- isTRUE(args[["logprobs"]])
   # Each result is a parsed reply of any shape, not one string.
@@ -806,13 +815,6 @@ lms_chat_batch <- function(
     if (!should_be_quiet) {
       cli::cli_progress_update(id = pb)
     }
-  }
-
-  if (format == "data.frame" && !isTRUE(simplify)) {
-    cli::cli_abort(
-      "The {.val data.frame} format requires {.code simplify = TRUE}.",
-      call = NULL
-    )
   }
 
   is_failed <- function(x) {
