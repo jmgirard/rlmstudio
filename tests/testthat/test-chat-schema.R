@@ -545,6 +545,22 @@ test_that("the failed reply warning ignores quiet", {
   )
 })
 
+test_that("the progress bar moves past a failed input", {
+  withr::local_options(rlmstudio.quiet = FALSE)
+  updates <- 0L
+  testthat::local_mocked_bindings(
+    cli_progress_update = function(...) updates <<- updates + 1L,
+    .package = "cli"
+  )
+  expect_warning(
+    out <- batch_with_sequence(invalid_valid_invalid(), "list", quiet = FALSE),
+    "positions 1 and 3"
+  )
+  # One update per input, the two failed ones included.
+  expect_identical(updates, 3L)
+  expect_failed_slots(out)
+})
+
 test_that("the failed reply warning names every position past 20", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(200L, completion_body(quoted("not json"))))

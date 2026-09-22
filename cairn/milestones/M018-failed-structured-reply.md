@@ -138,7 +138,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - [x] T11: If a vector batch has a failed input, state in the one warning that
       the call returns a list. If `content` is `NULL`, give a hint that does
       not say the reply text is in it. Add a test for each.
-- [ ] T12: Add a batch test with `quiet = FALSE` and a failed input, so the
+- [x] T12: Add a batch test with `quiet = FALSE` and a failed input, so the
       progress bar updates after a caught condition.
 - [ ] T13: Fix the NEWS bullet that calls `lms_chat_openai()` the second
       function to raise the class. Add the no-schema batch abort on a missing
@@ -170,6 +170,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: T9 done. The guard also rejects a named `choices` and a first element that is not a list. The test covers an object, `[1]`, and `["{}"]`, with and without a schema, and failed first. The help page and NEWS text for these shapes moves to T13. Suite 1688 pass.
 - 2026-09-21: T10 done. The batch handler sets `trace` to `NULL` before it stores the condition. The shared slot check asserts it in all three formats and failed first. Suite 1694 pass.
 - 2026-09-21: T11 done. A vector batch with a failure adds "Returning list." to its one warning. A `NULL` content gets a hint that says the reply has no text. Both tests failed first. Suite 1699 pass.
+- 2026-09-21: T12 done. The test mocks `cli::cli_progress_update()` and asserts 3 updates for invalid, valid, invalid. It passed on the branch code and failed on a planted skip of the update for a failed input. Suite 1709 pass.
 
 ## Decisions
 
