@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M019: A failed input no longer ends a chat batch
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -105,6 +105,9 @@
 - 2026-09-22: T8 done. The new all-failed test lacked the `logprobs` column on the old code, then passed. The data-frame branch now keys the column on the `logprobs` argument, not on the results. A batch whose replies all came back without logprobs now also gets the column, as `@return` says. Full suite: 2139 expectations, 0 failed.
 - 2026-09-22: T9 done. "Server not running" and the `NEWS.md` entry now limit `results` to a server that the check before an input finds gone. A run with the check mocked to pass and `host` on a closed port raised `httr2_failure` with no `results`, and a new test pins that. `devtools::document()` regenerated 13 pages. Batch tests: 301 expectations, 0 failed.
 - 2026-09-22: T10 done. New test: named `inputs` keep their names in a list, a vector, and `results`. The vector-with-`schema` runs assert the "Returning list" reason, the loop's warning count carries `info`, and both `fail_response()` calls pass `parsed`. A planted drop of the reason line and a planted drop of the names each turned a test red, and both were reverted. Batch tests: 312 expectations, 0 failed. `devtools::document()` left no diff. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes.
+- claim audit: 41 claims read, 3 corrected — R/chat.R, NEWS.md
+- 2026-09-22: T11 added and done (minor amendment, found by the claim audit). A `"content": null` reply beside a failed input gave a vector of 2 for 3 inputs. The new test failed that way, then passed once a NULL reply maps to `NA` in the text paths. The reader re-read the three claims once, and the NEWS wording it still flagged now names a vector or a data frame without `logprobs`. With `logprobs = TRUE`, a null reply still aborts inside `lms_chat_openai()`, as on `main`, so the O4 candidate row now names it. Full suite: 2156 expectations, 0 failed. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes.
+- 2026-09-22: implement complete after the review return. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
