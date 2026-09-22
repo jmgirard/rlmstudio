@@ -72,7 +72,7 @@
 - [x] T7: Run the AC6 grep and read each hit. Run `devtools::test()`, then `devtools::check()` with the token set.
 - [x] T8: Review O1. With `format = "data.frame"` and `logprobs = TRUE`, build the `logprobs` column even when every input fails (`R/chat.R:723`). Test it first: a batch in which every input fails, asserting the column and its `NULL` slots.
 - [x] T9: Review O2. Narrow the "Server not running" paragraph in `R/conditions.R` and the matching `NEWS.md` entry to a server that the check before an input finds gone. A drop during a request raises another error and carries no `results`. Run `devtools::document()`.
-- [ ] T10: Review O7, O8, and O9 in `tests/testthat/test-chat-batch.R`. Add a test that named `inputs` keep their names in a list, a vector, and the `results` field. Assert the "Returning list" text in the vector-with-`schema` warning. Give `expect_length(res$warnings, 1L)` its `info`. Pass `parsed` in the `fail_response()` call on the default `api_type`. Run `devtools::test()` and `devtools::check()` with the token.
+- [x] T10: Review O7, O8, and O9 in `tests/testthat/test-chat-batch.R`. Add a test that named `inputs` keep their names in a list, a vector, and the `results` field. Assert the "Returning list" text in the vector-with-`schema` warning. Give `expect_length(res$warnings, 1L)` its `info`. Pass `parsed` in the `fail_response()` call on the default `api_type`. Run `devtools::test()` and `devtools::check()` with the token.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates.
@@ -103,6 +103,7 @@
 - 2026-09-22: implement resumed after the review return. Question gate skipped, because T8 to T10 leave no choice open.
 - 2026-09-22: T8 done. The new all-failed test lacked the `logprobs` column on the old code, then passed. The data-frame branch now keys the column on the `logprobs` argument, not on the results. A batch whose replies all came back without logprobs now also gets the column, as `@return` says. Full suite: 2139 expectations, 0 failed.
 - 2026-09-22: T9 done. "Server not running" and the `NEWS.md` entry now limit `results` to a server that the check before an input finds gone. A run with the check mocked to pass and `host` on a closed port raised `httr2_failure` with no `results`, and a new test pins that. `devtools::document()` regenerated 13 pages. Batch tests: 301 expectations, 0 failed.
+- 2026-09-22: T10 done. New test: named `inputs` keep their names in a list, a vector, and `results`. The vector-with-`schema` runs assert the "Returning list" reason, the loop's warning count carries `info`, and both `fail_response()` calls pass `parsed`. A planted drop of the reason line and a planted drop of the names each turned a test red, and both were reverted. Batch tests: 312 expectations, 0 failed. `devtools::document()` left no diff. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

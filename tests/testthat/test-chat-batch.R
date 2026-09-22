@@ -119,7 +119,8 @@ test_that("a failed input in any format does not end the batch", {
             expect_failed_slot(got[[fail_at]], cls, info = info)
           }
 
-          expect_length(res$warnings, 1L)
+          # expect_length() takes no `info`, so the loop case would go unnamed.
+          expect_identical(length(res$warnings), 1L, info = info)
           expect_match(
             res$warnings,
             sprintf("1 input failed, at position %d\\.", fail_at),
@@ -129,6 +130,14 @@ test_that("a failed input in any format does not end the batch", {
             expect_match(res$warnings, 'format = "list"', fixed = TRUE, info = info)
           } else {
             expect_no_match(res$warnings, 'format = "list"', fixed = TRUE, info = info)
+          }
+          # A vector batch that returns a list says why in the same warning.
+          if (format == "vector" && schema) {
+            expect_match(
+              res$warnings,
+              "cannot store replies parsed from .*schema.*Returning list\\.",
+              info = info
+            )
           }
         }
       }
@@ -152,7 +161,7 @@ test_that("a failed input does not end a batch on the default api_type", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   recorder <- local_request_sequence(list(
     openresponses_ok(1L),
-    fail_response("rlmstudio_api_error"),
+    fail_response("rlmstudio_api_error", parsed = FALSE),
     openresponses_ok(3L)
   ))
   expect_warning(
@@ -271,13 +280,50 @@ test_that("a server down before the batch starts adds no results field", {
 test_that("a lost server keeps a stored failure in its results", {
   res <- run_lost_server_batch(
     3L,
-    list(fail_response("rlmstudio_api_error"), openai_ok(2L))
+    list(fail_response("rlmstudio_api_error", parsed = FALSE), openai_ok(2L))
   )
   expect_identical(res$requests, 2L)
   expect_length(res$cnd$results, 3L)
   expect_failed_slot(res$cnd$results[[1]], "rlmstudio_api_error")
   expect_identical(res$cnd$results[[2]], "reply 2")
   expect_null(res$cnd$results[[3]])
+})
+
+test_that("named inputs keep their names in the result and in results", {
+  named_inputs <- c(a = "first", b = "second", c = "third")
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  for (format in c("list", "vector")) {
+    local_request_sequence(list(
+      openai_ok(1L),
+      fail_response("rlmstudio_api_error", parsed = FALSE),
+      openai_ok(3L)
+    ))
+    expect_warning(
+      out <- lms_chat_batch(
+        "a-model",
+        named_inputs,
+        format = format,
+        quiet = TRUE,
+        api_type = "openai"
+      ),
+      "1 input failed"
+    )
+    expect_named(out, c("a", "b", "c"))
+  }
+  expect_identical(out, c(a = "reply 1", b = NA, c = "reply 3"))
+
+  probes <- 0L
+  testthat::local_mocked_bindings(is_server_running = function(...) {
+    probes <<- probes + 1L
+    probes <= 2L
+  })
+  local_request_sequence(list(openai_ok(1L)))
+  cnd <- expect_error(
+    lms_chat_batch("a-model", named_inputs, quiet = TRUE, api_type = "openai"),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(cnd$results, list(a = "reply 1", b = NULL, c = NULL))
 })
 
 test_that("a connection that fails after the check passes adds no results field", {
