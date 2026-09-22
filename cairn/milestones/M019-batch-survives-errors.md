@@ -50,7 +50,7 @@
      top-to-bottom). Review reads to fence evidence — tracking-rules "AC fencing". -->
 
 - AC1 → T1, T2
-- AC2 → T1, T2, T8
+- AC2 → T1, T2, T8, T11
 - AC3 → T1, T3
 - AC4 → T4
 - AC5 → T5
@@ -73,6 +73,7 @@
 - [x] T8: Review O1. With `format = "data.frame"` and `logprobs = TRUE`, build the `logprobs` column even when every input fails (`R/chat.R:723`). Test it first: a batch in which every input fails, asserting the column and its `NULL` slots.
 - [x] T9: Review O2. Narrow the "Server not running" paragraph in `R/conditions.R` and the matching `NEWS.md` entry to a server that the check before an input finds gone. A drop during a request raises another error and carries no `results`. Run `devtools::document()`.
 - [x] T10: Review O7, O8, and O9 in `tests/testthat/test-chat-batch.R`. Add a test that named `inputs` keep their names in a list, a vector, and the `results` field. Assert the "Returning list" text in the vector-with-`schema` warning. Give `expect_length(res$warnings, 1L)` its `info`. Pass `parsed` in the `fail_response()` call on the default `api_type`. Run `devtools::test()` and `devtools::check()` with the token.
+- [x] T11: Claim audit after the return. A reply with `"content": null` beside a failed input made a vector short and a data frame abort. Store `NA` for a NULL reply in the text paths, test it first, and correct the three claims the audit flagged.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates.

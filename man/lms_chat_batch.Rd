@@ -62,10 +62,12 @@ next input. Where the result is a list, or the \code{output} list-column that a
 \code{schema} gives, the element for that input holds the condition without its
 backtrace. An \code{rlmstudio_bad_response} for a reply that does not parse
 keeps the reply content in its \code{content} field. Where the result is text,
-as with \code{format = "vector"} or a data frame whose replies are not parsed
-(no \code{schema}, or \code{logprobs = TRUE}), the element holds \code{NA}, and the
-\code{logprobs} column holds \code{NULL}. Use \code{format = "list"} to keep the
-conditions. The call then gives one warning that names the count
+the element holds \code{NA}. The result is text with \code{format = "vector"} when it
+returns a vector (\code{simplify = TRUE}, no \code{schema}, \code{logprobs = FALSE}), and
+with a data frame whose replies are not parsed (no \code{schema}, or
+\code{logprobs = TRUE}). The \code{logprobs} column holds \code{NULL} for a failed input.
+A reply whose content is \code{null} also holds \code{NA} in a vector or in a data
+frame without \code{logprobs}. Use \code{format = "list"} to keep the conditions. The call then gives one warning that names the count
 and the positions of the failed inputs. That warning shows even with
 \code{quiet = TRUE}.
 

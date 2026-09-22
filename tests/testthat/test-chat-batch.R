@@ -289,6 +289,35 @@ test_that("a lost server keeps a stored failure in its results", {
   expect_null(res$cnd$results[[3]])
 })
 
+test_that("a reply with null content keeps its slot as NA in text results", {
+  # The server answers input 1 with `"content": null`, which lms_chat() returns
+  # as NULL rather than as a failure, and fails input 2.
+  null_reply <- mock_response(200L, completion_body("null"))
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  local_request_sequence(list(
+    null_reply,
+    fail_response("rlmstudio_api_error", parsed = FALSE),
+    openai_ok(3L)
+  ))
+  expect_warning(
+    out <- lms_chat_batch("a-model", batch_inputs, format = "vector", quiet = TRUE, api_type = "openai"),
+    "1 input failed, at position 2\\."
+  )
+  expect_identical(out, c(NA, NA, "reply 3"))
+
+  local_request_sequence(list(
+    null_reply,
+    fail_response("rlmstudio_api_error", parsed = FALSE),
+    openai_ok(3L)
+  ))
+  expect_warning(
+    out <- lms_chat_batch("a-model", batch_inputs, format = "data.frame", quiet = TRUE, api_type = "openai"),
+    "1 input failed, at position 2\\."
+  )
+  expect_identical(out$output, c(NA, NA, "reply 3"))
+})
+
 test_that("named inputs keep their names in the result and in results", {
   named_inputs <- c(a = "first", b = "second", c = "third")
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)

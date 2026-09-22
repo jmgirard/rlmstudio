@@ -553,10 +553,12 @@ lms_chat_native <- function(
 #' `schema` gives, the element for that input holds the condition without its
 #' backtrace. An `rlmstudio_bad_response` for a reply that does not parse
 #' keeps the reply content in its `content` field. Where the result is text,
-#' as with `format = "vector"` or a data frame whose replies are not parsed
-#' (no `schema`, or `logprobs = TRUE`), the element holds `NA`, and the
-#' `logprobs` column holds `NULL`. Use `format = "list"` to keep the
-#' conditions. The call then gives one warning that names the count
+#' the element holds `NA`. The result is text with `format = "vector"` when it
+#' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and
+#' with a data frame whose replies are not parsed (no `schema`, or
+#' `logprobs = TRUE`). The `logprobs` column holds `NULL` for a failed input.
+#' A reply whose content is `null` also holds `NA` in a vector or in a data
+#' frame without `logprobs`. Use `format = "list"` to keep the conditions. The call then gives one warning that names the count
 #' and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`.
 #'
@@ -646,7 +648,7 @@ lms_chat_batch <- function(
         stop(cnd)
       }
     )
-    # `[i]` rather than `[[i]]`, so a NULL reply keeps its slot.
+    # `[i]` rather than `[[i]]`, so a NULL reply keeps its slot in the list.
     results[i] <- list(res)
     if (!should_be_quiet) {
       cli::cli_progress_update(id = pb)
@@ -684,7 +686,11 @@ lms_chat_batch <- function(
   holds_na <- isTRUE(simplify) &&
     !has_parsed &&
     (format == "data.frame" || (format == "vector" && is.null(vector_fallback)))
-  na_if_failed <- function(x) if (is_failed(x)) NA_character_ else x
+  # A NULL reply, such as `"content": null`, is not a failure, but it becomes
+  # NA too, so the text result stays as long as `inputs`.
+  na_if_failed <- function(x) {
+    if (is.null(x) || is_failed(x)) NA_character_ else x
+  }
 
   if (length(failed) > 0L) {
     # Shown whatever `quiet` says, because it is the only signal that some
