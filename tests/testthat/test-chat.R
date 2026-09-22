@@ -78,7 +78,9 @@ test_that("lms_chat routes correctly to openresponses and creates S3 class", {
 
   fake_body <- list(
     output = list(list(
+      type = "message",
       content = list(list(
+        type = "output_text",
         text = "5",
         logprobs = list(
           list(

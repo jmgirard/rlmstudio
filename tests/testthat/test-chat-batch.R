@@ -15,14 +15,10 @@ openai_ok <- function(i, schema = FALSE) {
 # An OpenResponses response that succeeds at position `i`. With `logprobs`,
 # the reply carries one token and its log probability.
 openresponses_ok <- function(i, logprobs = FALSE) {
-  lp <- if (logprobs) {
-    ', "logprobs": [{"token": "r", "logprob": -0.5, "top_logprobs": []}]'
-  } else {
-    ""
-  }
+  lp <- if (logprobs) sprintf("[%s]", logprob_step("r")) else NULL
   mock_response(
     200L,
-    sprintf('{"output": [{"content": [{"text": "reply %d"%s}]}]}', i, lp)
+    output_body(responses_message(output_text(quoted(sprintf("reply %d", i)), lp)))
   )
 }
 

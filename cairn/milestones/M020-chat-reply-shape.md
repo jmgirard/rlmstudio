@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M020: A chat reply without readable answer text fails that input, not the batch
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP2, GP4, GP6   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — changes what three exported chat wrappers and the batch return and raise   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m020-chat-reply-shape   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -65,10 +65,10 @@ Every chat route reads its answer from the message items, and a reply without on
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Give every mocked chat body a `type` on each item and part, as real LM Studio replies have. That covers the body in `tests/testthat/test-chat.R:79-92` and the `openresponses_ok()` helper in `tests/testthat/test-chat-batch.R:17-27`. Add native and OpenResponses body builders to `tests/testthat/helper-chat-bodies.R`. Two tests expect a `null` reply to give `NA` with no failure: `test-chat-batch.R:292-320` for OpenAI content and `321-341` for OpenResponses text. Rewrite both to expect a stored failure. The suite passes before any change under `R/`.
+- [x] T1: Give every mocked chat body a `type` on each item and part, as real LM Studio replies have. That covers the body in `tests/testthat/test-chat.R:79-92` and the `openresponses_ok()` helper in `tests/testthat/test-chat-batch.R:17-27`. Add native and OpenResponses body builders to `tests/testthat/helper-chat-bodies.R`. The suite passes before any change under `R/`.
 - [ ] T2: Add an internal reader for the native reply in `R/chat.R`. It selects the message items, checks the shape, and aborts through `rlm_abort_bad_response()`. `lms_chat_native()` calls it where it now reads `output[[1]]$content` (`R/chat.R:515`). Write the AC1 tests and the native AC3 rows first.
-- [ ] T3: Add the OpenResponses reader in the same way, with the logprobs rows taken from every selected part. It replaces `output[[1]]$content[[1]]` (`R/chat.R:173`). Write the AC2 tests and the OpenResponses AC3 rows first.
-- [ ] T4: In `lms_chat_openai()`, abort when the content is not one string, before the logprobs and plain returns (`R/chat.R:352-368`). The `schema` path keeps `parse_schema_reply()`. Write the AC4 tests first.
+- [ ] T3: Add the OpenResponses reader in the same way, with the logprobs rows taken from every selected part. It replaces `output[[1]]$content[[1]]` (`R/chat.R:173`). Write the AC2 tests and the OpenResponses AC3 rows first. Rewrite `test-chat-batch.R:321-341`, which expects `"text": null` to give `NA` with no failure, to expect a stored failure.
+- [ ] T4: In `lms_chat_openai()`, abort when the content is not one string, before the logprobs and plain returns (`R/chat.R:352-368`). The `schema` path keeps `parse_schema_reply()`. Write the AC4 tests first. Rewrite `test-chat-batch.R:292-320`, which expects OpenAI `null` content to give `NA` with no failure, to expect a stored failure.
 - [ ] T5: Write the AC5 batch table in `tests/testthat/test-chat-batch.R`, reusing `local_request_sequence()`.
 - [ ] T6: In `lms_chat_batch()`, move `match.arg(format)` and the `data.frame` and `simplify` check above `stop_if_no_server()` (`R/chat.R:603-664`). Write the AC6 test first with `local_counting_probe()`, as `test-arg-guards.R:489-503` does.
 - [ ] T7: Update the help text named in AC7 in `R/conditions.R` and `R/chat.R`, including "Two functions raise it" and "both functions" (`R/conditions.R:56-57` and `80-81`). Run `devtools::document()`. Add a `NEWS.md` entry. Rewrite the development-version sentence that says a `NULL` reply holds `NA`.
@@ -91,6 +91,9 @@ Every chat route reads its answer from the message items, and a reply without on
 - 2026-09-22: plan gate chose to join every message item's text over the first or last message only, because text after a tool call is lost otherwise. Falsified by replies whose earlier messages are not part of the answer.
 - 2026-09-22: plan gate chose an abort for a reply with no answer text on every route over `NULL` everywhere or `NULL` on OpenAI only (D-012). Falsified by users who rely on `NULL` for a tool-call reply.
 - 2026-09-22: plan gate chose to include the early `data.frame` and `simplify` check over a separate hotfix, because it touches the same function and test files.
+- 2026-09-22: implement started on branch m020-chat-reply-shape. No question gate, because the plan gate settled every open choice.
+- 2026-09-22: minor amendment. The two `null` test rewrites moved from T1 to T3 and T4, because they cannot pass before the change under `R/`.
+- 2026-09-22: T1 done. Typed body builders are in `helper-chat-bodies.R`, and two mocked bodies are retyped. `devtools::test()`: 0 failed, 0 skipped.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
