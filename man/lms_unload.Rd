@@ -58,6 +58,17 @@ Studio server is there. The call then fails later, as an
 \code{rlmstudio_no_server}. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
 asks the host for a model list and reports \code{TRUE} only for an answer that
 an LM Studio server would give.
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} checks the server once before its first input, and
+\code{\link[=lms_chat]{lms_chat()}} checks it again for each input. If that check finds the server
+gone during the batch, the batch aborts with \code{rlmstudio_no_server}, and no
+request goes out after that. The condition then carries a \code{results} field, a list as
+long as \code{inputs}. Its elements before the lost input hold the values that
+\code{format = "list"} returns for those inputs. The element of the lost input
+and every element after it are \code{NULL}. The check before the first input
+adds no \code{results} field. A connection that fails after the check passes,
+such as a server that stops during a request, raises an \code{httr2_failure}
+error instead. That error aborts the batch and carries no \code{results} field.
 }
 
 \section{API failure}{
@@ -66,6 +77,10 @@ A condition of class \code{rlmstudio_api_error} is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a \code{status} field, which holds the HTTP response status as an
 integer.
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input
+holds the condition, or \code{NA} where the result is text, and the batch warns
+once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 }
 
 \examples{
