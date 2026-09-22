@@ -12,7 +12,6 @@ _Last hygiene check: 2026-09-22 (M020 done and archived, M017 row pruned, three 
 | M021 | An unreadable OpenResponses reply names its fault | review | none | normal | milestones/M021-openresponses-reply-faults.md |
 | M020 | A chat reply without readable answer text fails that input, not the batch | done | none | normal | milestones/archive/M020-chat-reply-shape.md |
 | M019 | A failed input no longer ends a chat batch | done | none | normal | milestones/archive/M019-batch-survives-errors.md |
-| M018 | A failed structured reply keeps its text and no longer ends a batch | done | none | normal | milestones/archive/M018-failed-structured-reply.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
