@@ -139,8 +139,9 @@ messages together must hold at least one \code{"output_text"} part.
 
 With \code{simplify = TRUE} and \code{logprobs = TRUE}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}
 also raises it for a \code{logprobs} value that breaks one of these rules. The
-\code{logprobs} value of each \code{"output_text"} part is checked. A field that is
-\code{null} or absent passes each rule.
+\code{logprobs} value of each \code{"output_text"} part is checked. A \code{logprobs}
+value, \code{token}, \code{logprob}, or \code{top_logprobs} that is \code{null} or absent
+passes its rule. A \code{null} step or candidate breaks rule 2 or rule 5.
 \enumerate{
 \item The value is an array.
 \item Each step in the array is a JSON object.

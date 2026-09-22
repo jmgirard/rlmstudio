@@ -1,6 +1,6 @@
 # M021: An unreadable OpenResponses reply names its fault
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -70,6 +70,8 @@ The checks go over the parts in order, then the steps of a part in order, then t
 - 2026-09-22: T4 done. The batch test in `tests/testthat/test-chat-batch.R` passes, and it fails with the base R error `$ operator is invalid for atomic vectors` on the `main` version of `R/chat.R`.
 - 2026-09-22: T5 done. `helper-chat-bodies.R` pairs every native and OpenResponses unreadable shape with its detail sentence, and `test-chat.R` asserts that sentence and no other. A plant that swapped two detail sentences in `R/chat.R` gave 10 failures.
 - 2026-09-22: T6 done. The conditions page, the `@return` text of `lms_chat_openresponses()`, and NEWS state the rules and the exact-name reads. The NEWS "before" claims were read off the `main` code on a `[5]` value and a `tokenX` field. `devtools::test()` passed 4398, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- claim audit: 38 claims read, 2 corrected — R/conditions.R, NEWS.md, tests/testthat/test-chat.R
+- 2026-09-22: the claim audit found that a `null` step or candidate now aborts, which the docs had said passes. The conditions page and NEWS now say so, and the reader read the corrected text again and found no problem. After the fix, `devtools::test()` passed 4398, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
 
 ## Decisions
 

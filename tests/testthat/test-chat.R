@@ -377,8 +377,9 @@ expect_logprobs_rule <- function(body, rule, info) {
   expect_identical(err$status, 200L, info = info)
 }
 
-# The bodies that place one bad `logprobs` value at each location a reply can
-# hold it. `good` is a readable value for the parts around it.
+# The bodies that place one bad `logprobs` value at three locations: the first
+# part, a later part, and a part of a later message item. `good` is a
+# readable value for the parts around it.
 logprobs_locations <- function(bad, good = json_array(step_json())) {
   list(
     "the first part" = output_body(responses_message(

@@ -75,8 +75,9 @@
 #'
 #' With `simplify = TRUE` and `logprobs = TRUE`, [lms_chat_openresponses()]
 #' also raises it for a `logprobs` value that breaks one of these rules. The
-#' `logprobs` value of each `"output_text"` part is checked. A field that is
-#' `null` or absent passes each rule.
+#' `logprobs` value of each `"output_text"` part is checked. A `logprobs`
+#' value, `token`, `logprob`, or `top_logprobs` that is `null` or absent
+#' passes its rule. A `null` step or candidate breaks rule 2 or rule 5.
 #'
 #' 1. The value is an array.
 #' 2. Each step in the array is a JSON object.
