@@ -725,9 +725,10 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. It holds the `response_id` of the reply and its `stats` object
-#'   of token counts and timings. [lms_chat_batch()] returns these values as
-#'   columns with `format = "data.frame"`. If \code{simplify = TRUE},
+#'   response. The body can hold a `response_id` for the reply and a `stats`
+#'   object of token counts and timings. With `api_type = "native"` and
+#'   `format = "data.frame"`, [lms_chat_batch()] returns the id and six of
+#'   the `stats` fields as columns. If \code{simplify = TRUE},
 #'   returns one character string: the
 #'   `content` of every item of type `"message"` in the `output` array, pasted
 #'   together in order with no separator. Items of other types, such as
@@ -977,8 +978,9 @@ lms_chat_batch <- function(
   # A native data frame also returns the reply id and the stats of each reply,
   # so that route asks for the body and reads the text out of it here. The
   # text is read by the helper `lms_chat_native()` uses, so a reply fails the
-  # same way. `results` still holds the text, which is what the `results`
-  # field of a lost-server abort carries on every route.
+  # same way. `results` still holds the answer text, as a native vector or
+  # list batch with `simplify = TRUE` does, so the `results` field of a
+  # lost-server abort does not change.
   native_frame <- format == "data.frame" && api_type == "native"
   reply_fields <- vector("list", length(inputs))
   # `lms_chat_native()` returns the body only for status 200, so the abort a

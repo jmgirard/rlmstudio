@@ -35,9 +35,10 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 }
 \value{
 If \code{simplify = FALSE}, returns a list representing the raw JSON
-response. It holds the \code{response_id} of the reply and its \code{stats} object
-of token counts and timings. \code{\link[=lms_chat_batch]{lms_chat_batch()}} returns these values as
-columns with \code{format = "data.frame"}. If \code{simplify = TRUE},
+response. The body can hold a \code{response_id} for the reply and a \code{stats}
+object of token counts and timings. With \code{api_type = "native"} and
+\code{format = "data.frame"}, \code{\link[=lms_chat_batch]{lms_chat_batch()}} returns the id and six of
+the \code{stats} fields as columns. If \code{simplify = TRUE},
 returns one character string: the
 \code{content} of every item of type \code{"message"} in the \code{output} array, pasted
 together in order with no separator. Items of other types, such as
