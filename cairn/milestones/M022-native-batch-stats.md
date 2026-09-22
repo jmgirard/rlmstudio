@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M022: A native chat batch reports each reply's stats and response id
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -69,7 +69,35 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - 2026-09-22: T5 documented the seven columns on the `lms_chat_batch()` page and the body fields on the `lms_chat_native()` page, and added the NEWS entry. A grep of `man/lms_chat_batch.Rd` finds each of the seven names. The help text names `model_load_time_seconds` as a field the server can leave out, as T1 observed.
 - 2026-09-22: T6 `devtools::test()` gave 316 tests, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. `devtools::document()` made no diff.
 - 2026-09-22: claim audit: 46 claims read, 2 corrected — R/chat.R. The `lms_chat_native()` return text no longer says that the body always holds `response_id` and `stats`. A batch code comment now names the route and setting it holds for. The re-read found both accurate and refined the comment once more.
+- 2026-09-22: review return 1 (defect). Three criteria fail as written. AC1 names `tests/testthat/test-chat-batch.R`, but the tests are in `test-chat-batch-stats.R`. AC2 names `expect_no_warning()`, but the tests compare `capture_warnings()` to `character()`. The `lms_chat_batch()` help page leaves out two NA rules that AC6 asks for. AC3, AC4, AC5, and AC7 passed. The Review section lists all 13 reviewer findings.
 
 ## Decisions
 
 ## Review
+
+Review pass 1, 2026-09-22. The branch holds `origin/main`, so no merge was needed. The pass ended in a return, so no box is ticked. The re-review gathers fresh evidence for all seven criteria.
+
+- AC1: FAIL as written. The tests in `tests/testthat/test-chat-batch-stats.R` pass, 12 tests with 0 failed. They cover each clause: the column order for both `logprobs` settings, `expect_identical()` on every cell, and the row names against the OpenAI route. The criterion names `tests/testthat/test-chat-batch.R`, and the branch leaves that file unchanged.
+- AC2: FAIL as written. The tests cover each shape for `response_id`, `input_tokens`, `tokens_per_second`, and `stats`, and they assert the `NA` cell and the kept `output`. They assert no warning with `expect_identical(res$warnings, character())` (lines 139 and 170). The criterion names `expect_no_warning()`. A probe showed that the code gives `NA` for `["resp_x"]` and `[7]`.
+- AC3: PASS. The test "a failed input holds NA in every reply column" covers both classes with both `logprobs` settings. It includes an unreadable reply with valid `stats` and `response_id`, and asserts `NA` in all seven columns and one failure warning at position 2. The test "the reply columns are there when every input failed" asserts the column types.
+- AC4: PASS. The test "the other routes add no reply column to a data frame" asserts `input` and `output` on OpenResponses and OpenAI, plus `logprobs` with `logprobs = TRUE`, and `input` and `output` for an OpenAI `schema` batch.
+- AC5: PASS. Four tests cover it. The single native and `lms_chat()` calls return a string with `NULL` attributes. With `simplify = FALSE`, the call returns the body with `response_id` and `stats`. Vector and list batches hold plain strings. A list batch stores `rlmstudio_api_error` (status 400) and `rlmstudio_bad_response`. A lost server aborts with `rlmstudio_no_server`, and `results` is `list("x", NULL, NULL)`.
+- AC6: FAIL as written. A grep of `man/lms_chat_batch.Rd` finds each of the seven names. `NEWS.md` has the entry, and the `lms_chat_native()` page names the body fields. The `lms_chat_batch()` page leaves out two NA rules: a `stats` value that is not an object gives `NA` in all six cells (AC2), and a reply with no readable answer text fails whatever its fields hold (AC3).
+- AC7: PASS. `devtools::test()` gave 316 tests, 4800 expectations, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. `devtools::document()` made no diff.
+- Consistency gate: `cairn_validate.py` exit 0. No DESIGN principle changed. No pkgdown site. The README files are untouched. The NEWS entry names no milestone. No new top-level file.
+
+Reviewer findings, ranked by each reviewer, all logged. These return with the milestone for triage at the next gate.
+
+- O1 (diff-bug): AC1 fails as written. The tests are in `test-chat-batch-stats.R`, not `test-chat-batch.R`. Recorded above.
+- O2: The `response_id` array and object cases hold a number (`[5]`, `{"a": 1}`), so a mutation to `is_one_string(unlist(id))` at `R/chat.R:841` stays green. Use `["resp_x"]` and `{"a": "resp_x"}`.
+- O3: AC6 is partly met. The help page leaves out the NA rules of AC2 and AC3 listed above. It also does not say that the columns stay when every input failed, or that an empty `response_id` is kept.
+- O4: The AC4 tests assert only column names, and `run_stats_batch()` swallows warnings, so a regression that failed every input on those routes stays green.
+- O5: `capture_warnings()` in place of the `expect_no_warning()` that AC2 names. Recorded above.
+- O6: The every-input-failed test checks column presence with `%in%`, not the order.
+- O7: No DECISIONS entry records the change to the native data-frame shape, which D-011 treated as a reason against an `error` column, or the choice of a silent `NA`.
+- O8: The `lms_chat_native()` page says the body "can hold" `stats` and `response_id`. AC6 says it returns the body "with" them.
+- O9: `x$response_id` at `R/chat.R:1127` reads a package-built list with `$`. The stats loop two lines later uses `[[`, as the M018 lesson and T3 ask.
+- O10: `body` and `text` are assigned inside the `tryCatch` expression and persist in the function frame. Each input overwrites them before use, so they cause no fault today.
+- O11: `R/chat.R:822-823` and `R/chat.R:879` exceed 80 characters.
+- S1 (blame-history): no conflict with past milestones, D-007, D-010, D-011, or D-012.
+- S2 (prior-review): the same `$` read as O9, rated low severity because the list names cannot collide. The probe for GitHub review comments found none.
