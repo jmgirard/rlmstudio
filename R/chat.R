@@ -557,8 +557,9 @@ lms_chat_native <- function(
 #' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and
 #' with a data frame whose replies are not parsed (no `schema`, or
 #' `logprobs = TRUE`). The `logprobs` column holds `NULL` for a failed input.
-#' A reply whose content is `null` also holds `NA` in a vector or in a data
-#' frame without `logprobs`. Use `format = "list"` to keep the conditions. The call then gives one warning that names the count
+#' A reply that [lms_chat()] returns as `NULL`, such as one whose content is
+#' `null`, also holds `NA` in a text result. Use `format = "list"` to keep the
+#' conditions. The call then gives one warning that names the count
 #' and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`.
 #'

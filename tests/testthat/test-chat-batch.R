@@ -318,6 +318,28 @@ test_that("a reply with null content keeps its slot as NA in text results", {
   expect_identical(out$output, c(NA, NA, "reply 3"))
 })
 
+test_that("a logprobs data frame keeps its column when no reply carried logprobs", {
+  # Replies with no logprobs, and one with null text, on the route that
+  # returns them as plain text or NULL.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    openresponses_ok(1L),
+    mock_response(200L, '{"output": [{"content": [{"text": null}]}]}'),
+    openresponses_ok(3L)
+  ))
+  out <- lms_chat_batch(
+    "a-model",
+    batch_inputs,
+    format = "data.frame",
+    logprobs = TRUE,
+    quiet = TRUE,
+    api_type = "openresponses"
+  )
+  expect_named(out, c("input", "output", "logprobs"))
+  expect_identical(out$output, c("reply 1", NA, "reply 3"))
+  expect_identical(out$logprobs, list(NULL, NULL, NULL))
+})
+
 test_that("named inputs keep their names in the result and in results", {
   named_inputs <- c(a = "first", b = "second", c = "third")
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)

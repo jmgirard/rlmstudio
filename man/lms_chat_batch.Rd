@@ -66,8 +66,9 @@ the element holds \code{NA}. The result is text with \code{format = "vector"} wh
 returns a vector (\code{simplify = TRUE}, no \code{schema}, \code{logprobs = FALSE}), and
 with a data frame whose replies are not parsed (no \code{schema}, or
 \code{logprobs = TRUE}). The \code{logprobs} column holds \code{NULL} for a failed input.
-A reply whose content is \code{null} also holds \code{NA} in a vector or in a data
-frame without \code{logprobs}. Use \code{format = "list"} to keep the conditions. The call then gives one warning that names the count
+A reply that \code{\link[=lms_chat]{lms_chat()}} returns as \code{NULL}, such as one whose content is
+\code{null}, also holds \code{NA} in a text result. Use \code{format = "list"} to keep the
+conditions. The call then gives one warning that names the count
 and the positions of the failed inputs. That warning shows even with
 \code{quiet = TRUE}.
 

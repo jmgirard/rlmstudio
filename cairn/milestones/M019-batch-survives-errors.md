@@ -108,6 +108,7 @@
 - claim audit: 41 claims read, 3 corrected — R/chat.R, NEWS.md
 - 2026-09-22: T11 added and done (minor amendment, found by the claim audit). A `"content": null` reply beside a failed input gave a vector of 2 for 3 inputs. The new test failed that way, then passed once a NULL reply maps to `NA` in the text paths. The reader re-read the three claims once, and the NEWS wording it still flagged now names a vector or a data frame without `logprobs`. With `logprobs = TRUE`, a null reply still aborts inside `lms_chat_openai()`, as on `main`, so the O4 candidate row now names it. Full suite: 2156 expectations, 0 failed. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes.
 - 2026-09-22: implement complete after the review return. Status set to review.
+- step-7 approval: m019-batch-survives-errors approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
@@ -163,3 +164,4 @@ Pass 2 independent review: three new fresh reviewers. The prior-review lens foun
 - P5: A `null` reply becomes `NA` with no warning, so a user cannot tell it from a failed input without `format = "list"`. The history lens noted the same case. The roxygen documents it, and a `null` reply is not a failure. Proposed: reject as documented design.
 - P6: AC2 was unticked. The reviewer read the file before the pass-2 tick. Proposed: reject as stale.
 - P7: With a data frame and `simplify = FALSE`, the stored failures are never reported before the abort. Proposed: follow-up, added to the O5 candidate row.
+- Gate pass 2, 2026-09-22: the user approved the merge. P1 to P3 were fixed on the branch in `NEWS.md` and the roxygen. A new test pins the always-present `logprobs` column and the `NA` for a `null` text reply on the OpenResponses route. P4 and P7 extend the O4 and O5 candidate rows. P5 and P6 are rejected. After the fix, `devtools::check()` with the token gave 0 errors, 0 warnings, and 0 notes.
