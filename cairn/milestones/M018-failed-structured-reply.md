@@ -113,7 +113,7 @@ still aborts on an empty `choices`, because no parse is in play there.
       up in a `tryCatch()` `finally` clause (LESSONS, M017). Record the
       fixture with LM Studio running and add the replay test. The test
       asserts that the recorded `finish_reason` is `"length"`.
-- [ ] T5: In `lms_chat_batch()`, wrap only the `lms_chat()` call
+- [x] T5: In `lms_chat_batch()`, wrap only the `lms_chat()` call
       (`R/chat.R:532`) in a handler for class `rlmstudio_bad_response`, so
       the progress bar still moves. Warn once after the loop through
       `cli::cli_warn()`, not the quiet helpers (D-010). If an input failed in
@@ -140,7 +140,8 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: implement gate: the user allowed starting the LM Studio server for the T4 recording. If the model is already loaded, the script skips the load and the unload.
 - 2026-09-21: T1 done. `local_request_sequence()` serves a list of responses in turn and raises past its end. Both recorders share `local_mock_perform()`. Suite 1542 pass.
 - 2026-09-21: T2 and T3 done in one commit, because both edit the same lines of `lms_chat_openai()`. The detail clause carries plain backticks, because cli does not read markup inside an inserted value. Suite 1612 pass.
-- 2026-09-21: T4 done. The live gemma-3-1b reply with `max_tokens` 5 came back as `{"why":` with `finish_reason` `"length"`. The script records with `simplify = FALSE`, because the abort would stop the recording. The server was started for the recording and stopped after it, and the loaded model stayed loaded.
+- 2026-09-21: T4 done. The live gemma-3-1b reply with `max_tokens` 5 came back as `{"why":` with `finish_reason` `"length"`. The script records with `simplify = FALSE`, because with `simplify = TRUE` the abort stops the recording. The server was started for the recording and stopped after it, and the loaded model stayed loaded.
+- 2026-09-21: T5 done. The batch catches `rlmstudio_bad_response` only when it parses replies, so a batch without a `schema` still aborts. Suite 1657 pass.
 
 ## Decisions
 

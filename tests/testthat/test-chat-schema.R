@@ -416,6 +416,126 @@ test_that("batch reads shortened argument names as lms_chat() does", {
   )
 })
 
+# Run lms_chat_batch() over three inputs against a mocked server that answers
+# them with `responses`, in order.
+batch_with_sequence <- function(responses, format = "list", quiet = TRUE) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(responses)
+  lms_chat_batch(
+    "a-model",
+    c("first", "second", "third"),
+    format = format,
+    quiet = quiet,
+    api_type = "openai",
+    schema = score_schema
+  )
+}
+
+invalid_valid_invalid <- function() {
+  list(
+    mock_response(200L, completion_body(quoted("not json one"))),
+    mock_response(200L, completion_body(quoted('{"score": 3}'))),
+    mock_response(200L, completion_body(quoted("not json three")))
+  )
+}
+
+# The elements a batch returns for invalid_valid_invalid(), checked by
+# identity: the conditions carry their own reply text, and the middle element
+# is the parsed reply.
+expect_failed_slots <- function(elements) {
+  expect_length(elements, 3L)
+  expect_s3_class(elements[[1]], "rlmstudio_bad_response")
+  expect_identical(elements[[1]]$content, "not json one")
+  expect_identical(elements[[2]], list(score = 3L))
+  expect_s3_class(elements[[3]], "rlmstudio_bad_response")
+  expect_identical(elements[[3]]$content, "not json three")
+}
+
+test_that("a batch keeps going past a structured reply that does not parse", {
+  for (format in c("list", "vector")) {
+    warnings <- testthat::capture_warnings(
+      out <- batch_with_sequence(invalid_valid_invalid(), format)
+    )
+    # One warning only, and the vector format does not add its own.
+    expect_length(warnings, 1L)
+    expect_match(warnings, "2 inputs", info = format)
+    expect_match(warnings, "positions 1 and 3", info = format)
+    expect_type(out, "list")
+    expect_failed_slots(out)
+  }
+
+  warnings <- testthat::capture_warnings(
+    out <- batch_with_sequence(invalid_valid_invalid(), "data.frame")
+  )
+  expect_length(warnings, 1L)
+  expect_match(warnings, "positions 1 and 3")
+  expect_s3_class(out, "data.frame")
+  expect_identical(out$input, c("first", "second", "third"))
+  expect_failed_slots(out$output)
+})
+
+test_that("the failed reply warning ignores quiet", {
+  # quiet = TRUE is what batch_with_sequence() passes. The option is the other
+  # way to silence the package, so it is set here with quiet left at FALSE.
+  withr::local_options(rlmstudio.quiet = TRUE)
+  expect_warning(
+    batch_with_sequence(invalid_valid_invalid(), "list", quiet = FALSE),
+    "positions 1 and 3"
+  )
+  expect_warning(
+    batch_with_sequence(invalid_valid_invalid(), "list", quiet = TRUE),
+    "positions 1 and 3"
+  )
+})
+
+test_that("a batch with no failed reply keeps the vector format warning", {
+  valid <- mock_response(200L, completion_body(quoted('{"score": 3}')))
+  warnings <- testthat::capture_warnings(
+    out <- batch_with_sequence(list(valid, valid, valid), "vector")
+  )
+  expect_length(warnings, 1L)
+  expect_match(warnings, "cannot store replies parsed")
+  expect_identical(out, rep(list(list(score = 3L)), 3L))
+})
+
+test_that("an API error in a batch still aborts", {
+  responses <- list(
+    mock_response(200L, completion_body(quoted('{"score": 3}'))),
+    mock_response(500L, '{"error": "the model crashed"}'),
+    mock_response(200L, completion_body(quoted('{"score": 3}')))
+  )
+  expect_error(
+    batch_with_sequence(responses),
+    class = "rlmstudio_api_error"
+  )
+})
+
+test_that("a server that stops during a batch still aborts", {
+  # The batch probes once before the loop, and each call probes again. The
+  # third probe is the second call's, so the server goes away mid-batch.
+  probes <- 0L
+  testthat::local_mocked_bindings(is_server_running = function(...) {
+    probes <<- probes + 1L
+    probes < 3L
+  })
+  valid <- mock_response(200L, completion_body(quoted('{"score": 3}')))
+  recorder <- local_request_sequence(list(valid, valid, valid))
+
+  expect_error(
+    lms_chat_batch(
+      "a-model",
+      c("first", "second", "third"),
+      format = "list",
+      quiet = TRUE,
+      api_type = "openai",
+      schema = score_schema
+    ),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(probes, 3L)
+  expect_length(recorder$requests, 1L)
+})
+
 test_that("a reply that does not parse is returned as text without a schema", {
   out <- call_with_reply(completion_body(quoted("a score of three")))
   expect_identical(out$value, "a score of three")

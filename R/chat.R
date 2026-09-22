@@ -573,20 +573,45 @@ lms_chat_batch <- function(
   }
 
   results <- lapply(inputs, function(input) {
-    res <- lms_chat(
-      model = model,
-      input = input,
-      system_prompt = system_prompt,
-      host = host,
-      simplify = simplify,
-      ...,
-      token = token
-    )
+    call_chat <- function() {
+      lms_chat(
+        model = model,
+        input = input,
+        system_prompt = system_prompt,
+        host = host,
+        simplify = simplify,
+        ...,
+        token = token
+      )
+    }
+    # A reply that does not parse loses one answer, not the whole batch. Its
+    # slot keeps the condition, which carries the reply text. Every other
+    # error still aborts, because it says nothing about one input alone.
+    res <- if (has_parsed) {
+      tryCatch(call_chat(), rlmstudio_bad_response = function(cnd) cnd)
+    } else {
+      call_chat()
+    }
     if (!should_be_quiet) {
       cli::cli_progress_update(id = pb)
     }
     res
   })
+
+  failed <- which(vapply(
+    results,
+    inherits,
+    logical(1),
+    "rlmstudio_bad_response"
+  ))
+  if (length(failed) > 0L) {
+    # Shown whatever `quiet` says, because it is the only signal that some
+    # answers are missing (D-010).
+    cli::cli_warn(c(
+      "Could not read the structured reply for {length(failed)} input{?s}, at position{?s} {failed}.",
+      "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with the reply text in its {.field content} field."
+    ))
+  }
 
   if (format == "data.frame") {
     if (!isTRUE(simplify)) {
@@ -643,10 +668,13 @@ lms_chat_batch <- function(
     if (has_parsed) {
       # A scalar reply would fit a vector, but a batch can mix reply shapes,
       # and a vector that depends on what the model returned is not one a
-      # script can rely on (GP2).
-      cli::cli_warn(
-        "The {.val vector} format cannot store replies parsed from {.arg schema}. Returning list."
-      )
+      # script can rely on (GP2). A batch with a failed reply has already
+      # warned, and one warning is enough.
+      if (length(failed) == 0L) {
+        cli::cli_warn(
+          "The {.val vector} format cannot store replies parsed from {.arg schema}. Returning list."
+        )
+      }
       return(results)
     }
     if (has_logprobs) {
