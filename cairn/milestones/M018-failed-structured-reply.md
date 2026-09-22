@@ -143,7 +143,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: T4 done. The live gemma-3-1b reply with `max_tokens` 5 came back as `{"why":` with `finish_reason` `"length"`. The script records with `simplify = FALSE`, because with `simplify = TRUE` the abort stops the recording. The server was started for the recording and stopped after it, and the loaded model stayed loaded.
 - 2026-09-21: T5 done. If the batch parses replies, it catches `rlmstudio_bad_response`. Otherwise it does not, so a batch without a `schema` still aborts. Suite 1657 pass.
 - 2026-09-21: T6 done. The test also pins that a bare `list()` goes out as `[]`, the reason the docs give. Suite 1659 pass.
-- 2026-09-21: T7 done. NEWS map: nested empty object to the AC6 test, the two fields to the AC2 test, the `max_tokens` message to the AC3 tests, no `choices` to the AC1 test, the batch bullet to the AC4 and AC5 tests. A run on main showed the old behavior: an empty `choices` gave `subscript out of bounds`, and a missing one returned `NULL`. `devtools::check()` 0 errors, 0 warnings, 0 notes.
+- 2026-09-21: T7 done. NEWS map: nested empty object to AC6, the two fields to AC2, the `max_tokens` message to AC3. No `choices` maps to AC1, and the batch bullet to AC4 and AC5. A run on main showed the old behavior: an empty `choices` gave `subscript out of bounds`, and a missing one returned `NULL`. `devtools::check()` 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 

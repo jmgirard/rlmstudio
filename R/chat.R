@@ -36,7 +36,7 @@
 #' [lms_chat_native()], according to `api_type`. It runs no request of its own.
 #' It can raise `rlmstudio_no_server` and `rlmstudio_api_error` through
 #' [lms_chat_openresponses()], [lms_chat_openai()], or [lms_chat_native()].
-#' With a `schema`, it can raise `rlmstudio_bad_response` through
+#' With `api_type = "openai"`, it can raise `rlmstudio_bad_response` through
 #' [lms_chat_openai()].
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
@@ -325,7 +325,8 @@ lms_chat_openai <- function(
 
     # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
     # empty list fails there with a subscript error that names neither the
-    # response nor the field, and a missing field gives back NULL as the reply.
+    # response nor the field. A missing field gives back NULL as the reply,
+    # which a plain call returns and a `logprobs` call fails on.
     choices <- resp_data$choices
     if (!is.list(choices) || length(choices) == 0L) {
       rlm_abort_bad_response(
@@ -529,7 +530,7 @@ lms_chat_native <- function(
 #' With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, a reply that
 #' cannot be read does not abort the batch. The element for that input holds
 #' the `rlmstudio_bad_response` condition. Its `content` field holds the reply
-#' text. The other elements hold their parsed replies, in input order. The
+#' text, or `NULL` where the response held no reply. The other elements hold their parsed replies, in input order. The
 #' call then gives one warning that names the count and the positions of the
 #' failed inputs. That warning shows even with `quiet = TRUE`. With any other
 #' settings, `rlmstudio_bad_response` from [lms_chat()] aborts the batch.
@@ -620,7 +621,7 @@ lms_chat_batch <- function(
     # answers are missing (D-010).
     cli::cli_warn(c(
       "Could not read the structured reply for {length(failed)} input{?s}, at position{?s} {failed}.",
-      "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with the reply text in its {.field content} field."
+      "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with any reply text in its {.field content} field."
     ))
   }
 

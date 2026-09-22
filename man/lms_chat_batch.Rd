@@ -61,7 +61,7 @@ either one aborts the batch.
 With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, a reply that
 cannot be read does not abort the batch. The element for that input holds
 the \code{rlmstudio_bad_response} condition. Its \code{content} field holds the reply
-text. The other elements hold their parsed replies, in input order. The
+text, or \code{NULL} where the response held no reply. The other elements hold their parsed replies, in input order. The
 call then gives one warning that names the count and the positions of the
 failed inputs. That warning shows even with \code{quiet = TRUE}. With any other
 settings, \code{rlmstudio_bad_response} from \code{\link[=lms_chat]{lms_chat()}} aborts the batch.

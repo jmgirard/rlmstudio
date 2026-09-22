@@ -16,9 +16,10 @@
 #
 #   Rscript data-raw/record-cutoff-cassette.R
 #
-# The recorded call is made with simplify = FALSE, because with
-# simplify = TRUE the cut-off reply aborts before httptest2 can finish the
-# recording. The script then checks that the reply was in fact cut off.
+# The recorded call is made with simplify = FALSE. With simplify = TRUE the
+# cut-off reply aborts the script, after httptest2 writes the response but
+# before the check below and the move into place. The check reads the raw
+# body to confirm that the reply was in fact cut off.
 #
 # httptest2 records only when the target directory is absent, so the script
 # records into a fresh directory beside it. The old cassette is replaced only

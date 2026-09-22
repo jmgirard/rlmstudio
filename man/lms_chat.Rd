@@ -67,7 +67,7 @@ This function calls \code{\link[=lms_chat_openresponses]{lms_chat_openresponses(
 \code{\link[=lms_chat_native]{lms_chat_native()}}, according to \code{api_type}. It runs no request of its own.
 It can raise \code{rlmstudio_no_server} and \code{rlmstudio_api_error} through
 \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, or \code{\link[=lms_chat_native]{lms_chat_native()}}.
-With a \code{schema}, it can raise \code{rlmstudio_bad_response} through
+With \code{api_type = "openai"}, it can raise \code{rlmstudio_bad_response} through
 \code{\link[=lms_chat_openai]{lms_chat_openai()}}.
 }
 \section{Server not running}{
