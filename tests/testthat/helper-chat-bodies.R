@@ -39,6 +39,40 @@ native_message <- function(content_json) {
   sprintf('{"type": "message", "content": %s}', content_json)
 }
 
+# A whole native reply whose one message item reads as `text`. `stats` and
+# `response_id` are JSON text, and `NULL` leaves the field out.
+native_reply <- function(
+  text = "reply",
+  stats = native_stats(),
+  response_id = quoted("resp_1")
+) {
+  json_object(
+    output = json_array(native_message(quoted(text))),
+    stats = stats,
+    response_id = response_id
+  )
+}
+
+# A native `stats` object. Each field is JSON text, and `NULL` leaves it out.
+# The token counts default to JSON integers, as a live reply sends them.
+native_stats <- function(
+  input_tokens = "21",
+  total_output_tokens = "3",
+  reasoning_output_tokens = "0",
+  tokens_per_second = "284.5",
+  time_to_first_token_seconds = "0.237",
+  model_load_time_seconds = "1.5"
+) {
+  json_object(
+    input_tokens = input_tokens,
+    total_output_tokens = total_output_tokens,
+    reasoning_output_tokens = reasoning_output_tokens,
+    tokens_per_second = tokens_per_second,
+    time_to_first_token_seconds = time_to_first_token_seconds,
+    model_load_time_seconds = model_load_time_seconds
+  )
+}
+
 # An OpenResponses message item holding the given parts.
 responses_message <- function(...) {
   sprintf(

@@ -46,8 +46,8 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 
 ## Tasks
 
-- [ ] T1: Send one `/api/v1/chat` request to the local LM Studio. Write the names and JSON types of the `stats` fields and the form of `response_id` in the work log. If a field is present under a name that differs from the six in AC1, stop and amend the plan through the gate. An absent field does not count, because AC2 gives it `NA`.
-- [ ] T2: In `tests/testthat/helper-chat-bodies.R`, add a builder for a native reply with a `stats` object and a `response_id`. Write the tests for AC1, AC2, and AC3 in `tests/testthat/test-chat-batch.R`, and see them fail.
+- [x] T1: Send one `/api/v1/chat` request to the local LM Studio. Write the names and JSON types of the `stats` fields and the form of `response_id` in the work log. If a field is present under a name that differs from the six in AC1, stop and amend the plan through the gate. An absent field does not count, because AC2 gives it `NA`.
+- [x] T2: In `tests/testthat/helper-chat-bodies.R`, add a builder for a native reply with a `stats` object and a `response_id`. Write the tests for AC1, AC2, and AC3 in `tests/testthat/test-chat-batch.R`, and see them fail.
 - [ ] T3: In `R/chat.R`, change the native data-frame path of `lms_chat_batch()` so that it reads `response_id` and `stats` from each reply body. Read the answer text through the helpers that `lms_chat_native()` uses, so that a failure keeps its class. A reply that is not 200 still goes through `rlm_abort_api()`. The native logprobs warning stays. Single calls do not change. Read the fields with `[[` (M018 lesson).
 - [ ] T4: Write the tests for AC4 and AC5.
 - [ ] T5: Write the roxygen for `lms_chat_batch()` and `lms_chat_native()`. Run `devtools::document()`. Add the NEWS entry.
@@ -61,6 +61,9 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - 2026-09-22: plan gate chose seven flat columns over one `stats` list-column, because flat columns compute directly. Falsified by a new server stats field that users need.
 - 2026-09-22: plan gate chose an `NA` cell with no warning over failing the input. Stats are extra data. With a failed input, a change to the stats block fails every input. Falsified by a user who needs to know that stats went missing.
 - 2026-09-22: plan gate kept the OpenResponses `usage` and `id` fields out, because their names and fields differ. Falsified by a need for one column set across routes.
+- 2026-09-22: implement started on branch `m022-native-batch-stats`. The plan left no choice open, so no question gate ran.
+- 2026-09-22: T1 live probe with google/gemma-3-1b. `stats` held `input_tokens`, `total_output_tokens`, and `reasoning_output_tokens` as JSON integers, and `tokens_per_second` and `time_to_first_token_seconds` as numbers with fractions. `model_load_time_seconds` was absent. `response_id` was a string like `resp_<hex>`. A second call with `previous_response_id` answered with the name from the first turn. No name differs from AC1.
+- 2026-09-22: T2 added `native_reply()` and `native_stats()` to the body helpers, and `tests/testthat/test-chat-batch-stats.R` for AC1 to AC3. The tests fail because the columns are missing.
 
 ## Decisions
 
