@@ -321,7 +321,19 @@ lms_chat_openai <- function(
       return(resp_data)
     }
 
-    res_text <- resp_data$choices[[1]]$message$content
+    # A 200 with no reply in it would otherwise fail on the `[[1]]` below with
+    # a subscript error that names neither the response nor the field.
+    choices <- resp_data$choices
+    if (!is.list(choices) || length(choices) == 0L) {
+      rlm_abort_bad_response(
+        resp,
+        "OpenAI API Failed",
+        "The response holds no reply in its `choices` field.",
+        content = NULL,
+        finish_reason = NULL
+      )
+    }
+    res_text <- choices[[1]]$message$content
 
     if (isTRUE(logprobs)) {
       # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
@@ -330,7 +342,12 @@ lms_chat_openai <- function(
       ))
     }
     if (!is.null(schema)) {
-      return(parse_schema_reply(resp, res_text, "OpenAI API Failed"))
+      return(parse_schema_reply(
+        resp,
+        res_text,
+        "OpenAI API Failed",
+        finish_reason = choices[[1]]$finish_reason
+      ))
     }
     return(res_text)
   }
@@ -365,21 +382,48 @@ schema_response_format <- function(schema) {
 #' `fromJSON()` fetches a string that looks like a URL and reads a string that
 #' names a file on disk. A model reply is text the package did not write.
 #'
+#' Both aborts carry the reply content and the finish reason as fields, so a
+#' caller can read what the model wrote without sending the request again. A
+#' finish reason of `"length"` means the server stopped the reply at the token
+#' limit, which is the likely reason the JSON is incomplete, so the message
+#' says so in place of the generic detail.
+#'
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param content The reply content read out of the response.
 #' @param label Character. The calling wrapper's label, which opens the message.
+#' @param finish_reason The `finish_reason` of the first choice, or `NULL`.
 #' @return The parsed reply.
 #'
 #' @noRd
-parse_schema_reply <- function(resp, content, label) {
+parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
+  abort_unread <- function(detail) {
+    if (identical(finish_reason, "length")) {
+      detail <- paste(
+        "The token limit cut the reply off before it was complete.",
+        "Raise `max_tokens` to allow a longer reply."
+      )
+    }
+    # The detail is inserted into the message as text, so cli markup in it
+    # would print as written. The hint below is a template of its own.
+    rlm_abort_bad_response(
+      resp,
+      label,
+      detail,
+      hint = paste(
+        "The reply text is in the {.field content} field of the condition,",
+        "and the finish reason is in its {.field finish_reason} field."
+      ),
+      content = content,
+      finish_reason = finish_reason
+    )
+  }
+
   if (!is.character(content) || length(content) != 1L || is.na(content)) {
-    rlm_abort_bad_response(resp, label, "The reply content is not one string.")
+    abort_unread("The reply content is not one string.")
   }
   tryCatch(
     jsonlite::parse_json(content, simplifyVector = TRUE),
-    error = function(cnd) {
-      rlm_abort_bad_response(resp, label, "The reply content is not valid JSON.")
-    }
+    error = function(cnd) abort_unread("The reply content is not valid JSON.")
   )
 }
 

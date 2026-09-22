@@ -101,10 +101,10 @@ still aborts on an empty `choices`, because no parse is in play there.
 - [x] T1: Add a mock helper in `tests/testthat/helper-mock-http.R` that
       serves a list of responses in turn. `local_request_recorder` returns
       one response to every request (`helper-mock-http.R:26-48`).
-- [ ] T2: Guard `choices` in `lms_chat_openai()` before `R/chat.R:324`, on
+- [x] T2: Guard `choices` in `lms_chat_openai()` before `R/chat.R:324`, on
       every `simplify = TRUE` path. Abort through `rlm_abort_bad_response()`
       with `content` and `finish_reason` as `NULL`. Add the AC1 tests.
-- [ ] T3: Pass `finish_reason` into `parse_schema_reply()` (`R/chat.R:374`).
+- [x] T3: Pass `finish_reason` into `parse_schema_reply()` (`R/chat.R:374`).
       Add the two fields, the `"length"` detail, and the new hint to both
       aborts. `rlm_abort_bad_response()` in `R/utils-api-error.R:127` takes
       the extra fields. Add the AC2 and AC3 mocked tests.
@@ -137,8 +137,9 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: plan gate chose a warning that ignores `quiet` over one that honors it, because a quiet batch then returns failed slots with no signal. Falsified by a user who runs quiet batches and treats the warning as noise.
 - 2026-09-21: plan gate chose to document nested empty objects over converting known keywords such as `properties`. A keyword list goes stale as JSON Schema changes (D-003). Falsified by repeated server errors from users who write `properties = list()`.
 - 2026-09-21: plan gate chose a live recorded cut-off reply over mocks only, so the `"length"` value comes from LM Studio and not from the OpenAI format. Falsified by an LM Studio reply that reports the cut-off in another field.
-- 2026-09-21: implement gate: the user allowed starting the LM Studio server for the T4 recording, with the script skipping load and unload when the model is already loaded.
-- 2026-09-21: T1 done. `local_request_sequence()` serves a list of responses in turn and raises past its end; both recorders share `local_mock_perform()`. Suite 1542 pass.
+- 2026-09-21: implement gate: the user allowed starting the LM Studio server for the T4 recording. If the model is already loaded, the script skips the load and the unload.
+- 2026-09-21: T1 done. `local_request_sequence()` serves a list of responses in turn and raises past its end. Both recorders share `local_mock_perform()`. Suite 1542 pass.
+- 2026-09-21: T2 and T3 done in one commit, because both edit the same lines of `lms_chat_openai()`. The detail clause carries plain backticks, because cli does not read markup inside an inserted value. Suite 1612 pass.
 
 ## Decisions
 

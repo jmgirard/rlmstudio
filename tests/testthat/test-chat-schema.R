@@ -13,15 +13,21 @@ sent_json <- function(req) {
 }
 
 # A chat completions response whose reply content is `content_json`, a JSON
-# value written out as text: a quoted string, or `null`.
-completion_body <- function(content_json) {
+# value written out as text: a quoted string, or `null`. `finish_reason` is
+# written as a JSON string, and `NULL` leaves the field out.
+completion_body <- function(content_json, finish_reason = "stop") {
+  finish <- if (is.null(finish_reason)) {
+    ""
+  } else {
+    sprintf(', "finish_reason": "%s"', finish_reason)
+  }
   sprintf(
     paste0(
       '{"id": "chatcmpl-1", "object": "chat.completion", "choices": ',
-      '[{"index": 0, "message": {"role": "assistant", "content": %s}, ',
-      '"finish_reason": "stop"}]}'
+      '[{"index": 0, "message": {"role": "assistant", "content": %s}%s}]}'
     ),
-    content_json
+    content_json,
+    finish
   )
 }
 
@@ -137,6 +143,89 @@ test_that("a reply that is not one JSON string aborts as a bad response", {
     )
     expect_identical(err$status, 200L, info = case$label)
     expect_match(conditionMessage(err), "OpenAI API Failed", info = case$label)
+  }
+})
+
+test_that("a 200 with no reply in choices aborts as a bad response", {
+  bodies <- list(
+    list(label = "no choices field", body = '{"id": "chatcmpl-1"}'),
+    list(label = "an empty choices list", body = '{"id": "chatcmpl-1", "choices": []}')
+  )
+  settings <- list(
+    list(label = "no schema", args = list()),
+    list(label = "a schema", args = list(schema = score_schema)),
+    list(label = "logprobs", args = list(logprobs = TRUE))
+  )
+  for (body in bodies) {
+    for (setting in settings) {
+      info <- paste(body$label, "with", setting$label)
+      err <- expect_error(
+        do.call(call_with_reply, c(list(body$body), setting$args)),
+        class = "rlmstudio_bad_response",
+        info = info
+      )
+      expect_identical(err$status, 200L, info = info)
+      expect_match(conditionMessage(err), "choices", info = info)
+      expect_true(all(c("content", "finish_reason") %in% names(err)), info = info)
+      expect_null(err$content, info = info)
+      expect_null(err$finish_reason, info = info)
+    }
+  }
+})
+
+test_that("an unreadable reply carries its content and finish reason", {
+  cases <- list(
+    list(label = "invalid JSON text", json = quoted("a score of"), content = "a score of"),
+    list(label = "a JSON null content", json = "null", content = NULL)
+  )
+  for (case in cases) {
+    err <- expect_error(
+      call_with_reply(completion_body(case$json), schema = score_schema),
+      class = "rlmstudio_bad_response",
+      info = case$label
+    )
+    expect_true(all(c("content", "finish_reason") %in% names(err)), info = case$label)
+    expect_identical(err$content, case$content, info = case$label)
+    expect_identical(err$finish_reason, "stop", info = case$label)
+    # The hint points at the field and no longer sends the user back to call.
+    expect_match(conditionMessage(err), "content field", info = case$label)
+    expect_no_match(conditionMessage(err), "Call again", info = case$label)
+    expect_no_match(conditionMessage(err), "simplify = FALSE", info = case$label)
+
+    # A response without a finish reason gives the field as NULL.
+    err <- expect_error(
+      call_with_reply(completion_body(case$json, finish_reason = NULL), schema = score_schema),
+      class = "rlmstudio_bad_response",
+      info = case$label
+    )
+    expect_true("finish_reason" %in% names(err), info = case$label)
+    expect_null(err$finish_reason, info = case$label)
+  }
+})
+
+test_that("a reply cut off at the token limit names max_tokens", {
+  cases <- list(
+    list(label = "not one string", json = "null", detail = "is not one string"),
+    list(label = "not valid JSON", json = quoted('{"score": '), detail = "is not valid JSON")
+  )
+  for (case in cases) {
+    cut <- expect_error(
+      call_with_reply(completion_body(case$json, "length"), schema = score_schema),
+      class = "rlmstudio_bad_response",
+      info = case$label
+    )
+    expect_match(conditionMessage(cut), "token limit cut the reply off", info = case$label)
+    expect_match(conditionMessage(cut), "max_tokens", info = case$label)
+    expect_identical(cut$finish_reason, "length", info = case$label)
+
+    # The same content with another finish reason keeps the existing detail.
+    done <- expect_error(
+      call_with_reply(completion_body(case$json, "stop"), schema = score_schema),
+      class = "rlmstudio_bad_response",
+      info = case$label
+    )
+    expect_match(conditionMessage(done), case$detail, info = case$label)
+    expect_no_match(conditionMessage(done), "max_tokens", info = case$label)
   }
 })
 

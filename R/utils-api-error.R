@@ -121,6 +121,8 @@ rlm_abort_api <- function(resp, label, token_sent = FALSE) {
 #'   points at `simplify = FALSE`, which is right for every fault found after
 #'   the body has parsed. A caller whose fault is the parse itself passes its
 #'   own hint, because `simplify = FALSE` cannot help there.
+#' @param ... Extra fields for the condition, passed on by name. A field given
+#'   as `NULL` is kept, so a caller can test for it with `names()`.
 #' @return Never returns. Always aborts.
 #'
 #' @noRd
@@ -131,12 +133,14 @@ rlm_abort_bad_response <- function(
   hint = paste(
     "The server returned a response this package cannot read.",
     "Call again with {.code simplify = FALSE} to get the body unchanged."
-  )
+  ),
+  ...
 ) {
   cli::cli_abort(
     c("x" = "{label}: {detail}", "i" = hint),
     class = "rlmstudio_bad_response",
     status = as.integer(httr2::resp_status(resp)),
+    ...,
     call = NULL
   )
 }
