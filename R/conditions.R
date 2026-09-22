@@ -49,7 +49,7 @@
 #' [lms_chat_openai()] raises it in two cases, both only with
 #' `simplify = TRUE`. The first case is a response whose `choices` field is
 #' missing, empty, or not an array, or whose first element is not a JSON
-#' object, so there is no reply to read. This case is raised with or
+#' object with a `message` object in it, so there is no reply to read. This case is raised with or
 #' without a `schema`, and with `logprobs = TRUE` as well. The second case is
 #' a reply that does not parse. A `schema` was given, `logprobs = FALSE`, and
 #' the reply content is not one string of valid JSON. If the server reports

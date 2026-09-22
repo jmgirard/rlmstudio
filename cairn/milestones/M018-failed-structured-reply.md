@@ -177,6 +177,7 @@ claim audit: 78 claims read, 2 corrected — NEWS.md, R/conditions.R, R/chat.R, 
 - 2026-09-22: the claim audit re-read covers the 2 corrections. The `choices` wording now names the first element only, because the guard reads only `choices[[1]]`. The hint and batch docs say reply content, because `content` can hold a non-string JSON value. Left open: `{"choices":[{}]}` passes the guard and returns `NULL`. Suite 1727 pass. `devtools::check()` 0 errors, 0 warnings, 0 notes. Status set to review.
 - 2026-09-22: review pass 2 checkpoint (in progress). Fresh evidence recorded for all seven criteria, and AC4 now passes. The package check and three reviewers are still running.
 - 2026-09-22: review pass 2 pre-gate checkpoint. All seven criteria verified and ticked, gate green, three reviewers done, 8 findings for triage.
+- 2026-09-22: gate triage: the user chose fix now for findings 1, 2, 4, 5, 6, and 8, a candidate row for 3, and reject for 7. The guard now requires a `message` object, fields are read with `[[`, the hint names `finish_reason` only when it is not `NULL`, and the wording says reply content. The new tests failed first. Suite 1843 pass. `devtools::check()` 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 
@@ -319,4 +320,10 @@ the proposed disposition (the gate decides):
 8. A NEWS line in the development section says the help documents two
    condition classes, but there are three. It predates the branch. Proposed:
    fix now, one word.
+
+Triage (user, at the gate): findings 1, 2, 4, 5, 6, and 8 fixed now on the
+branch. Finding 3 is a candidate row. Finding 7 is rejected, because the plan
+gate chose to store the condition. After the fixes: suite 1843 pass, 0 fail,
+0 skip, 0 warn. `devtools::check()` 0 errors, 0 warnings, 0 notes. AC1 to AC7
+still hold, because every test named in the pass-2 evidence still passes.
 

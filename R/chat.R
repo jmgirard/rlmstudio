@@ -329,14 +329,17 @@ lms_chat_openai <- function(
     # which a plain call returns and a `logprobs` call fails on. A JSON object
     # in place of the array would be read by its first value. A first element
     # that is a plain value fails on `$` with a base R error, and one that is
-    # an array gives back NULL as the reply.
-    choices <- resp_data$choices
+    # an array gives back NULL as the reply. The same holds for its `message`.
+    # Fields are read with `[[`, because `$` would read a field whose name only
+    # starts with the one asked for.
+    choices <- resp_data[["choices"]]
+    is_object <- function(x) is.list(x) && !is.null(names(x))
     if (
       !is.list(choices) ||
         length(choices) == 0L ||
         !is.null(names(choices)) ||
-        !is.list(choices[[1]]) ||
-        is.null(names(choices[[1]]))
+        !is_object(choices[[1]]) ||
+        !is_object(choices[[1]][["message"]])
     ) {
       rlm_abort_bad_response(
         resp,
@@ -346,7 +349,7 @@ lms_chat_openai <- function(
         finish_reason = NULL
       )
     }
-    res_text <- choices[[1]]$message$content
+    res_text <- choices[[1]][["message"]][["content"]]
 
     if (isTRUE(logprobs)) {
       # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
@@ -359,7 +362,7 @@ lms_chat_openai <- function(
         resp,
         res_text,
         "OpenAI API Failed",
-        finish_reason = choices[[1]]$finish_reason
+        finish_reason = choices[[1]][["finish_reason"]]
       ))
     }
     return(res_text)
@@ -418,16 +421,17 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
     }
     # The detail is inserted into the message as text, so cli markup in it
     # would print as written. The hint below is a template of its own.
-    # A NULL content has no text to point at, so its hint says so.
+    # A NULL content has no text to point at, so its hint says so. A NULL
+    # finish reason is not pointed at either.
     hint <- if (is.null(content)) {
-      paste(
-        "The reply has no text, so the {.field content} field of the condition",
-        "is {.code NULL}. The finish reason is in its {.field finish_reason} field."
-      )
+      "The reply has no text, so the {.field content} field of the condition is {.code NULL}."
     } else {
-      paste(
-        "The reply content is in the {.field content} field of the condition,",
-        "and the finish reason is in its {.field finish_reason} field."
+      "The reply content is in the {.field content} field of the condition."
+    }
+    if (!is.null(finish_reason)) {
+      hint <- paste(
+        hint,
+        "The finish reason is in its {.field finish_reason} field."
       )
     }
     rlm_abort_bad_response(
@@ -615,7 +619,7 @@ lms_chat_batch <- function(
       )
     }
     # A reply that does not parse loses one answer, not the whole batch. Its
-    # slot keeps the condition, which carries the reply text. Every other
+    # slot keeps the condition, which carries the reply content. Every other
     # error still aborts, because it says nothing about one input alone. The
     # backtrace is dropped, because it makes each failed slot large and says
     # nothing about the reply.
@@ -649,7 +653,7 @@ lms_chat_batch <- function(
     positions <- cli::ansi_collapse(failed, trunc = Inf)
     msg <- c(
       "Could not read the structured reply for {length(failed)} input{?s}, at {cli::qty(length(failed))}position{?s} {positions}.",
-      "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with any reply text in its {.field content} field."
+      "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with any reply content in its {.field content} field."
     )
     # A vector batch skips its own warning below, so this one says it too.
     if (format == "vector") {

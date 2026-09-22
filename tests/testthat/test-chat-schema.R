@@ -190,12 +190,24 @@ test_that("a choices field that is not an array of objects aborts as a bad respo
     list(label = "an array of numbers", body = '{"choices": [1]}'),
     list(label = "an array of strings", body = '{"choices": ["{}"]}'),
     list(label = "an array of arrays", body = '{"choices": [[{"message": {"content": "{}"}}]]}'),
-    list(label = "an array of empty arrays", body = '{"choices": [[]]}')
+    list(label = "an array of empty arrays", body = '{"choices": [[]]}'),
+    list(label = "a message that is a string", body = '{"choices": [{"message": "x"}]}'),
+    list(label = "a message that is a number", body = '{"choices": [{"message": 5}]}'),
+    list(label = "a message that is null", body = '{"choices": [{"message": null}]}'),
+    list(label = "a choice with no message", body = '{"choices": [{"index": 0}]}'),
+    list(label = "an empty choice", body = '{"choices": [{}]}'),
+    list(label = "a field that only starts with choices", body = '{"choicesX": [{"message": {"content": "{}"}}]}'),
+    list(label = "a field that only starts with message", body = '{"choices": [{"messageX": {"content": "{}"}}]}')
+  )
+  settings <- list(
+    list(schema = NULL),
+    list(schema = score_schema),
+    list(logprobs = TRUE)
   )
   for (body in bodies) {
-    for (schema in list(NULL, score_schema)) {
+    for (setting in settings) {
       err <- expect_error(
-        call_with_reply(body$body, schema = schema),
+        do.call(call_with_reply, c(list(body$body), setting)),
         class = "rlmstudio_bad_response",
         info = body$label
       )
@@ -249,7 +261,25 @@ test_that("an unreadable reply carries its content and finish reason", {
     )
     expect_true("finish_reason" %in% names(err), info = case$label)
     expect_null(err$finish_reason, info = case$label)
+    # The hint does not point at a finish_reason field that is NULL.
+    message <- gsub("\\s+", " ", conditionMessage(err))
+    expect_no_match(message, "finish_reason field", info = case$label)
   }
+})
+
+test_that("reply fields are read by their exact names", {
+  # R's `$` would read a field that only starts with the name asked for.
+  body <- paste0(
+    '{"choices": [{"message": {"content_parts": "{}"}, ',
+    '"finish_reasonX": "length"}]}'
+  )
+  err <- expect_error(
+    call_with_reply(body, schema = score_schema),
+    class = "rlmstudio_bad_response"
+  )
+  expect_null(err$content)
+  expect_null(err$finish_reason)
+  expect_no_match(conditionMessage(err), "max_tokens")
 })
 
 test_that("a reply cut off at the token limit names max_tokens", {
@@ -513,6 +543,7 @@ test_that("a batch keeps going past a structured reply that does not parse", {
     expect_length(warnings, 1L)
     expect_match(warnings, "2 inputs", info = format)
     expect_match(warnings, "positions 1 and 3", info = format)
+    expect_match(warnings, "any reply content", info = format)
     # The one warning also says that a vector batch came back as a list.
     if (format == "vector") {
       expect_match(warnings, "Returning list", info = format)
@@ -531,6 +562,21 @@ test_that("a batch keeps going past a structured reply that does not parse", {
   expect_s3_class(out, "data.frame")
   expect_identical(out$input, c("first", "second", "third"))
   expect_failed_slots(out$output)
+})
+
+test_that("a batch keeps going past a message that is not an object", {
+  responses <- list(
+    mock_response(200L, completion_body(quoted('{"score": 3}'))),
+    mock_response(200L, '{"choices": [{"message": "x"}]}'),
+    mock_response(200L, completion_body(quoted('{"score": 3}')))
+  )
+  expect_warning(
+    out <- batch_with_sequence(responses),
+    "position 2"
+  )
+  expect_identical(out[[1]], list(score = 3L))
+  expect_s3_class(out[[2]], "rlmstudio_bad_response")
+  expect_identical(out[[3]], list(score = 3L))
 })
 
 test_that("the failed reply warning ignores quiet", {

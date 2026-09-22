@@ -112,7 +112,7 @@ vector with the wrong text and give back a matrix that is silently wrong.
 \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in two cases, both only with
 \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
 missing, empty, or not an array, or whose first element is not a JSON
-object, so there is no reply to read. This case is raised with or
+object with a \code{message} object in it, so there is no reply to read. This case is raised with or
 without a \code{schema}, and with \code{logprobs = TRUE} as well. The second case is
 a reply that does not parse. A \code{schema} was given, \code{logprobs = FALSE}, and
 the reply content is not one string of valid JSON. If the server reports
