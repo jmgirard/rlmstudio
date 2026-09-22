@@ -71,7 +71,7 @@ Every chat route reads its answer from the message items, and a reply without on
 - [x] T4: In `lms_chat_openai()`, abort when the content is not one string, before the logprobs and plain returns (`R/chat.R:352-368`). The `schema` path keeps `parse_schema_reply()`. Write the AC4 tests first. Rewrite `test-chat-batch.R:292-320`, which expects OpenAI `null` content to give `NA` with no failure, to expect a stored failure.
 - [x] T5: Write the AC5 batch table in `tests/testthat/test-chat-batch.R`, reusing `local_request_sequence()`.
 - [x] T6: In `lms_chat_batch()`, move `match.arg(format)` and the `data.frame` and `simplify` check above `stop_if_no_server()` (`R/chat.R:603-664`). Write the AC6 test first with `local_counting_probe()`, as `test-arg-guards.R:489-503` does.
-- [ ] T7: Update the help text named in AC7 in `R/conditions.R` and `R/chat.R`, including "Two functions raise it" and "both functions" (`R/conditions.R:56-57` and `80-81`). Run `devtools::document()`. Add a `NEWS.md` entry. Rewrite the development-version sentence that says a `NULL` reply holds `NA`.
+- [x] T7: Update the help text named in AC7 in `R/conditions.R` and `R/chat.R`, including "Two functions raise it" and "both functions" (`R/conditions.R:56-57` and `80-81`). Run `devtools::document()`. Add a `NEWS.md` entry. Rewrite the development-version sentence that says a `NULL` reply holds `NA`.
 - [ ] T8: Run `devtools::test()` and then `devtools::check()` with `RLMSTUDIO_API_TOKEN` set, both clean.
 
 ## Work log
@@ -99,6 +99,7 @@ Every chat route reads its answer from the message items, and a reply without on
 - 2026-09-22: T4 done. `lms_chat_openai()` aborts on content that is not one string. The abort body of `parse_schema_reply()` moved to `abort_unread_reply()` so both paths share it. The AC4 test failed first. The OpenAI `null` batch test now expects failures at positions 1 and 2. `devtools::test()`: 0 failed, 0 skipped.
 - 2026-09-22: T5 done. The unreadable-reply tables moved to `helper-chat-bodies.R` so the batch table reuses them. On main's `R/chat.R` the four new or rewritten batch tests fail. `devtools::test()`: 0 failed, 0 skipped, 3126 passed.
 - 2026-09-22: T6 done. `match.arg(format)` and the `data.frame` check now run above `stop_if_no_server()`. The AC6 test failed first, with a control that a `list` format still reaches the probe. `devtools::test()`: 0 failed, 0 skipped, 3134 passed.
+- 2026-09-22: T7 done. The conditions page names four raisers and a third OpenAI case. Both wrappers inherit the section. The `@return` and details text changed, and NEWS has four entries. The M019 NEWS sentence about `NULL` replies was rewritten. A second `devtools::document()` gave no diff.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

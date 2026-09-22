@@ -36,8 +36,8 @@
 #' [lms_chat_native()], according to `api_type`. It runs no request of its own.
 #' It can raise `rlmstudio_no_server` and `rlmstudio_api_error` through
 #' [lms_chat_openresponses()], [lms_chat_openai()], or [lms_chat_native()].
-#' With `api_type = "openai"` and `simplify = TRUE`, it can raise
-#' `rlmstudio_bad_response` through [lms_chat_openai()].
+#' With `simplify = TRUE`, it can raise `rlmstudio_bad_response` through any
+#' of the three, for a reply that holds no readable answer text.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
@@ -129,11 +129,18 @@ lms_chat <- function(
 #'   FALSE, returns raw list.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature).
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. Otherwise, returns a character string containing the generated
-#'   text. If \code{logprobs = TRUE}, returns an object of class
-#'   \code{lms_chat_result} incorporating both the text and probability data.
+#'   response. Otherwise, returns one character string: the `text` of every
+#'   part of type `"output_text"` in the items of type `"message"`, pasted
+#'   together in order with no separator. Reasoning items, tool calls, and
+#'   parts of other types, such as a refusal, are skipped. If
+#'   \code{logprobs = TRUE} and at least one of those parts carries log
+#'   probabilities, returns an object of class \code{lms_chat_result} with that
+#'   text and a data frame of the probabilities of every such part, in order.
+#'   If no part carries them, it returns the string. A reply with no readable
+#'   answer text raises `rlmstudio_bad_response`, as described below.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #' @export
 lms_chat_openresponses <- function(
   model,
@@ -268,7 +275,10 @@ lms_chat_openresponses <- function(
 #'   response. Otherwise, returns a character string containing the generated
 #'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
 #'   object with the log probabilities populated as \code{NULL} since they are
-#'   currently stubbed in the LM Studio OpenAI endpoint.
+#'   currently stubbed in the LM Studio OpenAI endpoint. With
+#'   \code{simplify = TRUE}, reply content that is not one string, such as the
+#'   `null` content of a reply that holds only a tool call, raises
+#'   `rlmstudio_bad_response`.
 #'
 #'   With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, the reply is
 #'   parsed with `jsonlite::parse_json(simplifyVector = TRUE)` and the parsed
@@ -614,10 +624,14 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. If \code{simplify = TRUE}, returns a character string containing
-#'   the model's text output.
+#'   response. If \code{simplify = TRUE}, returns one character string: the
+#'   `content` of every item of type `"message"` in the `output` array, pasted
+#'   together in order with no separator. Items of other types, such as
+#'   reasoning and tool calls, are skipped. A reply with no readable answer
+#'   text raises `rlmstudio_bad_response`, as described below.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #' @export
 lms_chat_native <- function(
   model,
@@ -709,9 +723,9 @@ lms_chat_native <- function(
 #' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and
 #' with a data frame whose replies are not parsed (no `schema`, or
 #' `logprobs = TRUE`). The `logprobs` column holds `NULL` for a failed input.
-#' A reply that [lms_chat()] returns as `NULL`, such as one whose content is
-#' `null`, also holds `NA` in a text result. Use `format = "list"` to keep the
-#' conditions. The call then gives one warning that names the count
+#' A reply with no readable answer text, such as one whose content is `null`,
+#' fails as an `rlmstudio_bad_response` in the same way. Use `format = "list"`
+#' to keep the conditions. The call gives one warning that names the count
 #' and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`.
 #'
@@ -841,8 +855,9 @@ lms_chat_batch <- function(
   holds_na <- isTRUE(simplify) &&
     !has_parsed &&
     (format == "data.frame" || (format == "vector" && is.null(vector_fallback)))
-  # A NULL reply, such as `"content": null`, is not a failure, but it becomes
-  # NA too, so the text result stays as long as `inputs`.
+  # A reply with `"content": null` now fails (D-012), so no route returns NULL
+  # with `simplify = TRUE`. A NULL would still become NA here, so the text
+  # result stays as long as `inputs`.
   na_if_failed <- function(x) {
     if (is.null(x) || is_failed(x)) NA_character_ else x
   }
