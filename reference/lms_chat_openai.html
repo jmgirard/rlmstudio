@@ -97,8 +97,10 @@ of a <code>response_format</code> of type <code>"json_schema"</code>, with the n
 <code>"response"</code> and <code>strict</code> set to <code>true</code>. A JSON array of one item must be
 written as a list, such as <code>required = list("score")</code>, or wrapped in
 <code><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I()</a></code>. A plain vector of length one is sent as a single value, not as an
-array. The package checks only that <code>schema</code> is a named list, an empty
-list, or <code>NULL</code>. The server checks the schema itself.</p></dd>
+array. An empty object nested in the schema, such as <code>properties</code>, is
+written <code>setNames(list(), character())</code>, because <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> is sent as the
+empty array <code>[]</code>. The package checks only that <code>schema</code> is a named list,
+an empty list, or <code>NULL</code>. The server checks the schema itself.</p></dd>
 
 
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
@@ -167,18 +169,34 @@ it.</p>
 it returns are placed by the index that the response reports, so a block
 with a missing, repeated, or out-of-range index would otherwise pair a
 vector with the wrong text and give back a matrix that is silently wrong.</p>
-<p><code>lms_chat_openai()</code> raises it when a <code>schema</code> was given and the reply
-content is not one string of valid JSON. It is raised only with <code>simplify = TRUE</code> and
-<code>logprobs = FALSE</code>, which are the two settings under which the reply is
-parsed. <code><a href="lms_chat.html">lms_chat()</a></code> and <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> can raise it through
-<code>lms_chat_openai()</code>.</p>
+<p><code>lms_chat_openai()</code> raises it in two cases, both only with
+<code>simplify = TRUE</code>. The first case is a response whose <code>choices</code> field is
+missing, empty, or not an array, or whose first element is not a JSON
+object with a <code>message</code> object in it, so there is no reply to read. This case is raised with or
+without a <code>schema</code>, and with <code>logprobs = TRUE</code> as well. The second case is
+a reply that does not parse. A <code>schema</code> was given, <code>logprobs = FALSE</code>, and
+the reply content is not one string of valid JSON. If the server reports
+the finish reason <code>"length"</code>, the token limit cut the reply off. The message
+then says so and names <code>max_tokens</code>. <code><a href="lms_chat.html">lms_chat()</a></code> can raise the condition
+through <code>lms_chat_openai()</code>.</p>
+<p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> raises it only where it does not store the condition in
+an element of its result. With a <code>schema</code>, <code>simplify = TRUE</code>, and
+<code>logprobs = FALSE</code>, a failed input's element holds the condition, and the
+batch warns once and goes on. With any other settings, the condition
+aborts the batch.</p>
 <p>The condition carries a <code>status</code> field, which holds the HTTP response
 status as an integer. Today the status is always 200: both functions read
 the body only after a 200, and report every other status as an
-<code>rlmstudio_api_error</code> instead. The message names the argument that returns
-the body unchanged, so you can read what arrived. The one exception is an
-embeddings body that did not parse at all: that check runs before the
-argument is read, so its message points at the host instead.</p>
+<code>rlmstudio_api_error</code> instead. A condition from <code>lms_chat_openai()</code> also
+carries two more fields. The <code>content</code> field holds the reply content, and
+the <code>finish_reason</code> field holds the finish reason that the server reported.
+Either one is <code>NULL</code> where the response has none, and both are <code>NULL</code> for a
+response with no <code>choices</code>. For a reply that does not parse, the message
+names the <code>content</code> field, so you can read what the model wrote without a
+second request. The other messages name <code>simplify = FALSE</code>, which returns
+the body unchanged, with one exception. An embeddings body that did not
+parse at all is checked before that argument is read, so its message
+points at the host instead.</p>
     </div>
 
     <div class="section level2">

@@ -102,7 +102,8 @@ according to `api_type`. It runs no request of its own. It can raise
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
 or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md).
-With a `schema`, it can raise `rlmstudio_bad_response` through
+With `api_type = "openai"` and `simplify = TRUE`, it can raise
+`rlmstudio_bad_response` through
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
 
 ## Server not running
@@ -152,19 +153,35 @@ missing, repeated, or out-of-range index would otherwise pair a vector
 with the wrong text and give back a matrix that is silently wrong.
 
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-raises it when a `schema` was given and the reply content is not one
-string of valid JSON. It is raised only with `simplify = TRUE` and
-`logprobs = FALSE`, which are the two settings under which the reply is
-parsed. `lms_chat()` and
-[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-can raise it through
+raises it in two cases, both only with `simplify = TRUE`. The first case
+is a response whose `choices` field is missing, empty, or not an array,
+or whose first element is not a JSON object with a `message` object in
+it, so there is no reply to read. This case is raised with or without a
+`schema`, and with `logprobs = TRUE` as well. The second case is a reply
+that does not parse. A `schema` was given, `logprobs = FALSE`, and the
+reply content is not one string of valid JSON. If the server reports the
+finish reason `"length"`, the token limit cut the reply off. The message
+then says so and names `max_tokens`. `lms_chat()` can raise the
+condition through
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
+
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+raises it only where it does not store the condition in an element of
+its result. With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`,
+a failed input's element holds the condition, and the batch warns once
+and goes on. With any other settings, the condition aborts the batch.
 
 The condition carries a `status` field, which holds the HTTP response
 status as an integer. Today the status is always 200: both functions
 read the body only after a 200, and report every other status as an
-`rlmstudio_api_error` instead. The message names the argument that
-returns the body unchanged, so you can read what arrived. The one
-exception is an embeddings body that did not parse at all: that check
-runs before the argument is read, so its message points at the host
-instead.
+`rlmstudio_api_error` instead. A condition from
+[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+also carries two more fields. The `content` field holds the reply
+content, and the `finish_reason` field holds the finish reason that the
+server reported. Either one is `NULL` where the response has none, and
+both are `NULL` for a response with no `choices`. For a reply that does
+not parse, the message names the `content` field, so you can read what
+the model wrote without a second request. The other messages name
+`simplify = FALSE`, which returns the body unchanged, with one
+exception. An embeddings body that did not parse at all is checked
+before that argument is read, so its message points at the host instead.

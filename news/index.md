@@ -28,13 +28,48 @@
 
 - A `schema` must be a named list, an empty list, or `NULL`. Any other
   value aborts before the request, and so does a `schema` given together
-  with a `response_format` in `...`. The reply is parsed only with a
-  `schema`, `simplify = TRUE`, and `logprobs = FALSE`. There, reply
-  content that is not one string of valid JSON aborts with the condition
-  class `rlmstudio_bad_response`.
+  with a `response_format` in `...`. An empty object nested in the
+  schema, such as `properties`, is written
+  `setNames(list(), character())`, because
+  [`list()`](https://rdrr.io/r/base/list.html) is sent as the empty
+  array `[]`.
+
+- The reply is parsed only with a `schema`, `simplify = TRUE`, and
+  `logprobs = FALSE`. There, reply content that is not one string of
+  valid JSON aborts with the condition class `rlmstudio_bad_response`.
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  is now the second function that raises it, after
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md).
+  now raises it, as
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  does, and
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  passes it on. The condition carries the reply content in a `content`
+  field and the server’s finish reason in a `finish_reason` field. You
+  can therefore read what the model wrote without a second request. If
+  the finish reason is `"length"`, the message says that the token limit
+  cut the reply off and names `max_tokens`.
+
+- With `simplify = TRUE`, a response whose `choices` field is missing,
+  empty, or not an array, or whose first element is not a JSON object
+  with a `message` object in it, also aborts with
+  `rlmstudio_bad_response`, with or without a `schema`. Before, an empty
+  `choices` list failed with the bare error `subscript out of bounds`.
+  Without a `schema` and with `logprobs = FALSE`, a missing `choices`
+  field returned `NULL`. The condition’s `content` and `finish_reason`
+  fields are `NULL`. Without a `schema`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now aborts on such a response. Before, a missing `choices` field gave
+  `NULL` for that input. With `format = "vector"`, the result was then
+  shorter than the input.
+
+- With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  no longer stops at a reply it cannot read. The element for that input
+  holds the `rlmstudio_bad_response` condition, in the returned list or
+  in the `output` column of a data frame. The other elements hold their
+  parsed replies. The call gives one warning that names the count and
+  the positions of the failed inputs. `quiet = TRUE` does not silence
+  it. An `rlmstudio_api_error` or `rlmstudio_no_server` from one input
+  still aborts the batch.
 
 - [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
   now waits for the REST API to answer before it returns. The CLI
@@ -281,7 +316,7 @@
   a token, the hint says that the server rejected it. Other statuses
   gain no hint.
 
-- The help pages now document the two error condition classes that this
+- The help pages now document the error condition classes that this
   package raises. A new help topic, `rlmstudio-conditions`, is the
   source. It names the situation that raises `rlmstudio_no_server` and
   the situation that raises `rlmstudio_api_error`. It states that an
