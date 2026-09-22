@@ -1,6 +1,6 @@
 # M018: A failed structured reply keeps its text and no longer ends a batch
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -91,7 +91,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - AC1 → T2
 - AC2 → T3
 - AC3 → T3, T4
-- AC4 → T1, T5
+- AC4 → T1, T5, T8
 - AC5 → T1, T5
 - AC6 → T6
 - AC7 → T7
@@ -127,6 +127,23 @@ still aborts on an empty `choices`, because no parse is in play there.
       `R/chat.R:476-480`. Edit the unreleased NEWS bullets for `schema` in
       place. Map each NEWS claim to a test named in AC1 to AC6. Run
       `devtools::document()` and `devtools::check()`.
+- [ ] T8: Make the batch warning name every failed position, with no cli
+      shortening past 20. Add a test with 25 failed inputs that asserts
+      positions 19 to 23 appear in the warning.
+- [ ] T9: Extend the `choices` guard in `lms_chat_openai()` to a JSON object
+      and to a first element that is not an object. Both abort with
+      `rlmstudio_bad_response`. Add a test for each shape.
+- [ ] T10: Drop the backtrace from a condition before the batch stores it.
+      Add a test that the stored condition has no `trace`.
+- [ ] T11: If a vector batch has a failed input, state in the one warning that
+      the call returns a list. If `content` is `NULL`, give a hint that does
+      not say the reply text is in it. Add a test for each.
+- [ ] T12: Add a batch test with `quiet = FALSE` and a failed input, so the
+      progress bar updates after a caught condition.
+- [ ] T13: Fix the NEWS bullet that calls `lms_chat_openai()` the second
+      function to raise the class. Add the no-schema batch abort on a missing
+      `choices`. Add "with `simplify = TRUE`" to the `lms_chat()` docs for the
+      class. Run `devtools::document()` and `devtools::check()`.
 
 ## Work log
 
@@ -148,6 +165,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: the re-read of the 4 corrected claims found that all hold. Left open: a `choices` sent as a non-empty JSON object passes the guard and fails with a base R error. No criterion promises that case. Final `devtools::check()` 0 errors, 0 warnings, 0 notes. Status set to review.
 
 - 2026-09-21: review checkpoint. Six criteria verified and ticked. AC4 is unticked, because the warning cuts the position list past 20 failures. `devtools::check()` still runs.
+- 2026-09-21: returned to in-progress at the review gate (defect return 1). AC4 failed: the batch warning cuts the position list past 20 failures. The user chose to return with all fixes. Findings 1 to 9 are fix now, as T8 to T13. Findings 10 and 11 are rejected, for the reasons in the Review section.
 
 ## Decisions
 

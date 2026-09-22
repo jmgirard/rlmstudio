@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-21 (M017 done and archived, M014 row pruned, three 
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M018 | A failed structured reply keeps its text and no longer ends a batch | review | none | normal | milestones/M018-failed-structured-reply.md |
+| M018 | A failed structured reply keeps its text and no longer ends a batch | in-progress | none | normal | milestones/M018-failed-structured-reply.md |
 | M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | done | none | normal | milestones/archive/M017-structured-output.md |
 | M016 | The daemon start call can wait until the daemon reports running | dropped | none | normal | milestones/archive/M016-daemon-start-wait.md |
 | M015 | The server start call takes a token and checks its wait arguments before it starts | done | none | normal | milestones/archive/M015-server-start-token-and-host-check.md |
