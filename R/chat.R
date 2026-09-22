@@ -553,9 +553,10 @@ lms_chat_native <- function(
 #' `schema` gives, the element for that input holds the condition without its
 #' backtrace. An `rlmstudio_bad_response` for a reply that does not parse
 #' keeps the reply content in its `content` field. Where the result is text,
-#' as with `format = "vector"` or a data frame without a `schema`, the element
-#' holds `NA`, and the `logprobs` column holds `NULL`. Use `format = "list"` to
-#' keep the conditions. The call then gives one warning that names the count
+#' as with `format = "vector"` or a data frame whose replies are not parsed
+#' (no `schema`, or `logprobs = TRUE`), the element holds `NA`, and the
+#' `logprobs` column holds `NULL`. Use `format = "list"` to keep the
+#' conditions. The call then gives one warning that names the count
 #' and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`.
 #'

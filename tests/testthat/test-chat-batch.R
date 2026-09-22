@@ -270,7 +270,7 @@ test_that("a lost server keeps a stored failure in its results", {
 
 # Stub lms_chat() so that its second call raises `cnd`. The stub counts its
 # calls, because a stub that failed the test by raising would itself be
-# caught by expect_error() (LESSONS, M015).
+# caught by the tryCatch() below (LESSONS, M015).
 test_that("an error of any other class still aborts the batch unchanged", {
   raised <- list(
     plain = simpleError("a plain R error"),

@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M019: A failed input no longer ends a chat batch
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -93,6 +93,8 @@
 - 2026-09-22: T5 done. The AC5 test catches with `tryCatch()`, because `expect_error()` adds a backtrace and never returns the raised object. A planted `error =` catch-all in the batch loop turned it red on both the identity and the call count, and it is green without it.
 - 2026-09-22: T6 done. The batch `@return` and `@details`, the three sections in `R/conditions.R`, and two `NEWS.md` entries were rewritten, and one entry was added. The "Server not running" paragraph about `results` reaches every page that inherits that section, 12 pages in all. A test now pins the documented claim that the probe before the first input adds no `results` field.
 - 2026-09-22: T7 done. The AC6 grep returned 13 lines that mention a batch, and none says an API failure or an unreadable reply aborts it. The development `NEWS.md` entry on one failure path still says the batch's failures "change in the same way", which holds for the class and `status` of the stored condition. `devtools::document()` left no diff. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes.
+- claim audit: 22 claims read, 4 corrected — R/chat.R, NEWS.md, tests/testthat/test-chat-batch.R
+- 2026-09-22: claim audit corrections: a data frame with `schema` and `logprobs = TRUE` also holds `NA`, the `results` field also holds stored failures, and the AC5 comment names `tryCatch()`. The same fresh reader re-read all four as true. Left as is: a data frame with `simplify = FALSE` runs every input and then aborts on the argument, with no failed-input warning.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
