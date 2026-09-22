@@ -205,7 +205,7 @@ diff-bug findings, ranked, with the proposed disposition (the gate decides):
    This fails AC4. Proposed: return, fix now.
 5. With a failure, a vector batch does not say it returned a list. Proposed:
    fix now.
-6. The hint says the reply text is in `content` when `content` is `NULL`.
+6. If `content` is `NULL`, the hint still says the reply text is in it.
    Proposed: fix now.
 7. No test moves the progress bar past a caught failure. Proposed: fix now.
 8. NEWS still says `lms_chat_openai()` is the second function to raise the
@@ -213,7 +213,7 @@ diff-bug findings, ranked, with the proposed disposition (the gate decides):
    Proposed: fix now.
 9. The `lms_chat()` docs omit "with `simplify = TRUE`" for the class.
    Proposed: fix now.
-10. The recording script leaves a partial directory if the live call fails.
+10. If the live call fails, the recording script leaves a partial directory.
     The next run deletes it. Proposed: reject, low impact.
 11. The replay test depends on the request bytes. Proposed: reject, the
     test comment states it and httptest2 works this way.
