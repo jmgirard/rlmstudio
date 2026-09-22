@@ -30,7 +30,7 @@ R5: the `top_logprobs` of a step is absent, `null`, or an array of JSON objects.
 R6: the `token` and `logprob` of each of those objects follow R3 and R4.
 The checks go over the parts in order, then the steps of a part in order, then the candidates of a step in order.
 
-- [ ] AC1: Take a reply whose `output_text` part carries a `logprobs` value that breaks a rule. With `simplify = TRUE` and `logprobs = TRUE`, `lms_chat_openresponses()` raises `rlmstudio_bad_response` for it. The message names the first rule broken. The bad value can be in the first part, a later part, or a part of a later message item. The bad field can be in the first step or in a step after good steps. It can also be in a `top_logprobs` entry, or in a candidate after good candidates. A `logprobs` value on a part of another type, such as a refusal, is not checked. With `logprobs = FALSE`, a reply that breaks a rule returns its text.
+- [x] AC1: Take a reply whose `output_text` part carries a `logprobs` value that breaks a rule. With `simplify = TRUE` and `logprobs = TRUE`, `lms_chat_openresponses()` raises `rlmstudio_bad_response` for it. The message names the first rule broken. The bad value can be in the first part, a later part, or a part of a later message item. The bad field can be in the first step or in a step after good steps. It can also be in a `top_logprobs` entry, or in a candidate after good candidates. A `logprobs` value on a part of another type, such as a refusal, is not checked. With `logprobs = FALSE`, a reply that breaks a rule returns its text.
 - [x] AC2: A `logprobs` value that follows R1 to R6 gives the same return value as before, with one change. Fields are now read by exact name, so a step that holds a `tokenX` field and no `token` field reads `NA` for its token. The same holds for `logprob`, `top_logprobs`, and the fields of a candidate. A `null` or absent token or logprob still gives `NA`.
 - [x] AC3: `lms_chat_batch()` with `logprobs = TRUE` on the OpenResponses route stores the AC1 condition in the slot of the failed input. It keeps the replies of the other inputs and warns once, as it does for other failed inputs.
 - [x] AC4: Each unreadable native or OpenResponses reply aborts with the detail sentence of the first check it fails. The checks run in this order: the `output` array, its items, the message items, the `content` of a message, its parts, the `output_text` parts, and the answer texts.
@@ -119,3 +119,24 @@ Triage at the gate, 2026-09-22, by the maintainer:
 - O7: rejected. The integer column also occurs on `main`, and AC2 asks for the same return value as before.
 - O8: rejected. The sentence before the list says that `null` or absent passes.
 - O11: rejected. AC3 asks only for the slot condition, and every batch format stores failed inputs through one path.
+
+### Second pass, 2026-09-22
+
+Sync: the branch contains `origin/main`, so no merge was needed. Run with a live LM Studio server and `RLMSTUDIO_API_TOKEN` set. `devtools::test()` gave 4461 passed, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+
+- AC1: five logprobs tests in `tests/testthat/test-chat.R` passed. They cover every rule and location, candidates, the in-step and cross-step order, `null` and `{}` values, the refusal part, and `logprobs = FALSE`. The O1 input, a bad candidate token before a candidate that is not an object, names R6. The diff reviewer probed the O1 input, its reverse, faults across steps and parts, and `{}`, `null`, and wrong-type values. Each named the first rule broken in walk order.
+- AC2 to AC4: the tests named in the first pass passed again in the 4461 run.
+- AC5: the conditions page, the `@return` text, and NEWS were read again after the T7 and T8 edits. They state the rules, the walk order, the unchecked refusal part, `logprobs = FALSE`, and the exact-name reads.
+- AC6: the test and check results above.
+
+Consistency gate: `cairn_validate.py` passed (exit 0). `devtools::document()` left no diff. The branch does not touch README or `_pkgdown.yml`, and adds no top-level file. NEWS has the entries. No DESIGN principle changed.
+
+Independent review (three fresh reviewers): the blame-history and prior-review reviewers found no regression. The prior-review reviewer found that O1, O2, O3, O5, and O10 are fixed and that no rejected item was reversed. The diff reviewer found no correctness fault and reported 5 findings, ranked:
+
+- P1: the text of every part is checked before any logprobs check. Part 1 with `logprobs` `[5]` and part 2 with a bad `text` gives the text message. The code matches AC4, but the conditions page does not say that text comes first.
+- P2: the user docs do not say that R3, R4, and the array test of R5 run before the candidates of a step. The code comment says it.
+- P3: `check_part_logprobs()` defines local `is_string` and `is_number` in place of `is_one_string()` and `is_one_number()`.
+- P4: `R/chat.R` lines 150 and 595 are 110 and 100 characters long.
+- P5: one R5 message covers a `top_logprobs` that is not an array and a candidate that is not an object.
+
+P1 does not fail AC1. The input breaks a text check, which AC4 orders before the logprobs rules.
