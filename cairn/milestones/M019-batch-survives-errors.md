@@ -69,7 +69,7 @@
 - [x] T4: Write the AC4 tests. Then catch `rlmstudio_no_server` around the per-input call, set `results`, and signal the same condition again. Mock `is_server_running` with a counter, because `lms_chat_batch()` probes once before the first input (LESSONS M003).
 - [x] T5: Write the AC5 tests with a counting stub for `lms_chat()`, not `fail()` (LESSONS M015). Confirm that the two classes other than rlmstudio pass through the handlers.
 - [x] T6: Update the `lms_chat_batch()` roxygen `@return` and `@details` (`R/chat.R:540`). In `R/conditions.R`, update the "API failure" and "Malformed response" sections, and add the `results` field to "Server not running". Rewrite `NEWS.md` lines 7 and 8 and add one entry. Run `devtools::document()`.
-- [ ] T7: Run the AC6 grep and read each hit. Run `devtools::test()`, then `devtools::check()` with the token set.
+- [x] T7: Run the AC6 grep and read each hit. Run `devtools::test()`, then `devtools::check()` with the token set.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates.
@@ -92,6 +92,7 @@
 - 2026-09-22: T4 done. The three AC4 tests failed on the missing `results` field, then passed. The loop is now a `for` loop that fills a preset list, so the handler can attach the results so far. A named `inputs` still gives a named result, checked against the pre-change code. Full suite: 0 failed.
 - 2026-09-22: T5 done. The AC5 test catches with `tryCatch()`, because `expect_error()` adds a backtrace and never returns the raised object. A planted `error =` catch-all in the batch loop turned it red on both the identity and the call count, and it is green without it.
 - 2026-09-22: T6 done. The batch `@return` and `@details`, the three sections in `R/conditions.R`, and two `NEWS.md` entries were rewritten, and one entry was added. The "Server not running" paragraph about `results` reaches every page that inherits that section, 12 pages in all. A test now pins the documented claim that the probe before the first input adds no `results` field.
+- 2026-09-22: T7 done. The AC6 grep returned 13 lines that mention a batch, and none says an API failure or an unreadable reply aborts it. The development `NEWS.md` entry on one failure path still says the batch's failures "change in the same way", which holds for the class and `status` of the stored condition. `devtools::document()` left no diff. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
