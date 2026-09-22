@@ -884,21 +884,79 @@ native_stats_fields <- c(
 #'
 #' @noRd
 native_reply_fields <- function(resp_data) {
-  id <- resp_data[["response_id"]]
-  stats_obj <- resp_data[["stats"]]
-  if (!is_json_object(stats_obj)) {
-    stats_obj <- list()
-  }
-  number_or_na <- function(x) {
-    if (is.numeric(x) && length(x) == 1L) as.double(x) else NA_real_
-  }
+  stats_obj <- object_or_empty(resp_data[["stats"]])
   numbers <- lapply(
     native_stats_fields,
     \(field) number_or_na(stats_obj[[field]])
   )
   names(numbers) <- native_stats_fields
-  c(list(response_id = if (is_one_string(id)) id else NA_character_), numbers)
+  c(list(response_id = string_or_na(resp_data[["response_id"]])), numbers)
 }
+
+# A reply field read into a batch column: one string or one number, else NA.
+string_or_na <- function(x) if (is_one_string(x)) x else NA_character_
+number_or_na <- function(x) {
+  if (is.numeric(x) && length(x) == 1L) as.double(x) else NA_real_
+}
+# A JSON object, or an empty list in place of any other value, so that a
+# field read out of it gives NULL.
+object_or_empty <- function(x) if (is_json_object(x)) x else list()
+
+# The `usage` fields of an OpenResponses or chat completions reply that the
+# data-frame batch on that route returns, by column name. The reasoning count
+# sits in the details object named here.
+usage_field_names <- list(
+  openresponses = c(
+    input_tokens = "input_tokens",
+    total_output_tokens = "output_tokens",
+    details = "output_tokens_details"
+  ),
+  openai = c(
+    input_tokens = "prompt_tokens",
+    total_output_tokens = "completion_tokens",
+    details = "completion_tokens_details"
+  )
+)
+
+#' Read the reply id and the token counts of an OpenResponses or chat
+#' completions reply
+#'
+#' As with `native_reply_fields()`, these values are extra to the answer, so
+#' a value of the wrong type gives `NA` and never fails the input. Fields are
+#' read with `[[`, because `$` would read a field whose name only starts with
+#' the one asked for.
+#'
+#' @param resp_data The parsed response body.
+#' @param api_type `"openresponses"` or `"openai"`.
+#' @return A list with `response_id`, one string or `NA_character_`, and
+#'   `input_tokens`, `total_output_tokens`, and `reasoning_output_tokens`,
+#'   each one double or `NA_real_`.
+#'
+#' @noRd
+usage_reply_fields <- function(resp_data, api_type) {
+  names_in <- usage_field_names[[api_type]]
+  usage <- object_or_empty(resp_data[["usage"]])
+  details <- object_or_empty(usage[[names_in[["details"]]]])
+  list(
+    response_id = string_or_na(resp_data[["id"]]),
+    input_tokens = number_or_na(usage[[names_in[["input_tokens"]]]]),
+    total_output_tokens = number_or_na(usage[[names_in[["total_output_tokens"]]]]),
+    reasoning_output_tokens = number_or_na(details[["reasoning_tokens"]])
+  )
+}
+
+# The reply columns of a data-frame batch on each route, in column order.
+# `response_id` is character, and the others are double.
+reply_columns <- list(
+  native = c("response_id", native_stats_fields),
+  openresponses = c(
+    "response_id",
+    "input_tokens",
+    "total_output_tokens",
+    "reasoning_output_tokens"
+  )
+)
+reply_columns$openai <- reply_columns$openresponses
 
 #' Batch Chat Completion with LM Studio
 #'
@@ -1041,20 +1099,34 @@ lms_chat_batch <- function(
   # Slots from the lost input on stay NULL.
   results <- vector("list", length(inputs))
   names(results) <- names(inputs)
-  # A native data frame also returns the reply id and the stats of each reply,
-  # so that route asks for the body and reads the text out of it here. The
-  # text is read by the helper `lms_chat_native()` uses, so a reply fails the
-  # same way. `results` still holds the answer text, as a native vector or
-  # list batch with `simplify = TRUE` does, so the `results` field of a
-  # lost-server abort does not change.
-  native_frame <- format == "data.frame" && api_type == "native"
+  # A data frame also returns the reply id and the token counts of each reply
+  # (D-013, D-014), so it asks for the body and reads the answer out of it
+  # here. The answer is read by the helper the single call uses, so a reply
+  # fails the same way. `results` still holds what `simplify = TRUE` returns,
+  # so the `results` field of a lost-server abort does not change.
+  body_frame <- format == "data.frame"
   reply_fields <- vector("list", length(inputs))
-  # `lms_chat_native()` returns the body only for status 200, so the abort a
-  # bad body raises carries that status.
+  # The single calls return the body only for status 200, so the abort a bad
+  # body raises carries that status.
   ok_resp <- httr2::response(status_code = 200L)
+  read_reply <- function(body) {
+    value <- switch(
+      api_type,
+      native = native_reply_text(ok_resp, body),
+      openresponses = responses_reply_value(ok_resp, body, has_logprobs),
+      openai = openai_reply_value(ok_resp, body, has_logprobs, schema)
+    )
+    # Read after the answer, so a reply that fails leaves no values.
+    fields <- if (api_type == "native") {
+      native_reply_fields(body)
+    } else {
+      usage_reply_fields(body, api_type)
+    }
+    list(value = value, fields = fields)
+  }
   for (i in seq_along(inputs)) {
     res <- tryCatch(
-      if (native_frame) {
+      if (body_frame) {
         body <- lms_chat(
           model = model,
           input = inputs[[i]],
@@ -1064,10 +1136,9 @@ lms_chat_batch <- function(
           ...,
           token = token
         )
-        text <- native_reply_text(ok_resp, body)
-        # Read after the text, so a reply that fails leaves no values.
-        reply_fields[[i]] <- native_reply_fields(body)
-        text
+        read <- read_reply(body)
+        reply_fields[[i]] <- read$fields
+        read$value
       } else {
         lms_chat(
           model = model,
@@ -1152,11 +1223,30 @@ lms_chat_batch <- function(
     cli::cli_warn(vector_fallback)
   }
 
+  # Keyed on the route, not on the replies, so the columns and their types
+  # are there even when every input failed. A failed input has no values.
+  add_reply_columns <- function(df) {
+    columns <- reply_columns[[api_type]]
+    df$response_id <- vapply(
+      reply_fields,
+      \(x) if (is.null(x)) NA_character_ else x[["response_id"]],
+      character(1)
+    )
+    for (field in columns[-1]) {
+      df[[field]] <- vapply(
+        reply_fields,
+        \(x) if (is.null(x)) NA_real_ else x[[field]],
+        double(1)
+      )
+    }
+    df
+  }
+
   if (format == "data.frame") {
     if (has_parsed) {
       df <- data.frame(input = inputs, stringsAsFactors = FALSE)
       df$output <- results
-      return(df)
+      return(add_reply_columns(df))
     }
 
     # Keyed on the argument, not on the results, so the column is there even
@@ -1184,23 +1274,7 @@ lms_chat_batch <- function(
         stringsAsFactors = FALSE
       )
     }
-    # Keyed on the route, not on the replies, so the columns and their types
-    # are there even when every input failed. A failed input has no values.
-    if (native_frame) {
-      df$response_id <- vapply(
-        reply_fields,
-        \(x) if (is.null(x)) NA_character_ else x[["response_id"]],
-        character(1)
-      )
-      for (field in native_stats_fields) {
-        df[[field]] <- vapply(
-          reply_fields,
-          \(x) if (is.null(x)) NA_real_ else x[[field]],
-          double(1)
-        )
-      }
-    }
-    return(df)
+    return(add_reply_columns(df))
   }
 
   if (format == "vector" && is.null(vector_fallback)) {

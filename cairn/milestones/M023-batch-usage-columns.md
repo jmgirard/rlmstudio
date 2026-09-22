@@ -49,7 +49,7 @@ On the OpenResponses and OpenAI routes, a data-frame `lms_chat_batch()` returns 
 
 - [x] T1: In `tests/testthat/helper-chat-bodies.R`, add builders for an OpenResponses body and an OpenAI body that hold `id` and `usage`. Write the tests for AC1 to AC4 in `tests/testthat/test-chat-batch.R`, and see them fail.
 - [x] T2: In `R/chat.R`, move the `simplify = TRUE` branch of `lms_chat_openresponses()` (lines 191-215) into a shared reader. Do the same for `lms_chat_openai()` (lines 318-375). The single calls use these readers. Add one body check that all three routes run first, for AC6. Single calls keep every other result and message.
-- [ ] T3: In `lms_chat_batch()`, make the data-frame batch on both routes call with `simplify = FALSE`. Read the answer through the T2 readers, then read `id` and `usage` with `[[` (M018 lesson). Add the columns on the `schema` exit (line 1100) and on the main path. The `results` field of a lost-server abort keeps its present content.
+- [x] T3: In `lms_chat_batch()`, make the data-frame batch on both routes call with `simplify = FALSE`. Read the answer through the T2 readers, then read `id` and `usage` with `[[` (M018 lesson). Add the columns on the `schema` exit (line 1100) and on the main path. The `results` field of a lost-server abort keeps its present content.
 - [ ] T4: Add the list of `choices` faults and the bare-value bodies to the helper file. Write the tests for AC5 and AC6. Change the column-name expectations at `test-chat-batch.R:179`, `:207`, `:349`, and `:792-821` to the new columns, and pin the other columns by value.
 - [ ] T5: Write the roxygen of `lms_chat_batch()`, and replace the sentence "The other routes and formats add no such column". Run `devtools::document()`. Add the two NEWS entries.
 - [ ] T6: Run `devtools::test()`, `devtools::check()`, and `devtools::document()`.
@@ -63,6 +63,7 @@ On the OpenResponses and OpenAI routes, a data-frame `lms_chat_batch()` returns 
 - 2026-09-22: plan gate folded in the bare-value fix over a separate hotfix, because the new body readers are where its check goes. Falsified by a review that finds the two changes hard to review together.
 - 2026-09-22: T1 done. The builders are in `helper-chat-bodies.R`. The AC1 to AC4 tests are in a new file, `tests/testthat/test-chat-batch-usage.R`, not in `test-chat-batch.R` as T1 said, because that file holds 900 lines. Seven of the eight tests fail on the missing columns with no errors. The lost-server test passes, because it pins the present `results` field.
 - 2026-09-22: T2 done. `responses_reply_value()` and `openai_reply_value()` hold the `simplify = TRUE` readers. `check_body_object()` runs first in `chat_message_items()` and in `openai_reply_value()`, and it passes `null` and top-level arrays. `devtools::test()` shows failures only in the new T1 tests, and 5033 expectations pass.
+- 2026-09-22: T3 done. Every data-frame batch now reads the body through `read_reply()` in `lms_chat_batch()`, and `add_reply_columns()` adds the route's columns on both exits. The T1 tests pass. Four old tests in `test-chat-batch.R` fail only on the column names that T4 changes.
 
 ## Decisions
 
