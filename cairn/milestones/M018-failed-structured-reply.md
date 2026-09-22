@@ -1,6 +1,6 @@
 # M018: A failed structured reply keeps its text and no longer ends a batch
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -144,6 +144,8 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: T5 done. If the batch parses replies, it catches `rlmstudio_bad_response`. Otherwise it does not, so a batch without a `schema` still aborts. Suite 1657 pass.
 - 2026-09-21: T6 done. The test also pins that a bare `list()` goes out as `[]`, the reason the docs give. Suite 1659 pass.
 - 2026-09-21: T7 done. NEWS map: nested empty object to AC6, the two fields to AC2, the `max_tokens` message to AC3. No `choices` maps to AC1, and the batch bullet to AC4 and AC5. A run on main showed the old behavior: an empty `choices` gave `subscript out of bounds`, and a missing one returned `NULL`. `devtools::check()` 0 errors, 0 warnings, 0 notes.
+- claim audit: 52 claims read, 4 corrected — data-raw/record-cutoff-cassette.R, R/chat.R, NEWS.md, man/lms_chat.Rd, man/lms_chat_batch.Rd
+- 2026-09-21: the re-read of the 4 corrected claims found that all hold. Left open: a `choices` sent as a non-empty JSON object passes the guard and fails with a base R error. No criterion promises that case. Final `devtools::check()` 0 errors, 0 warnings, 0 notes. Status set to review.
 
 ## Decisions
 
