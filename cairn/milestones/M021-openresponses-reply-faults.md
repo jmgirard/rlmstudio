@@ -79,6 +79,8 @@ The checks go over the parts in order, then the steps of a part in order, then t
 - 2026-09-22: T8 done: tests for a `null` step, a `null` candidate, `{}` as the value and as `top_logprobs`, a `null` value, a `{}` step, and a bad text with bad logprobs. A plant that let a `null` step pass and a plant that checked logprobs before the text each turned their test red. `devtools::test()` passed 4461, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - claim audit: 14 claims read, 4 corrected — R/chat.R, R/conditions.R, NEWS.md
 - 2026-09-22: the audit found that "first rule" read as rule-number order after T7. The wording now gives the walk order, and the re-read found one more false sentence in the `check_part_logprobs()` notes, which is fixed. `devtools::test()` passed 4461, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
+- 2026-09-22: second review pass. AC1 ticked. The docs fixes for P1 and P2 were made at the gate.
+- step-7 approval: m021-openresponses-reply-faults approved for merge
 
 ## Decisions
 
@@ -140,3 +142,11 @@ Independent review (three fresh reviewers): the blame-history and prior-review r
 - P5: one R5 message covers a `top_logprobs` that is not an array and a candidate that is not an object.
 
 P1 does not fail AC1. The input breaks a text check, which AC4 orders before the logprobs rules.
+
+Triage at the gate, 2026-09-22, by the maintainer:
+
+- P1, P2: fix now. The conditions page and NEWS now say that text comes first and that a step's own fields come before its candidates. A probe with `[5]` in part 1 and a bad `text` in part 2 gave the text message. After the fix, `devtools::test()` passed 4461, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- P3: rejected. It is style only, with no change in behavior.
+- P4: rejected. It is style only, and the file already has other long lines.
+- P5: follow-up, a new candidate row.
+- conversation: no PR existed at the gate, so no PR conversation was read.

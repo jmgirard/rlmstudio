@@ -138,8 +138,11 @@ passes its rule. A \code{null} step or candidate breaks rule 2 or rule 5.
 }
 
 The parts are checked in order, then the steps of a part, then the
-candidates of a step, one at a time. The message names the first broken
-rule that this order reaches.
+candidates of a step, one at a time. Within a step, rules 3 and 4 and the
+array test of rule 5 come before the candidates. The message names the
+first broken rule that this order reaches. These checks run only after the
+text of every \code{"output_text"} part is read, so a reply that also has a bad
+\code{text} in any part gets the text message.
 Parts of other types, such as a refusal, are not checked, and with
 \code{logprobs = FALSE} no part is checked. Fields are read by their exact
 names, so a field whose name only starts with the one asked for, such as
