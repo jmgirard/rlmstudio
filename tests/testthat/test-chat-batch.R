@@ -3,6 +3,14 @@
 
 batch_inputs <- c("first", "second", "third")
 failure_classes <- c("rlmstudio_api_error", "rlmstudio_bad_response")
+# The columns a data frame on the OpenResponses and OpenAI routes adds after
+# its answer columns (D-014).
+usage_columns <- c(
+  "response_id",
+  "input_tokens",
+  "total_output_tokens",
+  "reasoning_output_tokens"
+)
 
 # A chat completions response that succeeds at position `i`: a score for a
 # schema batch, text otherwise. Each position gets its own value, so a slot
@@ -176,7 +184,7 @@ test_that("a failed input leaves NULL logprobs in a data frame", {
   for (cls in failure_classes) {
     res <- run_failing_batch(2L, cls, "data.frame", logprobs = TRUE)
     expect_identical(res$requests, 3L, info = cls)
-    expect_named(res$out, c("input", "output", "logprobs"))
+    expect_named(res$out, c("input", "output", "logprobs", usage_columns))
     expect_identical(res$out$output, c("reply 1", NA, "reply 3"), info = cls)
     expect_null(res$out$logprobs[[2]])
     expect_length(res$warnings, 1L)
@@ -204,7 +212,7 @@ test_that("a batch in which every input fails keeps its logprobs column", {
   for (cls in failure_classes) {
     res <- run_failing_batch(1:3, rep(cls, 3), "data.frame", logprobs = TRUE)
     expect_identical(res$requests, 3L, info = cls)
-    expect_named(res$out, c("input", "output", "logprobs"))
+    expect_named(res$out, c("input", "output", "logprobs", usage_columns))
     expect_identical(res$out$output, rep(NA_character_, 3), info = cls)
     expect_identical(res$out$logprobs, list(NULL, NULL, NULL), info = cls)
     expect_length(res$warnings, 1L)
@@ -346,7 +354,7 @@ test_that("a logprobs data frame keeps its column when no reply carried logprobs
     ),
     "1 input failed, at position 2\\."
   )
-  expect_named(out, c("input", "output", "logprobs"))
+  expect_named(out, c("input", "output", "logprobs", usage_columns))
   expect_identical(out$output, c("reply 1", NA, "reply 3"))
   expect_identical(out$logprobs, list(NULL, NULL, NULL))
 })
@@ -789,7 +797,7 @@ test_that("the reply columns are there when every input failed", {
   }
 })
 
-test_that("the other routes add no reply column to a data frame", {
+test_that("the other routes add the usage columns and no stats column", {
   routes <- list(
     openresponses = function(i, logprobs) {
       lp <- if (logprobs) json_array(logprob_step("r")) else NULL
@@ -806,7 +814,7 @@ test_that("the other routes add no reply column to a data frame", {
         logprobs = logprobs
       )
       expected <- if (logprobs) c("input", "output", "logprobs") else c("input", "output")
-      expect_identical(names(res$out), expected, info = info)
+      expect_identical(names(res$out), c(expected, usage_columns), info = info)
       expect_identical(res$out$output, c("reply 1", "reply 2"), info = info)
       # A failed input would warn, so no warning means both inputs read.
       expect_identical(res$warnings, character(), info = info)
@@ -818,7 +826,7 @@ test_that("the other routes add no reply column to a data frame", {
     api_type = "openai",
     schema = score_schema
   )
-  expect_identical(names(res$out), c("input", "output"))
+  expect_identical(names(res$out), c("input", "output", usage_columns))
   expect_identical(res$out$output, list(list(score = 1L), list(score = 2L)))
   expect_identical(res$warnings, character())
 })

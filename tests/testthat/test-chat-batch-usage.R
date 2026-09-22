@@ -381,3 +381,94 @@ test_that("a lost server keeps what the results field held before", {
     expect_null(cnd$results[[3]])
   }
 })
+
+# What lms_chat() with `simplify = TRUE` gives for `body` on the setting `s`:
+# the value, or the condition it raises.
+single_value <- function(s, body) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(mock_response(200L, body)))
+  args <- list("a-model", "input", api_type = s$api_type, logprobs = s$logprobs)
+  if (s$schema) {
+    args$schema <- score_schema
+  }
+  tryCatch(do.call(lms_chat, args), error = identity)
+}
+
+test_that("a readable reply gives the answer the single call returns", {
+  for (s in usage_settings) {
+    info <- setting_info(s)
+    bodies <- lapply(1:2, \(i) usage_reply(s$api_type, answer_text(s, i), lp = s$logprobs))
+    res <- run_usage_batch(bodies, s$api_type, s$logprobs, s$schema)
+    for (i in 1:2) {
+      single <- single_value(s, bodies[[i]])
+      expect_false(inherits(single, "error"), info = info)
+      if (s$schema) {
+        expect_identical(res$out$output[[i]], single, info = info)
+      } else if (s$logprobs) {
+        expect_s3_class(single, "lms_chat_result")
+        expect_identical(res$out$output[[i]], single$text, info = info)
+        expect_identical(res$out$logprobs[[i]], single$logprobs, info = info)
+      } else {
+        expect_identical(res$out$output[[i]], single, info = info)
+      }
+    }
+    if (s$api_type == "openresponses" && s$logprobs) {
+      # The route that carries logprobs, so the column holds data frames.
+      expect_s3_class(res$out$logprobs[[1]], "data.frame")
+    }
+  }
+})
+
+# An OpenResponses body whose one part carries a `logprobs` value that breaks
+# a rule, from an entry of logprobs_breaks().
+logprobs_break_body <- function(entry) {
+  lp <- if (is.null(entry$value)) json_array(entry$step) else entry$value
+  output_body(responses_message(output_text(quoted("x"), lp)))
+}
+
+# The unreadable bodies of each setting, named by their shape.
+unreadable_bodies <- function(s) {
+  if (s$api_type == "openresponses") {
+    bodies <- responses_unreadable()
+    if (s$logprobs) {
+      breaks <- logprobs_breaks()
+      names(breaks) <- vapply(breaks, \(b) paste(b$rule, b$label), character(1))
+      bodies <- c(bodies, lapply(breaks, logprobs_break_body))
+    }
+    return(bodies)
+  }
+  bodies <- c(lapply(openai_unreadable(), `[[`, "body"), openai_choices_faults())
+  if (s$schema) {
+    bodies[["content that is not JSON"]] <- completion_body(quoted("not json"))
+    bodies[["content cut off at the token limit"]] <-
+      completion_body(quoted('{"score": '), finish_reason = "length")
+  }
+  bodies
+}
+
+test_that("an unreadable reply fails its input as the single call fails", {
+  for (s in usage_settings) {
+    ok <- usage_reply(s$api_type, answer_text(s, 1L), lp = s$logprobs)
+    bodies <- unreadable_bodies(s)
+    expect_gt(length(bodies), 10L)
+    for (label in names(bodies)) {
+      info <- paste(setting_info(s), label)
+      single <- single_value(s, bodies[[label]])
+      expect_s3_class(single, "rlmstudio_bad_response")
+      res <- run_usage_batch(list(ok, bodies[[label]]), s$api_type, s$logprobs, s$schema)
+      expect_identical(length(res$warnings), 1L, info = info)
+      expect_match(res$warnings, "1 input failed, at position 2\\.", info = info)
+      if (!s$schema) {
+        expect_identical(res$out$output[[2]], NA_character_, info = info)
+        next
+      }
+      stored <- res$out$output[[2]]
+      expect_s3_class(stored, "rlmstudio_bad_response")
+      expect_identical(class(stored), class(single), info = info)
+      expect_identical(conditionMessage(stored), conditionMessage(single), info = info)
+      for (field in c("status", "content", "finish_reason")) {
+        expect_identical(stored[[field]], single[[field]], info = paste(info, field))
+      }
+    }
+  }
+})

@@ -368,6 +368,26 @@ openai_unreadable <- function() {
   )
 }
 
+# Chat completions bodies whose `choices` field holds no readable reply, named
+# by their shape. `lms_chat_openai()` names each of them in one message.
+openai_choices_faults <- function() {
+  list(
+    "no choices field" = '{"id": "chatcmpl-1"}',
+    "an empty choices array" = '{"choices": []}',
+    "a choices object" = '{"choices": {"a": 1}}',
+    "a choices string" = '{"choices": "a"}',
+    "a first choice that is a number" = '{"choices": [5]}',
+    "a first choice that is an array" = '{"choices": [[1]]}',
+    "a choice with no message" = '{"choices": [{"index": 0}]}',
+    "a message that is a string" = '{"choices": [{"message": "a"}]}',
+    "a message that is an array" = '{"choices": [{"message": ["a"]}]}'
+  )
+}
+
+# Bodies that are a bare JSON value. `null` is here as the regression case,
+# because each route already names it in a message of its own.
+bare_bodies <- c(number = "5", string = '"s"', boolean = "true", null = "null")
+
 score_schema <- list(
   type = "object",
   properties = list(score = list(type = "integer")),
