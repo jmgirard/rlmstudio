@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-22 (M018 done and archived, M015 row pruned, one re
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M019 | A failed input no longer ends a chat batch | planned | none | normal | milestones/M019-batch-survives-errors.md |
+| M019 | A failed input no longer ends a chat batch | in-progress | none | normal | milestones/M019-batch-survives-errors.md |
 | M018 | A failed structured reply keeps its text and no longer ends a batch | done | none | normal | milestones/archive/M018-failed-structured-reply.md |
 | M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | done | none | normal | milestones/archive/M017-structured-output.md |
 | M016 | The daemon start call can wait until the daemon reports running | dropped | none | normal | milestones/archive/M016-daemon-start-wait.md |
