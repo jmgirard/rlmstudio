@@ -855,7 +855,7 @@ lms_chat_batch <- function(
   holds_na <- isTRUE(simplify) &&
     !has_parsed &&
     (format == "data.frame" || (format == "vector" && is.null(vector_fallback)))
-  # A reply with `"content": null` now fails (D-012), so no route returns NULL
+  # A reply with `"content": null` now fails (D-012), so no text reply is NULL
   # with `simplify = TRUE`. A NULL would still become NA here, so the text
   # result stays as long as `inputs`.
   na_if_failed <- function(x) {

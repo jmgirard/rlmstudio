@@ -139,8 +139,9 @@ in it is not a JSON object. They also raise it when no item has the type
 \code{"message"}, as in a reply that holds only reasoning or a tool call. The
 text of a message must be one string. For \code{\link[=lms_chat_native]{lms_chat_native()}} that is the
 \code{content} of the item. For \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} it is the \code{text} of
-each part of type \code{"output_text"}. The \code{content} of such a message must be
-an array of JSON objects with at least one \code{"output_text"} part in it.
+each part of type \code{"output_text"}. The \code{content} of each such message must
+be an array of JSON objects, and the messages together must hold at least
+one \code{"output_text"} part.
 
 \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in three cases, all only with
 \code{simplify = TRUE}. The first case is a response whose \code{choices} field is

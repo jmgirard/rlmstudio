@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M020: A chat reply without readable answer text fails that input, not the batch
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -72,7 +72,7 @@ Every chat route reads its answer from the message items, and a reply without on
 - [x] T5: Write the AC5 batch table in `tests/testthat/test-chat-batch.R`, reusing `local_request_sequence()`.
 - [x] T6: In `lms_chat_batch()`, move `match.arg(format)` and the `data.frame` and `simplify` check above `stop_if_no_server()` (`R/chat.R:603-664`). Write the AC6 test first with `local_counting_probe()`, as `test-arg-guards.R:489-503` does.
 - [x] T7: Update the help text named in AC7 in `R/conditions.R` and `R/chat.R`, including "Two functions raise it" and "both functions" (`R/conditions.R:56-57` and `80-81`). Run `devtools::document()`. Add a `NEWS.md` entry. Rewrite the development-version sentence that says a `NULL` reply holds `NA`.
-- [ ] T8: Run `devtools::test()` and then `devtools::check()` with `RLMSTUDIO_API_TOKEN` set, both clean.
+- [x] T8: Run `devtools::test()` and then `devtools::check()` with `RLMSTUDIO_API_TOKEN` set, both clean.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates.
@@ -100,6 +100,9 @@ Every chat route reads its answer from the message items, and a reply without on
 - 2026-09-22: T5 done. The unreadable-reply tables moved to `helper-chat-bodies.R` so the batch table reuses them. On main's `R/chat.R` the four new or rewritten batch tests fail. `devtools::test()`: 0 failed, 0 skipped, 3126 passed.
 - 2026-09-22: T6 done. `match.arg(format)` and the `data.frame` check now run above `stop_if_no_server()`. The AC6 test failed first, with a control that a `list` format still reaches the probe. `devtools::test()`: 0 failed, 0 skipped, 3134 passed.
 - 2026-09-22: T7 done. The conditions page names four raisers and a third OpenAI case. Both wrappers inherit the section. The `@return` and details text changed, and NEWS has four entries. The M019 NEWS sentence about `NULL` replies was rewritten. A second `devtools::document()` gave no diff.
+- 2026-09-22: T8 done. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set: 0 errors, 0 warnings, 0 notes. The vignettes built against the live server.
+- 2026-09-22: claim audit: 85 claims read, 2 corrected — R/chat.R, R/conditions.R. The same reader re-read both and confirmed them. `devtools::test()` 3134 passed and `devtools::check()` clean after the fix.
+- 2026-09-22: all tasks done, status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
