@@ -228,3 +228,115 @@ test_that("the reply columns are there when every input failed", {
     }
   }
 })
+
+test_that("the other routes add no reply column to a data frame", {
+  routes <- list(
+    openresponses = function(i, logprobs) {
+      lp <- if (logprobs) json_array(logprob_step("r")) else NULL
+      output_body(responses_message(output_text(quoted(sprintf("reply %d", i)), lp)))
+    },
+    openai = function(i, logprobs) completion_body(quoted(sprintf("reply %d", i)))
+  )
+  for (api_type in names(routes)) {
+    for (logprobs in c(FALSE, TRUE)) {
+      info <- paste(api_type, "logprobs:", logprobs)
+      res <- run_stats_batch(
+        lapply(1:2, routes[[api_type]], logprobs = logprobs),
+        api_type = api_type,
+        logprobs = logprobs
+      )
+      expected <- if (logprobs) c("input", "output", "logprobs") else c("input", "output")
+      expect_identical(names(res$out), expected, info = info)
+    }
+  }
+
+  res <- run_stats_batch(
+    lapply(1:2, \(i) completion_body(quoted(sprintf('{"score": %d}', i)))),
+    api_type = "openai",
+    schema = score_schema
+  )
+  expect_identical(names(res$out), c("input", "output"))
+})
+
+test_that("a single native call still returns one plain string", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(rep(list(mock_response(200L, native_reply("x"))), 3))
+
+  out <- lms_chat_native("a-model", "hi")
+  expect_identical(out, "x")
+  expect_null(attributes(out))
+
+  out <- lms_chat("a-model", "hi", api_type = "native")
+  expect_identical(out, "x")
+  expect_null(attributes(out))
+
+  body <- lms_chat_native("a-model", "hi", simplify = FALSE)
+  expect_identical(body$response_id, "resp_1")
+  expect_identical(body$stats$input_tokens, 21L)
+  expect_identical(body$stats$tokens_per_second, 284.5)
+})
+
+test_that("a native vector or list batch holds plain strings", {
+  inputs <- c(a = "first", b = "second")
+  replies <- list(
+    mock_response(200L, native_reply("x")),
+    mock_response(200L, native_reply("y"))
+  )
+
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(c(replies, replies))
+  out <- lms_chat_batch("a-model", inputs, format = "vector", quiet = TRUE, api_type = "native")
+  expect_identical(out, c(a = "x", b = "y"))
+  expect_identical(names(attributes(out)), "names")
+
+  out <- lms_chat_batch("a-model", inputs, format = "list", quiet = TRUE, api_type = "native")
+  expect_identical(unname(out), list("x", "y"))
+  for (x in out) {
+    expect_null(attributes(x))
+  }
+})
+
+test_that("a native list batch stores each failure with its class", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    mock_response(200L, native_reply("x")),
+    failing_native$rlmstudio_api_error,
+    failing_native$rlmstudio_bad_response
+  ))
+  expect_warning(
+    out <- lms_chat_batch(
+      "a-model",
+      c("a", "b", "c"),
+      format = "list",
+      quiet = TRUE,
+      api_type = "native"
+    ),
+    "2 inputs failed"
+  )
+  expect_identical(out[[1]], "x")
+  expect_s3_class(out[[2]], "rlmstudio_api_error")
+  expect_identical(out[[2]]$status, 400L)
+  expect_s3_class(out[[3]], "rlmstudio_bad_response")
+})
+
+test_that("a lost server in a native data frame carries the answer strings so far", {
+  probes <- 0L
+  # The batch probes once, then each input probes again, so the server is
+  # gone at the second input.
+  testthat::local_mocked_bindings(is_server_running = function(...) {
+    probes <<- probes + 1L
+    probes <= 2L
+  })
+  local_request_sequence(list(mock_response(200L, native_reply("x"))))
+  cnd <- expect_error(
+    lms_chat_batch(
+      "a-model",
+      c("a", "b", "c"),
+      format = "data.frame",
+      quiet = TRUE,
+      api_type = "native"
+    ),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(cnd$results, list("x", NULL, NULL))
+})
