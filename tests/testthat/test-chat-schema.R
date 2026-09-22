@@ -184,6 +184,26 @@ test_that("a 200 with no reply in choices aborts as a bad response", {
   }
 })
 
+test_that("a choices field that is not an array of objects aborts as a bad response", {
+  bodies <- list(
+    list(label = "a JSON object", body = '{"choices": {"a": {"message": {"content": "{}"}}}}'),
+    list(label = "an array of numbers", body = '{"choices": [1]}'),
+    list(label = "an array of strings", body = '{"choices": ["{}"]}')
+  )
+  for (body in bodies) {
+    for (schema in list(NULL, score_schema)) {
+      err <- expect_error(
+        call_with_reply(body$body, schema = schema),
+        class = "rlmstudio_bad_response",
+        info = body$label
+      )
+      expect_identical(err$status, 200L, info = body$label)
+      expect_match(conditionMessage(err), "choices", info = body$label)
+      expect_null(err$content, info = body$label)
+    }
+  }
+})
+
 test_that("an unreadable reply carries its content and finish reason", {
   cases <- list(
     list(label = "invalid JSON text", json = quoted("a score of"), content = "a score of"),

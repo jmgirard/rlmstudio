@@ -130,7 +130,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - [x] T8: Make the batch warning name every failed position, with no cli
       shortening past 20. Add a test with 25 failed inputs that asserts
       positions 19 to 23 appear in the warning.
-- [ ] T9: Extend the `choices` guard in `lms_chat_openai()` to a JSON object
+- [x] T9: Extend the `choices` guard in `lms_chat_openai()` to a JSON object
       and to a first element that is not an object. Both abort with
       `rlmstudio_bad_response`. Add a test for each shape.
 - [ ] T10: Drop the backtrace from a condition before the batch stores it.
@@ -167,6 +167,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: review checkpoint. Six criteria verified and ticked. AC4 is unticked, because the warning cuts the position list past 20 failures. `devtools::check()` still runs.
 - 2026-09-21: returned to in-progress at the review gate (defect return 1). AC4 failed: the batch warning cuts the position list past 20 failures. The user chose to return with all fixes. Findings 1 to 9 are fix now, as T8 to T13. Findings 10 and 11 are rejected, for the reasons in the Review section.
 - 2026-09-21: T8 done. The warning joins the positions with `cli::ansi_collapse(trunc = Inf)` before cli sees them. The new test failed first with "18, ..., 24, and 25". Suite 1664 pass.
+- 2026-09-21: T9 done. The guard also rejects a named `choices` and a first element that is not a list. The test covers an object, `[1]`, and `["{}"]`, with and without a schema, and failed first. The help page and NEWS text for these shapes moves to T13. Suite 1688 pass.
 
 ## Decisions
 

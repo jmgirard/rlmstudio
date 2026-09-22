@@ -326,13 +326,20 @@ lms_chat_openai <- function(
     # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
     # empty list fails there with a subscript error that names neither the
     # response nor the field. A missing field gives back NULL as the reply,
-    # which a plain call returns and a `logprobs` call fails on.
+    # which a plain call returns and a `logprobs` call fails on. A JSON object
+    # in place of the array would be read by its first value, and a first
+    # element that is not an object fails on `$` with a base R error.
     choices <- resp_data$choices
-    if (!is.list(choices) || length(choices) == 0L) {
+    if (
+      !is.list(choices) ||
+        length(choices) == 0L ||
+        !is.null(names(choices)) ||
+        !is.list(choices[[1]])
+    ) {
       rlm_abort_bad_response(
         resp,
         "OpenAI API Failed",
-        "The response holds no reply in its `choices` field.",
+        "The response holds no readable reply in its `choices` field.",
         content = NULL,
         finish_reason = NULL
       )
