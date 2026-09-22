@@ -2,6 +2,44 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
+  and
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+  now read the answer from the reply items of type `"message"`. Before,
+  they read the first item of the `output` array. A reasoning model puts
+  a reasoning item first, so the call returned the reasoning in place of
+  the answer. The text of every message item is now pasted together in
+  order, and reasoning items, tool calls, and other items are skipped.
+  On the OpenResponses route, the text comes from each part of type
+  `"output_text"`, and a part of another type, such as a refusal, is
+  skipped. With `logprobs = TRUE`, the log probabilities come from every
+  such part in order.
+
+- With `simplify = TRUE`, those two functions now abort with
+  `rlmstudio_bad_response` when a reply holds no readable answer text.
+  That covers an `output` field that is missing, empty, or not an array,
+  and a reply with no message item, such as one that holds only
+  reasoning or a tool call. It also covers message text that is not one
+  string. Before, some of these replies failed with a bare R error such
+  as “subscript out of bounds”. Others returned `NULL` or a value that
+  was not a string. `simplify = FALSE` still returns the body unchanged.
+
+- With `simplify = TRUE`,
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now aborts with `rlmstudio_bad_response` when the reply content is not
+  one string. That includes `null` content, which a reply that holds
+  only a tool call has. The condition carries the content and the finish
+  reason in its `content` and `finish_reason` fields. Before, `null`
+  content returned `NULL`, and with `logprobs = TRUE` it failed with an
+  unclassed error. Content such as a number or an array was returned as
+  it was.
+
+- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  stores these failures as it stores other failed inputs, and warns
+  once. With `format = "data.frame"` and `simplify = FALSE`, it now
+  aborts before it sends any request. Before, it sent every request
+  first and then aborted, and the replies were lost.
+
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   has a new `schema` argument for structured output. Give it a JSON
   Schema written as a named list. The request then asks the server for a
@@ -71,10 +109,9 @@
   the result is text, the element holds `NA`. That is the case for
   `format = "vector"` when it returns a vector, and for a data frame
   whose replies are not parsed. In such a data frame, the `logprobs`
-  column holds `NULL` for a failed input. A reply that
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  returns as `NULL`, such as one whose content is `null`, also holds
-  `NA` in a text result, so the result stays as long as `inputs`. With
+  column holds `NULL` for a failed input. A reply with no readable
+  answer text, such as one whose content is `null`, fails in the same
+  way, so the result stays as long as `inputs`. With
   `format = "data.frame"` and `logprobs = TRUE`, the `logprobs` column
   is now always there, even when no reply carried log probabilities.
   Before, it was left out in that case. The call gives one warning that
