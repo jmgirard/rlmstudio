@@ -480,6 +480,10 @@ expect_failed_slots <- function(elements) {
   expect_identical(elements[[2]], list(score = 3L))
   expect_s3_class(elements[[3]], "rlmstudio_bad_response")
   expect_identical(elements[[3]]$content, "not json three")
+  # A stored condition keeps no backtrace, which would add tens of kilobytes
+  # per failed input.
+  expect_null(elements[[1]]$trace)
+  expect_null(elements[[3]]$trace)
 }
 
 test_that("a batch keeps going past a structured reply that does not parse", {

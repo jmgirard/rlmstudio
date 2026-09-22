@@ -605,9 +605,17 @@ lms_chat_batch <- function(
     }
     # A reply that does not parse loses one answer, not the whole batch. Its
     # slot keeps the condition, which carries the reply text. Every other
-    # error still aborts, because it says nothing about one input alone.
+    # error still aborts, because it says nothing about one input alone. The
+    # backtrace is dropped, because it adds tens of kilobytes to each failed
+    # slot and says nothing about the reply.
     res <- if (has_parsed) {
-      tryCatch(call_chat(), rlmstudio_bad_response = function(cnd) cnd)
+      tryCatch(
+        call_chat(),
+        rlmstudio_bad_response = function(cnd) {
+          cnd$trace <- NULL
+          cnd
+        }
+      )
     } else {
       call_chat()
     }
