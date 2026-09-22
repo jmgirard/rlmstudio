@@ -211,3 +211,52 @@ test_that("one warning names every failed input of either class", {
   expect_length(res$warnings, 1L)
   expect_match(res$warnings, "2 inputs failed, at positions 1 and 3\\.")
 })
+
+# Run a three-input batch in which the server goes away before input `k`. The
+# batch probes the server once before the first input, and each input probes
+# again, so input i makes probe i + 1. `responses` answers the inputs before
+# `k`. Returns the caught condition and the counts.
+run_lost_server_batch <- function(k, responses, format = "list") {
+  probes <- 0L
+  testthat::local_mocked_bindings(is_server_running = function(...) {
+    probes <<- probes + 1L
+    probes <= k
+  })
+  recorder <- local_request_sequence(responses)
+  cnd <- expect_error(
+    lms_chat_batch("a-model", batch_inputs, format = format, quiet = TRUE, api_type = "openai"),
+    class = "rlmstudio_no_server"
+  )
+  list(cnd = cnd, probes = probes, requests = length(recorder$requests))
+}
+
+test_that("a lost server aborts the batch with the replies so far", {
+  res <- run_lost_server_batch(2L, list(openai_ok(1L)))
+  expect_identical(res$probes, 3L)
+  expect_identical(res$requests, 1L)
+  expect_match(conditionMessage(res$cnd), "server")
+  expect_identical(res$cnd$results, list("reply 1", NULL, NULL))
+
+  # The field holds what format = "list" returns, whatever the format.
+  res <- run_lost_server_batch(2L, list(openai_ok(1L)), format = "vector")
+  expect_identical(res$cnd$results, list("reply 1", NULL, NULL))
+})
+
+test_that("a server lost before the first input leaves every result NULL", {
+  res <- run_lost_server_batch(1L, list())
+  expect_identical(res$probes, 2L)
+  expect_identical(res$requests, 0L)
+  expect_identical(res$cnd$results, list(NULL, NULL, NULL))
+})
+
+test_that("a lost server keeps a stored failure in its results", {
+  res <- run_lost_server_batch(
+    3L,
+    list(fail_response("rlmstudio_api_error"), openai_ok(2L))
+  )
+  expect_identical(res$requests, 2L)
+  expect_length(res$cnd$results, 3L)
+  expect_failed_slot(res$cnd$results[[1]], "rlmstudio_api_error")
+  expect_identical(res$cnd$results[[2]], "reply 2")
+  expect_null(res$cnd$results[[3]])
+})

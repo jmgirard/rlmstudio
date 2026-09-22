@@ -615,11 +615,16 @@ lms_chat_batch <- function(
     cnd$trace <- NULL
     cnd
   }
-  results <- lapply(inputs, function(input) {
+  # A lost server fails every later input, so it still aborts (GP3). The
+  # condition carries the results so far, so a long batch does not lose them.
+  # Slots from the lost input on stay NULL.
+  results <- vector("list", length(inputs))
+  names(results) <- names(inputs)
+  for (i in seq_along(inputs)) {
     res <- tryCatch(
       lms_chat(
         model = model,
-        input = input,
+        input = inputs[[i]],
         system_prompt = system_prompt,
         host = host,
         simplify = simplify,
@@ -627,13 +632,18 @@ lms_chat_batch <- function(
         token = token
       ),
       rlmstudio_api_error = keep_failure,
-      rlmstudio_bad_response = keep_failure
+      rlmstudio_bad_response = keep_failure,
+      rlmstudio_no_server = function(cnd) {
+        cnd$results <- results
+        stop(cnd)
+      }
     )
+    # `[i]` rather than `[[i]]`, so a NULL reply keeps its slot.
+    results[i] <- list(res)
     if (!should_be_quiet) {
       cli::cli_progress_update(id = pb)
     }
-    res
-  })
+  }
 
   if (format == "data.frame" && !isTRUE(simplify)) {
     cli::cli_abort(
