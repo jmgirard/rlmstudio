@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-22 (M018 done and archived, M015 row pruned, one review candidate added, two lessons, one retired)_
+_Last hygiene check: 2026-09-22 (M019 done and archived, M016 row pruned, three review candidates added, one lesson added, one pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-22 (M018 done and archived, M015 row pruned, one re
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M019 | A failed input no longer ends a chat batch | review | none | normal | milestones/M019-batch-survives-errors.md |
+| M019 | A failed input no longer ends a chat batch | done | none | normal | milestones/archive/M019-batch-survives-errors.md |
 | M018 | A failed structured reply keeps its text and no longer ends a batch | done | none | normal | milestones/archive/M018-failed-structured-reply.md |
 | M017 | The OpenAI chat call takes a JSON schema and returns the parsed answer | done | none | normal | milestones/archive/M017-structured-output.md |
-| M016 | The daemon start call can wait until the daemon reports running | dropped | none | normal | milestones/archive/M016-daemon-start-wait.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
