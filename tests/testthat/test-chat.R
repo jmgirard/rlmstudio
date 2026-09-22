@@ -486,6 +486,69 @@ test_that("the logprobs rules are checked in order within a step and across step
   )
 })
 
+test_that("a null step or candidate and an empty object break their rules", {
+  one_part <- function(logprobs) {
+    output_body(responses_message(output_text(quoted("a"), logprobs)))
+  }
+  expect_logprobs_rule(one_part("[null]"), "R2", info = "a null step")
+  expect_logprobs_rule(
+    one_part(json_array(step_json(top = "[null]"))),
+    "R5",
+    info = "a null candidate"
+  )
+  expect_logprobs_rule(one_part("{}"), "R1", info = "an empty object value")
+  expect_logprobs_rule(
+    one_part(json_array(step_json(top = "{}"))),
+    "R5",
+    info = "an empty object top_logprobs"
+  )
+})
+
+test_that("a null logprobs value and an empty object step are readable", {
+  one_part <- function(logprobs) {
+    output_body(responses_message(output_text(quoted("a"), logprobs)))
+  }
+  # A null value adds no steps, so the call returns the text alone.
+  expect_identical(
+    call_with_body(lms_chat_openresponses, one_part("null"), logprobs = TRUE),
+    "a"
+  )
+  # An empty object step has no fields, so every column is NA.
+  res <- call_with_body(lms_chat_openresponses, one_part("[{}]"), logprobs = TRUE)
+  expect_s3_class(res, "lms_chat_result")
+  expect_identical(
+    res$logprobs,
+    data.frame(
+      step_token = NA_character_,
+      step_logprob = NA_real_,
+      candidate_token = NA_character_,
+      candidate_logprob = NA_real_,
+      stringsAsFactors = FALSE
+    )
+  )
+})
+
+test_that("a part with a bad text and bad logprobs names the text", {
+  body <- output_body(responses_message(output_text("5", "[5]")))
+  err <- expect_error(
+    call_with_body(lms_chat_openresponses, body, logprobs = TRUE),
+    class = "rlmstudio_bad_response"
+  )
+  expect_detail(
+    conditionMessage(err),
+    unreadable_details[["responses_text"]],
+    info = "a bad text and bad logprobs"
+  )
+  for (rule in names(logprobs_rule_messages)) {
+    expect_no_match(
+      conditionMessage(err),
+      logprobs_rule_messages[[rule]],
+      fixed = TRUE,
+      info = rule
+    )
+  }
+})
+
 test_that("lms_chat_openresponses does not check logprobs outside output_text or with logprobs = FALSE", {
   refusal_with_logprobs <- '{"type": "refusal", "refusal": "no", "logprobs": {"a": 1}}'
   body <- output_body(responses_message(
