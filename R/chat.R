@@ -36,8 +36,8 @@
 #' [lms_chat_native()], according to `api_type`. It runs no request of its own.
 #' It can raise `rlmstudio_no_server` and `rlmstudio_api_error` through
 #' [lms_chat_openresponses()], [lms_chat_openai()], or [lms_chat_native()].
-#' With `api_type = "openai"`, it can raise `rlmstudio_bad_response` through
-#' [lms_chat_openai()].
+#' With `api_type = "openai"` and `simplify = TRUE`, it can raise
+#' `rlmstudio_bad_response` through [lms_chat_openai()].
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response

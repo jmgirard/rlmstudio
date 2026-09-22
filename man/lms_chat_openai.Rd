@@ -110,8 +110,8 @@ with a missing, repeated, or out-of-range index would otherwise pair a
 vector with the wrong text and give back a matrix that is silently wrong.
 
 \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in two cases, both only with
-\code{simplify = TRUE}. The first case is a response with no \code{choices} field or
-an empty one, so there is no reply to read. This case is raised with or
+\code{simplify = TRUE}. The first case is a response whose \code{choices} field is
+missing, empty, or not an array of objects, so there is no reply to read. This case is raised with or
 without a \code{schema}, and with \code{logprobs = TRUE} as well. The second case is
 a reply that does not parse. A \code{schema} was given, \code{logprobs = FALSE}, and
 the reply content is not one string of valid JSON. If the server reports

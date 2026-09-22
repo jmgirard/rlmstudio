@@ -47,8 +47,8 @@
 #' vector with the wrong text and give back a matrix that is silently wrong.
 #'
 #' [lms_chat_openai()] raises it in two cases, both only with
-#' `simplify = TRUE`. The first case is a response with no `choices` field or
-#' an empty one, so there is no reply to read. This case is raised with or
+#' `simplify = TRUE`. The first case is a response whose `choices` field is
+#' missing, empty, or not an array of objects, so there is no reply to read. This case is raised with or
 #' without a `schema`, and with `logprobs = TRUE` as well. The second case is
 #' a reply that does not parse. A `schema` was given, `logprobs = FALSE`, and
 #' the reply content is not one string of valid JSON. If the server reports

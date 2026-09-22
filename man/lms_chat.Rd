@@ -67,8 +67,8 @@ This function calls \code{\link[=lms_chat_openresponses]{lms_chat_openresponses(
 \code{\link[=lms_chat_native]{lms_chat_native()}}, according to \code{api_type}. It runs no request of its own.
 It can raise \code{rlmstudio_no_server} and \code{rlmstudio_api_error} through
 \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, or \code{\link[=lms_chat_native]{lms_chat_native()}}.
-With \code{api_type = "openai"}, it can raise \code{rlmstudio_bad_response} through
-\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+With \code{api_type = "openai"} and \code{simplify = TRUE}, it can raise
+\code{rlmstudio_bad_response} through \code{\link[=lms_chat_openai]{lms_chat_openai()}}.
 }
 \section{Server not running}{
 
@@ -117,8 +117,8 @@ with a missing, repeated, or out-of-range index would otherwise pair a
 vector with the wrong text and give back a matrix that is silently wrong.
 
 \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in two cases, both only with
-\code{simplify = TRUE}. The first case is a response with no \code{choices} field or
-an empty one, so there is no reply to read. This case is raised with or
+\code{simplify = TRUE}. The first case is a response whose \code{choices} field is
+missing, empty, or not an array of objects, so there is no reply to read. This case is raised with or
 without a \code{schema}, and with \code{logprobs = TRUE} as well. The second case is
 a reply that does not parse. A \code{schema} was given, \code{logprobs = FALSE}, and
 the reply content is not one string of valid JSON. If the server reports

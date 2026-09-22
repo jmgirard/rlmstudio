@@ -631,6 +631,29 @@ test_that("a server that stops during a batch still aborts", {
   expect_length(recorder$requests, 1L)
 })
 
+test_that("a batch without a schema aborts on a response with no choices", {
+  responses <- list(
+    mock_response(200L, completion_body(quoted("one"))),
+    mock_response(200L, '{"id": "chatcmpl-1"}'),
+    mock_response(200L, completion_body(quoted("three")))
+  )
+  for (format in c("list", "vector")) {
+    testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+    local_request_sequence(responses)
+    expect_error(
+      lms_chat_batch(
+        "a-model",
+        c("first", "second", "third"),
+        format = format,
+        quiet = TRUE,
+        api_type = "openai"
+      ),
+      class = "rlmstudio_bad_response",
+      info = format
+    )
+  }
+})
+
 test_that("a reply that does not parse is returned as text without a schema", {
   out <- call_with_reply(completion_body(quoted("a score of three")))
   expect_identical(out$value, "a score of three")
