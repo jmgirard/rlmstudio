@@ -88,12 +88,32 @@ Studio server is there. The call then fails later, as an
 for the stronger test: it asks the host for a model list and reports
 `TRUE` only for an answer that an LM Studio server would give.
 
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+checks the server once before its first input, and
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+checks it again for each input. If that check finds the server gone
+during the batch, the batch aborts with `rlmstudio_no_server`, and no
+request goes out after that. The condition then carries a `results`
+field, a list as long as `inputs`. Its elements before the lost input
+hold the values that `format = "list"` returns for those inputs. The
+element of the lost input and every element after it are `NULL`. The
+check before the first input adds no `results` field. A connection that
+fails after the check passes, such as a server that stops during a
+request, raises an `httr2_failure` error instead. That error aborts the
+batch and carries no `results` field.
+
 ## API failure
 
 A condition of class `rlmstudio_api_error` is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a `status` field, which holds the HTTP response status as an
 integer.
+
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+does not abort on it. The element of the failed input holds the
+condition, or `NA` where the result is text, and the batch warns once
+and goes on. See the details of
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
 
 ## Malformed response
 
@@ -124,10 +144,10 @@ can raise the condition through
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
 
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-raises it only where it does not store the condition in an element of
-its result. With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`,
-a failed input's element holds the condition, and the batch warns once
-and goes on. With any other settings, the condition aborts the batch.
+does not abort on it. The element of the failed input holds the
+condition, or `NA` where the result is text, and the batch warns once
+and goes on. See the details of
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
 
 The condition carries a `status` field, which holds the HTTP response
 status as an integer. Today the status is always 200: both functions

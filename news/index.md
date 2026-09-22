@@ -48,28 +48,48 @@
   the finish reason is `"length"`, the message says that the token limit
   cut the reply off and names `max_tokens`.
 
-- With `simplify = TRUE`, a response whose `choices` field is missing,
-  empty, or not an array, or whose first element is not a JSON object
-  with a `message` object in it, also aborts with
-  `rlmstudio_bad_response`, with or without a `schema`. Before, an empty
-  `choices` list failed with the bare error `subscript out of bounds`.
-  Without a `schema` and with `logprobs = FALSE`, a missing `choices`
-  field returned `NULL`. The condition’s `content` and `finish_reason`
-  fields are `NULL`. Without a `schema`,
+- With `simplify = TRUE`, a chat completions response from
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  whose `choices` field is missing, empty, or not an array, or whose
+  first element is not a JSON object with a `message` object in it, also
+  aborts with `rlmstudio_bad_response`, with or without a `schema`.
+  Before, an empty `choices` list failed with the bare error
+  `subscript out of bounds`. Without a `schema` and with
+  `logprobs = FALSE`, a missing `choices` field returned `NULL`. The
+  condition’s `content` and `finish_reason` fields are `NULL`. Without a
+  `schema`,
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now aborts on such a response. Before, a missing `choices` field gave
-  `NULL` for that input. With `format = "vector"`, the result was then
-  shorter than the input.
+  now stores such a response as a failed input, as the next entry says.
+  Before, a missing `choices` field gave `NULL` for that input. With
+  `format = "vector"`, the result was then shorter than the input.
 
-- With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`,
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  no longer stops at a reply it cannot read. The element for that input
-  holds the `rlmstudio_bad_response` condition, in the returned list or
-  in the `output` column of a data frame. The other elements hold their
-  parsed replies. The call gives one warning that names the count and
-  the positions of the failed inputs. `quiet = TRUE` does not silence
-  it. An `rlmstudio_api_error` or `rlmstudio_no_server` from one input
-  still aborts the batch.
+- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  no longer stops at an input that fails with `rlmstudio_api_error` or
+  `rlmstudio_bad_response`, whatever its settings. It goes on to the
+  next input. In a returned list, and in the `output` list-column that a
+  `schema` gives, the element for that input holds the condition. Where
+  the result is text, the element holds `NA`. That is the case for
+  `format = "vector"` when it returns a vector, and for a data frame
+  whose replies are not parsed. In such a data frame, the `logprobs`
+  column holds `NULL` for a failed input. A reply that
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  returns as `NULL`, such as one whose content is `null`, also holds
+  `NA` in a text result, so the result stays as long as `inputs`. With
+  `format = "data.frame"` and `logprobs = TRUE`, the `logprobs` column
+  is now always there, even when no reply carried log probabilities.
+  Before, it was left out in that case. The call gives one warning that
+  names the count and the positions of the failed inputs. `quiet = TRUE`
+  does not silence it. Where the result holds `NA`, the warning names
+  `format = "list"` as the way to keep the conditions.
+
+- An `rlmstudio_no_server` from one input still aborts
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  but the replies so far are no longer lost. The condition carries them
+  in a new `results` field, with any failures stored so far. It is a
+  list as long as `inputs`, with `NULL` from the lost input on. This
+  covers a server that the check before each input finds gone. A
+  connection that fails during a request still aborts with an
+  `httr2_failure` error and no `results` field.
 
 - [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
   now waits for the REST API to answer before it returns. The CLI
