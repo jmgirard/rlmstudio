@@ -48,7 +48,7 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 
 - [x] T1: Send one `/api/v1/chat` request to the local LM Studio. Write the names and JSON types of the `stats` fields and the form of `response_id` in the work log. If a field is present under a name that differs from the six in AC1, stop and amend the plan through the gate. An absent field does not count, because AC2 gives it `NA`.
 - [x] T2: In `tests/testthat/helper-chat-bodies.R`, add a builder for a native reply with a `stats` object and a `response_id`. Write the tests for AC1, AC2, and AC3 in `tests/testthat/test-chat-batch.R`, and see them fail.
-- [ ] T3: In `R/chat.R`, change the native data-frame path of `lms_chat_batch()` so that it reads `response_id` and `stats` from each reply body. Read the answer text through the helpers that `lms_chat_native()` uses, so that a failure keeps its class. A reply that is not 200 still goes through `rlm_abort_api()`. The native logprobs warning stays. Single calls do not change. Read the fields with `[[` (M018 lesson).
+- [x] T3: In `R/chat.R`, change the native data-frame path of `lms_chat_batch()` so that it reads `response_id` and `stats` from each reply body. Read the answer text through the helpers that `lms_chat_native()` uses, so that a failure keeps its class. A reply that is not 200 still goes through `rlm_abort_api()`. The native logprobs warning stays. Single calls do not change. Read the fields with `[[` (M018 lesson).
 - [ ] T4: Write the tests for AC4 and AC5.
 - [ ] T5: Write the roxygen for `lms_chat_batch()` and `lms_chat_native()`. Run `devtools::document()`. Add the NEWS entry.
 - [ ] T6: Run `devtools::test()`, `devtools::check()`, and `devtools::document()`.
@@ -64,6 +64,7 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - 2026-09-22: implement started on branch `m022-native-batch-stats`. The plan left no choice open, so no question gate ran.
 - 2026-09-22: T1 live probe with google/gemma-3-1b. `stats` held `input_tokens`, `total_output_tokens`, and `reasoning_output_tokens` as JSON integers, and `tokens_per_second` and `time_to_first_token_seconds` as numbers with fractions. `model_load_time_seconds` was absent. `response_id` was a string like `resp_<hex>`. A second call with `previous_response_id` answered with the name from the first turn. No name differs from AC1.
 - 2026-09-22: T2 added `native_reply()` and `native_stats()` to the body helpers, and `tests/testthat/test-chat-batch-stats.R` for AC1 to AC3. The tests fail because the columns are missing.
+- 2026-09-22: T3 added `native_reply_text()` and `native_reply_fields()` to `R/chat.R`. The native data-frame batch calls `lms_chat(simplify = FALSE)` and reads the text with the helper that `lms_chat_native()` now uses. `devtools::test()` gave 311 tests, 0 failed. A planted defect that read the stats before the text turned 2 tests red. A second plant, which removed `as.double()`, stayed green, because `vapply(..., double(1))` already converts an integer.
 
 ## Decisions
 

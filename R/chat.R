@@ -772,17 +772,70 @@ lms_chat_native <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-    label <- "Native API Failed"
-    messages <- chat_message_items(resp, resp_data, label)
-    return(join_reply_texts(
-      resp,
-      lapply(messages, \(item) item[["content"]]),
-      label,
-      "The `content` of a message item is not one string."
-    ))
+    return(native_reply_text(resp, resp_data))
   }
 
   rlm_abort_api(resp, "Native API Failed", !is.null(rlm_token(token)))
+}
+
+#' Read the answer text of a native reply
+#'
+#' The text of every message item, pasted together in order. Shared by
+#' `lms_chat_native()` and the native data-frame route of `lms_chat_batch()`,
+#' so a reply fails there with the same class and message.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @return One string.
+#'
+#' @noRd
+native_reply_text <- function(resp, resp_data) {
+  label <- "Native API Failed"
+  messages <- chat_message_items(resp, resp_data, label)
+  join_reply_texts(
+    resp,
+    lapply(messages, \(item) item[["content"]]),
+    label,
+    "The `content` of a message item is not one string."
+  )
+}
+
+# The fields of the `stats` object of a native reply that a native data-frame
+# batch returns as columns, in column order.
+native_stats_fields <- c(
+  "input_tokens",
+  "total_output_tokens",
+  "reasoning_output_tokens",
+  "tokens_per_second",
+  "time_to_first_token_seconds",
+  "model_load_time_seconds"
+)
+
+#' Read the reply id and the stats of a native reply
+#'
+#' These values are extra to the answer, so a value of the wrong type gives
+#' `NA` and never fails the input. A live server leaves out a field it has no
+#' value for, such as `model_load_time_seconds` when no model was loaded.
+#' Fields are read with `[[`, because `$` would read a field whose name only
+#' starts with the one asked for.
+#'
+#' @param resp_data The parsed response body.
+#' @return A list with `response_id`, one string or `NA_character_`, and the
+#'   fields in `native_stats_fields`, each one double or `NA_real_`.
+#'
+#' @noRd
+native_reply_fields <- function(resp_data) {
+  id <- resp_data[["response_id"]]
+  stats_obj <- resp_data[["stats"]]
+  if (!is_json_object(stats_obj)) {
+    stats_obj <- list()
+  }
+  number_or_na <- function(x) {
+    if (is.numeric(x) && length(x) == 1L) as.double(x) else NA_real_
+  }
+  numbers <- lapply(native_stats_fields, \(field) number_or_na(stats_obj[[field]]))
+  names(numbers) <- native_stats_fields
+  c(list(response_id = if (is_one_string(id)) id else NA_character_), numbers)
 }
 
 #' Batch Chat Completion with LM Studio
@@ -907,17 +960,43 @@ lms_chat_batch <- function(
   # Slots from the lost input on stay NULL.
   results <- vector("list", length(inputs))
   names(results) <- names(inputs)
+  # A native data frame also returns the reply id and the stats of each reply,
+  # so that route asks for the body and reads the text out of it here. The
+  # text is read by the helper `lms_chat_native()` uses, so a reply fails the
+  # same way. `results` still holds the text, which is what the `results`
+  # field of a lost-server abort carries on every route.
+  native_frame <- format == "data.frame" && api_type == "native"
+  reply_fields <- vector("list", length(inputs))
+  # `lms_chat_native()` returns the body only for status 200, so the abort a
+  # bad body raises carries that status.
+  ok_resp <- httr2::response(status_code = 200L)
   for (i in seq_along(inputs)) {
     res <- tryCatch(
-      lms_chat(
-        model = model,
-        input = inputs[[i]],
-        system_prompt = system_prompt,
-        host = host,
-        simplify = simplify,
-        ...,
-        token = token
-      ),
+      if (native_frame) {
+        body <- lms_chat(
+          model = model,
+          input = inputs[[i]],
+          system_prompt = system_prompt,
+          host = host,
+          simplify = FALSE,
+          ...,
+          token = token
+        )
+        text <- native_reply_text(ok_resp, body)
+        # Read after the text, so a reply that fails leaves no values.
+        reply_fields[[i]] <- native_reply_fields(body)
+        text
+      } else {
+        lms_chat(
+          model = model,
+          input = inputs[[i]],
+          system_prompt = system_prompt,
+          host = host,
+          simplify = simplify,
+          ...,
+          token = token
+        )
+      },
       rlmstudio_api_error = keep_failure,
       rlmstudio_bad_response = keep_failure,
       rlmstudio_no_server = function(cnd) {
@@ -1016,14 +1095,30 @@ lms_chat_batch <- function(
       df$logprobs <- lapply(results, function(x) {
         if (inherits(x, "lms_chat_result")) x$logprobs else NULL
       })
-      return(df)
     } else {
-      return(data.frame(
+      df <- data.frame(
         input = inputs,
         output = unlist(lapply(results, na_if_failed)),
         stringsAsFactors = FALSE
-      ))
+      )
     }
+    # Keyed on the route, not on the replies, so the columns and their types
+    # are there even when every input failed. A failed input has no values.
+    if (native_frame) {
+      df$response_id <- vapply(
+        reply_fields,
+        \(x) if (is.null(x)) NA_character_ else x$response_id,
+        character(1)
+      )
+      for (field in native_stats_fields) {
+        df[[field]] <- vapply(
+          reply_fields,
+          \(x) if (is.null(x)) NA_real_ else x[[field]],
+          double(1)
+        )
+      }
+    }
+    return(df)
   }
 
   if (format == "vector" && is.null(vector_fallback)) {
