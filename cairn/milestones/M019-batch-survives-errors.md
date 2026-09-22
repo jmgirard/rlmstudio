@@ -99,6 +99,7 @@
 - claim audit: 22 claims read, 4 corrected — R/chat.R, NEWS.md, tests/testthat/test-chat-batch.R
 - 2026-09-22: claim audit corrections: a data frame with `schema` and `logprobs = TRUE` also holds `NA`, the `results` field also holds stored failures, and the AC5 comment names `tryCatch()`. The same fresh reader re-read all four as true. Left as is: a data frame with `simplify = FALSE` runs every input and then aborts on the argument, with no failed-input warning.
 - 2026-09-22: review returned M019 to in-progress (defect return 1). AC2 fails: with `format = "data.frame"` and `logprobs = TRUE`, a batch in which every input fails has no `logprobs` column. The gate added T8 to T10 for that fix, the lost-server help text, and three test gaps.
+- 2026-09-22: review pushed the branch to origin by mistake with the send-back commit, before any merge approval. No PR exists.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
