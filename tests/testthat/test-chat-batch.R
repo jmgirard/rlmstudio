@@ -508,3 +508,40 @@ test_that("an OpenAI reply with null content fails its input in a logprobs data 
   expect_identical(res$out$output, c("reply 1", NA))
   expect_identical(res$out$logprobs, list(NULL, NULL))
 })
+
+test_that("a reply that breaks a logprobs rule fails only its own input", {
+  bad <- mock_response(
+    200L,
+    output_body(responses_message(output_text(quoted("reply 2"), "[5]")))
+  )
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    openresponses_ok(1L, logprobs = TRUE),
+    bad,
+    openresponses_ok(3L, logprobs = TRUE)
+  ))
+  warnings <- testthat::capture_warnings(
+    out <- lms_chat_batch(
+      "a-model",
+      batch_inputs,
+      format = "list",
+      quiet = TRUE,
+      api_type = "openresponses",
+      logprobs = TRUE
+    )
+  )
+  expect_length(warnings, 1L)
+  expect_match(warnings[[1]], "1 input failed, at position 2\\.")
+  expect_length(out, 3L)
+  for (i in c(1L, 3L)) {
+    expect_s3_class(out[[i]], "lms_chat_result")
+    expect_identical(out[[i]]$text, sprintf("reply %d", i), info = i)
+    expect_identical(out[[i]]$logprobs$step_token, "r", info = i)
+  }
+  expect_failed_slot(out[[2]], "rlmstudio_bad_response")
+  expect_match(
+    conditionMessage(out[[2]]),
+    "A step in the `logprobs` of an `output_text` part is not a JSON object.",
+    fixed = TRUE
+  )
+})
