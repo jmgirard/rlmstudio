@@ -50,7 +50,7 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - [x] T2: In `tests/testthat/helper-chat-bodies.R`, add a builder for a native reply with a `stats` object and a `response_id`. Write the tests for AC1, AC2, and AC3 in `tests/testthat/test-chat-batch.R`, and see them fail.
 - [x] T3: In `R/chat.R`, change the native data-frame path of `lms_chat_batch()` so that it reads `response_id` and `stats` from each reply body. Read the answer text through the helpers that `lms_chat_native()` uses, so that a failure keeps its class. A reply that is not 200 still goes through `rlm_abort_api()`. The native logprobs warning stays. Single calls do not change. Read the fields with `[[` (M018 lesson).
 - [x] T4: Write the tests for AC4 and AC5.
-- [ ] T5: Write the roxygen for `lms_chat_batch()` and `lms_chat_native()`. Run `devtools::document()`. Add the NEWS entry.
+- [x] T5: Write the roxygen for `lms_chat_batch()` and `lms_chat_native()`. Run `devtools::document()`. Add the NEWS entry.
 - [ ] T6: Run `devtools::test()`, `devtools::check()`, and `devtools::document()`.
 
 ## Work log
@@ -66,6 +66,7 @@ With `api_type = "native"` and `format = "data.frame"`, `lms_chat_batch()` retur
 - 2026-09-22: T2 added `native_reply()` and `native_stats()` to the body helpers, and `tests/testthat/test-chat-batch-stats.R` for AC1 to AC3. The tests fail because the columns are missing.
 - 2026-09-22: T3 added `native_reply_text()` and `native_reply_fields()` to `R/chat.R`. The native data-frame batch calls `lms_chat(simplify = FALSE)` and reads the text with the helper that `lms_chat_native()` now uses. `devtools::test()` gave 311 tests, 0 failed. A planted defect that read the stats before the text turned 2 tests red. A second plant, which removed `as.double()`, stayed green, because `vapply(..., double(1))` already converts an integer.
 - 2026-09-22: T4 added the AC4 and AC5 tests to `tests/testthat/test-chat-batch-stats.R`. They build their bodies from the shared helpers, because `openai_ok()` and `openresponses_ok()` are local to `test-chat-batch.R`. The file passes.
+- 2026-09-22: T5 documented the seven columns on the `lms_chat_batch()` page and the body fields on the `lms_chat_native()` page, and added the NEWS entry. A grep of `man/lms_chat_batch.Rd` finds each of the seven names. The help text names `model_load_time_seconds` as a field the server can leave out, as T1 observed.
 
 ## Decisions
 

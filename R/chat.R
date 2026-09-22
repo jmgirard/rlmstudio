@@ -725,7 +725,10 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. If \code{simplify = TRUE}, returns one character string: the
+#'   response. It holds the `response_id` of the reply and its `stats` object
+#'   of token counts and timings. [lms_chat_batch()] returns these values as
+#'   columns with `format = "data.frame"`. If \code{simplify = TRUE},
+#'   returns one character string: the
 #'   `content` of every item of type `"message"` in the `output` array, pasted
 #'   together in order with no separator. Items of other types, such as
 #'   reasoning and tool calls, are skipped. A reply with no readable answer
@@ -814,9 +817,8 @@ native_stats_fields <- c(
 #' Read the reply id and the stats of a native reply
 #'
 #' These values are extra to the answer, so a value of the wrong type gives
-#' `NA` and never fails the input. A live server leaves out a field it has no
-#' value for, such as `model_load_time_seconds` when no model was loaded.
-#' Fields are read with `[[`, because `$` would read a field whose name only
+#' `NA` and never fails the input. A live reply can leave a field out, such
+#' as `model_load_time_seconds`. Fields are read with `[[`, because `$` would read a field whose name only
 #' starts with the one asked for.
 #'
 #' @param resp_data The parsed response body.
@@ -861,8 +863,20 @@ native_reply_fields <- function(resp_data) {
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
 #'   \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. With \code{api_type = "native"}, seven more columns follow, described below.
 #' }
+#'
+#' With `api_type = "native"` and `format = "data.frame"`, the data frame ends
+#' with seven columns read from each reply: `response_id`, `input_tokens`,
+#' `total_output_tokens`, `reasoning_output_tokens`, `tokens_per_second`,
+#' `time_to_first_token_seconds`, and `model_load_time_seconds`.
+#' `response_id` is character, and it identifies the reply on the server. The
+#' other six are double, and they come from the `stats` object of the reply.
+#' A cell is `NA` when its field is absent or is not one value of the column
+#' type, a string for `response_id` and a number for the others. The server
+#' can leave a field out, such as `model_load_time_seconds`. Such a cell does
+#' not fail the input and gives no warning. The row of an input that failed holds `NA` in all seven columns.
+#' The other routes and formats add no such column.
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call.
