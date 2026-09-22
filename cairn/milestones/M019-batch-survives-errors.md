@@ -1,0 +1,96 @@
+<!-- Section ownership + write-modes: see tracking-rules.md "Milestone-file
+     section ownership". A phase skill never rewrites another phase's section.
+     Per-section owners are tagged below. The one size check that can fail is
+     cairn_validate's <150 over the plan-owned body. -->
+# M019: A failed input no longer ends a chat batch
+
+- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
+- **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
+- **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
+- **Principles touched:** GP2, GP3, GP6   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
+- **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
+- **Surface tier:** user-facing — changes what an exported function returns and raises   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
+- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+
+## Goal
+<!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
+
+`lms_chat_batch()` stores an API failure or an unreadable reply in the failed input's slot and goes on, and a lost server still aborts but hands back the replies received so far.
+
+## Scope
+<!-- owner: plan · create/amend-via-gate -->
+
+**In:** In every setting of `lms_chat_batch()`, an `rlmstudio_api_error` or `rlmstudio_bad_response` from one input is stored and the batch goes on. M018 did this for `rlmstudio_bad_response` with a `schema` only. A list result holds the condition. A vector or a data frame without a `schema` holds `NA_character_`. One warning names every failed position and ignores `quiet`. An `rlmstudio_no_server` from `lms_chat()` still aborts, and its condition gains a `results` field. D-011 records the choices and extends D-010. The help pages and `NEWS.md` change to match. This absorbs the candidate row "An `rlmstudio_api_error` or `rlmstudio_no_server` from one input still aborts `lms_chat_batch()`".
+
+**Out:** An argument that restores the abort on the first failure. The plan gate declined it, and no row holds it. A reply that the token limit cut off but that still parses stays its own candidate row (M018 review). A data-frame `error` column was declined at the plan gate. The replies lost to a user interrupt (Ctrl-C) are not in scope, and no row holds them. Errors of any other class still abort.
+
+## Acceptance criteria
+<!-- owner: plan · create/amend-via-gate; review reads, never reinterprets.
+     Every item opens with its positional label — `ACn:` — the item's
+     position counted top-to-bottom, the number Coverage cites; an
+     insertion, removal, or reorder renumbers the labels and the Coverage
+     lines together.
+     Driving RR set → its Binding criteria appear VERBATIM here (binding-
+     criteria check), each ingested as a numbered criterion carrying its tag
+     — `- [ ] ACn (BCm): <verbatim>` — with its own Coverage line, since
+     coverage-complete counts AC checkboxes positionally (M107); departures:
+     a "Deviations from RR<NN>" table ends this section. -->
+
+- [ ] AC1: An `rlmstudio_api_error` or an `rlmstudio_bad_response` that `lms_chat()` raises for one input no longer aborts `lms_chat_batch()`. The batch sends a request for every later input and returns. Tests run a three-input batch with `api_type = "openai"`, where both classes can arise, once per class in six settings. These are `format = "list"`, `"vector"`, and `"data.frame"`, each with and without a `schema`. The second response fails in each run, and one more run per format fails the third. Two more settings test `rlmstudio_api_error` alone. The first is `simplify = FALSE` with `format = "list"`, because that setting never reads the reply. The second is the default `api_type` with `format = "list"`. One more setting, `logprobs = TRUE` with `format = "data.frame"`, tests both classes. Each test asserts three requests sent.
+- [ ] AC2: The failed input keeps its position in the result. In a returned list, and in the `output` list-column that a `schema` produces, the element holds the condition with its backtrace removed. With `format = "vector"`, `simplify = TRUE`, and no `schema` or `logprobs`, the result is a character vector as long as `inputs`. It holds `NA_character_` at the failed position. With `format = "data.frame"` and no `schema`, the `output` column holds `NA_character_` in that row. With `logprobs = TRUE` the `logprobs` column holds `NULL` there. The AC1 tests assert the value at each failed and each successful position.
+- [ ] AC3: A batch with one or more failed inputs gives exactly one warning about failed inputs. This holds for any mix of the two classes. It names the count and every failed position, and it shows with `quiet = TRUE`. Where the result holds `NA_character_` in place of the condition, the warning names `format = "list"` as the way to keep the conditions. Each AC1 test asserts that warning, and the vector and data-frame tests without a `schema` assert the `format = "list"` text. One test fails position 1 with `rlmstudio_api_error` and position 3 with `rlmstudio_bad_response`. Under `quiet = TRUE`, it asserts one warning that names both positions.
+- [ ] AC4: An `rlmstudio_no_server` that `lms_chat()` raises for input k still aborts `lms_chat_batch()` with that class and message. No request goes out after it. The condition carries a new `results` field, a list as long as `inputs`. Its elements 1 to k - 1 hold the values that `format = "list"` returns for those inputs. Its elements from k on are `NULL`. The tests mock the server probe with a call counter. The batch's own probe is call 1 and passes. One test fails the probe for input 2 (k = 2) and one fails it for input 1 (k = 1). Each asserts the class, the request count, and the field.
+- [ ] AC5: An error of any other class from `lms_chat()` still aborts `lms_chat_batch()` unchanged. Two tests stub `lms_chat()` with a call counter that raises for the second of three inputs. One raises a plain R error, and one raises an rlang error with a class that is not an rlmstudio class. Each asserts with `expect_identical()` that the caught condition is the one raised, and that the stub ran twice.
+- [ ] AC6: No help source, vignette, `README.Rmd`, or development-section `NEWS.md` entry says that `rlmstudio_api_error` or `rlmstudio_bad_response` from one input aborts `lms_chat_batch()`. The reviewer reads every line that `grep -rn -iE "abort|stop" R vignettes README.Rmd NEWS.md` returns and that mentions a batch. The reviewer also reads the `lms_chat_batch()` details and the "API failure" and "Malformed response" sections of `R/conditions.R`. `devtools::document()` leaves no diff. With `RLMSTUDIO_API_TOKEN` set, `devtools::check()` returns 0 errors, 0 warnings, and 0 notes.
+
+## Coverage
+<!-- owner: plan · create/amend-via-gate; each acceptance criterion → the
+     task(s) satisfying it, by positional number (AC/Task counted
+     top-to-bottom). Review reads to fence evidence — tracking-rules "AC fencing". -->
+
+- AC1 → T1, T2
+- AC2 → T1, T2
+- AC3 → T1, T3
+- AC4 → T4
+- AC5 → T5
+- AC6 → T6, T7
+
+## Tasks
+<!-- owner: plan (create) / implement (check-off, minor edits); substantive
+     change is amend-via-gate. Every item opens with its positional label —
+     `Tn:` — the item's position counted top-to-bottom, the number Coverage
+     cites; an insertion, removal, or reorder renumbers the labels and the
+     Coverage lines together. -->
+
+- [ ] T1: Write the AC1 to AC3 tests first, in a new batch test file, with `local_request_sequence()` from `tests/testthat/helper-mock-http.R`. Build a 400 response for `rlmstudio_api_error` and an unparseable schema reply for `rlmstudio_bad_response`. Watch them fail on the current code.
+- [ ] T2: In `lms_chat_batch()` (`R/chat.R:609`), catch both classes in every setting, not only when `has_parsed` is true. Drop the backtrace as now. Build the vector and the no-schema data frame with `NA_character_` in a failed slot, and `NULL` logprobs there (`R/chat.R:682`, `R/chat.R:738`).
+- [ ] T3: Rewrite the warning (`R/chat.R:649`) to cover both classes. Keep the positions joined with `cli::ansi_collapse(trunc = Inf)`. Add the `format = "list"` line where the result holds `NA_character_`. Keep one warning per batch. Where a failure already warned, the vector format's own list warnings must not add a second one about failed inputs.
+- [ ] T4: Write the AC4 tests. Then catch `rlmstudio_no_server` around the per-input call, set `results`, and signal the same condition again. Mock `is_server_running` with a counter, because `lms_chat_batch()` probes once before the first input (LESSONS M003).
+- [ ] T5: Write the AC5 tests with a counting stub for `lms_chat()`, not `fail()` (LESSONS M015). Confirm that the two classes other than rlmstudio pass through the handlers.
+- [ ] T6: Update the `lms_chat_batch()` roxygen `@return` and `@details` (`R/chat.R:540`). In `R/conditions.R`, update the "API failure" and "Malformed response" sections, and add the `results` field to "Server not running". Rewrite `NEWS.md` lines 7 and 8 and add one entry. Run `devtools::document()`.
+- [ ] T7: Run the AC6 grep and read each hit. Run `devtools::test()`, then `devtools::check()` with the token set.
+
+## Work log
+<!-- owner: any skill · append-only; one line per entry; absolute dates.
+     EXEMPT from the 150-line cap (D-046): history under D-045, never edited,
+     so the cap must never demand a trim here. Wrapped entries get a WARN.
+     The rejected-alternative record (/milestone-plan step 4) takes this form:
+     `- YYYY-MM-DD: plan gate chose <approach> over <alternative> because
+     <reason>; falsified by <evidence class>.` — one per approach choice the
+     gate actually weighed, none where it weighed none, and it is the record
+     `/milestone-review`'s thrash trigger (b) reads. It lives here rather than
+     below so an instantiated file inherits no placeholder to delete. -->
+
+- 2026-09-22: created by /milestone-plan.
+- 2026-09-22: criteria audit (full mode, fresh Opus reader) returned 14 findings. All were fixed before the gate: `api_type = "openai"` for the reply class, formats named for `simplify = FALSE` and `logprobs`, last-position and k = 1 runs, a second error class, "one warning about failed inputs", the D-010 gap, and a named docs sweep.
+- 2026-09-22: plan gate chose to abort on a lost server with the replies attached over storing it and going on, because a lost server fails every later input and GP3 says a missing server is an error. Falsified by a user who needs the batch to resume after the server restarts mid-run.
+- 2026-09-22: plan gate chose `NA_character_` in a failed vector or data-frame slot over a data-frame `error` column or a switch to a list, because the result type then does not depend on what failed (GP2). Falsified by users who need the condition from a data-frame batch and cannot rerun with `format = "list"`.
+- 2026-09-22: plan gate chose no `on_error` argument over adding one, because an argument is hard to remove and the warning already marks the failures. Falsified by a user who needs a batch to stop at the first failure.
+
+## Decisions
+<!-- owner: implement / review · append-only; milestone-local; promote
+     cross-cutting ones to cairn/DECISIONS.md.
+     EXEMPT from the 150-line cap (D-074) because D-045 makes it history like the work log — dated dispositions, never edited — so the cap must never demand a trim here either.
+     Entries carry their rationale; the counterweight `decisions format`
+     advisory watches for pasted output, not for entry length (D-075). -->
