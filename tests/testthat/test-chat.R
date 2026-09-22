@@ -189,6 +189,15 @@ call_with_body <- function(fun, body, ...) {
 # The item bodies and the tables of unreadable replies live in
 # helper-chat-bodies.R, which the batch tests share.
 
+# Assert that `msg` carries the detail sentence `detail` and no other one from
+# `unreadable_details`, so a shape that reaches the wrong check fails.
+expect_detail <- function(msg, detail, info) {
+  expect_match(msg, detail, fixed = TRUE, info = info)
+  for (other in setdiff(unreadable_details, detail)) {
+    expect_no_match(msg, other, fixed = TRUE, info = paste(info, "-", other))
+  }
+}
+
 test_that("lms_chat_native returns the text of every message item in order", {
   bodies <- list(
     list(
@@ -238,6 +247,8 @@ test_that("lms_chat_native returns the text of every message item in order", {
 
 test_that("lms_chat_native aborts as a bad response when a reply has no readable text", {
   shapes <- native_unreadable()
+  details <- native_unreadable_details()
+  expect_identical(names(details), names(shapes))
   for (label in names(shapes)) {
     err <- expect_error(
       call_with_body(lms_chat_native, shapes[[label]]),
@@ -245,6 +256,7 @@ test_that("lms_chat_native aborts as a bad response when a reply has no readable
       info = label
     )
     expect_match(conditionMessage(err), "Native API Failed", info = label)
+    expect_detail(conditionMessage(err), details[[label]], info = label)
     expect_identical(err$status, 200L, info = label)
   }
 })
@@ -559,6 +571,8 @@ test_that("lms_chat_openresponses reads logprobs fields by their exact names", {
 
 test_that("lms_chat_openresponses aborts as a bad response when a reply has no readable text", {
   shapes <- responses_unreadable()
+  details <- responses_unreadable_details()
+  expect_identical(names(details), names(shapes))
   for (logprobs in c(FALSE, TRUE)) {
     for (label in names(shapes)) {
       info <- paste(label, "logprobs:", logprobs)
@@ -568,6 +582,7 @@ test_that("lms_chat_openresponses aborts as a bad response when a reply has no r
         info = info
       )
       expect_match(conditionMessage(err), "OpenResponses Failed", info = info)
+      expect_detail(conditionMessage(err), details[[label]], info = info)
       expect_identical(err$status, 200L, info = info)
     }
   }
