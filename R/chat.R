@@ -453,6 +453,69 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
   )
 }
 
+#' Read the message items of a native or OpenResponses reply
+#'
+#' Both endpoints return an `output` array of typed items. A reasoning model
+#' puts a `reasoning` item before the message, and a call with tools puts
+#' `tool_call` items between messages, so the answer is read from the items of
+#' type `"message"` and never from the first item. An item of any other type,
+#' or with no `type`, is skipped. Fields are read with `[[`, because `$` would
+#' read a field whose name only starts with the one asked for.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param label Character. The calling wrapper's label, which opens the message.
+#' @return A list of the message items, never empty.
+#'
+#' @noRd
+chat_message_items <- function(resp, resp_data, label) {
+  output <- resp_data[["output"]]
+  if (!is_json_array(output) || length(output) == 0L) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The response holds no `output` array of reply items."
+    )
+  }
+  if (!all(vapply(output, is_json_object, logical(1)))) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "An item of the `output` array is not a JSON object."
+    )
+  }
+  messages <- Filter(\(item) identical(item[["type"]], "message"), output)
+  if (length(messages) == 0L) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The reply holds no message item, so it has no answer text."
+    )
+  }
+  messages
+}
+
+#' Join the answer texts of a reply, or abort if one is not a string
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param texts A list of the text values read out of the reply.
+#' @param label Character. The calling wrapper's label.
+#' @param detail Character. What the abort says is not one string.
+#' @return One string, the texts pasted together with no separator.
+#'
+#' @noRd
+join_reply_texts <- function(resp, texts, label, detail) {
+  if (!all(vapply(texts, is_one_string, logical(1)))) {
+    rlm_abort_bad_response(resp, label, detail)
+  }
+  paste(unlist(texts), collapse = "")
+}
+
+# A parsed JSON body keeps an array as an unnamed list, the counterpart of
+# `is_json_object()` in R/embed.R.
+is_json_array <- function(x) is.list(x) && is.null(names(x))
+is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
+
 #' Chat Completion via Native API
 #'
 #' Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.
@@ -512,7 +575,14 @@ lms_chat_native <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-    return(resp_data$output[[1]]$content)
+    label <- "Native API Failed"
+    messages <- chat_message_items(resp, resp_data, label)
+    return(join_reply_texts(
+      resp,
+      lapply(messages, \(item) item[["content"]]),
+      label,
+      "The `content` of a message item is not one string."
+    ))
   }
 
   rlm_abort_api(resp, "Native API Failed", !is.null(rlm_token(token)))

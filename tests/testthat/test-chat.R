@@ -178,3 +178,131 @@ test_that("lms_chat passes rlmstudio_no_server through for api_type native", {
     class = "rlmstudio_no_server"
   )
 })
+
+# Call `fun` once against a mocked server that answers with `body`.
+call_with_body <- function(fun, body, ...) {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, body))
+  fun("a-model", "hi", ...)
+}
+
+# Items that carry no answer text. The native docs list `tool_call`,
+# `reasoning`, and `invalid_tool_call` beside `message`.
+reasoning_item <- '{"type": "reasoning", "content": "thinking"}'
+tool_call_item <- paste0(
+  '{"type": "tool_call", "tool": "t", "arguments": {}, "output": "x"}'
+)
+invalid_tool_call_item <- paste0(
+  '{"type": "invalid_tool_call", "reason": "r", ',
+  '"metadata": {"type": "invalid_name", "tool_name": "t"}}'
+)
+unknown_item <- '{"type": "something_new", "content": "not the answer"}'
+untyped_item <- '{"content": "not the answer"}'
+
+# Reply text values that are not one string, as JSON.
+not_a_string <- c(
+  number = "5",
+  boolean = "true",
+  array = '["p", "q"]',
+  object = '{"a": 1}',
+  null = "null"
+)
+
+test_that("lms_chat_native returns the text of every message item in order", {
+  bodies <- list(
+    list(
+      label = "reasoning before the message",
+      body = output_body(reasoning_item, native_message(quoted("answer"))),
+      text = "answer"
+    ),
+    list(
+      label = "a tool call between two messages",
+      body = output_body(
+        native_message(quoted("a")),
+        tool_call_item,
+        native_message(quoted("b"))
+      ),
+      text = "ab"
+    ),
+    list(
+      label = "other item types between two messages",
+      body = output_body(
+        native_message(quoted("a")),
+        invalid_tool_call_item,
+        unknown_item,
+        untyped_item,
+        native_message(quoted("b"))
+      ),
+      text = "ab"
+    ),
+    list(
+      label = "one message alone",
+      body = output_body(native_message(quoted("answer"))),
+      text = "answer"
+    ),
+    list(
+      label = "an empty string",
+      body = output_body(native_message(quoted(""))),
+      text = ""
+    )
+  )
+  for (case in bodies) {
+    expect_identical(
+      call_with_body(lms_chat_native, case$body),
+      case$text,
+      info = case$label
+    )
+  }
+})
+
+# The shapes with no readable answer text that both routes share. `message`
+# builds a message item from one JSON text value.
+shared_unreadable <- function(message) {
+  shapes <- list(
+    "no output field" = "{}",
+    "an empty output array" = output_body(),
+    "an output object" = sprintf('{"output": %s}', message(quoted("a"))),
+    "an output string" = '{"output": "a"}',
+    "an item that is a string" = output_body('"a"'),
+    "an item that is a number" = output_body("5"),
+    "no message item" = output_body(reasoning_item, tool_call_item)
+  )
+  for (kind in names(not_a_string)) {
+    value <- not_a_string[[kind]]
+    shapes[[paste("text that is", kind, "alone")]] <- output_body(message(value))
+    shapes[[paste("text that is", kind, "beside a readable message")]] <-
+      output_body(message(quoted("a")), message(value))
+  }
+  shapes
+}
+
+native_unreadable <- function() {
+  shapes <- shared_unreadable(native_message)
+  shapes[["a message with no content field"]] <- output_body('{"type": "message"}')
+  shapes
+}
+
+test_that("lms_chat_native aborts as a bad response when a reply has no readable text", {
+  shapes <- native_unreadable()
+  for (label in names(shapes)) {
+    err <- expect_error(
+      call_with_body(lms_chat_native, shapes[[label]]),
+      class = "rlmstudio_bad_response",
+      info = label
+    )
+    expect_match(conditionMessage(err), "Native API Failed", info = label)
+    expect_identical(err$status, 200L, info = label)
+  }
+})
+
+test_that("lms_chat_native returns an unreadable reply unchanged with simplify = FALSE", {
+  shapes <- native_unreadable()
+  for (label in names(shapes)) {
+    out <- call_with_body(lms_chat_native, shapes[[label]], simplify = FALSE)
+    expect_identical(
+      out,
+      jsonlite::parse_json(shapes[[label]]),
+      info = label
+    )
+  }
+})

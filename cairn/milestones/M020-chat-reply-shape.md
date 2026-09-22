@@ -66,7 +66,7 @@ Every chat route reads its answer from the message items, and a reply without on
      Coverage lines together. -->
 
 - [x] T1: Give every mocked chat body a `type` on each item and part, as real LM Studio replies have. That covers the body in `tests/testthat/test-chat.R:79-92` and the `openresponses_ok()` helper in `tests/testthat/test-chat-batch.R:17-27`. Add native and OpenResponses body builders to `tests/testthat/helper-chat-bodies.R`. The suite passes before any change under `R/`.
-- [ ] T2: Add an internal reader for the native reply in `R/chat.R`. It selects the message items, checks the shape, and aborts through `rlm_abort_bad_response()`. `lms_chat_native()` calls it where it now reads `output[[1]]$content` (`R/chat.R:515`). Write the AC1 tests and the native AC3 rows first.
+- [x] T2: Add an internal reader for the native reply in `R/chat.R`. It selects the message items, checks the shape, and aborts through `rlm_abort_bad_response()`. `lms_chat_native()` calls it where it now reads `output[[1]]$content` (`R/chat.R:515`). Write the AC1 tests and the native AC3 rows first.
 - [ ] T3: Add the OpenResponses reader in the same way, with the logprobs rows taken from every selected part. It replaces `output[[1]]$content[[1]]` (`R/chat.R:173`). Write the AC2 tests and the OpenResponses AC3 rows first. Rewrite `test-chat-batch.R:321-341`, which expects `"text": null` to give `NA` with no failure, to expect a stored failure.
 - [ ] T4: In `lms_chat_openai()`, abort when the content is not one string, before the logprobs and plain returns (`R/chat.R:352-368`). The `schema` path keeps `parse_schema_reply()`. Write the AC4 tests first. Rewrite `test-chat-batch.R:292-320`, which expects OpenAI `null` content to give `NA` with no failure, to expect a stored failure.
 - [ ] T5: Write the AC5 batch table in `tests/testthat/test-chat-batch.R`, reusing `local_request_sequence()`.
@@ -94,6 +94,7 @@ Every chat route reads its answer from the message items, and a reply without on
 - 2026-09-22: implement started on branch m020-chat-reply-shape. No question gate, because the plan gate settled every open choice.
 - 2026-09-22: minor amendment. The two `null` test rewrites moved from T1 to T3 and T4, because they cannot pass before the change under `R/`.
 - 2026-09-22: T1 done. Typed body builders are in `helper-chat-bodies.R`, and two mocked bodies are retyped. `devtools::test()`: 0 failed, 0 skipped.
+- 2026-09-22: T2 done. `chat_message_items()` and `join_reply_texts()` read the native reply. The AC1 and native AC3 tests failed on the old `output[[1]]` read and pass now. `devtools::test()`: 0 failed, 0 skipped.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
