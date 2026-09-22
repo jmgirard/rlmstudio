@@ -187,35 +187,50 @@ lms_chat_openresponses <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-
-    label <- "OpenResponses Failed"
-    parts <- responses_text_parts(resp, resp_data, label)
-    text <- join_reply_texts(
-      resp,
-      lapply(parts, \(part) part[["text"]]),
-      label,
-      "The `text` of an `output_text` part is not one string."
-    )
-    if (!isTRUE(logprobs)) {
-      return(text)
-    }
-
-    check_part_logprobs(resp, parts, label)
-    # The steps of every part in order. A part without logprobs adds none.
-    steps <- unlist(
-      lapply(parts, \(part) part[["logprobs"]]),
-      recursive = FALSE
-    )
-    if (length(steps) == 0L) {
-      return(text)
-    }
-
-    return(validate_lms_chat_result(
-      new_lms_chat_result(text = text, logprobs = logprobs_frame(steps))
-    ))
+    return(responses_reply_value(resp, resp_data, logprobs))
   }
 
   rlm_abort_api(resp, "OpenResponses Failed", !is.null(rlm_token(token)))
+}
+
+#' Read the answer of an OpenResponses reply
+#'
+#' What `lms_chat_openresponses()` returns with `simplify = TRUE`. Shared with
+#' the OpenResponses data-frame route of `lms_chat_batch()`, so a reply fails
+#' there with the same class and message.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param logprobs Logical. Whether log probabilities were asked for.
+#' @return One string, or an `lms_chat_result` when a part carries logprobs.
+#'
+#' @noRd
+responses_reply_value <- function(resp, resp_data, logprobs) {
+  label <- "OpenResponses Failed"
+  parts <- responses_text_parts(resp, resp_data, label)
+  text <- join_reply_texts(
+    resp,
+    lapply(parts, \(part) part[["text"]]),
+    label,
+    "The `text` of an `output_text` part is not one string."
+  )
+  if (!isTRUE(logprobs)) {
+    return(text)
+  }
+
+  check_part_logprobs(resp, parts, label)
+  # The steps of every part in order. A part without logprobs adds none.
+  steps <- unlist(
+    lapply(parts, \(part) part[["logprobs"]]),
+    recursive = FALSE
+  )
+  if (length(steps) == 0L) {
+    return(text)
+  }
+
+  validate_lms_chat_result(
+    new_lms_chat_result(text = text, logprobs = logprobs_frame(steps))
+  )
 }
 
 #' Chat Completion via OpenAI Compatibility API
@@ -314,68 +329,108 @@ lms_chat_openai <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-
-    # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
-    # empty list fails there with a subscript error that names neither the
-    # response nor the field. A missing field gives back NULL as the reply,
-    # which a plain call returns and a `logprobs` call fails on. A JSON object
-    # in place of the array would be read by its first value. A first element
-    # that is a plain value fails on `$` with a base R error, and one that is
-    # an array gives back NULL as the reply. The same holds for its `message`.
-    # Fields are read with `[[`, because `$` would read a field whose name only
-    # starts with the one asked for.
-    choices <- resp_data[["choices"]]
-    is_object <- function(x) is.list(x) && !is.null(names(x))
-    if (
-      !is.list(choices) ||
-        length(choices) == 0L ||
-        !is.null(names(choices)) ||
-        !is_object(choices[[1]]) ||
-        !is_object(choices[[1]][["message"]])
-    ) {
-      rlm_abort_bad_response(
-        resp,
-        "OpenAI API Failed",
-        "The response holds no readable reply in its `choices` field.",
-        content = NULL,
-        finish_reason = NULL
-      )
-    }
-    res_text <- choices[[1]][["message"]][["content"]]
-    finish_reason <- choices[[1]][["finish_reason"]]
-
-    # A reply that is returned as text must be one string. Content that is
-    # `null` or absent, as with a reply that holds only a tool call, has no
-    # answer text (D-012). A schema reply without logprobs is checked by
-    # parse_schema_reply() below instead.
-    if ((is.null(schema) || isTRUE(logprobs)) && !is_one_string(res_text)) {
-      abort_unread_reply(
-        resp,
-        res_text,
-        "OpenAI API Failed",
-        "The reply content is not one string.",
-        finish_reason
-      )
-    }
-
-    if (isTRUE(logprobs)) {
-      # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
-      return(validate_lms_chat_result(
-        new_lms_chat_result(text = res_text, logprobs = NULL)
-      ))
-    }
-    if (!is.null(schema)) {
-      return(parse_schema_reply(
-        resp,
-        res_text,
-        "OpenAI API Failed",
-        finish_reason = finish_reason
-      ))
-    }
-    return(res_text)
+    return(openai_reply_value(resp, resp_data, logprobs, schema))
   }
 
   rlm_abort_api(resp, "OpenAI API Failed", !is.null(rlm_token(token)))
+}
+
+#' Read the answer of a chat completions reply
+#'
+#' What `lms_chat_openai()` returns with `simplify = TRUE`. Shared with the
+#' OpenAI data-frame route of `lms_chat_batch()`, so a reply fails there with
+#' the same class and message.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param logprobs Logical. Whether log probabilities were asked for.
+#' @param schema The schema the request sent, or `NULL`.
+#' @return The reply text, an `lms_chat_result`, or the parsed schema reply.
+#'
+#' @noRd
+openai_reply_value <- function(resp, resp_data, logprobs, schema) {
+  check_body_object(resp, resp_data, "OpenAI API Failed")
+  # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
+  # empty list fails there with a subscript error that names neither the
+  # response nor the field. A missing field gives back NULL as the reply,
+  # which a plain call returns and a `logprobs` call fails on. A JSON object
+  # in place of the array would be read by its first value. A first element
+  # that is a plain value fails on `$` with a base R error, and one that is
+  # an array gives back NULL as the reply. The same holds for its `message`.
+  # Fields are read with `[[`, because `$` would read a field whose name only
+  # starts with the one asked for.
+  choices <- resp_data[["choices"]]
+  is_object <- function(x) is.list(x) && !is.null(names(x))
+  if (
+    !is.list(choices) ||
+      length(choices) == 0L ||
+      !is.null(names(choices)) ||
+      !is_object(choices[[1]]) ||
+      !is_object(choices[[1]][["message"]])
+  ) {
+    rlm_abort_bad_response(
+      resp,
+      "OpenAI API Failed",
+      "The response holds no readable reply in its `choices` field.",
+      content = NULL,
+      finish_reason = NULL
+    )
+  }
+  res_text <- choices[[1]][["message"]][["content"]]
+  finish_reason <- choices[[1]][["finish_reason"]]
+
+  # A reply that is returned as text must be one string. Content that is
+  # `null` or absent, as with a reply that holds only a tool call, has no
+  # answer text (D-012). A schema reply without logprobs is checked by
+  # parse_schema_reply() below instead.
+  if ((is.null(schema) || isTRUE(logprobs)) && !is_one_string(res_text)) {
+    abort_unread_reply(
+      resp,
+      res_text,
+      "OpenAI API Failed",
+      "The reply content is not one string.",
+      finish_reason
+    )
+  }
+
+  if (isTRUE(logprobs)) {
+    # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
+    return(validate_lms_chat_result(
+      new_lms_chat_result(text = res_text, logprobs = NULL)
+    ))
+  }
+  if (!is.null(schema)) {
+    return(parse_schema_reply(
+      resp,
+      res_text,
+      "OpenAI API Failed",
+      finish_reason = finish_reason
+    ))
+  }
+  res_text
+}
+
+#' Abort on a response body that is a bare JSON value
+#'
+#' A body such as `5`, `"s"`, or `true` parses to an atomic value, and reading
+#' a field out of it with `[[` fails with a base R "subscript out of bounds"
+#' error. A body of `null` parses to `NULL`, and each route's own checks name
+#' that case, so it passes here. A top-level array parses to a list and passes
+#' too.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param label Character. The calling wrapper's label.
+#'
+#' @noRd
+check_body_object <- function(resp, resp_data, label) {
+  if (!is.null(resp_data) && !is.list(resp_data)) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The response body is not a JSON object."
+    )
+  }
 }
 
 #' Build the structured-output field of a chat completions request
@@ -495,6 +550,7 @@ abort_unread_reply <- function(resp, content, label, detail, finish_reason) {
 #'
 #' @noRd
 chat_message_items <- function(resp, resp_data, label) {
+  check_body_object(resp, resp_data, label)
   output <- resp_data[["output"]]
   if (!is_json_array(output) || length(output) == 0L) {
     rlm_abort_bad_response(
