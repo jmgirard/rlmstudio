@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-22 (M021 done and archived, M018 row pruned, one re
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M022 | A native chat batch reports each reply's stats and response id | planned | none | normal | milestones/M022-native-batch-stats.md |
+| M022 | A native chat batch reports each reply's stats and response id | review | none | normal | milestones/M022-native-batch-stats.md |
 | M021 | An unreadable OpenResponses reply names its fault | done | none | normal | milestones/archive/M021-openresponses-reply-faults.md |
 | M020 | A chat reply without readable answer text fails that input, not the batch | done | none | normal | milestones/archive/M020-chat-reply-shape.md |
-| M019 | A failed input no longer ends a chat batch | done | none | normal | milestones/archive/M019-batch-survives-errors.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -53,6 +52,7 @@ _Last hygiene check: 2026-09-22 (M021 done and archived, M018 row pruned, one re
 - The shared "Malformed response" help section now lists the six OpenResponses `logprobs` rules. It reaches the help pages of `lms_embed()`, `lms_chat_native()`, `lms_chat_openai()`, and `lms_chat()`, which never check them. M007 chose one shared section over one copy per function. Decide whether the rules move to the `lms_chat_openresponses()` page alone, added 2026-09-22, M021 review finding O9
 - One `logprobs` rule 5 message covers two faults. One is a `top_logprobs` that is not an array, and one is a candidate that is not a JSON object. Each other rule has one fault per message. Decide whether to split it, added 2026-09-22, M021 review finding P5
 - The `Full Integration` test in `tests/testthat/test-chat.R` calls `lms_unload()` in its `on.exit()`, outside the recorded replies. On a machine with a live server, `devtools::test()` then unloads `google/gemma-3-1b`. It does this also for a model that was loaded before the run, observed 2026-09-22, M021 T2
+- A 200 chat body can be a bare JSON scalar, such as `5` or `"s"`. It fails in `chat_message_items()` with a base R "subscript out of bounds" error, not `rlmstudio_bad_response`. In `lms_chat_batch()` that error ends the batch and loses every reply so far, added 2026-09-22, M022 review pass 2 finding P8
 - [low] The macOS check job has two exits from its Package Manager workaround. If a released pak extracts zstd archives, remove the workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. If Posit Package Manager stops serving gzip macOS binaries or drops its R 4.6 path, pin the job to R 4.5. M011 rejected that pin (rows merged M022), added 2026-09-20, M011 scope and plan gate, r-lib/pkgdepends#485
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues

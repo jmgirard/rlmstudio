@@ -46,8 +46,27 @@ The return type depends on the \code{format} argument:
 \itemize{
 \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
 \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed.
+\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. With \code{api_type = "native"}, seven more columns follow, described below.
 }
+
+With \code{api_type = "native"} and \code{format = "data.frame"}, the data frame ends
+with seven columns read from each reply: \code{response_id}, \code{input_tokens},
+\code{total_output_tokens}, \code{reasoning_output_tokens}, \code{tokens_per_second},
+\code{time_to_first_token_seconds}, and \code{model_load_time_seconds}.
+\code{response_id} is character, and it identifies the reply on the server. The
+other six are double, and they come from the \code{stats} object of the reply.
+A cell is \code{NA} when its field is absent or is not one value of the column
+type, a string for \code{response_id} and a number for the others. An empty
+string is a string, so an empty \code{response_id} is kept. If \code{stats} is absent
+or is not a JSON object, all six stats cells are \code{NA}. The server can leave
+a field out, such as \code{model_load_time_seconds}. Such a cell does not fail
+the input and gives no warning.
+
+A reply with no readable answer text fails its input, whatever its \code{stats}
+and \code{response_id} hold. The row of an input that failed holds \code{NA} in all
+seven columns. If every input failed, the seven columns are still there,
+\code{response_id} as character and the other six as double. The other routes
+and formats add no such column.
 }
 \description{
 Process a vector of inputs sequentially through LM Studio.
