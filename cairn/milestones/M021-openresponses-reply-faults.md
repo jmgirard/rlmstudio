@@ -1,6 +1,6 @@
 # M021: An unreadable OpenResponses reply names its fault
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -77,6 +77,8 @@ The checks go over the parts in order, then the steps of a part in order, then t
 - 2026-09-22: defect return 1, from review. AC1 fails on finding O1: a bad candidate token before a candidate that is not an object names R5, not R6. The maintainer chose to fix the code. T7 and T8 added, and status set to in-progress.
 - 2026-09-22: resumed by /milestone-implement. No question was open. T7 done: `check_part_logprobs()` checks the candidates of a step one at a time, and the helper defined in the loop is gone. The new test named R5 and not R6 on the old code, and it passes now. `devtools::test()` passed 4407.
 - 2026-09-22: T8 done: tests for a `null` step, a `null` candidate, `{}` as the value and as `top_logprobs`, a `null` value, a `{}` step, and a bad text with bad logprobs. A plant that let a `null` step pass and a plant that checked logprobs before the text each turned their test red. `devtools::test()` passed 4461, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- claim audit: 14 claims read, 4 corrected — R/chat.R, R/conditions.R, NEWS.md
+- 2026-09-22: the audit found that "first rule" read as rule-number order after T7. The wording now gives the walk order, and the re-read found one more false sentence in the `check_part_logprobs()` notes, which is fixed. `devtools::test()` passed 4461, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
 
 ## Decisions
 

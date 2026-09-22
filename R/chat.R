@@ -146,8 +146,8 @@ lms_chat <- function(
 #'   such as `tokenX`. With `logprobs = TRUE`, the `logprobs` value of each
 #'   `"output_text"` part must follow six rules, which the section below
 #'   lists. A value that breaks one raises `rlmstudio_bad_response`, and the
-#'   message names the first rule it breaks. Parts of other types are not
-#'   checked. With `logprobs = FALSE`, the value is not read, and the call
+#'   message names the first broken rule in the order the section below
+#'   gives. Parts of other types are not checked. With `logprobs = FALSE`, the value is not read, and the call
 #'   returns the text.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
@@ -579,7 +579,7 @@ join_reply_texts <- function(resp, texts, label, detail) {
 
 #' Check the logprobs of the output_text parts of an OpenResponses reply
 #'
-#' The value of each part must follow six rules, checked in this order:
+#' The value of each part must follow six rules:
 #' 1. It is absent, `null`, or an array.
 #' 2. Each step in the array is a JSON object.
 #' 3. The `token` of a step is absent, `null`, or a string.
@@ -589,9 +589,11 @@ join_reply_texts <- function(resp, texts, label, detail) {
 #' 6. The `token` and `logprob` of each of those objects follow rules 3 and 4.
 #'
 #' The parts are checked in order, then the steps of a part, then the
-#' candidates of a step, one at a time. The first broken rule aborts, with one message per
-#' rule. Fields are read with `[[`, because `$` would read a field whose name
-#' only starts with the one asked for.
+#' candidates of a step, one at a time. Within a step, rules 2 to 4 are
+#' checked in number order, then that `top_logprobs` is an array, then each
+#' candidate against rule 5 and then rule 6. The first broken rule reached in
+#' that order aborts, with one message per rule. Fields are read with `[[`, because `$` would read a
+#' field whose name only starts with the one asked for.
 #'
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param parts The `output_text` parts, from `responses_text_parts()`.

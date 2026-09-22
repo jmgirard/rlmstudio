@@ -56,8 +56,8 @@ field is read by its exact name. A field that is \code{null} or absent gives
 such as \code{tokenX}. With \code{logprobs = TRUE}, the \code{logprobs} value of each
 \code{"output_text"} part must follow six rules, which the section below
 lists. A value that breaks one raises \code{rlmstudio_bad_response}, and the
-message names the first rule it breaks. Parts of other types are not
-checked. With \code{logprobs = FALSE}, the value is not read, and the call
+message names the first broken rule in the order the section below
+gives. Parts of other types are not checked. With \code{logprobs = FALSE}, the value is not read, and the call
 returns the text.
 }
 \description{
@@ -152,7 +152,8 @@ passes its rule. A \code{null} step or candidate breaks rule 2 or rule 5.
 }
 
 The parts are checked in order, then the steps of a part, then the
-candidates of a step. The message names the first rule that is broken.
+candidates of a step, one at a time. The message names the first broken
+rule that this order reaches.
 Parts of other types, such as a refusal, are not checked, and with
 \code{logprobs = FALSE} no part is checked. Fields are read by their exact
 names, so a field whose name only starts with the one asked for, such as

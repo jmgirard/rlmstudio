@@ -87,7 +87,8 @@
 #' 6. The `token` and `logprob` of each of those objects follow rules 3 and 4.
 #'
 #' The parts are checked in order, then the steps of a part, then the
-#' candidates of a step. The message names the first rule that is broken.
+#' candidates of a step, one at a time. The message names the first broken
+#' rule that this order reaches.
 #' Parts of other types, such as a refusal, are not checked, and with
 #' `logprobs = FALSE` no part is checked. Fields are read by their exact
 #' names, so a field whose name only starts with the one asked for, such as
