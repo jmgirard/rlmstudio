@@ -416,14 +416,23 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
     }
     # The detail is inserted into the message as text, so cli markup in it
     # would print as written. The hint below is a template of its own.
+    # A NULL content has no text to point at, so its hint says so.
+    hint <- if (is.null(content)) {
+      paste(
+        "The reply has no text, so the {.field content} field of the condition",
+        "is {.code NULL}. The finish reason is in its {.field finish_reason} field."
+      )
+    } else {
+      paste(
+        "The reply text is in the {.field content} field of the condition,",
+        "and the finish reason is in its {.field finish_reason} field."
+      )
+    }
     rlm_abort_bad_response(
       resp,
       label,
       detail,
-      hint = paste(
-        "The reply text is in the {.field content} field of the condition,",
-        "and the finish reason is in its {.field finish_reason} field."
-      ),
+      hint = hint,
       content = content,
       finish_reason = finish_reason
     )
@@ -636,10 +645,18 @@ lms_chat_batch <- function(
     # answers are missing (D-010). The positions are joined here, because cli
     # shortens a vector of more than 20 values and would drop some of them.
     positions <- cli::ansi_collapse(failed, trunc = Inf)
-    cli::cli_warn(c(
+    msg <- c(
       "Could not read the structured reply for {length(failed)} input{?s}, at {cli::qty(length(failed))}position{?s} {positions}.",
       "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with any reply text in its {.field content} field."
-    ))
+    )
+    # A vector batch skips its own warning below, so this one says it too.
+    if (format == "vector") {
+      msg <- c(
+        msg,
+        "i" = "The {.val vector} format cannot store these results. Returning list."
+      )
+    }
+    cli::cli_warn(msg)
   }
 
   if (format == "data.frame") {

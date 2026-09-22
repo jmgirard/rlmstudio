@@ -206,8 +206,18 @@ test_that("a choices field that is not an array of objects aborts as a bad respo
 
 test_that("an unreadable reply carries its content and finish reason", {
   cases <- list(
-    list(label = "invalid JSON text", json = quoted("a score of"), content = "a score of"),
-    list(label = "a JSON null content", json = "null", content = NULL)
+    list(
+      label = "invalid JSON text",
+      json = quoted("a score of"),
+      content = "a score of",
+      hint = "reply text is in the content field"
+    ),
+    list(
+      label = "a JSON null content",
+      json = "null",
+      content = NULL,
+      hint = "reply has no text"
+    )
   )
   for (case in cases) {
     err <- expect_error(
@@ -219,7 +229,13 @@ test_that("an unreadable reply carries its content and finish reason", {
     expect_identical(err$content, case$content, info = case$label)
     expect_identical(err$finish_reason, "stop", info = case$label)
     # The hint points at the field and no longer sends the user back to call.
-    expect_match(conditionMessage(err), "content field", info = case$label)
+    # A NULL content gets a hint that does not point at text that is not there.
+    message <- gsub("\\s+", " ", conditionMessage(err))
+    expect_match(message, case$hint, info = case$label)
+    if (is.null(case$content)) {
+      expect_no_match(message, "reply text is in", info = case$label)
+    }
+    expect_match(message, "finish_reason field", info = case$label)
     expect_no_match(conditionMessage(err), "Call again", info = case$label)
     expect_no_match(conditionMessage(err), "simplify = FALSE", info = case$label)
 
@@ -495,6 +511,12 @@ test_that("a batch keeps going past a structured reply that does not parse", {
     expect_length(warnings, 1L)
     expect_match(warnings, "2 inputs", info = format)
     expect_match(warnings, "positions 1 and 3", info = format)
+    # The one warning also says that a vector batch came back as a list.
+    if (format == "vector") {
+      expect_match(warnings, "Returning list", info = format)
+    } else {
+      expect_no_match(warnings, "Returning list", info = format)
+    }
     expect_type(out, "list")
     expect_failed_slots(out)
   }

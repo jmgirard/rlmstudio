@@ -135,7 +135,7 @@ still aborts on an empty `choices`, because no parse is in play there.
       `rlmstudio_bad_response`. Add a test for each shape.
 - [x] T10: Drop the backtrace from a condition before the batch stores it.
       Add a test that the stored condition has no `trace`.
-- [ ] T11: If a vector batch has a failed input, state in the one warning that
+- [x] T11: If a vector batch has a failed input, state in the one warning that
       the call returns a list. If `content` is `NULL`, give a hint that does
       not say the reply text is in it. Add a test for each.
 - [ ] T12: Add a batch test with `quiet = FALSE` and a failed input, so the
@@ -169,6 +169,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: T8 done. The warning joins the positions with `cli::ansi_collapse(trunc = Inf)` before cli sees them. The new test failed first with "18, ..., 24, and 25". Suite 1664 pass.
 - 2026-09-21: T9 done. The guard also rejects a named `choices` and a first element that is not a list. The test covers an object, `[1]`, and `["{}"]`, with and without a schema, and failed first. The help page and NEWS text for these shapes moves to T13. Suite 1688 pass.
 - 2026-09-21: T10 done. The batch handler sets `trace` to `NULL` before it stores the condition. The shared slot check asserts it in all three formats and failed first. Suite 1694 pass.
+- 2026-09-21: T11 done. A vector batch with a failure adds "Returning list." to its one warning. A `NULL` content gets a hint that says the reply has no text. Both tests failed first. Suite 1699 pass.
 
 ## Decisions
 
