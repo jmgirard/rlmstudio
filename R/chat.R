@@ -721,14 +721,9 @@ lms_chat_batch <- function(
       return(df)
     }
 
-    any_logprobs <- any(vapply(
-      results,
-      inherits,
-      logical(1),
-      "lms_chat_result"
-    ))
-
-    if (any_logprobs) {
+    # Keyed on the argument, not on the results, so the column is there even
+    # when every input failed (GP2).
+    if (has_logprobs) {
       df <- data.frame(
         input = inputs,
         output = vapply(

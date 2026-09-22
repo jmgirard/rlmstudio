@@ -195,6 +195,18 @@ test_that("a failed input leaves NULL logprobs in a data frame", {
   expect_s3_class(res$out$logprobs[[3]], "data.frame")
 })
 
+test_that("a batch in which every input fails keeps its logprobs column", {
+  for (cls in failure_classes) {
+    res <- run_failing_batch(1:3, rep(cls, 3), "data.frame", logprobs = TRUE)
+    expect_identical(res$requests, 3L, info = cls)
+    expect_named(res$out, c("input", "output", "logprobs"))
+    expect_identical(res$out$output, rep(NA_character_, 3), info = cls)
+    expect_identical(res$out$logprobs, list(NULL, NULL, NULL), info = cls)
+    expect_length(res$warnings, 1L)
+    expect_match(res$warnings, "3 inputs failed, at positions 1, 2, and 3\\.", info = cls)
+  }
+})
+
 test_that("one warning names every failed input of either class", {
   withr::local_options(rlmstudio.quiet = TRUE)
   res <- run_failing_batch(
