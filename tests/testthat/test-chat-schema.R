@@ -82,6 +82,17 @@ test_that("an empty schema is sent as an empty JSON object", {
   expect_match(sent_json(out$requests[[1]]), '"schema":{}', fixed = TRUE)
 })
 
+test_that("a nested empty object is sent as {} when written with empty names", {
+  schema <- list(type = "object", properties = setNames(list(), character()))
+  out <- call_with_reply(completion_body(quoted("{}")), schema = schema)
+  expect_match(sent_json(out$requests[[1]]), '"properties":{}', fixed = TRUE)
+
+  # The documented reason: a bare list() goes out as an array.
+  schema <- list(type = "object", properties = list())
+  out <- call_with_reply(completion_body(quoted("{}")), schema = schema)
+  expect_match(sent_json(out$requests[[1]]), '"properties":[]', fixed = TRUE)
+})
+
 test_that("the reply is parsed with jsonlite::parse_json() and simplified", {
   replies <- list(
     list(label = "object", text = '{"score": 3, "why": "clear"}'),

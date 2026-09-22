@@ -252,8 +252,10 @@ lms_chat_openresponses <- function(
 #'   `"response"` and `strict` set to `true`. A JSON array of one item must be
 #'   written as a list, such as `required = list("score")`, or wrapped in
 #'   [I()]. A plain vector of length one is sent as a single value, not as an
-#'   array. The package checks only that `schema` is a named list, an empty
-#'   list, or `NULL`. The server checks the schema itself.
+#'   array. An empty object nested in the schema, such as `properties`, is
+#'   written `setNames(list(), character())`, because `list()` is sent as the
+#'   empty array `[]`. The package checks only that `schema` is a named list,
+#'   an empty list, or `NULL`. The server checks the schema itself.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. Otherwise, returns a character string containing the generated
 #'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}

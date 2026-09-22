@@ -121,7 +121,7 @@ still aborts on an empty `choices`, because no parse is in play there.
       AC4 and AC5 tests. The `rlmstudio_no_server` test mocks
       `is_server_running` to return TRUE, TRUE, FALSE across the batch probe
       (`R/chat.R:514`) and the first two calls (`R/chat.R:299`).
-- [ ] T6: Write the nested empty-object sentence in the `schema` docs and
+- [x] T6: Write the nested empty-object sentence in the `schema` docs and
       add the AC6 test.
 - [ ] T7: Rewrite `R/conditions.R:49-61` and the batch `@details` at
       `R/chat.R:476-480`. Edit the unreleased NEWS bullets for `schema` in
@@ -141,7 +141,8 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: T1 done. `local_request_sequence()` serves a list of responses in turn and raises past its end. Both recorders share `local_mock_perform()`. Suite 1542 pass.
 - 2026-09-21: T2 and T3 done in one commit, because both edit the same lines of `lms_chat_openai()`. The detail clause carries plain backticks, because cli does not read markup inside an inserted value. Suite 1612 pass.
 - 2026-09-21: T4 done. The live gemma-3-1b reply with `max_tokens` 5 came back as `{"why":` with `finish_reason` `"length"`. The script records with `simplify = FALSE`, because with `simplify = TRUE` the abort stops the recording. The server was started for the recording and stopped after it, and the loaded model stayed loaded.
-- 2026-09-21: T5 done. The batch catches `rlmstudio_bad_response` only when it parses replies, so a batch without a `schema` still aborts. Suite 1657 pass.
+- 2026-09-21: T5 done. If the batch parses replies, it catches `rlmstudio_bad_response`. Otherwise it does not, so a batch without a `schema` still aborts. Suite 1657 pass.
+- 2026-09-21: T6 done. The test also pins that a bare `list()` goes out as `[]`, the reason the docs give. Suite 1659 pass.
 
 ## Decisions
 

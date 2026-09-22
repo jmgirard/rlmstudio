@@ -37,8 +37,10 @@ of a \code{response_format} of type \code{"json_schema"}, with the name
 \code{"response"} and \code{strict} set to \code{true}. A JSON array of one item must be
 written as a list, such as \code{required = list("score")}, or wrapped in
 \code{\link[=I]{I()}}. A plain vector of length one is sent as a single value, not as an
-array. The package checks only that \code{schema} is a named list, an empty
-list, or \code{NULL}. The server checks the schema itself.}
+array. An empty object nested in the schema, such as \code{properties}, is
+written \code{setNames(list(), character())}, because \code{list()} is sent as the
+empty array \verb{[]}. The package checks only that \code{schema} is a named list,
+an empty list, or \code{NULL}. The server checks the schema itself.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
