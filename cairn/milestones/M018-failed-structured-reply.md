@@ -1,13 +1,13 @@
 # M018: A failed structured reply keeps its text and no longer ends a batch
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP4, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — changes what three exported chat functions return and raise
-- **Branch/PR:** —
+- **Branch/PR:** m018-failed-structured-reply
 
 ## Goal
 
@@ -98,7 +98,7 @@ still aborts on an empty `choices`, because no parse is in play there.
 
 ## Tasks
 
-- [ ] T1: Add a mock helper in `tests/testthat/helper-mock-http.R` that
+- [x] T1: Add a mock helper in `tests/testthat/helper-mock-http.R` that
       serves a list of responses in turn. `local_request_recorder` returns
       one response to every request (`helper-mock-http.R:26-48`).
 - [ ] T2: Guard `choices` in `lms_chat_openai()` before `R/chat.R:324`, on
@@ -137,6 +137,8 @@ still aborts on an empty `choices`, because no parse is in play there.
 - 2026-09-21: plan gate chose a warning that ignores `quiet` over one that honors it, because a quiet batch then returns failed slots with no signal. Falsified by a user who runs quiet batches and treats the warning as noise.
 - 2026-09-21: plan gate chose to document nested empty objects over converting known keywords such as `properties`. A keyword list goes stale as JSON Schema changes (D-003). Falsified by repeated server errors from users who write `properties = list()`.
 - 2026-09-21: plan gate chose a live recorded cut-off reply over mocks only, so the `"length"` value comes from LM Studio and not from the OpenAI format. Falsified by an LM Studio reply that reports the cut-off in another field.
+- 2026-09-21: implement gate: the user allowed starting the LM Studio server for the T4 recording, with the script skipping load and unload when the model is already loaded.
+- 2026-09-21: T1 done. `local_request_sequence()` serves a list of responses in turn and raises past its end; both recorders share `local_mock_perform()`. Suite 1542 pass.
 
 ## Decisions
 

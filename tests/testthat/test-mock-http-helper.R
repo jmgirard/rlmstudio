@@ -39,3 +39,26 @@ test_that("request_target() reports no Authorization header when none is set", {
 
   expect_null(target$headers$authorization)
 })
+
+test_that("local_request_sequence() serves its responses in order", {
+  recorder <- local_request_sequence(list(
+    mock_response(200L, '{"n": 1}'),
+    mock_response(200L, '{"n": 2}')
+  ))
+  req <- httr2::request("http://localhost:1234")
+
+  first <- httr2::req_perform(req)
+  second <- httr2::req_perform(req)
+
+  expect_identical(httr2::resp_body_json(first)$n, 1L)
+  expect_identical(httr2::resp_body_json(second)$n, 2L)
+  expect_length(recorder$requests, 2L)
+})
+
+test_that("local_request_sequence() raises on a request past its list", {
+  local_request_sequence(list(mock_response(200L, '{"n": 1}')))
+  req <- httr2::request("http://localhost:1234")
+  httr2::req_perform(req)
+
+  expect_error(httr2::req_perform(req), "request 2 arrived")
+})
