@@ -618,9 +618,11 @@ lms_chat_batch <- function(
   ))
   if (length(failed) > 0L) {
     # Shown whatever `quiet` says, because it is the only signal that some
-    # answers are missing (D-010).
+    # answers are missing (D-010). The positions are joined here, because cli
+    # shortens a vector of more than 20 values and would drop some of them.
+    positions <- cli::ansi_collapse(failed, trunc = Inf)
     cli::cli_warn(c(
-      "Could not read the structured reply for {length(failed)} input{?s}, at position{?s} {failed}.",
+      "Could not read the structured reply for {length(failed)} input{?s}, at {cli::qty(length(failed))}position{?s} {positions}.",
       "i" = "Each of those elements holds the {.cls rlmstudio_bad_response} condition, with any reply text in its {.field content} field."
     ))
   }

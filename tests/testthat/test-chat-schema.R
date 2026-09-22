@@ -499,6 +499,28 @@ test_that("the failed reply warning ignores quiet", {
   )
 })
 
+test_that("the failed reply warning names every position past 20", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, completion_body(quoted("not json"))))
+  warnings <- testthat::capture_warnings(
+    lms_chat_batch(
+      "a-model",
+      as.character(1:25),
+      format = "list",
+      quiet = TRUE,
+      api_type = "openai",
+      schema = score_schema
+    )
+  )
+  expect_length(warnings, 1L)
+  # cli wraps a long message, so the line breaks are read as spaces.
+  text <- gsub("\\s+", " ", warnings)
+  expect_match(text, "25 inputs")
+  expect_match(text, paste0("positions ", toString(1:24), ", and 25"), fixed = TRUE)
+  expect_no_match(text, "…", fixed = TRUE)
+  expect_no_match(text, "...", fixed = TRUE)
+})
+
 test_that("a batch with no failed reply keeps the vector format warning", {
   valid <- mock_response(200L, completion_body(quoted('{"score": 3}')))
   warnings <- testthat::capture_warnings(
