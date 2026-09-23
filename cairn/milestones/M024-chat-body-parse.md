@@ -54,7 +54,7 @@ A status-200 chat reply that does not parse as JSON aborts with `rlmstudio_bad_r
      change is amend-via-gate. -->
 
 - [x] T1: Write the tests of AC1, AC2, and AC4 first, in a new file `tests/testthat/test-chat-body-parse.R`. Use `mock_response()` from `helper-mock-http.R`, which takes a `content_type`, and the reply builders in `helper-chat-bodies.R`. Make sure that they fail on the current code for the reason each asserts, not by accident (LESSONS, M008 and M012).
-- [ ] T2: Move the guard of `lms_embed()` into a shared helper in `R/utils-api-error.R`. It takes the response, the label, and extra condition fields, so the OpenAI route can pass `content = NULL` and `finish_reason = NULL`. Call it from `lms_embed()` and the three chat functions, before the `simplify` branch. Run `test-embed.R` and the T1 tests to green.
+- [x] T2: Move the guard of `lms_embed()` into a shared helper in `R/utils-api-error.R`. It takes the response, the label, and extra condition fields, so the OpenAI route can pass `content = NULL` and `finish_reason = NULL`. Call it from `lms_embed()` and the three chat functions, before the `simplify` branch. Run `test-embed.R` and the T1 tests to green.
 - [ ] T3: Add the AC3 batch tests, next to the bare-value batch test in `test-bare-body.R` or in the T1 file. Make sure that the batch catches the new condition through its existing `rlmstudio_bad_response` handler (`R/chat.R:1187-1188`), with no change to the loop.
 - [ ] T4: Update the help text named in AC6 in `R/conditions.R` and in the `lms_chat_batch()` roxygen block. Add the NEWS.md entry. Run `devtools::document()`.
 - [ ] T5: Run `devtools::test()`, then `devtools::check()` with LM Studio live and the token set (LESSONS, M009). Record the results.
@@ -69,6 +69,7 @@ A status-200 chat reply that does not parse as JSON aborts with `rlmstudio_bad_r
 - 2026-09-22: Gate chose no condition field for the raw body over a `body` field. With the field, a batch holds a large page for each failed input. The falsifier of the previous line applies here too.
 - 2026-09-22: Implement started on branch `m024-chat-body-parse`. No question gate, because the plan left no choice open. The ROADMAP had two candidate rows on one line, and the status commit split them.
 - 2026-09-22: T1 done. `tests/testthat/test-chat-body-parse.R` fails on the current code: each body raises an unclassed httr2 or jsonlite error, and the jsonlite message quotes MARKER.
+- 2026-09-22: T2 done. `parse_ok_body()` in `R/utils-api-error.R` holds the guard, and `lms_embed()` and the three chat functions call it. Full suite: 0 failures, 6379 passes.
 
 ## Decisions
 <!-- owner: implement, review · append-only -->

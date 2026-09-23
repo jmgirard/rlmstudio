@@ -145,6 +145,53 @@ rlm_abort_bad_response <- function(
   )
 }
 
+#' Parse a successful response body, or abort
+#'
+#' The parse every wrapper runs on a status-200 body before it reads it. A
+#' 200 whose body is not JSON at all reaches here: a proxy or a captive
+#' portal answering on the host serves an HTML page under a success status.
+#' Left unguarded, httr2 or the jsonlite lexer raises an unclassed error, and
+#' a chat batch loses every reply so far to one input. The abort runs before
+#' the caller's `simplify` branch, so `simplify = FALSE` cannot rescue the
+#' body, and the hint says something the caller can act on instead.
+#'
+#' `check_type = FALSE` is what keeps the message true. Left on, the same
+#' error covers two different causes: a body that will not parse, and a body
+#' that parses perfectly under a content type httr2 declines to read. A proxy
+#' that rewrites the header to `text/plain` sends good JSON, and reporting
+#' that as a parse failure names the wrong fault and leaves no way through.
+#' Parsing by content rather than by header leaves the parse failure as the
+#' only cause the abort can have.
+#'
+#' The message leaves out the parse error, because jsonlite quotes the body
+#' text around the point where it stopped.
+#'
+#' @param resp An httr2 response with status 200.
+#' @param label Character. The calling wrapper's own label, which opens the
+#'   message.
+#' @param ... Extra fields for the condition, passed on to
+#'   `rlm_abort_bad_response()`.
+#' @return The parsed body.
+#'
+#' @noRd
+parse_ok_body <- function(resp, label, ...) {
+  tryCatch(
+    httr2::resp_body_json(resp, check_type = FALSE),
+    error = function(cnd) {
+      rlm_abort_bad_response(
+        resp,
+        label,
+        "the response body did not parse as JSON.",
+        hint = paste(
+          "The server returned a response this package cannot read.",
+          "Something other than LM Studio may be answering on this host."
+        ),
+        ...
+      )
+    }
+  )
+}
+
 #' The hint text for a rejected call
 #'
 #' Kept apart from the abort so a test can read the two wordings without

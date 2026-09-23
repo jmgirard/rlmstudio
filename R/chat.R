@@ -183,7 +183,7 @@ lms_chat_openresponses <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
+    resp_data <- parse_ok_body(resp, "OpenResponses Failed")
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -325,7 +325,14 @@ lms_chat_openai <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
+    # Every OpenAI condition carries these two fields, so a caller can read
+    # them without checking which fault it caught.
+    resp_data <- parse_ok_body(
+      resp,
+      "OpenAI API Failed",
+      content = NULL,
+      finish_reason = NULL
+    )
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -837,7 +844,7 @@ lms_chat_native <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
+    resp_data <- parse_ok_body(resp, "Native API Failed")
     if (!isTRUE(simplify)) {
       return(resp_data)
     }

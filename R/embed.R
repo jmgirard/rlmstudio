@@ -71,34 +71,7 @@ lms_embed <- function(
     rlm_abort_api(resp, "Embeddings Failed", !is.null(rlm_token(token)))
   }
 
-  # A 200 whose body is not JSON at all reaches here: a proxy or a captive
-  # portal answering on the host serves an HTML page under a success status.
-  # Left unguarded, httr2 or the jsonlite lexer raises an unclassed error, so
-  # the fault the whole check exists to name escapes it on a technicality.
-  # `simplify = FALSE` cannot rescue this one, because the parse runs first,
-  # so the hint says something the caller can act on instead.
-  #
-  # `check_type = FALSE` is what keeps that message true. Left on, the same
-  # error covers two different causes: a body that will not parse, and a body
-  # that parses perfectly under a content type httr2 declines to read. A proxy
-  # that rewrites the header to `text/plain` sends good JSON, and reporting
-  # that as a parse failure names the wrong fault and leaves no way through.
-  # Parsing by content rather than by header leaves the parse failure as the
-  # only cause this branch can have.
-  resp_data <- tryCatch(
-    httr2::resp_body_json(resp, check_type = FALSE),
-    error = function(cnd) {
-      rlm_abort_bad_response(
-        resp,
-        "Embeddings Failed",
-        "the response body did not parse as JSON.",
-        hint = paste(
-          "The server returned a response this package cannot read.",
-          "Something other than LM Studio may be answering on this host."
-        )
-      )
-    }
-  )
+  resp_data <- parse_ok_body(resp, "Embeddings Failed")
 
   if (!isTRUE(simplify)) {
     return(resp_data)
