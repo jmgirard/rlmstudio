@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-23 (M025 done and archived, M022 row pruned, two lessons retired into one, two lessons updated)_
+_Last hygiene check: 2026-09-22 (M026 done and archived, one lesson added, the M009 lesson extended)_
 
 ## Milestones
 
@@ -9,8 +9,8 @@ _Last hygiene check: 2026-09-23 (M025 done and archived, M022 row pruned, two le
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M026 | A model list with the wrong JSON shape aborts with rlmstudio_bad_response | review | none | normal | milestones/M026-model-list-shape.md |
 | M027 | A load or download reply with the wrong JSON shape aborts with rlmstudio_bad_response | planned | M026 | normal | milestones/M027-load-download-shape.md |
+| M026 | A model list with the wrong JSON shape aborts with rlmstudio_bad_response | done | none | normal | milestones/archive/M026-model-list-shape.md |
 | M025 | A model-management reply that does not parse as JSON aborts with rlmstudio_bad_response | done | none | normal | milestones/archive/M025-reply-parse-guard.md |
 | M024 | A chat reply that does not parse as JSON fails its input alone | done | none | normal | milestones/archive/M024-chat-body-parse.md |
 
