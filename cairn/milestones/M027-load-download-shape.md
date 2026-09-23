@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M027: A load or download reply with the wrong JSON shape aborts with rlmstudio_bad_response
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M026   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -90,8 +90,9 @@ binary operator", because `$` matched the extended name.
       each show an example response (lmstudio-ai/docs,
       `1_developer/2_rest/{load,download,download-status}.md`, "Response"
       blocks). A test passes each through its function and asserts the
-      return value. The existing tests pass. An existing test changes only
-      where its body breaks a rule of AC1 to AC3.
+      return value. The existing tests pass. No existing test is removed,
+      and an existing test changes its reply body, its call, or an
+      expectation only where the old body breaks a rule of AC1 to AC3.
 - [x] AC7: The `rlmstudio-conditions` help page names the three functions as
       raisers of `rlmstudio_bad_response` for a body with the wrong shape. It
       no longer says that they can fail with an unclassed error, fail with
@@ -151,6 +152,10 @@ binary operator", because `$` matched the extended name.
 - 2026-09-22: implement complete. `devtools::test()` gave 0 failures and 9079 passes, and `devtools::document()` made no diff. Status set to review.
 - 2026-09-22: review return 1 (defect): consistency gate failed. `cairn_validate` weight caps: `cairn/ROADMAP.md` has 60 lines, cap under 60, after the T3 candidate row. AC1 to AC7 have evidence, and AC6 fails as written (review finding O3). Fix: shorten or merge a candidate row, and amend AC6 through the gate. Then re-review. Status set to in-progress.
 - 2026-09-22: implement resumed after review return 1. Merged the two ROADMAP candidate rows on cut-off replies into one row, so the file has 59 lines, and `cairn_validate` passes.
+- 2026-09-22: re-audit: AC6 (full) — my draft "An existing test changes a reply body or an expectation only where the old body breaks a rule of AC1 to AC3." holds on the branch but misses a removed test and a changed call. The reader proposed the wording the gate chose.
+- 2026-09-22: re-audit: AC6 (full) — nothing. A second fresh reader found the chosen wording met: `test_that` counts match `main` in the four edited files, and no call changed.
+- 2026-09-22: amendment return: AC6 — "No existing test is removed, and an existing test changes its reply body, its call, or an expectation only where the old body breaks a rule of AC1 to AC3." The user chose this wording at the mini gate. It replaces "An existing test changes only where its body breaks a rule of AC1 to AC3."
+- 2026-09-22: implement complete after return 1. `cairn_validate` passes. No code changed since review, which recorded `devtools::test()` with 0 failures and 9079 passes. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
