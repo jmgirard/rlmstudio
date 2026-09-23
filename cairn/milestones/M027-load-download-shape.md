@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M027: A load or download reply with the wrong JSON shape aborts with rlmstudio_bad_response
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M026   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -147,6 +147,8 @@ binary operator", because `$` matched the extended name.
 - 2026-09-22: T2 done. `download_reply_fault()` is in `R/download.R`, the `invisible(TRUE)` branch is gone, and the new tests were red before the fix. Edited test: the `lms_download` reply in `test-body-parse.R` gained `"status": "downloading"`. A comment in `test-token-wrappers.R` now names the fields the download calls read. `devtools::test()` gave 0 failures and 8829 passes.
 - 2026-09-22: T3 done. `download_status_fault()` is in `R/download.R`, and `print()` reads its five fields with `[[`. The fault and print tests were red before the fix. Discovered sub-task: `print()` passed the server's `status` to `cli::cli_text()` as format text, so `{...}` in it ran as R code. It is now spliced in as a value, with a test that is red on the old line. A [high] candidate row holds the sweep of the other cli calls. `devtools::test()` gave 0 failures and 9079 passes.
 - 2026-09-22: T4 done. The help page lists the three rules and drops the old unclassed, API-error, and `TRUE` outcomes. The `simplify = FALSE` sentence now names the chat functions and `lms_embed()` only. The `@return` of `lms_download()` names the abort. NEWS has four entries, one of them for the `print()` fixes. `devtools::document()` then made no diff, and `devtools::test()` gave 0 failures and 9079 passes.
+- 2026-09-22: claim audit: 68 claims read, 2 corrected — R/download.R, R/conditions.R. The `@return` of `lms_download()` now also names the abort on a `status` that is not a string. The help page names two value exceptions, the load `status` and a download reply with `"already_downloaded"`. The same reader re-read both and found them accurate.
+- 2026-09-22: implement complete. `devtools::test()` gave 0 failures and 9079 passes, and `devtools::document()` made no diff. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

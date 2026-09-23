@@ -152,8 +152,9 @@ rules and returns \code{FALSE} for a body that breaks one.
 \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} also raise it
 for a status-200 reply of their own with the wrong shape. Each reply must
 follow the rule of its function. Each field is read by its exact name. The
-rules check the type of a field and not its value. The one exception is
-the \code{status} of a load reply, which must be \code{"loaded"}.
+rules check the type of a field and not its value, with two exceptions. The
+\code{status} of a load reply must be \code{"loaded"}, and a download reply whose
+\code{status} is \code{"already_downloaded"} needs no \code{job_id}.
 \enumerate{
 \item A reply of \code{\link[=lms_load]{lms_load()}} is a JSON object whose \code{status} is the string
 \code{"loaded"}. With \code{echo_load_config = TRUE}, its \code{load_config} is also a

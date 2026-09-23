@@ -106,8 +106,9 @@
 #' [lms_load()], [lms_download()], and [lms_download_status()] also raise it
 #' for a status-200 reply of their own with the wrong shape. Each reply must
 #' follow the rule of its function. Each field is read by its exact name. The
-#' rules check the type of a field and not its value. The one exception is
-#' the `status` of a load reply, which must be `"loaded"`.
+#' rules check the type of a field and not its value, with two exceptions. The
+#' `status` of a load reply must be `"loaded"`, and a download reply whose
+#' `status` is `"already_downloaded"` needs no `job_id`.
 #'
 #' 1. A reply of [lms_load()] is a JSON object whose `status` is the string
 #'    `"loaded"`. With `echo_load_config = TRUE`, its `load_config` is also a

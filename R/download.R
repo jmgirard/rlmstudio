@@ -19,7 +19,8 @@
 #'   \code{"already_downloaded"}, invisibly, if the model is already
 #'   downloaded. The call aborts with \code{rlmstudio_bad_response} when the
 #'   reply holds neither a \code{job_id} string nor the status
-#'   \code{"already_downloaded"}.
+#'   \code{"already_downloaded"}. It also aborts when the reply is not a JSON
+#'   object whose \code{status} is a string.
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
