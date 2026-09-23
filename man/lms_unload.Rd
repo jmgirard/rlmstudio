@@ -64,7 +64,7 @@ come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, t
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it.
 \code{\link[=list_models]{list_models()}} raises it for a model list with another shape, and so do
 \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE}, which read that
-list. The load reply of \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
+list. The replies of \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
 \code{\link[=lms_download_status]{lms_download_status()}} can fail with an error with no class of this
 package, fail with \code{rlmstudio_api_error}, as \code{\link[=lms_load]{lms_load()}} does for \code{{}}, or
 report success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not

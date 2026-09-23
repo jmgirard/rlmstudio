@@ -156,7 +156,8 @@ fault_cases <- function() {
   cases
 }
 
-# Bodies that pass: `size_bytes` absent, `null`, and under an extended name.
+# Bodies that pass: `size_bytes` absent, `null`, or under an extended name, an
+# empty model list, and a list with a loaded model.
 pass_cases <- function() {
   list(
     "size_bytes absent" = list_body(json_object(model_fields(), drop = "size_bytes")),

@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M026: A model list with the wrong JSON shape aborts with rlmstudio_bad_response
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -162,6 +162,8 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 - 2026-09-22: existing tests edited because their bodies break L1 to L4: `test-list.R` (GET test, `{}` to `{"models": []}`), `test-load.R` (integer conversion test, a list reply and a load reply in sequence), `test-token-wrappers.R` (`identifier` to `id`), `test-server-ready.R` (three tests, `loaded_instances` added), and `test-body-parse.R` (text/plain server-ready test, `loaded_instances` added). `devtools::test()`: 0 failures, 8377 passes.
 - 2026-09-22: T2 done. `lms_unload_all()` reads `x[["id"]]` and the fallback chain is gone. Deleted from `test-unload.R`: the `identifier` column test, the first-column fallback test, the number coercion test, and the two NA and empty-id tests. Two unload tests now use an `id` column. With the `list_models()` pre-check in `lms_load()` removed, or with `lms_unload_all()` reading the first field, the new caller tests fail. `devtools::test()`: 0 failures, 8384 passes.
 - 2026-09-22: T4 done. `R/conditions.R` states the four rules in "Malformed response" and names the three raisers in "Server not running". `lms_server_ready()` help says it applies the `list_models()` rules. NEWS.md has four entries. `devtools::document()` is stable on a second run, and `devtools::test()`: 0 failures, 8384 passes.
+- 2026-09-22: claim audit: 45 claims read, 4 corrected — NEWS.md, R/conditions.R, tests/testthat/test-model-list-shape.R. Fixed: the "Before" sentence of the first NEWS entry, "load reply" for all three functions on the conditions page, and the `pass_cases()` comment. The fourth, the docs commit of the fixture, was fetched this session and stands. On its one re-read, the reader found the NEWS "Before" sentence still too broad, so it now says "some bad fields" and "some other bodies".
+- 2026-09-22: status set to review. `devtools::test()`: 0 failures, 8384 passes. `devtools::document()` gives no diff.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

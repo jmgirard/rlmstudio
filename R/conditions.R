@@ -33,7 +33,7 @@
 #' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it.
 #' [list_models()] raises it for a model list with another shape, and so do
 #' [lms_unload_all()] and [lms_load()] without `force = TRUE`, which read that
-#' list. The load reply of [lms_load()], [lms_download()], and
+#' list. The replies of [lms_load()], [lms_download()], and
 #' [lms_download_status()] can fail with an error with no class of this
 #' package, fail with `rlmstudio_api_error`, as [lms_load()] does for `{}`, or
 #' report success, as [lms_download()] does for `{}`. A process that does not
