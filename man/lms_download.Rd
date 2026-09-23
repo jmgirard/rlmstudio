@@ -54,9 +54,12 @@ on.
 
 The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
-Studio server is there. The call then fails later, as an
-\code{rlmstudio_api_error} or as a raw parse error, rather than as
-\code{rlmstudio_no_server}. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+Studio server is there. The call then fails later, rather than as
+\code{rlmstudio_no_server}. The chat functions and \code{\link[=lms_embed]{lms_embed()}} raise
+\code{rlmstudio_api_error} or \code{rlmstudio_bad_response}. \code{\link[=list_models]{list_models()}},
+\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} can raise an
+error with no class of this package, from httr2 or from the JSON parser.
+Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
 asks the host for a model list and reports \code{TRUE} only for an answer that
 an LM Studio server would give.
 

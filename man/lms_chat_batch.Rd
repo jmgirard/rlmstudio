@@ -104,14 +104,17 @@ An \code{rlmstudio_api_error} or an \code{rlmstudio_bad_response} that \code{\li
 raises for one input does not abort the batch. The batch goes on to the
 next input. Where the result is a list, or the \code{output} list-column that a
 \code{schema} gives, the element for that input holds the condition without its
-backtrace. An \code{rlmstudio_bad_response} for a reply that does not parse
-keeps the reply content in its \code{content} field. Where the result is text,
+backtrace. An \code{rlmstudio_bad_response} for reply content that does not
+parse keeps that content in its \code{content} field. Where the result is text,
 the element holds \code{NA}. The result is text with \code{format = "vector"} when it
 returns a vector (\code{simplify = TRUE}, no \code{schema}, \code{logprobs = FALSE}), and
 with a data frame whose replies are not parsed (no \code{schema}, or
 \code{logprobs = TRUE}). The \code{logprobs} column holds \code{NULL} for a failed input.
 A reply with no readable answer text, such as one whose content is \code{null},
-fails as an \code{rlmstudio_bad_response} in the same way. Use \code{format = "list"}
+fails as an \code{rlmstudio_bad_response} in the same way. So does a
+status-200 body that does not parse as JSON, such as an HTML page from a
+proxy or an empty body. That input fails alone, and the other elements
+keep their replies. Use \code{format = "list"}
 to keep the conditions. The call gives one warning that names the count
 and the positions of the failed inputs. That warning shows even with
 \code{quiet = TRUE}.
@@ -139,9 +142,12 @@ on.
 
 The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
-Studio server is there. The call then fails later, as an
-\code{rlmstudio_api_error} or as a raw parse error, rather than as
-\code{rlmstudio_no_server}. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+Studio server is there. The call then fails later, rather than as
+\code{rlmstudio_no_server}. The chat functions and \code{\link[=lms_embed]{lms_embed()}} raise
+\code{rlmstudio_api_error} or \code{rlmstudio_bad_response}. \code{\link[=list_models]{list_models()}},
+\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} can raise an
+error with no class of this package, from httr2 or from the JSON parser.
+Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
 asks the host for a model list and reports \code{TRUE} only for an answer that
 an LM Studio server would give.
 
@@ -175,7 +181,17 @@ A condition of class \code{rlmstudio_bad_response} is raised when the server
 answers with a status the wrapper accepts and a body the wrapper cannot
 read. It is raised where a wrapper checks the body before it reshapes it,
 rather than indexing straight into whatever arrived. Four functions raise
-it.
+it: \code{\link[=lms_embed]{lms_embed()}}, \code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, and
+\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+
+All four raise it for a status-200 body that does not parse as JSON, such
+as an HTML page from a proxy, JSON text that stops part way, or an empty
+body. The body is parsed before \code{simplify} is read, so the condition is
+raised whatever \code{simplify} is. The body is parsed by its content and not by
+its \code{Content-Type} header, so valid JSON under \code{text/plain} is read as
+JSON. The message says that the body did not parse as JSON and that
+something other than LM Studio may be answering on the host. It does not
+hold the body text.
 
 \code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
 it returns are placed by the index that the response reports, so a block
@@ -255,8 +271,9 @@ Both are \code{NULL} for a response with no \code{choices}. In the third case,
 missing content. For the second and third cases, the message names the
 \code{content} field, so you can read what the model wrote without a second
 request. The other messages name \code{simplify = FALSE}, which returns the body
-unchanged, with one exception. An embeddings body that did not parse at
-all is checked before that argument is read, so its message points at the
-host instead.
+unchanged, with one exception. A body that did not parse as JSON is
+checked before that argument is read, so its message points at the host
+instead. For such a body, the \code{content} and \code{finish_reason} fields of a
+condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}.
 }
 

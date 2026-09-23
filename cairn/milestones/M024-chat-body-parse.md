@@ -56,7 +56,7 @@ A status-200 chat reply that does not parse as JSON aborts with `rlmstudio_bad_r
 - [x] T1: Write the tests of AC1, AC2, and AC4 first, in a new file `tests/testthat/test-chat-body-parse.R`. Use `mock_response()` from `helper-mock-http.R`, which takes a `content_type`, and the reply builders in `helper-chat-bodies.R`. Make sure that they fail on the current code for the reason each asserts, not by accident (LESSONS, M008 and M012).
 - [x] T2: Move the guard of `lms_embed()` into a shared helper in `R/utils-api-error.R`. It takes the response, the label, and extra condition fields, so the OpenAI route can pass `content = NULL` and `finish_reason = NULL`. Call it from `lms_embed()` and the three chat functions, before the `simplify` branch. Run `test-embed.R` and the T1 tests to green.
 - [x] T3: Add the AC3 batch tests, next to the bare-value batch test in `test-bare-body.R` or in the T1 file. Make sure that the batch catches the new condition through its existing `rlmstudio_bad_response` handler (`R/chat.R:1187-1188`), with no change to the loop.
-- [ ] T4: Update the help text named in AC6 in `R/conditions.R` and in the `lms_chat_batch()` roxygen block. Add the NEWS.md entry. Run `devtools::document()`.
+- [x] T4: Update the help text named in AC6 in `R/conditions.R` and in the `lms_chat_batch()` roxygen block. Add the NEWS.md entry. Run `devtools::document()`.
 - [ ] T5: Run `devtools::test()`, then `devtools::check()` with LM Studio live and the token set (LESSONS, M009). Record the results.
 
 ## Work log
@@ -71,6 +71,7 @@ A status-200 chat reply that does not parse as JSON aborts with `rlmstudio_bad_r
 - 2026-09-22: T1 done. `tests/testthat/test-chat-body-parse.R` fails on the current code: each body raises an unclassed httr2 or jsonlite error, and the jsonlite message quotes MARKER.
 - 2026-09-22: T2 done. `parse_ok_body()` in `R/utils-api-error.R` holds the guard, and `lms_embed()` and the three chat functions call it. Full suite: 0 failures, 6379 passes.
 - 2026-09-22: T3 done. The batch test sits in the T1 file. The batch loop did not change. With `R/` from the T1 commit, the test errors at the `lms_chat_batch()` call, because the unclassed parse error escapes the batch.
+- 2026-09-22: T4 done. Help text updated in `R/conditions.R` and in the `lms_chat()` and `lms_chat_batch()` blocks, and NEWS.md has two entries. A mocked HTML page showed that `list_models()` also parses a 200 body with no guard. The help names it beside the three out-of-scope functions, and the candidate row names it too.
 
 ## Decisions
 <!-- owner: implement, review · append-only -->
