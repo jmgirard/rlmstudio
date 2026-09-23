@@ -82,11 +82,9 @@ come back unchanged with <code>simplify = FALSE</code>. With <code>simplify = TR
 chat functions and <code><a href="lms_embed.html">lms_embed()</a></code> raise <code>rlmstudio_bad_response</code> for it.
 <code><a href="list_models.html">list_models()</a></code> raises it for a model list with another shape, and so do
 <code><a href="lms_unload_all.html">lms_unload_all()</a></code> and <code><a href="lms_load.html">lms_load()</a></code> without <code>force = TRUE</code>, which read that
-list. The replies of <code><a href="lms_load.html">lms_load()</a></code>, <code><a href="lms_download.html">lms_download()</a></code>, and
-<code><a href="lms_download_status.html">lms_download_status()</a></code> can fail with an error with no class of this
-package, fail with <code>rlmstudio_api_error</code>, as <code><a href="lms_load.html">lms_load()</a></code> does for <code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>, or
-report success, as <code><a href="lms_download.html">lms_download()</a></code> does for <code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>. A process that does not
-answer in HTTP gives an <code>httr2_failure</code> error. Use <code><a href="lms_server_ready.html">lms_server_ready()</a></code> for
+list. <code><a href="lms_load.html">lms_load()</a></code>, <code><a href="lms_download.html">lms_download()</a></code>, and <code><a href="lms_download_status.html">lms_download_status()</a></code> raise it
+for a reply of their own with another shape, such as <code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>. A process that
+does not answer in HTTP gives an <code>httr2_failure</code> error. Use <code><a href="lms_server_ready.html">lms_server_ready()</a></code> for
 the stronger test: it asks the host for a model list and reports <code>TRUE</code>
 only for a model list that <code><a href="list_models.html">list_models()</a></code> can read.</p>
 <p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> checks the server once before its first input, and
@@ -152,6 +150,22 @@ with a character that is not whitespace.</p></li>
 that the filters drop can still raise the condition. The message names the
 field or entry that broke a rule. <code><a href="lms_server_ready.html">lms_server_ready()</a></code> applies the same
 rules and returns <code>FALSE</code> for a body that breaks one.</p>
+<p><code><a href="lms_load.html">lms_load()</a></code>, <code><a href="lms_download.html">lms_download()</a></code>, and <code><a href="lms_download_status.html">lms_download_status()</a></code> also raise it
+for a status-200 reply of their own with the wrong shape. Each reply must
+follow the rule of its function. Each field is read by its exact name. The
+rules check the type of a field and not its value, with two exceptions. The
+<code>status</code> of a load reply must be <code>"loaded"</code>, and a download reply whose
+<code>status</code> is <code>"already_downloaded"</code> needs no <code>job_id</code>.</p><ol><li><p>A reply of <code><a href="lms_load.html">lms_load()</a></code> is a JSON object whose <code>status</code> is the string
+<code>"loaded"</code>. With <code>echo_load_config = TRUE</code>, its <code>load_config</code> is also a
+JSON object.</p></li>
+<li><p>A reply of <code><a href="lms_download.html">lms_download()</a></code> is a JSON object whose <code>status</code> is a string.
+If the status is not <code>"already_downloaded"</code>, its <code>job_id</code> is a string.</p></li>
+<li><p>A reply of <code><a href="lms_download_status.html">lms_download_status()</a></code> is a JSON object whose <code>job_id</code> and
+<code>status</code> are strings. Its <code>total_size_bytes</code>, <code>downloaded_bytes</code>, and
+<code>bytes_per_second</code> are each a number, or absent, or <code>null</code>.</p></li>
+</ol><p>The message names the field that broke the rule, or it says that the body
+is not a JSON object. It also says that something other than LM Studio may
+be answering on the host.</p>
 <p><code><a href="lms_embed.html">lms_embed()</a></code> raises it on an embeddings block it cannot trust. The vectors
 it returns are placed by the index that the response reports, so a block
 with a missing, repeated, or out-of-range index would otherwise pair a
@@ -219,8 +233,8 @@ Both are <code>NULL</code> for a response with no <code>choices</code>. In the t
 <code>content</code> holds the value that was read, which is <code>NULL</code> for <code>null</code> or
 missing content. For the second and third cases, the message names the
 <code>content</code> field, so you can read what the model wrote without a second
-request. The other messages name <code>simplify = FALSE</code>, which returns the body
-unchanged, with one exception. A body that did not parse as JSON is
+request. The other messages of the chat functions and <code><a href="lms_embed.html">lms_embed()</a></code> name
+<code>simplify = FALSE</code>, which returns the body unchanged, with one exception. A body that did not parse as JSON is
 checked before that argument is read, so its message points at the host
 instead. For such a body, the <code>content</code> and <code>finish_reason</code> fields of a
 condition from <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> are <code>NULL</code>.</p>

@@ -2,6 +2,51 @@
 
 ## rlmstudio (development version)
 
+- [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  now checks the shape of a status-200 load reply before it reads it.
+  The reply must be a JSON object whose `status` is the string
+  `"loaded"`. With `echo_load_config = TRUE`, its `load_config` must
+  also be a JSON object, and the call returns it as a list. Any other
+  reply aborts with `rlmstudio_bad_response`, and the message names the
+  field that broke the rule. Fields are read by their exact names.
+  Before, [`{}`](https://rdrr.io/r/base/Paren.html) and a status such as
+  `"pending"` aborted with `rlmstudio_api_error` and status 200. A body
+  such as `"x"` failed with an unclassed error. A field such as
+  `statusX` was read in place of `status`. With
+  `echo_load_config = TRUE`, a reply with no `load_config` returned
+  `NULL`.
+
+- [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+  now checks the shape of a status-200 reply before it reads it. The
+  reply must be a JSON object whose `status` is a string. If the status
+  is `"already_downloaded"`, the call returns `"already_downloaded"`
+  invisibly, as before. Otherwise the reply’s `job_id` must be a string,
+  and the call returns it. Any other reply aborts with
+  `rlmstudio_bad_response`, and the message names the field that broke
+  the rule. The call no longer returns `TRUE`. Before,
+  [`{}`](https://rdrr.io/r/base/Paren.html), `[]`, and `null` returned
+  `TRUE`, a `job_id` of `1` returned `1L`, and a `job_id` that was an
+  array returned a list.
+
+- [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  now checks the shape of a status-200 reply before it reads it. The
+  reply must be a JSON object whose `job_id` and `status` are strings.
+  Its `total_size_bytes`, `downloaded_bytes`, and `bytes_per_second`
+  must each be a number, or absent, or `null`. Any other reply aborts
+  with `rlmstudio_bad_response`, and the message names the field that
+  broke the rule. Before, [`{}`](https://rdrr.io/r/base/Paren.html)
+  returned an empty status object, and printing it failed with “EXPR
+  must be a length 1 vector”.
+
+- [`print()`](https://rdrr.io/r/base/print.html) on a download status
+  now reads each field by its exact name. Before, a field such as
+  `bytes_per_secondX` was read in place of an absent `bytes_per_second`.
+  A string there made [`print()`](https://rdrr.io/r/base/print.html)
+  fail with “non-numeric argument to binary operator”.
+  [`print()`](https://rdrr.io/r/base/print.html) also shows the status
+  as text now. Before, braces in the status were run as R code, so a
+  status of `"{1 + 1}"` printed as `2`.
+
 - [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
   now checks the shape of a status-200 model list before it reads it. A
   model list that breaks a rule aborts with `rlmstudio_bad_response`,

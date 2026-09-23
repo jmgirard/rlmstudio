@@ -107,19 +107,14 @@ raises it for a model list with another shape, and so do
 [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
 and
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-without `force = TRUE`, which read that list. The replies of
+without `force = TRUE`, which read that list.
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 and
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-can fail with an error with no class of this package, fail with
-`rlmstudio_api_error`, as
-[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-does for [`{}`](https://rdrr.io/r/base/Paren.html), or report success,
-as
-[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-does for [`{}`](https://rdrr.io/r/base/Paren.html). A process that does
-not answer in HTTP gives an `httr2_failure` error. Use
+raise it for a reply of their own with another shape, such as
+[`{}`](https://rdrr.io/r/base/Paren.html). A process that does not
+answer in HTTP gives an `httr2_failure` error. Use
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 for the stronger test: it asks the host for a model list and reports
 `TRUE` only for a model list that
@@ -219,6 +214,37 @@ names the field or entry that broke a rule.
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 applies the same rules and returns `FALSE` for a body that breaks one.
 
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+and
+[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+also raise it for a status-200 reply of their own with the wrong shape.
+Each reply must follow the rule of its function. Each field is read by
+its exact name. The rules check the type of a field and not its value,
+with two exceptions. The `status` of a load reply must be `"loaded"`,
+and a download reply whose `status` is `"already_downloaded"` needs no
+`job_id`.
+
+1.  A reply of
+    [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+    is a JSON object whose `status` is the string `"loaded"`. With
+    `echo_load_config = TRUE`, its `load_config` is also a JSON object.
+
+2.  A reply of
+    [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+    is a JSON object whose `status` is a string. If the status is not
+    `"already_downloaded"`, its `job_id` is a string.
+
+3.  A reply of
+    [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+    is a JSON object whose `job_id` and `status` are strings. Its
+    `total_size_bytes`, `downloaded_bytes`, and `bytes_per_second` are
+    each a number, or absent, or `null`.
+
+The message names the field that broke the rule, or it says that the
+body is not a JSON object. It also says that something other than LM
+Studio may be answering on the host.
+
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 raises it on an embeddings block it cannot trust. The vectors it returns
 are placed by the index that the response reports, so a block with a
@@ -317,10 +343,11 @@ first choice. Both are `NULL` for a response with no `choices`. In the
 third case, `content` holds the value that was read, which is `NULL` for
 `null` or missing content. For the second and third cases, the message
 names the `content` field, so you can read what the model wrote without
-a second request. The other messages name `simplify = FALSE`, which
-returns the body unchanged, with one exception. A body that did not
-parse as JSON is checked before that argument is read, so its message
-points at the host instead. For such a body, the `content` and
-`finish_reason` fields of a condition from
+a second request. The other messages of the chat functions and
+[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+name `simplify = FALSE`, which returns the body unchanged, with one
+exception. A body that did not parse as JSON is checked before that
+argument is read, so its message points at the host instead. For such a
+body, the `content` and `finish_reason` fields of a condition from
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
 are `NULL`.

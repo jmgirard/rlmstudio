@@ -88,19 +88,14 @@ raises it for a model list with another shape, and so do
 [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
 and
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-without `force = TRUE`, which read that list. The replies of
+without `force = TRUE`, which read that list.
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 and
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-can fail with an error with no class of this package, fail with
-`rlmstudio_api_error`, as
-[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-does for [`{}`](https://rdrr.io/r/base/Paren.html), or report success,
-as
-[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-does for [`{}`](https://rdrr.io/r/base/Paren.html). A process that does
-not answer in HTTP gives an `httr2_failure` error. Use
+raise it for a reply of their own with another shape, such as
+[`{}`](https://rdrr.io/r/base/Paren.html). A process that does not
+answer in HTTP gives an `httr2_failure` error. Use
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 for the stronger test: it asks the host for a model list and reports
 `TRUE` only for a model list that
