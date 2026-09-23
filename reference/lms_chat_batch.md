@@ -200,9 +200,19 @@ does not read the body, so it can report success. A body that parses as
 JSON but has another shape can come back unchanged with
 `simplify = FALSE`. With `simplify = TRUE`, the chat functions and
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-raise `rlmstudio_bad_response` for it. The other functions can fail with
-an error with no class of this package, fail with `rlmstudio_api_error`,
-as
+raise `rlmstudio_bad_response` for it.
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+raises it for a model list with another shape, and so do
+[`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+and
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+without `force = TRUE`, which read that list. The replies of
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+and
+[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+can fail with an error with no class of this package, fail with
+`rlmstudio_api_error`, as
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
 does for [`{}`](https://rdrr.io/r/base/Paren.html), or report success,
 as
@@ -211,7 +221,9 @@ does for [`{}`](https://rdrr.io/r/base/Paren.html). A process that does
 not answer in HTTP gives an `httr2_failure` error. Use
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 for the stronger test: it asks the host for a model list and reports
-`TRUE` only for an answer that an LM Studio server would give.
+`TRUE` only for a model list that
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+can read.
 
 `lms_chat_batch()` checks the server once before its first input, and
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
@@ -275,6 +287,33 @@ file does not parse, and the package does not fetch the URL or read the
 file. The message says that the body did not parse as JSON and that
 something other than LM Studio may be answering on the host. It does not
 hold the body text.
+
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+also raises it for a status-200 model list with the wrong shape.
+[`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+and
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+without `force = TRUE` raise it through
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md).
+A model list must follow four rules. Each field is read by its exact
+name, so a field named `keyX` does not stand in for `key`.
+
+1.  The body is a JSON object whose `models` field is an array. The
+    array can be empty.
+
+2.  Each entry of `models` is a JSON object. Its `type` and `key` are
+    strings, and its `loaded_instances` is an array.
+
+3.  The `size_bytes` of an entry is a number, or absent, or `null`.
+
+4.  Each entry of `loaded_instances` is a JSON object whose `id` is a
+    string with a character that is not whitespace.
+
+The rules are checked before the `type` and `loaded` filters, so an
+entry that the filters drop can still raise the condition. The message
+names the field or entry that broke a rule.
+[`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+applies the same rules and returns `FALSE` for a body that breaks one.
 
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 raises it on an embeddings block it cannot trust. The vectors it returns

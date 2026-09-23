@@ -82,9 +82,19 @@ so it can report success. A body that parses as JSON but has another
 shape can come back unchanged with `simplify = FALSE`. With
 `simplify = TRUE`, the chat functions and
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-raise `rlmstudio_bad_response` for it. The other functions can fail with
-an error with no class of this package, fail with `rlmstudio_api_error`,
-as
+raise `rlmstudio_bad_response` for it.
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+raises it for a model list with another shape, and so do
+[`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+and
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+without `force = TRUE`, which read that list. The replies of
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+and
+[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+can fail with an error with no class of this package, fail with
+`rlmstudio_api_error`, as
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
 does for [`{}`](https://rdrr.io/r/base/Paren.html), or report success,
 as
@@ -93,7 +103,9 @@ does for [`{}`](https://rdrr.io/r/base/Paren.html). A process that does
 not answer in HTTP gives an `httr2_failure` error. Use
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 for the stronger test: it asks the host for a model list and reports
-`TRUE` only for an answer that an LM Studio server would give.
+`TRUE` only for a model list that
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+can read.
 
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 checks the server once before its first input, and

@@ -2,6 +2,57 @@
 
 ## rlmstudio (development version)
 
+- [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  now checks the shape of a status-200 model list before it reads it. A
+  model list that breaks a rule aborts with `rlmstudio_bad_response`,
+  and the message names the field or entry that broke it. The body must
+  be a JSON object whose `models` is an array. Each model must be a JSON
+  object whose `type` and `key` are strings and whose `loaded_instances`
+  is an array. A `size_bytes` must be a number when it is present and
+  not `null`. Each loaded instance must be a JSON object whose `id` is a
+  string that is not empty or blank. Fields are read by their exact
+  names. The check covers every entry, also the entries that the `type`
+  and `loaded` filters drop.
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
+  and
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  without `force = TRUE`, raise the condition through
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  and send no other request. Before,
+  [`{}`](https://rdrr.io/r/base/Paren.html) gave an empty data frame, a
+  field such as `modelsX` was read in place of `models`, and some bad
+  fields, such as a missing `key` or `type`, were read without error.
+  Some other bodies failed with a base R error, such as “\$ operator is
+  invalid for atomic vectors” or “missing value where TRUE/FALSE
+  needed”.
+
+- [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  no longer fails on a model list with no models in it, which is what a
+  server with nothing downloaded returns. It returns an empty data frame
+  and, unless `quiet = TRUE`, says that no models were found on the
+  host. Before, it failed with “missing value where TRUE/FALSE needed”.
+  Through it,
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+  failed the same way, and so did
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  without `force = TRUE`. Now
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+  reports that no models are loaded, and
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  loads the model.
+
+- [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+  now reads each loaded instance by its `id` field alone. Before, it
+  read an `identifier` field first, then `id`, then the first field, and
+  it skipped an id that was `NA` or empty.
+
+- [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+  now returns `TRUE` only for a model list that
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  can read. It applies the same rules. Before, it accepted any array of
+  JSON objects under `models`, such as models without a `type` or a
+  `key`.
+
 - A reply body is now read as JSON text and nothing else. Before, the
   package fetched a body whose text was a URL that starts with `http://`
   or `https://`. It read a body whose text was the path of an existing

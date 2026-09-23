@@ -3,9 +3,13 @@
 Sends one GET request to the model list endpoint at `host` and reports
 whether the answer came from an LM Studio server that this package can
 use. The answer is `TRUE` only when the request returns HTTP status 200
-and the response body carries a list of models. An empty list counts,
-because a fresh LM Studio install has no models downloaded yet and its
-server still works.
+and the response body is a model list that
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+can read. The two functions apply the same shape rules, which the
+"Malformed response" section of
+[rlmstudio-conditions](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+states. An empty list counts, because a fresh LM Studio install has no
+models downloaded yet and its server still works.
 
 ## Usage
 
