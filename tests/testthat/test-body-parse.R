@@ -259,7 +259,7 @@ test_that("lms_server_ready does not read a file or fetch a URL body", {
 })
 
 test_that("lms_server_ready reads a model list sent as text/plain", {
-  body <- '{"models": [{"type": "llm", "key": "a"}]}'
+  body <- '{"models": [{"type": "llm", "key": "a", "loaded_instances": []}]}'
   results <- lapply(c("application/json", "text/plain"), function(type) {
     local_request_sequence(list(mock_response(200L, body, content_type = type)))
     lms_server_ready()

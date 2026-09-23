@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M026: A model list with the wrong JSON shape aborts with rlmstudio_bad_response
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP2, GP5   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing, because three exported functions change what they accept and raise   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m026-model-list-shape   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -119,7 +119,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Shape check. Tests first, in a new test file. Add a helper in
+- [x] T1: Shape check. Tests first, in a new test file. Add a helper in
       `R/list.R` that takes the parse with `simplifyVector = FALSE` and returns
       the first broken rule, or nothing. `list_models()` (`R/list.R:69-76`)
       parses the body through `parse_json_body()` without simplification and
@@ -138,7 +138,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
       the delegate, so that each test goes red without its call site
       (LESSONS, M003).
       `lms_load()` without `force` sends two requests (LESSONS, M008).
-- [ ] T3: `lms_server_ready()` (`R/serve.R:667`) calls the T1 check and
+- [x] T3: `lms_server_ready()` (`R/serve.R:667`) calls the T1 check and
       `is_model_list()` goes. Write the AC6 server-ready tests. Fix the
       entries with no `loaded_instances` at `test-server-ready.R:100` and
       `:131` and at `test-body-parse.R:261`.
@@ -158,6 +158,8 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 - 2026-09-22: criteria re-audit, full mode, second fresh [O] reader, after the gate changed the criteria. It found 12 gaps across M026 and M027, all fixed in the criteria. The claim that existing tests pass unchanged was false for eight tests. An `id` of `""` passed L4 and then broke `lms_unload()`. The places of L4 faults, the forms of array and object faults, and the reading of the message rule were unclear. AC4 did not forbid a request after the model list, and AC5 said "nothing else" over an open domain.
 - 2026-09-22: plan chose to reject an empty or blank instance `id` over a silent skip, the old behavior. A skip hides a server fault, and M026 rejects every other bad field. Falsified by a live server that reports a loaded instance with an empty `id`.
 - 2026-09-22: plan chose to split the draft into M026 and M027 over one milestone. The draft had 11 criteria, and the model-list work ships alone. Falsified by a merge conflict between the two that costs more than one review.
+- 2026-09-22: T1 and T3 done in one commit, because the new tests in `test-model-list-shape.R` drive `lms_server_ready()` over the same bodies. `model_list_fault()` in `R/list.R` checks the unsimplified parse, `list_models()` parses a second time with `simplifyVector = TRUE`, and `lms_server_ready()` calls the check in place of `is_model_list()`. The docs example is saved as `tests/testthat/fixtures/list-docs-example.json` (lmstudio-ai/docs commit 2e643a417b). With the call site replaced by `fault <- NULL`, the new tests fail.
+- 2026-09-22: existing tests edited because their bodies break L1 to L4: `test-list.R` (GET test, `{}` to `{"models": []}`), `test-load.R` (integer conversion test, a list reply and a load reply in sequence), `test-token-wrappers.R` (`identifier` to `id`), `test-server-ready.R` (three tests, `loaded_instances` added), and `test-body-parse.R` (text/plain server-ready test, `loaded_instances` added). `devtools::test()`: 0 failures, 8377 passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
