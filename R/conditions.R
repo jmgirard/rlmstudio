@@ -64,14 +64,15 @@
 #' A condition of class `rlmstudio_bad_response` is raised when the server
 #' answers with a status the wrapper accepts and a body the wrapper cannot
 #' read. It is raised where a wrapper checks the body before it reshapes it,
-#' rather than indexing straight into whatever arrived. Nine functions raise
-#' it: [lms_embed()], [lms_chat_native()], [lms_chat_openresponses()],
-#' [lms_chat_openai()], [list_models()], [lms_load()], [lms_download()],
-#' [lms_download_status()], and [lms_unload_all()]. [lms_unload_all()] raises
-#' it through [list_models()], and so does [lms_load()] unless
-#' `force = TRUE`.
+#' rather than indexing straight into whatever arrived. Ten functions raise
+#' it: [lms_embed()], [lms_chat()], [lms_chat_native()],
+#' [lms_chat_openresponses()], [lms_chat_openai()], [list_models()],
+#' [lms_load()], [lms_download()], [lms_download_status()], and
+#' [lms_unload_all()]. [lms_chat()] raises it through the chat function it
+#' calls. [lms_unload_all()] raises it through [list_models()], and so does
+#' [lms_load()] unless `force = TRUE`.
 #'
-#' All nine raise it for a status-200 body that does not parse as JSON, such
+#' All ten raise it for a status-200 body that does not parse as JSON, such
 #' as an HTML page from a proxy, JSON text that stops part way, or an empty
 #' body. In the functions that take `simplify`, the body is parsed before
 #' `simplify` is read, so the condition is raised whatever `simplify` is. The

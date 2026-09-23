@@ -175,8 +175,10 @@ parse_json_body <- function(resp, simplifyVector = FALSE) {
 
 #' Parse a successful response body, or abort
 #'
-#' The parse that every wrapper runs on a status-200 body before it reads
-#' it. A
+#' The parse that a wrapper runs on a status-200 body before it reads it.
+#' `lms_server_ready()` is the one wrapper reading such a body that does not
+#' use it.
+#' It calls `parse_json_body()` and returns `FALSE` on any error. A
 #' 200 whose body is not JSON at all reaches here: a proxy or a captive
 #' portal answering on the host serves an HTML page under a success status.
 #' Left unguarded, httr2 or the jsonlite lexer raises an unclassed error, and

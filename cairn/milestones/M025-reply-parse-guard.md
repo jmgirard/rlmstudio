@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M025: A model-management reply that does not parse as JSON aborts with rlmstudio_bad_response
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -146,6 +146,9 @@ the content of that file. A fetch calls a host the user never named (IP1).
 - 2026-09-22: T2 done. `list_models()`, `lms_load()`, `lms_download()`, and `lms_download_status()` parse through `parse_ok_body()`. The new tests failed before the change and pass after it. A planted leak of the parser text into the message turned the no-copy test red, and the file was restored. `parse_json(simplifyVector = TRUE)` and `fromJSON(simplifyDataFrame = TRUE)` gave identical output on the recorded model list. `devtools::test()` is clean.
 - 2026-09-22: AC5 site list. The code lines that the AC5 grep lists are `R/chat.R:507`, `R/serve.R:394`, `R/serve.R:667`, and `R/utils-api-error.R:44`, `:46`, `:169-171`, and `:209`. The HTTP reply sites are `:667` (`lms_server_ready()`), `:46` (`api_error_message()`), and `:209` (`parse_ok_body()`), and each has a file and URL test. `:169-171` is the shared parse that the three call. `:44` reads the raw text for the message fallback and parses nothing. `R/chat.R:507` parses reply content that is already out of the body, with `parse_json()`. `R/serve.R:394` parses CLI output.
 - 2026-09-22: T3 done. The two help page sections now name nine raisers, and the Rd files of the five functions carry the `Malformed response` section. `lms_unload_all()` details name the new class. NEWS has three entries. `devtools::document()` and `devtools::test()` are clean.
+- 2026-09-22: claim audit: 58 claims read, 3 corrected — R/conditions.R, NEWS.md, R/utils-api-error.R
+- 2026-09-22: the claim audit found that `lms_chat()` also raises the class, so the help page names ten raisers, not nine. The NEWS line on the message now says it opens with each function's own label. The `parse_ok_body()` comment now names `lms_server_ready()` as the one wrapper that skips it. The same reader re-read the three fixes, and they hold.
+- 2026-09-22: all tasks done, `devtools::test()` clean. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
