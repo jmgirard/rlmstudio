@@ -30,14 +30,16 @@
 #' `rlmstudio_bad_response`. [lms_unload()] does not read the body, so it can
 #' report success. A body that parses as JSON but has another shape can
 #' come back unchanged with `simplify = FALSE`. With `simplify = TRUE`, the
-#' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it. The
-#' other functions can fail with an error with no class of this package, fail
-#' with `rlmstudio_api_error`, as [lms_load()] does for `{}`, or report
-#' success, as [lms_download()] does for `{}`. A process that does not answer
-#' in HTTP gives an
-#' `httr2_failure` error. Use [lms_server_ready()] for the stronger test: it
-#' asks the host for a model list and reports `TRUE` only for an answer that
-#' an LM Studio server would give.
+#' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it.
+#' [list_models()] raises it for a model list with another shape, and so do
+#' [lms_unload_all()] and [lms_load()] without `force = TRUE`, which read that
+#' list. The load reply of [lms_load()], [lms_download()], and
+#' [lms_download_status()] can fail with an error with no class of this
+#' package, fail with `rlmstudio_api_error`, as [lms_load()] does for `{}`, or
+#' report success, as [lms_download()] does for `{}`. A process that does not
+#' answer in HTTP gives an `httr2_failure` error. Use [lms_server_ready()] for
+#' the stronger test: it asks the host for a model list and reports `TRUE`
+#' only for a model list that [list_models()] can read.
 #'
 #' [lms_chat_batch()] checks the server once before its first input, and
 #' [lms_chat()] checks it again for each input. If that check finds the server
@@ -83,6 +85,25 @@
 #' The message says that the body did not parse as JSON and that something
 #' other than LM Studio may be answering on the host. It does not hold the
 #' body text.
+#'
+#' [list_models()] also raises it for a status-200 model list with the wrong
+#' shape. [lms_unload_all()] and [lms_load()] without `force = TRUE` raise it
+#' through [list_models()]. A model list must follow four rules. Each field is
+#' read by its exact name, so a field named `keyX` does not stand in for
+#' `key`.
+#'
+#' 1. The body is a JSON object whose `models` field is an array. The array
+#'    can be empty.
+#' 2. Each entry of `models` is a JSON object. Its `type` and `key` are
+#'    strings, and its `loaded_instances` is an array.
+#' 3. The `size_bytes` of an entry is a number, or absent, or `null`.
+#' 4. Each entry of `loaded_instances` is a JSON object whose `id` is a string
+#'    with a character that is not whitespace.
+#'
+#' The rules are checked before the `type` and `loaded` filters, so an entry
+#' that the filters drop can still raise the condition. The message names the
+#' field or entry that broke a rule. [lms_server_ready()] applies the same
+#' rules and returns `FALSE` for a body that breaks one.
 #'
 #' [lms_embed()] raises it on an embeddings block it cannot trust. The vectors
 #' it returns are placed by the index that the response reports, so a block

@@ -142,7 +142,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
       `is_model_list()` goes. Write the AC6 server-ready tests. Fix the
       entries with no `loaded_instances` at `test-server-ready.R:100` and
       `:131` and at `test-body-parse.R:261`.
-- [ ] T4: Docs. Rewrite the "Server not running" and "Malformed response"
+- [x] T4: Docs. Rewrite the "Server not running" and "Malformed response"
       sections of `R/conditions.R` (`:26-39`, `:64-79`). Update the
       `lms_server_ready()` help text on what counts as a model list. Add the
       NEWS entries. Run `devtools::document()` and `devtools::test()`.
@@ -161,6 +161,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 - 2026-09-22: T1 and T3 done in one commit, because the new tests in `test-model-list-shape.R` drive `lms_server_ready()` over the same bodies. `model_list_fault()` in `R/list.R` checks the unsimplified parse, `list_models()` parses a second time with `simplifyVector = TRUE`, and `lms_server_ready()` calls the check in place of `is_model_list()`. The docs example is saved as `tests/testthat/fixtures/list-docs-example.json` (lmstudio-ai/docs commit 2e643a417b). With the call site replaced by `fault <- NULL`, the new tests fail.
 - 2026-09-22: existing tests edited because their bodies break L1 to L4: `test-list.R` (GET test, `{}` to `{"models": []}`), `test-load.R` (integer conversion test, a list reply and a load reply in sequence), `test-token-wrappers.R` (`identifier` to `id`), `test-server-ready.R` (three tests, `loaded_instances` added), and `test-body-parse.R` (text/plain server-ready test, `loaded_instances` added). `devtools::test()`: 0 failures, 8377 passes.
 - 2026-09-22: T2 done. `lms_unload_all()` reads `x[["id"]]` and the fallback chain is gone. Deleted from `test-unload.R`: the `identifier` column test, the first-column fallback test, the number coercion test, and the two NA and empty-id tests. Two unload tests now use an `id` column. With the `list_models()` pre-check in `lms_load()` removed, or with `lms_unload_all()` reading the first field, the new caller tests fail. `devtools::test()`: 0 failures, 8384 passes.
+- 2026-09-22: T4 done. `R/conditions.R` states the four rules in "Malformed response" and names the three raisers in "Server not running". `lms_server_ready()` help says it applies the `list_models()` rules. NEWS.md has four entries. `devtools::document()` is stable on a second run, and `devtools::test()`: 0 failures, 8384 passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

@@ -61,14 +61,16 @@ status-200 body that does not parse as JSON, the chat functions,
 \code{rlmstudio_bad_response}. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it can
 report success. A body that parses as JSON but has another shape can
 come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, the
-chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it. The
-other functions can fail with an error with no class of this package, fail
-with \code{rlmstudio_api_error}, as \code{\link[=lms_load]{lms_load()}} does for \code{{}}, or report
-success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not answer
-in HTTP gives an
-\code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
-asks the host for a model list and reports \code{TRUE} only for an answer that
-an LM Studio server would give.
+chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it.
+\code{\link[=list_models]{list_models()}} raises it for a model list with another shape, and so do
+\code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE}, which read that
+list. The load reply of \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
+\code{\link[=lms_download_status]{lms_download_status()}} can fail with an error with no class of this
+package, fail with \code{rlmstudio_api_error}, as \code{\link[=lms_load]{lms_load()}} does for \code{{}}, or
+report success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not
+answer in HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for
+the stronger test: it asks the host for a model list and reports \code{TRUE}
+only for a model list that \code{\link[=list_models]{list_models()}} can read.
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} checks the server once before its first input, and
 \code{\link[=lms_chat]{lms_chat()}} checks it again for each input. If that check finds the server
