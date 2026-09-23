@@ -42,6 +42,12 @@ test_that("a bare-value body raises rlmstudio_bad_response on every route", {
       if (kind != "null") {
         expect_no_match(conditionMessage(cnd), "subscript", info = info)
       }
+      if (api_type == "openai") {
+        # Every OpenAI condition carries these two fields, NULL here.
+        expect_true(all(c("content", "finish_reason") %in% names(cnd)), info = info)
+        expect_null(cnd$content)
+        expect_null(cnd$finish_reason)
+      }
     }
   }
 })
@@ -90,6 +96,12 @@ test_that("a bare-value body fails only its own input in every batch format", {
         if (format == "list") {
           expect_identical(got[[1]], "reply 1", info = info)
           expect_s3_class(got[[2]], "rlmstudio_bad_response")
+          detail <- if (kind == "null") {
+            null_details[[api_type]]
+          } else {
+            "The response body is not a JSON object."
+          }
+          expect_match(conditionMessage(got[[2]]), detail, fixed = TRUE, info = info)
           expect_identical(got[[3]], "reply 3", info = info)
         } else {
           expect_identical(got, c("reply 1", NA, "reply 3"), info = info)

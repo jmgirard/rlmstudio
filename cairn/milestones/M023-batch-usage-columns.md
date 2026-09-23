@@ -70,6 +70,9 @@ On the OpenResponses and OpenAI routes, a data-frame `lms_chat_batch()` returns 
 - 2026-09-22: claim audit: 75 claims read, 2 corrected — NEWS.md
 - 2026-09-22: status set to review. The two corrected NEWS sentences were an incomplete `NA` rule and an unqualified "return what they did before". The same reader re-read them, and both hold.
 
+- 2026-09-22: review fixes O1, O6, and O10 applied. `check_body_object()` passes `content` and `finish_reason` on the OpenAI route, the batch test asserts the stored message, and NEWS has its blank line.
+- 2026-09-22: step-7 approval: m023-batch-usage-columns approved for merge
+
 ## Decisions
 
 ## Review
@@ -99,3 +102,5 @@ Independent review: three fresh reviewers. The prior-review lens found no prior-
 - O9: `object_or_empty()` in `R/chat.R` and `json_field()` in `R/embed.R` do similar work. Proposed: reject as a refactor outside scope.
 - O10: the two new NEWS bullets have no blank line between them. Proposed: fix now.
 - O11: in `R/conditions.R`, the sentence about `lms_chat()` now ends the bare-value paragraph. It still reads correctly. Proposed: reject.
+
+Gate triage 2026-09-22: the user took the proposal. O1, O6, and O10 are fixed on the branch. O2 becomes a candidate row at hygiene. O3, O4, O5, O7, O8, O9, and O11 are rejected for the reasons above. With the old `R/chat.R` planted back, `test-bare-body.R` failed 3 expectations, one for each OpenAI bare value. With the fix, `devtools::test()` gave 0 failures and 6256 passed expectations. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::document()` made no diff.

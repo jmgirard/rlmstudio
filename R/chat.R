@@ -349,7 +349,13 @@ lms_chat_openai <- function(
 #'
 #' @noRd
 openai_reply_value <- function(resp, resp_data, logprobs, schema) {
-  check_body_object(resp, resp_data, "OpenAI API Failed")
+  check_body_object(
+    resp,
+    resp_data,
+    "OpenAI API Failed",
+    content = NULL,
+    finish_reason = NULL
+  )
   # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
   # empty list fails there with a subscript error that names neither the
   # response nor the field. A missing field gives back NULL as the reply,
@@ -421,14 +427,17 @@ openai_reply_value <- function(resp, resp_data, logprobs, schema) {
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param resp_data The parsed response body.
 #' @param label Character. The calling wrapper's label.
+#' @param ... Extra condition fields, such as the `content` and
+#'   `finish_reason` fields that every OpenAI condition carries.
 #'
 #' @noRd
-check_body_object <- function(resp, resp_data, label) {
+check_body_object <- function(resp, resp_data, label, ...) {
   if (!is.null(resp_data) && !is.list(resp_data)) {
     rlm_abort_bad_response(
       resp,
       label,
-      "The response body is not a JSON object."
+      "The response body is not a JSON object.",
+      ...
     )
   }
 }
