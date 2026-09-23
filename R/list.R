@@ -66,8 +66,7 @@ list_models <- function(
     rlm_abort_api(resp, "API List Failed", !is.null(rlm_token(token)))
   }
 
-  raw_content <- httr2::resp_body_string(resp)
-  full_data <- jsonlite::fromJSON(raw_content, simplifyDataFrame = TRUE)
+  full_data <- parse_ok_body(resp, "API List Failed", simplifyVector = TRUE)
   df <- full_data$models
 
   if (is.null(df) || nrow(df) == 0) {

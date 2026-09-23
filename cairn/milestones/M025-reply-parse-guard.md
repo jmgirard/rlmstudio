@@ -120,7 +120,7 @@ the content of that file. A fetch calls a host the user never named (IP1).
       `lms_embed()`, the error-message path, and `lms_server_ready()`. Write
       the AC4 tests for `lms_server_ready()` and the error message. Record the
       AC5 site list in the work log.
-- [ ] T2: Four wrappers. Tests first, in `tests/testthat/test-body-parse.R`.
+- [x] T2: Four wrappers. Tests first, in `tests/testthat/test-body-parse.R`.
       `list_models()` (`R/list.R:69-70`) calls `parse_ok_body()` with
       `simplifyVector = TRUE`. `lms_load()` (`R/load.R:133`), `lms_download()`
       (`R/download.R:71`), and `lms_download_status()` (`R/download.R:147`)
@@ -143,6 +143,8 @@ the content of that file. A fetch calls a host the user never named (IP1).
 - 2026-09-22: plan chose `jsonlite::parse_json()` on the body text over `jsonlite::validate()` before `fromJSON()`. `parse_json()` never reads a file or a URL. Falsified by a body that `parse_json(simplifyVector = TRUE)` reads differently from `fromJSON(simplifyDataFrame = TRUE)`.
 - 2026-09-22: started implementation on `m025-reply-parse-guard`. No implementation choice was open, so the question gate was skipped.
 - 2026-09-22: T1 done. `parse_json_body()` in `R/utils-api-error.R` is the one reply parse, and `parse_ok_body()`, `api_error_message()`, and `lms_server_ready()` call it. `tests/testthat/test-body-parse.R` failed 10 times before the change and passes after it. The AC5 site list moves to T2, because T2 changes the sites. `devtools::test()` is clean.
+- 2026-09-22: T2 done. `list_models()`, `lms_load()`, `lms_download()`, and `lms_download_status()` parse through `parse_ok_body()`. The new tests failed before the change and pass after it. A planted leak of the parser text into the message turned the no-copy test red, and the file was restored. `parse_json(simplifyVector = TRUE)` and `fromJSON(simplifyDataFrame = TRUE)` gave identical output on the recorded model list. `devtools::test()` is clean.
+- 2026-09-22: AC5 site list. The code lines that the AC5 grep lists are `R/chat.R:507`, `R/serve.R:394`, `R/serve.R:667`, and `R/utils-api-error.R:44`, `:46`, `:169-171`, and `:209`. The HTTP reply sites are `:667` (`lms_server_ready()`), `:46` (`api_error_message()`), and `:209` (`parse_ok_body()`), and each has a file and URL test. `:169-171` is the shared parse that the three call. `:44` reads the raw text for the message fallback and parses nothing. `R/chat.R:507` parses reply content that is already out of the body, with `parse_json()`. `R/serve.R:394` parses CLI output.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
