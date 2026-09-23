@@ -71,12 +71,14 @@ lms_chat_openai(
 ## Value
 
 If `simplify = FALSE`, returns a list representing the raw JSON
-response. Otherwise, returns a character string containing the generated
-text. If `logprobs = TRUE`, it returns an `lms_chat_result` object with
-the log probabilities populated as `NULL` since they are currently
-stubbed in the LM Studio OpenAI endpoint. With `simplify = TRUE`, reply
-content that is not one string, such as the `null` content of a reply
-that holds only a tool call, raises `rlmstudio_bad_response`.
+response. A status-200 body that does not parse as JSON raises
+`rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
+returns a character string containing the generated text. If
+`logprobs = TRUE`, it returns an `lms_chat_result` object with the log
+probabilities populated as `NULL` since they are currently stubbed in
+the LM Studio OpenAI endpoint. With `simplify = TRUE`, reply content
+that is not one string, such as the `null` content of a reply that holds
+only a tool call, raises `rlmstudio_bad_response`.
 
 With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, the reply is
 parsed with `jsonlite::parse_json(simplifyVector = TRUE)` and the parsed
@@ -102,9 +104,33 @@ or give `host` the address that your server listens on.
 
 The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
-Studio server is there. The call then fails later, as an
-`rlmstudio_api_error` or as a raw parse error, rather than as
-`rlmstudio_no_server`. Use
+Studio server is there. The call then does not raise
+`rlmstudio_no_server`, and what it does depends on what answers. On a
+status-200 body that does not parse as JSON, the chat functions and
+[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+raise `rlmstudio_bad_response`. On the same body,
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
+and
+[`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+raise an error with no class of this package, from httr2 or from the
+JSON parser.
+[`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
+does not read the body, so it can report success. A body that parses as
+JSON but has another shape can come back unchanged with
+`simplify = FALSE`. With `simplify = TRUE`, the chat functions and
+[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+raise `rlmstudio_bad_response` for it. The other functions can fail with
+an error with no class of this package, fail with `rlmstudio_api_error`,
+as
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+does for [`{}`](https://rdrr.io/r/base/Paren.html), or report success,
+as
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+does for [`{}`](https://rdrr.io/r/base/Paren.html). A process that does
+not answer in HTTP gives an `httr2_failure` error. Use
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 for the stronger test: it asks the host for a model list and reports
 `TRUE` only for an answer that an LM Studio server would give.
@@ -142,7 +168,20 @@ A condition of class `rlmstudio_bad_response` is raised when the server
 answers with a status the wrapper accepts and a body the wrapper cannot
 read. It is raised where a wrapper checks the body before it reshapes
 it, rather than indexing straight into whatever arrived. Four functions
-raise it.
+raise it:
+[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+[`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+and `lms_chat_openai()`.
+
+All four raise it for a status-200 body that does not parse as JSON,
+such as an HTML page from a proxy, JSON text that stops part way, or an
+empty body. The body is parsed before `simplify` is read, so the
+condition is raised whatever `simplify` is. The body is parsed by its
+content and not by its `Content-Type` header, so valid JSON under
+`text/plain` is read as JSON. The message says that the body did not
+parse as JSON and that something other than LM Studio may be answering
+on the host. It does not hold the body text.
 
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 raises it on an embeddings block it cannot trust. The vectors it returns
@@ -199,20 +238,21 @@ no part is checked. Fields are read by their exact names, so a field
 whose name only starts with the one asked for, such as `tokenX`, reads
 as absent and gives `NA` in the data frame.
 
-`lms_chat_openai()` raises it in three cases, all only with
-`simplify = TRUE`. The first case is a response whose `choices` field is
-missing, empty, or not an array, or whose first element is not a JSON
-object with a `message` object in it, so there is no reply to read. This
-case is raised with or without a `schema`, and with `logprobs = TRUE` as
-well. The second case is a reply that does not parse. A `schema` was
-given, `logprobs = FALSE`, and the reply content is not one string of
-valid JSON. The third case is reply content that is not one string, such
-as `null`, a missing `content` field, a number, or an array. A reply
-that holds only a tool call has `null` content. This case is raised
-without a `schema`, and with `logprobs = TRUE` with or without one. In
-the second and third cases, if the server reports the finish reason
-`"length"`, the token limit cut the reply off. The message then says so
-and names `max_tokens`.
+Apart from a body that does not parse as JSON, `lms_chat_openai()`
+raises it in three cases, all only with `simplify = TRUE`. The first
+case is a response whose `choices` field is missing, empty, or not an
+array, or whose first element is not a JSON object with a `message`
+object in it, so there is no reply to read. This case is raised with or
+without a `schema`, and with `logprobs = TRUE` as well. The second case
+is a reply that does not parse. A `schema` was given,
+`logprobs = FALSE`, and the reply content is not one string of valid
+JSON. The third case is reply content that is not one string, such as
+`null`, a missing `content` field, a number, or an array. A reply that
+holds only a tool call has `null` content. This case is raised without a
+`schema`, and with `logprobs = TRUE` with or without one. In the second
+and third cases, if the server reports the finish reason `"length"`, the
+token limit cut the reply off. The message then says so and names
+`max_tokens`.
 
 With `simplify = TRUE`,
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
@@ -242,8 +282,10 @@ which is `NULL` for `null` or missing content. For the second and third
 cases, the message names the `content` field, so you can read what the
 model wrote without a second request. The other messages name
 `simplify = FALSE`, which returns the body unchanged, with one
-exception. An embeddings body that did not parse at all is checked
-before that argument is read, so its message points at the host instead.
+exception. A body that did not parse as JSON is checked before that
+argument is read, so its message points at the host instead. For such a
+body, the `content` and `finish_reason` fields of a condition from
+`lms_chat_openai()` are `NULL`.
 
 ## Examples
 

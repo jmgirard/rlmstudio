@@ -91,9 +91,21 @@ system to give up, which can take a minute. Start the server with
 on.</p>
 <p>The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
-Studio server is there. The call then fails later, as an
-<code>rlmstudio_api_error</code> or as a raw parse error, rather than as
-<code>rlmstudio_no_server</code>. Use <code><a href="lms_server_ready.html">lms_server_ready()</a></code> for the stronger test: it
+Studio server is there. The call then does not raise
+<code>rlmstudio_no_server</code>, and what it does depends on what answers. On a
+status-200 body that does not parse as JSON, the chat functions and
+<code><a href="lms_embed.html">lms_embed()</a></code> raise <code>rlmstudio_bad_response</code>. On the same body,
+<code><a href="list_models.html">list_models()</a></code>, <code><a href="lms_load.html">lms_load()</a></code>, <code><a href="lms_download.html">lms_download()</a></code>, <code>lms_download_status()</code>,
+and <code><a href="lms_unload_all.html">lms_unload_all()</a></code> raise an error with no class of this package, from
+httr2 or from the JSON parser. <code><a href="lms_unload.html">lms_unload()</a></code> does not read the body, so it
+can report success. A body that parses as JSON but has another shape can
+come back unchanged with <code>simplify = FALSE</code>. With <code>simplify = TRUE</code>, the
+chat functions and <code><a href="lms_embed.html">lms_embed()</a></code> raise <code>rlmstudio_bad_response</code> for it. The
+other functions can fail with an error with no class of this package, fail
+with <code>rlmstudio_api_error</code>, as <code><a href="lms_load.html">lms_load()</a></code> does for <code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>, or report
+success, as <code><a href="lms_download.html">lms_download()</a></code> does for <code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>. A process that does not answer
+in HTTP gives an
+<code>httr2_failure</code> error. Use <code><a href="lms_server_ready.html">lms_server_ready()</a></code> for the stronger test: it
 asks the host for a model list and reports <code>TRUE</code> only for an answer that
 an LM Studio server would give.</p>
 <p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> checks the server once before its first input, and

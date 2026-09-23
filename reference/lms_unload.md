@@ -67,9 +67,32 @@ or give `host` the address that your server listens on.
 
 The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
-Studio server is there. The call then fails later, as an
-`rlmstudio_api_error` or as a raw parse error, rather than as
-`rlmstudio_no_server`. Use
+Studio server is there. The call then does not raise
+`rlmstudio_no_server`, and what it does depends on what answers. On a
+status-200 body that does not parse as JSON, the chat functions and
+[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+raise `rlmstudio_bad_response`. On the same body,
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
+and
+[`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+raise an error with no class of this package, from httr2 or from the
+JSON parser. `lms_unload()` does not read the body, so it can report
+success. A body that parses as JSON but has another shape can come back
+unchanged with `simplify = FALSE`. With `simplify = TRUE`, the chat
+functions and
+[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+raise `rlmstudio_bad_response` for it. The other functions can fail with
+an error with no class of this package, fail with `rlmstudio_api_error`,
+as
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+does for [`{}`](https://rdrr.io/r/base/Paren.html), or report success,
+as
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+does for [`{}`](https://rdrr.io/r/base/Paren.html). A process that does
+not answer in HTTP gives an `httr2_failure` error. Use
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 for the stronger test: it asks the host for a model list and reports
 `TRUE` only for an answer that an LM Studio server would give.

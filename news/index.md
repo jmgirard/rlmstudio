@@ -2,6 +2,32 @@
 
 ## rlmstudio (development version)
 
+- A status-200 reply body that does not parse as JSON now aborts with
+  `rlmstudio_bad_response` in
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  and
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
+  Examples are an HTML page from a proxy, JSON text that stops part way,
+  and an empty body. The abort happens with `simplify = TRUE` and with
+  `simplify = FALSE`. The condition’s `status` is `200L`. The message
+  says that the body did not parse as JSON. It also says that something
+  other than LM Studio can be answering on the host. It does not hold
+  the body text. On the OpenAI route, the condition’s `content` and
+  `finish_reason` fields are `NULL`. Before, such a body failed with an
+  unclassed error from httr2 or jsonlite. In
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  that error ended the batch and lost every reply so far. Now that input
+  fails alone, and the batch stores the failure and warns once, as for
+  other failed inputs.
+
+- The three chat functions now parse a status-200 body by its content,
+  not by its `Content-Type` header. Valid JSON under `text/plain` now
+  gives the same result as under `application/json`. Before, it failed
+  with an unclassed httr2 error.
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  already worked this way, and its behavior does not change.
+
 - With `api_type = "openresponses"` or `api_type = "openai"` and
   `format = "data.frame"`,
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
