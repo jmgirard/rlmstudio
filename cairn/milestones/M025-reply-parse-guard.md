@@ -168,3 +168,15 @@ Evidence, 2026-09-22, on `m025-reply-parse-guard` at `c55fb5d`, which contains `
 - AC7: `devtools::test()`: 6670 pass, 0 fail, 0 skip, with the live server up. `devtools::document()` left `git status --porcelain` empty.
 
 Consistency gate, 2026-09-22. `cairn_validate.py` exits 0, and all checks pass. No DESIGN principle changed, so `cairn_impact` is skipped. `devtools::document()` gives no diff. `devtools::check()`, with the API token set, gives 0 errors, 0 warnings, and 0 notes. `pkgdown::check_pkgdown()` finds no problems. The diff does not touch README.Rmd or add a top-level file. NEWS.md has the entries.
+
+Independent review, 2026-09-22, three fresh reviewers. The prior-review lens found no findings. The archive shows that M024 left these four functions in a candidate row, and no GitHub review comments exist. The blame-history lens found no findings. The change carries out D-016, and `parse_json(simplifyVector = TRUE)` gives the same shape as the old `list_models()` parse. The diff-bug lens restored the old parse in the loaded namespace, and six tests failed with one error. It reported nine findings, all low or cosmetic, and none shows a criterion failing. Proposed dispositions go to the gate.
+
+- F1 (low): `list_models()` now reads the body as UTF-8 and ignores a header charset, so a Latin-1 body aborts. Proposed: reject, because JSON must be UTF-8 (RFC 8259) and the other three functions already failed on such a body.
+- F2 (low): In `parse_ok_body(resp, label, simplifyVector = FALSE, ...)`, a later field named `simplify` binds to `simplifyVector` by partial match. Proposed: fix now. Move `simplifyVector` after `...`.
+- F3 (low): The URL counter mocks `base::url`, which jsonlite 2.0.0 uses. If an older jsonlite fetched through curl, the counter misses that fetch. Proposed: reject, because the test checks the parse that ships, and a version floor is a dependency change outside this milestone.
+- F4 (low): The `parse_ok_body()` comment at `R/utils-api-error.R:178-183` says "It ... returns `FALSE`", which reads as `parse_ok_body()`. Proposed: fix now.
+- F5 (low): The second new NEWS entry says that the message opens with the function's own label. For `lms_load()` without `force`, it opens with "API List Failed". Proposed: fix now.
+- F6 (low): The first new NEWS entry names only the chat functions as readers of a file body. `lms_embed()`, `list_models()`, and the other three functions also read the file or fetched the URL. Proposed: fix now.
+- F7 (low): `api_error_message()` reads the fallback text with the header charset but parses as UTF-8. Proposed: reject, because the result for a non-UTF-8 body is the same as before this milestone.
+- F8 (cosmetic): The full `Malformed response` section now appears in five more help pages, with chat rules that do not apply to them. Proposed: reject, because AC6 requires the section.
+- F9 (cosmetic): A blank line separates the new NEWS entries from the older ones under the same heading. Proposed: fix now.
