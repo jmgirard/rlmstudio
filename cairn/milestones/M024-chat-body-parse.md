@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M024: A chat reply that does not parse as JSON fails its input alone
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP2   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes the condition that three exported chat functions and `lms_chat_batch()` raise   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m024-chat-body-parse   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -53,7 +53,7 @@ A status-200 chat reply that does not parse as JSON aborts with `rlmstudio_bad_r
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate. -->
 
-- [ ] T1: Write the tests of AC1, AC2, and AC4 first, in a new file `tests/testthat/test-chat-body-parse.R`. Use `mock_response()` from `helper-mock-http.R`, which takes a `content_type`, and the reply builders in `helper-chat-bodies.R`. Make sure that they fail on the current code for the reason each asserts, not by accident (LESSONS, M008 and M012).
+- [x] T1: Write the tests of AC1, AC2, and AC4 first, in a new file `tests/testthat/test-chat-body-parse.R`. Use `mock_response()` from `helper-mock-http.R`, which takes a `content_type`, and the reply builders in `helper-chat-bodies.R`. Make sure that they fail on the current code for the reason each asserts, not by accident (LESSONS, M008 and M012).
 - [ ] T2: Move the guard of `lms_embed()` into a shared helper in `R/utils-api-error.R`. It takes the response, the label, and extra condition fields, so the OpenAI route can pass `content = NULL` and `finish_reason = NULL`. Call it from `lms_embed()` and the three chat functions, before the `simplify` branch. Run `test-embed.R` and the T1 tests to green.
 - [ ] T3: Add the AC3 batch tests, next to the bare-value batch test in `test-bare-body.R` or in the T1 file. Make sure that the batch catches the new condition through its existing `rlmstudio_bad_response` handler (`R/chat.R:1187-1188`), with no change to the loop.
 - [ ] T4: Update the help text named in AC6 in `R/conditions.R` and in the `lms_chat_batch()` roxygen block. Add the NEWS.md entry. Run `devtools::document()`.
@@ -67,6 +67,8 @@ A status-200 chat reply that does not parse as JSON aborts with `rlmstudio_bad_r
 - 2026-09-22: Gate chose parsing by content (`check_type = FALSE`) over an abort on a `text/plain` header. The abort reports two causes as one, and it leaves no way through a proxy that rewrites the header. A server that sends non-JSON under `text/plain` on purpose falsifies the choice.
 - 2026-09-22: Gate chose to abort with `simplify = FALSE` too over a return of the raw text. A text return makes the type of `simplify = FALSE` depend on the server. A user who needs the page to diagnose a proxy falsifies the choice.
 - 2026-09-22: Gate chose no condition field for the raw body over a `body` field. With the field, a batch holds a large page for each failed input. The falsifier of the previous line applies here too.
+- 2026-09-22: Implement started on branch `m024-chat-body-parse`. No question gate, because the plan left no choice open. The ROADMAP had two candidate rows on one line, and the status commit split them.
+- 2026-09-22: T1 done. `tests/testthat/test-chat-body-parse.R` fails on the current code: each body raises an unclassed httr2 or jsonlite error, and the jsonlite message quotes MARKER.
 
 ## Decisions
 <!-- owner: implement, review · append-only -->
