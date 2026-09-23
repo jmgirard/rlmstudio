@@ -130,7 +130,7 @@ binary operator", because `$` matched the extended name.
       rules of AC3 after `parse_ok_body()` (`R/download.R:147-151`). Read
       fields with `[[` in `print.lms_download_status()`
       (`R/download.R:177-206`). Write the AC3, AC4, AC5, and AC6 status tests.
-- [ ] T4: Docs. Rewrite the "Server not running" and "Malformed response"
+- [x] T4: Docs. Rewrite the "Server not running" and "Malformed response"
       sections of `R/conditions.R` and the `@return` of `lms_download()`. Add
       the NEWS entries. Run `devtools::document()` and `devtools::test()`.
 
@@ -146,6 +146,7 @@ binary operator", because `$` matched the extended name.
 - 2026-09-22: T1 done. `load_reply_fault()` is in `R/load.R`, and its tests in `test-load-download-shape.R` were red before the fix. Minor sub-task: M026's JSON-text helpers moved to `helper-json-forms.R` as `shape_object()` and `shape_array()`, because `helper-chat-bodies.R` already defines `json_object()`. Edited test: the `test-api-error.R` load-status test now expects `rlmstudio_bad_response` for `{"status": "pending"}`. The docs example fixtures come from lmstudio-ai/docs 2e643a417b, unchanged at 9b8bc2004f. `devtools::test()` gave 0 failures and 8702 passes.
 - 2026-09-22: T2 done. `download_reply_fault()` is in `R/download.R`, the `invisible(TRUE)` branch is gone, and the new tests were red before the fix. Edited test: the `lms_download` reply in `test-body-parse.R` gained `"status": "downloading"`. A comment in `test-token-wrappers.R` now names the fields the download calls read. `devtools::test()` gave 0 failures and 8829 passes.
 - 2026-09-22: T3 done. `download_status_fault()` is in `R/download.R`, and `print()` reads its five fields with `[[`. The fault and print tests were red before the fix. Discovered sub-task: `print()` passed the server's `status` to `cli::cli_text()` as format text, so `{...}` in it ran as R code. It is now spliced in as a value, with a test that is red on the old line. A [high] candidate row holds the sweep of the other cli calls. `devtools::test()` gave 0 failures and 9079 passes.
+- 2026-09-22: T4 done. The help page lists the three rules and drops the old unclassed, API-error, and `TRUE` outcomes. The `simplify = FALSE` sentence now names the chat functions and `lms_embed()` only. The `@return` of `lms_download()` names the abort. NEWS has four entries, one of them for the `print()` fixes. `devtools::document()` then made no diff, and `devtools::test()` gave 0 failures and 9079 passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

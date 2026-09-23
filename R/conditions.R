@@ -33,11 +33,9 @@
 #' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it.
 #' [list_models()] raises it for a model list with another shape, and so do
 #' [lms_unload_all()] and [lms_load()] without `force = TRUE`, which read that
-#' list. The replies of [lms_load()], [lms_download()], and
-#' [lms_download_status()] can fail with an error with no class of this
-#' package, fail with `rlmstudio_api_error`, as [lms_load()] does for `{}`, or
-#' report success, as [lms_download()] does for `{}`. A process that does not
-#' answer in HTTP gives an `httr2_failure` error. Use [lms_server_ready()] for
+#' list. [lms_load()], [lms_download()], and [lms_download_status()] raise it
+#' for a reply of their own with another shape, such as `{}`. A process that
+#' does not answer in HTTP gives an `httr2_failure` error. Use [lms_server_ready()] for
 #' the stronger test: it asks the host for a model list and reports `TRUE`
 #' only for a model list that [list_models()] can read.
 #'
@@ -104,6 +102,25 @@
 #' that the filters drop can still raise the condition. The message names the
 #' field or entry that broke a rule. [lms_server_ready()] applies the same
 #' rules and returns `FALSE` for a body that breaks one.
+#'
+#' [lms_load()], [lms_download()], and [lms_download_status()] also raise it
+#' for a status-200 reply of their own with the wrong shape. Each reply must
+#' follow the rule of its function. Each field is read by its exact name. The
+#' rules check the type of a field and not its value. The one exception is
+#' the `status` of a load reply, which must be `"loaded"`.
+#'
+#' 1. A reply of [lms_load()] is a JSON object whose `status` is the string
+#'    `"loaded"`. With `echo_load_config = TRUE`, its `load_config` is also a
+#'    JSON object.
+#' 2. A reply of [lms_download()] is a JSON object whose `status` is a string.
+#'    If the status is not `"already_downloaded"`, its `job_id` is a string.
+#' 3. A reply of [lms_download_status()] is a JSON object whose `job_id` and
+#'    `status` are strings. Its `total_size_bytes`, `downloaded_bytes`, and
+#'    `bytes_per_second` are each a number, or absent, or `null`.
+#'
+#' The message names the field that broke the rule, or it says that the body
+#' is not a JSON object. It also says that something other than LM Studio may
+#' be answering on the host.
 #'
 #' [lms_embed()] raises it on an embeddings block it cannot trust. The vectors
 #' it returns are placed by the index that the response reports, so a block
@@ -181,8 +198,8 @@
 #' `content` holds the value that was read, which is `NULL` for `null` or
 #' missing content. For the second and third cases, the message names the
 #' `content` field, so you can read what the model wrote without a second
-#' request. The other messages name `simplify = FALSE`, which returns the body
-#' unchanged, with one exception. A body that did not parse as JSON is
+#' request. The other messages of the chat functions and [lms_embed()] name
+#' `simplify = FALSE`, which returns the body unchanged, with one exception. A body that did not parse as JSON is
 #' checked before that argument is read, so its message points at the host
 #' instead. For such a body, the `content` and `finish_reason` fields of a
 #' condition from [lms_chat_openai()] are `NULL`.

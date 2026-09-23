@@ -79,11 +79,9 @@ come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, t
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it.
 \code{\link[=list_models]{list_models()}} raises it for a model list with another shape, and so do
 \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE}, which read that
-list. The replies of \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
-\code{\link[=lms_download_status]{lms_download_status()}} can fail with an error with no class of this
-package, fail with \code{rlmstudio_api_error}, as \code{\link[=lms_load]{lms_load()}} does for \code{{}}, or
-report success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not
-answer in HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for
+list. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it
+for a reply of their own with another shape, such as \code{{}}. A process that
+does not answer in HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for
 the stronger test: it asks the host for a model list and reports \code{TRUE}
 only for a model list that \code{\link[=list_models]{list_models()}} can read.
 
@@ -155,6 +153,26 @@ The rules are checked before the \code{type} and \code{loaded} filters, so an en
 that the filters drop can still raise the condition. The message names the
 field or entry that broke a rule. \code{\link[=lms_server_ready]{lms_server_ready()}} applies the same
 rules and returns \code{FALSE} for a body that breaks one.
+
+\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} also raise it
+for a status-200 reply of their own with the wrong shape. Each reply must
+follow the rule of its function. Each field is read by its exact name. The
+rules check the type of a field and not its value. The one exception is
+the \code{status} of a load reply, which must be \code{"loaded"}.
+\enumerate{
+\item A reply of \code{\link[=lms_load]{lms_load()}} is a JSON object whose \code{status} is the string
+\code{"loaded"}. With \code{echo_load_config = TRUE}, its \code{load_config} is also a
+JSON object.
+\item A reply of \code{\link[=lms_download]{lms_download()}} is a JSON object whose \code{status} is a string.
+If the status is not \code{"already_downloaded"}, its \code{job_id} is a string.
+\item A reply of \code{\link[=lms_download_status]{lms_download_status()}} is a JSON object whose \code{job_id} and
+\code{status} are strings. Its \code{total_size_bytes}, \code{downloaded_bytes}, and
+\code{bytes_per_second} are each a number, or absent, or \code{null}.
+}
+
+The message names the field that broke the rule, or it says that the body
+is not a JSON object. It also says that something other than LM Studio may
+be answering on the host.
 
 \code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
 it returns are placed by the index that the response reports, so a block
@@ -233,8 +251,8 @@ Both are \code{NULL} for a response with no \code{choices}. In the third case,
 \code{content} holds the value that was read, which is \code{NULL} for \code{null} or
 missing content. For the second and third cases, the message names the
 \code{content} field, so you can read what the model wrote without a second
-request. The other messages name \code{simplify = FALSE}, which returns the body
-unchanged, with one exception. A body that did not parse as JSON is
+request. The other messages of the chat functions and \code{\link[=lms_embed]{lms_embed()}} name
+\code{simplify = FALSE}, which returns the body unchanged, with one exception. A body that did not parse as JSON is
 checked before that argument is read, so its message points at the host
 instead. For such a body, the \code{content} and \code{finish_reason} fields of a
 condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}.

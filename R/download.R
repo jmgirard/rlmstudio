@@ -16,7 +16,10 @@
 #'   API](https://lmstudio.ai/docs/developer/rest/download)
 #'
 #' @return A character string containing the download \code{job_id}, or
-#'   \code{"already_downloaded"} if already downloaded.
+#'   \code{"already_downloaded"}, invisibly, if the model is already
+#'   downloaded. The call aborts with \code{rlmstudio_bad_response} when the
+#'   reply holds neither a \code{job_id} string nor the status
+#'   \code{"already_downloaded"}.
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
