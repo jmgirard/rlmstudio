@@ -170,3 +170,51 @@ test_that("the LM Studio docs example of the load reply reads", {
     )
   )
 })
+
+# lms_download() ---------------------------------------------------------------
+
+download_fields <- c(job_id = '"job-1"', status = '"downloading"')
+download_call <- function() lms_download("a-model")
+
+test_that("each rule of the download reply aborts lms_download() with rlmstudio_bad_response", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_options(rlmstudio.quiet = TRUE)
+  cases <- c(
+    top_level_faults(),
+    required_field_faults(download_fields, "status", "string"),
+    # With `status` "downloading", `job_id` must be a string.
+    required_field_faults(download_fields, "job_id", "string")
+  )
+  expect_shape_faults(cases, download_call, "API Download Failed")
+})
+
+test_that("a download reply that passes the rules returns the job id or already_downloaded", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_options(rlmstudio.quiet = TRUE)
+
+  local_request_sequence(list(mock_response(200L, shape_object(download_fields))))
+  result <- withVisible(download_call())
+  expect_identical(result$value, "job-1")
+  expect_true(result$visible)
+
+  # With `status` "already_downloaded", `job_id` is not read.
+  already <- list(
+    "no job_id" = '{"status": "already_downloaded"}',
+    "job_id as number" = '{"status": "already_downloaded", "job_id": 1}'
+  )
+  for (label in names(already)) {
+    local_request_sequence(list(mock_response(200L, already[[label]])))
+    result <- withVisible(download_call())
+    expect_identical(result$value, "already_downloaded", info = label)
+    expect_false(result$visible, info = label)
+  }
+})
+
+test_that("the LM Studio docs example of the download reply reads", {
+  # The "Response" block of lmstudio-ai/docs 1_developer/2_rest/download.md,
+  # as of commit 2e643a417b.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_options(rlmstudio.quiet = TRUE)
+  local_request_sequence(list(mock_response(200L, docs_example("download-docs-example.json"))))
+  expect_identical(download_call(), "job_493c7c9ded")
+})

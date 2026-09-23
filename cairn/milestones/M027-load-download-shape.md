@@ -121,7 +121,7 @@ binary operator", because `$` matched the extended name.
       status-200 path no longer reaches `rlm_abort_api()`. Read fields with
       `[[` (LESSONS, M018). Call with `force = TRUE`, so that the load reply is
       the body under test. Write the AC1, AC4, AC5, and AC6 load tests.
-- [ ] T2: `lms_download()`. Tests first. Check the rule of AC2 after
+- [x] T2: `lms_download()`. Tests first. Check the rule of AC2 after
       `parse_ok_body()` (`R/download.R:71-90`), and drop the `invisible(TRUE)`
       branch. Write the AC2, AC4, AC5, and AC6 download tests. Fix the
       reply `{"job_id": "job-1"}` at `test-body-parse.R:69`, which has no
@@ -144,6 +144,7 @@ binary operator", because `$` matched the extended name.
 - 2026-09-22: plan chose to check field types and not status values over a check against the documented status lists. A new status from a later LM Studio then passes. Falsified by a status value that a caller of these functions misreads as success.
 - 2026-09-22: implement started on branch m027-load-download-shape. Question gate skipped: the one open choice, the hint text, reuses M026's hint with the kind of reply named, through a new `rlm_abort_bad_reply()` that `list_models()` now also calls (same message).
 - 2026-09-22: T1 done. `load_reply_fault()` is in `R/load.R`, and its tests in `test-load-download-shape.R` were red before the fix. Minor sub-task: M026's JSON-text helpers moved to `helper-json-forms.R` as `shape_object()` and `shape_array()`, because `helper-chat-bodies.R` already defines `json_object()`. Edited test: the `test-api-error.R` load-status test now expects `rlmstudio_bad_response` for `{"status": "pending"}`. The docs example fixtures come from lmstudio-ai/docs 2e643a417b, unchanged at 9b8bc2004f. `devtools::test()` gave 0 failures and 8702 passes.
+- 2026-09-22: T2 done. `download_reply_fault()` is in `R/download.R`, the `invisible(TRUE)` branch is gone, and the new tests were red before the fix. Edited test: the `lms_download` reply in `test-body-parse.R` gained `"status": "downloading"`. A comment in `test-token-wrappers.R` now names the fields the download calls read. `devtools::test()` gave 0 failures and 8829 passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

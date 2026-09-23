@@ -70,26 +70,51 @@ lms_download <- function(
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "API Download Failed")
+    fault <- download_reply_fault(resp_data)
+    if (!is.null(fault)) {
+      rlm_abort_bad_reply(resp, "API Download Failed", fault, "a download reply")
+    }
 
-    if (
-      !is.null(resp_data$status) && resp_data$status == "already_downloaded"
-    ) {
+    if (identical(resp_data[["status"]], "already_downloaded")) {
       rlm_alert_success("Model {.val {model}} is already downloaded.")
       return(invisible("already_downloaded"))
     }
 
-    if (!is.null(resp_data$job_id)) {
-      rlm_alert_success(
-        "Download job started successfully. Job ID: {.val {resp_data$job_id}}"
-      )
-      return(resp_data$job_id)
-    }
-
-    rlm_alert_success("Download request succeeded.")
-    return(invisible(TRUE))
+    job_id <- resp_data[["job_id"]]
+    rlm_alert_success(
+      "Download job started successfully. Job ID: {.val {job_id}}"
+    )
+    return(job_id)
   }
 
   rlm_abort_api(resp, "API Download Failed", !is.null(rlm_token(token)))
+}
+
+#' Find the first way a download reply breaks its shape rules
+#'
+#' The body is a JSON object whose `status` is a string. Unless `status` is
+#' `"already_downloaded"`, its `job_id` is a string too. The rules check types
+#' and not status values, so a status that a later LM Studio adds still passes
+#' (D-017). Fields are read by exact name.
+#'
+#' @param body The body, parsed with `simplifyVector = FALSE`.
+#' @return `NULL` when the body passes, or one clause naming the fault.
+#'
+#' @noRd
+download_reply_fault <- function(body) {
+  if (!is_json_object(body)) {
+    return("the response body is not a JSON object.")
+  }
+  if (!is_json_string(body[["status"]])) {
+    return("`status` is not a string.")
+  }
+  if (identical(body[["status"]], "already_downloaded")) {
+    return(NULL)
+  }
+  if (!is_json_string(body[["job_id"]])) {
+    return("`job_id` is not a string.")
+  }
+  NULL
 }
 
 #' Get the status of a download job

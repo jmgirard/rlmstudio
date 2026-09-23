@@ -10,7 +10,8 @@
 wrapper_token <- "wrapper-token"
 
 # One response body answers every request in this file. list_models() reads
-# `models`, lms_load() reads `status`, and lms_download() reads `job_id`. The
+# `models`, lms_load() reads `status`, and lms_download() and
+# lms_download_status() read `status` and `job_id`. The
 # listed model key differs from the model the load test asks for, so lms_load()
 # does not short-circuit on the already-loaded branch.
 wrapper_body <- paste0(

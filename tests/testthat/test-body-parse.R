@@ -67,7 +67,7 @@ model_sites <- list(
   ),
   lms_download = list(
     call = function() lms_download("a-model"),
-    reply = '{"job_id": "job-1"}'
+    reply = '{"job_id": "job-1", "status": "downloading"}'
   ),
   lms_download_status = list(
     call = function() lms_download_status("job-1"),
