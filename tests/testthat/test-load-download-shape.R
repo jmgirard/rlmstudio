@@ -14,6 +14,12 @@ top_level_faults <- function() {
   cases
 }
 
+# A bare `{}`, the example on the help page. It is a JSON object, so the
+# message names the first field that the rule requires.
+empty_body_fault <- function(field) {
+  list(list(label = "body as {}", body = "{}", names = paste0("`", field, "`")))
+}
+
 # The faults of one field that a rule requires. `ok_forms` names the JSON forms
 # that the rule accepts. Every other form, the field absent, and the field under
 # an extended name is a fault.
@@ -110,7 +116,11 @@ test_that("each rule of the load reply aborts lms_load() with rlmstudio_bad_resp
     extra = c('"pending"' = '"pending"', '"Loaded"' = '"Loaded"')
   )
   for (echo in c(FALSE, TRUE)) {
-    expect_shape_faults(c(top_level_faults(), status_faults), load_call(echo), "API Load Failed")
+    expect_shape_faults(
+      c(top_level_faults(), empty_body_fault("status"), status_faults),
+      load_call(echo),
+      "API Load Failed"
+    )
   }
 
   # With `echo_load_config = TRUE`, `load_config` must be a JSON object.
@@ -182,6 +192,7 @@ test_that("each rule of the download reply aborts lms_download() with rlmstudio_
   withr::local_options(rlmstudio.quiet = TRUE)
   cases <- c(
     top_level_faults(),
+    empty_body_fault("status"),
     required_field_faults(download_fields, "status", "string"),
     # With `status` "downloading", `job_id` must be a string.
     required_field_faults(download_fields, "job_id", "string")
@@ -236,6 +247,7 @@ test_that("each rule of the status reply aborts lms_download_status() with rlmst
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   cases <- c(
     top_level_faults(),
+    empty_body_fault("job_id"),
     required_field_faults(status_fields, "job_id", "string"),
     required_field_faults(status_fields, "status", "string")
   )
