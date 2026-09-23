@@ -86,7 +86,7 @@ binary operator", because `$` matched the extended name.
       `"downloading"`. `{"status": "already_downloaded", "job_id": 1}` passes
       and returns `"already_downloaded"`. For each function, the body as a
       JSON array, string, number, boolean, and `null` is a fault.
-- [ ] AC6: The LM Studio docs pages for load, download, and download status
+- [x] AC6: The LM Studio docs pages for load, download, and download status
       each show an example response (lmstudio-ai/docs,
       `1_developer/2_rest/{load,download,download-status}.md`, "Response"
       blocks). A test passes each through its function and asserts the
@@ -188,3 +188,7 @@ Independent review, run in parallel with the gate and read after it failed. The 
   - O6: `print()` shows `Progress: NaN%` for sizes of 0, and `Speed: Inf MB/s` for `1e400`. This is older than the branch.
   - O7: the vignette `wait` chunk reads `res$status` with `$`. The branch did not touch it.
   - O8: `R/conditions.R:38` and `R/conditions.R:202-203` run past the usual roxygen wrap width.
+
+Pass 2, 2026-09-22, on the branch head 61a4bd8, which contains `origin/main` 23f4003. `git diff 929f7dd HEAD` outside `cairn/` is empty, so the code is the code of pass 1.
+- AC1 to AC5 and AC7: `devtools::test()` again gave 28 files, 0 failures, 0 skips, and 9079 passes. The 11 tests in `test-load-download-shape.R` passed. `devtools::document()` left `git status` clean. The pass 1 evidence lines above hold for this code.
+- AC6 (amended): the docs-example tests and the full suite passed. `test_that` counts match `main` in the four edited files: `test-api-error.R` 2 top-level blocks (its looped blocks come from the same table), `test-body-parse.R` 11, `test-model-list-shape.R` 9, and `test-token-wrappers.R` 6. So no test was removed. A reply body or expectation changed in two tests only, and each old body breaks a rule: `{"status": "pending"}` breaks AC1, and `{"job_id": "job-1"}` breaks AC2. No call changed. In `test-model-list-shape.R`, only helper names changed. The helpers have the same code, so each reply body sent is the same JSON text. The delta reviewer compared the test titles with `main`. All match except one retitle in `test-api-error.R`, whose body and call stayed.
