@@ -70,15 +70,7 @@ list_models <- function(
   body <- parse_ok_body(resp, "API List Failed")
   fault <- model_list_fault(body)
   if (!is.null(fault)) {
-    rlm_abort_bad_response(
-      resp,
-      "API List Failed",
-      fault,
-      hint = paste(
-        "The server returned a model list this package cannot read.",
-        "Something other than LM Studio may be answering on this host."
-      )
-    )
+    rlm_abort_bad_reply(resp, "API List Failed", fault, "a model list")
   }
 
   if (length(body[["models"]]) == 0) {

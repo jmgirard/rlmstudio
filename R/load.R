@@ -132,13 +132,40 @@ lms_load <- function(
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "API Load Failed")
-    if (identical(resp_data$status, "loaded")) {
-      if (isTRUE(echo_load_config)) {
-        return(invisible(resp_data$load_config))
-      }
-      return(invisible(model))
+    fault <- load_reply_fault(resp_data, echo_load_config)
+    if (!is.null(fault)) {
+      rlm_abort_bad_reply(resp, "API Load Failed", fault, "a load reply")
     }
+    if (isTRUE(echo_load_config)) {
+      return(invisible(resp_data[["load_config"]]))
+    }
+    return(invisible(model))
   }
 
   rlm_abort_api(resp, "API Load Failed", !is.null(rlm_token(token)))
+}
+
+#' Find the first way a load reply breaks its shape rules
+#'
+#' The body is a JSON object whose `status` is the string `"loaded"`, the one
+#' load status the LM Studio docs list. With `echo_load_config = TRUE`, its
+#' `load_config` is also a JSON object. Fields are read by exact name
+#' (D-017).
+#'
+#' @param body The body, parsed with `simplifyVector = FALSE`.
+#' @param echo_load_config Logical. Whether the caller reads `load_config`.
+#' @return `NULL` when the body passes, or one clause naming the fault.
+#'
+#' @noRd
+load_reply_fault <- function(body, echo_load_config) {
+  if (!is_json_object(body)) {
+    return("the response body is not a JSON object.")
+  }
+  if (!identical(body[["status"]], "loaded")) {
+    return("`status` is not the string \"loaded\".")
+  }
+  if (isTRUE(echo_load_config) && !is_json_object(body[["load_config"]])) {
+    return("`load_config` is not a JSON object.")
+  }
+  NULL
 }

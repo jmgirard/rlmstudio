@@ -145,6 +145,32 @@ rlm_abort_bad_response <- function(
   )
 }
 
+#' Abort on a model-management reply with the wrong shape
+#'
+#' `list_models()`, `lms_load()`, `lms_download()`, and
+#' `lms_download_status()` have no `simplify` argument, so the default hint of
+#' `rlm_abort_bad_response()` does not apply to them. This hint names the kind
+#' of reply instead.
+#'
+#' @param resp An httr2 response with status 200.
+#' @param label Character. The calling wrapper's own label.
+#' @param detail Character. One clause naming the fault.
+#' @param what Character. The kind of reply, such as `"a load reply"`.
+#' @return Never returns. Always aborts.
+#'
+#' @noRd
+rlm_abort_bad_reply <- function(resp, label, detail, what) {
+  rlm_abort_bad_response(
+    resp,
+    label,
+    detail,
+    hint = paste(
+      "The server returned", what, "this package cannot read.",
+      "Something other than LM Studio may be answering on this host."
+    )
+  )
+}
+
 #' Parse a response body as JSON text
 #'
 #' The one parse for the body of every HTTP reply. It reads the body as UTF-8

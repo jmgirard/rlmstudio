@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M027: A load or download reply with the wrong JSON shape aborts with rlmstudio_bad_response
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M026   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP2   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing, because three exported functions change what they accept, raise, and return   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m027-load-download-shape   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -115,7 +115,7 @@ binary operator", because `$` matched the extended name.
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: `lms_load()`. Tests first. After `parse_ok_body()`
+- [x] T1: `lms_load()`. Tests first. After `parse_ok_body()`
       (`R/load.R:133-141`), check the rule of AC1 and abort through
       `rlm_abort_bad_response()` with the hint that T1 of M026 wrote. The
       status-200 path no longer reaches `rlm_abort_api()`. Read fields with
@@ -142,6 +142,8 @@ binary operator", because `$` matched the extended name.
 - 2026-09-22: criteria re-audit, full mode, second fresh [O] reader. See the M026 work log. The fixes here are a false claim about existing tests, probes of `load_config` and `job_id` under both branches, array and object fault forms, and print tests for all three numeric fields. The `@return` clause checked nothing, and the "Before" line in AC1 moved to the background.
 - 2026-09-22: plan gate chose `rlmstudio_bad_response` for a load body whose `status` is not `"loaded"` over `rlmstudio_api_error`. The docs list `"loaded"` as the only value, and D-007 rejected an API error with status 200. Falsified by a live LM Studio that answers a failed load with status 200 and an `error` object.
 - 2026-09-22: plan chose to check field types and not status values over a check against the documented status lists. A new status from a later LM Studio then passes. Falsified by a status value that a caller of these functions misreads as success.
+- 2026-09-22: implement started on branch m027-load-download-shape. Question gate skipped: the one open choice, the hint text, reuses M026's hint with the kind of reply named, through a new `rlm_abort_bad_reply()` that `list_models()` now also calls (same message).
+- 2026-09-22: T1 done. `load_reply_fault()` is in `R/load.R`, and its tests in `test-load-download-shape.R` were red before the fix. Minor sub-task: M026's JSON-text helpers moved to `helper-json-forms.R` as `shape_object()` and `shape_array()`, because `helper-chat-bodies.R` already defines `json_object()`. Edited test: the `test-api-error.R` load-status test now expects `rlmstudio_bad_response` for `{"status": "pending"}`. The docs example fixtures come from lmstudio-ai/docs 2e643a417b, unchanged at 9b8bc2004f. `devtools::test()` gave 0 failures and 8702 passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
