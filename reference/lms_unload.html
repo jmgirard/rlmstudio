@@ -107,12 +107,11 @@ on.</p>
 accepts the connection, so the condition is not raised even though no LM
 Studio server is there. The call then does not raise
 <code>rlmstudio_no_server</code>, and what it does depends on what answers. On a
-status-200 body that does not parse as JSON, the chat functions and
-<code><a href="lms_embed.html">lms_embed()</a></code> raise <code>rlmstudio_bad_response</code>. On the same body,
-<code><a href="list_models.html">list_models()</a></code>, <code><a href="lms_load.html">lms_load()</a></code>, <code><a href="lms_download.html">lms_download()</a></code>, <code><a href="lms_download_status.html">lms_download_status()</a></code>,
-and <code><a href="lms_unload_all.html">lms_unload_all()</a></code> raise an error with no class of this package, from
-httr2 or from the JSON parser. <code>lms_unload()</code> does not read the body, so it
-can report success. A body that parses as JSON but has another shape can
+status-200 body that does not parse as JSON, the chat functions,
+<code><a href="lms_embed.html">lms_embed()</a></code>, <code><a href="list_models.html">list_models()</a></code>, <code><a href="lms_load.html">lms_load()</a></code>, <code><a href="lms_download.html">lms_download()</a></code>,
+<code><a href="lms_download_status.html">lms_download_status()</a></code>, and <code><a href="lms_unload_all.html">lms_unload_all()</a></code> raise
+<code>rlmstudio_bad_response</code>. <code>lms_unload()</code> does not read the body, so it can
+report success. A body that parses as JSON but has another shape can
 come back unchanged with <code>simplify = FALSE</code>. With <code>simplify = TRUE</code>, the
 chat functions and <code><a href="lms_embed.html">lms_embed()</a></code> raise <code>rlmstudio_bad_response</code> for it. The
 other functions can fail with an error with no class of this package, fail

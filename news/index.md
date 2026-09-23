@@ -2,6 +2,62 @@
 
 ## rlmstudio (development version)
 
+- A reply body is now read as JSON text and nothing else. Before, the
+  package fetched a body whose text was a URL that starts with `http://`
+  or `https://`. It read a body whose text was the path of an existing
+  file from disk. For a file that held a valid reply,
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+  and the chat functions returned the content of that file. If the reply
+  header said `application/json`,
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+  and
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  did the same. Now such a body does not parse, so the functions that
+  read a status-200 body abort with `rlmstudio_bad_response`, and
+  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+  returns `FALSE`. An error body of that kind is shown as its own text
+  in the `rlmstudio_api_error` message.
+
+- A status-200 body that does not parse as JSON now aborts with
+  `rlmstudio_bad_response` in
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+  and
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md).
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+  raises it through
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+  and so does
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  unless `force = TRUE`. The condition’s `status` is `200L`. After a
+  label, the message says what the message of the chat functions says.
+  The label is the function’s own. If the model list is the body that
+  fails,
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
+  and
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  show the label of
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+  “API List Failed”. Before, such a body failed with an unclassed error
+  from httr2 or jsonlite.
+
+- [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+  and
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  now read a status-200 body by its content, not by its `Content-Type`
+  header. Valid JSON under `text/plain` now gives the same result as
+  under `application/json`. Before, it failed with an unclassed httr2
+  error.
+  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+  now returns `TRUE` for a model list sent as `text/plain`, where before
+  it returned `FALSE`. An `rlmstudio_api_error` whose JSON body comes as
+  `text/plain` now shows the error text from the body, where before it
+  showed the whole body.
+
 - A status-200 reply body that does not parse as JSON now aborts with
   `rlmstudio_bad_response` in
   [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),

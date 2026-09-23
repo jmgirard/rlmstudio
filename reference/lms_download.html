@@ -109,12 +109,11 @@ on.</p>
 accepts the connection, so the condition is not raised even though no LM
 Studio server is there. The call then does not raise
 <code>rlmstudio_no_server</code>, and what it does depends on what answers. On a
-status-200 body that does not parse as JSON, the chat functions and
-<code><a href="lms_embed.html">lms_embed()</a></code> raise <code>rlmstudio_bad_response</code>. On the same body,
-<code><a href="list_models.html">list_models()</a></code>, <code><a href="lms_load.html">lms_load()</a></code>, <code>lms_download()</code>, <code><a href="lms_download_status.html">lms_download_status()</a></code>,
-and <code><a href="lms_unload_all.html">lms_unload_all()</a></code> raise an error with no class of this package, from
-httr2 or from the JSON parser. <code><a href="lms_unload.html">lms_unload()</a></code> does not read the body, so it
-can report success. A body that parses as JSON but has another shape can
+status-200 body that does not parse as JSON, the chat functions,
+<code><a href="lms_embed.html">lms_embed()</a></code>, <code><a href="list_models.html">list_models()</a></code>, <code><a href="lms_load.html">lms_load()</a></code>, <code>lms_download()</code>,
+<code><a href="lms_download_status.html">lms_download_status()</a></code>, and <code><a href="lms_unload_all.html">lms_unload_all()</a></code> raise
+<code>rlmstudio_bad_response</code>. <code><a href="lms_unload.html">lms_unload()</a></code> does not read the body, so it can
+report success. A body that parses as JSON but has another shape can
 come back unchanged with <code>simplify = FALSE</code>. With <code>simplify = TRUE</code>, the
 chat functions and <code><a href="lms_embed.html">lms_embed()</a></code> raise <code>rlmstudio_bad_response</code> for it. The
 other functions can fail with an error with no class of this package, fail
@@ -146,6 +145,104 @@ integer.</p>
 <p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> does not abort on it. The element of the failed input
 holds the condition, or <code>NA</code> where the result is text, and the batch warns
 once and goes on. See the details of <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="malformed-response">Malformed response<a class="anchor" aria-label="anchor" href="#malformed-response"></a></h2>
+
+
+<p>A condition of class <code>rlmstudio_bad_response</code> is raised when the server
+answers with a status the wrapper accepts and a body the wrapper cannot
+read. It is raised where a wrapper checks the body before it reshapes it,
+rather than indexing straight into whatever arrived. Ten functions raise
+it: <code><a href="lms_embed.html">lms_embed()</a></code>, <code><a href="lms_chat.html">lms_chat()</a></code>, <code><a href="lms_chat_native.html">lms_chat_native()</a></code>,
+<code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>, <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>, <code><a href="list_models.html">list_models()</a></code>,
+<code><a href="lms_load.html">lms_load()</a></code>, <code>lms_download()</code>, <code><a href="lms_download_status.html">lms_download_status()</a></code>, and
+<code><a href="lms_unload_all.html">lms_unload_all()</a></code>. <code><a href="lms_chat.html">lms_chat()</a></code> raises it through the chat function it
+calls. <code><a href="lms_unload_all.html">lms_unload_all()</a></code> raises it through <code><a href="list_models.html">list_models()</a></code>, and so does
+<code><a href="lms_load.html">lms_load()</a></code> unless <code>force = TRUE</code>.</p>
+<p>All ten raise it for a status-200 body that does not parse as JSON, such
+as an HTML page from a proxy, JSON text that stops part way, or an empty
+body. In the functions that take <code>simplify</code>, the body is parsed before
+<code>simplify</code> is read, so the condition is raised whatever <code>simplify</code> is. The
+body is parsed by its content and not by its <code>Content-Type</code> header, so
+valid JSON under <code>text/plain</code> is read as JSON. The body is read as JSON
+text and nothing else. A body whose text is a URL or the path of a file
+does not parse, and the package does not fetch the URL or read the file.
+The message says that the body did not parse as JSON and that something
+other than LM Studio may be answering on the host. It does not hold the
+body text.</p>
+<p><code><a href="lms_embed.html">lms_embed()</a></code> raises it on an embeddings block it cannot trust. The vectors
+it returns are placed by the index that the response reports, so a block
+with a missing, repeated, or out-of-range index would otherwise pair a
+vector with the wrong text and give back a matrix that is silently wrong.</p>
+<p><code><a href="lms_chat_native.html">lms_chat_native()</a></code> and <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> raise it with
+<code>simplify = TRUE</code> when the reply holds no readable answer text. Both read
+the answer from the items of type <code>"message"</code> in the <code>output</code> array. They
+raise it when <code>output</code> is missing, empty, or not an array, or when an item
+in it is not a JSON object. They also raise it when no item has the type
+<code>"message"</code>, as in a reply that holds only reasoning or a tool call. The
+text of a message must be one string. For <code><a href="lms_chat_native.html">lms_chat_native()</a></code> that is the
+<code>content</code> of the item. For <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> it is the <code>text</code> of
+each part of type <code>"output_text"</code>. For <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> only, the
+<code>content</code> of each message must be an array of JSON objects, and the
+messages together must hold at least one <code>"output_text"</code> part.</p>
+<p>With <code>simplify = TRUE</code> and <code>logprobs = TRUE</code>, <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>
+also raises it for a <code>logprobs</code> value that breaks one of these rules. The
+<code>logprobs</code> value of each <code>"output_text"</code> part is checked. A <code>logprobs</code>
+value, <code>token</code>, <code>logprob</code>, or <code>top_logprobs</code> that is <code>null</code> or absent
+passes its rule. A <code>null</code> step or candidate breaks rule 2 or rule 5.</p><ol><li><p>The value is an array.</p></li>
+<li><p>Each step in the array is a JSON object.</p></li>
+<li><p>The <code>token</code> of a step is a string.</p></li>
+<li><p>The <code>logprob</code> of a step is a number.</p></li>
+<li><p>The <code>top_logprobs</code> of a step is an array of JSON objects.</p></li>
+<li><p>The <code>token</code> and <code>logprob</code> of each of those objects follow rules 3 and 4.</p></li>
+</ol><p>The parts are checked in order, then the steps of a part, then the
+candidates of a step, one at a time. Within a step, rules 3 and 4 and the
+array test of rule 5 come before the candidates. The message names the
+first broken rule that this order reaches. These checks run only after the
+text of every <code>"output_text"</code> part is read, so a reply that also has a bad
+<code>text</code> in any part gets the text message.
+Parts of other types, such as a refusal, are not checked, and with
+<code>logprobs = FALSE</code> no part is checked. Fields are read by their exact
+names, so a field whose name only starts with the one asked for, such as
+<code>tokenX</code>, reads as absent and gives <code>NA</code> in the data frame.</p>
+<p>Apart from a body that does not parse as JSON, <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> raises
+it in three cases, all only with <code>simplify = TRUE</code>. The first case is a response whose <code>choices</code> field is
+missing, empty, or not an array, or whose first element is not a JSON
+object with a <code>message</code> object in it, so there is no reply to read. This
+case is raised with or without a <code>schema</code>, and with <code>logprobs = TRUE</code> as
+well. The second case is a reply that does not parse. A <code>schema</code> was
+given, <code>logprobs = FALSE</code>, and the reply content is not one string of valid
+JSON. The third case is reply content that is not one string, such as
+<code>null</code>, a missing <code>content</code> field, a number, or an array. A reply that
+holds only a tool call has <code>null</code> content. This case is raised without a
+<code>schema</code>, and with <code>logprobs = TRUE</code> with or without one. In the second and
+third cases, if the server reports the finish reason <code>"length"</code>, the token
+limit cut the reply off. The message then says so and names <code>max_tokens</code>.</p>
+<p>With <code>simplify = TRUE</code>, <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>,
+and <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> also raise it for a body that is a bare JSON value,
+such as <code>5</code>, <code>"s"</code>, or <code>true</code>. The message says that the response body is
+not a JSON object. A body of <code>null</code> gets the message about its missing
+<code>output</code> or <code>choices</code> field instead.
+<code><a href="lms_chat.html">lms_chat()</a></code> can raise the condition through all three chat functions.</p>
+<p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> does not abort on it. The element of the failed input
+holds the condition, or <code>NA</code> where the result is text, and the batch warns
+once and goes on. See the details of <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code>.</p>
+<p>The condition carries a <code>status</code> field, which holds the HTTP response
+status as an integer. Today the status is always 200: each of these
+functions reads the body only after a 200, and reports every other status
+as an <code>rlmstudio_api_error</code> instead. A condition from <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>
+also carries two more fields. The <code>content</code> field holds the reply content,
+and the <code>finish_reason</code> field holds the finish reason of the first choice.
+Both are <code>NULL</code> for a response with no <code>choices</code>. In the third case,
+<code>content</code> holds the value that was read, which is <code>NULL</code> for <code>null</code> or
+missing content. For the second and third cases, the message names the
+<code>content</code> field, so you can read what the model wrote without a second
+request. The other messages name <code>simplify = FALSE</code>, which returns the body
+unchanged, with one exception. A body that did not parse as JSON is
+checked before that argument is read, so its message points at the host
+instead. For such a body, the <code>content</code> and <code>finish_reason</code> fields of a
+condition from <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> are <code>NULL</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
