@@ -664,7 +664,7 @@ lms_server_ready <- function(
         return(FALSE)
       }
 
-      is_model_list(httr2::resp_body_json(resp)[["models"]])
+      is_model_list(parse_json_body(resp)[["models"]])
     },
     error = function(e) FALSE
   )

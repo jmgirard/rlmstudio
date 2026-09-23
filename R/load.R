@@ -34,6 +34,7 @@
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #'
 #' @export
 #'
@@ -130,7 +131,7 @@ lms_load <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
+    resp_data <- parse_ok_body(resp, "API Load Failed")
     if (identical(resp_data$status, "loaded")) {
       if (isTRUE(echo_load_config)) {
         return(invisible(resp_data$load_config))

@@ -65,12 +65,11 @@ The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
 Studio server is there. The call then does not raise
 \code{rlmstudio_no_server}, and what it does depends on what answers. On a
-status-200 body that does not parse as JSON, the chat functions and
-\code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response}. On the same body,
-\code{\link[=list_models]{list_models()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}},
-and \code{\link[=lms_unload_all]{lms_unload_all()}} raise an error with no class of this package, from
-httr2 or from the JSON parser. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it
-can report success. A body that parses as JSON but has another shape can
+status-200 body that does not parse as JSON, the chat functions,
+\code{\link[=lms_embed]{lms_embed()}}, \code{\link[=list_models]{list_models()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}},
+\code{\link[=lms_download_status]{lms_download_status()}}, and \code{\link[=lms_unload_all]{lms_unload_all()}} raise
+\code{rlmstudio_bad_response}. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it can
+report success. A body that parses as JSON but has another shape can
 come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, the
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it. The
 other functions can fail with an error with no class of this package, fail
@@ -103,6 +102,115 @@ integer.
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input
 holds the condition, or \code{NA} where the result is text, and the batch warns
 once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+}
+
+\section{Malformed response}{
+
+A condition of class \code{rlmstudio_bad_response} is raised when the server
+answers with a status the wrapper accepts and a body the wrapper cannot
+read. It is raised where a wrapper checks the body before it reshapes it,
+rather than indexing straight into whatever arrived. Ten functions raise
+it: \code{\link[=lms_embed]{lms_embed()}}, \code{\link[=lms_chat]{lms_chat()}}, \code{\link[=lms_chat_native]{lms_chat_native()}},
+\code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, \code{\link[=list_models]{list_models()}},
+\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}}, and
+\code{\link[=lms_unload_all]{lms_unload_all()}}. \code{\link[=lms_chat]{lms_chat()}} raises it through the chat function it
+calls. \code{\link[=lms_unload_all]{lms_unload_all()}} raises it through \code{\link[=list_models]{list_models()}}, and so does
+\code{\link[=lms_load]{lms_load()}} unless \code{force = TRUE}.
+
+All ten raise it for a status-200 body that does not parse as JSON, such
+as an HTML page from a proxy, JSON text that stops part way, or an empty
+body. In the functions that take \code{simplify}, the body is parsed before
+\code{simplify} is read, so the condition is raised whatever \code{simplify} is. The
+body is parsed by its content and not by its \code{Content-Type} header, so
+valid JSON under \code{text/plain} is read as JSON. The body is read as JSON
+text and nothing else. A body whose text is a URL or the path of a file
+does not parse, and the package does not fetch the URL or read the file.
+The message says that the body did not parse as JSON and that something
+other than LM Studio may be answering on the host. It does not hold the
+body text.
+
+\code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
+it returns are placed by the index that the response reports, so a block
+with a missing, repeated, or out-of-range index would otherwise pair a
+vector with the wrong text and give back a matrix that is silently wrong.
+
+\code{\link[=lms_chat_native]{lms_chat_native()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it with
+\code{simplify = TRUE} when the reply holds no readable answer text. Both read
+the answer from the items of type \code{"message"} in the \code{output} array. They
+raise it when \code{output} is missing, empty, or not an array, or when an item
+in it is not a JSON object. They also raise it when no item has the type
+\code{"message"}, as in a reply that holds only reasoning or a tool call. The
+text of a message must be one string. For \code{\link[=lms_chat_native]{lms_chat_native()}} that is the
+\code{content} of the item. For \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} it is the \code{text} of
+each part of type \code{"output_text"}. For \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} only, the
+\code{content} of each message must be an array of JSON objects, and the
+messages together must hold at least one \code{"output_text"} part.
+
+With \code{simplify = TRUE} and \code{logprobs = TRUE}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}
+also raises it for a \code{logprobs} value that breaks one of these rules. The
+\code{logprobs} value of each \code{"output_text"} part is checked. A \code{logprobs}
+value, \code{token}, \code{logprob}, or \code{top_logprobs} that is \code{null} or absent
+passes its rule. A \code{null} step or candidate breaks rule 2 or rule 5.
+\enumerate{
+\item The value is an array.
+\item Each step in the array is a JSON object.
+\item The \code{token} of a step is a string.
+\item The \code{logprob} of a step is a number.
+\item The \code{top_logprobs} of a step is an array of JSON objects.
+\item The \code{token} and \code{logprob} of each of those objects follow rules 3 and 4.
+}
+
+The parts are checked in order, then the steps of a part, then the
+candidates of a step, one at a time. Within a step, rules 3 and 4 and the
+array test of rule 5 come before the candidates. The message names the
+first broken rule that this order reaches. These checks run only after the
+text of every \code{"output_text"} part is read, so a reply that also has a bad
+\code{text} in any part gets the text message.
+Parts of other types, such as a refusal, are not checked, and with
+\code{logprobs = FALSE} no part is checked. Fields are read by their exact
+names, so a field whose name only starts with the one asked for, such as
+\code{tokenX}, reads as absent and gives \code{NA} in the data frame.
+
+Apart from a body that does not parse as JSON, \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises
+it in three cases, all only with \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
+missing, empty, or not an array, or whose first element is not a JSON
+object with a \code{message} object in it, so there is no reply to read. This
+case is raised with or without a \code{schema}, and with \code{logprobs = TRUE} as
+well. The second case is a reply that does not parse. A \code{schema} was
+given, \code{logprobs = FALSE}, and the reply content is not one string of valid
+JSON. The third case is reply content that is not one string, such as
+\code{null}, a missing \code{content} field, a number, or an array. A reply that
+holds only a tool call has \code{null} content. This case is raised without a
+\code{schema}, and with \code{logprobs = TRUE} with or without one. In the second and
+third cases, if the server reports the finish reason \code{"length"}, the token
+limit cut the reply off. The message then says so and names \code{max_tokens}.
+
+With \code{simplify = TRUE}, \code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}},
+and \code{\link[=lms_chat_openai]{lms_chat_openai()}} also raise it for a body that is a bare JSON value,
+such as \code{5}, \code{"s"}, or \code{true}. The message says that the response body is
+not a JSON object. A body of \code{null} gets the message about its missing
+\code{output} or \code{choices} field instead.
+\code{\link[=lms_chat]{lms_chat()}} can raise the condition through all three chat functions.
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input
+holds the condition, or \code{NA} where the result is text, and the batch warns
+once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+
+The condition carries a \code{status} field, which holds the HTTP response
+status as an integer. Today the status is always 200: each of these
+functions reads the body only after a 200, and reports every other status
+as an \code{rlmstudio_api_error} instead. A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}}
+also carries two more fields. The \code{content} field holds the reply content,
+and the \code{finish_reason} field holds the finish reason of the first choice.
+Both are \code{NULL} for a response with no \code{choices}. In the third case,
+\code{content} holds the value that was read, which is \code{NULL} for \code{null} or
+missing content. For the second and third cases, the message names the
+\code{content} field, so you can read what the model wrote without a second
+request. The other messages name \code{simplify = FALSE}, which returns the body
+unchanged, with one exception. A body that did not parse as JSON is
+checked before that argument is read, so its message points at the host
+instead. For such a body, the \code{content} and \code{finish_reason} fields of a
+condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}.
 }
 
 \examples{

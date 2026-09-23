@@ -20,6 +20,7 @@
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #'
 #' @export
 #'
@@ -68,7 +69,7 @@ lms_download <- function(
   rlm_progress_done(step_id)
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
+    resp_data <- parse_ok_body(resp, "API Download Failed")
 
     if (
       !is.null(resp_data$status) && resp_data$status == "already_downloaded"
@@ -109,6 +110,7 @@ lms_download <- function(
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #'
 #' @export
 #'
@@ -144,7 +146,7 @@ lms_download_status <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    out <- httr2::resp_body_json(resp)
+    out <- parse_ok_body(resp, "API Status Request Failed")
     class(out) <- c("lms_download_status", "list")
     return(out)
   }

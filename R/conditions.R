@@ -24,12 +24,11 @@
 #' accepts the connection, so the condition is not raised even though no LM
 #' Studio server is there. The call then does not raise
 #' `rlmstudio_no_server`, and what it does depends on what answers. On a
-#' status-200 body that does not parse as JSON, the chat functions and
-#' [lms_embed()] raise `rlmstudio_bad_response`. On the same body,
-#' [list_models()], [lms_load()], [lms_download()], [lms_download_status()],
-#' and [lms_unload_all()] raise an error with no class of this package, from
-#' httr2 or from the JSON parser. [lms_unload()] does not read the body, so it
-#' can report success. A body that parses as JSON but has another shape can
+#' status-200 body that does not parse as JSON, the chat functions,
+#' [lms_embed()], [list_models()], [lms_load()], [lms_download()],
+#' [lms_download_status()], and [lms_unload_all()] raise
+#' `rlmstudio_bad_response`. [lms_unload()] does not read the body, so it can
+#' report success. A body that parses as JSON but has another shape can
 #' come back unchanged with `simplify = FALSE`. With `simplify = TRUE`, the
 #' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it. The
 #' other functions can fail with an error with no class of this package, fail
@@ -65,18 +64,25 @@
 #' A condition of class `rlmstudio_bad_response` is raised when the server
 #' answers with a status the wrapper accepts and a body the wrapper cannot
 #' read. It is raised where a wrapper checks the body before it reshapes it,
-#' rather than indexing straight into whatever arrived. Four functions raise
-#' it: [lms_embed()], [lms_chat_native()], [lms_chat_openresponses()], and
-#' [lms_chat_openai()].
+#' rather than indexing straight into whatever arrived. Ten functions raise
+#' it: [lms_embed()], [lms_chat()], [lms_chat_native()],
+#' [lms_chat_openresponses()], [lms_chat_openai()], [list_models()],
+#' [lms_load()], [lms_download()], [lms_download_status()], and
+#' [lms_unload_all()]. [lms_chat()] raises it through the chat function it
+#' calls. [lms_unload_all()] raises it through [list_models()], and so does
+#' [lms_load()] unless `force = TRUE`.
 #'
-#' All four raise it for a status-200 body that does not parse as JSON, such
+#' All ten raise it for a status-200 body that does not parse as JSON, such
 #' as an HTML page from a proxy, JSON text that stops part way, or an empty
-#' body. The body is parsed before `simplify` is read, so the condition is
-#' raised whatever `simplify` is. The body is parsed by its content and not by
-#' its `Content-Type` header, so valid JSON under `text/plain` is read as
-#' JSON. The message says that the body did not parse as JSON and that
-#' something other than LM Studio may be answering on the host. It does not
-#' hold the body text.
+#' body. In the functions that take `simplify`, the body is parsed before
+#' `simplify` is read, so the condition is raised whatever `simplify` is. The
+#' body is parsed by its content and not by its `Content-Type` header, so
+#' valid JSON under `text/plain` is read as JSON. The body is read as JSON
+#' text and nothing else. A body whose text is a URL or the path of a file
+#' does not parse, and the package does not fetch the URL or read the file.
+#' The message says that the body did not parse as JSON and that something
+#' other than LM Studio may be answering on the host. It does not hold the
+#' body text.
 #'
 #' [lms_embed()] raises it on an embeddings block it cannot trust. The vectors
 #' it returns are placed by the index that the response reports, so a block

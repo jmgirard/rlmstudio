@@ -86,8 +86,8 @@ lms_embed <- function(
 
 #' Is this value one number?
 #'
-#' `httr2::resp_body_json()` parses with `simplifyVector = FALSE` (LESSONS,
-#' M005), so every number in the body arrives as a length-one numeric and a
+#' `parse_ok_body()` parses with `simplifyVector = FALSE` (LESSONS, M005), so
+#' every number in the body arrives as a length-one numeric and a
 #' JSON `null` arrives as `NULL`. A logical passes `is.numeric()` nowhere, and
 #' a base64 string fails on the type.
 #'

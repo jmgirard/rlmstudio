@@ -9,10 +9,10 @@
 #' @return `TRUE` when `x` is a length-one character string that holds
 #'   something other than whitespace.
 #'
-#' The length and `NA` guards are defensive. `httr2::resp_body_json()` parses
-#' with `simplifyVector = FALSE`, so no response body reaches them: a JSON
-#' array arrives as a list rather than as a longer vector. A test through the
-#' wrappers cannot fire them while that holds.
+#' The length and `NA` guards are defensive. `api_error_message()` parses
+#' through `parse_json_body()` with `simplifyVector = FALSE`, so no response
+#' body reaches them: a JSON array arrives as a list rather than as a longer
+#' vector. A test through the wrappers cannot fire them while that holds.
 #'
 #' @noRd
 is_message_string <- function(x) {
@@ -43,7 +43,7 @@ api_error_message <- function(resp) {
   fallback <- paste("HTTP Status", status)
   body <- tryCatch(httr2::resp_body_string(resp), error = function(e) "")
 
-  parsed <- tryCatch(httr2::resp_body_json(resp), error = function(e) NULL)
+  parsed <- tryCatch(parse_json_body(resp), error = function(e) NULL)
 
   if (is.list(parsed)) {
     err <- parsed$error
@@ -145,24 +145,53 @@ rlm_abort_bad_response <- function(
   )
 }
 
+#' Parse a response body as JSON text
+#'
+#' The one parse for the body of every HTTP reply. It reads the body as UTF-8
+#' text and hands it to `jsonlite::parse_json()`, which reads JSON text and
+#' nothing else. `jsonlite::fromJSON()`, which `httr2::resp_body_json()`
+#' calls, treats a text that is not valid JSON as a place to read from. It
+#' fetches a text that starts with `http://` or `https://` and reads a text
+#' that names an existing file. A reply body is text the package did not
+#' write, so it must not decide which file the package reads or which host it
+#' calls (D-016).
+#'
+#' The header is not checked, so a body is read by its content alone.
+#'
+#' @param resp An httr2 response.
+#' @param simplifyVector Logical. `FALSE` keeps every JSON array a list.
+#'   `TRUE` simplifies arrays to vectors and data frames, as
+#'   `jsonlite::fromJSON()` does by default.
+#' @return The parsed body. Raises the httr2 or jsonlite error when the body
+#'   is empty or does not parse.
+#'
+#' @noRd
+parse_json_body <- function(resp, simplifyVector = FALSE) {
+  jsonlite::parse_json(
+    httr2::resp_body_string(resp, "UTF-8"),
+    simplifyVector = simplifyVector
+  )
+}
+
 #' Parse a successful response body, or abort
 #'
-#' The parse that [lms_embed()] and the three chat wrappers run on a
-#' status-200 body before they read it. A
-#' 200 whose body is not JSON at all reaches here: a proxy or a captive
+#' The parse that a wrapper runs on a status-200 body before it reads it.
+#' `lms_server_ready()` is the one wrapper reading such a body that does not
+#' use it: that function calls `parse_json_body()` itself and returns `FALSE`
+#' on any error. A 200 whose body is not JSON at all reaches here: a proxy or a captive
 #' portal answering on the host serves an HTML page under a success status.
 #' Left unguarded, httr2 or the jsonlite lexer raises an unclassed error, and
 #' a chat batch loses every reply so far to one input. The abort runs before
 #' the caller's `simplify` branch, so `simplify = FALSE` cannot rescue the
 #' body, and the hint says something the caller can act on instead.
 #'
-#' `check_type = FALSE` is what keeps the message true. Left on, the same
-#' error covers two different causes: a body that will not parse, and a body
-#' that parses perfectly under a content type httr2 declines to read. A proxy
-#' that rewrites the header to `text/plain` sends good JSON, and reporting
-#' that as a parse failure names the wrong fault and leaves no way through.
-#' Parsing by content rather than by header leaves the parse failure as the
-#' only cause the abort can have.
+#' The body is parsed by `parse_json_body()`, which reads it by content and not
+#' by its `Content-Type` header. A header check would make the same error
+#' cover two different causes: a body that will not parse, and a body that
+#' parses perfectly under a content type httr2 declines to read. A proxy that
+#' rewrites the header to `text/plain` sends good JSON, and reporting that as a
+#' parse failure names the wrong fault and leaves no way through. Parsing by
+#' content leaves the parse failure as the only cause the abort can have.
 #'
 #' The message leaves out the parse error, because jsonlite quotes the body
 #' text around the point where it stopped.
@@ -172,12 +201,15 @@ rlm_abort_bad_response <- function(
 #'   message.
 #' @param ... Extra fields for the condition, passed on to
 #'   `rlm_abort_bad_response()`.
+#' @param simplifyVector Logical. Passed on to `parse_json_body()`. It comes
+#'   after `...`, so it matches only by its full name, and a condition field
+#'   such as `simplify` cannot bind to it.
 #' @return The parsed body.
 #'
 #' @noRd
-parse_ok_body <- function(resp, label, ...) {
+parse_ok_body <- function(resp, label, ..., simplifyVector = FALSE) {
   tryCatch(
-    httr2::resp_body_json(resp, check_type = FALSE),
+    parse_json_body(resp, simplifyVector = simplifyVector),
     error = function(cnd) {
       rlm_abort_bad_response(
         resp,

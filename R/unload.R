@@ -90,10 +90,12 @@ lms_unload <- function(
 #' This function calls [list_models()] to find the loaded instances, then calls
 #' [lms_unload()] once for each one. It raises `rlmstudio_no_server` itself,
 #' before the first call. It can raise `rlmstudio_api_error` through
-#' [list_models()] and through [lms_unload()].
+#' [list_models()] and through [lms_unload()]. It can raise
+#' `rlmstudio_bad_response` through [list_models()].
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #'
 #' @export
 #'

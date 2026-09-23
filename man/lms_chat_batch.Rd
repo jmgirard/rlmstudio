@@ -144,12 +144,11 @@ The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
 Studio server is there. The call then does not raise
 \code{rlmstudio_no_server}, and what it does depends on what answers. On a
-status-200 body that does not parse as JSON, the chat functions and
-\code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response}. On the same body,
-\code{\link[=list_models]{list_models()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}},
-and \code{\link[=lms_unload_all]{lms_unload_all()}} raise an error with no class of this package, from
-httr2 or from the JSON parser. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it
-can report success. A body that parses as JSON but has another shape can
+status-200 body that does not parse as JSON, the chat functions,
+\code{\link[=lms_embed]{lms_embed()}}, \code{\link[=list_models]{list_models()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}},
+\code{\link[=lms_download_status]{lms_download_status()}}, and \code{\link[=lms_unload_all]{lms_unload_all()}} raise
+\code{rlmstudio_bad_response}. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it can
+report success. A body that parses as JSON but has another shape can
 come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, the
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it. The
 other functions can fail with an error with no class of this package, fail
@@ -189,18 +188,25 @@ once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch
 A condition of class \code{rlmstudio_bad_response} is raised when the server
 answers with a status the wrapper accepts and a body the wrapper cannot
 read. It is raised where a wrapper checks the body before it reshapes it,
-rather than indexing straight into whatever arrived. Four functions raise
-it: \code{\link[=lms_embed]{lms_embed()}}, \code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, and
-\code{\link[=lms_chat_openai]{lms_chat_openai()}}.
+rather than indexing straight into whatever arrived. Ten functions raise
+it: \code{\link[=lms_embed]{lms_embed()}}, \code{\link[=lms_chat]{lms_chat()}}, \code{\link[=lms_chat_native]{lms_chat_native()}},
+\code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, \code{\link[=list_models]{list_models()}},
+\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}}, and
+\code{\link[=lms_unload_all]{lms_unload_all()}}. \code{\link[=lms_chat]{lms_chat()}} raises it through the chat function it
+calls. \code{\link[=lms_unload_all]{lms_unload_all()}} raises it through \code{\link[=list_models]{list_models()}}, and so does
+\code{\link[=lms_load]{lms_load()}} unless \code{force = TRUE}.
 
-All four raise it for a status-200 body that does not parse as JSON, such
+All ten raise it for a status-200 body that does not parse as JSON, such
 as an HTML page from a proxy, JSON text that stops part way, or an empty
-body. The body is parsed before \code{simplify} is read, so the condition is
-raised whatever \code{simplify} is. The body is parsed by its content and not by
-its \code{Content-Type} header, so valid JSON under \code{text/plain} is read as
-JSON. The message says that the body did not parse as JSON and that
-something other than LM Studio may be answering on the host. It does not
-hold the body text.
+body. In the functions that take \code{simplify}, the body is parsed before
+\code{simplify} is read, so the condition is raised whatever \code{simplify} is. The
+body is parsed by its content and not by its \code{Content-Type} header, so
+valid JSON under \code{text/plain} is read as JSON. The body is read as JSON
+text and nothing else. A body whose text is a URL or the path of a file
+does not parse, and the package does not fetch the URL or read the file.
+The message says that the body did not parse as JSON and that something
+other than LM Studio may be answering on the host. It does not hold the
+body text.
 
 \code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
 it returns are placed by the index that the response reports, so a block
