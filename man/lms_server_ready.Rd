@@ -29,7 +29,9 @@ because that is a fault in the call rather than a fact about the server.
 Sends one GET request to the model list endpoint at \code{host} and reports
 whether the answer came from an LM Studio server that this package can use.
 The answer is \code{TRUE} only when the request returns HTTP status 200 and the
-response body carries a list of models. An empty list counts, because a
+response body is a model list that \code{\link[=list_models]{list_models()}} can read. The two
+functions apply the same shape rules, which the "Malformed response"
+section of \link{rlmstudio-conditions} states. An empty list counts, because a
 fresh LM Studio install has no models downloaded yet and its server still
 works.
 }

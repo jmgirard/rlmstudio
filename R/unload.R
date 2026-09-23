@@ -126,24 +126,11 @@ lms_unload_all <- function(host = "http://localhost:1234", ..., token = NULL) {
     return(invisible(NULL))
   }
 
-  # Robustly extract all instance IDs from the nested list column
+  # list_models() has checked that every loaded instance carries an `id` that
+  # is a string with content, so the ids are read by that name alone.
   loaded_keys <- unlist(lapply(active_models$loaded_instances, function(x) {
-    if (is.data.frame(x)) {
-      # The API typically uses 'identifier' or 'id' for the specific instance string
-      if ("identifier" %in% names(x)) {
-        return(x$identifier)
-      }
-      if ("id" %in% names(x)) {
-        return(x$id)
-      }
-      return(as.character(x[[1]])) # Fallback to the first column
-    } else {
-      return(as.character(x))
-    }
+    x[["id"]]
   }))
-
-  # Filter out any potential NAs or empty strings just to be safe
-  loaded_keys <- Filter(function(x) !is.na(x) && x != "", loaded_keys)
 
   if (length(loaded_keys) == 0) {
     rlm_alert_info("No models are currently loaded.")

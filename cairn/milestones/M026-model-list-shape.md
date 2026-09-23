@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M026: A model list with the wrong JSON shape aborts with rlmstudio_bad_response
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP2, GP5   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing, because three exported functions change what they accept and raise   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m026-model-list-shape   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -46,7 +46,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `list_models()` reads a status-200 body under four rules. L1: the
+- [x] AC1: `list_models()` reads a status-200 body under four rules. L1: the
       body is a JSON object whose `models` is an array. L2: each entry of
       `models` is a JSON object. Its `type` and `key` are JSON strings, and
       its `loaded_instances` is an array. L3: the `size_bytes` of an entry is
@@ -58,7 +58,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
       first line of the message holds `API List Failed`. The message names the
       field that broke the rule, or the array whose entry broke it, or it says
       that the body is not a JSON object. It does not contain `simplify`.
-- [ ] AC2: A test pins each rule of AC1 with one body per fault, and each body
+- [x] AC2: A test pins each rule of AC1 with one body per fault, and each body
       breaks one rule. Take each of `models`, `type`, `key`,
       `loaded_instances`, and `id`. Its faults are the field absent, `null`,
       and under a name that extends it. The field as each other type from
@@ -76,20 +76,20 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
       array, string, number, boolean, and `null` is a fault. One fault entry
       has type `"embedding"` under `type = "llm"`, and one is unloaded under
       `loaded = TRUE`.
-- [ ] AC3: `{"models": []}` makes `list_models()` return
+- [x] AC3: `{"models": []}` makes `list_models()` return
       `invisible(data.frame())`, and unless `quiet` it informs "No models
       found on host". With that body, `lms_unload_all()` informs "No models
       are currently loaded", and `lms_load()` without `force` sends the load
       request. A test pins each of the three.
-- [ ] AC4: If the model-list body breaks a rule of AC1, `lms_load()` without
+- [x] AC4: If the model-list body breaks a rule of AC1, `lms_load()` without
       `force` and `lms_unload_all()` abort with `rlmstudio_bad_response`. The
       message holds `API List Failed`, and no request goes out after the model
       list. A test pins each of the two.
-- [ ] AC5: `lms_unload_all()` unloads each loaded instance by its `id`. A test
+- [x] AC5: `lms_unload_all()` unloads each loaded instance by its `id`. A test
       with two loaded models, one with two instances, asserts that
       `lms_unload()` runs three times. Its `model` arguments are the three ids
       in body order.
-- [ ] AC6: `lms_server_ready()` returns `TRUE` for a status-200 body that
+- [x] AC6: `lms_server_ready()` returns `TRUE` for a status-200 body that
       passes L1 to L4, and `FALSE` for each fault body of AC2. A test runs it
       over the AC2 bodies. The example response of the LM Studio list docs
       (lmstudio-ai/docs, `1_developer/2_rest/list.md`, "Response" block) and
@@ -97,7 +97,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
       asserts the `list_models()` return for the docs example. The existing
       tests pass. An existing test changes only where its body breaks L1 to
       L4, or where it pins the fallback chain that AC5 removes.
-- [ ] AC7: The `rlmstudio-conditions` help page names three raisers of
+- [x] AC7: The `rlmstudio-conditions` help page names three raisers of
       `rlmstudio_bad_response` for a model list with the wrong shape. They are
       `list_models()`, `lms_unload_all()`, and `lms_load()` without `force`.
       It says that `lms_server_ready()` applies the same rules. It no longer says that
@@ -119,7 +119,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Shape check. Tests first, in a new test file. Add a helper in
+- [x] T1: Shape check. Tests first, in a new test file. Add a helper in
       `R/list.R` that takes the parse with `simplifyVector = FALSE` and returns
       the first broken rule, or nothing. `list_models()` (`R/list.R:69-76`)
       parses the body through `parse_json_body()` without simplification and
@@ -131,18 +131,18 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
       `test-list.R:8`, the load test's list reply at `test-load.R:14`, and
       the `identifier` instances at `test-token-wrappers.R:16`. Record each
       edited test in the work log.
-- [ ] T2: Callers. `lms_unload_all()` (`R/unload.R:124-148`) reads `id` and
+- [x] T2: Callers. `lms_unload_all()` (`R/unload.R:124-148`) reads `id` and
       drops the fallback chain. Delete the tests of that chain in
       `test-unload.R:159-292` and record them in the work log. Write the AC3,
       AC4, and AC5 tests. Mock out
       the delegate, so that each test goes red without its call site
       (LESSONS, M003).
       `lms_load()` without `force` sends two requests (LESSONS, M008).
-- [ ] T3: `lms_server_ready()` (`R/serve.R:667`) calls the T1 check and
+- [x] T3: `lms_server_ready()` (`R/serve.R:667`) calls the T1 check and
       `is_model_list()` goes. Write the AC6 server-ready tests. Fix the
       entries with no `loaded_instances` at `test-server-ready.R:100` and
       `:131` and at `test-body-parse.R:261`.
-- [ ] T4: Docs. Rewrite the "Server not running" and "Malformed response"
+- [x] T4: Docs. Rewrite the "Server not running" and "Malformed response"
       sections of `R/conditions.R` (`:26-39`, `:64-79`). Update the
       `lms_server_ready()` help text on what counts as a model list. Add the
       NEWS entries. Run `devtools::document()` and `devtools::test()`.
@@ -158,9 +158,56 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 - 2026-09-22: criteria re-audit, full mode, second fresh [O] reader, after the gate changed the criteria. It found 12 gaps across M026 and M027, all fixed in the criteria. The claim that existing tests pass unchanged was false for eight tests. An `id` of `""` passed L4 and then broke `lms_unload()`. The places of L4 faults, the forms of array and object faults, and the reading of the message rule were unclear. AC4 did not forbid a request after the model list, and AC5 said "nothing else" over an open domain.
 - 2026-09-22: plan chose to reject an empty or blank instance `id` over a silent skip, the old behavior. A skip hides a server fault, and M026 rejects every other bad field. Falsified by a live server that reports a loaded instance with an empty `id`.
 - 2026-09-22: plan chose to split the draft into M026 and M027 over one milestone. The draft had 11 criteria, and the model-list work ships alone. Falsified by a merge conflict between the two that costs more than one review.
+- 2026-09-22: T1 and T3 done in one commit, because the new tests in `test-model-list-shape.R` drive `lms_server_ready()` over the same bodies. `model_list_fault()` in `R/list.R` checks the unsimplified parse, `list_models()` parses a second time with `simplifyVector = TRUE`, and `lms_server_ready()` calls the check in place of `is_model_list()`. The docs example is saved as `tests/testthat/fixtures/list-docs-example.json` (lmstudio-ai/docs commit 2e643a417b). With the call site replaced by `fault <- NULL`, the new tests fail.
+- 2026-09-22: existing tests edited because their bodies break L1 to L4: `test-list.R` (GET test, `{}` to `{"models": []}`), `test-load.R` (integer conversion test, a list reply and a load reply in sequence), `test-token-wrappers.R` (`identifier` to `id`), `test-server-ready.R` (three tests, `loaded_instances` added), and `test-body-parse.R` (text/plain server-ready test, `loaded_instances` added). `devtools::test()`: 0 failures, 8377 passes.
+- 2026-09-22: T2 done. `lms_unload_all()` reads `x[["id"]]` and the fallback chain is gone. Deleted from `test-unload.R`: the `identifier` column test, the first-column fallback test, the number coercion test, and the two NA and empty-id tests. Two unload tests now use an `id` column. With the `list_models()` pre-check in `lms_load()` removed, or with `lms_unload_all()` reading the first field, the new caller tests fail. `devtools::test()`: 0 failures, 8384 passes.
+- 2026-09-22: T4 done. `R/conditions.R` states the four rules in "Malformed response" and names the three raisers in "Server not running". `lms_server_ready()` help says it applies the `list_models()` rules. NEWS.md has four entries. `devtools::document()` is stable on a second run, and `devtools::test()`: 0 failures, 8384 passes.
+- 2026-09-22: claim audit: 45 claims read, 4 corrected — NEWS.md, R/conditions.R, tests/testthat/test-model-list-shape.R. Fixed: the "Before" sentence of the first NEWS entry, "load reply" for all three functions on the conditions page, and the `pass_cases()` comment. The fourth, the docs commit of the fixture, was fetched this session and stands. On its one re-read, the reader found the NEWS "Before" sentence still too broad, so it now says "some bad fields" and "some other bodies".
+- 2026-09-22: status set to review. `devtools::test()`: 0 failures, 8384 passes. `devtools::document()` gives no diff.
+- 2026-09-22: step-7 approval: m026-model-list-shape approved for merge, with review finding 1 fixed first (non-object entry tests expect "is not a JSON object").
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Run 2026-09-22 on `m026-model-list-shape` at 3563979, level with `origin/main` (6d35ecd). `devtools::test()`: 0 failures, 0 skips, 8384 passes. `test-model-list-shape.R`: 9 tests, 1722 expectations, 0 failures.
+
+- AC1: `model_list_fault()` (`R/list.R`) runs on the unsimplified parse before the filters and checks L1 to L4 by `[[`. The first test of `test-model-list-shape.R` runs every AC2 fault body through `list_models()`. For each body it asserts the class `rlmstudio_bad_response` and the `status` `200L`. It also asserts `API List Failed` on the first line, the named field in the message, and no `simplify`. The filter test aborts for a dropped embedding entry and a dropped unloaded entry. Passed.
+- AC2: read `fault_cases()` in `test-model-list-shape.R` against the criterion. It builds each field fault: absent, extended name, and every other JSON form. The forms include both array forms and both object forms. It also builds `id` as `""` and `" "`, and the non-object entries. L2 and L3 faults sit in 3 places, and L4 faults in 3 by 3 places. The body as array, string, number, boolean, and `null` is a case. `size_bytes` absent, `null`, and extended pass in `pass_cases()`. The two filter cases are in their own test. Passed.
+- AC3: two tests pass. One asserts that `{"models": []}` gives an invisible `data.frame()` and the "No models found on host" message, and no message with `quiet = TRUE`. The other asserts "No models are currently loaded" from `lms_unload_all()` after one request. It also asserts that `lms_load()` sends a second request to `/api/v1/models/load`. Passed.
+- AC4: one test serves a list with no `key` to `lms_load("a-model")` and to `lms_unload_all()`. For each it asserts `rlmstudio_bad_response`, `API List Failed` in the message, and exactly one recorded request. Passed.
+- AC5: the test "lms_unload_all unloads each instance by its id, in body order" mocks `lms_unload()`. It serves two loaded models, one with two instances that carry a decoy field before `id`. It asserts the `model` arguments `a-1`, `a-2`, `b-1` in that order. Passed.
+- AC6: one test runs `lms_server_ready()` over every AC2 fault body (all `FALSE`) and every pass body (all `TRUE`). A direct run of `model_list_fault()` returns `NULL` for `tests/testthat/list_models/localhost-1234/api/v1/models.json` (6 models) and for the docs example fixture (3 models). The docs example test asserts the `key`, `state`, `type`, and `size_gb` columns and `TRUE` from `lms_server_ready()`. The edited existing tests, read in `git diff main..HEAD`, change bodies that break L1 to L4 or pin the removed `identifier` fallback. The full suite passes. Passed.
+- AC7: `R/conditions.R` "Server not running" names `list_models()`, `lms_unload_all()`, and `lms_load()` without `force = TRUE` as raisers. "Malformed response" states the four rules and says that `lms_server_ready()` applies them. The only "no class" sentence left names the load and download replies, not `list_models()`. NEWS.md has four entries: the rules (AC1), the empty list (AC3), the `id` read (AC5), and `lms_server_ready()` (AC6). `devtools::document()` left `git status` clean. The test run above is clean. Passed.
+
+Consistency gate: `cairn_validate.py` passed every check. `devtools::document()` and `devtools::build_readme()` left no diff. `pkgdown::check_pkgdown()` found no problems. NEWS.md has the entries. The branch adds no top-level file, and DESIGN.md is unchanged, so `cairn_impact` was skipped. `devtools::check()` with the API token: 0 errors, 0 warnings, 0 notes on the third run. The first two runs failed in the vignette build with "Could not connect to server" because the local LM Studio server was off. The first run was stopped by hand mid-build. A live `lms_load()` and `lms_unload_all()` on this branch then worked.
+
+Independent review: three fresh reviewers. The blame-history reviewer and the prior-review reviewer found nothing beyond the planned changes. No GitHub review threads exist. The diff reviewer found no bug in the code and reported 11 ranked findings:
+
+1. The message check for a non-object entry cannot fail. The expected text `` `models` `` or `` `loaded_instances` `` appears in every message at that level, so a message that names the wrong field still passes.
+2. AC4 is pinned with one fault form only, a missing `key`.
+3. `R/list.R`, `R/unload.R`, and `R/load.R` still read data frame columns with `$`. No failing case exists, because the check guarantees the exact names.
+4. The pass-case test checks only that no error occurs, not the return value.
+5. Duplicate JSON keys pass. `[[` reads the first one in both parses.
+6. The body is parsed twice.
+7. The blank-id test depends on the locale. A no-break space counts as content.
+8. The `list_models/` fixture is tested only through `test-list.R`.
+9. Two unload tests changed `identifier` to `id` in mocked frames, and the work log does not give the reason.
+10. NEWS says the callers "send no other request", and one fault body pins it.
+11. The help sentence "The message names the field or entry" depends on finding 1.
+
+None shows a criterion failing. Triage is at the merge gate.
+
+Triage at the gate, 2026-09-22:
+- Finding 1: fix now. A non-object entry case now also expects "is not a JSON object". With wrong messages planted in `R/list.R` for both non-object branches, 72 cases went red, and the restored code passes. Full suite: 0 failures, 8456 passes.
+- Findings 2 and 10: rejected. `list_models()` aborts before a caller sends any other request, whatever the fault.
+- Finding 3: rejected. The `$` reads are on lines the branch did not change.
+- Finding 4: rejected. The docs example test checks the return.
+- Finding 5: rejected. No rule covers duplicate keys.
+- Finding 6: rejected. The plan (T1) chose the second parse.
+- Finding 7: rejected. The blank test matches the package's existing id check.
+- Finding 8: rejected. This review ran the check on that fixture directly.
+- Finding 9: noted. The T2 work-log line records the two unload test edits.
+- Finding 11: fixed by finding 1.

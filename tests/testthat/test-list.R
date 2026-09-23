@@ -5,7 +5,7 @@ test_that("list_models aborts with class rlmstudio_no_server when the server is 
 
 test_that("list_models sends a GET request to api/v1/models", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-  recorder <- local_request_recorder(mock_response(200L, "{}"))
+  recorder <- local_request_recorder(mock_response(200L, '{"models": []}'))
 
   suppressMessages(list_models())
 

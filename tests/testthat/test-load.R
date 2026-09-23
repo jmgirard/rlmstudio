@@ -11,9 +11,10 @@ test_that("lms_load aborts with class rlmstudio_no_server when the server is dow
 test_that("lms_load builds body with correct integer/logical conversions", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
 
-  recorder <- local_request_recorder(
+  recorder <- local_request_sequence(list(
+    mock_response(200L, '{"models": []}'),
     mock_response(200L, '{"status": "loaded"}')
-  )
+  ))
 
   suppressMessages({
     lms_load(

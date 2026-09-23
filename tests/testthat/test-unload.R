@@ -167,7 +167,7 @@ test_that("lms_unload_all unloads each reported instance in order and forwards d
     is_server_running = function(...) TRUE,
     list_models = function(...) {
       loaded_models_frame(
-        data.frame(identifier = c("inst-1", "inst-2"), stringsAsFactors = FALSE)
+        data.frame(id = c("inst-1", "inst-2"), stringsAsFactors = FALSE)
       )
     }
   )
@@ -203,7 +203,7 @@ test_that("lms_unload_all sends every unload request to the host it was given", 
     is_server_running = function(...) TRUE,
     list_models = function(...) {
       loaded_models_frame(
-        data.frame(identifier = c("inst-1", "inst-2"), stringsAsFactors = FALSE)
+        data.frame(id = c("inst-1", "inst-2"), stringsAsFactors = FALSE)
       )
     }
   )
@@ -220,8 +220,8 @@ test_that("lms_unload_all sends every unload request to the host it was given", 
   expect_equal(hosts, rep("unload-all-test.invalid:9999", 2L))
 })
 
-# Run lms_unload_all() over one loaded_instances shape and return the ids it
-# read, so each shape test states only its own shape and expected id.
+# Run lms_unload_all() over one loaded_instances value and return the ids it
+# read.
 ids_read_from <- function(instances) {
   testthat::local_mocked_bindings(
     is_server_running = function(...) TRUE,
@@ -232,64 +232,9 @@ ids_read_from <- function(instances) {
   suppressMessages(lms_unload_all())
 }
 
-test_that("lms_unload_all reads the identifier column, not the first column", {
-  ids <- ids_read_from(
-    data.frame(
-      decoy = "wrong-a",
-      identifier = "inst-id-a",
-      stringsAsFactors = FALSE
-    )
-  )
-  expect_equal(ids, "inst-id-a")
-})
-
 test_that("lms_unload_all reads the id column, not the first column", {
   ids <- ids_read_from(
     data.frame(decoy = "wrong-b", id = "inst-id-b", stringsAsFactors = FALSE)
   )
   expect_equal(ids, "inst-id-b")
-})
-
-test_that("lms_unload_all falls back to the first column when neither name is present", {
-  ids <- ids_read_from(
-    data.frame(
-      first_col = "inst-id-c",
-      other = "ignored",
-      stringsAsFactors = FALSE
-    )
-  )
-  expect_equal(ids, "inst-id-c")
-})
-
-test_that("lms_unload_all coerces a plain vector of instance ids to character", {
-  # Feed numbers rather than strings. With a character vector the as.character()
-  # coercion in lms_unload_all() does nothing, so the test passes whether the
-  # coercion is there or not. Numbers make the coercion load-bearing: without
-  # it the ids come back as numbers and this assertion fails.
-  ids <- ids_read_from(c(101, 102))
-  expect_equal(ids, c("101", "102"))
-})
-
-test_that("lms_unload_all drops NA and empty ids and returns NULL when none remain", {
-  local_mocked_bindings(
-    is_server_running = function(...) TRUE,
-    list_models = function(...) {
-      loaded_models_frame(c(NA_character_, ""))
-    }
-  )
-  recorder <- local_request_recorder(mock_response(200L))
-
-  expect_message(
-    result <- expect_invisible(lms_unload_all()),
-    "No models are currently loaded.",
-    fixed = TRUE
-  )
-
-  expect_null(result)
-  expect_length(recorder$requests, 0L)
-})
-
-test_that("lms_unload_all keeps the good ids when only some are NA or empty", {
-  ids <- ids_read_from(c("inst-id-f", NA_character_, "", "inst-id-g"))
-  expect_equal(ids, c("inst-id-f", "inst-id-g"))
 })

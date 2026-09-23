@@ -577,7 +577,9 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #' Sends one GET request to the model list endpoint at `host` and reports
 #' whether the answer came from an LM Studio server that this package can use.
 #' The answer is `TRUE` only when the request returns HTTP status 200 and the
-#' response body carries a list of models. An empty list counts, because a
+#' response body is a model list that [list_models()] can read. The two
+#' functions apply the same shape rules, which the "Malformed response"
+#' section of [rlmstudio-conditions] states. An empty list counts, because a
 #' fresh LM Studio install has no models downloaded yet and its server still
 #' works.
 #'
@@ -664,7 +666,7 @@ lms_server_ready <- function(
         return(FALSE)
       }
 
-      is_model_list(parse_json_body(resp)[["models"]])
+      is.null(model_list_fault(parse_json_body(resp)))
     },
     error = function(e) FALSE
   )
@@ -690,28 +692,4 @@ server_ready_request <- function(host, timeout = 2, token = NULL) {
     httr2::req_url_path("api/v1/models") |>
     httr2::req_timeout(timeout) |>
     httr2::req_error(is_error = \(resp) FALSE)
-}
-
-#' Is this parsed value a list of models?
-#'
-#' @param models The value parsed out of the `models` key of a response body.
-#'
-#' @return Logical.
-#'
-#' @noRd
-is_model_list <- function(models) {
-  # A JSON array parses to a list with no names. A JSON object parses to a
-  # list with names, so a body that happens to hold a `models` object is not a
-  # model list.
-  if (!is.list(models) || !is.null(names(models))) {
-    return(FALSE)
-  }
-
-  # Every entry of a real model list is a JSON object, which parses to a named
-  # list. An array of bare strings or numbers is some other server's answer.
-  all(vapply(
-    models,
-    function(entry) is.list(entry) && !is.null(names(entry)),
-    logical(1)
-  ))
 }

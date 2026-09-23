@@ -85,7 +85,7 @@ test_that("a failed status is not ready even when the body looks right", {
   # deleting the status check turns this test red.
   for (status in c(401L, 500L)) {
     local_request_recorder(
-      mock_response(status, '{"models": [{"type": "llm", "key": "a"}]}')
+      mock_response(status, '{"models": [{"type": "llm", "key": "a", "loaded_instances": []}]}')
     )
     expect_identical(lms_server_ready(), FALSE)
   }
@@ -99,7 +99,7 @@ test_that("a 200 whose body carries no model list is not ready", {
 
 test_that("a 200 whose body carries a model list is ready", {
   local_request_recorder(
-    mock_response(200L, '{"models": [{"type": "llm", "key": "a"}]}')
+    mock_response(200L, '{"models": [{"type": "llm", "key": "a", "loaded_instances": []}]}')
   )
 
   expect_identical(lms_server_ready(), TRUE)
@@ -132,7 +132,7 @@ test_that("a model list of several models is ready", {
   local_request_recorder(
     mock_response(
       200L,
-      '{"models": [{"type": "llm", "key": "a"}, {"type": "llm", "key": "b"}]}'
+      '{"models": [{"type": "llm", "key": "a", "loaded_instances": []}, {"type": "llm", "key": "b", "loaded_instances": []}]}'
     )
   )
   expect_identical(lms_server_ready(), TRUE)

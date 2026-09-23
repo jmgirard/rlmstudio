@@ -17,7 +17,7 @@ wrapper_body <- paste0(
   '{"status": "loaded", "job_id": "job-1", "models": [',
   '{"type": "llm", "key": "other-model", "display_name": "Other", ',
   '"size_bytes": 1073741824, ',
-  '"loaded_instances": [{"identifier": "inst-1"}]}]}'
+  '"loaded_instances": [{"id": "inst-1"}]}]}'
 )
 
 # The fourteen exported functions that can reach the REST API, with the number

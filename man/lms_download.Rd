@@ -62,14 +62,16 @@ status-200 body that does not parse as JSON, the chat functions,
 \code{rlmstudio_bad_response}. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it can
 report success. A body that parses as JSON but has another shape can
 come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, the
-chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it. The
-other functions can fail with an error with no class of this package, fail
-with \code{rlmstudio_api_error}, as \code{\link[=lms_load]{lms_load()}} does for \code{{}}, or report
-success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not answer
-in HTTP gives an
-\code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
-asks the host for a model list and reports \code{TRUE} only for an answer that
-an LM Studio server would give.
+chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it.
+\code{\link[=list_models]{list_models()}} raises it for a model list with another shape, and so do
+\code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE}, which read that
+list. The replies of \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
+\code{\link[=lms_download_status]{lms_download_status()}} can fail with an error with no class of this
+package, fail with \code{rlmstudio_api_error}, as \code{\link[=lms_load]{lms_load()}} does for \code{{}}, or
+report success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not
+answer in HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for
+the stronger test: it asks the host for a model list and reports \code{TRUE}
+only for a model list that \code{\link[=list_models]{list_models()}} can read.
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} checks the server once before its first input, and
 \code{\link[=lms_chat]{lms_chat()}} checks it again for each input. If that check finds the server
@@ -119,6 +121,26 @@ does not parse, and the package does not fetch the URL or read the file.
 The message says that the body did not parse as JSON and that something
 other than LM Studio may be answering on the host. It does not hold the
 body text.
+
+\code{\link[=list_models]{list_models()}} also raises it for a status-200 model list with the wrong
+shape. \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE} raise it
+through \code{\link[=list_models]{list_models()}}. A model list must follow four rules. Each field is
+read by its exact name, so a field named \code{keyX} does not stand in for
+\code{key}.
+\enumerate{
+\item The body is a JSON object whose \code{models} field is an array. The array
+can be empty.
+\item Each entry of \code{models} is a JSON object. Its \code{type} and \code{key} are
+strings, and its \code{loaded_instances} is an array.
+\item The \code{size_bytes} of an entry is a number, or absent, or \code{null}.
+\item Each entry of \code{loaded_instances} is a JSON object whose \code{id} is a string
+with a character that is not whitespace.
+}
+
+The rules are checked before the \code{type} and \code{loaded} filters, so an entry
+that the filters drop can still raise the condition. The message names the
+field or entry that broke a rule. \code{\link[=lms_server_ready]{lms_server_ready()}} applies the same
+rules and returns \code{FALSE} for a body that breaks one.
 
 \code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
 it returns are placed by the index that the response reports, so a block
