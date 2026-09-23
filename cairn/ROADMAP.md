@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-22 (M023 done and archived, M020 row pruned, one review candidate added, one lesson corrected)_
+_Last hygiene check: 2026-09-23 (M024 done and archived, M021 row pruned, one candidate row extended, D-015 added, one lesson extended)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-22 (M023 done and archived, M020 row pruned, one re
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M024 | A chat reply that does not parse as JSON fails its input alone | review | none | normal | milestones/M024-chat-body-parse.md |
+| M024 | A chat reply that does not parse as JSON fails its input alone | done | none | normal | milestones/archive/M024-chat-body-parse.md |
 | M023 | A data-frame chat batch reports each reply's id and token counts on the OpenResponses and OpenAI routes | done | none | normal | milestones/archive/M023-batch-usage-columns.md |
 | M022 | A native chat batch reports each reply's stats and response id | done | none | normal | milestones/archive/M022-native-batch-stats.md |
-| M021 | An unreadable OpenResponses reply names its fault | done | none | normal | milestones/archive/M021-openresponses-reply-faults.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -46,7 +45,7 @@ _Last hygiene check: 2026-09-22 (M023 done and archived, M020 row pruned, one re
 - `request_target()` now returns headers with redaction off for every caller. The older callers do not pin `RLMSTUDIO_API_TOKEN`. Nothing prints those headers today. Give them an opt-in accessor, added 2026-09-20, M009 review finding 6
 - A guard that keeps the token wrapper table covering every exported function that reaches the REST API. The table is a fixed list of twelve names. A thirteenth wrapper added later escapes it, added 2026-09-20, M009 review finding 8, count corrected M010, see the two sibling guard rows above
 - A structured reply that the token limit cut off but that is still valid JSON, such as `"12"`, parses with no sign of the cut-off. Decide whether a `finish_reason` of `"length"` warns or aborts even when the parse succeeds, added 2026-09-22, M018 review pass 2 finding 3
-- A bad token (401) or a model that is not loaded (404) fails every input of `lms_chat_batch()` in the same way. The batch then sends every request and warns at the end. Decide whether a failure that holds for every input stops the batch early, added 2026-09-22, M019 review finding O3
+- A bad token (401) or a model that is not loaded (404) fails every input of `lms_chat_batch()` in the same way. The batch then sends every request and warns at the end. Decide whether a failure that holds for every input stops the batch early. Since M024, `stream = TRUE` in `...` also fails every input alone. The hint then blames another process, added 2026-09-22, M019 review finding O3, M024 review finding O1
 - An unreadable native or OpenResponses reply that the token limit cut off aborts with the shape detail and no hint about the limit. On 2026-09-22, cut-off replies at `max_output_tokens` 5 from gemma-3-1b and qwen3-4b-2507 carried no marker. `/v1/responses` said `status` `"completed"` and `incomplete_details` `null`. `/api/v1/chat` carried only `model_instance_id`, `output`, `stats`, and `response_id`. No reasoning model was on hand to test a reply that ends before any message item. Promote once a live reply marks the cut-off, such as `status` `"incomplete"` with reason `"max_output_tokens"`, added 2026-09-22, M021 plan gate and T1
 - A cut-off OpenResponses or native reply whose text is readable returns the partial text with no sign of the cut-off. Decide whether it warns. See the sibling row on a cut-off structured reply that still parses, added 2026-09-22, M021 scope
 - The tests of the unreadable native and OpenResponses replies do not pin the order of the checks. Each shape breaks exactly one check, so the tests still pass after a swap of two adjacent checks. Add shapes that break two checks, added 2026-09-22, M021 review finding O6
