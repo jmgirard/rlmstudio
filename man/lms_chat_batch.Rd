@@ -152,8 +152,10 @@ httr2 or from the JSON parser. \code{\link[=lms_unload]{lms_unload()}} does not 
 can report success. A body that parses as JSON but has another shape can
 come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, the
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it. The
-other functions can fail with an error with no class of this package, or
-report success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not answer in HTTP gives an
+other functions can fail with an error with no class of this package, fail
+with \code{rlmstudio_api_error}, as \code{\link[=lms_load]{lms_load()}} does for \code{{}}, or report
+success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not answer
+in HTTP gives an
 \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
 asks the host for a model list and reports \code{TRUE} only for an answer that
 an LM Studio server would give.
@@ -242,8 +244,8 @@ Parts of other types, such as a refusal, are not checked, and with
 names, so a field whose name only starts with the one asked for, such as
 \code{tokenX}, reads as absent and gives \code{NA} in the data frame.
 
-\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it in three cases, all only with
-\code{simplify = TRUE}. The first case is a response whose \code{choices} field is
+Apart from a body that does not parse as JSON, \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises
+it in three cases, all only with \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
 missing, empty, or not an array, or whose first element is not a JSON
 object with a \code{message} object in it, so there is no reply to read. This
 case is raised with or without a \code{schema}, and with \code{logprobs = TRUE} as

@@ -131,7 +131,9 @@ lms_chat <- function(
 #'   FALSE, returns raw list.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature).
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. Otherwise, returns one character string: the `text` of every
+#'   response. A status-200 body that does not parse as JSON raises
+#'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
+#'   returns one character string: the `text` of every
 #'   part of type `"output_text"` in the items of type `"message"`, pasted
 #'   together in order with no separator. Reasoning items, tool calls, and
 #'   parts of other types, such as a refusal, are skipped. If
@@ -263,7 +265,9 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   empty array `[]`. The package checks only that `schema` is a named list,
 #'   an empty list, or `NULL`. The server checks the schema itself.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. Otherwise, returns a character string containing the generated
+#'   response. A status-200 body that does not parse as JSON raises
+#'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
+#'   returns a character string containing the generated
 #'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
 #'   object with the log probabilities populated as \code{NULL} since they are
 #'   currently stubbed in the LM Studio OpenAI endpoint. With
@@ -799,7 +803,9 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. The body can hold a `response_id` for the reply and a `stats`
+#'   response. A status-200 body that does not parse as JSON raises
+#'   `rlmstudio_bad_response` with either setting of `simplify`. The body can
+#'   hold a `response_id` for the reply and a `stats`
 #'   object of token counts and timings. With `api_type = "native"` and
 #'   `format = "data.frame"`, [lms_chat_batch()] returns the id and six of
 #'   the `stats` fields as columns. If \code{simplify = TRUE},

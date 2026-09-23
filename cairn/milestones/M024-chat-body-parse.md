@@ -75,6 +75,8 @@ A status-200 chat reply that does not parse as JSON aborts with `rlmstudio_bad_r
 - 2026-09-22: T5 done. `devtools::test()`: 0 failures, 6535 passes. `devtools::check()` with LM Studio live and the token set: 0 errors, 0 warnings, 0 notes.
 - 2026-09-22: claim audit: 20 claims read, 4 corrected — NEWS.md, R/conditions.R, R/utils-api-error.R
 - 2026-09-22: The claim audit's re-read found one corrected sentence incomplete, and its evidence-backed wording went in. The help now names `lms_unload_all()` and `lms_unload()` and the `{}` outcomes. `devtools::test()`: 0 failures, 6535 passes. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
+- 2026-09-22: Review ran. All seven criteria have fresh evidence, and the three reviewer lenses reported nine findings. Four are fixed on the branch, one joins a candidate row, one goes to a hygiene D-entry, and three are rejected.
+- step-7 approval: m024-chat-body-parse approved for merge
 
 ## Decisions
 <!-- owner: implement, review · append-only -->
@@ -92,3 +94,17 @@ Sync: branch contains `origin/main`, which had not moved. No PR exists yet.
 - AC6: A read of `R/conditions.R` and `man/rlmstudio-conditions.Rd` on the branch shows the four changes. "Malformed response" names `lms_embed()` and the three chat functions after "Four functions raise it", which is 4 names. It states that the body is parsed before `simplify` is read. A grep for "raw parse error" and "embeddings body that did not parse" in `R/` and `man/` finds nothing. The `lms_chat_batch()` help says "That input fails alone". NEWS.md has two entries.
 - AC7: `devtools::test()` gave 6535 passes, 0 failures, 0 errors, and 0 skips. `devtools::document()` left `git status` clean. `devtools::check()` ran with LM Studio started and the token set. The vignettes built, and the result was 0 errors, 0 warnings, and 0 notes.
 - Consistency gate: `cairn_validate.py` exited 0 with all checks passed. `document()` gave no diff. The branch does not touch README, `DESIGN.md`, or `.Rbuildignore`, and it adds no top-level file. The repo has no pkgdown site. NEWS.md has the entries and no milestone numbers.
+
+Independent review: three fresh reviewers ran. The history lens [S] and the prior-review lens [S] reported no findings. The prior-review probe found no PR review comments. The diff lens [O] reported nine findings. The maintainer accepted the proposed triage at the gate.
+
+- O1 (follow-up): A fault that hits every input no longer stops `lms_chat_batch()`. With `stream = TRUE` in `...`, every input fails alone, and the hint wrongly blames another process. It joins the candidate row on batches where every input fails.
+- O2 (fixed): `R/conditions.R` said that `lms_chat_openai()` raises the class only with `simplify = TRUE`. The passage now opens with the exception for a body that does not parse.
+- O3 (fixed): The help said that the other functions fail unclassed or report success. A mock showed that `lms_load()` raises `rlmstudio_api_error` for `{}`, and the help now says so.
+- O4 (fixed): The `@return` text of the three chat functions now states the abort with either `simplify` setting.
+- O5 (rejected): The lowercase message clause copies the `lms_embed()` wording.
+- O6 (rejected): The plan gate chose to leave out the parser error, because it quotes the body.
+- O7 (fixed in part): `expect_null()` calls in the loops now carry `info`. `expect_s3_class()` takes no `info` argument, so those calls stay.
+- O8 (rejected): A batch with `schema` or `logprobs` is outside AC3, and the parse runs before those branches.
+- O9 (fixed at hygiene): No D-entry records the gate choices, and D-012's `simplify = FALSE` line no longer holds for a body that does not parse. The history lens raised the same gap. A new D-entry goes in with the post-merge record update.
+
+After the fixes, `devtools::document()` ran and `devtools::test()` gave 6535 passes and 0 failures.

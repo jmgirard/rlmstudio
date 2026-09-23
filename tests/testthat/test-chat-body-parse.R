@@ -55,8 +55,8 @@ test_that("a 200 body that does not parse raises rlmstudio_bad_response", {
         if (api_type == "openai") {
           # Every OpenAI condition carries these two fields, NULL here.
           expect_true(all(c("content", "finish_reason") %in% names(cnd)), info = info)
-          expect_null(cnd$content)
-          expect_null(cnd$finish_reason)
+          expect_null(cnd$content, info = info)
+          expect_null(cnd$finish_reason, info = info)
         }
       }
     }

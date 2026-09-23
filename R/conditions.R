@@ -32,8 +32,10 @@
 #' can report success. A body that parses as JSON but has another shape can
 #' come back unchanged with `simplify = FALSE`. With `simplify = TRUE`, the
 #' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it. The
-#' other functions can fail with an error with no class of this package, or
-#' report success, as [lms_download()] does for `{}`. A process that does not answer in HTTP gives an
+#' other functions can fail with an error with no class of this package, fail
+#' with `rlmstudio_api_error`, as [lms_load()] does for `{}`, or report
+#' success, as [lms_download()] does for `{}`. A process that does not answer
+#' in HTTP gives an
 #' `httr2_failure` error. Use [lms_server_ready()] for the stronger test: it
 #' asks the host for a model list and reports `TRUE` only for an answer that
 #' an LM Studio server would give.
@@ -117,8 +119,8 @@
 #' names, so a field whose name only starts with the one asked for, such as
 #' `tokenX`, reads as absent and gives `NA` in the data frame.
 #'
-#' [lms_chat_openai()] raises it in three cases, all only with
-#' `simplify = TRUE`. The first case is a response whose `choices` field is
+#' Apart from a body that does not parse as JSON, [lms_chat_openai()] raises
+#' it in three cases, all only with `simplify = TRUE`. The first case is a response whose `choices` field is
 #' missing, empty, or not an array, or whose first element is not a JSON
 #' object with a `message` object in it, so there is no reply to read. This
 #' case is raised with or without a `schema`, and with `logprobs = TRUE` as
