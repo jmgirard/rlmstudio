@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M025: A model-management reply that does not parse as JSON aborts with rlmstudio_bad_response
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** IP1, GP2   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — five exported functions change the error they raise, and two change what they accept   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m025-reply-parse-guard   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -109,7 +109,7 @@ the content of that file. A fetch calls a host the user never named (IP1).
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Shared parse. Tests first. Add a helper that reads the body with
+- [x] T1: Shared parse. Tests first. Add a helper that reads the body with
       `httr2::resp_body_string(resp, "UTF-8")` and parses it with
       `jsonlite::parse_json()`, with a `simplifyVector` argument and nothing
       else. `parse_ok_body()` (`R/utils-api-error.R:178`),
@@ -141,6 +141,8 @@ the content of that file. A fetch calls a host the user never named (IP1).
 - 2026-09-22: plan gate chose to fix the file and URL read in M025 over a separate hotfix. The same helper carries both changes. Falsified by a regression in the chat routes that traces to the parser switch alone.
 - 2026-09-22: plan gate chose to parse every reply by content over a header check in `lms_server_ready()` and `api_error_message()`. One parse rule then covers one body. Falsified by a server setup that sends a non-JSON-type body that `lms_server_ready()` must reject.
 - 2026-09-22: plan chose `jsonlite::parse_json()` on the body text over `jsonlite::validate()` before `fromJSON()`. `parse_json()` never reads a file or a URL. Falsified by a body that `parse_json(simplifyVector = TRUE)` reads differently from `fromJSON(simplifyDataFrame = TRUE)`.
+- 2026-09-22: started implementation on `m025-reply-parse-guard`. No implementation choice was open, so the question gate was skipped.
+- 2026-09-22: T1 done. `parse_json_body()` in `R/utils-api-error.R` is the one reply parse, and `parse_ok_body()`, `api_error_message()`, and `lms_server_ready()` call it. `tests/testthat/test-body-parse.R` failed 10 times before the change and passes after it. The AC5 site list moves to T2, because T2 changes the sites. `devtools::test()` is clean.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
