@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-22 (M022 done and archived, M019 row pruned, one review candidate added)_
+_Last hygiene check: 2026-09-22 (M023 done and archived, M020 row pruned, one review candidate added, one lesson corrected)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-22 (M022 done and archived, M019 row pruned, one re
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M023 | A data-frame chat batch reports each reply's id and token counts on the OpenResponses and OpenAI routes | review | none | normal | milestones/M023-batch-usage-columns.md |
+| M023 | A data-frame chat batch reports each reply's id and token counts on the OpenResponses and OpenAI routes | done | none | normal | milestones/archive/M023-batch-usage-columns.md |
 | M022 | A native chat batch reports each reply's stats and response id | done | none | normal | milestones/archive/M022-native-batch-stats.md |
 | M021 | An unreadable OpenResponses reply names its fault | done | none | normal | milestones/archive/M021-openresponses-reply-faults.md |
-| M020 | A chat reply without readable answer text fails that input, not the batch | done | none | normal | milestones/archive/M020-chat-reply-shape.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -39,6 +38,7 @@ _Last hygiene check: 2026-09-22 (M022 done and archived, M019 row pruned, one re
 - A guard that keeps every new `stop_if_no_server()` call site covered by a class test, added 2026-09-18, M003 scope
 - A guard that keeps every REST wrapper handling a failed response listed in the failure table. The deleted guard read package sources that R CMD check does not ship, so it skipped there. It did run under `devtools::test()`, so it gated local runs (corrected M006 review), added 2026-09-18, M006 scope, see also the `stop_if_no_server()` guard row
 - A non-JSON failure body becomes the abort message in full, with no length bound. A proxy's HTML page reaches the user whole. A scalar JSON body reaches the user as the bare token, added 2026-09-18, M005 implement audit and M005 review finding 12
+- A 200 chat body that is not JSON, or that comes as `text/plain`, fails in `httr2::resp_body_json()` with an unclassed error. In `lms_chat_batch()`, that error ends the batch and loses every reply so far. M023 classes only bare JSON values. See the sibling row on non-JSON failure bodies, added 2026-09-22, M023 review finding O2
 - When only R-devel breaks, a red `ubuntu-latest (devel)` job still blocks the merge. Decide its disposition, added 2026-09-17, M002 review finding 6
 - `request_target()` parses the request body as JSON with no guard, so a wrapper that ever sends a non-JSON body surfaces a raw `jsonlite` error from the helper rather than a named test failure. Catch the parse and return the raw string, added 2026-09-19, M008 review finding 6
 - The eight abort sites call `rlm_token(token)` again to decide the hint. `lms_client()` already resolved it. Ambient state that changes between the two reads gives the wrong hint, added 2026-09-20, M009 review finding 5
