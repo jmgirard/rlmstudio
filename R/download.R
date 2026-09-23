@@ -20,6 +20,7 @@
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #'
 #' @export
 #'
@@ -109,6 +110,7 @@ lms_download <- function(
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
 #'
 #' @export
 #'
