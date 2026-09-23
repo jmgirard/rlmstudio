@@ -177,9 +177,8 @@ parse_json_body <- function(resp, simplifyVector = FALSE) {
 #'
 #' The parse that a wrapper runs on a status-200 body before it reads it.
 #' `lms_server_ready()` is the one wrapper reading such a body that does not
-#' use it.
-#' It calls `parse_json_body()` and returns `FALSE` on any error. A
-#' 200 whose body is not JSON at all reaches here: a proxy or a captive
+#' use it: that function calls `parse_json_body()` itself and returns `FALSE`
+#' on any error. A 200 whose body is not JSON at all reaches here: a proxy or a captive
 #' portal answering on the host serves an HTML page under a success status.
 #' Left unguarded, httr2 or the jsonlite lexer raises an unclassed error, and
 #' a chat batch loses every reply so far to one input. The abort runs before
@@ -200,13 +199,15 @@ parse_json_body <- function(resp, simplifyVector = FALSE) {
 #' @param resp An httr2 response with status 200.
 #' @param label Character. The calling wrapper's own label, which opens the
 #'   message.
-#' @param simplifyVector Logical. Passed on to `parse_json_body()`.
 #' @param ... Extra fields for the condition, passed on to
 #'   `rlm_abort_bad_response()`.
+#' @param simplifyVector Logical. Passed on to `parse_json_body()`. It comes
+#'   after `...`, so it matches only by its full name, and a condition field
+#'   such as `simplify` cannot bind to it.
 #' @return The parsed body.
 #'
 #' @noRd
-parse_ok_body <- function(resp, label, simplifyVector = FALSE, ...) {
+parse_ok_body <- function(resp, label, ..., simplifyVector = FALSE) {
   tryCatch(
     parse_json_body(resp, simplifyVector = simplifyVector),
     error = function(cnd) {

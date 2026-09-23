@@ -150,6 +150,8 @@ the content of that file. A fetch calls a host the user never named (IP1).
 - 2026-09-22: the claim audit found that `lms_chat()` also raises the class, so the help page names ten raisers, not nine. The NEWS line on the message now says it opens with each function's own label. The `parse_ok_body()` comment now names `lms_server_ready()` as the one wrapper that skips it. The same reader re-read the three fixes, and they hold.
 - 2026-09-22: all tasks done, `devtools::test()` clean. Status set to review.
 - 2026-09-22: review checkpoint. AC1 to AC7 have evidence and ticks, and the consistency gate passes. Two of three independent reviewers are still running.
+- 2026-09-22: gate fixes F2, F4, F5, F6, and F9 committed. Tests clean.
+- step-7 approval: m025-reply-parse-guard approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -180,3 +182,5 @@ Independent review, 2026-09-22, three fresh reviewers. The prior-review lens fou
 - F7 (low): `api_error_message()` reads the fallback text with the header charset but parses as UTF-8. Proposed: reject, because the result for a non-UTF-8 body is the same as before this milestone.
 - F8 (cosmetic): The full `Malformed response` section now appears in five more help pages, with chat rules that do not apply to them. Proposed: reject, because AC6 requires the section.
 - F9 (cosmetic): A blank line separates the new NEWS entries from the older ones under the same heading. Proposed: fix now.
+
+Gate triage, 2026-09-22: the user accepted the proposed dispositions. F2, F4, F5, F6, and F9 are fixed. F1, F3, F7, and F8 are rejected for the reasons above. After the fixes, `devtools::test()` gives 6670 pass and 0 fail, and `devtools::document()` gives no diff. The F6 NEWS text rests on the old parse calls, read at review with `git show main` and `git diff main...HEAD`.
