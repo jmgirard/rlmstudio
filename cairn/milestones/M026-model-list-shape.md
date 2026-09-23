@@ -164,6 +164,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 - 2026-09-22: T4 done. `R/conditions.R` states the four rules in "Malformed response" and names the three raisers in "Server not running". `lms_server_ready()` help says it applies the `list_models()` rules. NEWS.md has four entries. `devtools::document()` is stable on a second run, and `devtools::test()`: 0 failures, 8384 passes.
 - 2026-09-22: claim audit: 45 claims read, 4 corrected — NEWS.md, R/conditions.R, tests/testthat/test-model-list-shape.R. Fixed: the "Before" sentence of the first NEWS entry, "load reply" for all three functions on the conditions page, and the `pass_cases()` comment. The fourth, the docs commit of the fixture, was fetched this session and stands. On its one re-read, the reader found the NEWS "Before" sentence still too broad, so it now says "some bad fields" and "some other bodies".
 - 2026-09-22: status set to review. `devtools::test()`: 0 failures, 8384 passes. `devtools::document()` gives no diff.
+- 2026-09-22: step-7 approval: m026-model-list-shape approved for merge, with review finding 1 fixed first (non-object entry tests expect "is not a JSON object").
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -198,3 +199,15 @@ Independent review: three fresh reviewers. The blame-history reviewer and the pr
 11. The help sentence "The message names the field or entry" depends on finding 1.
 
 None shows a criterion failing. Triage is at the merge gate.
+
+Triage at the gate, 2026-09-22:
+- Finding 1: fix now. A non-object entry case now also expects "is not a JSON object". With wrong messages planted in `R/list.R` for both non-object branches, 72 cases went red, and the restored code passes. Full suite: 0 failures, 8456 passes.
+- Findings 2 and 10: rejected. `list_models()` aborts before a caller sends any other request, whatever the fault.
+- Finding 3: rejected. The `$` reads are on lines the branch did not change.
+- Finding 4: rejected. The docs example test checks the return.
+- Finding 5: rejected. No rule covers duplicate keys.
+- Finding 6: rejected. The plan (T1) chose the second parse.
+- Finding 7: rejected. The blank test matches the package's existing id check.
+- Finding 8: rejected. This review ran the check on that fixture directly.
+- Finding 9: noted. The T2 work-log line records the two unload test edits.
+- Finding 11: fixed by finding 1.

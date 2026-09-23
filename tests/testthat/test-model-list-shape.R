@@ -62,8 +62,10 @@ entry_places <- function(bad, good) {
   )
 }
 
-# Every fault body, as a list of cases. Each case holds the body, the text the
-# message must name, and a label.
+# Every fault body, as a list of cases. Each case holds the body, the texts the
+# message must contain, and a label. A non-object entry also needs "is not a
+# JSON object", because the name of its array appears in every message about
+# that array.
 fault_cases <- function() {
   cases <- list()
   add <- function(label, body, names) {
@@ -108,7 +110,7 @@ fault_cases <- function() {
     model_faults[[paste("size_bytes as", form)]] <- list(json_object(fields), "size_bytes")
   }
   for (form in setdiff(names(json_forms), c("empty object", "object"))) {
-    model_faults[[paste("model entry as", form)]] <- list(json_forms[[form]], "models")
+    model_faults[[paste("model entry as", form)]] <- list(json_forms[[form]], "models", "is not a JSON object")
   }
   for (name in names(model_faults)) {
     fault <- model_faults[[name]]
@@ -117,7 +119,7 @@ fault_cases <- function() {
       add(
         paste(name, "in", place),
         list_body(places[[place]]),
-        paste0("`", fault[[2]], "`")
+        c(paste0("`", fault[[2]], "`"), fault[-(1:2)])
       )
     }
   }
@@ -133,10 +135,10 @@ fault_cases <- function() {
   for (form in setdiff(names(json_forms), "string")) {
     instance_faults[[paste("id as", form)]] <- json_object(c(id = json_forms[[form]]))
   }
-  instance_names <- rep("id", length(instance_faults))
+  instance_names <- rep(list("`id`"), length(instance_faults))
   for (form in setdiff(names(json_forms), c("empty object", "object"))) {
     instance_faults[[paste("instance entry as", form)]] <- json_forms[[form]]
-    instance_names <- c(instance_names, "loaded_instances")
+    instance_names <- c(instance_names, list(c("`loaded_instances`", "is not a JSON object")))
   }
   for (k in seq_along(instance_faults)) {
     inner <- entry_places(instance_faults[[k]], valid_instance)
@@ -147,7 +149,7 @@ fault_cases <- function() {
         add(
           paste(names(instance_faults)[[k]], "in", inner_place, "instance,", outer_place, "model"),
           list_body(outer[[outer_place]]),
-          paste0("`", instance_names[[k]], "`")
+          instance_names[[k]]
         )
       }
     }
@@ -188,7 +190,9 @@ test_that("each rule of the model list aborts list_models() with rlmstudio_bad_r
     message <- conditionMessage(cnd)
     first_line <- strsplit(message, "\n", fixed = TRUE)[[1]][[1]]
     expect_match(first_line, "API List Failed", fixed = TRUE, info = case$label)
-    expect_match(message, case$names, fixed = TRUE, info = case$label)
+    for (text in case$names) {
+      expect_match(message, text, fixed = TRUE, info = case$label)
+    }
     expect_no_match(message, "simplify", fixed = TRUE, info = case$label)
   }
 })
