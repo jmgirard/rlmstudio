@@ -187,35 +187,50 @@ lms_chat_openresponses <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-
-    label <- "OpenResponses Failed"
-    parts <- responses_text_parts(resp, resp_data, label)
-    text <- join_reply_texts(
-      resp,
-      lapply(parts, \(part) part[["text"]]),
-      label,
-      "The `text` of an `output_text` part is not one string."
-    )
-    if (!isTRUE(logprobs)) {
-      return(text)
-    }
-
-    check_part_logprobs(resp, parts, label)
-    # The steps of every part in order. A part without logprobs adds none.
-    steps <- unlist(
-      lapply(parts, \(part) part[["logprobs"]]),
-      recursive = FALSE
-    )
-    if (length(steps) == 0L) {
-      return(text)
-    }
-
-    return(validate_lms_chat_result(
-      new_lms_chat_result(text = text, logprobs = logprobs_frame(steps))
-    ))
+    return(responses_reply_value(resp, resp_data, logprobs))
   }
 
   rlm_abort_api(resp, "OpenResponses Failed", !is.null(rlm_token(token)))
+}
+
+#' Read the answer of an OpenResponses reply
+#'
+#' What `lms_chat_openresponses()` returns with `simplify = TRUE`. Shared with
+#' the OpenResponses data-frame route of `lms_chat_batch()`, so a reply fails
+#' there with the same class and message.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param logprobs Logical. Whether log probabilities were asked for.
+#' @return One string, or an `lms_chat_result` when a part carries logprobs.
+#'
+#' @noRd
+responses_reply_value <- function(resp, resp_data, logprobs) {
+  label <- "OpenResponses Failed"
+  parts <- responses_text_parts(resp, resp_data, label)
+  text <- join_reply_texts(
+    resp,
+    lapply(parts, \(part) part[["text"]]),
+    label,
+    "The `text` of an `output_text` part is not one string."
+  )
+  if (!isTRUE(logprobs)) {
+    return(text)
+  }
+
+  check_part_logprobs(resp, parts, label)
+  # The steps of every part in order. A part without logprobs adds none.
+  steps <- unlist(
+    lapply(parts, \(part) part[["logprobs"]]),
+    recursive = FALSE
+  )
+  if (length(steps) == 0L) {
+    return(text)
+  }
+
+  validate_lms_chat_result(
+    new_lms_chat_result(text = text, logprobs = logprobs_frame(steps))
+  )
 }
 
 #' Chat Completion via OpenAI Compatibility API
@@ -314,68 +329,117 @@ lms_chat_openai <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-
-    # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
-    # empty list fails there with a subscript error that names neither the
-    # response nor the field. A missing field gives back NULL as the reply,
-    # which a plain call returns and a `logprobs` call fails on. A JSON object
-    # in place of the array would be read by its first value. A first element
-    # that is a plain value fails on `$` with a base R error, and one that is
-    # an array gives back NULL as the reply. The same holds for its `message`.
-    # Fields are read with `[[`, because `$` would read a field whose name only
-    # starts with the one asked for.
-    choices <- resp_data[["choices"]]
-    is_object <- function(x) is.list(x) && !is.null(names(x))
-    if (
-      !is.list(choices) ||
-        length(choices) == 0L ||
-        !is.null(names(choices)) ||
-        !is_object(choices[[1]]) ||
-        !is_object(choices[[1]][["message"]])
-    ) {
-      rlm_abort_bad_response(
-        resp,
-        "OpenAI API Failed",
-        "The response holds no readable reply in its `choices` field.",
-        content = NULL,
-        finish_reason = NULL
-      )
-    }
-    res_text <- choices[[1]][["message"]][["content"]]
-    finish_reason <- choices[[1]][["finish_reason"]]
-
-    # A reply that is returned as text must be one string. Content that is
-    # `null` or absent, as with a reply that holds only a tool call, has no
-    # answer text (D-012). A schema reply without logprobs is checked by
-    # parse_schema_reply() below instead.
-    if ((is.null(schema) || isTRUE(logprobs)) && !is_one_string(res_text)) {
-      abort_unread_reply(
-        resp,
-        res_text,
-        "OpenAI API Failed",
-        "The reply content is not one string.",
-        finish_reason
-      )
-    }
-
-    if (isTRUE(logprobs)) {
-      # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
-      return(validate_lms_chat_result(
-        new_lms_chat_result(text = res_text, logprobs = NULL)
-      ))
-    }
-    if (!is.null(schema)) {
-      return(parse_schema_reply(
-        resp,
-        res_text,
-        "OpenAI API Failed",
-        finish_reason = finish_reason
-      ))
-    }
-    return(res_text)
+    return(openai_reply_value(resp, resp_data, logprobs, schema))
   }
 
   rlm_abort_api(resp, "OpenAI API Failed", !is.null(rlm_token(token)))
+}
+
+#' Read the answer of a chat completions reply
+#'
+#' What `lms_chat_openai()` returns with `simplify = TRUE`. Shared with the
+#' OpenAI data-frame route of `lms_chat_batch()`, so a reply fails there with
+#' the same class and message.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param logprobs Logical. Whether log probabilities were asked for.
+#' @param schema The schema the request sent, or `NULL`.
+#' @return The reply text, an `lms_chat_result`, or the parsed schema reply.
+#'
+#' @noRd
+openai_reply_value <- function(resp, resp_data, logprobs, schema) {
+  check_body_object(
+    resp,
+    resp_data,
+    "OpenAI API Failed",
+    content = NULL,
+    finish_reason = NULL
+  )
+  # A 200 with no reply in it would otherwise reach the `[[1]]` below. An
+  # empty list fails there with a subscript error that names neither the
+  # response nor the field. A missing field gives back NULL as the reply,
+  # which a plain call returns and a `logprobs` call fails on. A JSON object
+  # in place of the array would be read by its first value. A first element
+  # that is a plain value fails on `$` with a base R error, and one that is
+  # an array gives back NULL as the reply. The same holds for its `message`.
+  # Fields are read with `[[`, because `$` would read a field whose name only
+  # starts with the one asked for.
+  choices <- resp_data[["choices"]]
+  is_object <- function(x) is.list(x) && !is.null(names(x))
+  if (
+    !is.list(choices) ||
+      length(choices) == 0L ||
+      !is.null(names(choices)) ||
+      !is_object(choices[[1]]) ||
+      !is_object(choices[[1]][["message"]])
+  ) {
+    rlm_abort_bad_response(
+      resp,
+      "OpenAI API Failed",
+      "The response holds no readable reply in its `choices` field.",
+      content = NULL,
+      finish_reason = NULL
+    )
+  }
+  res_text <- choices[[1]][["message"]][["content"]]
+  finish_reason <- choices[[1]][["finish_reason"]]
+
+  # A reply that is returned as text must be one string. Content that is
+  # `null` or absent, as with a reply that holds only a tool call, has no
+  # answer text (D-012). A schema reply without logprobs is checked by
+  # parse_schema_reply() below instead.
+  if ((is.null(schema) || isTRUE(logprobs)) && !is_one_string(res_text)) {
+    abort_unread_reply(
+      resp,
+      res_text,
+      "OpenAI API Failed",
+      "The reply content is not one string.",
+      finish_reason
+    )
+  }
+
+  if (isTRUE(logprobs)) {
+    # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
+    return(validate_lms_chat_result(
+      new_lms_chat_result(text = res_text, logprobs = NULL)
+    ))
+  }
+  if (!is.null(schema)) {
+    return(parse_schema_reply(
+      resp,
+      res_text,
+      "OpenAI API Failed",
+      finish_reason = finish_reason
+    ))
+  }
+  res_text
+}
+
+#' Abort on a response body that is a bare JSON value
+#'
+#' A body such as `5`, `"s"`, or `true` parses to an atomic value, and reading
+#' a field out of it with `[[` fails with a base R "subscript out of bounds"
+#' error. A body of `null` parses to `NULL`, and each route's own checks name
+#' that case, so it passes here. A top-level array parses to a list and passes
+#' too.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param label Character. The calling wrapper's label.
+#' @param ... Extra condition fields, such as the `content` and
+#'   `finish_reason` fields that every OpenAI condition carries.
+#'
+#' @noRd
+check_body_object <- function(resp, resp_data, label, ...) {
+  if (!is.null(resp_data) && !is.list(resp_data)) {
+    rlm_abort_bad_response(
+      resp,
+      label,
+      "The response body is not a JSON object.",
+      ...
+    )
+  }
 }
 
 #' Build the structured-output field of a chat completions request
@@ -495,6 +559,7 @@ abort_unread_reply <- function(resp, content, label, detail, finish_reason) {
 #'
 #' @noRd
 chat_message_items <- function(resp, resp_data, label) {
+  check_body_object(resp, resp_data, label)
   output <- resp_data[["output"]]
   if (!is_json_array(output) || length(output) == 0L) {
     rlm_abort_bad_response(
@@ -828,21 +893,79 @@ native_stats_fields <- c(
 #'
 #' @noRd
 native_reply_fields <- function(resp_data) {
-  id <- resp_data[["response_id"]]
-  stats_obj <- resp_data[["stats"]]
-  if (!is_json_object(stats_obj)) {
-    stats_obj <- list()
-  }
-  number_or_na <- function(x) {
-    if (is.numeric(x) && length(x) == 1L) as.double(x) else NA_real_
-  }
+  stats_obj <- object_or_empty(resp_data[["stats"]])
   numbers <- lapply(
     native_stats_fields,
     \(field) number_or_na(stats_obj[[field]])
   )
   names(numbers) <- native_stats_fields
-  c(list(response_id = if (is_one_string(id)) id else NA_character_), numbers)
+  c(list(response_id = string_or_na(resp_data[["response_id"]])), numbers)
 }
+
+# A reply field read into a batch column: one string or one number, else NA.
+string_or_na <- function(x) if (is_one_string(x)) x else NA_character_
+number_or_na <- function(x) {
+  if (is.numeric(x) && length(x) == 1L) as.double(x) else NA_real_
+}
+# A JSON object, or an empty list in place of any other value, so that a
+# field read out of it gives NULL.
+object_or_empty <- function(x) if (is_json_object(x)) x else list()
+
+# The `usage` fields of an OpenResponses or chat completions reply that the
+# data-frame batch on that route returns, by column name. The reasoning count
+# sits in the details object named here.
+usage_field_names <- list(
+  openresponses = c(
+    input_tokens = "input_tokens",
+    total_output_tokens = "output_tokens",
+    details = "output_tokens_details"
+  ),
+  openai = c(
+    input_tokens = "prompt_tokens",
+    total_output_tokens = "completion_tokens",
+    details = "completion_tokens_details"
+  )
+)
+
+#' Read the reply id and the token counts of an OpenResponses or chat
+#' completions reply
+#'
+#' As with `native_reply_fields()`, these values are extra to the answer, so
+#' a value of the wrong type gives `NA` and never fails the input. Fields are
+#' read with `[[`, because `$` would read a field whose name only starts with
+#' the one asked for.
+#'
+#' @param resp_data The parsed response body.
+#' @param api_type `"openresponses"` or `"openai"`.
+#' @return A list with `response_id`, one string or `NA_character_`, and
+#'   `input_tokens`, `total_output_tokens`, and `reasoning_output_tokens`,
+#'   each one double or `NA_real_`.
+#'
+#' @noRd
+usage_reply_fields <- function(resp_data, api_type) {
+  names_in <- usage_field_names[[api_type]]
+  usage <- object_or_empty(resp_data[["usage"]])
+  details <- object_or_empty(usage[[names_in[["details"]]]])
+  list(
+    response_id = string_or_na(resp_data[["id"]]),
+    input_tokens = number_or_na(usage[[names_in[["input_tokens"]]]]),
+    total_output_tokens = number_or_na(usage[[names_in[["total_output_tokens"]]]]),
+    reasoning_output_tokens = number_or_na(details[["reasoning_tokens"]])
+  )
+}
+
+# The reply columns of a data-frame batch on each route, in column order.
+# `response_id` is character, and the others are double.
+reply_columns <- list(
+  native = c("response_id", native_stats_fields),
+  openresponses = c(
+    "response_id",
+    "input_tokens",
+    "total_output_tokens",
+    "reasoning_output_tokens"
+  )
+)
+reply_columns$openai <- reply_columns$openresponses
 
 #' Batch Chat Completion with LM Studio
 #'
@@ -867,7 +990,7 @@ native_reply_fields <- function(resp_data) {
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
 #'   \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. With \code{api_type = "native"}, seven more columns follow, described below.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow, as described below.
 #' }
 #'
 #' With `api_type = "native"` and `format = "data.frame"`, the data frame ends
@@ -883,11 +1006,36 @@ native_reply_fields <- function(resp_data) {
 #' a field out, such as `model_load_time_seconds`. Such a cell does not fail
 #' the input and gives no warning.
 #'
-#' A reply with no readable answer text fails its input, whatever its `stats`
-#' and `response_id` hold. The row of an input that failed holds `NA` in all
-#' seven columns. If every input failed, the seven columns are still there,
-#' `response_id` as character and the other six as double. The other routes
-#' and formats add no such column.
+#' With `api_type = "openresponses"` or `api_type = "openai"` and
+#' `format = "data.frame"`, the data frame ends with four columns read from
+#' each reply: `response_id`, `input_tokens`, `total_output_tokens`, and
+#' `reasoning_output_tokens`. These are the first four native column names,
+#' but the servers send the values under other names:
+#' \itemize{
+#'   \item `response_id` is the reply's `id` on both routes.
+#'   \item `input_tokens` is `usage.input_tokens` on the OpenResponses route
+#'     and `usage.prompt_tokens` on the OpenAI route.
+#'   \item `total_output_tokens` is `usage.output_tokens` on the OpenResponses
+#'     route and `usage.completion_tokens` on the OpenAI route.
+#'   \item `reasoning_output_tokens` is
+#'     `usage.output_tokens_details.reasoning_tokens` on the OpenResponses
+#'     route and `usage.completion_tokens_details.reasoning_tokens` on the
+#'     OpenAI route.
+#' }
+#' The columns are there for every setting of `logprobs` and `schema`.
+#' `response_id` is character, and the three counts are double. The `NA`
+#' rule is the one for the native columns: a cell is `NA` when its field is
+#' absent or is not one value of the column type, and an empty string is
+#' kept. If `usage` is absent or is not a JSON object, all three count cells
+#' are `NA`. If the details object is absent or is not a JSON object, only
+#' `reasoning_output_tokens` is `NA`. Such a cell does not fail the input and
+#' gives no warning.
+#'
+#' A reply with no readable answer text fails its input, whatever its other
+#' fields hold. The row of an input that failed holds `NA` in every column
+#' read from the reply. If every input failed, those columns are still there,
+#' `response_id` as character and the others as double. The vector and list
+#' formats add no such column.
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call.
@@ -985,20 +1133,34 @@ lms_chat_batch <- function(
   # Slots from the lost input on stay NULL.
   results <- vector("list", length(inputs))
   names(results) <- names(inputs)
-  # A native data frame also returns the reply id and the stats of each reply,
-  # so that route asks for the body and reads the text out of it here. The
-  # text is read by the helper `lms_chat_native()` uses, so a reply fails the
-  # same way. `results` still holds the answer text, as a native vector or
-  # list batch with `simplify = TRUE` does, so the `results` field of a
-  # lost-server abort does not change.
-  native_frame <- format == "data.frame" && api_type == "native"
+  # A data frame also returns the reply id and the token counts of each reply
+  # (D-013, D-014), so it asks for the body and reads the answer out of it
+  # here. The answer is read by the helper the single call uses, so a reply
+  # fails the same way. `results` still holds what `simplify = TRUE` returns,
+  # so the `results` field of a lost-server abort does not change.
+  body_frame <- format == "data.frame"
   reply_fields <- vector("list", length(inputs))
-  # `lms_chat_native()` returns the body only for status 200, so the abort a
-  # bad body raises carries that status.
+  # The single calls return the body only for status 200, so the abort a bad
+  # body raises carries that status.
   ok_resp <- httr2::response(status_code = 200L)
+  read_reply <- function(body) {
+    value <- switch(
+      api_type,
+      native = native_reply_text(ok_resp, body),
+      openresponses = responses_reply_value(ok_resp, body, has_logprobs),
+      openai = openai_reply_value(ok_resp, body, has_logprobs, schema)
+    )
+    # Read after the answer, so a reply that fails leaves no values.
+    fields <- if (api_type == "native") {
+      native_reply_fields(body)
+    } else {
+      usage_reply_fields(body, api_type)
+    }
+    list(value = value, fields = fields)
+  }
   for (i in seq_along(inputs)) {
     res <- tryCatch(
-      if (native_frame) {
+      if (body_frame) {
         body <- lms_chat(
           model = model,
           input = inputs[[i]],
@@ -1008,10 +1170,9 @@ lms_chat_batch <- function(
           ...,
           token = token
         )
-        text <- native_reply_text(ok_resp, body)
-        # Read after the text, so a reply that fails leaves no values.
-        reply_fields[[i]] <- native_reply_fields(body)
-        text
+        read <- read_reply(body)
+        reply_fields[[i]] <- read$fields
+        read$value
       } else {
         lms_chat(
           model = model,
@@ -1096,11 +1257,30 @@ lms_chat_batch <- function(
     cli::cli_warn(vector_fallback)
   }
 
+  # Keyed on the route, not on the replies, so the columns and their types
+  # are there even when every input failed. A failed input has no values.
+  add_reply_columns <- function(df) {
+    columns <- reply_columns[[api_type]]
+    df$response_id <- vapply(
+      reply_fields,
+      \(x) if (is.null(x)) NA_character_ else x[["response_id"]],
+      character(1)
+    )
+    for (field in columns[-1]) {
+      df[[field]] <- vapply(
+        reply_fields,
+        \(x) if (is.null(x)) NA_real_ else x[[field]],
+        double(1)
+      )
+    }
+    df
+  }
+
   if (format == "data.frame") {
     if (has_parsed) {
       df <- data.frame(input = inputs, stringsAsFactors = FALSE)
       df$output <- results
-      return(df)
+      return(add_reply_columns(df))
     }
 
     # Keyed on the argument, not on the results, so the column is there even
@@ -1128,23 +1308,7 @@ lms_chat_batch <- function(
         stringsAsFactors = FALSE
       )
     }
-    # Keyed on the route, not on the replies, so the columns and their types
-    # are there even when every input failed. A failed input has no values.
-    if (native_frame) {
-      df$response_id <- vapply(
-        reply_fields,
-        \(x) if (is.null(x)) NA_character_ else x[["response_id"]],
-        character(1)
-      )
-      for (field in native_stats_fields) {
-        df[[field]] <- vapply(
-          reply_fields,
-          \(x) if (is.null(x)) NA_real_ else x[[field]],
-          double(1)
-        )
-      }
-    }
-    return(df)
+    return(add_reply_columns(df))
   }
 
   if (format == "vector" && is.null(vector_fallback)) {

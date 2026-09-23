@@ -73,6 +73,73 @@ native_stats <- function(
   )
 }
 
+# A whole OpenResponses reply whose one `output_text` part reads as `text`.
+# `id` and `usage` are JSON text, and `NULL` leaves the field out.
+# `logprobs_json` goes on the part, as in output_text().
+responses_reply <- function(
+  text = "reply",
+  usage = responses_usage(),
+  id = quoted("resp_1"),
+  logprobs_json = NULL
+) {
+  json_object(
+    id = id,
+    output = json_array(responses_message(output_text(quoted(text), logprobs_json))),
+    usage = usage
+  )
+}
+
+# An OpenResponses `usage` object, in the shape a live reply sends. Each field
+# is JSON text, and `NULL` leaves it out.
+responses_usage <- function(
+  input_tokens = "32",
+  output_tokens = "2",
+  details = json_object(reasoning_tokens = "0")
+) {
+  json_object(
+    input_tokens = input_tokens,
+    output_tokens = output_tokens,
+    total_tokens = "34",
+    input_tokens_details = json_object(cached_tokens = "0"),
+    output_tokens_details = details
+  )
+}
+
+# A whole chat completions reply whose content is `content_json`. `id` and
+# `usage` are JSON text, and `NULL` leaves the field out.
+openai_reply <- function(
+  content_json = quoted("reply"),
+  usage = openai_usage(),
+  id = quoted("chatcmpl-1")
+) {
+  choice <- json_object(
+    index = "0",
+    message = json_object(role = quoted("assistant"), content = content_json),
+    finish_reason = quoted("stop")
+  )
+  json_object(
+    id = id,
+    object = quoted("chat.completion"),
+    choices = json_array(choice),
+    usage = usage
+  )
+}
+
+# A chat completions `usage` object, in the shape a live reply sends. Each
+# field is JSON text, and `NULL` leaves it out.
+openai_usage <- function(
+  prompt_tokens = "29",
+  completion_tokens = "4",
+  details = json_object(reasoning_tokens = "0")
+) {
+  json_object(
+    prompt_tokens = prompt_tokens,
+    completion_tokens = completion_tokens,
+    total_tokens = "33",
+    completion_tokens_details = details
+  )
+}
+
 # An OpenResponses message item holding the given parts.
 responses_message <- function(...) {
   sprintf(
@@ -300,6 +367,26 @@ openai_unreadable <- function() {
     "an object" = list(body = completion_body('{"a": 1}'), content = list(a = 1L))
   )
 }
+
+# Chat completions bodies whose `choices` field holds no readable reply, named
+# by their shape. `lms_chat_openai()` names each of them in one message.
+openai_choices_faults <- function() {
+  list(
+    "no choices field" = '{"id": "chatcmpl-1"}',
+    "an empty choices array" = '{"choices": []}',
+    "a choices object" = '{"choices": {"a": 1}}',
+    "a choices string" = '{"choices": "a"}',
+    "a first choice that is a number" = '{"choices": [5]}',
+    "a first choice that is an array" = '{"choices": [[1]]}',
+    "a choice with no message" = '{"choices": [{"index": 0}]}',
+    "a message that is a string" = '{"choices": [{"message": "a"}]}',
+    "a message that is an array" = '{"choices": [{"message": ["a"]}]}'
+  )
+}
+
+# Bodies that are a bare JSON value. `null` is here as the regression case,
+# because each route already names it in a message of its own.
+bare_bodies <- c(number = "5", string = '"s"', boolean = "true", null = "null")
 
 score_schema <- list(
   type = "object",
