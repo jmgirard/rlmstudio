@@ -50,7 +50,7 @@ the content of that file. A fetch calls a host the user never named (IP1).
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: Four functions abort with `rlmstudio_bad_response` on a status-200
+- [x] AC1: Four functions abort with `rlmstudio_bad_response` on a status-200
       body that does not parse as JSON. They are `list_models()`,
       `lms_load()`, `lms_download()`, and `lms_download_status()`. The
       condition's `status` is `200L`. The message contains
@@ -58,22 +58,22 @@ the content of that file. A fetch calls a host the user never named (IP1).
       function over three bodies: an HTML page, JSON text that stops part
       way, and an empty body. It calls `lms_load()` with `force = TRUE`, so
       the load reply is the body under test.
-- [ ] AC2: The condition of the AC1 abort holds no copy of the body text. A
+- [x] AC2: The condition of the AC1 abort holds no copy of the body text. A
       test puts a marker string in a cut-off JSON body, next to where the
       parse stops, and sends it to each AC1 function. It asserts that the
       marker is in neither `conditionMessage()` nor any field of the
       condition.
-- [ ] AC3: If the model-list body does not parse as JSON, `lms_load()`
+- [x] AC3: If the model-list body does not parse as JSON, `lms_load()`
       without `force` and `lms_unload_all()` abort with
       `rlmstudio_bad_response`. A test pins each of the two.
-- [ ] AC4: Valid JSON sent as `text/plain` reads as JSON. For each of
+- [x] AC4: Valid JSON sent as `text/plain` reads as JSON. For each of
       `lms_load(force = TRUE)`, `lms_download()`, `lms_download_status()`, and
       `lms_server_ready()`, a test sends one body under `text/plain` and under
       `application/json` and compares the results with `expect_identical()`.
       A status-400 body `{"error": {"message": "MARKER"}}` under `text/plain`
       gives an `rlmstudio_api_error` whose message contains `MARKER` and no
       `{`. A test pins that through `lms_load(force = TRUE)`.
-- [ ] AC5: No reply parse site reads a body as a file path or fetches it as a
+- [x] AC5: No reply parse site reads a body as a file path or fetches it as a
       URL. The sites are the lines of `R/` that read an HTTP reply and that
       `grep -nE 'fromJSON|resp_body_json|parse_json|resp_body_string' R/`
       lists. The work log records that list. For
@@ -83,7 +83,7 @@ the content of that file. A fetch calls a host the user never named (IP1).
       `lms_server_ready()` returns `FALSE`. At status 400, the message does not
       contain the file's content. With `base::url` mocked to count calls, the
       test asserts zero calls.
-- [ ] AC6: The `rlmstudio-conditions` help page names `list_models()`,
+- [x] AC6: The `rlmstudio-conditions` help page names `list_models()`,
       `lms_load()`, `lms_download()`, `lms_download_status()`, and
       `lms_unload_all()` as raisers of `rlmstudio_bad_response` for a
       status-200 body that does not parse as JSON. The function counts in its
@@ -92,7 +92,7 @@ the content of that file. A fetch calls a host the user never named (IP1).
       such a body. The Rd file of each of the five contains the
       `Malformed response` section. NEWS.md has an entry for AC1, AC3, AC4,
       and AC5.
-- [ ] AC7: `devtools::test()` is clean, and `devtools::document()` produces
+- [x] AC7: `devtools::test()` is clean, and `devtools::document()` produces
       no diff.
 
 ## Coverage
@@ -149,9 +149,22 @@ the content of that file. A fetch calls a host the user never named (IP1).
 - 2026-09-22: claim audit: 58 claims read, 3 corrected — R/conditions.R, NEWS.md, R/utils-api-error.R
 - 2026-09-22: the claim audit found that `lms_chat()` also raises the class, so the help page names ten raisers, not nine. The NEWS line on the message now says it opens with each function's own label. The `parse_ok_body()` comment now names `lms_server_ready()` as the one wrapper that skips it. The same reader re-read the three fixes, and they hold.
 - 2026-09-22: all tasks done, `devtools::test()` clean. Status set to review.
+- 2026-09-22: review checkpoint. AC1 to AC7 have evidence and ticks, and the consistency gate passes. Two of three independent reviewers are still running.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Evidence, 2026-09-22, on `m025-reply-parse-guard` at `c55fb5d`, which contains `origin/main`.
+
+- AC1: `tests/testthat/test-body-parse.R:86-104` runs `list_models()`, `lms_load(force = TRUE)`, `lms_download()`, and `lms_download_status()` over an HTML page, cut-off JSON, and an empty body. It asserts the class, `status` `200L`, and both message phrases. `devtools::test(filter = "body-parse")`: 414 pass, 0 fail.
+- AC2: `test-body-parse.R:106-128` sends `{"status": "MARKER` to each of the four AC1 functions. It asserts that `MARKER` is in neither `conditionMessage()` nor any deparsed field of the condition. Green in the same run.
+- AC3: `test-body-parse.R:130-147` sends an HTML model list to `lms_load("a-model")` and to `lms_unload_all()`. Each aborts with `rlmstudio_bad_response` and the `API List Failed` label, after one request. Green in the same run.
+- AC4: `test-body-parse.R:149-164` compares `application/json` and `text/plain` results with `expect_identical()` for `lms_load(force = TRUE)`, `lms_download()`, and `lms_download_status()`. `:261-269` does the same for `lms_server_ready()`, and both give `TRUE`. `:271-282` sends the status-400 `MARKER` body under `text/plain` through `lms_load(force = TRUE)`. The message holds `MARKER` and no `{`. Green in the same run.
+- AC5: The grep, re-run at review, lists `R/utils-api-error.R:44`, `:46`, `:169-171`, `:211`, `R/serve.R:394`, `:667`, and `R/chat.R:507`. This matches the work-log list, except that the `parse_ok_body()` site is now `:211`, not `:209`, because the claim-audit comment moved it. The three HTTP reply sites each have tests. The `parse_ok_body()` site has `test-body-parse.R:190-223`, which covers eight functions with a temp-file body and both URL schemes. The `api_error_message()` site has `:225-246`, at status 400. The `lms_server_ready()` site has `:248-259`, which returns `FALSE`. Each URL test mocks `base::url` and asserts zero calls. jsonlite 2.0.0 `fromJSON()` opens a URL body through `base::url()`, which was read at review, so the counter can see a fetch. Green in the same run.
+- AC6: `man/rlmstudio-conditions.Rd`, section `Malformed response`, says "Ten functions raise it" and lists ten, and then says "All ten". The five functions are among them. The status-200 sentence in the API failure section names the five as raisers of `rlmstudio_bad_response`. The one "no class of this package" line left is about a body that parses with another shape. `grep -c 'section{Malformed response}'` gives 1 in each of the five Rd files. NEWS.md has three new entries: the file and URL read (AC5), the four functions and the two callers (AC1, AC3), and `text/plain` (AC4).
+- AC7: `devtools::test()`: 6670 pass, 0 fail, 0 skip, with the live server up. `devtools::document()` left `git status --porcelain` empty.
+
+Consistency gate, 2026-09-22. `cairn_validate.py` exits 0, and all checks pass. No DESIGN principle changed, so `cairn_impact` is skipped. `devtools::document()` gives no diff. `devtools::check()`, with the API token set, gives 0 errors, 0 warnings, and 0 notes. `pkgdown::check_pkgdown()` finds no problems. The diff does not touch README.Rmd or add a top-level file. NEWS.md has the entries.
