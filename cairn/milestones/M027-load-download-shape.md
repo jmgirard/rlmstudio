@@ -150,6 +150,7 @@ binary operator", because `$` matched the extended name.
 - 2026-09-22: claim audit: 68 claims read, 2 corrected — R/download.R, R/conditions.R. The `@return` of `lms_download()` now also names the abort on a `status` that is not a string. The help page names two value exceptions, the load `status` and a download reply with `"already_downloaded"`. The same reader re-read both and found them accurate.
 - 2026-09-22: implement complete. `devtools::test()` gave 0 failures and 9079 passes, and `devtools::document()` made no diff. Status set to review.
 - 2026-09-22: review return 1 (defect): consistency gate failed. `cairn_validate` weight caps: `cairn/ROADMAP.md` has 60 lines, cap under 60, after the T3 candidate row. AC1 to AC7 have evidence, and AC6 fails as written (review finding O3). Fix: shorten or merge a candidate row, and amend AC6 through the gate. Then re-review. Status set to in-progress.
+- 2026-09-22: implement resumed after review return 1. Merged the two ROADMAP candidate rows on cut-off replies into one row, so the file has 59 lines, and `cairn_validate` passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
