@@ -1,42 +1,12 @@
 # A status-200 model list is read only when it has the shape that the package
 # reads. `list_models()` aborts with `rlmstudio_bad_response` on any other
 # shape, and `lms_server_ready()` reports FALSE for it. Both apply the rules in
-# `model_list_fault()`. The bodies here are built as JSON text, so each fault
-# keeps the exact JSON form under test. The server is mocked through the shared
-# recorder (D-004).
-
-# JSON literals, one per form a field can take.
-json_forms <- c(
-  number = "1",
-  string = '"a"',
-  boolean = "true",
-  "empty array" = "[]",
-  array = '["a"]',
-  "empty object" = "{}",
-  object = '{"a": 1}',
-  null = "null"
-)
-
-# Build a JSON object from a named character vector of JSON literals. `drop`
-# leaves a field out. `extend` writes the field under its name plus "X".
-json_object <- function(fields, drop = NULL, extend = NULL) {
-  keys <- names(fields)
-  keys[keys %in% extend] <- paste0(keys[keys %in% extend], "X")
-  keep <- !names(fields) %in% drop
-  if (!any(keep)) {
-    return("{}")
-  }
-  paste0(
-    "{",
-    paste0('"', keys[keep], '": ', fields[keep], collapse = ", "),
-    "}"
-  )
-}
-
-json_array <- function(items) paste0("[", paste(items, collapse = ", "), "]")
+# `model_list_fault()`. The bodies here are built as JSON text with the helpers
+# in `helper-json-forms.R`. The server is mocked through the shared recorder
+# (D-004).
 
 instance_fields <- c(id = '"inst-1"')
-valid_instance <- json_object(instance_fields)
+valid_instance <- shape_object(instance_fields)
 
 model_fields <- function(type = '"llm"', key = '"m"', instances = "[]") {
   c(
@@ -47,10 +17,10 @@ model_fields <- function(type = '"llm"', key = '"m"', instances = "[]") {
     loaded_instances = instances
   )
 }
-valid_model <- json_object(model_fields())
-loaded_model <- json_object(model_fields(instances = json_array(valid_instance)))
+valid_model <- shape_object(model_fields())
+loaded_model <- shape_object(model_fields(instances = shape_array(valid_instance)))
 
-list_body <- function(models) json_object(c(models = json_array(models)))
+list_body <- function(models) shape_object(c(models = shape_array(models)))
 
 # The three places an entry fault sits: the only entry, the first of two
 # entries, and the second after a valid entry.
@@ -78,36 +48,36 @@ fault_cases <- function() {
   }
 
   # L1: `models` must be an array.
-  top <- c(models = json_array(valid_model))
-  add("models absent", json_object(top, drop = "models"), "`models`")
-  add("models extended", json_object(top, extend = "models"), "`models`")
+  top <- c(models = shape_array(valid_model))
+  add("models absent", shape_object(top, drop = "models"), "`models`")
+  add("models extended", shape_object(top, extend = "models"), "`models`")
   for (form in setdiff(names(json_forms), c("empty array", "array"))) {
-    add(paste("models as", form), json_object(c(models = json_forms[[form]])), "`models`")
+    add(paste("models as", form), shape_object(c(models = json_forms[[form]])), "`models`")
   }
 
   # L2 and L3: the fields of a model entry, in each of the three places.
   model_faults <- list()
   for (field in c("type", "key")) {
-    model_faults[[paste(field, "absent")]] <- list(json_object(model_fields(), drop = field), field)
-    model_faults[[paste(field, "extended")]] <- list(json_object(model_fields(), extend = field), field)
+    model_faults[[paste(field, "absent")]] <- list(shape_object(model_fields(), drop = field), field)
+    model_faults[[paste(field, "extended")]] <- list(shape_object(model_fields(), extend = field), field)
     for (form in setdiff(names(json_forms), "string")) {
       fields <- model_fields()
       fields[[field]] <- json_forms[[form]]
-      model_faults[[paste(field, "as", form)]] <- list(json_object(fields), field)
+      model_faults[[paste(field, "as", form)]] <- list(shape_object(fields), field)
     }
   }
   field <- "loaded_instances"
-  model_faults[[paste(field, "absent")]] <- list(json_object(model_fields(), drop = field), field)
-  model_faults[[paste(field, "extended")]] <- list(json_object(model_fields(), extend = field), field)
+  model_faults[[paste(field, "absent")]] <- list(shape_object(model_fields(), drop = field), field)
+  model_faults[[paste(field, "extended")]] <- list(shape_object(model_fields(), extend = field), field)
   for (form in setdiff(names(json_forms), c("empty array", "array"))) {
     model_faults[[paste(field, "as", form)]] <- list(
-      json_object(model_fields(instances = json_forms[[form]])), field
+      shape_object(model_fields(instances = json_forms[[form]])), field
     )
   }
   for (form in setdiff(names(json_forms), c("number", "null"))) {
     fields <- model_fields()
     fields[["size_bytes"]] <- json_forms[[form]]
-    model_faults[[paste("size_bytes as", form)]] <- list(json_object(fields), "size_bytes")
+    model_faults[[paste("size_bytes as", form)]] <- list(shape_object(fields), "size_bytes")
   }
   for (form in setdiff(names(json_forms), c("empty object", "object"))) {
     model_faults[[paste("model entry as", form)]] <- list(json_forms[[form]], "models", "is not a JSON object")
@@ -127,13 +97,13 @@ fault_cases <- function() {
   # L4: the fields of an instance entry. Each fault sits in three places among
   # the instances, and the model holding it sits in three places among models.
   instance_faults <- list(
-    "id absent" = json_object(instance_fields, drop = "id"),
-    "id extended" = json_object(instance_fields, extend = "id"),
-    "id empty" = json_object(c(id = '""')),
-    "id blank" = json_object(c(id = '" "'))
+    "id absent" = shape_object(instance_fields, drop = "id"),
+    "id extended" = shape_object(instance_fields, extend = "id"),
+    "id empty" = shape_object(c(id = '""')),
+    "id blank" = shape_object(c(id = '" "'))
   )
   for (form in setdiff(names(json_forms), "string")) {
-    instance_faults[[paste("id as", form)]] <- json_object(c(id = json_forms[[form]]))
+    instance_faults[[paste("id as", form)]] <- shape_object(c(id = json_forms[[form]]))
   }
   instance_names <- rep(list("`id`"), length(instance_faults))
   for (form in setdiff(names(json_forms), c("empty object", "object"))) {
@@ -143,7 +113,7 @@ fault_cases <- function() {
   for (k in seq_along(instance_faults)) {
     inner <- entry_places(instance_faults[[k]], valid_instance)
     for (inner_place in names(inner)) {
-      bad_model <- json_object(model_fields(instances = json_array(inner[[inner_place]])))
+      bad_model <- shape_object(model_fields(instances = shape_array(inner[[inner_place]])))
       outer <- entry_places(bad_model, loaded_model)
       for (outer_place in names(outer)) {
         add(
@@ -162,20 +132,12 @@ fault_cases <- function() {
 # empty model list, and a list with a loaded model.
 pass_cases <- function() {
   list(
-    "size_bytes absent" = list_body(json_object(model_fields(), drop = "size_bytes")),
-    "size_bytes null" = list_body(json_object(replace(model_fields(), "size_bytes", "null"))),
-    "size_bytes extended" = list_body(json_object(model_fields(), extend = "size_bytes")),
+    "size_bytes absent" = list_body(shape_object(model_fields(), drop = "size_bytes")),
+    "size_bytes null" = list_body(shape_object(replace(model_fields(), "size_bytes", "null"))),
+    "size_bytes extended" = list_body(shape_object(model_fields(), extend = "size_bytes")),
     "no models" = list_body(character(0)),
     "one loaded model" = list_body(c(valid_model, loaded_model))
   )
-}
-
-# The condition a call raises, or NULL when it returns.
-shape_raised_by <- function(expr) {
-  tryCatch({
-    expr
-    NULL
-  }, error = identity)
 }
 
 test_that("each rule of the model list aborts list_models() with rlmstudio_bad_response", {
@@ -211,12 +173,12 @@ test_that("a fault in an entry that the filters drop still aborts", {
   withr::local_options(rlmstudio.quiet = TRUE)
 
   # The bad entry is an embedding model, and the call asks for LLMs only.
-  bad_embedding <- json_object(model_fields(type = '"embedding"'), drop = "key")
+  bad_embedding <- shape_object(model_fields(type = '"embedding"'), drop = "key")
   local_request_sequence(list(mock_response(200L, list_body(c(loaded_model, bad_embedding)))))
   expect_error(list_models(type = "llm"), class = "rlmstudio_bad_response")
 
   # The bad entry is not loaded, and the call asks for loaded models only.
-  bad_unloaded <- json_object(model_fields(key = "1"))
+  bad_unloaded <- shape_object(model_fields(key = "1"))
   local_request_sequence(list(mock_response(200L, list_body(c(loaded_model, bad_unloaded)))))
   expect_error(list_models(loaded = TRUE), class = "rlmstudio_bad_response")
 })
@@ -297,7 +259,7 @@ test_that("a model list with the wrong shape aborts the callers before any other
     lms_load = function() lms_load("a-model"),
     lms_unload_all = function() lms_unload_all()
   )
-  bad_list <- list_body(json_object(model_fields(), drop = "key"))
+  bad_list <- list_body(shape_object(model_fields(), drop = "key"))
   for (name in names(callers)) {
     # One response only: a second request raises a plain error from the mock,
     # which is not the class asserted here.
@@ -321,14 +283,14 @@ test_that("lms_unload_all unloads each instance by its id, in body order", {
   )
   # Each instance carries a decoy field before `id`, so a read of the first
   # field gives the wrong ids.
-  two_instances <- json_array(c(
+  two_instances <- shape_array(c(
     '{"decoy": "wrong-1", "id": "a-1"}',
     '{"decoy": "wrong-2", "id": "a-2"}'
   ))
   body <- list_body(c(
-    json_object(model_fields(key = '"a"', instances = two_instances)),
+    shape_object(model_fields(key = '"a"', instances = two_instances)),
     valid_model,
-    json_object(model_fields(key = '"b"', instances = '[{"id": "b-1"}]'))
+    shape_object(model_fields(key = '"b"', instances = '[{"id": "b-1"}]'))
   ))
   local_request_sequence(list(mock_response(200L, body)))
   result <- suppressMessages(lms_unload_all())

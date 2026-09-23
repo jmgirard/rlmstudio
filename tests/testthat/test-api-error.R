@@ -270,17 +270,17 @@ for (row in api_error_table) {
   })
 }
 
-test_that("lms_load() reports the body when the load did not finish", {
-  # This wrapper aborts on a status 200 whose body does not report the model
-  # as loaded. `HTTP Status 200` says nothing about why, so the body is what
-  # the abort has to carry.
+test_that("lms_load() names the status when the load did not finish", {
+  # A status-200 body that does not report the model as loaded is a reply the
+  # package cannot read, not an API error (D-017).
   local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(200L, '{"status": "pending"}'))
 
   expect_error(
     suppressMessages(lms_load("m", force = TRUE)),
-    "API Load Failed: \\{\"status\": \"pending\"\\}",
-    class = "rlmstudio_api_error"
+    "API Load Failed: `status` is not the string \"loaded\".",
+    fixed = TRUE,
+    class = "rlmstudio_bad_response"
   )
 })
 

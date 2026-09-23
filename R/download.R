@@ -16,7 +16,11 @@
 #'   API](https://lmstudio.ai/docs/developer/rest/download)
 #'
 #' @return A character string containing the download \code{job_id}, or
-#'   \code{"already_downloaded"} if already downloaded.
+#'   \code{"already_downloaded"}, invisibly, if the model is already
+#'   downloaded. The call aborts with \code{rlmstudio_bad_response} when the
+#'   reply holds neither a \code{job_id} string nor the status
+#'   \code{"already_downloaded"}. It also aborts when the reply is not a JSON
+#'   object whose \code{status} is a string.
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
@@ -70,26 +74,51 @@ lms_download <- function(
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "API Download Failed")
+    fault <- download_reply_fault(resp_data)
+    if (!is.null(fault)) {
+      rlm_abort_bad_reply(resp, "API Download Failed", fault, "a download reply")
+    }
 
-    if (
-      !is.null(resp_data$status) && resp_data$status == "already_downloaded"
-    ) {
+    if (identical(resp_data[["status"]], "already_downloaded")) {
       rlm_alert_success("Model {.val {model}} is already downloaded.")
       return(invisible("already_downloaded"))
     }
 
-    if (!is.null(resp_data$job_id)) {
-      rlm_alert_success(
-        "Download job started successfully. Job ID: {.val {resp_data$job_id}}"
-      )
-      return(resp_data$job_id)
-    }
-
-    rlm_alert_success("Download request succeeded.")
-    return(invisible(TRUE))
+    job_id <- resp_data[["job_id"]]
+    rlm_alert_success(
+      "Download job started successfully. Job ID: {.val {job_id}}"
+    )
+    return(job_id)
   }
 
   rlm_abort_api(resp, "API Download Failed", !is.null(rlm_token(token)))
+}
+
+#' Find the first way a download reply breaks its shape rules
+#'
+#' The body is a JSON object whose `status` is a string. Unless `status` is
+#' `"already_downloaded"`, its `job_id` is a string too. The rules check types
+#' and not status values, so a status that a later LM Studio adds still passes
+#' (D-017). Fields are read by exact name.
+#'
+#' @param body The body, parsed with `simplifyVector = FALSE`.
+#' @return `NULL` when the body passes, or one clause naming the fault.
+#'
+#' @noRd
+download_reply_fault <- function(body) {
+  if (!is_json_object(body)) {
+    return("the response body is not a JSON object.")
+  }
+  if (!is_json_string(body[["status"]])) {
+    return("`status` is not a string.")
+  }
+  if (identical(body[["status"]], "already_downloaded")) {
+    return(NULL)
+  }
+  if (!is_json_string(body[["job_id"]])) {
+    return("`job_id` is not a string.")
+  }
+  NULL
 }
 
 #' Get the status of a download job
@@ -147,11 +176,49 @@ lms_download_status <- function(
 
   if (httr2::resp_status(resp) == 200) {
     out <- parse_ok_body(resp, "API Status Request Failed")
+    fault <- download_status_fault(out)
+    if (!is.null(fault)) {
+      rlm_abort_bad_reply(
+        resp,
+        "API Status Request Failed",
+        fault,
+        "a download status"
+      )
+    }
     class(out) <- c("lms_download_status", "list")
     return(out)
   }
 
   rlm_abort_api(resp, "API Status Request Failed", !is.null(rlm_token(token)))
+}
+
+#' Find the first way a download status breaks its shape rules
+#'
+#' The body is a JSON object whose `job_id` and `status` are strings. Its
+#' `total_size_bytes`, `downloaded_bytes`, and `bytes_per_second` are each a
+#' number, or absent, or `null`. These are the fields that
+#' `print.lms_download_status()` reads. Fields are read by exact name (D-017).
+#'
+#' @param body The body, parsed with `simplifyVector = FALSE`.
+#' @return `NULL` when the body passes, or one clause naming the fault.
+#'
+#' @noRd
+download_status_fault <- function(body) {
+  if (!is_json_object(body)) {
+    return("the response body is not a JSON object.")
+  }
+  for (field in c("job_id", "status")) {
+    if (!is_json_string(body[[field]])) {
+      return(paste0("`", field, "` is not a string."))
+    }
+  }
+  for (field in c("total_size_bytes", "downloaded_bytes", "bytes_per_second")) {
+    value <- body[[field]]
+    if (!is.null(value) && !is_json_number(value)) {
+      return(paste0("`", field, "` is not a number."))
+    }
+  }
+  NULL
 }
 
 #' Print method for LM Studio download status
@@ -172,11 +239,19 @@ lms_download_status <- function(
 #' print(status)
 #' }
 print.lms_download_status <- function(x, ...) {
-  cli::cli_h3("Download Job: {.val {x$job_id}}")
+  # Fields are read with `[[`, which matches exact names only. `$` would read
+  # a field whose name extends the one asked for.
+  job_id <- x[["job_id"]]
+  status <- x[["status"]]
+  total <- x[["total_size_bytes"]]
+  downloaded <- x[["downloaded_bytes"]]
+  speed <- x[["bytes_per_second"]]
+
+  cli::cli_h3("Download Job: {.val {job_id}}")
 
   # Color-code the status dynamically
   status_col <- switch(
-    x$status,
+    status,
     "downloading" = cli::col_blue,
     "completed" = cli::col_green,
     "already_downloaded" = cli::col_green,
@@ -185,20 +260,23 @@ print.lms_download_status <- function(x, ...) {
     cli::col_grey
   )
 
-  cli::cli_text("{.strong Status:} ", status_col(x$status))
+  # The status is spliced in as a value. Passed as a separate argument, cli
+  # would read its braces as code to run.
+  status_text <- status_col(status)
+  cli::cli_text("{.strong Status:} {status_text}")
 
   # Calculate and format progress
-  if (!is.null(x$total_size_bytes) && !is.null(x$downloaded_bytes)) {
-    pct <- round((x$downloaded_bytes / x$total_size_bytes) * 100, 1)
-    dl_gb <- round(x$downloaded_bytes / (1024^3), 2)
-    tot_gb <- round(x$total_size_bytes / (1024^3), 2)
+  if (!is.null(total) && !is.null(downloaded)) {
+    pct <- round((downloaded / total) * 100, 1)
+    dl_gb <- round(downloaded / (1024^3), 2)
+    tot_gb <- round(total / (1024^3), 2)
 
     cli::cli_text("{.strong Progress:} {pct}% ({dl_gb} GB / {tot_gb} GB)")
   }
 
   # Format speed
-  if (!is.null(x$bytes_per_second) && x$bytes_per_second > 0) {
-    spd_mb <- round(x$bytes_per_second / (1024^2), 2)
+  if (!is.null(speed) && speed > 0) {
+    spd_mb <- round(speed / (1024^2), 2)
     cli::cli_text("{.strong Speed:} {spd_mb} MB/s")
   }
 

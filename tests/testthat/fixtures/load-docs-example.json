@@ -1,0 +1,13 @@
+{
+  "type": "llm",
+  "instance_id": "openai/gpt-oss-20b",
+  "load_time_seconds": 9.099,
+  "status": "loaded",
+  "load_config": {
+    "context_length": 16384,
+    "eval_batch_size": 512,
+    "flash_attention": true,
+    "offload_kv_cache_to_gpu": true,
+    "num_experts": 4
+  }
+}
