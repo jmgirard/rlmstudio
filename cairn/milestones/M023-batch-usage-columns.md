@@ -85,3 +85,17 @@ Evidence run 2026-09-22 on `m023-batch-usage-columns` at 1eff032, level with `or
 - AC7: `man/lms_chat_batch.Rd` lines 65-94 name the four columns and map each to its field on each route. The page states the `NA` rules of AC3 and AC4. A grep of the page finds each of the four column names. It also finds each of the six source field names, such as `completion_tokens_details`. `NEWS.md` has one entry for the columns and one for the bare-value fix. `devtools::test()` gave 0 failures. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. `devtools::document()` made no diff.
 
 Consistency gate: `cairn_validate.py` exit 0, all checks passed. `DESIGN.md` is unchanged, so no impact report runs. The diff does not touch `README.Rmd` or `README.md`, and the repo has no pkgdown site. The diff adds no top-level file. `NEWS.md` has the two entries, with no milestone numbers.
+
+Independent review: three fresh reviewers. The prior-review lens found no prior-review evidence that the diff contradicts, and the GitHub probe returned no inline comments. The blame-history lens found nothing that undoes past intent. The diff-bug lens found no correctness bug and reported 11 findings, ranked. Proposed dispositions go to the merge gate.
+
+- O1: `check_body_object()` gives the OpenAI bare-value condition no `content` or `finish_reason` field. The condition help page says every `lms_chat_openai()` condition carries both. Proposed: fix now.
+- O2: a 200 body that is not JSON, or that is sent as `text/plain`, still aborts the whole batch from `httr2::resp_body_json()` with an unclassed error. This is older than M023 and out of its scope. Proposed: follow-up candidate row.
+- O3: a top-level array body such as `[5]` gets the route's missing `output` or `choices` message, not "not a JSON object". Proposed: reject, because the condition is still classed and AC6 names only bare values.
+- O4: the `lms_chat_batch()` details say `lms_chat()` raises the stored condition, but a data-frame batch raises it in its own reader. Proposed: reject, because AC5 shows the condition equals the single call's.
+- O5: a `NULL` from a reader makes `reply_fields[[i]] <- read$fields` drop a slot. Both readers always return a list. Proposed: reject as latent only.
+- O6: the list-format branch of the bare-body batch test asserts the class of the stored condition but not its message. Proposed: fix now.
+- O7: the AC3 field tests run without `logprobs` and `schema` only. AC3 asks for each route, and the readers are shared. Proposed: reject.
+- O8: a lost-server abort drops the id and counts of rows that finished. AC4 intends this. Proposed: reject.
+- O9: `object_or_empty()` in `R/chat.R` and `json_field()` in `R/embed.R` do similar work. Proposed: reject as a refactor outside scope.
+- O10: the two new NEWS bullets have no blank line between them. Proposed: fix now.
+- O11: in `R/conditions.R`, the sentence about `lms_chat()` now ends the bare-value paragraph. It still reads correctly. Proposed: reject.
