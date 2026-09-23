@@ -37,7 +37,9 @@
 #' It can raise `rlmstudio_no_server` and `rlmstudio_api_error` through
 #' [lms_chat_openresponses()], [lms_chat_openai()], or [lms_chat_native()].
 #' With `simplify = TRUE`, it can raise `rlmstudio_bad_response` through any
-#' of the three, for a reply that holds no readable answer text.
+#' of the three, for a reply that holds no readable answer text. With either
+#' setting of `simplify`, it raises `rlmstudio_bad_response` through any of the
+#' three for a status-200 body that does not parse as JSON.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
@@ -129,7 +131,9 @@ lms_chat <- function(
 #'   FALSE, returns raw list.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature).
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. Otherwise, returns one character string: the `text` of every
+#'   response. A status-200 body that does not parse as JSON raises
+#'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
+#'   returns one character string: the `text` of every
 #'   part of type `"output_text"` in the items of type `"message"`, pasted
 #'   together in order with no separator. Reasoning items, tool calls, and
 #'   parts of other types, such as a refusal, are skipped. If
@@ -183,7 +187,7 @@ lms_chat_openresponses <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
+    resp_data <- parse_ok_body(resp, "OpenResponses Failed")
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -261,7 +265,9 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   empty array `[]`. The package checks only that `schema` is a named list,
 #'   an empty list, or `NULL`. The server checks the schema itself.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. Otherwise, returns a character string containing the generated
+#'   response. A status-200 body that does not parse as JSON raises
+#'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
+#'   returns a character string containing the generated
 #'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
 #'   object with the log probabilities populated as \code{NULL} since they are
 #'   currently stubbed in the LM Studio OpenAI endpoint. With
@@ -325,7 +331,14 @@ lms_chat_openai <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
+    # Every OpenAI condition carries these two fields, so a caller can read
+    # them without checking which fault it caught.
+    resp_data <- parse_ok_body(
+      resp,
+      "OpenAI API Failed",
+      content = NULL,
+      finish_reason = NULL
+    )
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -790,7 +803,9 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
-#'   response. The body can hold a `response_id` for the reply and a `stats`
+#'   response. A status-200 body that does not parse as JSON raises
+#'   `rlmstudio_bad_response` with either setting of `simplify`. The body can
+#'   hold a `response_id` for the reply and a `stats`
 #'   object of token counts and timings. With `api_type = "native"` and
 #'   `format = "data.frame"`, [lms_chat_batch()] returns the id and six of
 #'   the `stats` fields as columns. If \code{simplify = TRUE},
@@ -837,7 +852,7 @@ lms_chat_native <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    resp_data <- httr2::resp_body_json(resp)
+    resp_data <- parse_ok_body(resp, "Native API Failed")
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -1044,14 +1059,17 @@ reply_columns$openai <- reply_columns$openresponses
 #' raises for one input does not abort the batch. The batch goes on to the
 #' next input. Where the result is a list, or the `output` list-column that a
 #' `schema` gives, the element for that input holds the condition without its
-#' backtrace. An `rlmstudio_bad_response` for a reply that does not parse
-#' keeps the reply content in its `content` field. Where the result is text,
+#' backtrace. An `rlmstudio_bad_response` for reply content that does not
+#' parse keeps that content in its `content` field. Where the result is text,
 #' the element holds `NA`. The result is text with `format = "vector"` when it
 #' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and
 #' with a data frame whose replies are not parsed (no `schema`, or
 #' `logprobs = TRUE`). The `logprobs` column holds `NULL` for a failed input.
 #' A reply with no readable answer text, such as one whose content is `null`,
-#' fails as an `rlmstudio_bad_response` in the same way. Use `format = "list"`
+#' fails as an `rlmstudio_bad_response` in the same way. So does a
+#' status-200 body that does not parse as JSON, such as an HTML page from a
+#' proxy or an empty body. That input fails alone, and the other elements
+#' keep their replies. Use `format = "list"`
 #' to keep the conditions. The call gives one warning that names the count
 #' and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`.

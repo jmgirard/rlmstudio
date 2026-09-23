@@ -22,9 +22,21 @@
 #'
 #' The check reads the port and nothing else. Any process holding that port
 #' accepts the connection, so the condition is not raised even though no LM
-#' Studio server is there. The call then fails later, as an
-#' `rlmstudio_api_error` or as a raw parse error, rather than as
-#' `rlmstudio_no_server`. Use [lms_server_ready()] for the stronger test: it
+#' Studio server is there. The call then does not raise
+#' `rlmstudio_no_server`, and what it does depends on what answers. On a
+#' status-200 body that does not parse as JSON, the chat functions and
+#' [lms_embed()] raise `rlmstudio_bad_response`. On the same body,
+#' [list_models()], [lms_load()], [lms_download()], [lms_download_status()],
+#' and [lms_unload_all()] raise an error with no class of this package, from
+#' httr2 or from the JSON parser. [lms_unload()] does not read the body, so it
+#' can report success. A body that parses as JSON but has another shape can
+#' come back unchanged with `simplify = FALSE`. With `simplify = TRUE`, the
+#' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it. The
+#' other functions can fail with an error with no class of this package, fail
+#' with `rlmstudio_api_error`, as [lms_load()] does for `{}`, or report
+#' success, as [lms_download()] does for `{}`. A process that does not answer
+#' in HTTP gives an
+#' `httr2_failure` error. Use [lms_server_ready()] for the stronger test: it
 #' asks the host for a model list and reports `TRUE` only for an answer that
 #' an LM Studio server would give.
 #'
@@ -54,7 +66,17 @@
 #' answers with a status the wrapper accepts and a body the wrapper cannot
 #' read. It is raised where a wrapper checks the body before it reshapes it,
 #' rather than indexing straight into whatever arrived. Four functions raise
-#' it.
+#' it: [lms_embed()], [lms_chat_native()], [lms_chat_openresponses()], and
+#' [lms_chat_openai()].
+#'
+#' All four raise it for a status-200 body that does not parse as JSON, such
+#' as an HTML page from a proxy, JSON text that stops part way, or an empty
+#' body. The body is parsed before `simplify` is read, so the condition is
+#' raised whatever `simplify` is. The body is parsed by its content and not by
+#' its `Content-Type` header, so valid JSON under `text/plain` is read as
+#' JSON. The message says that the body did not parse as JSON and that
+#' something other than LM Studio may be answering on the host. It does not
+#' hold the body text.
 #'
 #' [lms_embed()] raises it on an embeddings block it cannot trust. The vectors
 #' it returns are placed by the index that the response reports, so a block
@@ -97,8 +119,8 @@
 #' names, so a field whose name only starts with the one asked for, such as
 #' `tokenX`, reads as absent and gives `NA` in the data frame.
 #'
-#' [lms_chat_openai()] raises it in three cases, all only with
-#' `simplify = TRUE`. The first case is a response whose `choices` field is
+#' Apart from a body that does not parse as JSON, [lms_chat_openai()] raises
+#' it in three cases, all only with `simplify = TRUE`. The first case is a response whose `choices` field is
 #' missing, empty, or not an array, or whose first element is not a JSON
 #' object with a `message` object in it, so there is no reply to read. This
 #' case is raised with or without a `schema`, and with `logprobs = TRUE` as
@@ -133,9 +155,10 @@
 #' missing content. For the second and third cases, the message names the
 #' `content` field, so you can read what the model wrote without a second
 #' request. The other messages name `simplify = FALSE`, which returns the body
-#' unchanged, with one exception. An embeddings body that did not parse at
-#' all is checked before that argument is read, so its message points at the
-#' host instead.
+#' unchanged, with one exception. A body that did not parse as JSON is
+#' checked before that argument is read, so its message points at the host
+#' instead. For such a body, the `content` and `finish_reason` fields of a
+#' condition from [lms_chat_openai()] are `NULL`.
 #'
 #' @name rlmstudio-conditions
 #' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response
