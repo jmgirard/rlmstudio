@@ -126,7 +126,7 @@ binary operator", because `$` matched the extended name.
       branch. Write the AC2, AC4, AC5, and AC6 download tests. Fix the
       reply `{"job_id": "job-1"}` at `test-body-parse.R:69`, which has no
       `status`, and record each edited test in the work log.
-- [ ] T3: `lms_download_status()` and its print method. Tests first. Check the
+- [x] T3: `lms_download_status()` and its print method. Tests first. Check the
       rules of AC3 after `parse_ok_body()` (`R/download.R:147-151`). Read
       fields with `[[` in `print.lms_download_status()`
       (`R/download.R:177-206`). Write the AC3, AC4, AC5, and AC6 status tests.
@@ -145,6 +145,7 @@ binary operator", because `$` matched the extended name.
 - 2026-09-22: implement started on branch m027-load-download-shape. Question gate skipped: the one open choice, the hint text, reuses M026's hint with the kind of reply named, through a new `rlm_abort_bad_reply()` that `list_models()` now also calls (same message).
 - 2026-09-22: T1 done. `load_reply_fault()` is in `R/load.R`, and its tests in `test-load-download-shape.R` were red before the fix. Minor sub-task: M026's JSON-text helpers moved to `helper-json-forms.R` as `shape_object()` and `shape_array()`, because `helper-chat-bodies.R` already defines `json_object()`. Edited test: the `test-api-error.R` load-status test now expects `rlmstudio_bad_response` for `{"status": "pending"}`. The docs example fixtures come from lmstudio-ai/docs 2e643a417b, unchanged at 9b8bc2004f. `devtools::test()` gave 0 failures and 8702 passes.
 - 2026-09-22: T2 done. `download_reply_fault()` is in `R/download.R`, the `invisible(TRUE)` branch is gone, and the new tests were red before the fix. Edited test: the `lms_download` reply in `test-body-parse.R` gained `"status": "downloading"`. A comment in `test-token-wrappers.R` now names the fields the download calls read. `devtools::test()` gave 0 failures and 8829 passes.
+- 2026-09-22: T3 done. `download_status_fault()` is in `R/download.R`, and `print()` reads its five fields with `[[`. The fault and print tests were red before the fix. Discovered sub-task: `print()` passed the server's `status` to `cli::cli_text()` as format text, so `{...}` in it ran as R code. It is now spliced in as a value, with a test that is red on the old line. A [high] candidate row holds the sweep of the other cli calls. `devtools::test()` gave 0 failures and 9079 passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

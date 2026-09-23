@@ -80,11 +80,12 @@ expect_shape_faults <- function(cases, call, label) {
   }
 }
 
-# Run each body through `call` and return the list of results, named by case.
+# Run each body through `call` and return the list of return values, or of
+# conditions for a call that raised, named by case.
 shape_results <- function(bodies, call) {
   lapply(bodies, function(body) {
     local_request_sequence(list(mock_response(200L, body)))
-    shape_raised_by(call())
+    tryCatch(call(), error = identity)
   })
 }
 
@@ -217,4 +218,93 @@ test_that("the LM Studio docs example of the download reply reads", {
   withr::local_options(rlmstudio.quiet = TRUE)
   local_request_sequence(list(mock_response(200L, docs_example("download-docs-example.json"))))
   expect_identical(download_call(), "job_493c7c9ded")
+})
+
+# lms_download_status() -------------------------------------------------------
+
+status_fields <- c(
+  job_id = '"job-1"',
+  status = '"downloading"',
+  total_size_bytes = "100",
+  downloaded_bytes = "50",
+  bytes_per_second = "10"
+)
+status_call <- function() lms_download_status("job-1")
+number_fields <- c("total_size_bytes", "downloaded_bytes", "bytes_per_second")
+
+test_that("each rule of the status reply aborts lms_download_status() with rlmstudio_bad_response", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  cases <- c(
+    top_level_faults(),
+    required_field_faults(status_fields, "job_id", "string"),
+    required_field_faults(status_fields, "status", "string")
+  )
+  for (field in number_fields) {
+    cases <- c(cases, optional_field_cases(status_fields, field, "number")$faults)
+  }
+  expect_shape_faults(cases, status_call, "API Status Request Failed")
+})
+
+test_that("a status reply that passes the rules returns its fields", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  bodies <- list("all fields" = shape_object(status_fields))
+  for (field in number_fields) {
+    bodies <- c(bodies, optional_field_cases(status_fields, field, "number")$passes)
+  }
+  results <- shape_results(bodies, status_call)
+  for (label in names(results)) {
+    result <- results[[label]]
+    expect_true(inherits(result, "lms_download_status"), info = label)
+    expect_identical(result[["job_id"]], "job-1", info = label)
+    expect_identical(result[["status"]], "downloading", info = label)
+  }
+})
+
+test_that("print() reads each number field by its exact name", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (field in number_fields) {
+    # The field itself is absent, and a field whose name extends it holds a
+    # string. A read by `$` matches the extended name and fails on the string.
+    fields <- replace(status_fields, field, '"a"')
+    body <- shape_object(fields, extend = field)
+    local_request_sequence(list(mock_response(200L, body)))
+    status <- status_call()
+    expect_null(status[[field]], info = field)
+    result <- shape_raised_by(suppressMessages(print(status)))
+    expect_null(result, info = field)
+  }
+})
+
+test_that("print() shows the status text and does not run it", {
+  # Run as code, the status would print as "2".
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  body <- shape_object(replace(status_fields, "status", '"{1 + 1}"'))
+  local_request_sequence(list(mock_response(200L, body)))
+  status <- status_call()
+  printed <- paste(capture_messages(print(status)), collapse = "")
+  expect_match(printed, "Status: {1 + 1}", fixed = TRUE)
+})
+
+test_that("the LM Studio docs example of the status reply reads and prints", {
+  # The "Response" block of lmstudio-ai/docs
+  # 1_developer/2_rest/download-status.md, as of commit 2e643a417b.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    mock_response(200L, docs_example("download-status-docs-example.json"))
+  ))
+  status <- status_call()
+  expect_s3_class(status, "lms_download_status")
+  expect_identical(
+    unclass(status),
+    list(
+      job_id = "job_493c7c9ded",
+      status = "completed",
+      total_size_bytes = 2279145003,
+      downloaded_bytes = 2279145003,
+      started_at = "2025-10-03T15:33:23.496Z",
+      completed_at = "2025-10-03T15:43:12.102Z"
+    )
+  )
+  printed <- paste(capture_messages(print(status)), collapse = "")
+  expect_match(printed, "Progress: 100%", fixed = TRUE)
 })
