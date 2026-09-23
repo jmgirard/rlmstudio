@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M024: A chat reply that does not parse as JSON fails its input alone
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -73,6 +73,8 @@ A status-200 chat reply that does not parse as JSON aborts with `rlmstudio_bad_r
 - 2026-09-22: T3 done. The batch test sits in the T1 file. The batch loop did not change. With `R/` from the T1 commit, the test errors at the `lms_chat_batch()` call, because the unclassed parse error escapes the batch.
 - 2026-09-22: T4 done. Help text updated in `R/conditions.R` and in the `lms_chat()` and `lms_chat_batch()` blocks, and NEWS.md has two entries. A mocked HTML page showed that `list_models()` also parses a 200 body with no guard. The help names it beside the three out-of-scope functions, and the candidate row names it too.
 - 2026-09-22: T5 done. `devtools::test()`: 0 failures, 6535 passes. `devtools::check()` with LM Studio live and the token set: 0 errors, 0 warnings, 0 notes.
+- 2026-09-22: claim audit: 20 claims read, 4 corrected — NEWS.md, R/conditions.R, R/utils-api-error.R
+- 2026-09-22: The claim audit's re-read found one corrected sentence incomplete, and its evidence-backed wording went in. The help now names `lms_unload_all()` and `lms_unload()` and the `{}` outcomes. `devtools::test()`: 0 failures, 6535 passes. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
 
 ## Decisions
 <!-- owner: implement, review · append-only -->

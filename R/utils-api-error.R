@@ -147,7 +147,8 @@ rlm_abort_bad_response <- function(
 
 #' Parse a successful response body, or abort
 #'
-#' The parse every wrapper runs on a status-200 body before it reads it. A
+#' The parse that [lms_embed()] and the three chat wrappers run on a
+#' status-200 body before they read it. A
 #' 200 whose body is not JSON at all reaches here: a proxy or a captive
 #' portal answering on the host serves an HTML page under a success status.
 #' Left unguarded, httr2 or the jsonlite lexer raises an unclassed error, and

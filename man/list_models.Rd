@@ -63,12 +63,19 @@ on.
 
 The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
-Studio server is there. The call then fails later, rather than as
-\code{rlmstudio_no_server}. The chat functions and \code{\link[=lms_embed]{lms_embed()}} raise
-\code{rlmstudio_api_error} or \code{rlmstudio_bad_response}. \code{\link[=list_models]{list_models()}},
-\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} can raise an
-error with no class of this package, from httr2 or from the JSON parser.
-Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+Studio server is there. The call then does not raise
+\code{rlmstudio_no_server}, and what it does depends on what answers. On a
+status-200 body that does not parse as JSON, the chat functions and
+\code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response}. On the same body,
+\code{\link[=list_models]{list_models()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}},
+and \code{\link[=lms_unload_all]{lms_unload_all()}} raise an error with no class of this package, from
+httr2 or from the JSON parser. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it
+can report success. A body that parses as JSON but has another shape can
+come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, the
+chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it. The
+other functions can fail with an error with no class of this package, or
+report success, as \code{\link[=lms_download]{lms_download()}} does for \code{{}}. A process that does not answer in HTTP gives an
+\code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
 asks the host for a model list and reports \code{TRUE} only for an answer that
 an LM Studio server would give.
 

@@ -22,12 +22,19 @@
 #'
 #' The check reads the port and nothing else. Any process holding that port
 #' accepts the connection, so the condition is not raised even though no LM
-#' Studio server is there. The call then fails later, rather than as
-#' `rlmstudio_no_server`. The chat functions and [lms_embed()] raise
-#' `rlmstudio_api_error` or `rlmstudio_bad_response`. [list_models()],
-#' [lms_load()], [lms_download()], and [lms_download_status()] can raise an
-#' error with no class of this package, from httr2 or from the JSON parser.
-#' Use [lms_server_ready()] for the stronger test: it
+#' Studio server is there. The call then does not raise
+#' `rlmstudio_no_server`, and what it does depends on what answers. On a
+#' status-200 body that does not parse as JSON, the chat functions and
+#' [lms_embed()] raise `rlmstudio_bad_response`. On the same body,
+#' [list_models()], [lms_load()], [lms_download()], [lms_download_status()],
+#' and [lms_unload_all()] raise an error with no class of this package, from
+#' httr2 or from the JSON parser. [lms_unload()] does not read the body, so it
+#' can report success. A body that parses as JSON but has another shape can
+#' come back unchanged with `simplify = FALSE`. With `simplify = TRUE`, the
+#' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it. The
+#' other functions can fail with an error with no class of this package, or
+#' report success, as [lms_download()] does for `{}`. A process that does not answer in HTTP gives an
+#' `httr2_failure` error. Use [lms_server_ready()] for the stronger test: it
 #' asks the host for a model list and reports `TRUE` only for an answer that
 #' an LM Studio server would give.
 #'
