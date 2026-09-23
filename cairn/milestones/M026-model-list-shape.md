@@ -131,7 +131,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
       `test-list.R:8`, the load test's list reply at `test-load.R:14`, and
       the `identifier` instances at `test-token-wrappers.R:16`. Record each
       edited test in the work log.
-- [ ] T2: Callers. `lms_unload_all()` (`R/unload.R:124-148`) reads `id` and
+- [x] T2: Callers. `lms_unload_all()` (`R/unload.R:124-148`) reads `id` and
       drops the fallback chain. Delete the tests of that chain in
       `test-unload.R:159-292` and record them in the work log. Write the AC3,
       AC4, and AC5 tests. Mock out
@@ -160,6 +160,7 @@ of a server with no models, gave "missing value where TRUE/FALSE needed".
 - 2026-09-22: plan chose to split the draft into M026 and M027 over one milestone. The draft had 11 criteria, and the model-list work ships alone. Falsified by a merge conflict between the two that costs more than one review.
 - 2026-09-22: T1 and T3 done in one commit, because the new tests in `test-model-list-shape.R` drive `lms_server_ready()` over the same bodies. `model_list_fault()` in `R/list.R` checks the unsimplified parse, `list_models()` parses a second time with `simplifyVector = TRUE`, and `lms_server_ready()` calls the check in place of `is_model_list()`. The docs example is saved as `tests/testthat/fixtures/list-docs-example.json` (lmstudio-ai/docs commit 2e643a417b). With the call site replaced by `fault <- NULL`, the new tests fail.
 - 2026-09-22: existing tests edited because their bodies break L1 to L4: `test-list.R` (GET test, `{}` to `{"models": []}`), `test-load.R` (integer conversion test, a list reply and a load reply in sequence), `test-token-wrappers.R` (`identifier` to `id`), `test-server-ready.R` (three tests, `loaded_instances` added), and `test-body-parse.R` (text/plain server-ready test, `loaded_instances` added). `devtools::test()`: 0 failures, 8377 passes.
+- 2026-09-22: T2 done. `lms_unload_all()` reads `x[["id"]]` and the fallback chain is gone. Deleted from `test-unload.R`: the `identifier` column test, the first-column fallback test, the number coercion test, and the two NA and empty-id tests. Two unload tests now use an `id` column. With the `list_models()` pre-check in `lms_load()` removed, or with `lms_unload_all()` reading the first field, the new caller tests fail. `devtools::test()`: 0 failures, 8384 passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

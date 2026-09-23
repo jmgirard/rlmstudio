@@ -263,3 +263,70 @@ test_that("the LM Studio docs example of the model list reads as a data frame", 
   local_request_sequence(list(mock_response(200L, body)))
   expect_identical(lms_server_ready(), TRUE)
 })
+
+test_that("an empty model list reaches the callers as nothing loaded", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  recorder <- local_request_sequence(list(mock_response(200L, '{"models": []}')))
+  expect_message(lms_unload_all(), "No models are currently loaded", fixed = TRUE)
+  expect_identical(length(recorder$requests), 1L)
+
+  # With nothing loaded, lms_load() goes on to the load request.
+  recorder <- local_request_sequence(list(
+    mock_response(200L, '{"models": []}'),
+    mock_response(200L, '{"status": "loaded"}')
+  ))
+  result <- suppressMessages(lms_load("a-model"))
+  expect_identical(result, "a-model")
+  expect_identical(length(recorder$requests), 2L)
+  expect_identical(
+    request_target(recorder$requests[[2]])$path,
+    "/api/v1/models/load"
+  )
+})
+
+test_that("a model list with the wrong shape aborts the callers before any other request", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_options(rlmstudio.quiet = TRUE)
+  callers <- list(
+    lms_load = function() lms_load("a-model"),
+    lms_unload_all = function() lms_unload_all()
+  )
+  bad_list <- list_body(json_object(model_fields(), drop = "key"))
+  for (name in names(callers)) {
+    # One response only: a second request raises a plain error from the mock,
+    # which is not the class asserted here.
+    recorder <- local_request_sequence(list(mock_response(200L, bad_list)))
+    cnd <- shape_raised_by(callers[[name]]())
+    expect_true(inherits(cnd, "rlmstudio_bad_response"), info = name)
+    expect_match(conditionMessage(cnd), "API List Failed", fixed = TRUE, info = name)
+    expect_match(conditionMessage(cnd), "`key`", fixed = TRUE, info = name)
+    expect_identical(length(recorder$requests), 1L, info = name)
+  }
+})
+
+test_that("lms_unload_all unloads each instance by its id, in body order", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  unloaded <- character(0)
+  testthat::local_mocked_bindings(
+    lms_unload = function(model, ...) {
+      unloaded <<- c(unloaded, model)
+      invisible(model)
+    }
+  )
+  # Each instance carries a decoy field before `id`, so a read of the first
+  # field gives the wrong ids.
+  two_instances <- json_array(c(
+    '{"decoy": "wrong-1", "id": "a-1"}',
+    '{"decoy": "wrong-2", "id": "a-2"}'
+  ))
+  body <- list_body(c(
+    json_object(model_fields(key = '"a"', instances = two_instances)),
+    valid_model,
+    json_object(model_fields(key = '"b"', instances = '[{"id": "b-1"}]'))
+  ))
+  local_request_sequence(list(mock_response(200L, body)))
+  result <- suppressMessages(lms_unload_all())
+  expect_identical(unloaded, c("a-1", "a-2", "b-1"))
+  expect_identical(result, c("a-1", "a-2", "b-1"))
+})
