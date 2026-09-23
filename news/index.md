@@ -2,6 +2,40 @@
 
 ## rlmstudio (development version)
 
+- With `api_type = "openresponses"` or `api_type = "openai"` and
+  `format = "data.frame"`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now returns four more columns at the end of the data frame:
+  `response_id`, `input_tokens`, `total_output_tokens`, and
+  `reasoning_output_tokens`. They carry the names of the first four
+  native columns, so batches from the three routes share them.
+  `response_id` is the reply’s `id`. The counts come from the reply’s
+  `usage` object. The OpenResponses route reads `input_tokens`,
+  `output_tokens`, and `output_tokens_details.reasoning_tokens`. The
+  OpenAI route reads `prompt_tokens`, `completion_tokens`, and
+  `completion_tokens_details.reasoning_tokens`. The columns are there
+  with `logprobs = TRUE` and with a `schema` too. `response_id` is
+  character, and the counts are double. If a field is absent or is not
+  one value of the column type, its cell is `NA`, with no warning. If
+  `usage` is not a JSON object, all three count cells are `NA`. The row
+  of an input that failed holds `NA` in all four columns. Apart from the
+  bare-value change below, the answer columns, the vector and list
+  formats, and single calls return what they did before.
+
+- A 200 response body can be a bare JSON value, such as `5`, `"s"`, or
+  `true`. With `simplify = TRUE`, such a body now aborts with
+  `rlmstudio_bad_response` in
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  and
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
+  The message says that the body is not a JSON object. Before, such a
+  body failed with the base R error “subscript out of bounds”. In
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  that error ended the batch and lost every reply so far. Now the batch
+  stores the failure and goes on. With `simplify = FALSE`, the body
+  comes back unchanged, as before.
+
 - With `api_type = "native"` and `format = "data.frame"`,
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
   now returns seven more columns at the end of the data frame. The first

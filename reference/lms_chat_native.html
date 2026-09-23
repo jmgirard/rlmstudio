@@ -207,7 +207,12 @@ JSON. The third case is reply content that is not one string, such as
 holds only a tool call has <code>null</code> content. This case is raised without a
 <code>schema</code>, and with <code>logprobs = TRUE</code> with or without one. In the second and
 third cases, if the server reports the finish reason <code>"length"</code>, the token
-limit cut the reply off. The message then says so and names <code>max_tokens</code>.
+limit cut the reply off. The message then says so and names <code>max_tokens</code>.</p>
+<p>With <code>simplify = TRUE</code>, <code>lms_chat_native()</code>, <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>,
+and <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> also raise it for a body that is a bare JSON value,
+such as <code>5</code>, <code>"s"</code>, or <code>true</code>. The message says that the response body is
+not a JSON object. A body of <code>null</code> gets the message about its missing
+<code>output</code> or <code>choices</code> field instead.
 <code><a href="lms_chat.html">lms_chat()</a></code> can raise the condition through all three chat functions.</p>
 <p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> does not abort on it. The element of the failed input
 holds the condition, or <code>NA</code> where the result is text, and the batch warns

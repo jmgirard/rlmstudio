@@ -107,7 +107,7 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The return type depends on the <code>format</code> argument:</p><ul><li><p><code>"vector"</code>: A character vector of responses, with <code>NA</code> for an input that failed. This format is only supported if <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>. With a <code>schema</code>, it warns and returns the list instead.</p></li>
 <li><p><code>"list"</code>: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a <code>schema</code>, <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code>, each element that did not fail is the parsed reply.</p></li>
-<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code>, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed. With <code>api_type = "native"</code>, seven more columns follow, described below.</p></li>
+<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code>, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow, as described below.</p></li>
 </ul><p>With <code>api_type = "native"</code> and <code>format = "data.frame"</code>, the data frame ends
 with seven columns read from each reply: <code>response_id</code>, <code>input_tokens</code>,
 <code>total_output_tokens</code>, <code>reasoning_output_tokens</code>, <code>tokens_per_second</code>,
@@ -120,11 +120,32 @@ string is a string, so an empty <code>response_id</code> is kept. If <code>stats
 or is not a JSON object, all six stats cells are <code>NA</code>. The server can leave
 a field out, such as <code>model_load_time_seconds</code>. Such a cell does not fail
 the input and gives no warning.</p>
-<p>A reply with no readable answer text fails its input, whatever its <code>stats</code>
-and <code>response_id</code> hold. The row of an input that failed holds <code>NA</code> in all
-seven columns. If every input failed, the seven columns are still there,
-<code>response_id</code> as character and the other six as double. The other routes
-and formats add no such column.</p>
+<p>With <code>api_type = "openresponses"</code> or <code>api_type = "openai"</code> and
+<code>format = "data.frame"</code>, the data frame ends with four columns read from
+each reply: <code>response_id</code>, <code>input_tokens</code>, <code>total_output_tokens</code>, and
+<code>reasoning_output_tokens</code>. These are the first four native column names,
+but the servers send the values under other names:</p><ul><li><p><code>response_id</code> is the reply's <code>id</code> on both routes.</p></li>
+<li><p><code>input_tokens</code> is <code>usage.input_tokens</code> on the OpenResponses route
+and <code>usage.prompt_tokens</code> on the OpenAI route.</p></li>
+<li><p><code>total_output_tokens</code> is <code>usage.output_tokens</code> on the OpenResponses
+route and <code>usage.completion_tokens</code> on the OpenAI route.</p></li>
+<li><p><code>reasoning_output_tokens</code> is
+<code>usage.output_tokens_details.reasoning_tokens</code> on the OpenResponses
+route and <code>usage.completion_tokens_details.reasoning_tokens</code> on the
+OpenAI route.</p></li>
+</ul><p>The columns are there for every setting of <code>logprobs</code> and <code>schema</code>.
+<code>response_id</code> is character, and the three counts are double. The <code>NA</code>
+rule is the one for the native columns: a cell is <code>NA</code> when its field is
+absent or is not one value of the column type, and an empty string is
+kept. If <code>usage</code> is absent or is not a JSON object, all three count cells
+are <code>NA</code>. If the details object is absent or is not a JSON object, only
+<code>reasoning_output_tokens</code> is <code>NA</code>. Such a cell does not fail the input and
+gives no warning.</p>
+<p>A reply with no readable answer text fails its input, whatever its other
+fields hold. The row of an input that failed holds <code>NA</code> in every column
+read from the reply. If every input failed, those columns are still there,
+<code>response_id</code> as character and the others as double. The vector and list
+formats add no such column.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -253,7 +274,12 @@ JSON. The third case is reply content that is not one string, such as
 holds only a tool call has <code>null</code> content. This case is raised without a
 <code>schema</code>, and with <code>logprobs = TRUE</code> with or without one. In the second and
 third cases, if the server reports the finish reason <code>"length"</code>, the token
-limit cut the reply off. The message then says so and names <code>max_tokens</code>.
+limit cut the reply off. The message then says so and names <code>max_tokens</code>.</p>
+<p>With <code>simplify = TRUE</code>, <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>,
+and <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> also raise it for a body that is a bare JSON value,
+such as <code>5</code>, <code>"s"</code>, or <code>true</code>. The message says that the response body is
+not a JSON object. A body of <code>null</code> gets the message about its missing
+<code>output</code> or <code>choices</code> field instead.
 <code><a href="lms_chat.html">lms_chat()</a></code> can raise the condition through all three chat functions.</p>
 <p><code>lms_chat_batch()</code> does not abort on it. The element of the failed input
 holds the condition, or <code>NA</code> where the result is text, and the batch warns

@@ -213,6 +213,14 @@ without a `schema`, and with `logprobs = TRUE` with or without one. In
 the second and third cases, if the server reports the finish reason
 `"length"`, the token limit cut the reply off. The message then says so
 and names `max_tokens`.
+
+With `simplify = TRUE`,
+[`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+and `lms_chat_openai()` also raise it for a body that is a bare JSON
+value, such as `5`, `"s"`, or `true`. The message says that the response
+body is not a JSON object. A body of `null` gets the message about its
+missing `output` or `choices` field instead.
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 can raise the condition through all three chat functions.
 

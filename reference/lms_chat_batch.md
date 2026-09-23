@@ -82,8 +82,8 @@ The return type depends on the `format` argument:
   an additional list-column named `logprobs` is included, with `NULL`
   for an input that failed. With a `schema` and `logprobs = FALSE`,
   `output` is a list-column of parsed replies, with the condition in
-  place of an input that failed. With `api_type = "native"`, seven more
-  columns follow, described below.
+  place of an input that failed. Columns read from each reply follow, as
+  described below.
 
 With `api_type = "native"` and `format = "data.frame"`, the data frame
 ends with seven columns read from each reply: `response_id`,
@@ -99,11 +99,39 @@ six stats cells are `NA`. The server can leave a field out, such as
 `model_load_time_seconds`. Such a cell does not fail the input and gives
 no warning.
 
-A reply with no readable answer text fails its input, whatever its
-`stats` and `response_id` hold. The row of an input that failed holds
-`NA` in all seven columns. If every input failed, the seven columns are
-still there, `response_id` as character and the other six as double. The
-other routes and formats add no such column.
+With `api_type = "openresponses"` or `api_type = "openai"` and
+`format = "data.frame"`, the data frame ends with four columns read from
+each reply: `response_id`, `input_tokens`, `total_output_tokens`, and
+`reasoning_output_tokens`. These are the first four native column names,
+but the servers send the values under other names:
+
+- `response_id` is the reply's `id` on both routes.
+
+- `input_tokens` is `usage.input_tokens` on the OpenResponses route and
+  `usage.prompt_tokens` on the OpenAI route.
+
+- `total_output_tokens` is `usage.output_tokens` on the OpenResponses
+  route and `usage.completion_tokens` on the OpenAI route.
+
+- `reasoning_output_tokens` is
+  `usage.output_tokens_details.reasoning_tokens` on the OpenResponses
+  route and `usage.completion_tokens_details.reasoning_tokens` on the
+  OpenAI route.
+
+The columns are there for every setting of `logprobs` and `schema`.
+`response_id` is character, and the three counts are double. The `NA`
+rule is the one for the native columns: a cell is `NA` when its field is
+absent or is not one value of the column type, and an empty string is
+kept. If `usage` is absent or is not a JSON object, all three count
+cells are `NA`. If the details object is absent or is not a JSON object,
+only `reasoning_output_tokens` is `NA`. Such a cell does not fail the
+input and gives no warning.
+
+A reply with no readable answer text fails its input, whatever its other
+fields hold. The row of an input that failed holds `NA` in every column
+read from the reply. If every input failed, those columns are still
+there, `response_id` as character and the others as double. The vector
+and list formats add no such column.
 
 ## Details
 
@@ -263,6 +291,16 @@ holds only a tool call has `null` content. This case is raised without a
 and third cases, if the server reports the finish reason `"length"`, the
 token limit cut the reply off. The message then says so and names
 `max_tokens`.
+
+With `simplify = TRUE`,
+[`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+and
+[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+also raise it for a body that is a bare JSON value, such as `5`, `"s"`,
+or `true`. The message says that the response body is not a JSON object.
+A body of `null` gets the message about its missing `output` or
+`choices` field instead.
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 can raise the condition through all three chat functions.
 
