@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-27 (M030 done and archived, M027 row pruned, one unit-boundary row added)_
+_Last hygiene check: 2026-09-27 (M031 done and archived, M028 row pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-27 (M030 done and archived, M027 row pruned, one un
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M031 | A chat batch stops at an API failure that holds for every input | review | none | normal | milestones/M031-batch-early-stop.md |
+| M031 | A chat batch stops at an API failure that holds for every input | done | none | normal | milestones/archive/M031-batch-early-stop.md |
 | M030 | A download status prints progress only from 0 to 100 and shows sizes and speed in a unit that fits | done | none | normal | milestones/archive/M030-download-print-units.md |
 | M029 | A failed or blank download reply aborts, and a download status prints no NaN or Inf | done | none | normal | milestones/archive/M029-download-flow.md |
-| M028 | Brace tests for the six cli sites that show server or CLI text | done | none | normal | milestones/archive/M028-brace-probe-tests.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
