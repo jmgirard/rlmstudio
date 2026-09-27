@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-27 (M034 done and archived, M031 row pruned)_
+_Last hygiene check: 2026-09-27 (M035 done and archived, M032 row pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-27 (M034 done and archived, M031 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M035 | A chat completions reply that the token limit cut off no longer passes as complete | review | none | normal | milestones/M035-openai-cut-off-reply.md |
+| M035 | A chat completions reply that the token limit cut off no longer passes as complete | done | none | normal | milestones/archive/M035-openai-cut-off-reply.md |
 | M034 | The OpenAI chat and embedding functions take a ttl for a model that the request loads | done | none | normal | milestones/archive/M034-chat-embed-ttl.md |
 | M033 | The socket tests share one port helper that leaves the random seed alone | done | none | normal | milestones/archive/M033-shared-port-helpers.md |
-| M032 | A download status picks the unit of a size or speed after rounding | done | none | normal | milestones/archive/M032-download-unit-rounding.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
