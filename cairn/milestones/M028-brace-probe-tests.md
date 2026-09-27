@@ -64,3 +64,15 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 - AC1: the six brace tests ran on 2026-09-27 through `testthat::test_file()` on the four files, with 0 failed, 0 skipped, and 0 errors. Expectation counts: chat reply 3, status heading 3, download alert 4, daemon stop 3, version check 4, installer abort 7. Each test plants `brace_probe` and matches the braces as written in the messages or the abort message. Each test also runs `expect_no_match(shown$stdout, "EVALUATED")`. T5 recorded each test red under a planted format-string site.
 - AC2: `devtools::test()` ran on 2026-09-27 and exited 0 with no failure section in the summary reporter. `git diff --stat main -- R/` printed nothing.
 - Gate: `cairn_validate.py` passed all checks. `devtools::document()` left no diff. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The branch does not touch `README.Rmd`, and the repo has no `_pkgdown.yml`. No NEWS entry is owed, because the branch adds tests only. No top-level file is new.
+- Reviewers: three fresh readers. The diff reader (O) reported 10 findings. The history reader (S) reported 2. The prior-review reader found no prior-review evidence, and the repo has no PR review threads. Proposed dispositions, pending the merge gate:
+- O1 (fix now): the install test does not stub `interactive()`. In an interactive `devtools::test()`, `install_lmstudio()` reaches `utils::askYesNo()` at `R/setup.R:151` and waits for an answer. Confirmed by a read of `R/setup.R:140-157`.
+- O2 (follow-up): the outer handler at `R/setup.R:213-216` has no brace test, because its `e$message` holds only the first line of the inner abort. It splices the text as a value today. The fix belongs to the existing `/hotfix` row about the dropped installer output.
+- O3 (fix now): the `lms_download()` test goes through `rlm_alert_success()`, which honors `rlmstudio.quiet`. A profile that sets the option to TRUE fails the test. `test-chat-schema.R:569` pins the option.
+- O4 (reject): the `cli::cli_abort` stub covers the whole cli namespace. The stub re-raises the same condition, so the risk is a wrong count, not a false pass.
+- O5 (follow-up): the install test asserts two aborts. A `/hotfix` that chains the inner error must rewrite it. Noted in the same `/hotfix` row.
+- O6 (noted): the OS branches are safe. On an unsupported OS the call count is 0 and the test fails.
+- O7 (reject): `capture_shown()` joins messages with no separator. Every match has a prefix such as "Job ID:", so a match across two messages is not possible here.
+- O8 (reject): the chat test matches the probe anywhere in the messages. No other message in `print()` holds the probe.
+- O9 (fix now): `test-download.R:32` writes `testthat::local_mocked_bindings`, and the other new tests use the bare name.
+- S1 (reject): the claim that no brace test covers the download status is false. `test-load-download-shape.R:290` plants `{1 + 1}` in the status and matches "Status: {1 + 1}". Checked by a read of the file.
+- S2 (reject): `test-daemon.R` now has two stub styles for `lms_path()`. T3 asks for the stub, so no real CLI is needed.
