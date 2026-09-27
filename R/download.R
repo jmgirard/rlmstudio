@@ -304,8 +304,9 @@ print.lms_download_status <- function(x, ...) {
   status_text <- status_col(status)
   cli::cli_text("{.strong Status:} {status_text}")
 
-  # Calculate and format progress. A size that is 0, below 0, or not finite
-  # would print as NaN, Inf, or a negative percentage, so the line is left out.
+  # Calculate and format progress. A total of 0 or below would print as NaN,
+  # Inf, or a negative percentage, and a size that is not finite has no
+  # meaningful percentage, so the line is left out for both.
   if (
     !is.null(total) &&
       !is.null(downloaded) &&

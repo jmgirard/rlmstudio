@@ -1,6 +1,6 @@
 # M029: A failed or blank download reply aborts, and a download status prints no NaN or Inf
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -46,7 +46,7 @@
 - [x] T3: Write the print tests for AC4. Then guard the Progress line and the Speed line in `print.lms_download_status()` with `is.finite()` and the above-0 tests.
 - [x] T4: Change the `wait` chunks of `vignettes/getting-started.Rmd` (line 84) and `vignettes/headless-config.Rmd` (line 81). Read `res[["status"]]`, and add `"paused"` to the stop states.
 - [x] T5: Update the "Malformed response" section in `R/conditions.R` (lines 106 to 125) and the `@return` of `lms_download()`. Add three NEWS entries. Run `devtools::document()`.
-- [ ] T6: Run `lms server start`, and set `RLMSTUDIO_API_TOKEN` (LESSONS M009). Then run `devtools::test()` and `devtools::check()`.
+- [x] T6: Run `lms server start`, and set `RLMSTUDIO_API_TOKEN` (LESSONS M009). Then run `devtools::test()` and `devtools::check()`.
 
 ## Work log
 
@@ -60,6 +60,10 @@
 - 2026-09-27: T3 done. The eight-case print test failed nine expectations before the guard and passes after it. `devtools::test()`: 370 tests, 0 failed.
 - 2026-09-27: T4 done. Both `wait` chunks read `res[["status"]]` and stop on `"paused"`. `grep -n '\$' vignettes/*.Rmd` prints only the two `knitr::opts_chunk$set(` lines. The vignette builds run at T6.
 - 2026-09-27: T5 done. The help section now counts four exceptions and limits the "something other than LM Studio" line to the other faults. `@return` and three NEWS entries added. `devtools::document()` rewrote the section in 12 Rd files. `devtools::test()`: 370 tests, 0 failed.
+- 2026-09-27: T6 done. With the server started and the token set, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and the vignettes rebuilt. `devtools::document()` then left no diff.
+- 2026-09-27: claim audit: 31 claims read, 4 corrected — NEWS.md, R/download.R
+- 2026-09-27: The four fixes were wording in two NEWS entries and one print comment, made after the check. The same reader re-read them and found all four true. `devtools::test()`: 370 tests, 0 failed. A negative `downloaded_bytes` still prints a negative percentage, which Scope leaves out.
+- 2026-09-27: status set to review.
 
 ## Decisions
 
