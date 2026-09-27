@@ -1271,32 +1271,45 @@ lms_chat_batch <- function(
     }
     list(value = value, fields = fields)
   }
+  # The positions of replies that a length limit cut off. Each input's own
+  # warning is muffled here, and the batch gives one warning for all of them
+  # below (D-021). The handler covers `read_reply()` too, because the
+  # data-frame format reads the answer after `lms_chat()` returns.
+  # `tryCatch()` lets a warning through, so the handler sits inside it.
+  cut_off <- integer()
+  note_cut_off <- function(w) {
+    cut_off[[length(cut_off) + 1L]] <<- i
+    invokeRestart("muffleWarning")
+  }
   for (i in seq_along(inputs)) {
     res <- tryCatch(
-      if (body_frame) {
-        body <- lms_chat(
-          model = model,
-          input = inputs[[i]],
-          system_prompt = system_prompt,
-          host = host,
-          simplify = FALSE,
-          ...,
-          token = token
-        )
-        read <- read_reply(body)
-        reply_fields[[i]] <- read$fields
-        read$value
-      } else {
-        lms_chat(
-          model = model,
-          input = inputs[[i]],
-          system_prompt = system_prompt,
-          host = host,
-          simplify = simplify,
-          ...,
-          token = token
-        )
-      },
+      withCallingHandlers(
+        if (body_frame) {
+          body <- lms_chat(
+            model = model,
+            input = inputs[[i]],
+            system_prompt = system_prompt,
+            host = host,
+            simplify = FALSE,
+            ...,
+            token = token
+          )
+          read <- read_reply(body)
+          reply_fields[[i]] <- read$fields
+          read$value
+        } else {
+          lms_chat(
+            model = model,
+            input = inputs[[i]],
+            system_prompt = system_prompt,
+            host = host,
+            simplify = simplify,
+            ...,
+            token = token
+          )
+        },
+        rlmstudio_reply_cut_off = note_cut_off
+      ),
       rlmstudio_api_error = keep_or_abort_api,
       rlmstudio_bad_response = keep_failure,
       rlmstudio_no_server = abort_with_results
@@ -1365,6 +1378,20 @@ lms_chat_batch <- function(
     cli::cli_warn(msg)
   } else if (!is.null(vector_fallback)) {
     cli::cli_warn(vector_fallback)
+  }
+
+  if (length(cut_off) > 0L) {
+    # Shown whatever `quiet` says, because it is the only sign that some
+    # answers are not complete (D-021). A class of its own, apart from the
+    # failed-inputs warning, so a caller can tell the two faults apart.
+    positions <- cli::ansi_collapse(cut_off, trunc = Inf)
+    cli::cli_warn(
+      c(
+        "A length limit ended the reply to {length(cut_off)} input{?s} before it was complete, at {cli::qty(length(cut_off))}position{?s} {positions}.",
+        "i" = "Each of those elements keeps the reply as far as it goes. The limit is {.code max_tokens} or the context length of the model. Raise the one that is too low."
+      ),
+      class = "rlmstudio_reply_cut_off"
+    )
   }
 
   # Keyed on the route, not on the replies, so the columns and their types
