@@ -439,9 +439,11 @@ openai_reply_value <- function(resp, resp_data, logprobs, schema) {
 
   if (isTRUE(logprobs)) {
     # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
-    return(validate_lms_chat_result(
+    value <- validate_lms_chat_result(
       new_lms_chat_result(text = res_text, logprobs = NULL)
-    ))
+    )
+    warn_if_cut_off(finish_reason)
+    return(value)
   }
   if (!is.null(schema)) {
     # A reply that a length limit ended is not a whole answer, also when what
@@ -462,7 +464,32 @@ openai_reply_value <- function(resp, resp_data, logprobs, schema) {
       finish_reason = finish_reason
     ))
   }
+  warn_if_cut_off(finish_reason)
   res_text
+}
+
+#' Warn that a length limit cut a text reply off
+#'
+#' Called only after every check on the reply has passed, so a reply never
+#' both warns and fails. The warning goes through `cli::cli_warn()` and not
+#' through the quiet helpers, because it is the only sign that an answer is
+#' not complete (D-021). `lms_chat_batch()` muffles it for each input and
+#' gives one warning of the same class for the batch.
+#'
+#' @param finish_reason The `finish_reason` of the first choice, or `NULL`.
+#'
+#' @noRd
+warn_if_cut_off <- function(finish_reason) {
+  if (identical(finish_reason, "length")) {
+    cli::cli_warn(
+      c(
+        "A length limit ended the reply before it was complete.",
+        "i" = "The limit is {.code max_tokens} or the context length of the model. Raise the one that is too low."
+      ),
+      class = "rlmstudio_reply_cut_off",
+      call = NULL
+    )
+  }
 }
 
 #' Abort on a response body that is a bare JSON value

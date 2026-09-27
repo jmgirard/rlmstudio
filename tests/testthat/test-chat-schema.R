@@ -314,6 +314,53 @@ test_that("a schema reply cut off at the token limit aborts even when it parses"
   }
 })
 
+test_that("a text reply cut off at the token limit warns and keeps its value", {
+  settings <- list(
+    list(label = "no schema", args = list()),
+    list(label = "logprobs", args = list(logprobs = TRUE)),
+    list(label = "a schema and logprobs", args = list(schema = score_schema, logprobs = TRUE))
+  )
+  text <- quoted('{"score": 3}')
+  for (setting in settings) {
+    info <- setting$label
+    call <- function(finish_reason) {
+      body <- completion_body(text, finish_reason = finish_reason)
+      collect_warnings(do.call(call_with_reply, c(list(body), setting$args)))
+    }
+    cut <- call("length")
+    done <- call("stop")
+    expect_identical(cut$value$value, done$value$value, info = info)
+    expect_identical(length(cut$warnings), 1L, info = info)
+    expect_s3_class(cut$warnings[[1]], "rlmstudio_reply_cut_off")
+    expect_length_limit_message(cut$warnings[[1]], info = info)
+    # A reply that the model ended on its own, or with no finish reason,
+    # gives no warning.
+    expect_identical(length(done$warnings), 0L, info = info)
+    expect_identical(length(call(NULL)$warnings), 0L, info = info)
+  }
+  # Stated apart from the call with "stop": the text comes back as sent.
+  expect_identical(
+    collect_warnings(call_with_reply(completion_body(text, "length")))$value$value,
+    '{"score": 3}'
+  )
+
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, completion_body(quoted("a"), "length")))
+  res <- collect_warnings(lms_chat("a-model", "Say a.", api_type = "openai"))
+  expect_identical(res$value, "a")
+  expect_identical(length(res$warnings), 1L)
+  expect_s3_class(res$warnings[[1]], "rlmstudio_reply_cut_off")
+})
+
+test_that("the cut-off warning shows with quiet on", {
+  withr::local_options(rlmstudio.quiet = TRUE)
+  expect_warning(
+    out <- call_with_reply(completion_body(quoted("a"), "length")),
+    class = "rlmstudio_reply_cut_off"
+  )
+  expect_identical(out$value, "a")
+})
+
 test_that("a reply naming a file is not read from disk", {
   # `jsonlite::fromJSON()` would read this file and return its contents as the
   # answer. The URL case above cannot show the difference offline, because a
