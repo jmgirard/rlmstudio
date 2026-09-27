@@ -102,8 +102,9 @@ raises \code{rlmstudio_no_server} itself, before the first call.
 
 An \code{rlmstudio_bad_response} that \code{\link[=lms_chat]{lms_chat()}} raises for one input fails
 that input alone. So does an \code{rlmstudio_api_error} with any \code{status} other
-than 401, 403, or 404. The batch goes on to the next input. Where the result is a list, or the \code{output} list-column that a
-\code{schema} gives, the element for that input holds the condition without its
+than 401, 403, or 404. The batch goes on to the next input. Where the
+result is a list, or the \code{output} list-column that a \code{schema} gives, the
+element for that input holds the condition without its
 backtrace. An \code{rlmstudio_bad_response} for reply content that does not
 parse keeps that content in its \code{content} field. Where the result is text,
 the element holds \code{NA}. The result is text with \code{format = "vector"} when it
@@ -122,7 +123,8 @@ and the positions of the failed inputs. That warning shows even with
 An \code{rlmstudio_api_error} with \code{status} 401, 403, or 404 aborts the batch
 with that condition, and no request goes out after that input. Such a
 status comes from a fault that does not depend on the prompt, such as a
-token that the server refuses, so every later input fails in the same way. The condition carries a \code{results} field, as described in the "API
+token that the server refuses, so every later input fails in the same
+way. The condition carries a \code{results} field, as described in the "API
 failure" section below. No warning about failed inputs is given.
 
 An \code{rlmstudio_no_server} from \code{\link[=lms_chat]{lms_chat()}} also aborts the batch. Its

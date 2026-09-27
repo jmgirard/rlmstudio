@@ -1057,8 +1057,9 @@ reply_columns$openai <- reply_columns$openresponses
 #'
 #' An `rlmstudio_bad_response` that [lms_chat()] raises for one input fails
 #' that input alone. So does an `rlmstudio_api_error` with any `status` other
-#' than 401, 403, or 404. The batch goes on to the next input. Where the result is a list, or the `output` list-column that a
-#' `schema` gives, the element for that input holds the condition without its
+#' than 401, 403, or 404. The batch goes on to the next input. Where the
+#' result is a list, or the `output` list-column that a `schema` gives, the
+#' element for that input holds the condition without its
 #' backtrace. An `rlmstudio_bad_response` for reply content that does not
 #' parse keeps that content in its `content` field. Where the result is text,
 #' the element holds `NA`. The result is text with `format = "vector"` when it
@@ -1077,7 +1078,8 @@ reply_columns$openai <- reply_columns$openresponses
 #' An `rlmstudio_api_error` with `status` 401, 403, or 404 aborts the batch
 #' with that condition, and no request goes out after that input. Such a
 #' status comes from a fault that does not depend on the prompt, such as a
-#' token that the server refuses, so every later input fails in the same way. The condition carries a `results` field, as described in the "API
+#' token that the server refuses, so every later input fails in the same
+#' way. The condition carries a `results` field, as described in the "API
 #' failure" section below. No warning about failed inputs is given.
 #'
 #' An `rlmstudio_no_server` from [lms_chat()] also aborts the batch. Its
@@ -1143,8 +1145,10 @@ lms_chat_batch <- function(
     on.exit(cli::cli_progress_done(id = pb), add = TRUE)
   }
 
-  # A failed input loses its own answer, not the whole batch. Its slot keeps
-  # the condition, and an `rlmstudio_bad_response` carries the reply content.
+  # A failed input loses its own answer, not the whole batch, unless the
+  # failure holds for every input (see `keep_or_abort_api()` below). Its slot
+  # keeps the condition, and an `rlmstudio_bad_response` carries the reply
+  # content.
   # Every other error still aborts, because it says nothing about one input
   # alone. The backtrace is dropped, because it makes each failed slot large
   # and says nothing about the input.

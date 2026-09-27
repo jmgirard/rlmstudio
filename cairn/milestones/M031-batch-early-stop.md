@@ -1,6 +1,6 @@
 # M031: A chat batch stops at an API failure that holds for every input
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -55,6 +55,8 @@
 - 2026-09-27: T2 added seven tests and `run_stopping_batch()` to `tests/testthat/test-chat-batch.R`. Against the old handler, a 401 at input two gave a stored slot, a warning, and three requests, so the stop tests fail. This checkpoint is red until T3.
 - 2026-09-27: T3 made the `rlmstudio_api_error` handler abort with a `results` field on status 401, 403, or 404, through one helper that the lost-server handler now shares. `devtools::test()` gave 380 tests, 0 failed, 0 skipped.
 - 2026-09-27: T4 rewrote the `lms_chat_batch()` details and the "API failure" section, and added the NEWS entry. The "Malformed response" section keeps its "does not abort" sentence, because it is about `rlmstudio_bad_response`. `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes.
+- 2026-09-27: claim audit: 33 claims read, 0 corrected — NEWS.md, R/chat.R, R/conditions.R, tests/testthat/test-chat-batch.R, man/*.Rd
+- 2026-09-27: after the audit, the older `keep_failure()` comment in R/chat.R now names the stop, and two roxygen lines are rewrapped. The chat-batch tests gave 47 passed, 0 failed. Status set to review.
 
 ## Decisions
 
