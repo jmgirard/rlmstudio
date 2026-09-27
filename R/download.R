@@ -351,5 +351,8 @@ format_bytes <- function(bytes) {
   while (power < length(units) - 1 && bytes >= 1024^(power + 1)) {
     power <- power + 1
   }
-  paste(signif(bytes / 1024^power, 3), units[[power + 1]])
+  # `format()` also shows three digits for a subnormal number, which
+  # `signif()` alone leaves at full length.
+  value <- format(signif(bytes / 1024^power, 3), digits = 3)
+  paste(value, units[[power + 1]])
 }

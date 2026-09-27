@@ -425,6 +425,8 @@ test_that("print() shows sizes and speed in a unit that keeps the value at 1 or 
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   speeds <- c(
     "1e-9" = "Speed: 1e-09 B/s",
+    # A subnormal number, which signif() alone prints at full length.
+    "5e-324" = "Speed: 4.94e-324 B/s",
     "1023" = "Speed: 1020 B/s",
     "1024" = "Speed: 1 KB/s",
     "1536" = "Speed: 1.5 KB/s",

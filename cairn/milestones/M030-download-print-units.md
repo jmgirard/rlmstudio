@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M030: A download status prints progress only from 0 to 100 and shows sizes and speed in a unit that fits
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -85,6 +85,8 @@ plan gate). The print method of `lms_chat_result` stays as it is.
 - 2026-09-27: plan gate chose a unit per value (B to TB). It rejected leaving out a speed that rounds to 0, and it rejected a `< 0.01` floor. One helper fixes both the tiny speed and the 0 GB size. A user who parses the printed GB or MB/s text falsifies the choice.
 - 2026-09-27: implement started on branch m030-download-print-units. The question gate was skipped because the plan left no choice open.
 - 2026-09-27: T1-T5 done. The new tests failed first with `0 GB`, `0 MB/s`, and `100%` for 9996 of 10000. With each new bound removed in turn, a test went red. The `is.finite(pct)` guard is gone, because a downloaded size from 0 to the total keeps the ratio from 0 to 1. `devtools::test()` passed 9302 tests, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-27: claim audit: 23 claims read, 3 corrected — R/download.R, NEWS.md, tests/testthat/test-load-download-shape.R
+- 2026-09-27: the claim audit found that `signif()` leaves a subnormal number at full length. `format_bytes()` now wraps it in `format(digits = 3)`, and a test pins `5e-324` as `4.94e-324 B/s`. The NEWS entry now names B for a value below 1. The reader re-read the three claims once, and all three hold. `devtools::test()` passed 9303 tests, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
 
 ## Decisions
 
