@@ -306,30 +306,50 @@ print.lms_download_status <- function(x, ...) {
 
   # Calculate and format progress. A total of 0 or below would print as NaN,
   # Inf, or a negative percentage, and a size that is not finite has no
-  # meaningful percentage, so the line is left out for both. A tiny total can
-  # still divide to Inf, so the percentage itself must be finite too.
+  # meaningful percentage, so the line is left out for both. A downloaded size
+  # below 0 or above the total would print a percentage outside 0 to 100, so
+  # the line is left out for that too. The percentage rounds down, so a
+  # download short of its total does not print as 100%.
   if (
     !is.null(total) &&
       !is.null(downloaded) &&
       is.finite(total) &&
       is.finite(downloaded) &&
-      total > 0
+      total > 0 &&
+      downloaded >= 0 &&
+      downloaded <= total
   ) {
-    pct <- round((downloaded / total) * 100, 1)
-    if (is.finite(pct)) {
-      dl_gb <- round(downloaded / (1024^3), 2)
-      tot_gb <- round(total / (1024^3), 2)
-
-      cli::cli_text("{.strong Progress:} {pct}% ({dl_gb} GB / {tot_gb} GB)")
-    }
+    pct <- floor(downloaded / total * 1000) / 10
+    dl <- format_bytes(downloaded)
+    tot <- format_bytes(total)
+    cli::cli_text("{.strong Progress:} {pct}% ({dl} / {tot})")
   }
 
   # Format speed
   if (!is.null(speed) && is.finite(speed) && speed > 0) {
-    spd_mb <- round(speed / (1024^2), 2)
-    cli::cli_text("{.strong Speed:} {spd_mb} MB/s")
+    spd <- format_bytes(speed)
+    cli::cli_text("{.strong Speed:} {spd}/s")
   }
 
   # Invisible return so assignment still captures the underlying list
   invisible(x)
+}
+
+#' Format a byte count in a unit that keeps the value at 1 or more
+#'
+#' The unit is the largest of B, KB, MB, GB, and TB (base 1024) in which the
+#' value is 1 or more, and B for a value below 1024. The value keeps three
+#' significant digits, so a count above 0 never shows as 0.
+#'
+#' @param bytes A finite number of 0 or more.
+#' @return One string, such as `"1.5 KB"`.
+#'
+#' @noRd
+format_bytes <- function(bytes) {
+  units <- c("B", "KB", "MB", "GB", "TB")
+  power <- 0
+  while (power < length(units) - 1 && bytes >= 1024^(power + 1)) {
+    power <- power + 1
+  }
+  paste(signif(bytes / 1024^power, 3), units[[power + 1]])
 }

@@ -376,7 +376,8 @@ test_that("print() shows progress and speed only for finite numbers above 0", {
     "total 1e400" = list(c("1e400", "50", "10"), progress = FALSE, speed = TRUE),
     "downloaded 1e400" = list(c("100", "1e400", "10"), progress = FALSE, speed = TRUE),
     "total -1" = list(c("-1", "50", "10"), progress = FALSE, speed = TRUE),
-    # Finite and above 0, but the percentage divides to Inf.
+    # Finite and above 0, but the downloaded size is above the total, and the
+    # percentage would divide to Inf.
     "total 1e-300" = list(c("1e-300", "1e10", "10"), progress = FALSE, speed = TRUE),
     "speed 1e400" = list(c("100", "50", "1e400"), progress = TRUE, speed = FALSE),
     "speed 0" = list(c("100", "50", "0"), progress = TRUE, speed = FALSE),
@@ -393,6 +394,74 @@ test_that("print() shows progress and speed only for finite numbers above 0", {
     expect_identical(grepl("Speed:", printed, fixed = TRUE), case$speed, info = label)
     expect_no_match(printed, "NaN", fixed = TRUE, info = label)
     expect_no_match(printed, "Inf", fixed = TRUE, info = label)
+  }
+})
+
+# Prints a status reply with the three number fields set to the given JSON
+# numbers, and returns the printed text as one string.
+print_status_numbers <- function(total, downloaded, speed) {
+  fields <- replace(status_fields, number_fields, c(total, downloaded, speed))
+  local_request_sequence(list(mock_response(200L, shape_object(fields))))
+  paste(capture_messages(print(status_call())), collapse = "")
+}
+
+test_that("print() shows progress only for a downloaded size from 0 to the total", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  expect_no_match(print_status_numbers("100", "-1", "10"), "Progress:", fixed = TRUE)
+  expect_no_match(print_status_numbers("100", "101", "10"), "Progress:", fixed = TRUE)
+  expect_match(
+    print_status_numbers("100", "0", "10"),
+    "Progress: 0% (0 B / 100 B)",
+    fixed = TRUE
+  )
+  expect_match(
+    print_status_numbers("100", "100", "10"),
+    "Progress: 100% (100 B / 100 B)",
+    fixed = TRUE
+  )
+})
+
+test_that("print() shows sizes and speed in a unit that keeps the value at 1 or more", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  speeds <- c(
+    "1e-9" = "Speed: 1e-09 B/s",
+    "1023" = "Speed: 1020 B/s",
+    "1024" = "Speed: 1 KB/s",
+    "1536" = "Speed: 1.5 KB/s",
+    "1234567" = "Speed: 1.18 MB/s",
+    "5242880" = "Speed: 5 MB/s"
+  )
+  for (speed in names(speeds)) {
+    expect_match(
+      print_status_numbers("100", "50", speed),
+      speeds[[speed]],
+      fixed = TRUE,
+      info = speed
+    )
+  }
+  expect_match(
+    print_status_numbers("100", "50", "10"),
+    "Progress: 50% (50 B / 100 B)",
+    fixed = TRUE
+  )
+})
+
+test_that("print() rounds the percentage down to one decimal", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  cases <- list(
+    list(c("10000", "9996"), "Progress: 99.9% "),
+    list(c("100", "29"), "Progress: 29% "),
+    list(c("3", "1"), "Progress: 33.3% "),
+    list(c("10000", "10000"), "Progress: 100% ")
+  )
+  for (case in cases) {
+    sizes <- case[[1]]
+    expect_match(
+      print_status_numbers(sizes[[1]], sizes[[2]], "10"),
+      case[[2]],
+      fixed = TRUE,
+      info = paste(sizes[[2]], "of", sizes[[1]])
+    )
   }
 })
 
@@ -428,5 +497,5 @@ test_that("the LM Studio docs example of the status reply reads and prints", {
     )
   )
   printed <- paste(capture_messages(print(status)), collapse = "")
-  expect_match(printed, "Progress: 100%", fixed = TRUE)
+  expect_match(printed, "Progress: 100% (2.12 GB / 2.12 GB)", fixed = TRUE)
 })

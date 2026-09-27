@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-27 (M029 done and archived, M026 row pruned, one pr
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M030 | A download status prints progress only from 0 to 100 and shows sizes and speed in a unit that fits | planned | none | normal | milestones/M030-download-print-units.md |
+| M030 | A download status prints progress only from 0 to 100 and shows sizes and speed in a unit that fits | in-progress | none | normal | milestones/M030-download-print-units.md |
 | M029 | A failed or blank download reply aborts, and a download status prints no NaN or Inf | done | none | normal | milestones/archive/M029-download-flow.md |
 | M028 | Brace tests for the six cli sites that show server or CLI text | done | none | normal | milestones/archive/M028-brace-probe-tests.md |
 | M027 | A load or download reply with the wrong JSON shape aborts with rlmstudio_bad_response | done | M026 | normal | milestones/archive/M027-load-download-shape.md |

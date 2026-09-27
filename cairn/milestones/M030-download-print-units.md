@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M030: A download status prints progress only from 0 to 100 and shows sizes and speed in a unit that fits
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** user-facing — changes the printed output of an exported S3 method
-- **Branch/PR:** —
+- **Branch/PR:** m030-download-print-units
 
 ## Goal
 
@@ -61,20 +61,20 @@ plan gate). The print method of `lms_chat_result` stays as it is.
 
 ## Tasks
 
-- [ ] T1: Write the failing tests first in
+- [x] T1: Write the failing tests first in
       `tests/testthat/test-load-download-shape.R`, next to the M029 print test
       (about line 370): the four AC1 cases, the AC2 speed and size strings, and
       the AC3 percentages. Pin each line with `fixed = TRUE` matches on the
       captured messages.
-- [ ] T2: In `print.lms_download_status()` (`R/download.R` about line 305), add
+- [x] T2: In `print.lms_download_status()` (`R/download.R` about line 305), add
       `downloaded >= 0` and `downloaded <= total` to the Progress condition.
       The existing `"total 1e-300"` case now also fails the new rule. Update
       its comment, which says only that the percentage divides to Inf.
-- [ ] T3: Add an internal helper that formats a byte count in the AC2 unit, and
+- [x] T3: Add an internal helper that formats a byte count in the AC2 unit, and
       use it for both sizes and for the speed with a `/s` suffix. Extend the
       docs example test to pin the whole Progress line of AC4.
-- [ ] T4: Compute the percentage as `floor(downloaded / total * 1000) / 10`.
-- [ ] T5: Add a NEWS entry that states the AC1 to AC3 changes with the before
+- [x] T4: Compute the percentage as `floor(downloaded / total * 1000) / 10`.
+- [x] T5: Add a NEWS entry that states the AC1 to AC3 changes with the before
       and after text. Run `devtools::document()`, `devtools::test()`, and
       `devtools::check()`.
 
@@ -83,6 +83,8 @@ plan gate). The print method of `lms_chat_result` stays as it is.
 - 2026-09-27: created by /milestone-plan. The full criteria audit by a fresh reader returned six findings. The plan fixed all six before the gate: AC2 wording and cases, TB added, AC3 cases, the stale 1e-300 test comment, and AC4 narrowed to the docs example output.
 - 2026-09-27: plan gate chose to leave out the Progress line for a negative or over-total `downloaded_bytes`. It rejected a clamp to 0-100 and sizes without a percentage. M029 already leaves out the line for a total of 0 or a size that is not finite. A live reply with a downloaded size above the total in a normal download falsifies the choice.
 - 2026-09-27: plan gate chose a unit per value (B to TB). It rejected leaving out a speed that rounds to 0, and it rejected a `< 0.01` floor. One helper fixes both the tiny speed and the 0 GB size. A user who parses the printed GB or MB/s text falsifies the choice.
+- 2026-09-27: implement started on branch m030-download-print-units. The question gate was skipped because the plan left no choice open.
+- 2026-09-27: T1-T5 done. The new tests failed first with `0 GB`, `0 MB/s`, and `100%` for 9996 of 10000. With each new bound removed in turn, a test went red. The `is.finite(pct)` guard is gone, because a downloaded size from 0 to the total keeps the ratio from 0 to 1. `devtools::test()` passed 9302 tests, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 
