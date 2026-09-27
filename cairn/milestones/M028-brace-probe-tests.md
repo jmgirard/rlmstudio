@@ -28,8 +28,8 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 
 ## Acceptance criteria
 
-- [ ] AC1: For each of the six sites listed in Scope, `devtools::test()` runs a test that gives that site server or CLI text holding `{cat("EVALUATED")}`. The test asserts that the printed output or the condition message holds the braces as written. It also asserts that "EVALUATED" was not printed.
-- [ ] AC2: `devtools::test()` passes with no failures, and `git diff --stat main -- R/` prints nothing.
+- [x] AC1: For each of the six sites listed in Scope, `devtools::test()` runs a test that gives that site server or CLI text holding `{cat("EVALUATED")}`. The test asserts that the printed output or the condition message holds the braces as written. It also asserts that "EVALUATED" was not printed.
+- [x] AC2: `devtools::test()` passes with no failures, and `git diff --stat main -- R/` prints nothing.
 
 ## Coverage
 
@@ -57,3 +57,9 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 - 2026-09-27: T4 done. The first run showed that the outer abort keeps only the first line of the inner abort, so the installer output never reaches the user. The test reads the inner abort through a wrapper around `cli::cli_abort`, and T4's wording now says so. The dropped output is a new candidate row for `/hotfix`, because this milestone does not change `R/`.
 - 2026-09-27: T5 done. Each site was planted in turn with its text in the format string, through `cli::cli_text(x$text)` or `paste0()`. All six tests went red, each with 2 failed expectations. The sites are the chat reply, the status heading, the download alert, the daemon stop, the version check, and the installer abort. No other test in each file failed. `devtools::test()` then passed with 9123 expectations, and `git diff --stat main -- R/` printed nothing.
 - 2026-09-27: claim audit: not owed — internal tier
+- 2026-09-27: review started. The branch already held `origin/main`, so no merge was needed.
+
+## Review
+
+- AC1: the six brace tests ran on 2026-09-27 through `testthat::test_file()` on the four files, with 0 failed, 0 skipped, and 0 errors. Expectation counts: chat reply 3, status heading 3, download alert 4, daemon stop 3, version check 4, installer abort 7. Each test plants `brace_probe` and matches the braces as written in the messages or the abort message. Each test also runs `expect_no_match(shown$stdout, "EVALUATED")`. T5 recorded each test red under a planted format-string site.
+- AC2: `devtools::test()` ran on 2026-09-27 and exited 0 with no failure section in the summary reporter. `git diff --stat main -- R/` printed nothing.
