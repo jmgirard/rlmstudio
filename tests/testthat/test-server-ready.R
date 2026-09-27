@@ -5,29 +5,8 @@
 # The first three cases use a real TCP target, because a refused connection
 # and a silent listener are properties of the socket. The rest mock the
 # transport through the shared recorder, because an HTTP status and a body
-# shape are properties of the response.
-
-# Bind a listening socket on a random high port and return both the connection
-# and the port it took. The caller closes the connection. A port in use makes
-# serverSocket() raise, so the loop retries until one is free.
-open_listener <- function() {
-  for (i in seq_len(50)) {
-    port <- sample(20000:40000, 1)
-    con <- tryCatch(serverSocket(port), error = function(e) NULL)
-    if (!is.null(con)) {
-      return(list(con = con, port = port))
-    }
-  }
-  testthat::skip("no free port found in 50 tries")
-}
-
-# A port that nothing listens on. Take one, then give it back, so the number is
-# known to have been free a moment ago.
-free_port <- function() {
-  listener <- open_listener()
-  close(listener$con)
-  listener$port
-}
+# shape are properties of the response. The TCP targets come from
+# local_listener() and free_port() in helper-ports.R.
 
 test_that("a closed port is not ready", {
   port <- free_port()
@@ -39,12 +18,11 @@ test_that("a closed port is not ready", {
 })
 
 test_that("an open port whose listener never answers is not ready", {
-  listener <- open_listener()
-  on.exit(close(listener$con), add = TRUE)
+  port <- local_listener()
 
   started <- Sys.time()
   ready <- lms_server_ready(
-    host = paste0("http://127.0.0.1:", listener$port),
+    host = paste0("http://127.0.0.1:", port),
     timeout = 1
   )
   elapsed <- as.numeric(difftime(Sys.time(), started, units = "secs"))
@@ -63,9 +41,8 @@ test_that("a port held by something else passes the TCP probe and fails here", {
   # port and nothing else, so a listener that is not LM Studio suppresses the
   # `rlmstudio_no_server` condition. The readiness check is what tells them
   # apart.
-  listener <- open_listener()
-  on.exit(close(listener$con), add = TRUE)
-  host <- paste0("http://127.0.0.1:", listener$port)
+  port <- local_listener()
+  host <- paste0("http://127.0.0.1:", port)
 
   expect_true(is_server_running(host))
   expect_silent(stop_if_no_server(host))

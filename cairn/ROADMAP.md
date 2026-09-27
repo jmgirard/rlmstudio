@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-27 (M032 done and archived, M029 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M033 | The socket tests share one port helper that leaves the random seed alone | planned | none | normal | milestones/M033-shared-port-helpers.md |
+| M033 | The socket tests share one port helper that leaves the random seed alone | review | none | normal | milestones/M033-shared-port-helpers.md |
 | M032 | A download status picks the unit of a size or speed after rounding | done | none | normal | milestones/archive/M032-download-unit-rounding.md |
 | M031 | A chat batch stops at an API failure that holds for every input | done | none | normal | milestones/archive/M031-batch-early-stop.md |
 | M030 | A download status prints progress only from 0 to 100 and shows sizes and speed in a unit that fits | done | none | normal | milestones/archive/M030-download-print-units.md |

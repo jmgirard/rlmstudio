@@ -29,33 +29,6 @@ test_that("lms_server_start handles success and failure", {
   expect_error(lms_server_start(), "Failed to start the LM Studio server")
 })
 
-# Open a listening socket on a free port and return it with the port number.
-# The caller closes the socket.
-local_listener <- function(env = parent.frame()) {
-  for (i in seq_len(50)) {
-    port <- sample(20000:40000, 1)
-    srv <- tryCatch(serverSocket(port), error = function(e) NULL)
-    if (!is.null(srv)) {
-      withr::defer(close(srv), envir = env)
-      return(port)
-    }
-  }
-  stop("No free port found.")
-}
-
-# Return a port number that nothing listens on.
-free_port <- function() {
-  for (i in seq_len(50)) {
-    port <- sample(20000:40000, 1)
-    srv <- tryCatch(serverSocket(port), error = function(e) NULL)
-    if (!is.null(srv)) {
-      close(srv)
-      return(port)
-    }
-  }
-  stop("No free port found.")
-}
-
 test_that("is_server_running probes the hostname and port named in host", {
   port <- local_listener()
   expect_true(is_server_running(paste0("http://localhost:", port)))
