@@ -71,3 +71,14 @@ Evidence gathered 2026-09-27 on branch head 2de0e68, which holds `origin/main` (
 - AC5: `devtools::test()` gave 380 tests, 0 failed. `devtools::document()` left `git status` clean. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, 0 notes in 1m 0.6s.
 
 Consistency gate: `cairn_validate.py` passed all checks. No principle changed, so `cairn_impact` did not run. There is no `_pkgdown.yml`. `README.Rmd` and `README.md` are not in the diff. The diff adds no top-level file. The NEWS entry is present.
+
+Independent review: three fresh reviewers. The blame-history reader found 0 findings. The prior-review reader found no prior-review evidence that the diff regresses, and the repo has no PR review threads. The diff-bug reader found no correctness defect and ranked 8 findings. Proposed dispositions, pending the gate:
+
+1. The help and NEWS do not say that only the native route sends 404 for a missing model. Proposed: reject, because the help gives only the token as its example, and the ROADMAP row from T1 holds the route gap.
+2. A filtering proxy can send 403 for one prompt, and the batch then stops. Proposed: reject, because D-019 chose 403 on purpose.
+3. The status loop tests lack `info` on `expect_s3_class()`. Proposed: fix now.
+4. The 422 and 500 cases do not assert that the stored condition has no backtrace. Proposed: fix now.
+5. No test stops a batch with `simplify = FALSE` or a `schema`. Proposed: reject, because no criterion asks for it and `results` is filled by the same line in every setting.
+6. No test asserts that the abort keeps the message of the single call. Proposed: fix now.
+7. One roxygen line in the `lms_chat_batch()` details breaks early. Proposed: fix now.
+8. The NEWS entry gives a reason for 401 alone. Proposed: fix now, with the 404 that the native route sends for a model it cannot find.
