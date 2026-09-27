@@ -45,10 +45,12 @@ lms_embed <- function(
   host = "http://localhost:1234",
   simplify = TRUE,
   ...,
+  ttl = NULL,
   token = NULL
 ) {
   rlm_check_id(model, "model")
   rlm_check_text(input, "input")
+  rlm_check_ttl(ttl)
 
   stop_if_no_server(host)
 
@@ -59,6 +61,11 @@ lms_embed <- function(
   # vector's names over, and jsonlite writes a named list as a JSON object.
   # `setNames(df$text, df$id)` is an ordinary way to reach this function.
   body <- list(model = model, input = as.list(unname(input)))
+  # An R integer is written as a JSON integer whatever the serializer does
+  # with a double. The check has already made the value whole and in range.
+  if (!is.null(ttl)) {
+    body$ttl <- as.integer(ttl)
+  }
   body <- utils::modifyList(body, list(...))
 
   resp <- lms_client(host, token = token) |>

@@ -54,6 +54,7 @@ lms_chat <- function(
   simplify = TRUE,
   ...,
   schema = NULL,
+  ttl = NULL,
   token = NULL
 ) {
   api_type <- match.arg(api_type)
@@ -61,6 +62,8 @@ lms_chat <- function(
   rlm_check_no_na(input, "input")
   rlm_check_schema(schema, ...names())
   rlm_check_schema_route(schema, api_type)
+  rlm_check_ttl(ttl)
+  rlm_check_ttl_route(ttl, api_type)
 
   if (api_type == "openresponses") {
     return(lms_chat_openresponses(
@@ -90,6 +93,7 @@ lms_chat <- function(
       simplify = simplify,
       ...,
       schema = schema,
+      ttl = ttl,
       token = token
     ))
   }
@@ -306,10 +310,12 @@ lms_chat_openai <- function(
   simplify = TRUE,
   ...,
   schema = NULL,
+  ttl = NULL,
   token = NULL
 ) {
   rlm_check_id(model, "model")
   rlm_check_schema(schema, ...names())
+  rlm_check_ttl(ttl)
 
   stop_if_no_server(host)
 
@@ -321,6 +327,11 @@ lms_chat_openai <- function(
   body <- Filter(Negate(is.null), body)
   if (!is.null(schema)) {
     body$response_format <- schema_response_format(schema)
+  }
+  # An R integer is written as a JSON integer whatever the serializer does
+  # with a double. The check has already made the value whole and in range.
+  if (!is.null(ttl)) {
+    body$ttl <- as.integer(ttl)
   }
   body <- utils::modifyList(body, list(...))
 
@@ -1118,6 +1129,9 @@ lms_chat_batch <- function(
   }
   api_type <- match.arg(api_type, c("openresponses", "openai", "native"))
   rlm_check_schema_route(schema, api_type)
+  ttl <- args[["ttl"]]
+  rlm_check_ttl(ttl)
+  rlm_check_ttl_route(ttl, api_type)
 
   # An argument fault, so it aborts before the server probe (D-008) and before
   # any request is sent.
