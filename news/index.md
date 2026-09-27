@@ -46,10 +46,12 @@
   Before, 101 of 100 bytes printed `Progress: 101%`. The percentage now
   rounds down to one decimal. So 9996 of 10000 bytes prints `99.9%` and
   not `100%`. Each size and the speed now print in B, KB, MB, GB, or TB.
-  The unit is the largest that keeps the value at 1 or more, and B for a
-  value below 1. The value has three significant digits. Before, sizes
-  were always in GB and the speed in MB/s. A speed of `1e-9` printed
-  `Speed: 0 MB/s`, and 50 of 100 bytes printed `(0 GB / 0 GB)`.
+  The value has three significant digits. The unit is the largest in
+  which the rounded value is 1 or more. When no unit gives such a value,
+  the unit is B. So 1023.9 bytes prints `1 KB`, and 1023 bytes prints
+  `1020 B`. Before, sizes were always in GB and the speed in MB/s. A
+  speed of `1e-9` printed `Speed: 0 MB/s`, and 50 of 100 bytes printed
+  `(0 GB / 0 GB)`.
 
 - [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
   now checks the shape of a status-200 load reply before it reads it.
