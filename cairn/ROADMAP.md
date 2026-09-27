@@ -9,6 +9,7 @@ _Last hygiene check: 2026-09-22 (M027 done and archived, the M012 lesson extende
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M028 | Brace tests for the six cli sites that show server or CLI text | planned | none | normal | milestones/M028-brace-probe-tests.md |
 | M027 | A load or download reply with the wrong JSON shape aborts with rlmstudio_bad_response | done | M026 | normal | milestones/archive/M027-load-download-shape.md |
 | M026 | A model list with the wrong JSON shape aborts with rlmstudio_bad_response | done | none | normal | milestones/archive/M026-model-list-shape.md |
 | M025 | A model-management reply that does not parse as JSON aborts with rlmstudio_bad_response | done | none | normal | milestones/archive/M025-reply-parse-guard.md |
@@ -19,7 +20,6 @@ _Last hygiene check: 2026-09-22 (M027 done and archived, the M012 lesson extende
      - idea, added YYYY-MM-DD, links
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
-- [high] cli reads the braces of its format string as R code to run. Before M027, `print.lms_download_status()` passed the server's `status` text to `cli::cli_text()` as part of that string, and a status of `{cat("EVALUATED")}` ran. M027 fixed that one call. Sweep the other `cli_*` calls for text from a server, the CLI, or a file that reaches the format string, added 2026-09-22, M027 T3
 - `lms_server_start()` with `host = NULL` does not check the host it builds from `port` before the CLI runs. A `port` of `"abc"` or `99999` makes the probe abort. If the CLI accepts such a port, the call warns after the start rather than aborting before it, added 2026-09-20, M015 review finding 4
 - The argument-guard loops in `tests/testthat/test-arg-guards.R` report one failure for ten functions. A non-matching error aborts the whole `test_that()` block. The first broken function then hides the other nine. The file still turns red. The diagnostics alone are coarse, added 2026-09-20, M013 review finding 7
 - Run `lms daemon up` then `lms daemon status --json` on a headless llmster install, as on Linux. On macOS with the desktop app installed, `up` returned only once the daemon ran, so M016 dropped its wait. If `up` returns early there, a wait on `lms_daemon_start()` has a reason, added 2026-09-20, milestones/archive/M016-daemon-start-wait.md
