@@ -792,7 +792,7 @@ test_that("stream = FALSE is sent and stream = NULL is left out", {
         recorder <- local_request_recorder(
           mock_response(200L, stream_reply(name, route))
         )
-        expect_no_error(stream_call(name, route, dots), message = label)
+        expect_no_error(stream_call(name, route, dots))
         expected <- if (identical(name, "lms_chat_batch")) 2L else 1L
         expect_identical(length(recorder$requests), expected, info = label)
         for (req in recorder$requests) {
@@ -807,3 +807,30 @@ test_that("stream = FALSE is sent and stream = NULL is left out", {
     }
   }
 })
+
+test_that("a FALSE with names or attributes passes, as isFALSE() reads it", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  for (value in list(c(a = FALSE), structure(FALSE, foo = 1))) {
+    label <- deparse1(value)
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", list(), stream = value))
+    expect_identical(length(recorder$requests), 1L, info = label)
+    body <- request_target(recorder$requests[[1]])$body
+    expect_identical(body[["stream"]], FALSE, info = label)
+  }
+})
+
+test_that("a long stream value is cut short in the message", {
+  probe <- local_counting_probe()
+
+  err <- expect_error(
+    lms_chat_openai("a-model", list(), stream = seq_len(1000) + 0.5),
+    "must be `FALSE` or `NULL`",
+    fixed = TRUE
+  )
+  expect_lt(nchar(conditionMessage(err)), 300)
+  expect_match(conditionMessage(err), "...", fixed = TRUE)
+  expect_identical(probe$calls, 0L)
+})
+

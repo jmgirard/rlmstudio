@@ -227,7 +227,8 @@ rlm_check_ttl_route <- function(ttl, api_type) {
 #'
 #' The chat functions read one whole JSON reply. A `stream` of `TRUE` makes
 #' the server send Server Sent Events, which fail as a bad response. The check
-#' refuses any value other than `FALSE` or `NULL` (D-023). Every element named
+#' refuses any value other than `NULL` or one `FALSE`, as `isFALSE()` reads it,
+#' so names or attributes on a `FALSE` pass (D-023). Every element named
 #' `stream` is checked, so a later bad value is refused too, even though
 #' `utils::modifyList()` sends only the first.
 #'
@@ -241,8 +242,12 @@ rlm_check_stream <- function(dots) {
     return(invisible(dots))
   }
   for (value in dots[nms == "stream"]) {
-    if (!is.null(value) && !identical(value, FALSE)) {
+    if (!is.null(value) && !isFALSE(value)) {
+      # A long value is cut short, so the message stays one readable line.
       given <- deparse1(value)
+      if (nchar(given) > 60L) {
+        given <- paste0(substr(given, 1L, 57L), "...")
+      }
       cli::cli_abort(
         c(
           "{.field stream} in {.arg ...} must be {.code FALSE} or {.code NULL}.",

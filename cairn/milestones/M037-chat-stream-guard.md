@@ -93,6 +93,7 @@ on other `...` fields stay with the server (D-003).
 - 2026-09-27: T3 done. Help text at `...` on the five chat pages, `stream` added to the argument list of the conditions page's "Server not running" section, and a NEWS bullet. The help says "before the call checks for a running server" in place of "server probe". `devtools::test()`: 10194 passed, 0 failed. `devtools::check()`: 0 errors, 0 warnings, 0 notes. `document()` still warns on the `@aliases` tag at `R/conditions.R:257`, as the existing candidate row records.
 - 2026-09-27: claim audit: 26 claims read, 3 corrected — R/utils-args.R, tests/testthat/test-arg-guards.R. Two comments said that the server can read a second `stream` and that any value other than `FALSE` makes the server stream. A test comment rested on the first. The same reader re-read all three and found them correct.
 - 2026-09-27: implement complete, status review. `devtools::test()`: 10194 passed, 0 failed. `document()` gives no diff.
+- 2026-09-27: step-7 approval: m037-chat-stream-guard approved for merge, with findings 1 and 2 fixed first.
 
 ## Decisions
 
@@ -106,4 +107,14 @@ Pass 1, 2026-09-27, on `m037-chat-stream-guard` at `b0bd31a`, with main unmoved 
 - AC4: `devtools::test()` with the server running and the token set passed 10194 tests with 0 failed, 0 errors, and 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Pass.
 - Gate: `cairn_validate` passed all checks, and `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. README is untouched, NEWS has the entry, and there is no new top-level file. DESIGN is unchanged, so `cairn_impact` was not run.
 - Lenses: diff-bug [O] reported 8 items. Blame-history [S] found nothing. Prior-review [S] found no prior-review evidence (no PR comments, and no archived finding reintroduced).
+- Finding 1 (diff-bug, most severe): a `FALSE` with names or attributes, which was sent as `false` before, aborted under `identical(value, FALSE)`. Fix now: the check uses `isFALSE()`, and a test sends `c(a = FALSE)` and `structure(FALSE, foo = 1)` as `false`. With `identical()` back, that test goes red. D-023 is updated.
+- Finding 2: `deparse1()` of a long value gave a message of 195,129 characters. Fix now: the value is cut to 60 characters, and a test bounds the message. Without the cut, that test goes red.
+- Finding 3, GP4 text not amended in DESIGN: rejected, because D-023 records the trade, as D-020 did with no DESIGN edit.
+- Finding 4, the native logprobs warning comes before the stream abort in `lms_chat()`: rejected as the plan's recorded choice. The abort still comes before the server check.
+- Finding 5, D-015 and D-019 not edited: rejected, because D-entries are only appended to and D-023 names both.
+- Finding 6, message formatting safe: noted, no action.
+- Finding 7, the batch checks `stream` after schema, api_type, and ttl: rejected, because all of them abort before the server check.
+- Finding 8, the attributed FALSE was not documented: resolved by finding 1.
+- Also at the gate: `expect_no_error(..., message = label)` filtered errors rather than labelled them. It is dropped in both uses, and an unmatched error still failed the test, so no test was vacuous.
+- After the fixes: `devtools::test()` passed 10204 tests with 0 failed. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `document()` gave no diff.
 
