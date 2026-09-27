@@ -9,6 +9,7 @@ _Last hygiene check: 2026-09-27 (M032 done and archived, M029 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M033 | The socket tests share one port helper that leaves the random seed alone | planned | none | normal | milestones/M033-shared-port-helpers.md |
 | M032 | A download status picks the unit of a size or speed after rounding | done | none | normal | milestones/archive/M032-download-unit-rounding.md |
 | M031 | A chat batch stops at an API failure that holds for every input | done | none | normal | milestones/archive/M031-batch-early-stop.md |
 | M030 | A download status prints progress only from 0 to 100 and shows sizes and speed in a unit that fits | done | none | normal | milestones/archive/M030-download-print-units.md |
@@ -32,7 +33,6 @@ _Last hygiene check: 2026-09-27 (M032 done and archived, M029 row pruned)_
 - Stateful chat on `/api/v1/chat`. The endpoint returns a `response_id` and continues a thread from `previous_response_id`. With `simplify = FALSE`, the body carries the id, and `...` passes `previous_response_id` through. No named argument or help text covers a thread, so GP4 asks for a named argument (corrected M022). M022 puts the id in a native data-frame batch, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. A test that greps `R/` gates `devtools::test()` only, added 2026-09-18, M007 scope
 - Building either vignette stops an LM Studio server the vignette did not start. The teardown chunks run whenever the CLI is present, added 2026-09-20, M010 review finding 5
-- The port helpers in `tests/testthat/test-server-ready.R` and `tests/testthat/test-serve.R` are near-duplicates that belong in a `helper-` file. Both pick a port through `sample()`. That moves the session RNG and collides reproducibly under a seed, added 2026-09-20, M010 review findings 8 and 9
 - A guard that keeps the pre-call probe in the REST wrappers in step with the condition help page. M010 narrows that page and adds a stronger probe. The wrappers keep the TCP probe, so the two can drift, added 2026-09-20, M010 scope
 - The release walk needs a live-run step: full suite against a running LM Studio, then a re-record of stale fixtures, added 2026-09-17, DESIGN Conventions
 - A guard that keeps every new `stop_if_no_server()` call site covered by a class test, added 2026-09-18, M003 scope
