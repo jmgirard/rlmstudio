@@ -2,6 +2,22 @@
 
 ## rlmstudio (development version)
 
+- A `stream` in the `...` of
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  or
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now aborts before the request unless it is `FALSE` or `NULL`. The
+  error has no condition class, and it comes before the check for a
+  running server. Before, `stream = TRUE` made the server send a
+  streamed reply, and the call failed with `rlmstudio_bad_response` and
+  a hint that another program can be answering on the host.
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  failed every input that way and did not stop. The package reads a
+  whole reply only.
+
 - The help of
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   now says that with `simplify = TRUE`, a reply is read from its first

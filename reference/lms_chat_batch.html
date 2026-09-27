@@ -94,7 +94,10 @@ one value and no missing values.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to <code>lms_chat</code>, such as <code>api_type</code>,
 <code>logprobs</code>, <code>schema</code>, or <code>ttl</code>. A <code>schema</code>, a <code>ttl</code>, and the <code>api_type</code>
-that each needs are checked before the first call.</p></dd>
+that each needs are checked before the first call.
+The package checks a <code>stream</code> here. A <code>stream</code> other than <code>FALSE</code> or
+<code>NULL</code> aborts before the call checks for a running server, because the
+package reads a whole reply and not a streamed one.</p></dd>
 
 
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
@@ -188,9 +191,9 @@ unchanged.</p>
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, <code>schema</code>, or <code>ttl</code> aborts with an argument message and no
-condition class
-even when the server is down. A condition of class
+<code>input</code>, <code>inputs</code>, <code>schema</code>, or <code>ttl</code>, or a <code>stream</code> in the <code>...</code> of a chat
+function, aborts with an argument message and no condition class even when
+the server is down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor
