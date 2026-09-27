@@ -1,13 +1,13 @@
 # M035: A chat completions reply that the token limit cut off no longer passes as complete
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — a new abort, a new warning class, and a new help section on three exported chat functions
-- **Branch/PR:** —
+- **Branch/PR:** m035-openai-cut-off-reply
 
 ## Goal
 
@@ -43,7 +43,7 @@ Observed on 2026-09-27 with google/gemma-3-1b. At `max_tokens` 2, a strict integ
 
 ## Tasks
 
-- [ ] T1: Append D-021 to `cairn/DECISIONS.md`. A cut-off schema reply is a bad response, which annotates D-007 and D-018. A cut-off text reply warns. The warning ignores quiet. D-021 widens the class that D-010 names to warnings that report lost or incomplete results. It does not count exceptions, because the batch format warnings and the server-wait warnings in `R/serve.R` also ignore quiet. Only the OpenAI route is covered, because the other two routes do not mark a cut-off. D-012 had a shared case, and this one does not. Record the rejected options: a warning for schema replies, an abort for text replies, a warning that honors quiet, and one folded batch warning.
+- [x] T1: Append D-021 to `cairn/DECISIONS.md`. A cut-off schema reply is a bad response, which annotates D-007 and D-018. A cut-off text reply warns. The warning ignores quiet. D-021 widens the class that D-010 names to warnings that report lost or incomplete results. It does not count exceptions, because the batch format warnings and the server-wait warnings in `R/serve.R` also ignore quiet. Only the OpenAI route is covered, because the other two routes do not mark a cut-off. D-012 had a shared case, and this one does not. Record the rejected options: a warning for schema replies, an abort for text replies, a warning that honors quiet, and one folded batch warning.
 - [ ] T2: Write the AC1 and AC5 tests in `tests/testthat/test-chat-schema.R` first. Use `completion_body()` from `tests/testthat/helper-chat-bodies.R`, and use `local_request_sequence()` for the batch. Then add the abort to `openai_reply_value()` through `abort_unread_reply()`. It runs before `parse_schema_reply()` when the finish reason is `"length"`. Plant a check that skips a reply that parses, and see the `"3"` test go red.
 - [ ] T3: Reword the `"length"` detail in `abort_unread_reply()` to name the context length and `max_tokens`. Update the existing `max_tokens` message tests to assert both.
 - [ ] T4: Write the AC2 and AC3 tests first. Raise the warning in `openai_reply_value()`, not in `lms_chat_openai()`. The data-frame batch reads the body through that helper in `read_reply()`. Use `cli::cli_warn(class = "rlmstudio_reply_cut_off")` outside the quiet helpers. Raise it only after every abort check in `openai_reply_value()` passes, just before the value returns, so a reply never both warns and fails. Make sure that `simplify = FALSE` returns before the warning.
@@ -59,6 +59,8 @@ Observed on 2026-09-27 with google/gemma-3-1b. At `max_tokens` 2, a strict integ
 - 2026-09-27: plan gate chose a warning that ignores quiet over one that honors it, because a quiet batch otherwise keeps cut-off answers with no sign (GP2); falsified by a user who runs quiet batches and treats the warning as noise.
 - 2026-09-27: plan gate chose a separate classed batch warning over folding it into the failed-inputs warning, because the class tells a caller which fault it reports; falsified by a user who needs a batch to give one warning at most.
 - 2026-09-27: criteria re-audit (full mode, same fresh [O] reader) returned 4 findings, all fixed. AC2 is limited to one-string content again. T4 warns only after every abort check. T5 wraps `read_reply()` too. T1 widens the D-010 class and does not count exceptions.
+- 2026-09-27: implement started on branch m035-openai-cut-off-reply. No question gate, because the plan left no choice open.
+- 2026-09-27: T1 done. D-021 appended.
 
 ## Decisions
 
