@@ -21,10 +21,10 @@ The tests that need a real TCP socket get their ports from one helper file whose
 
 ## Acceptance criteria
 
-- [ ] AC1: `tests/testthat/helper-ports.R` defines `local_listener()` and `free_port()`, and `grep -rnE "^[^#]*serverSocket\(" tests/testthat` reports matches in that file only.
-- [ ] AC2: `local_listener()` and `free_port()` leave `.Random.seed` unchanged. After `set.seed(1)`, it is identical after the call. If it was absent before the call, it is still absent.
-- [ ] AC3: If no port in its `ports` argument binds, each helper fails the calling test with an error that names the port range.
-- [ ] AC4: `devtools::test()` runs clean.
+- [x] AC1: `tests/testthat/helper-ports.R` defines `local_listener()` and `free_port()`, and `grep -rnE "^[^#]*serverSocket\(" tests/testthat` reports matches in that file only.
+- [x] AC2: `local_listener()` and `free_port()` leave `.Random.seed` unchanged. After `set.seed(1)`, it is identical after the call. If it was absent before the call, it is still absent.
+- [x] AC3: If no port in its `ports` argument binds, each helper fails the calling test with an error that names the port range.
+- [x] AC4: `devtools::test()` runs clean.
 
 ## Coverage
 
@@ -53,3 +53,18 @@ The tests that need a real TCP socket get their ports from one helper file whose
 ## Decisions
 
 ## Review
+
+- AC1 (2026-09-27): `helper-ports.R` defines `local_listener()` (line 24) and `free_port()` (line 32). The AC1 grep matched `tests/testthat/helper-ports.R:14` only. No `open_listener` or `sample(` call remains in `tests/testthat`.
+- AC2 (2026-09-27): A direct probe sourced `helper-ports.R` and called each helper. After `set.seed(1)`, `.Random.seed` was identical after the call. With `.Random.seed` removed, it was still absent after the call. Both held for both helpers. `test-ports.R` ran 10 of 10 expectations green.
+- AC3 (2026-09-27): A probe held one port `p` open. Then `local_listener(ports = p)` and `free_port(ports = p)` each raised "No free port in 28575-28575." The `test-ports.R` case matches that message for both helpers and passed. The error comes from `stop()`, so it fails the calling test.
+- AC4 (2026-09-27): `devtools::test()` with LM Studio running gave FAIL 0, ERROR 0, WARN 0, SKIP 0, PASS 9418.
+- Gate (2026-09-27): `cairn_validate.py` passed all checks (exit 0). No principle changed, so `cairn_impact` was skipped. `devtools::document()` left `NAMESPACE`, `man/`, and `R/` unchanged. The diff touches only `tests/` and `cairn/`, so README, NEWS, and `.Rbuildignore` owe nothing. No pkgdown site exists. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+- Reviewers (2026-09-27): three fresh-context lenses ran. The prior-review lens found no prior-review evidence on these files. The blame-history lens found no conflict: the skip-to-error change matches the plan gate and D-006. The diff-bug lens reported eight findings, ranked below.
+- Finding 1 ([O], `helper-ports.R:11-14`): if a second bind on a held port succeeds on Windows, two tests fail there. Refuted against R's `sock.c`: `SO_REUSEADDR` is set only outside Windows, so a second bind fails on Windows too. Disposition: reject.
+- Finding 2 ([O], `helper-ports.R:11`): two test processes with adjacent process ids start one port apart and reuse the same ports. Disposition: pending at the gate.
+- Finding 3 ([O], `helper-ports.R:19`): the error names the whole range after only 50 tries. Disposition: pending at the gate.
+- Finding 4 ([O], `helper-ports.R:11-12`): a busy block of 50 ports after the start fails every socket test, where `sample()` spread its tries. Disposition: pending at the gate.
+- Finding 5 ([O], `helper-ports.R:19`): `ports = integer(0)` gives a warning and the message "Inf--Inf". Disposition: reject, because no caller passes an empty range.
+- Finding 6 ([O], `helper-ports.R:19`): a non-contiguous `ports` is reported by its min and max. Disposition: reject, because no caller passes one.
+- Finding 7 ([O], `test-server-ready.R`): the skip-to-error change has no D-entry. Disposition: reject, because the plan gate chose it and the work log records it.
+- Finding 8 ([O], `test-ports.R:43-46`): the `free_port()` test proves little beyond its callers. Disposition: reject, because it states the helper contract that AC1 moved into one file.
