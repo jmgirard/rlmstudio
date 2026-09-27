@@ -1,7 +1,7 @@
 # The `ttl` field of the request body, for each function that sends one. The
 # argument checks live in test-arg-guards.R. The replies are written here
 # rather than recorded, because a recording cannot show what the request body
-# held (D-004).
+# held.
 
 # The request body as the JSON text that goes over the wire. The parsed form
 # that request_target() returns cannot tell 300 from 300.0 (LESSONS, M008).
@@ -19,8 +19,8 @@ embed_reply <- paste0(
 # completion_body() and quoted() live in helper-chat-bodies.R.
 chat_reply <- completion_body(quoted("hi"))
 
-# Each function that sends `ttl`, called with the reply its endpoint gives.
-# Returns the JSON text of every request that was sent.
+# Each function that sends `ttl`, called with arguments that are valid apart
+# from `ttl`.
 ttl_senders <- list(
   lms_chat_openai = function(...) {
     lms_chat_openai("a-model", list(list(role = "user", content = "hi")), ...)
@@ -42,6 +42,8 @@ ttl_senders <- list(
   }
 )
 
+# Calls one sender against a mocked 200 reply and returns the JSON text of
+# every request that was sent.
 send_with_ttl <- function(name, ...) {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   reply <- if (name == "lms_embed") embed_reply else chat_reply

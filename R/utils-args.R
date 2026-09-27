@@ -139,8 +139,8 @@ article_for <- function(word) {
 #'
 #' LM Studio accepts a bad `ttl`, such as `"abc"` or `-5`, with no error and
 #' keeps its default idle time, so GP4 puts the check on the package. The
-#' upper bound is the largest R integer, because the body carries the value
-#' as a JSON integer.
+#' upper bound is the largest R integer, because the value goes into the body
+#' through `as.integer()`.
 #'
 #' @param value The value the caller passed as `ttl`.
 #' @return `value`, invisibly.
@@ -215,7 +215,7 @@ rlm_check_ttl_route <- function(ttl, api_type) {
       c(
         "{.arg ttl} needs {.code api_type = \"openai\"}.",
         "x" = "You gave {.code api_type = {.str {api_type}}}.",
-        "i" = "LM Studio honors a ttl on its OpenAI chat endpoint only."
+        "i" = "Of the LM Studio chat endpoints, only the OpenAI one honors a ttl."
       ),
       call = NULL
     )

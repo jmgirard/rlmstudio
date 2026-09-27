@@ -45,9 +45,10 @@ an empty list, or \code{NULL}. The server checks the schema itself.}
 
 \item{ttl}{A whole number of seconds from 1 to \code{.Machine$integer.max}, or
 \code{NULL} to leave it out. It is how long the model stays loaded with no
-request. It has an effect only on a model that this request loads, which
-the server does for a model that is not loaded yet. A model that is
-already loaded keeps its idle time.}
+request. It has an effect only on a model that this request loads. The
+server loads a model that is not loaded yet when its just-in-time loading
+setting is on, which is the default. A model that is already loaded keeps
+its idle time.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the

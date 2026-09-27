@@ -1,6 +1,6 @@
 # M034: The OpenAI chat and embedding functions take a ttl for a model that the request loads
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -45,7 +45,7 @@ The facts behind the scope were observed on 2026-09-27 against LM Studio 0.4.25+
 - [x] T2: Add `ttl` after `...` on `lms_chat_openai()` and `lms_embed()`. The check runs above `stop_if_no_server()`. If `ttl` is not `NULL`, the body gets `as.integer(ttl)`. Write the AC1 body tests first. Read the serialized bytes, as the M012 lesson on array forms describes.
 - [x] T3: Add `ttl` after `...` on `lms_chat()`. Run the value check and the route check next to the `schema` checks, and forward `ttl` on the `"openai"` route. In `lms_chat_batch()`, read `ttl` through `rlm_chat_dots()` and check it with `schema`, before `stop_if_no_server()`. Write the AC2 body tests for both functions first. Test the `"openai"` route of `lms_chat()` directly, because its delegate checks again (M013 lesson).
 - [x] T4: Write the roxygen text for the five pages in AC4, run `devtools::document()`, and add the AC5 entry to `NEWS.md`. Write each claim about the server from the 2026-09-27 observations or from T5, not from memory.
-- [ ] T5: With a running server, call `lms_embed()` with `ttl = 120` and `lms_chat_openai()` with `ttl = 100`, each on a model that is not loaded. Make sure that `lms ps` shows each TTL. Send a request with a `ttl` to a model that is already loaded, and make sure that its TTL does not change. Unload what the check loaded, restore the server state, and log one line.
+- [x] T5: With a running server, call `lms_embed()` with `ttl = 120` and `lms_chat_openai()` with `ttl = 100`, each on a model that is not loaded. Make sure that `lms ps` shows each TTL. Send a request with a `ttl` to a model that is already loaded, and make sure that its TTL does not change. Unload what the check loaded, restore the server state, and log one line.
 
 ## Work log
 
@@ -58,7 +58,10 @@ The facts behind the scope were observed on 2026-09-27 against LM Studio 0.4.25+
 - 2026-09-27: implement started on branch `m034-chat-embed-ttl`. The question gate was skipped, because the plan left no choice open.
 - 2026-09-27: T1 to T3 done in one checkpoint, because the T1 tests cover the functions that T2 and T3 change. The body tests are in the new `tests/testthat/test-ttl.R`. Four planted defects each turned a test red: a value check that accepts 0, a route check that skips native, no batch check, and no `ttl` in the embed body. `devtools::test()` passed with 9721 tests.
 - 2026-09-27: T2 finding: httr2 writes the double 1e5 as `100000`, so `as.integer()` changes nothing on the wire today. It stays so that the field is an integer whatever the serializer does with a double.
-- 2026-09-27: T4 done. `ttl` is documented on the three function pages, the batch `...` entry names it, and the openresponses and native `...` entries say what their endpoint does with it. The NEWS entry is added. A second `devtools::document()` wrote nothing, and `devtools::test()` passed with 9721 tests.
+- 2026-09-27: T4 done. `ttl` is documented on the three function pages, and the batch `...` entry names it. The openresponses and native `...` entries say what their endpoint does with it. The NEWS entry is added. A second `devtools::document()` wrote nothing, and `devtools::test()` passed with 9721 tests.
+- 2026-09-27: T5 live check on LM Studio 0.4.25+1. `lms_embed(ttl = 120)` and `lms_chat_openai(ttl = 100)`, each on a model that was not loaded, gave a TTL of `2m / 2m` in `lms ps`. `lms_chat(api_type = "openai", ttl = 600)` on the loaded `google/gemma-3-1b` left its TTL empty. As the next just-in-time model loaded, auto-evict unloaded the earlier one. The server was stopped and gemma left loaded, as before the check.
+- 2026-09-27: claim audit: 52 claims read, 5 corrected — tests/testthat/test-ttl.R, R/utils-args.R, R/chat.R, R/embed.R
+- 2026-09-27: the five corrections were a D-004 citation, a misplaced helper comment, the reason for the upper bound, the route hint that ignored embeddings, and the missing just-in-time loading setting in three `ttl` help texts. `devtools::test()` passed with 9721 tests, and a second `devtools::document()` wrote nothing. Status set to review.
 
 ## Decisions
 
