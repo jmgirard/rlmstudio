@@ -727,8 +727,8 @@ stream_bad_dots <- list(
   list(stream = NA),
   list(stream = logical(0)),
   list(stream = c(FALSE, TRUE)),
-  # The first of two same-named dots is the one that `utils::modifyList()`
-  # and `[[` read, so a later bad one is the case a first-match check misses.
+  # `utils::modifyList()` and `[[` read the first of two same-named dots. A
+  # later bad one is refused by policy, and a first-match check misses it.
   list(stream = FALSE, stream = TRUE)
 )
 

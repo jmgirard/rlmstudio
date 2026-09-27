@@ -225,11 +225,11 @@ rlm_check_ttl_route <- function(ttl, api_type) {
 
 #' Reject a stream field that would make the server stream its reply
 #'
-#' The chat functions read one whole JSON reply. A `stream` other than `FALSE`
-#' makes the server send Server Sent Events, which fail as a bad response
-#' (D-023). Every element named `stream` is checked, because
-#' `utils::modifyList()` and `[[` read the first of two and the server can
-#' read another.
+#' The chat functions read one whole JSON reply. A `stream` of `TRUE` makes
+#' the server send Server Sent Events, which fail as a bad response. The check
+#' refuses any value other than `FALSE` or `NULL` (D-023). Every element named
+#' `stream` is checked, so a later bad value is refused too, even though
+#' `utils::modifyList()` sends only the first.
 #'
 #' @param dots The list of the caller's `...` values.
 #' @return `dots`, invisibly.

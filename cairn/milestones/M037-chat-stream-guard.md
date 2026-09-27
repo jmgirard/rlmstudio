@@ -1,6 +1,6 @@
 # M037: The chat functions refuse a stream field before any request
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -91,6 +91,8 @@ on other `...` fields stay with the server (D-003).
 - 2026-09-27: amendment (mini gate): AC3 no longer says that `stream` is the one checked field in `...`, because `lms_chat_openai()` refuses a `response_format` next to `schema` and `lms_chat_native()` warns on and drops a `logprobs`. The user chose narrowing over listing every checked field.
 - 2026-09-27: re-audit: AC3 (full) — nothing. The reader noted that "server probe" is internal wording, and AC3 binds the meaning, not the words.
 - 2026-09-27: T3 done. Help text at `...` on the five chat pages, `stream` added to the argument list of the conditions page's "Server not running" section, and a NEWS bullet. The help says "before the call checks for a running server" in place of "server probe". `devtools::test()`: 10194 passed, 0 failed. `devtools::check()`: 0 errors, 0 warnings, 0 notes. `document()` still warns on the `@aliases` tag at `R/conditions.R:257`, as the existing candidate row records.
+- 2026-09-27: claim audit: 26 claims read, 3 corrected — R/utils-args.R, tests/testthat/test-arg-guards.R. Two comments said that the server can read a second `stream` and that any value other than `FALSE` makes the server stream. A test comment rested on the first. The same reader re-read all three and found them correct.
+- 2026-09-27: implement complete, status review. `devtools::test()`: 10194 passed, 0 failed. `document()` gives no diff.
 
 ## Decisions
 
