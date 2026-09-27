@@ -367,6 +367,33 @@ test_that("print() shows the status text and does not run it", {
   expect_match(printed, "Status: {1 + 1}", fixed = TRUE)
 })
 
+test_that("print() shows progress and speed only for finite numbers above 0", {
+  # jsonlite reads 1e400 as Inf. Each case lists total, downloaded, and speed,
+  # then whether the Progress and Speed lines appear.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  cases <- list(
+    "both sizes 0" = list(c("0", "0", "10"), progress = FALSE, speed = TRUE),
+    "total 1e400" = list(c("1e400", "50", "10"), progress = FALSE, speed = TRUE),
+    "downloaded 1e400" = list(c("100", "1e400", "10"), progress = FALSE, speed = TRUE),
+    "total -1" = list(c("-1", "50", "10"), progress = FALSE, speed = TRUE),
+    "speed 1e400" = list(c("100", "50", "1e400"), progress = TRUE, speed = FALSE),
+    "speed 0" = list(c("100", "50", "0"), progress = TRUE, speed = FALSE),
+    "speed -1" = list(c("100", "50", "-1"), progress = TRUE, speed = FALSE),
+    "all finite and positive" = list(c("100", "50", "10"), progress = TRUE, speed = TRUE)
+  )
+  for (label in names(cases)) {
+    case <- cases[[label]]
+    fields <- replace(status_fields, number_fields, case[[1]])
+    local_request_sequence(list(mock_response(200L, shape_object(fields))))
+    status <- status_call()
+    printed <- paste(capture_messages(print(status)), collapse = "")
+    expect_identical(grepl("Progress:", printed, fixed = TRUE), case$progress, info = label)
+    expect_identical(grepl("Speed:", printed, fixed = TRUE), case$speed, info = label)
+    expect_no_match(printed, "NaN", fixed = TRUE, info = label)
+    expect_no_match(printed, "Inf", fixed = TRUE, info = label)
+  }
+})
+
 test_that("a status reply with status failed returns and prints", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   body <- shape_object(replace(status_fields, "status", '"failed"'))

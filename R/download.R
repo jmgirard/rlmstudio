@@ -303,8 +303,15 @@ print.lms_download_status <- function(x, ...) {
   status_text <- status_col(status)
   cli::cli_text("{.strong Status:} {status_text}")
 
-  # Calculate and format progress
-  if (!is.null(total) && !is.null(downloaded)) {
+  # Calculate and format progress. A size that is 0, below 0, or not finite
+  # would print as NaN, Inf, or a negative percentage, so the line is left out.
+  if (
+    !is.null(total) &&
+      !is.null(downloaded) &&
+      is.finite(total) &&
+      is.finite(downloaded) &&
+      total > 0
+  ) {
     pct <- round((downloaded / total) * 100, 1)
     dl_gb <- round(downloaded / (1024^3), 2)
     tot_gb <- round(total / (1024^3), 2)
@@ -313,7 +320,7 @@ print.lms_download_status <- function(x, ...) {
   }
 
   # Format speed
-  if (!is.null(speed) && speed > 0) {
+  if (!is.null(speed) && is.finite(speed) && speed > 0) {
     spd_mb <- round(speed / (1024^2), 2)
     cli::cli_text("{.strong Speed:} {spd_mb} MB/s")
   }
