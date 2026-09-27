@@ -82,9 +82,11 @@ test_that("a ttl is sent as a JSON integer in each request", {
     for (value in list(300, 300L, 1e5, .Machine$integer.max)) {
       jsons <- send_with_ttl(name, ttl = value)
       expect_identical(length(jsons), expected_requests[[name]], info = name)
-      field <- paste0('"ttl":', format(as.integer(value)))
+      # The field must end after the digits, so that "ttl":3000 or
+      # "ttl":300.0 does not match "ttl":300.
+      field <- paste0('"ttl":', format(as.integer(value)), "[,}]")
       for (json in jsons) {
-        expect_match(json, field, fixed = TRUE, info = paste(name, field))
+        expect_match(json, field, info = paste(name, field))
       }
     }
   }

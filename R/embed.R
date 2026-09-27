@@ -23,8 +23,7 @@
 #'   `NULL` to leave it out. It is how long the model stays loaded with no
 #'   request. It has an effect only on a model that this request loads. The
 #'   server loads a model that is not loaded yet when its just-in-time loading
-#'   setting is on, which is the default. A model that is already loaded keeps
-#'   its idle time.
+#'   setting is on. A model that is already loaded keeps its idle time.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].

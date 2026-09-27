@@ -62,6 +62,8 @@ The facts behind the scope were observed on 2026-09-27 against LM Studio 0.4.25+
 - 2026-09-27: T5 live check on LM Studio 0.4.25+1. `lms_embed(ttl = 120)` and `lms_chat_openai(ttl = 100)`, each on a model that was not loaded, gave a TTL of `2m / 2m` in `lms ps`. `lms_chat(api_type = "openai", ttl = 600)` on the loaded `google/gemma-3-1b` left its TTL empty. As the next just-in-time model loaded, auto-evict unloaded the earlier one. The server was stopped and gemma left loaded, as before the check.
 - 2026-09-27: claim audit: 52 claims read, 5 corrected — tests/testthat/test-ttl.R, R/utils-args.R, R/chat.R, R/embed.R
 - 2026-09-27: the five corrections were a D-004 citation, a misplaced helper comment, the reason for the upper bound, the route hint that ignored embeddings, and the missing just-in-time loading setting in three `ttl` help texts. `devtools::test()` passed with 9721 tests, and a second `devtools::document()` wrote nothing. Status set to review.
+- 2026-09-27: review found all six criteria met, and review findings 1 to 5 were fixed at the gate.
+- 2026-09-27: step-7 approval: m034-chat-embed-ttl approved for merge
 
 ## Decisions
 
@@ -87,3 +89,5 @@ Independent review, 2026-09-27, three fresh reviewers. The [S] history lens foun
 5. `cairn/references/lmstudio-api-surface.md` lines 152 and 153 still list the `ttl` argument as open work. Proposed: fix now.
 6. The value loop for `lms_chat()` on the openai route passes even with the `lms_chat()` value check removed, because `lms_chat_openai()` checks again. The native-route order test does go red. Proposed: reject, because one test already fails on that defect.
 7. `ttl_fault()` accepts any object for which `is.numeric()` is true, so a class with odd arithmetic methods can pass. Proposed: reject, because no such class is in use and the common ones (difftime, Date, integer64) behave.
+
+Gate triage, 2026-09-27: the maintainer took the proposed dispositions. Findings 1 to 5 were fixed on the branch. The conditions page names `ttl`, and the body test matches `"ttl":<n>` followed by `,` or `}`. An R check showed that this pattern rejects `"ttl":3000` and `"ttl":300.0` and accepts `"ttl":300` in both positions. The three help texts no longer say which setting is the default. D-020 records the exception to D-003, and the reference marks the `ttl` item as wrapped. Findings 6 and 7 were rejected for the reasons above. After the fixes, `devtools::test()` gave 9721 tests with 0 failures and 0 skips. A second `devtools::document()` wrote nothing, and `cairn_validate.py` passed.

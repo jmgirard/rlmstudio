@@ -30,8 +30,8 @@
 #'   `api_type = "openai"`, and any other `api_type`, the default included,
 #'   aborts before the request. It has an effect only on a model that this
 #'   request loads. The server loads a model that is not loaded yet when its
-#'   just-in-time loading setting is on, which is the default. A model that is
-#'   already loaded keeps its idle time.
+#'   just-in-time loading setting is on. A model that is already loaded keeps
+#'   its idle time.
 #' @return Depending on the arguments provided:
 #' \itemize{
 #'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
@@ -281,8 +281,7 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   `NULL` to leave it out. It is how long the model stays loaded with no
 #'   request. It has an effect only on a model that this request loads. The
 #'   server loads a model that is not loaded yet when its just-in-time loading
-#'   setting is on, which is the default. A model that is already loaded keeps
-#'   its idle time.
+#'   setting is on. A model that is already loaded keeps its idle time.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
