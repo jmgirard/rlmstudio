@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M032: A download status picks the unit of a size or speed after rounding
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes what `print()` shows for a download status   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m032-download-unit-rounding   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -80,7 +80,7 @@ as M030 review rejected them.
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: In `tests/testthat/test-load-download-shape.R` near line 423, add
+- [x] T1: In `tests/testthat/test-load-download-shape.R` near line 423, add
       eight threshold probes as speeds: 1023.9 and 1023 times 1024 to the
       power 0 through 3. Add one progress-line probe. Run the tests and
       see the four round-up probes and the progress probe go red. The planned
@@ -108,6 +108,7 @@ as M030 review rejected them.
 - 2026-09-27: criteria audit ran in full mode (user-facing tier) and found nothing blocking. The gate fixed two points. AC1 gains a progress-line probe and the prefix rule for matches. AC2 names the old fallback phrase that must change.
 - 2026-09-27: plan gate chose "largest unit whose rounded value is 1 or more" over "move up once the rounded value reaches 1000". The first keeps the value at 1 or more, and it prints 999.6 bytes as `1000 B`, not `0.976 KB`. A user report that a four-digit figure such as `1020 B` reads as wrong falsifies the choice.
 - 2026-09-27: plan gate chose to amend the unreleased M030 NEWS bullet over a new bullet, because no release shipped the old rule. A release that ships the M030 rule before this merges falsifies the choice.
+- 2026-09-27: T1 added eight threshold probes and one progress probe. The four round-up probes and the progress probe went red with `1020 B/s`, `1020 KB/s`, `1020 MB/s`, `1020 GB/s`, and `(1020 B / 1020 B)`.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
