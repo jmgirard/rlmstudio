@@ -93,8 +93,8 @@ one value and no missing values.</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to <code>lms_chat</code>, such as <code>api_type</code>,
-<code>logprobs</code>, or <code>schema</code>. A <code>schema</code> and the <code>api_type</code> it needs are
-checked before the first call.</p></dd>
+<code>logprobs</code>, <code>schema</code>, or <code>ttl</code>. A <code>schema</code>, a <code>ttl</code>, and the <code>api_type</code>
+that each needs are checked before the first call.</p></dd>
 
 
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
@@ -188,7 +188,7 @@ unchanged.</p>
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, or <code>schema</code> aborts with an argument message and no
+<code>input</code>, <code>inputs</code>, <code>schema</code>, or <code>ttl</code> aborts with an argument message and no
 condition class
 even when the server is down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A

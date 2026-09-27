@@ -60,6 +60,7 @@ selected API type.</p>
 <span>  simplify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  schema <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ttl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -113,6 +114,16 @@ TRUE.</p></dd>
 See <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> for its form and for what is returned.</p></dd>
 
 
+<dt id="arg-ttl">ttl<a class="anchor" aria-label="anchor" href="#arg-ttl"></a></dt>
+<dd><p>A whole number of seconds from 1 to <code>.Machine$integer.max</code>, or
+<code>NULL</code>. It is how long the model stays loaded with no request. It needs
+<code>api_type = "openai"</code>, and any other <code>api_type</code>, the default included,
+aborts before the request. It has an effect only on a model that this
+request loads. The server loads a model that is not loaded yet when its
+just-in-time loading setting is on. A model that is already loaded keeps
+its idle time.</p></dd>
+
+
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
 <dd><p>Character or <code>NULL</code>. An API token for a server that requires
 authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option and then the
@@ -143,7 +154,7 @@ three for a status-200 body that does not parse as JSON.</p>
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, or <code>schema</code> aborts with an argument message and no
+<code>input</code>, <code>inputs</code>, <code>schema</code>, or <code>ttl</code> aborts with an argument message and no
 condition class
 even when the server is down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A

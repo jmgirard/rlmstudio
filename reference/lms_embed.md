@@ -13,6 +13,7 @@ lms_embed(
   host = "http://localhost:1234",
   simplify = TRUE,
   ...,
+  ttl = NULL,
   token = NULL
 )
 ```
@@ -48,6 +49,15 @@ lms_embed(
   LM Studio: a server that honors it returns embeddings this function
   cannot read, and the default `simplify = TRUE` path then aborts.
 
+- ttl:
+
+  A whole number of seconds from 1 to `.Machine$integer.max`, or `NULL`
+  to leave it out. It is how long the model stays loaded with no
+  request. It has an effect only on a model that this request loads. The
+  server loads a model that is not loaded yet when its just-in-time
+  loading setting is on. A model that is already loaded keeps its idle
+  time.
+
 - token:
 
   Character or `NULL`. An API token for a server that requires
@@ -68,7 +78,7 @@ carries no row or column names.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
-`model`, `job_id`, `input`, `inputs`, or `schema` aborts with an
+`model`, `job_id`, `input`, `inputs`, `schema`, or `ttl` aborts with an
 argument message and no condition class even when the server is down. A
 condition of class `rlmstudio_no_server` is raised when that connection
 cannot be opened. A refused connection raises it. So do an address the

@@ -2,6 +2,26 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+  and
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  take a new `ttl` argument. It is the number of seconds that a model
+  stays loaded with no request. It has an effect only on a model that
+  the request itself loads. A model that is already loaded keeps its
+  idle time. `ttl` must be `NULL` or one whole number from 1 to
+  `.Machine$integer.max`, and any other value aborts before the request.
+  LM Studio accepts a bad value such as `-5` with no error.
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  takes `ttl` with `api_type = "openai"` only. On any other route, the
+  default included, it now aborts before the request. Before, LM Studio
+  ignored a `ttl` in `...` on the openresponses route and rejected it
+  with status 400 on the native route.
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  passes `ttl` to
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  and checks it before the first request.
+
 - [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
   now aborts at an input that fails with an `rlmstudio_api_error` of
   status 401, 403, or 404. It aborts with that condition and sends no
