@@ -323,7 +323,7 @@ what the same reply returns without the cut-off. A \code{schema} reply with
 \code{logprobs = FALSE} raises \code{rlmstudio_bad_response} instead, as the
 "Malformed response" section says. The warning and that abort read the
 finish reason of the first choice, which is the choice that the call
-returns. No other choice is read. With \code{simplify = FALSE}, the call
+reads. No other element of \code{choices} is read. With \code{simplify = FALSE}, the call
 returns the body with every choice and no warning.
 
 \code{\link[=lms_chat]{lms_chat()}} gives the warning through \code{\link[=lms_chat_openai]{lms_chat_openai()}} with

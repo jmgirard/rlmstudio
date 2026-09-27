@@ -305,7 +305,7 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   with a warning. See the "Cut-off reply" section.
 #'
 #'   With `simplify = TRUE`, the reply is read from the first element of the
-#'   `choices` field. No other choice is read. A request with `n` in `...`
+#'   `choices` field. No other element of `choices` is read. A request with `n` in `...`
 #'   therefore returns the first choice alone, and the cut-off warning and
 #'   abort report the finish reason of that choice alone. With
 #'   `simplify = FALSE`, the body holds every choice.

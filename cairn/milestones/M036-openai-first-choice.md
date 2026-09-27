@@ -1,6 +1,6 @@
 # M036: The chat completions help says that a reply is read from its first choice
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -52,6 +52,8 @@ Observed on 2026-09-27 with google/gemma-3-1b: a `/v1/chat/completions` request 
 - 2026-09-27: T1 done. `two_choice_body()` and three tests in `test-chat-first-choice.R`. Plant "read the last choice" turned all three tests red, and plant "finish reason from the last choice" also did. `devtools::test()` 9885 pass, 0 fail.
 - 2026-09-27: T2 done. First-choice text in the `@return` of `lms_chat_openai()` and in the "Cut-off reply" and "Malformed response" sections. `devtools::document()` wrote it to the four named pages. The "Malformed response" change also reaches the eight other pages that inherit that section.
 - 2026-09-27: T3 done. One NEWS bullet under the development version. A second `devtools::document()` gave no diff. `devtools::test()` 9885 pass, 0 fail.
+- 2026-09-27: claim audit: 17 claims read, 3 corrected. Files: R/chat.R, R/conditions.R, tests/testthat/test-chat-first-choice.R. The help now says "no other element of `choices`", since the batch token columns read `usage`. The cut-off sentence says the choice "the call reads". The batch test now runs the vector, list, and data-frame formats. The plant "read the last choice" turned all three tests red again.
+- 2026-09-27: all tasks done. `devtools::test()` 9889 pass, 0 fail. `devtools::document()` gave no diff. Status set to review.
 
 ## Decisions
 

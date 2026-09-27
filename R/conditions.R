@@ -238,7 +238,7 @@
 #' `logprobs = FALSE` raises `rlmstudio_bad_response` instead, as the
 #' "Malformed response" section says. The warning and that abort read the
 #' finish reason of the first choice, which is the choice that the call
-#' returns. No other choice is read. With `simplify = FALSE`, the call
+#' reads. No other element of `choices` is read. With `simplify = FALSE`, the call
 #' returns the body with every choice and no warning.
 #'
 #' [lms_chat()] gives the warning through [lms_chat_openai()] with

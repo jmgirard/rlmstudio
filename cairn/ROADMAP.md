@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-27 (M035 done and archived, M032 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M036 | The chat completions help says that a reply is read from its first choice | in-progress | none | normal | milestones/M036-openai-first-choice.md |
+| M036 | The chat completions help says that a reply is read from its first choice | review | none | normal | milestones/M036-openai-first-choice.md |
 | M035 | A chat completions reply that the token limit cut off no longer passes as complete | done | none | normal | milestones/archive/M035-openai-cut-off-reply.md |
 | M034 | The OpenAI chat and embedding functions take a ttl for a model that the request loads | done | none | normal | milestones/archive/M034-chat-embed-ttl.md |
 | M033 | The socket tests share one port helper that leaves the random seed alone | done | none | normal | milestones/archive/M033-shared-port-helpers.md |

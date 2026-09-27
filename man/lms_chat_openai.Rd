@@ -76,7 +76,7 @@ any other setting, such a reply whose content is one string is returned
 with a warning. See the "Cut-off reply" section.
 
 With \code{simplify = TRUE}, the reply is read from the first element of the
-\code{choices} field. No other choice is read. A request with \code{n} in \code{...}
+\code{choices} field. No other element of \code{choices} is read. A request with \code{n} in \code{...}
 therefore returns the first choice alone, and the cut-off warning and
 abort report the finish reason of that choice alone. With
 \code{simplify = FALSE}, the body holds every choice.
@@ -327,7 +327,7 @@ what the same reply returns without the cut-off. A \code{schema} reply with
 \code{logprobs = FALSE} raises \code{rlmstudio_bad_response} instead, as the
 "Malformed response" section says. The warning and that abort read the
 finish reason of the first choice, which is the choice that the call
-returns. No other choice is read. With \code{simplify = FALSE}, the call
+reads. No other element of \code{choices} is read. With \code{simplify = FALSE}, the call
 returns the body with every choice and no warning.
 
 \code{\link[=lms_chat]{lms_chat()}} gives the warning through \code{\link[=lms_chat_openai]{lms_chat_openai()}} with

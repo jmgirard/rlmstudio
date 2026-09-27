@@ -80,16 +80,31 @@ test_that("a schema reply is read from its first choice", {
 
 test_that("a batch reads each reply from its first choice", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-  local_request_sequence(list(
-    mock_response(200L, completion_body(quoted("one"))),
-    mock_response(
-      200L,
-      two_choice_body(c(quoted("two"), quoted("other")), c("stop", "length"))
-    )
-  ))
-  out <- collect_warnings(
-    lms_chat_batch("a-model", c("a", "b"), api_type = "openai", quiet = TRUE)
+  # The data-frame format reads a reply by its own path, apart from
+  # lms_chat(), so each format is run.
+  outputs <- list(
+    vector = function(value) value[[2]],
+    list = function(value) value[[2]],
+    data.frame = function(value) value$output[[2]]
   )
-  expect_identical(out$value[[2]], "two")
-  expect_identical(cut_off_count(out), 0L)
+  for (format in names(outputs)) {
+    local_request_sequence(list(
+      mock_response(200L, completion_body(quoted("one"))),
+      mock_response(
+        200L,
+        two_choice_body(c(quoted("two"), quoted("other")), c("stop", "length"))
+      )
+    ))
+    out <- collect_warnings(
+      lms_chat_batch(
+        "a-model",
+        c("a", "b"),
+        api_type = "openai",
+        format = format,
+        quiet = TRUE
+      )
+    )
+    expect_identical(outputs[[format]](out$value), "two", info = format)
+    expect_identical(cut_off_count(out), 0L, info = format)
+  }
 })
