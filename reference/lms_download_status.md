@@ -179,9 +179,11 @@ applies the same rules and returns `FALSE` for a body that breaks one.
 and `lms_download_status()` also raise it for a status-200 reply of
 their own with the wrong shape. Each reply must follow the rule of its
 function. Each field is read by its exact name. The rules check the type
-of a field and not its value, with two exceptions. The `status` of a
-load reply must be `"loaded"`, and a download reply whose `status` is
-`"already_downloaded"` needs no `job_id`.
+of a field and not its value, with four exceptions. The `status` of a
+load reply must be `"loaded"`. A download reply whose `status` is
+`"already_downloaded"` needs no `job_id`. A download reply whose
+`status` is `"failed"` always aborts. The `job_id` of any other download
+reply must hold a character that is not whitespace.
 
 1.  A reply of
     [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
@@ -190,17 +192,21 @@ load reply must be `"loaded"`, and a download reply whose `status` is
 
 2.  A reply of
     [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-    is a JSON object whose `status` is a string. If the status is not
-    `"already_downloaded"`, its `job_id` is a string.
+    is a JSON object whose `status` is a string other than `"failed"`.
+    If the status is not `"already_downloaded"`, its `job_id` is a
+    string with a character that is not whitespace. For a `"failed"`
+    status, the message says that LM Studio reports that the download
+    failed. It names the reply's `job_id` if that is a string with a
+    character that is not whitespace.
 
 3.  A reply of `lms_download_status()` is a JSON object whose `job_id`
     and `status` are strings. Its `total_size_bytes`,
     `downloaded_bytes`, and `bytes_per_second` are each a number, or
     absent, or `null`.
 
-The message names the field that broke the rule, or it says that the
-body is not a JSON object. It also says that something other than LM
-Studio may be answering on the host.
+For the other faults, the message names the field that broke the rule,
+or it says that the body is not a JSON object. It also says that
+something other than LM Studio may be answering on the host.
 
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 raises it on an embeddings block it cannot trust. The vectors it returns

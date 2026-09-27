@@ -173,19 +173,25 @@ rules and returns <code>FALSE</code> for a body that breaks one.</p>
 <p><code><a href="lms_load.html">lms_load()</a></code>, <code><a href="lms_download.html">lms_download()</a></code>, and <code>lms_download_status()</code> also raise it
 for a status-200 reply of their own with the wrong shape. Each reply must
 follow the rule of its function. Each field is read by its exact name. The
-rules check the type of a field and not its value, with two exceptions. The
-<code>status</code> of a load reply must be <code>"loaded"</code>, and a download reply whose
-<code>status</code> is <code>"already_downloaded"</code> needs no <code>job_id</code>.</p><ol><li><p>A reply of <code><a href="lms_load.html">lms_load()</a></code> is a JSON object whose <code>status</code> is the string
+rules check the type of a field and not its value, with four exceptions.
+The <code>status</code> of a load reply must be <code>"loaded"</code>. A download reply whose
+<code>status</code> is <code>"already_downloaded"</code> needs no <code>job_id</code>. A download reply whose
+<code>status</code> is <code>"failed"</code> always aborts. The <code>job_id</code> of any other download
+reply must hold a character that is not whitespace.</p><ol><li><p>A reply of <code><a href="lms_load.html">lms_load()</a></code> is a JSON object whose <code>status</code> is the string
 <code>"loaded"</code>. With <code>echo_load_config = TRUE</code>, its <code>load_config</code> is also a
 JSON object.</p></li>
-<li><p>A reply of <code><a href="lms_download.html">lms_download()</a></code> is a JSON object whose <code>status</code> is a string.
-If the status is not <code>"already_downloaded"</code>, its <code>job_id</code> is a string.</p></li>
+<li><p>A reply of <code><a href="lms_download.html">lms_download()</a></code> is a JSON object whose <code>status</code> is a string
+other than <code>"failed"</code>. If the status is not <code>"already_downloaded"</code>, its
+<code>job_id</code> is a string with a character that is not whitespace. For a
+<code>"failed"</code> status, the message says that LM Studio reports that the
+download failed. It names the reply's <code>job_id</code> if that is a string with
+a character that is not whitespace.</p></li>
 <li><p>A reply of <code>lms_download_status()</code> is a JSON object whose <code>job_id</code> and
 <code>status</code> are strings. Its <code>total_size_bytes</code>, <code>downloaded_bytes</code>, and
 <code>bytes_per_second</code> are each a number, or absent, or <code>null</code>.</p></li>
-</ol><p>The message names the field that broke the rule, or it says that the body
-is not a JSON object. It also says that something other than LM Studio may
-be answering on the host.</p>
+</ol><p>For the other faults, the message names the field that broke the rule, or
+it says that the body is not a JSON object. It also says that something
+other than LM Studio may be answering on the host.</p>
 <p><code><a href="lms_embed.html">lms_embed()</a></code> raises it on an embeddings block it cannot trust. The vectors
 it returns are placed by the index that the response reports, so a block
 with a missing, repeated, or out-of-range index would otherwise pair a

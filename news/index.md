@@ -2,6 +2,31 @@
 
 ## rlmstudio (development version)
 
+- If a download reply has a `status` of `"failed"`,
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+  now aborts with `rlmstudio_bad_response`. The message says that LM
+  Studio reports that the download failed. If the reply’s `job_id` is a
+  string with a character that is not whitespace, the message names it.
+  Before, if the `job_id` was a string, the call said “Download job
+  started successfully” and returned the job id.
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  still returns a `"failed"` status and does not abort.
+
+- If the `job_id` of a download reply is empty or holds only whitespace,
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+  now aborts with `rlmstudio_bad_response`. The message says that
+  `job_id` is a string with no character that is not whitespace. Before,
+  the call returned that job id.
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  then failed with an argument error.
+
+- [`print()`](https://rdrr.io/r/base/print.html) on a download status
+  now shows no `NaN` and no `Inf`. If the total size is 0 or below, or
+  if a size is not finite, the progress line is left out. If the speed
+  is 0, below 0, or not finite, the speed line is left out. Before,
+  sizes of 0 printed `Progress: NaN%`. A speed of `1e400` printed
+  `Speed: Inf MB/s`.
+
 - [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
   now checks the shape of a status-200 load reply before it reads it.
   The reply must be a JSON object whose `status` is the string
@@ -21,12 +46,13 @@
   reply must be a JSON object whose `status` is a string. If the status
   is `"already_downloaded"`, the call returns `"already_downloaded"`
   invisibly, as before. Otherwise the reply’s `job_id` must be a string,
-  and the call returns it. Any other reply aborts with
-  `rlmstudio_bad_response`, and the message names the field that broke
-  the rule. The call no longer returns `TRUE`. Before,
-  [`{}`](https://rdrr.io/r/base/Paren.html), `[]`, and `null` returned
-  `TRUE`, a `job_id` of `1` returned `1L`, and a `job_id` that was an
-  array returned a list.
+  and the call returns it. The two entries above add two more rules: a
+  `"failed"` status aborts, and so does a `job_id` that holds only
+  whitespace. Any other reply aborts with `rlmstudio_bad_response`, and
+  the message names the field that broke the rule. The call no longer
+  returns `TRUE`. Before, [`{}`](https://rdrr.io/r/base/Paren.html),
+  `[]`, and `null` returned `TRUE`, a `job_id` of `1` returned `1L`, and
+  a `job_id` that was an array returned a list.
 
 - [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
   now checks the shape of a status-200 reply before it reads it. The
