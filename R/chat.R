@@ -298,10 +298,11 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   parsed with `jsonlite::parse_json(simplifyVector = TRUE)` and the parsed
 #'   value is returned. A JSON object becomes a named list, and an array of
 #'   numbers becomes a vector. With `simplify = FALSE` or `logprobs = TRUE`,
-#'   the reply stays a string. In this setting, a reply that a length limit
-#'   ended raises `rlmstudio_bad_response`, also when it parses. In the other
-#'   settings with `simplify = TRUE`, such a reply gives a warning. See the
-#'   "Cut-off reply" section.
+#'   the reply stays a string. With a `schema`, `simplify = TRUE`, and
+#'   `logprobs = FALSE`, a reply that a length limit ended raises
+#'   `rlmstudio_bad_response`, also when it parses. With `simplify = TRUE` in
+#'   any other setting, such a reply whose content is one string is returned
+#'   with a warning. See the "Cut-off reply" section.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response

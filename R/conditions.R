@@ -3,8 +3,8 @@
 #' The functions in this package that talk to the LM Studio REST API raise
 #' three condition classes of their own. Each one is raised through
 #' [cli::cli_abort()], so each one is an R error that you can catch by class
-#' with [base::tryCatch()]. The chat functions also give one warning class of
-#' their own, described in the "Cut-off reply" section.
+#' with [base::tryCatch()]. The chat functions on the OpenAI route also give
+#' one warning class of their own, described in the "Cut-off reply" section.
 #'
 #' @section Server not running:
 #' Functions that call the LM Studio REST API open a TCP connection to the

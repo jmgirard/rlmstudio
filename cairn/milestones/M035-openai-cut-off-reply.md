@@ -1,6 +1,6 @@
 # M035: A chat completions reply that the token limit cut off no longer passes as complete
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -67,6 +67,8 @@ Observed on 2026-09-27 with google/gemma-3-1b. At `max_tokens` 2, a strict integ
 - 2026-09-27: planted a warning before the `simplify = FALSE` return of `lms_chat_openai()`. The AC5 test went red, and the plant was reverted.
 - 2026-09-27: T5 done. The batch muffles each input's cut-off warning inside its `tryCatch()` and warns once after the failed-inputs warning. New `tests/testthat/test-chat-batch-cut-off.R` went red before the change. A plant that left the data-frame path unmuffled turned it red too. `devtools::test()` clean.
 - 2026-09-27: T6 done. "Cut-off reply" section and `rlmstudio_reply_cut_off` alias on the conditions page, inherited by the three chat pages. A grep of `man/` finds the phrase on those four pages only. The shared "Malformed response" text links to the conditions page, so it does not carry the phrase. Two NEWS bullets. `devtools::document()` gives no diff on a second run, and `devtools::test()` is clean.
+- 2026-09-27: claim audit: 49 claims read, 2 corrected — R/chat.R, R/conditions.R
+- 2026-09-27: the two corrections name the `lms_chat_openai()` setting that aborts in its `@return` text, and limit the warning class to the OpenAI route in the conditions page intro. The same reader re-read both as true. `devtools::test()` clean, and status set to review.
 
 ## Decisions
 

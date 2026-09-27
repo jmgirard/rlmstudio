@@ -69,10 +69,11 @@ With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, the r
 parsed with \code{jsonlite::parse_json(simplifyVector = TRUE)} and the parsed
 value is returned. A JSON object becomes a named list, and an array of
 numbers becomes a vector. With \code{simplify = FALSE} or \code{logprobs = TRUE},
-the reply stays a string. In this setting, a reply that a length limit
-ended raises \code{rlmstudio_bad_response}, also when it parses. In the other
-settings with \code{simplify = TRUE}, such a reply gives a warning. See the
-"Cut-off reply" section.
+the reply stays a string. With a \code{schema}, \code{simplify = TRUE}, and
+\code{logprobs = FALSE}, a reply that a length limit ended raises
+\code{rlmstudio_bad_response}, also when it parses. With \code{simplify = TRUE} in
+any other setting, such a reply whose content is one string is returned
+with a warning. See the "Cut-off reply" section.
 }
 \description{
 Direct interface to LM Studio's OpenAI-compatible endpoint. Uses the messages

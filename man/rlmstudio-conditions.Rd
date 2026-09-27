@@ -11,8 +11,8 @@
 The functions in this package that talk to the LM Studio REST API raise
 three condition classes of their own. Each one is raised through
 \code{\link[cli:cli_abort]{cli::cli_abort()}}, so each one is an R error that you can catch by class
-with \code{\link[base:tryCatch]{base::tryCatch()}}. The chat functions also give one warning class of
-their own, described in the "Cut-off reply" section.
+with \code{\link[base:tryCatch]{base::tryCatch()}}. The chat functions on the OpenAI route also give
+one warning class of their own, described in the "Cut-off reply" section.
 }
 \section{Server not running}{
 
