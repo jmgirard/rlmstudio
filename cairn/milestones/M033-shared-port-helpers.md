@@ -49,6 +49,8 @@ The tests that need a real TCP socket get their ports from one helper file whose
 - 2026-09-27: T2 done. With `sample()` planted in a scratch copy of the helper, the four seed checks in `test-ports.R` went red and the other six passed. Without the plant, all ten passed.
 - 2026-09-27: T3 done. The AC1 grep matched `tests/testthat/helper-ports.R:14` only. `devtools::test()` gave FAIL 0, WARN 0, SKIP 0, PASS 9418. The M001 lesson now names the helpers.
 - 2026-09-27: claim audit: not owed — internal tier
+- 2026-09-27: review gate fixed findings 2 and 3 on the branch and sent finding 4 to a candidate row.
+- 2026-09-27: step-7 approval: m033-shared-port-helpers approved for merge
 
 ## Decisions
 
@@ -61,9 +63,10 @@ The tests that need a real TCP socket get their ports from one helper file whose
 - Gate (2026-09-27): `cairn_validate.py` passed all checks (exit 0). No principle changed, so `cairn_impact` was skipped. `devtools::document()` left `NAMESPACE`, `man/`, and `R/` unchanged. The diff touches only `tests/` and `cairn/`, so README, NEWS, and `.Rbuildignore` owe nothing. No pkgdown site exists. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
 - Reviewers (2026-09-27): three fresh-context lenses ran. The prior-review lens found no prior-review evidence on these files. The blame-history lens found no conflict: the skip-to-error change matches the plan gate and D-006. The diff-bug lens reported eight findings, ranked below.
 - Finding 1 ([O], `helper-ports.R:11-14`): if a second bind on a held port succeeds on Windows, two tests fail there. Refuted against R's `sock.c`: `SO_REUSEADDR` is set only outside Windows, so a second bind fails on Windows too. Disposition: reject.
-- Finding 2 ([O], `helper-ports.R:11`): two test processes with adjacent process ids start one port apart and reuse the same ports. Disposition: pending at the gate.
-- Finding 3 ([O], `helper-ports.R:19`): the error names the whole range after only 50 tries. Disposition: pending at the gate.
-- Finding 4 ([O], `helper-ports.R:11-12`): a busy block of 50 ports after the start fails every socket test, where `sample()` spread its tries. Disposition: pending at the gate.
+- Finding 2 ([O], `helper-ports.R:11`): two test processes with adjacent process ids start one port apart and reuse the same ports. Disposition: fix now. The scan starts at the process id times 97, and adjacent ids 4000 and 4001 start 97 ports apart.
+- Finding 3 ([O], `helper-ports.R:19`): the error names the whole range after only 50 tries. Disposition: fix now. The message now ends with the count, for example "No free port in 37541-37541 (3 tried).", and `test-ports.R` matches "(1 tried)."
+- Finding 4 ([O], `helper-ports.R:11-12`): a busy block of 50 ports after the start fails every socket test, where `sample()` spread its tries. Disposition: follow-up, as a candidate row in `cairn/ROADMAP.md`.
+- After the fixes (2026-09-27): `devtools::test()` gave FAIL 0, ERROR 0, WARN 0, SKIP 0, PASS 9418. The AC1 grep matched `tests/testthat/helper-ports.R:15` only.
 - Finding 5 ([O], `helper-ports.R:19`): `ports = integer(0)` gives a warning and the message "Inf--Inf". Disposition: reject, because no caller passes an empty range.
 - Finding 6 ([O], `helper-ports.R:19`): a non-contiguous `ports` is reported by its min and max. Disposition: reject, because no caller passes one.
 - Finding 7 ([O], `test-server-ready.R`): the skip-to-error change has no D-entry. Disposition: reject, because the plan gate chose it and the work log records it.

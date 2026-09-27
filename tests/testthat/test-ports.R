@@ -47,7 +47,7 @@ test_that("free_port() returns a port that nothing listens on", {
 
 test_that("each helper fails when no port in its range binds", {
   held <- local_listener()
-  expected <- paste0("No free port in ", held, "-", held)
+  expected <- paste0("No free port in ", held, "-", held, " (1 tried).")
   expect_error(local_listener(ports = held), expected, fixed = TRUE)
   expect_error(free_port(ports = held), expected, fixed = TRUE)
 })
