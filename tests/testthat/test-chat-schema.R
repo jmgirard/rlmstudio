@@ -14,6 +14,14 @@ sent_json <- function(req) {
 
 # completion_body(), quoted(), and score_schema live in helper-chat-bodies.R.
 
+# A finish reason of "length" comes from either limit, so the message of a
+# cut-off reply names both of them.
+expect_length_limit_message <- function(cnd, info = NULL) {
+  message <- gsub("\\s+", " ", conditionMessage(cnd))
+  expect_match(message, "max_tokens", fixed = TRUE, info = info)
+  expect_match(message, "context length", fixed = TRUE, info = info)
+}
+
 # Call lms_chat_openai() against a mocked server that answers every request
 # with `body`. Returns the value and the captured requests.
 call_with_reply <- function(body, ...) {
@@ -265,8 +273,7 @@ test_that("a reply cut off at the token limit names max_tokens", {
       class = "rlmstudio_bad_response",
       info = case$label
     )
-    expect_match(conditionMessage(cut), "token limit cut the reply off", info = case$label)
-    expect_match(conditionMessage(cut), "max_tokens", info = case$label)
+    expect_length_limit_message(cut, info = case$label)
     expect_identical(cut$finish_reason, "length", info = case$label)
 
     # The same content with another finish reason keeps the existing detail.
@@ -298,9 +305,8 @@ test_that("a schema reply cut off at the token limit aborts even when it parses"
     expect_identical(err$status, 200L, info = label)
     expect_identical(err$content, "3", info = label)
     expect_identical(err$finish_reason, "length", info = label)
-    message <- gsub("\\s+", " ", conditionMessage(err))
-    expect_match(message, "OpenAI API Failed", info = label)
-    expect_match(message, "max_tokens", info = label)
+    expect_match(conditionMessage(err), "OpenAI API Failed", info = label)
+    expect_length_limit_message(err, info = label)
 
     # The same reply that the model ended on its own is a whole answer.
     done <- call(completion_body(quoted("3"), finish_reason = "stop"))
@@ -404,8 +410,7 @@ test_that("a reply that LM Studio cut off at the token limit names max_tokens", 
 
   # The value comes from LM Studio, not from a hand-written body.
   expect_identical(raw$choices[[1]]$finish_reason, "length")
-  expect_match(conditionMessage(err), "token limit cut the reply off")
-  expect_match(conditionMessage(err), "max_tokens")
+  expect_length_limit_message(err)
   expect_identical(err$finish_reason, "length")
   expect_identical(err$content, raw$choices[[1]]$message$content)
 })
@@ -744,8 +749,7 @@ test_that("content that is not one string names max_tokens at the token limit wi
       class = "rlmstudio_bad_response",
       info = info
     )
-    expect_match(conditionMessage(cut), "token limit cut the reply off", info = info)
-    expect_match(conditionMessage(cut), "max_tokens", info = info)
+    expect_length_limit_message(cut, info = info)
     expect_identical(cut$finish_reason, "length", info = info)
 
     # A finish reason of "stop" keeps the not-one-string detail.

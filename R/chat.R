@@ -520,9 +520,10 @@ schema_response_format <- function(schema) {
 #'
 #' Both aborts carry the reply content and the finish reason as fields, so a
 #' caller can read what the model wrote without sending the request again. A
-#' finish reason of `"length"` means the server stopped the reply at the token
+#' finish reason of `"length"` means the server stopped the reply at a length
 #' limit, which is the likely reason the JSON is incomplete, so the message
-#' says so in place of the generic detail.
+#' says so in place of the generic detail. `openai_reply_value()` aborts on
+#' that finish reason before it calls this function.
 #'
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param content The reply content read out of the response.
@@ -545,13 +546,13 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
   )
 }
 
-#' Abort on a chat completions reply that cannot be read
+#' Abort on a chat completions reply that cannot be read or is not complete
 #'
 #' The abort carries the reply content and the finish reason as fields, so a
 #' caller can read what the model wrote without sending the request again. A
-#' finish reason of `"length"` means the server stopped the reply at the token
-#' limit, which is the likely reason the reply is incomplete, so the message
-#' says so in place of `detail`.
+#' finish reason of `"length"` means the server stopped the reply at
+#' `max_tokens` or at the context length of the model, so the reply is not
+#' complete. The message then says so in place of `detail`.
 #'
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param content The reply content read out of the response.
@@ -562,9 +563,12 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
 #' @noRd
 abort_unread_reply <- function(resp, content, label, detail, finish_reason) {
   if (identical(finish_reason, "length")) {
+    # The server gives this finish reason for either limit, and the reply
+    # does not say which one it reached.
     detail <- paste(
-      "The token limit cut the reply off before it was complete.",
-      "Raise `max_tokens` to allow a longer reply."
+      "A length limit ended the reply before it was complete.",
+      "The limit is `max_tokens` or the context length of the model.",
+      "Raise the one that is too low."
     )
   }
   # The detail is inserted into the message as text, so cli markup in it
