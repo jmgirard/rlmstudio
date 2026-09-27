@@ -29,7 +29,8 @@ test_that("print() shows a job_id with braces and does not run it", {
 })
 
 test_that("lms_download() shows a job_id with braces and does not run it", {
-  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_options(rlmstudio.quiet = FALSE)
+  local_mocked_bindings(is_server_running = function(...) TRUE)
   body <- jsonlite::toJSON(
     list(job_id = brace_probe, status = "downloading"),
     auto_unbox = TRUE

@@ -57,6 +57,8 @@ test_that("install_lmstudio shows installer output with braces and does not run 
   calls <- 0L
   withr::local_envvar(RLMSTUDIO_ALLOW_INSTALL = "TRUE")
   local_mocked_bindings(has_lms = function() FALSE)
+  # In an interactive session, the install asks for consent first.
+  local_mocked_bindings(askYesNo = function(...) TRUE, .package = "utils")
   local_mocked_bindings(Sys.which = function(...) "/usr/bin/curl", .package = "base")
   local_mocked_bindings(
     run = function(...) {

@@ -58,6 +58,7 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 - 2026-09-27: T5 done. Each site was planted in turn with its text in the format string, through `cli::cli_text(x$text)` or `paste0()`. All six tests went red, each with 2 failed expectations. The sites are the chat reply, the status heading, the download alert, the daemon stop, the version check, and the installer abort. No other test in each file failed. `devtools::test()` then passed with 9123 expectations, and `git diff --stat main -- R/` printed nothing.
 - 2026-09-27: claim audit: not owed — internal tier
 - 2026-09-27: review started. The branch already held `origin/main`, so no merge was needed.
+- 2026-09-27: step-7 approval: m028-brace-probe-tests approved for merge, with the fixes for O1, O3, and O9 first.
 
 ## Review
 
@@ -76,3 +77,4 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 - O9 (fix now): `test-download.R:32` writes `testthat::local_mocked_bindings`, and the other new tests use the bare name.
 - S1 (reject): the claim that no brace test covers the download status is false. `test-load-download-shape.R:290` plants `{1 + 1}` in the status and matches "Status: {1 + 1}". Checked by a read of the file.
 - S2 (reject): `test-daemon.R` now has two stub styles for `lms_path()`. T3 asks for the stub, so no real CLI is needed.
+- Gate: the maintainer accepted the proposed dispositions. O1 stubs `utils::askYesNo()`. Piped into `R --interactive`, the old test showed the consent prompt and the new test did not. O3 pins `rlmstudio.quiet = FALSE`, and the test passed with the option set to TRUE for the session. O9 uses the bare name. O2 and O5 went into the `/hotfix` row about the installer output. `devtools::test()` then ran 9123 expectations with 0 failures and 0 errors.
