@@ -342,8 +342,10 @@ test_that("an API error with status 401, 403, or 404 aborts the batch", {
     for (stop_at in 1:2) {
       info <- paste("status:", status, "stop_at:", stop_at)
       res <- run_stopping_batch(stop_at, status)
-      expect_s3_class(res$cnd, "rlmstudio_api_error")
+      expect_true(inherits(res$cnd, "rlmstudio_api_error"), info = info)
       expect_identical(res$cnd$status, status, info = info)
+      # The abort is the condition of the single call, with the server's text.
+      expect_match(conditionMessage(res$cnd), "refused", info = info)
       expect_identical(res$warnings, character(), info = info)
       expect_identical(res$requests, stop_at, info = info)
     }
@@ -357,7 +359,7 @@ test_that("a 401 aborts the batch on the native and OpenResponses routes", {
   )
   for (api_type in names(routes)) {
     res <- run_stopping_batch(2L, 401L, api_type = api_type, ok = routes[[api_type]])
-    expect_s3_class(res$cnd, "rlmstudio_api_error")
+    expect_true(inherits(res$cnd, "rlmstudio_api_error"), info = api_type)
     expect_identical(res$cnd$status, 401L, info = api_type)
     expect_identical(res$warnings, character(), info = api_type)
     expect_identical(res$requests, 2L, info = api_type)
@@ -382,7 +384,7 @@ test_that("the abort carries the replies so far in every format", {
   # The field holds what format = "list" returns, whatever the format.
   for (format in c("list", "vector", "data.frame")) {
     res <- run_stopping_batch(2L, 401L, format = format)
-    expect_s3_class(res$cnd, "rlmstudio_api_error")
+    expect_true(inherits(res$cnd, "rlmstudio_api_error"), info = format)
     expect_identical(res$cnd$results, list("reply 1", NULL, NULL), info = format)
   }
 })
@@ -411,8 +413,9 @@ test_that("any other API failure or a bad response still fails its input alone",
     expect_type(res$cnd, "list")
     expect_false(inherits(res$cnd, "condition"), info = info)
     expect_identical(res$cnd[[1]], "reply 1", info = info)
-    expect_s3_class(res$cnd[[2]], "rlmstudio_api_error")
+    expect_true(inherits(res$cnd[[2]], "rlmstudio_api_error"), info = info)
     expect_identical(res$cnd[[2]]$status, status, info = info)
+    expect_null(res$cnd[[2]]$trace, info = info)
     expect_identical(res$cnd[[3]], "reply 3", info = info)
     expect_identical(length(res$warnings), 1L, info = info)
     expect_match(res$warnings, "1 input failed, at position 2\\.", info = info)

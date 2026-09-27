@@ -1059,8 +1059,8 @@ reply_columns$openai <- reply_columns$openresponses
 #' that input alone. So does an `rlmstudio_api_error` with any `status` other
 #' than 401, 403, or 404. The batch goes on to the next input. Where the
 #' result is a list, or the `output` list-column that a `schema` gives, the
-#' element for that input holds the condition without its
-#' backtrace. An `rlmstudio_bad_response` for reply content that does not
+#' element for that input holds the condition without its backtrace. An
+#' `rlmstudio_bad_response` for reply content that does not
 #' parse keeps that content in its `content` field. Where the result is text,
 #' the element holds `NA`. The result is text with `format = "vector"` when it
 #' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and

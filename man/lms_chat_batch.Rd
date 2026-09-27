@@ -104,8 +104,8 @@ An \code{rlmstudio_bad_response} that \code{\link[=lms_chat]{lms_chat()}} raises
 that input alone. So does an \code{rlmstudio_api_error} with any \code{status} other
 than 401, 403, or 404. The batch goes on to the next input. Where the
 result is a list, or the \code{output} list-column that a \code{schema} gives, the
-element for that input holds the condition without its
-backtrace. An \code{rlmstudio_bad_response} for reply content that does not
+element for that input holds the condition without its backtrace. An
+\code{rlmstudio_bad_response} for reply content that does not
 parse keeps that content in its \code{content} field. Where the result is text,
 the element holds \code{NA}. The result is text with \code{format = "vector"} when it
 returns a vector (\code{simplify = TRUE}, no \code{schema}, \code{logprobs = FALSE}), and

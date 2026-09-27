@@ -57,6 +57,8 @@
 - 2026-09-27: T4 rewrote the `lms_chat_batch()` details and the "API failure" section, and added the NEWS entry. The "Malformed response" section keeps its "does not abort" sentence, because it is about `rlmstudio_bad_response`. `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes.
 - 2026-09-27: claim audit: 33 claims read, 0 corrected — NEWS.md, R/chat.R, R/conditions.R, tests/testthat/test-chat-batch.R, man/*.Rd
 - 2026-09-27: after the audit, the older `keep_failure()` comment in R/chat.R now names the stop, and two roxygen lines are rewrapped. The chat-batch tests gave 47 passed, 0 failed. Status set to review.
+- 2026-09-27: review found 0 defect returns. Three reviewers gave 8 findings, all minor, and 5 are fixed on the branch.
+- 2026-09-27: step-7 approval: m031-batch-early-stop approved for merge
 
 ## Decisions
 
@@ -82,3 +84,5 @@ Independent review: three fresh reviewers. The blame-history reader found 0 find
 6. No test asserts that the abort keeps the message of the single call. Proposed: fix now.
 7. One roxygen line in the `lms_chat_batch()` details breaks early. Proposed: fix now.
 8. The NEWS entry gives a reason for 401 alone. Proposed: fix now, with the 404 that the native route sends for a model it cannot find.
+
+Triage at the gate: the user accepted the proposed dispositions. Findings 1, 2, and 5 are rejected for the reasons above. Findings 3, 4, 6, 7, and 8 are fixed on the branch. For finding 3, `expect_true(inherits(...), info =)` replaces `expect_s3_class()`, because testthat 3.3.2 gives `expect_s3_class()` no `info` argument. Finding 6 asserts the server text "refused" in the abort message, and no R code outside a comment holds that word. After the fixes, `devtools::test()` gave 380 tests, 0 failed. `devtools::document()` rewrote `man/lms_chat_batch.Rd` for the rewrap alone.
