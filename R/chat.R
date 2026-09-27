@@ -50,6 +50,7 @@
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Cut-off reply
 #' @export
 lms_chat <- function(
   model,
@@ -297,10 +298,15 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   parsed with `jsonlite::parse_json(simplifyVector = TRUE)` and the parsed
 #'   value is returned. A JSON object becomes a named list, and an array of
 #'   numbers becomes a vector. With `simplify = FALSE` or `logprobs = TRUE`,
-#'   the reply stays a string.
+#'   the reply stays a string. With a `schema`, `simplify = TRUE`, and
+#'   `logprobs = FALSE`, a reply that a length limit ended raises
+#'   `rlmstudio_bad_response`, also when it parses. With `simplify = TRUE` in
+#'   any other setting, such a reply whose content is one string is returned
+#'   with a warning. See the "Cut-off reply" section.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Cut-off reply
 #' @export
 #' @examples
 #' \dontrun{
@@ -439,11 +445,25 @@ openai_reply_value <- function(resp, resp_data, logprobs, schema) {
 
   if (isTRUE(logprobs)) {
     # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
-    return(validate_lms_chat_result(
+    value <- validate_lms_chat_result(
       new_lms_chat_result(text = res_text, logprobs = NULL)
-    ))
+    )
+    warn_if_cut_off(finish_reason)
+    return(value)
   }
   if (!is.null(schema)) {
+    # A reply that a length limit ended is not a whole answer, also when what
+    # the model wrote so far parses, such as a lone digit (D-021).
+    if (identical(finish_reason, "length")) {
+      # `abort_unread_reply()` words the detail for this finish reason.
+      abort_unread_reply(
+        resp,
+        res_text,
+        "OpenAI API Failed",
+        NULL,
+        finish_reason
+      )
+    }
     return(parse_schema_reply(
       resp,
       res_text,
@@ -451,7 +471,32 @@ openai_reply_value <- function(resp, resp_data, logprobs, schema) {
       finish_reason = finish_reason
     ))
   }
+  warn_if_cut_off(finish_reason)
   res_text
+}
+
+#' Warn that a length limit cut a text reply off
+#'
+#' Called only after every check on the reply has passed, so a reply never
+#' both warns and fails. The warning goes through `cli::cli_warn()` and not
+#' through the quiet helpers, because it is the only sign that an answer is
+#' not complete (D-021). `lms_chat_batch()` muffles it for each input and
+#' gives one warning of the same class for the batch.
+#'
+#' @param finish_reason The `finish_reason` of the first choice, or `NULL`.
+#'
+#' @noRd
+warn_if_cut_off <- function(finish_reason) {
+  if (identical(finish_reason, "length")) {
+    cli::cli_warn(
+      c(
+        "A length limit ended the reply before it was complete.",
+        "i" = "The limit is {.code max_tokens} or the context length of the model. Raise the one that is too low."
+      ),
+      class = "rlmstudio_reply_cut_off",
+      call = NULL
+    )
+  }
 }
 
 #' Abort on a response body that is a bare JSON value
@@ -509,9 +554,10 @@ schema_response_format <- function(schema) {
 #'
 #' Both aborts carry the reply content and the finish reason as fields, so a
 #' caller can read what the model wrote without sending the request again. A
-#' finish reason of `"length"` means the server stopped the reply at the token
+#' finish reason of `"length"` means the server stopped the reply at a length
 #' limit, which is the likely reason the JSON is incomplete, so the message
-#' says so in place of the generic detail.
+#' says so in place of the generic detail. `openai_reply_value()` aborts on
+#' that finish reason before it calls this function.
 #'
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param content The reply content read out of the response.
@@ -534,26 +580,30 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
   )
 }
 
-#' Abort on a chat completions reply that cannot be read
+#' Abort on a chat completions reply that cannot be read or is not complete
 #'
 #' The abort carries the reply content and the finish reason as fields, so a
 #' caller can read what the model wrote without sending the request again. A
-#' finish reason of `"length"` means the server stopped the reply at the token
-#' limit, which is the likely reason the reply is incomplete, so the message
-#' says so in place of `detail`.
+#' finish reason of `"length"` means the server stopped the reply at
+#' `max_tokens` or at the context length of the model, so the reply is not
+#' complete. The message then says so in place of `detail`.
 #'
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param content The reply content read out of the response.
 #' @param label Character. The calling wrapper's label, which opens the message.
-#' @param detail Character. What is wrong with the reply.
+#' @param detail Character. What is wrong with the reply. A finish reason of
+#'   `"length"` replaces it, so a caller may pass `NULL` then.
 #' @param finish_reason The `finish_reason` of the first choice, or `NULL`.
 #'
 #' @noRd
-abort_unread_reply <- function(resp, content, label, detail, finish_reason) {
+abort_unread_reply <-function(resp, content, label, detail, finish_reason) {
   if (identical(finish_reason, "length")) {
+    # The server gives this finish reason for either limit, and the reply
+    # does not say which one it reached.
     detail <- paste(
-      "The token limit cut the reply off before it was complete.",
-      "Raise `max_tokens` to allow a longer reply."
+      "A length limit ended the reply before it was complete.",
+      "The limit is `max_tokens` or the context length of the model.",
+      "Raise the one that is too low."
     )
   }
   # The detail is inserted into the message as text, so cli markup in it
@@ -1115,6 +1165,7 @@ reply_columns$openai <- reply_columns$openresponses
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Cut-off reply
 #' @export
 lms_chat_batch <- function(
   model,
@@ -1187,9 +1238,11 @@ lms_chat_batch <- function(
   }
   # A lost server fails every later input, so it still aborts (GP3). The
   # condition carries the results so far, so a long batch does not lose them.
-  # Slots from the lost input on stay NULL.
+  # Slots from the lost input on stay NULL. The results can hold replies that
+  # a length limit cut off, so the batch names them before it aborts.
   abort_with_results <- function(cnd) {
     cnd$results <- results
+    warn_cut_off_inputs()
     stop(cnd)
   }
   # A refused token or a model the server cannot find fails every input the
@@ -1229,32 +1282,61 @@ lms_chat_batch <- function(
     }
     list(value = value, fields = fields)
   }
+  # The positions of replies that a length limit cut off. Each input's own
+  # warning is muffled here, and the batch gives one warning for all of them
+  # below (D-021). The handler covers `read_reply()` too, because the
+  # data-frame format reads the answer after `lms_chat()` returns.
+  # `tryCatch()` lets a warning through, so the handler sits inside it.
+  cut_off <- integer()
+  note_cut_off <- function(w) {
+    cut_off[[length(cut_off) + 1L]] <<- i
+    invokeRestart("muffleWarning")
+  }
+  # Shown whatever `quiet` says, because it is the only sign that some
+  # answers are not complete (D-021). A class of its own, apart from the
+  # failed-inputs warning, so a caller can tell the two faults apart.
+  warn_cut_off_inputs <- function() {
+    if (length(cut_off) == 0L) {
+      return(invisible())
+    }
+    positions <- cli::ansi_collapse(cut_off, trunc = Inf)
+    cli::cli_warn(
+      c(
+        "A length limit ended the reply to {length(cut_off)} input{?s} before it was complete, at {cli::qty(length(cut_off))}position{?s} {positions}.",
+        "i" = "Each of those elements keeps the reply as far as it goes. The limit is {.code max_tokens} or the context length of the model. Raise the one that is too low."
+      ),
+      class = "rlmstudio_reply_cut_off"
+    )
+  }
   for (i in seq_along(inputs)) {
     res <- tryCatch(
-      if (body_frame) {
-        body <- lms_chat(
-          model = model,
-          input = inputs[[i]],
-          system_prompt = system_prompt,
-          host = host,
-          simplify = FALSE,
-          ...,
-          token = token
-        )
-        read <- read_reply(body)
-        reply_fields[[i]] <- read$fields
-        read$value
-      } else {
-        lms_chat(
-          model = model,
-          input = inputs[[i]],
-          system_prompt = system_prompt,
-          host = host,
-          simplify = simplify,
-          ...,
-          token = token
-        )
-      },
+      withCallingHandlers(
+        if (body_frame) {
+          body <- lms_chat(
+            model = model,
+            input = inputs[[i]],
+            system_prompt = system_prompt,
+            host = host,
+            simplify = FALSE,
+            ...,
+            token = token
+          )
+          read <- read_reply(body)
+          reply_fields[[i]] <- read$fields
+          read$value
+        } else {
+          lms_chat(
+            model = model,
+            input = inputs[[i]],
+            system_prompt = system_prompt,
+            host = host,
+            simplify = simplify,
+            ...,
+            token = token
+          )
+        },
+        rlmstudio_reply_cut_off = note_cut_off
+      ),
       rlmstudio_api_error = keep_or_abort_api,
       rlmstudio_bad_response = keep_failure,
       rlmstudio_no_server = abort_with_results
@@ -1324,6 +1406,8 @@ lms_chat_batch <- function(
   } else if (!is.null(vector_fallback)) {
     cli::cli_warn(vector_fallback)
   }
+
+  warn_cut_off_inputs()
 
   # Keyed on the route, not on the replies, so the columns and their types
   # are there even when every input failed. A failed input has no values.

@@ -69,7 +69,11 @@ With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, the r
 parsed with \code{jsonlite::parse_json(simplifyVector = TRUE)} and the parsed
 value is returned. A JSON object becomes a named list, and an array of
 numbers becomes a vector. With \code{simplify = FALSE} or \code{logprobs = TRUE},
-the reply stays a string.
+the reply stays a string. With a \code{schema}, \code{simplify = TRUE}, and
+\code{logprobs = FALSE}, a reply that a length limit ended raises
+\code{rlmstudio_bad_response}, also when it parses. With \code{simplify = TRUE} in
+any other setting, such a reply whose content is one string is returned
+with a warning. See the "Cut-off reply" section.
 }
 \description{
 Direct interface to LM Studio's OpenAI-compatible endpoint. Uses the messages
@@ -255,7 +259,7 @@ names, so a field whose name only starts with the one asked for, such as
 \code{tokenX}, reads as absent and gives \code{NA} in the data frame.
 
 Apart from a body that does not parse as JSON, \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises
-it in three cases, all only with \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
+it in four cases, all only with \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
 missing, empty, or not an array, or whose first element is not a JSON
 object with a \code{message} object in it, so there is no reply to read. This
 case is raised with or without a \code{schema}, and with \code{logprobs = TRUE} as
@@ -264,9 +268,16 @@ given, \code{logprobs = FALSE}, and the reply content is not one string of valid
 JSON. The third case is reply content that is not one string, such as
 \code{null}, a missing \code{content} field, a number, or an array. A reply that
 holds only a tool call has \code{null} content. This case is raised without a
-\code{schema}, and with \code{logprobs = TRUE} with or without one. In the second and
-third cases, if the server reports the finish reason \code{"length"}, the token
-limit cut the reply off. The message then says so and names \code{max_tokens}.
+\code{schema}, and with \code{logprobs = TRUE} with or without one. The fourth case
+is a cut-off reply. A \code{schema} was given, \code{logprobs = FALSE}, and the
+server reports the finish reason \code{"length"}. This case is raised also when
+the reply content parses, because a reply that stops part way can parse to
+a wrong value, such as the first digit of a longer number. In the second,
+third, and fourth cases, if the server reports the finish reason
+\code{"length"}, a length limit ended the reply. The limit is \code{max_tokens} or
+the context length of the model. The message then says so and names both.
+A cut-off reply that is returned as text gives a warning of class
+\code{rlmstudio_reply_cut_off} instead, which \link{rlmstudio-conditions} describes.
 
 With \code{simplify = TRUE}, \code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}},
 and \code{\link[=lms_chat_openai]{lms_chat_openai()}} also raise it for a body that is a bare JSON value,
@@ -287,13 +298,40 @@ also carries two more fields. The \code{content} field holds the reply content,
 and the \code{finish_reason} field holds the finish reason of the first choice.
 Both are \code{NULL} for a response with no \code{choices}. In the third case,
 \code{content} holds the value that was read, which is \code{NULL} for \code{null} or
-missing content. For the second and third cases, the message names the
+missing content. For the second, third, and fourth cases, the message names the
 \code{content} field, so you can read what the model wrote without a second
 request. The other messages of the chat functions and \code{\link[=lms_embed]{lms_embed()}} name
 \code{simplify = FALSE}, which returns the body unchanged, with one exception. A body that did not parse as JSON is
 checked before that argument is read, so its message points at the host
 instead. For such a body, the \code{content} and \code{finish_reason} fields of a
 condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}.
+}
+
+\section{Cut-off reply}{
+
+A warning of class \code{rlmstudio_reply_cut_off} is given when a length limit
+ended a reply that \code{\link[=lms_chat_openai]{lms_chat_openai()}} returns as text. The server reports
+this with the finish reason \code{"length"}. The limit is \code{max_tokens} or the
+context length of the model, and the reply does not say which one. The
+message names both. The warning is given with \code{simplify = TRUE} for reply
+content that is one string, in three settings: no \code{schema},
+\code{logprobs = TRUE}, and a \code{schema} with \code{logprobs = TRUE}. The call returns
+what the same reply returns without the cut-off. A \code{schema} reply with
+\code{logprobs = FALSE} raises \code{rlmstudio_bad_response} instead, as the
+"Malformed response" section says. With \code{simplify = FALSE}, the call
+returns the body with no warning.
+
+\code{\link[=lms_chat]{lms_chat()}} gives the warning through \code{\link[=lms_chat_openai]{lms_chat_openai()}} with
+\code{api_type = "openai"}. \code{\link[=lms_chat_batch]{lms_chat_batch()}} gives one warning of this class
+for the whole batch in place of one for each input. It names the count and
+the positions of the cut-off inputs, and each of those elements keeps its
+reply. It comes after the warning about failed inputs. A batch that aborts
+on a lost server, or on status 401, 403, or 404, gives this warning before
+the abort. It names the cut-off inputs whose replies the \code{results} field of
+the abort holds. The native and OpenResponses routes give no such warning.
+
+The warning shows whatever \code{quiet} and the \code{rlmstudio.quiet} option say,
+because it is the only sign that an answer is not complete.
 }
 
 \examples{
