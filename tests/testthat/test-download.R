@@ -27,3 +27,21 @@ test_that("print() shows a job_id with braces and does not run it", {
   )
   expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
 })
+
+test_that("lms_download() shows a job_id with braces and does not run it", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  body <- jsonlite::toJSON(
+    list(job_id = brace_probe, status = "downloading"),
+    auto_unbox = TRUE
+  )
+  local_request_sequence(list(mock_response(200L, as.character(body))))
+  shown <- capture_shown(job_id <- lms_download("google/gemma-3-1b"))
+  expect_null(shown$error)
+  expect_identical(job_id, brace_probe)
+  expect_match(
+    shown$messages,
+    paste("Job ID:", brace_probe_val),
+    fixed = TRUE
+  )
+  expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
+})
