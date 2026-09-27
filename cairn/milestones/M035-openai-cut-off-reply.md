@@ -71,7 +71,8 @@ Observed on 2026-09-27 with google/gemma-3-1b. At `max_tokens` 2, a strict integ
 - 2026-09-27: the two corrections name the `lms_chat_openai()` setting that aborts in its `@return` text, and limit the warning class to the OpenAI route in the conditions page intro. The same reader re-read both as true. `devtools::test()` clean, and status set to review.
 - 2026-09-27: review evidence recorded for AC1 to AC7, gate clean. The three review lenses reported 11 findings, which go to the merge gate.
 - 2026-09-27: gate triage chose fix now for O1, O2, O4, O5, and O10, follow-up rows for O3 and O7, and rejection for the rest. Merge was approved on the condition that the O1 fix is shown once more before the push.
-- 2026-09-27: fix-now work done. `devtools::test()` clean, 9862 passed.
+- 2026-09-27: fix-now work done. `devtools::test()` clean, 9862 passed. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes after the fixes.
+- step-7 approval: m035-openai-cut-off-reply approved for merge
 
 ## Decisions
 
