@@ -77,3 +77,13 @@ Branch synced 2026-09-27: `origin/main` is at d3b31ff, the branch base, so no me
 - AC6: Fresh `devtools::test()` on 2026-09-27 gave 9721 tests, 0 failures, 0 errors, and 0 skips, with the live server on. A fresh `devtools::document()` left `git status` clean.
 
 Consistency gate, 2026-09-27: `cairn_validate.py` exit 0 with all checks passed. DESIGN.md is unchanged, so `cairn_impact` does not apply. `devtools::document()` gave no diff. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The branch does not touch `README.Rmd`, the repo has no `_pkgdown.yml`, and the branch adds no top-level file. The `NEWS.md` entry is present, with no milestone number.
+
+Independent review, 2026-09-27, three fresh reviewers. The [S] history lens found nothing. The [S] prior-review lens found nothing, and the PR comment probe returned no comments. The [O] diff lens ran both test files and reported seven findings, ranked. A read of the code backs each one, and none shows a criterion failing. The dispositions below are proposed, and the merge gate decides them.
+
+1. `R/conditions.R` lines 11 and 12 list the arguments that abort before the server probe and do not name `ttl`. Proposed: fix now.
+2. `test-ttl.R` matches `"ttl":300` as an open substring, so `"ttl":3000` also passes. On 2026-09-27, httr2 wrote the doubles `300`, `100000`, `2147483647`, and `2000000000` with no decimal part. So the `as.integer()` lines are not visible on the wire. Proposed: fix now by anchoring the match at the end of the field.
+3. Three `ttl` help texts say that just-in-time loading is on by default. No recorded observation backs the default. Proposed: fix now by removing "which is the default".
+4. The package check on the `ttl` value is an exception to D-003, and no D-entry records it. Proposed: fix now with a D-entry that narrows D-003.
+5. `cairn/references/lmstudio-api-surface.md` lines 152 and 153 still list the `ttl` argument as open work. Proposed: fix now.
+6. The value loop for `lms_chat()` on the openai route passes even with the `lms_chat()` value check removed, because `lms_chat_openai()` checks again. The native-route order test does go red. Proposed: reject, because one test already fails on that defect.
+7. `ttl_fault()` accepts any object for which `is.numeric()` is true, so a class with odd arithmetic methods can pass. Proposed: reject, because no such class is in use and the common ones (difftime, Date, integer64) behave.
