@@ -99,7 +99,7 @@ job_id <- lms_download(model)
 lms_download_status(job_id)
 #> ── Download Job: "job_02c8a1f86e"
 #> Status: completed
-#> Progress: 100% (0.72 GB / 0.72 GB)
+#> Progress: 100% (737 MB / 737 MB)
 ```
 
 ### 3. Loading Models

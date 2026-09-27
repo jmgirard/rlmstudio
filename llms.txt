@@ -89,7 +89,7 @@ job_id <- lms_download("google/gemma-3-1b")
 lms_download_status(job_id)
 ## ── Download Job: "job_02c8a1f86e"
 ## Status: completed
-## Progress: 100% (0.72 GB / 0.72 GB)
+## Progress: 100% (737 MB / 737 MB)
 ```
 
 Once a model is downloaded and available, load it into memory.
