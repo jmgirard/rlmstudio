@@ -86,7 +86,7 @@ as M030 review rejected them.
       see the four round-up probes and the progress probe go red. The planned
       rule moves up at 1023.488 times the lower unit, so both probes sit
       clear of the cut-over.
-- [ ] T2: Change `format_bytes()` at `R/download.R:348-358` to pick the unit
+- [x] T2: Change `format_bytes()` at `R/download.R:348-358` to pick the unit
       from the rounded value. Rewrite its roxygen comment at
       `R/download.R:338-342` to state the same rule. Run `devtools::test()`.
 - [ ] T3: Amend the M030 unit bullet in NEWS.md (line 8) per AC2.
@@ -109,6 +109,7 @@ as M030 review rejected them.
 - 2026-09-27: plan gate chose "largest unit whose rounded value is 1 or more" over "move up once the rounded value reaches 1000". The first keeps the value at 1 or more, and it prints 999.6 bytes as `1000 B`, not `0.976 KB`. A user report that a four-digit figure such as `1020 B` reads as wrong falsifies the choice.
 - 2026-09-27: plan gate chose to amend the unreleased M030 NEWS bullet over a new bullet, because no release shipped the old rule. A release that ships the M030 rule before this merges falsifies the choice.
 - 2026-09-27: T1 added eight threshold probes and one progress probe. The four round-up probes and the progress probe went red with `1020 B/s`, `1020 KB/s`, `1020 MB/s`, `1020 GB/s`, and `(1020 B / 1020 B)`.
+- 2026-09-27: T2 changed `format_bytes()` to start at TB and step down while the rounded value is below 1, and rewrote its comment. `devtools::test()` passed 9408 with 0 failures.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
