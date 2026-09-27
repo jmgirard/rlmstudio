@@ -1,13 +1,13 @@
 # M031: A chat batch stops at an API failure that holds for every input
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP3
 - **Resolves:** —
 - **Surface tier:** user-facing — the milestone changes the abort rule of `lms_chat_batch()` and the fields of its abort
-- **Branch/PR:** —
+- **Branch/PR:** m031-batch-early-stop
 
 ## Goal
 
@@ -37,7 +37,7 @@
 
 ## Tasks
 
-- [ ] T1: Start the local LM Studio server with the token from the user's token file. On each of the three routes, send one chat request with a bad token. Send one for a model that is not loaded. If the server offers a setting for just-in-time loading, turn it off first. Log the status and error text of each route in one work-log line. A route can send a status outside 401, 403, and 404 for the missing model. In that case, add a candidate row that names the route and the status.
+- [x] T1: Start the local LM Studio server with the token from the user's token file. On each of the three routes, send one chat request with a bad token. Send one for a model that is not loaded. If the server offers a setting for just-in-time loading, turn it off first. Log the status and error text of each route in one work-log line. A route can send a status outside 401, 403, and 404 for the missing model. In that case, add a candidate row that names the route and the status.
 - [ ] T2: Write the AC1 to AC3 tests in `tests/testthat/test-chat-batch.R` through the shared recorder (D-004). Reuse `run_failing_batch()` where it fits. Plant a 401 at the middle input and see the tests fail against the current code.
 - [ ] T3: Change the `rlmstudio_api_error` handler of `lms_chat_batch()` at `R/chat.R:1205`. For status 401, 403, or 404, it aborts with the condition and a `results` field. For any other status, it keeps the stored failure. Run `devtools::test()`.
 - [ ] T4: Rewrite the `lms_chat_batch()` details at `R/chat.R:1054-1080` and the "API failure" section at `R/conditions.R:56-61`. State the `results` rule next to the lost-server text. Add the `NEWS.md` entry. Run `devtools::document()`, then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set.
@@ -50,6 +50,8 @@
 - 2026-09-27: plan gate chose 401, 403, and 404 over a streak of three equal failures, because a streak ends a good batch after three bad prompts. An every-input fault with a status outside the set, such as a 400 for a missing model, falsifies the choice.
 - 2026-09-27: plan gate chose an abort with a `results` field over an early return with a warning. A script can miss a warning, and scripts already catch a lost server this way. A user who needs the partial result without `tryCatch()` falsifies the choice.
 - 2026-09-27: plan gate chose a separate candidate row for `stream = TRUE` over a guard in the batch alone. The fix belongs in every chat function and needs its own decision against D-003. A user report of a batch lost to `stream = TRUE` falsifies the choice.
+- 2026-09-27: implement started on branch m031-batch-early-stop. No question gate, because the plan left no choice open.
+- 2026-09-27: T1 live check on LM Studio at localhost:1234. A bad, malformed, or absent token gives 401 `invalid_api_key` on all three routes. A model id that is not downloaded gives 404 `model_not_found` on `/api/v1/chat`. On `/v1/responses` and `/v1/chat/completions` it gives 200 with a reply from the loaded model, or 400 "No models loaded" with no model loaded. JIT loading stayed on, because a model that is not downloaded cannot load. A downloaded model that is not loaded was not tried. Candidate row added for the two OpenAI-style routes.
 
 ## Decisions
 
