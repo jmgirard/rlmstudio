@@ -84,6 +84,10 @@ lms_download <- function(
       return(invisible("already_downloaded"))
     }
 
+    if (identical(resp_data[["status"]], "failed")) {
+      rlm_abort_download_failed(resp, resp_data[["job_id"]])
+    }
+
     job_id <- resp_data[["job_id"]]
     rlm_alert_success(
       "Download job started successfully. Job ID: {.val {job_id}}"
@@ -96,10 +100,13 @@ lms_download <- function(
 
 #' Find the first way a download reply breaks its shape rules
 #'
-#' The body is a JSON object whose `status` is a string. Unless `status` is
-#' `"already_downloaded"`, its `job_id` is a string too. The rules check types
-#' and not status values, so a status that a later LM Studio adds still passes
-#' (D-017). Fields are read by exact name.
+#' The body is a JSON object whose `status` is a string. A status of
+#' `"already_downloaded"` or `"failed"` passes with any `job_id`, and
+#' `lms_download()` handles each of them itself. For any other status, the
+#' `job_id` is a string with a character that is not whitespace. Apart from
+#' those two values, the rules check types and not status values, so a status
+#' that a later LM Studio adds still passes (D-017, narrowed by D-018). Fields
+#' are read by exact name.
 #'
 #' @param body The body, parsed with `simplifyVector = FALSE`.
 #' @return `NULL` when the body passes, or one clause naming the fault.
@@ -112,13 +119,44 @@ download_reply_fault <- function(body) {
   if (!is_json_string(body[["status"]])) {
     return("`status` is not a string.")
   }
-  if (identical(body[["status"]], "already_downloaded")) {
+  if (body[["status"]] %in% c("already_downloaded", "failed")) {
     return(NULL)
   }
-  if (!is_json_string(body[["job_id"]])) {
+  job_id <- body[["job_id"]]
+  if (!is_json_string(job_id)) {
     return("`job_id` is not a string.")
   }
+  if (!grepl("[^[:space:]]", job_id)) {
+    return("`job_id` is a string with no character that is not whitespace.")
+  }
   NULL
+}
+
+#' Abort on a download reply whose status is "failed"
+#'
+#' The reply is well formed, so the hint of `rlm_abort_bad_reply()` about
+#' another program on the host does not apply. The condition class is still
+#' `rlmstudio_bad_response`, as for a load reply that is not `"loaded"`
+#' (D-018). The job id is named only when it is a string with a character
+#' that is not whitespace. It is spliced in as a value, so cli does not run
+#' its braces.
+#'
+#' @param resp The httr2 response, with status 200.
+#' @param job_id The reply's `job_id` field, of any type, or `NULL`.
+#' @return Never returns. Always aborts.
+#'
+#' @noRd
+rlm_abort_download_failed <- function(resp, job_id) {
+  detail <- "LM Studio reports that the download failed."
+  if (is_json_string(job_id) && grepl("[^[:space:]]", job_id)) {
+    detail <- paste0(detail, " Job ID: ", encodeString(job_id, quote = '"'), ".")
+  }
+  rlm_abort_bad_response(
+    resp,
+    "API Download Failed",
+    detail,
+    hint = "The reply does not say why the download failed."
+  )
 }
 
 #' Get the status of a download job

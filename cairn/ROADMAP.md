@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-27 (M028 done and archived, the installer hotfix ro
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M029 | A failed or blank download reply aborts, and a download status prints no NaN or Inf | planned | none | normal | milestones/M029-download-flow.md |
+| M029 | A failed or blank download reply aborts, and a download status prints no NaN or Inf | in-progress | none | normal | milestones/M029-download-flow.md |
 | M028 | Brace tests for the six cli sites that show server or CLI text | done | none | normal | milestones/archive/M028-brace-probe-tests.md |
 | M027 | A load or download reply with the wrong JSON shape aborts with rlmstudio_bad_response | done | M026 | normal | milestones/archive/M027-load-download-shape.md |
 | M026 | A model list with the wrong JSON shape aborts with rlmstudio_bad_response | done | none | normal | milestones/archive/M026-model-list-shape.md |

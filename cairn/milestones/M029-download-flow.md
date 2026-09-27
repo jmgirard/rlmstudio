@@ -1,13 +1,13 @@
 # M029: A failed or blank download reply aborts, and a download status prints no NaN or Inf
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes the exported `lms_download()` and the print of a download status
-- **Branch/PR:** —
+- **Branch/PR:** m029-download-flow
 
 ## Goal
 
@@ -41,8 +41,8 @@
 
 ## Tasks
 
-- [ ] T1: Write the tests for AC1 to AC3 first, in the download block of `tests/testthat/test-load-download-shape.R` (near line 185). In a scratch copy, plant a wrong message and a swapped check order. Make sure that the message tests go red (LESSONS M026).
-- [ ] T2: In `R/download.R`, `download_reply_fault()` (line 108) checks for `"failed"` after `"already_downloaded"` and before the job id. The job id rule uses `grepl("[^[:space:]]", x)`, as `list_models()` does for an instance id. `lms_download()` (line 76) aborts a failed reply through `rlm_abort_bad_response()` with its own hint. It splices the job id in as a value (LESSONS M012). The helper roxygen cites D-018.
+- [x] T1: Write the tests for AC1 to AC3 first, in the download block of `tests/testthat/test-load-download-shape.R` (near line 185). In a scratch copy, plant a wrong message and a swapped check order. Make sure that the message tests go red (LESSONS M026).
+- [x] T2: In `R/download.R`, `download_reply_fault()` (line 108) checks for `"failed"` after `"already_downloaded"` and before the job id. The job id rule uses `grepl("[^[:space:]]", x)`, as `list_models()` does for an instance id. `lms_download()` (line 76) aborts a failed reply through `rlm_abort_bad_response()` with its own hint. It splices the job id in as a value (LESSONS M012). The helper roxygen cites D-018.
 - [ ] T3: Write the print tests for AC4. Then guard the Progress line and the Speed line in `print.lms_download_status()` with `is.finite()` and the above-0 tests.
 - [ ] T4: Change the `wait` chunks of `vignettes/getting-started.Rmd` (line 84) and `vignettes/headless-config.Rmd` (line 81). Read `res[["status"]]`, and add `"paused"` to the stop states.
 - [ ] T5: Update the "Malformed response" section in `R/conditions.R` (lines 106 to 125) and the `@return` of `lms_download()`. Add three NEWS entries. Run `devtools::document()`.
@@ -55,6 +55,8 @@
 - 2026-09-27: plan gate chose an `rlmstudio_bad_response` abort for a `"failed"` download. It rejected a warning with the job id returned, and a new condition class. A load reply that is not `"loaded"` already aborts with that class (D-017). A user who needs to tell a failed download from a malformed reply by class falsifies the choice.
 - 2026-09-27: plan gate kept `lms_download_status()` returning a `"failed"` status and rejected an abort there. A status query that answers `"failed"` is a correct answer, and the vignette loops read it. A caller who polls the status and expects an error on failure falsifies the choice.
 - 2026-09-27: plan left out the Progress and Speed lines in `print()` and rejected a shape rule against non-finite numbers. A display fault must not abort a status query. A live LM Studio reply with a non-finite size that a caller needs as an error falsifies the choice.
+- 2026-09-27: implement started on branch `m029-download-flow`. No implement gate, because the plan left no choice open.
+- 2026-09-27: T1 and T2 done. Tests for AC1 to AC3 went red before the fix. Four plants in a scratch copy each turned them red: a wrong failed message, the failed check moved behind the job id rule, an empty-only blank rule, and a blank job id named. `devtools::test()`: 369 tests, 0 failed.
 
 ## Decisions
 
