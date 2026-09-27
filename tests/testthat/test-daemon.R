@@ -57,3 +57,16 @@ test_that("lms_daemon_stop handles force argument and generic failures", {
     "Failed to stop the LM Studio daemon"
   )
 })
+
+test_that("lms_daemon_stop shows CLI output with braces and does not run it", {
+  local_mocked_bindings(lms_path = function() "lms")
+  local_mocked_bindings(
+    run = function(...) list(status = 1, stdout = "", stderr = brace_probe),
+    .package = "processx"
+  )
+  shown <- capture_shown(lms_daemon_stop())
+  message <- conditionMessage(shown$error)
+  expect_match(message, "Failed to stop the LM Studio daemon", fixed = TRUE)
+  expect_match(message, paste("CLI output:", brace_probe_val), fixed = TRUE)
+  expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
+})

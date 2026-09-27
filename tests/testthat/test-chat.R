@@ -668,3 +668,11 @@ test_that("lms_chat_openresponses returns an unreadable reply unchanged with sim
     expect_identical(out, jsonlite::parse_json(shapes[[label]]), info = label)
   }
 })
+
+test_that("print() shows reply text with braces and does not run it", {
+  result <- new_lms_chat_result(text = brace_probe, logprobs = NULL)
+  shown <- capture_shown(print(result))
+  expect_null(shown$error)
+  expect_match(shown$messages, brace_probe, fixed = TRUE)
+  expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
+})
