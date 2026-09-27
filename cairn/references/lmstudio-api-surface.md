@@ -150,7 +150,8 @@ scores many items.
 2. Embeddings. `/v1/embeddings` is a whole endpoint with no wrapper, and text
    embeddings serve the research workflow directly.
 3. A `ttl` argument on the chat and embedding wrappers whose endpoint honors
-   it. The load endpoint rejects `ttl` (corrected M034).
+   it. The load endpoint rejects `ttl` (corrected M034). Wrapped by M034 on
+   `lms_chat_openai()`, `lms_embed()`, and `lms_chat()`.
 4. Per-call statistics from the native chat response, for throughput reporting
    over a batch.
 5. Structured output on `/v1/chat/completions`, for one parsed score per item.

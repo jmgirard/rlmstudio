@@ -10,6 +10,7 @@ lms_embed(
   host = "http://localhost:1234",
   simplify = TRUE,
   ...,
+  ttl = NULL,
   token = NULL
 )
 }
@@ -34,6 +35,12 @@ vector has no effect. \code{encoding_format = "base64"} is untested against LM
 Studio: a server that honors it returns embeddings this function cannot
 read, and the default \code{simplify = TRUE} path then aborts.}
 
+\item{ttl}{A whole number of seconds from 1 to \code{.Machine$integer.max}, or
+\code{NULL} to leave it out. It is how long the model stays loaded with no
+request. It has an effect only on a model that this request loads. The
+server loads a model that is not loaded yet when its just-in-time loading
+setting is on. A model that is already loaded keeps its idle time.}
+
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
@@ -55,7 +62,7 @@ request.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, or \code{schema} aborts with an argument message and no
+\code{input}, \code{inputs}, \code{schema}, or \code{ttl} aborts with an argument message and no
 condition class
 even when the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

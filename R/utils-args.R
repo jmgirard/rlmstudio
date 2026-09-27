@@ -135,6 +135,94 @@ article_for <- function(word) {
   if (grepl("^[aeiou]", word, ignore.case = TRUE)) "an" else "a"
 }
 
+#' Reject a ttl that is not one whole number of seconds in range
+#'
+#' LM Studio accepts a bad `ttl`, such as `"abc"` or `-5`, with no error and
+#' keeps its default idle time, so GP4 puts the check on the package. The
+#' upper bound is the largest R integer, because the value goes into the body
+#' through `as.integer()`.
+#'
+#' @param value The value the caller passed as `ttl`.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_ttl <- function(value) {
+  fault <- ttl_fault(value)
+  if (!is.null(fault)) {
+    # A cli brace that opens with a dot names a style, so the bound goes in
+    # through a variable.
+    max_ttl <- format(.Machine$integer.max)
+    cli::cli_abort(
+      c(
+        "{.arg ttl} must be one whole number from 1 to {max_ttl}, or {.code NULL}.",
+        "x" = "{fault}"
+      ),
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
+#' Which rule did this ttl break?
+#'
+#' Returns plain text rather than a cli string, for the reason `id_fault()`
+#' states.
+#'
+#' @param value The value the caller passed.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+ttl_fault <- function(value) {
+  if (is.null(value)) {
+    return(NULL)
+  }
+  if (!is.numeric(value)) {
+    cls <- class(value)[[1]]
+    return(paste0("You gave ", article_for(cls), " ", cls, " value."))
+  }
+  if (length(value) != 1L) {
+    return(paste0("You gave ", length(value), " values rather than one."))
+  }
+  if (is.na(value)) {
+    return("You gave a missing value.")
+  }
+  if (!is.finite(value)) {
+    return("You gave an infinite value.")
+  }
+  if (value != trunc(value)) {
+    return("You gave a number that is not whole.")
+  }
+  if (value < 1 || value > .Machine$integer.max) {
+    return(paste0("You gave ", format(value), ", which is out of range."))
+  }
+  NULL
+}
+
+#' Reject a ttl sent to a route whose endpoint does not honor one
+#'
+#' On 2026-09-27, LM Studio 0.4.25+1 honored `ttl` on `/v1/chat/completions`,
+#' the `"openai"` route of `lms_chat()`. `/v1/responses` accepted it and kept
+#' the default idle time, and `/api/v1/chat` rejected it with status 400.
+#'
+#' @param ttl The value the caller passed as `ttl`.
+#' @param api_type Character. The route, already matched.
+#' @return `ttl`, invisibly.
+#'
+#' @noRd
+rlm_check_ttl_route <- function(ttl, api_type) {
+  if (!is.null(ttl) && !identical(api_type, "openai")) {
+    cli::cli_abort(
+      c(
+        "{.arg ttl} needs {.code api_type = \"openai\"}.",
+        "x" = "You gave {.code api_type = {.str {api_type}}}.",
+        "i" = "Of the LM Studio chat endpoints, only the OpenAI one honors a ttl."
+      ),
+      call = NULL
+    )
+  }
+  invisible(ttl)
+}
+
 #' Reject a schema that cannot be sent as a JSON object
 #'
 #' `schema` becomes the `schema` field of the `response_format` body, which

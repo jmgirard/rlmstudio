@@ -541,3 +541,154 @@ test_that("a batch format that simplify = FALSE cannot fill aborts before the se
   )
   expect_identical(probe$calls, 1L)
 })
+
+# A call to each function that takes `ttl`, valid apart from `ttl`, keyed by
+# function name. `lms_chat_batch()` takes it through `...`, so the NAMESPACE
+# enumeration below cannot find it, and it is added by hand. The two routing
+# functions are called on the openai route, so a value fault is the only fault.
+ttl_calls <- list(
+  lms_chat_openai = function(...) {
+    lms_chat_openai("a-model", list(list(role = "user", content = "hi")), ...)
+  },
+  lms_embed = function(...) {
+    lms_embed("a-model", "hi", ...)
+  },
+  lms_chat = function(...) {
+    lms_chat("a-model", "hi", api_type = "openai", ...)
+  },
+  lms_chat_batch = function(...) {
+    lms_chat_batch("a-model", "hi", api_type = "openai", ...)
+  }
+)
+
+# The functions whose `ttl` is checked: every export with a `ttl` formal, read
+# from NAMESPACE, and `lms_chat_batch()`. An export with no call above fails
+# the test rather than leaving the domain.
+ttl_domain <- function() {
+  exports <- guarded_exports("ttl")
+  missing_call <- setdiff(exports, names(ttl_calls))
+  if (length(missing_call) > 0) {
+    testthat::fail(paste0(
+      "No call in ttl_calls for ",
+      paste(missing_call, collapse = ", "),
+      "()."
+    ))
+  }
+  c(exports, "lms_chat_batch")
+}
+
+ttl_bad_values <- list(
+  "300",
+  TRUE,
+  list(300),
+  factor(300),
+  numeric(0),
+  c(60, 120),
+  0,
+  0L,
+  -5,
+  0.5,
+  1.5,
+  NA_real_,
+  NA_integer_,
+  NaN,
+  Inf,
+  -Inf,
+  2^31,
+  1e22
+)
+
+test_that("the ttl domain is read from NAMESPACE and is not empty", {
+  domain <- ttl_domain()
+  # A record of what the enumeration found on the day this was written, never
+  # the source of the domain.
+  expect_setequal(
+    domain,
+    c("lms_chat", "lms_chat_batch", "lms_chat_openai", "lms_embed")
+  )
+})
+
+test_that("a ttl that is not one whole number in range aborts before the probe", {
+  probe <- local_counting_probe()
+
+  for (name in ttl_domain()) {
+    for (value in ttl_bad_values) {
+      label <- paste(name, "with", deparse(value))
+      err <- expect_error(
+        ttl_calls[[name]](ttl = value),
+        "must be one whole number",
+        info = label
+      )
+      expect_match(conditionMessage(err), "ttl", info = label)
+      # No package class on an argument fault (D-008).
+      expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+    }
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("a valid ttl passes the value check and reaches the server probe", {
+  probe <- local_counting_probe()
+
+  valid <- list(NULL, 1, 300L, .Machine$integer.max)
+  domain <- ttl_domain()
+  for (name in domain) {
+    for (value in valid) {
+      expect_error(
+        ttl_calls[[name]](ttl = value),
+        class = "rlmstudio_no_server",
+        info = paste(name, "with", deparse(value))
+      )
+    }
+  }
+  expect_identical(probe$calls, length(domain) * length(valid))
+})
+
+# The two functions that route, each called with a valid ttl. `api_type` is
+# left out when `route` is NULL, so the default route is probed as the caller
+# would meet it.
+ttl_route_calls <- list(
+  lms_chat = function(route) {
+    args <- list("a-model", "hi", ttl = 300)
+    if (!is.null(route)) args$api_type <- route
+    do.call(lms_chat, args)
+  },
+  lms_chat_batch = function(route) {
+    args <- list("a-model", "hi", ttl = 300)
+    if (!is.null(route)) args$api_type <- route
+    do.call(lms_chat_batch, args)
+  }
+)
+
+test_that("a ttl on a route other than openai aborts before the probe", {
+  probe <- local_counting_probe()
+
+  for (name in names(ttl_route_calls)) {
+    for (route in list("openresponses", "native", NULL)) {
+      label <- paste(name, "with", if (is.null(route)) "the default" else route)
+      err <- expect_error(
+        ttl_route_calls[[name]](route),
+        'api_type = "openai"',
+        fixed = TRUE,
+        info = label
+      )
+      expect_match(conditionMessage(err), "ttl", info = label)
+      expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+    }
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("the ttl value check runs before the route check", {
+  probe <- local_counting_probe()
+
+  expect_error(
+    lms_chat("a-model", "hi", api_type = "native", ttl = "300"),
+    "must be one whole number"
+  )
+  expect_error(
+    lms_chat_batch("a-model", "hi", api_type = "native", ttl = "300"),
+    "must be one whole number"
+  )
+  expect_identical(probe$calls, 0L)
+})

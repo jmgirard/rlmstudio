@@ -17,7 +17,7 @@ with \code{\link[base:tryCatch]{base::tryCatch()}}.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, or \code{schema} aborts with an argument message and no
+\code{input}, \code{inputs}, \code{schema}, or \code{ttl} aborts with an argument message and no
 condition class
 even when the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
