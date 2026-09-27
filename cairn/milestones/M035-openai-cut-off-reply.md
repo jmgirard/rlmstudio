@@ -70,6 +70,8 @@ Observed on 2026-09-27 with google/gemma-3-1b. At `max_tokens` 2, a strict integ
 - 2026-09-27: claim audit: 49 claims read, 2 corrected — R/chat.R, R/conditions.R
 - 2026-09-27: the two corrections name the `lms_chat_openai()` setting that aborts in its `@return` text, and limit the warning class to the OpenAI route in the conditions page intro. The same reader re-read both as true. `devtools::test()` clean, and status set to review.
 - 2026-09-27: review evidence recorded for AC1 to AC7, gate clean. The three review lenses reported 11 findings, which go to the merge gate.
+- 2026-09-27: gate triage chose fix now for O1, O2, O4, O5, and O10, follow-up rows for O3 and O7, and rejection for the rest. Merge was approved on the condition that the O1 fix is shown once more before the push.
+- 2026-09-27: fix-now work done. `devtools::test()` clean, 9862 passed.
 
 ## Decisions
 
@@ -97,3 +99,8 @@ Evidence gathered 2026-09-27 on branch head 1cd4a1f, which contains `origin/main
 - O9: `warn_if_cut_off()` passes `call = NULL` and the batch warning does not. The single-call message does not mention the content.
 - O10: The `lms_chat()` case of the AC2 test and the AC3 test do not assert the message text.
 - O11: No test covers a cut-off input before a batch abort. The failed-plus-cut-off run covers the vector format only.
+- Triage at the gate: O1 fix now. The batch gives its cut-off warning before a lost server or a 401, 403, or 404 abort. A new test went red first, then green. NEWS and the "Cut-off reply" section say so.
+- Triage: O2, O4, O5, and O10 fix now. O2 drops the option run and says why. O4 retitles the page "Conditions raised by rlmstudio". O5 passes `NULL` for the unused detail. O10 asserts the message in both tests.
+- Triage: O3 follow-up, folded into the candidate row on the shared "Malformed response" section. O7 follow-up, a new candidate row.
+- Triage: O6 rejected, because `warn = 2` is the user's own choice to turn warnings into errors. O8 rejected, because LM Studio sends `finish_reason` as a string. O9 rejected as cosmetic. O11 rejected in part, because AC4 allows the narrower run. The O1 test covers the abort case.
+- After the fixes: `devtools::test()` gave 9862 passed and 0 failed. `devtools::document()` regenerated the three chat pages and the conditions page. `grep -l "Cut-off reply" man/*.Rd` still lists the same four pages.

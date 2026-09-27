@@ -455,11 +455,12 @@ openai_reply_value <- function(resp, resp_data, logprobs, schema) {
     # A reply that a length limit ended is not a whole answer, also when what
     # the model wrote so far parses, such as a lone digit (D-021).
     if (identical(finish_reason, "length")) {
+      # `abort_unread_reply()` words the detail for this finish reason.
       abort_unread_reply(
         resp,
         res_text,
         "OpenAI API Failed",
-        "The reply is not complete.",
+        NULL,
         finish_reason
       )
     }
@@ -590,11 +591,12 @@ parse_schema_reply <- function(resp, content, label, finish_reason = NULL) {
 #' @param resp The httr2 response, for the status the abort carries.
 #' @param content The reply content read out of the response.
 #' @param label Character. The calling wrapper's label, which opens the message.
-#' @param detail Character. What is wrong with the reply.
+#' @param detail Character. What is wrong with the reply. A finish reason of
+#'   `"length"` replaces it, so a caller may pass `NULL` then.
 #' @param finish_reason The `finish_reason` of the first choice, or `NULL`.
 #'
 #' @noRd
-abort_unread_reply <- function(resp, content, label, detail, finish_reason) {
+abort_unread_reply <-function(resp, content, label, detail, finish_reason) {
   if (identical(finish_reason, "length")) {
     # The server gives this finish reason for either limit, and the reply
     # does not say which one it reached.
@@ -1236,9 +1238,11 @@ lms_chat_batch <- function(
   }
   # A lost server fails every later input, so it still aborts (GP3). The
   # condition carries the results so far, so a long batch does not lose them.
-  # Slots from the lost input on stay NULL.
+  # Slots from the lost input on stay NULL. The results can hold replies that
+  # a length limit cut off, so the batch names them before it aborts.
   abort_with_results <- function(cnd) {
     cnd$results <- results
+    warn_cut_off_inputs()
     stop(cnd)
   }
   # A refused token or a model the server cannot find fails every input the
@@ -1287,6 +1291,22 @@ lms_chat_batch <- function(
   note_cut_off <- function(w) {
     cut_off[[length(cut_off) + 1L]] <<- i
     invokeRestart("muffleWarning")
+  }
+  # Shown whatever `quiet` says, because it is the only sign that some
+  # answers are not complete (D-021). A class of its own, apart from the
+  # failed-inputs warning, so a caller can tell the two faults apart.
+  warn_cut_off_inputs <- function() {
+    if (length(cut_off) == 0L) {
+      return(invisible())
+    }
+    positions <- cli::ansi_collapse(cut_off, trunc = Inf)
+    cli::cli_warn(
+      c(
+        "A length limit ended the reply to {length(cut_off)} input{?s} before it was complete, at {cli::qty(length(cut_off))}position{?s} {positions}.",
+        "i" = "Each of those elements keeps the reply as far as it goes. The limit is {.code max_tokens} or the context length of the model. Raise the one that is too low."
+      ),
+      class = "rlmstudio_reply_cut_off"
+    )
   }
   for (i in seq_along(inputs)) {
     res <- tryCatch(
@@ -1387,19 +1407,7 @@ lms_chat_batch <- function(
     cli::cli_warn(vector_fallback)
   }
 
-  if (length(cut_off) > 0L) {
-    # Shown whatever `quiet` says, because it is the only sign that some
-    # answers are not complete (D-021). A class of its own, apart from the
-    # failed-inputs warning, so a caller can tell the two faults apart.
-    positions <- cli::ansi_collapse(cut_off, trunc = Inf)
-    cli::cli_warn(
-      c(
-        "A length limit ended the reply to {length(cut_off)} input{?s} before it was complete, at {cli::qty(length(cut_off))}position{?s} {positions}.",
-        "i" = "Each of those elements keeps the reply as far as it goes. The limit is {.code max_tokens} or the context length of the model. Raise the one that is too low."
-      ),
-      class = "rlmstudio_reply_cut_off"
-    )
-  }
+  warn_cut_off_inputs()
 
   # Keyed on the route, not on the replies, so the columns and their types
   # are there even when every input failed. A failed input has no values.

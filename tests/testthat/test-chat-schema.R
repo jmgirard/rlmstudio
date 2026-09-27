@@ -350,14 +350,16 @@ test_that("a text reply cut off at the token limit warns and keeps its value", {
   expect_identical(res$value, "a")
   expect_identical(length(res$warnings), 1L)
   expect_s3_class(res$warnings[[1]], "rlmstudio_reply_cut_off")
+  expect_length_limit_message(res$warnings[[1]])
 })
 
 test_that("the cut-off warning shows with quiet on", {
   withr::local_options(rlmstudio.quiet = TRUE)
-  expect_warning(
+  w <- expect_warning(
     out <- call_with_reply(completion_body(quoted("a"), "length")),
     class = "rlmstudio_reply_cut_off"
   )
+  expect_length_limit_message(w)
   expect_identical(out$value, "a")
 })
 

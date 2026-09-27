@@ -69,14 +69,12 @@ test_that("a text batch gives one cut-off warning and keeps every reply", {
   }
 })
 
-test_that("the batch cut-off warning shows with quiet off and with the option on", {
+test_that("the batch cut-off warning shows with quiet off", {
+  # The runs above cover `quiet = TRUE`. `lms_chat_batch()` defaults to
+  # `quiet = FALSE`, so it never reads the `rlmstudio.quiet` option.
   withr::local_options(rlmstudio.quiet = FALSE)
   res <- run_cut_off_batch(cut_off_replies(), format = "vector", quiet = FALSE)
   expect_one_cut_off_warning(res$warnings, "quiet = FALSE")
-
-  withr::local_options(rlmstudio.quiet = TRUE)
-  res <- run_cut_off_batch(cut_off_replies(), format = "vector")
-  expect_one_cut_off_warning(res$warnings, "rlmstudio.quiet")
 })
 
 test_that("a failed input and a cut-off reply give one warning each", {
@@ -88,6 +86,74 @@ test_that("a failed input and a cut-off reply give one warning each", {
   expect_false(inherits(res$warnings[[1]], "rlmstudio_reply_cut_off"))
   expect_s3_class(res$warnings[[2]], "rlmstudio_reply_cut_off")
   expect_one_cut_off_warning(res$warnings, "a failed input")
+})
+
+test_that("a batch that aborts still warns about the cut-off inputs before it", {
+  # Status 401 at the third input aborts the batch. The abort's `results`
+  # keep the cut-off reply at position 2, so the warning must name it.
+  replies <- cut_off_replies()[1:2]
+  replies[[3]] <- mock_response(401L, '{"error": {"message": "no"}}')
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(replies)
+  warnings <- list()
+  err <- expect_error(
+    withCallingHandlers(
+      lms_chat_batch("a-model", c("a", "b", "c", "d"), api_type = "openai", quiet = TRUE),
+      warning = function(w) {
+        warnings[[length(warnings) + 1L]] <<- w
+        invokeRestart("muffleWarning")
+      }
+    ),
+    class = "rlmstudio_api_error"
+  )
+  expect_identical(err$status, 401L)
+  expect_identical(err$results[1:2], list("one", "two"))
+  expect_identical(length(warnings), 1L)
+  cut_off <- warnings_of_class(warnings, "rlmstudio_reply_cut_off")
+  expect_identical(length(cut_off), 1L)
+  message <- gsub("\\s+", " ", conditionMessage(cut_off[[1]]))
+  expect_match(message, "1 input", fixed = TRUE)
+  expect_match(message, "position 2", fixed = TRUE)
+
+  # A lost server aborts the same way. The batch probes once before the
+  # loop, and each call probes again, so the fourth probe is the third call's.
+  probes <- 0L
+  testthat::local_mocked_bindings(is_server_running = function(...) {
+    probes <<- probes + 1L
+    probes < 4L
+  })
+  local_request_sequence(cut_off_replies())
+  warnings <- list()
+  err <- expect_error(
+    withCallingHandlers(
+      lms_chat_batch("a-model", c("a", "b", "c", "d"), api_type = "openai", quiet = TRUE),
+      warning = function(w) {
+        warnings[[length(warnings) + 1L]] <<- w
+        invokeRestart("muffleWarning")
+      }
+    ),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(err$results[1:2], list("one", "two"))
+  cut_off <- warnings_of_class(warnings, "rlmstudio_reply_cut_off")
+  expect_identical(length(cut_off), 1L)
+  expect_match(conditionMessage(cut_off[[1]]), "position 2", fixed = TRUE)
+
+  # A batch that aborts before any cut-off reply gives no such warning.
+  local_request_sequence(list(mock_response(401L, '{"error": {"message": "no"}}')))
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  warnings <- list()
+  expect_error(
+    withCallingHandlers(
+      lms_chat_batch("a-model", c("a", "b"), api_type = "openai", quiet = TRUE),
+      warning = function(w) {
+        warnings[[length(warnings) + 1L]] <<- w
+        invokeRestart("muffleWarning")
+      }
+    ),
+    class = "rlmstudio_api_error"
+  )
+  expect_identical(length(warnings_of_class(warnings, "rlmstudio_reply_cut_off")), 0L)
 })
 
 test_that("a batch with no cut-off reply gives no cut-off warning", {

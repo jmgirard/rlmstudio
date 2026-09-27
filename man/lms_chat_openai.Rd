@@ -325,8 +325,10 @@ returns the body with no warning.
 \code{api_type = "openai"}. \code{\link[=lms_chat_batch]{lms_chat_batch()}} gives one warning of this class
 for the whole batch in place of one for each input. It names the count and
 the positions of the cut-off inputs, and each of those elements keeps its
-reply. It comes after the warning about failed inputs. The native and
-OpenResponses routes give no such warning.
+reply. It comes after the warning about failed inputs. A batch that aborts
+on a lost server, or on status 401, 403, or 404, gives this warning before
+the abort. It names the cut-off inputs whose replies the \code{results} field of
+the abort holds. The native and OpenResponses routes give no such warning.
 
 The warning shows whatever \code{quiet} and the \code{rlmstudio.quiet} option say,
 because it is the only sign that an answer is not complete.
