@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M032: A download status picks the unit of a size or speed after rounding
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -90,7 +90,7 @@ as M030 review rejected them.
       from the rounded value. Rewrite its roxygen comment at
       `R/download.R:338-342` to state the same rule. Run `devtools::test()`.
 - [x] T3: Amend the M030 unit bullet in NEWS.md (line 8) per AC2.
-- [ ] T4: Run `devtools::test()` and `devtools::check()` (the check needs
+- [x] T4: Run `devtools::test()` and `devtools::check()` (the check needs
       the LM Studio token and a running server, see LESSONS M009).
 
 ## Work log
@@ -111,6 +111,8 @@ as M030 review rejected them.
 - 2026-09-27: T1 added eight threshold probes and one progress probe. The four round-up probes and the progress probe went red with `1020 B/s`, `1020 KB/s`, `1020 MB/s`, `1020 GB/s`, and `(1020 B / 1020 B)`.
 - 2026-09-27: T2 changed `format_bytes()` to start at TB and step down while the rounded value is below 1, and rewrote its comment. `devtools::test()` passed 9408 with 0 failures.
 - 2026-09-27: T3 amended the M030 NEWS bullet to state the rounded-value rule, with 1023.9 bytes as `1 KB` and 1023 bytes as `1020 B`.
+- 2026-09-27: T4 ran `devtools::test()` (9408 passed, 0 failed) and `devtools::check()` (0 errors, 0 warnings, 0 notes).
+- 2026-09-27: claim audit: 19 claims read, 0 corrected — R/download.R, NEWS.md, tests/testthat/test-load-download-shape.R
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
