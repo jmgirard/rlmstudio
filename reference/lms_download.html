@@ -255,7 +255,7 @@ Parts of other types, such as a refusal, are not checked, and with
 names, so a field whose name only starts with the one asked for, such as
 <code>tokenX</code>, reads as absent and gives <code>NA</code> in the data frame.</p>
 <p>Apart from a body that does not parse as JSON, <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> raises
-it in three cases, all only with <code>simplify = TRUE</code>. The first case is a response whose <code>choices</code> field is
+it in four cases, all only with <code>simplify = TRUE</code>. The first case is a response whose <code>choices</code> field is
 missing, empty, or not an array, or whose first element is not a JSON
 object with a <code>message</code> object in it, so there is no reply to read. This
 case is raised with or without a <code>schema</code>, and with <code>logprobs = TRUE</code> as
@@ -264,9 +264,16 @@ given, <code>logprobs = FALSE</code>, and the reply content is not one string of
 JSON. The third case is reply content that is not one string, such as
 <code>null</code>, a missing <code>content</code> field, a number, or an array. A reply that
 holds only a tool call has <code>null</code> content. This case is raised without a
-<code>schema</code>, and with <code>logprobs = TRUE</code> with or without one. In the second and
-third cases, if the server reports the finish reason <code>"length"</code>, the token
-limit cut the reply off. The message then says so and names <code>max_tokens</code>.</p>
+<code>schema</code>, and with <code>logprobs = TRUE</code> with or without one. The fourth case
+is a cut-off reply. A <code>schema</code> was given, <code>logprobs = FALSE</code>, and the
+server reports the finish reason <code>"length"</code>. This case is raised also when
+the reply content parses, because a reply that stops part way can parse to
+a wrong value, such as the first digit of a longer number. In the second,
+third, and fourth cases, if the server reports the finish reason
+<code>"length"</code>, a length limit ended the reply. The limit is <code>max_tokens</code> or
+the context length of the model. The message then says so and names both.
+A cut-off reply that is returned as text gives a warning of class
+<code>rlmstudio_reply_cut_off</code> instead, which <a href="rlmstudio-conditions.html">rlmstudio-conditions</a> describes.</p>
 <p>With <code>simplify = TRUE</code>, <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>,
 and <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> also raise it for a body that is a bare JSON value,
 such as <code>5</code>, <code>"s"</code>, or <code>true</code>. The message says that the response body is
@@ -284,7 +291,7 @@ also carries two more fields. The <code>content</code> field holds the reply con
 and the <code>finish_reason</code> field holds the finish reason of the first choice.
 Both are <code>NULL</code> for a response with no <code>choices</code>. In the third case,
 <code>content</code> holds the value that was read, which is <code>NULL</code> for <code>null</code> or
-missing content. For the second and third cases, the message names the
+missing content. For the second, third, and fourth cases, the message names the
 <code>content</code> field, so you can read what the model wrote without a second
 request. The other messages of the chat functions and <code><a href="lms_embed.html">lms_embed()</a></code> name
 <code>simplify = FALSE</code>, which returns the body unchanged, with one exception. A body that did not parse as JSON is

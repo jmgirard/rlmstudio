@@ -2,6 +2,34 @@
 
 ## rlmstudio (development version)
 
+- If the server reports the finish reason `"length"`,
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  with a `schema`, `simplify = TRUE`, and `logprobs = FALSE` now aborts
+  with `rlmstudio_bad_response`. Such a reply whose content parses
+  aborts too. A length limit ended such a reply, so the parsed value can
+  be incomplete. The limit is `max_tokens` or the context length of the
+  model, and the message names both. The condition holds the reply
+  content in its `content` field and `"length"` in its `finish_reason`
+  field. Before, a cut-off reply that parsed came back as a whole
+  answer. `lms_chat(api_type = "openai")` aborts in the same way.
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  stores the failure and warns once, as for other failed inputs. The
+  message for a cut-off reply that does not parse now also names the
+  context length.
+
+- If a length limit ended a reply that
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  returns as text, the call now warns with class
+  `rlmstudio_reply_cut_off`. That covers a call with no `schema` and a
+  call with `logprobs = TRUE`. The call returns the reply as before. The
+  warning shows whatever `quiet` and the `rlmstudio.quiet` option say.
+  `lms_chat(api_type = "openai")` warns in the same way.
+  `lms_chat_batch(api_type = "openai")` gives one such warning for the
+  batch, after any warning about failed inputs. It names the count and
+  the positions of the cut-off inputs. A batch that aborts on a lost
+  server, or on status 401, 403, or 404, gives this warning before the
+  abort. With `simplify = FALSE`, no call gives this warning.
+
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
   [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
   and

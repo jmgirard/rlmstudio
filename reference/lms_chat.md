@@ -363,20 +363,28 @@ as absent and gives `NA` in the data frame.
 
 Apart from a body that does not parse as JSON,
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-raises it in three cases, all only with `simplify = TRUE`. The first
-case is a response whose `choices` field is missing, empty, or not an
-array, or whose first element is not a JSON object with a `message`
-object in it, so there is no reply to read. This case is raised with or
-without a `schema`, and with `logprobs = TRUE` as well. The second case
-is a reply that does not parse. A `schema` was given,
-`logprobs = FALSE`, and the reply content is not one string of valid
-JSON. The third case is reply content that is not one string, such as
-`null`, a missing `content` field, a number, or an array. A reply that
-holds only a tool call has `null` content. This case is raised without a
-`schema`, and with `logprobs = TRUE` with or without one. In the second
-and third cases, if the server reports the finish reason `"length"`, the
-token limit cut the reply off. The message then says so and names
-`max_tokens`.
+raises it in four cases, all only with `simplify = TRUE`. The first case
+is a response whose `choices` field is missing, empty, or not an array,
+or whose first element is not a JSON object with a `message` object in
+it, so there is no reply to read. This case is raised with or without a
+`schema`, and with `logprobs = TRUE` as well. The second case is a reply
+that does not parse. A `schema` was given, `logprobs = FALSE`, and the
+reply content is not one string of valid JSON. The third case is reply
+content that is not one string, such as `null`, a missing `content`
+field, a number, or an array. A reply that holds only a tool call has
+`null` content. This case is raised without a `schema`, and with
+`logprobs = TRUE` with or without one. The fourth case is a cut-off
+reply. A `schema` was given, `logprobs = FALSE`, and the server reports
+the finish reason `"length"`. This case is raised also when the reply
+content parses, because a reply that stops part way can parse to a wrong
+value, such as the first digit of a longer number. In the second, third,
+and fourth cases, if the server reports the finish reason `"length"`, a
+length limit ended the reply. The limit is `max_tokens` or the context
+length of the model. The message then says so and names both. A cut-off
+reply that is returned as text gives a warning of class
+`rlmstudio_reply_cut_off` instead, which
+[rlmstudio-conditions](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+describes.
 
 With `simplify = TRUE`,
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
@@ -404,9 +412,9 @@ also carries two more fields. The `content` field holds the reply
 content, and the `finish_reason` field holds the finish reason of the
 first choice. Both are `NULL` for a response with no `choices`. In the
 third case, `content` holds the value that was read, which is `NULL` for
-`null` or missing content. For the second and third cases, the message
-names the `content` field, so you can read what the model wrote without
-a second request. The other messages of the chat functions and
+`null` or missing content. For the second, third, and fourth cases, the
+message names the `content` field, so you can read what the model wrote
+without a second request. The other messages of the chat functions and
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 name `simplify = FALSE`, which returns the body unchanged, with one
 exception. A body that did not parse as JSON is checked before that
@@ -414,3 +422,34 @@ argument is read, so its message points at the host instead. For such a
 body, the `content` and `finish_reason` fields of a condition from
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
 are `NULL`.
+
+## Cut-off reply
+
+A warning of class `rlmstudio_reply_cut_off` is given when a length
+limit ended a reply that
+[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+returns as text. The server reports this with the finish reason
+`"length"`. The limit is `max_tokens` or the context length of the
+model, and the reply does not say which one. The message names both. The
+warning is given with `simplify = TRUE` for reply content that is one
+string, in three settings: no `schema`, `logprobs = TRUE`, and a
+`schema` with `logprobs = TRUE`. The call returns what the same reply
+returns without the cut-off. A `schema` reply with `logprobs = FALSE`
+raises `rlmstudio_bad_response` instead, as the "Malformed response"
+section says. With `simplify = FALSE`, the call returns the body with no
+warning.
+
+`lms_chat()` gives the warning through
+[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+with `api_type = "openai"`.
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+gives one warning of this class for the whole batch in place of one for
+each input. It names the count and the positions of the cut-off inputs,
+and each of those elements keeps its reply. It comes after the warning
+about failed inputs. A batch that aborts on a lost server, or on status
+401, 403, or 404, gives this warning before the abort. It names the
+cut-off inputs whose replies the `results` field of the abort holds. The
+native and OpenResponses routes give no such warning.
+
+The warning shows whatever `quiet` and the `rlmstudio.quiet` option say,
+because it is the only sign that an answer is not complete.
