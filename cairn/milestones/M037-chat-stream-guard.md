@@ -66,7 +66,7 @@ on other `...` fields stay with the server (D-003).
       Then write the failing tests for AC1 and AC2 in
       `tests/testthat/test-arg-guards.R`. Use `local_no_request_allowed()`
       and the request recorder in `tests/testthat/helper-mock-http.R`.
-- [ ] T2: Add `rlm_check_stream(dots)` to `R/utils-args.R`. It aborts when
+- [x] T2: Add `rlm_check_stream(dots)` to `R/utils-args.R`. It aborts when
       any element named `stream` is neither `NULL` nor
       `identical(x, FALSE)`.
       Call it above `stop_if_no_server()` in the
@@ -87,6 +87,7 @@ on other `...` fields stay with the server (D-003).
 - 2026-09-27: plan gate chose a check on `...` with D-023 over a named `stream = FALSE` argument (GP4) because a formal with one legal value adds nothing and the streaming candidate must then redefine it; falsified by a user who needs `stream` documented as an argument.
 - 2026-09-27: plan chose to leave `lms_chat()` without its own check over a check at its top because each route delegates to a checked function before any probe; falsified by a route of `lms_chat()` that reaches the probe or a request without a checked delegate.
 - 2026-09-27: T1 done. D-023 appended. The stream abort test is red on `rlmstudio_no_server` from `lms_chat_openresponses()`, and the FALSE and NULL test passes on the current code.
+- 2026-09-27: T2 done. `rlm_check_stream()` runs in the three direct functions and in `lms_chat_batch()`. The batch reads the raw `list(...)`, because `rlm_chat_dots()` keeps only the first of two same-named values, which the duplicate probe caught. Deleting each of the four call sites in a scratch copy turned the test red. `devtools::test()`: 10194 passed, 0 failed.
 
 ## Decisions
 

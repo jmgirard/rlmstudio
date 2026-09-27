@@ -183,6 +183,7 @@ lms_chat_openresponses <- function(
 ) {
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_stream(list(...))
 
   stop_if_no_server(host)
 
@@ -342,6 +343,7 @@ lms_chat_openai <- function(
   rlm_check_id(model, "model")
   rlm_check_schema(schema, ...names())
   rlm_check_ttl(ttl)
+  rlm_check_stream(list(...))
 
   stop_if_no_server(host)
 
@@ -911,6 +913,7 @@ lms_chat_native <- function(
 ) {
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_stream(list(...))
 
   stop_if_no_server(host)
 
@@ -1204,6 +1207,9 @@ lms_chat_batch <- function(
   ttl <- args[["ttl"]]
   rlm_check_ttl(ttl)
   rlm_check_ttl_route(ttl, api_type)
+  # The raw dots, because `args` keeps only the first of two same-named
+  # values. No `lms_chat()` argument starts with `stream`, so the names match.
+  rlm_check_stream(list(...))
 
   # An argument fault, so it aborts before the server probe (D-008) and before
   # any request is sent.
