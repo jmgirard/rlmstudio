@@ -54,6 +54,7 @@ Observed on 2026-09-27 with google/gemma-3-1b: a `/v1/chat/completions` request 
 - 2026-09-27: T3 done. One NEWS bullet under the development version. A second `devtools::document()` gave no diff. `devtools::test()` 9885 pass, 0 fail.
 - 2026-09-27: claim audit: 17 claims read, 3 corrected. Files: R/chat.R, R/conditions.R, tests/testthat/test-chat-first-choice.R. The help now says "no other element of `choices`", since the batch token columns read `usage`. The cut-off sentence says the choice "the call reads". The batch test now runs the vector, list, and data-frame formats. The plant "read the last choice" turned all three tests red again.
 - 2026-09-27: all tasks done. `devtools::test()` 9889 pass, 0 fail. `devtools::document()` gave no diff. Status set to review.
+- 2026-09-27: step-7 approval: m036-openai-first-choice approved for merge, with the O2 wording fix first.
 
 ## Decisions
 
@@ -76,3 +77,4 @@ Observed on 2026-09-27 with google/gemma-3-1b: a `/v1/chat/completions` request 
   - O7: three new lines are over 80 characters. Proposed reject, because a formatter catches it and the files hold other such lines.
   - O8: `lms_chat(api_type = "openai")` has no direct first-choice test. Proposed reject, because it calls `lms_chat_openai()` at `R/chat.R:382`.
   - Review-side note: `devtools::document()` warns that the `@aliases` at `R/conditions.R:257` spans two lines. Proposed follow-up candidate row, because the line came from M035.
+- Gate triage (user chose fix-then-merge): O2 fixed now. The `@return` and NEWS now say that the warning and abort "depend on" the finish reason of that choice. After the fix, `devtools::document()` changed only `man/lms_chat_openai.Rd`, and `devtools::test()` gave 9889 pass, 0 fail. O1 and O3 to O8 rejected for the reasons above. The `@aliases` note became a ROADMAP candidate row.

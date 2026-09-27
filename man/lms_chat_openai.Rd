@@ -76,9 +76,9 @@ any other setting, such a reply whose content is one string is returned
 with a warning. See the "Cut-off reply" section.
 
 With \code{simplify = TRUE}, the reply is read from the first element of the
-\code{choices} field. No other element of \code{choices} is read. A request with \code{n} in \code{...}
-therefore returns the first choice alone, and the cut-off warning and
-abort report the finish reason of that choice alone. With
+\code{choices} field. No other element of \code{choices} is read. A request with
+\code{n} in \code{...} therefore returns the first choice alone, and the cut-off
+warning and abort depend on the finish reason of that choice alone. With
 \code{simplify = FALSE}, the body holds every choice.
 }
 \description{
