@@ -1149,6 +1149,20 @@ lms_chat_batch <- function(
   # A lost server fails every later input, so it still aborts (GP3). The
   # condition carries the results so far, so a long batch does not lose them.
   # Slots from the lost input on stay NULL.
+  abort_with_results <- function(cnd) {
+    cnd$results <- results
+    stop(cnd)
+  }
+  # A refused token or a model the server cannot find fails every input the
+  # same way, whatever the prompt, so these statuses abort like a lost server
+  # (D-019). Any other status can come from one prompt, so it fails that input
+  # alone.
+  keep_or_abort_api <- function(cnd) {
+    if (isTRUE(cnd$status %in% c(401L, 403L, 404L))) {
+      abort_with_results(cnd)
+    }
+    keep_failure(cnd)
+  }
   results <- vector("list", length(inputs))
   names(results) <- names(inputs)
   # A data frame also returns the reply id and the token counts of each reply
@@ -1202,12 +1216,9 @@ lms_chat_batch <- function(
           token = token
         )
       },
-      rlmstudio_api_error = keep_failure,
+      rlmstudio_api_error = keep_or_abort_api,
       rlmstudio_bad_response = keep_failure,
-      rlmstudio_no_server = function(cnd) {
-        cnd$results <- results
-        stop(cnd)
-      }
+      rlmstudio_no_server = abort_with_results
     )
     # `[i]` rather than `[[i]]`, so a NULL reply keeps its slot in the list.
     results[i] <- list(res)
