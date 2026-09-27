@@ -293,6 +293,141 @@ test_that("a lost server keeps a stored failure in its results", {
   expect_null(res$cnd$results[[3]])
 })
 
+# The statuses that fail every input the same way, whatever the prompt: a
+# refused token (401, 403) and a model the server cannot find (404).
+stop_statuses <- c(401L, 403L, 404L)
+
+# An API error with the given status.
+status_response <- function(status) {
+  mock_response(status, '{"error": {"message": "refused"}}')
+}
+
+# Run a batch over `inputs` in which input `stop_at` gets an API error with
+# `status`, the inputs at `fail_at` get a stored 400 failure, and the others
+# succeed with `ok(i)`. Every input has a response, so the count of requests
+# shows where the batch stopped. Returns the caught condition, or the result
+# if nothing was raised, the warnings, and the number of requests sent.
+run_stopping_batch <- function(
+  stop_at,
+  status,
+  format = "list",
+  fail_at = integer(),
+  api_type = "openai",
+  ok = openai_ok,
+  inputs = batch_inputs
+) {
+  responses <- lapply(seq_along(inputs), ok)
+  responses[fail_at] <- list(fail_response("rlmstudio_api_error", parsed = FALSE))
+  responses[[stop_at]] <- status_response(status)
+
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(responses)
+  warnings <- testthat::capture_warnings(
+    cnd <- tryCatch(
+      lms_chat_batch(
+        "a-model",
+        inputs,
+        format = format,
+        quiet = TRUE,
+        api_type = api_type
+      ),
+      rlmstudio_api_error = identity
+    )
+  )
+  list(cnd = cnd, warnings = warnings, requests = length(recorder$requests))
+}
+
+test_that("an API error with status 401, 403, or 404 aborts the batch", {
+  for (status in stop_statuses) {
+    for (stop_at in 1:2) {
+      info <- paste("status:", status, "stop_at:", stop_at)
+      res <- run_stopping_batch(stop_at, status)
+      expect_true(inherits(res$cnd, "rlmstudio_api_error"), info = info)
+      expect_identical(res$cnd$status, status, info = info)
+      # The abort is the condition of the single call, with the server's text.
+      expect_match(conditionMessage(res$cnd), "refused", info = info)
+      expect_identical(res$warnings, character(), info = info)
+      expect_identical(res$requests, stop_at, info = info)
+    }
+  }
+})
+
+test_that("a 401 aborts the batch on the native and OpenResponses routes", {
+  routes <- list(
+    native = function(i) mock_response(200L, native_reply(sprintf("reply %d", i))),
+    openresponses = openresponses_ok
+  )
+  for (api_type in names(routes)) {
+    res <- run_stopping_batch(2L, 401L, api_type = api_type, ok = routes[[api_type]])
+    expect_true(inherits(res$cnd, "rlmstudio_api_error"), info = api_type)
+    expect_identical(res$cnd$status, 401L, info = api_type)
+    expect_identical(res$warnings, character(), info = api_type)
+    expect_identical(res$requests, 2L, info = api_type)
+    expect_identical(res$cnd$results, list("reply 1", NULL, NULL), info = api_type)
+  }
+})
+
+test_that("a 401 aborts the batch after an earlier stored failure", {
+  res <- run_stopping_batch(2L, 401L, fail_at = 1L)
+  expect_s3_class(res$cnd, "rlmstudio_api_error")
+  expect_identical(res$cnd$status, 401L)
+  expect_identical(res$warnings, character())
+  expect_identical(res$requests, 2L)
+  # The stored 400 keeps its slot in the results so far.
+  expect_length(res$cnd$results, 3L)
+  expect_failed_slot(res$cnd$results[[1]], "rlmstudio_api_error")
+  expect_null(res$cnd$results[[2]])
+  expect_null(res$cnd$results[[3]])
+})
+
+test_that("the abort carries the replies so far in every format", {
+  # The field holds what format = "list" returns, whatever the format.
+  for (format in c("list", "vector", "data.frame")) {
+    res <- run_stopping_batch(2L, 401L, format = format)
+    expect_true(inherits(res$cnd, "rlmstudio_api_error"), info = format)
+    expect_identical(res$cnd$results, list("reply 1", NULL, NULL), info = format)
+  }
+})
+
+test_that("an abort at the first input leaves every result NULL", {
+  res <- run_stopping_batch(1L, 403L)
+  expect_identical(res$requests, 1L)
+  expect_identical(res$cnd$results, list(NULL, NULL, NULL))
+})
+
+test_that("the abort keeps the names of named inputs in its results", {
+  res <- run_stopping_batch(
+    2L,
+    404L,
+    inputs = c(a = "first", b = "second", c = "third")
+  )
+  expect_identical(res$cnd$results, list(a = "reply 1", b = NULL, c = NULL))
+})
+
+test_that("any other API failure or a bad response still fails its input alone", {
+  for (status in c(400L, 422L, 500L)) {
+    info <- paste("status:", status)
+    # The stop status argument is the one the middle input fails with.
+    res <- run_stopping_batch(2L, status)
+    expect_identical(res$requests, 3L, info = info)
+    expect_type(res$cnd, "list")
+    expect_false(inherits(res$cnd, "condition"), info = info)
+    expect_identical(res$cnd[[1]], "reply 1", info = info)
+    expect_true(inherits(res$cnd[[2]], "rlmstudio_api_error"), info = info)
+    expect_identical(res$cnd[[2]]$status, status, info = info)
+    expect_null(res$cnd[[2]]$trace, info = info)
+    expect_identical(res$cnd[[3]], "reply 3", info = info)
+    expect_identical(length(res$warnings), 1L, info = info)
+    expect_match(res$warnings, "1 input failed, at position 2\\.", info = info)
+  }
+
+  res <- run_failing_batch(2L, "rlmstudio_bad_response", "list")
+  expect_identical(res$requests, 3L)
+  expect_failed_slot(res$out[[2]], "rlmstudio_bad_response")
+  expect_length(res$warnings, 1L)
+  expect_match(res$warnings, "1 input failed, at position 2\\.")
+})
+
 test_that("a reply with null content fails its input as NA in text results", {
   # The server answers input 1 with `"content": null`, which has no answer
   # text and so fails, and fails input 2 with an API error.

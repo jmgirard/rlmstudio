@@ -1055,11 +1055,12 @@ reply_columns$openai <- reply_columns$openresponses
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call.
 #'
-#' An `rlmstudio_api_error` or an `rlmstudio_bad_response` that [lms_chat()]
-#' raises for one input does not abort the batch. The batch goes on to the
-#' next input. Where the result is a list, or the `output` list-column that a
-#' `schema` gives, the element for that input holds the condition without its
-#' backtrace. An `rlmstudio_bad_response` for reply content that does not
+#' An `rlmstudio_bad_response` that [lms_chat()] raises for one input fails
+#' that input alone. So does an `rlmstudio_api_error` with any `status` other
+#' than 401, 403, or 404. The batch goes on to the next input. Where the
+#' result is a list, or the `output` list-column that a `schema` gives, the
+#' element for that input holds the condition without its backtrace. An
+#' `rlmstudio_bad_response` for reply content that does not
 #' parse keeps that content in its `content` field. Where the result is text,
 #' the element holds `NA`. The result is text with `format = "vector"` when it
 #' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and
@@ -1074,7 +1075,14 @@ reply_columns$openai <- reply_columns$openresponses
 #' and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`.
 #'
-#' An `rlmstudio_no_server` from [lms_chat()] still aborts the batch. Its
+#' An `rlmstudio_api_error` with `status` 401, 403, or 404 aborts the batch
+#' with that condition, and no request goes out after that input. Such a
+#' status comes from a fault that does not depend on the prompt, such as a
+#' token that the server refuses, so every later input fails in the same
+#' way. The condition carries a `results` field, as described in the "API
+#' failure" section below. No warning about failed inputs is given.
+#'
+#' An `rlmstudio_no_server` from [lms_chat()] also aborts the batch. Its
 #' `results` field holds the results so far, as described in the "Server not
 #' running" section below. An error of any other class aborts the batch
 #' unchanged.
@@ -1137,8 +1145,10 @@ lms_chat_batch <- function(
     on.exit(cli::cli_progress_done(id = pb), add = TRUE)
   }
 
-  # A failed input loses its own answer, not the whole batch. Its slot keeps
-  # the condition, and an `rlmstudio_bad_response` carries the reply content.
+  # A failed input loses its own answer, not the whole batch, unless the
+  # failure holds for every input (see `keep_or_abort_api()` below). Its slot
+  # keeps the condition, and an `rlmstudio_bad_response` carries the reply
+  # content.
   # Every other error still aborts, because it says nothing about one input
   # alone. The backtrace is dropped, because it makes each failed slot large
   # and says nothing about the input.
@@ -1149,13 +1159,27 @@ lms_chat_batch <- function(
   # A lost server fails every later input, so it still aborts (GP3). The
   # condition carries the results so far, so a long batch does not lose them.
   # Slots from the lost input on stay NULL.
+  abort_with_results <- function(cnd) {
+    cnd$results <- results
+    stop(cnd)
+  }
+  # A refused token or a model the server cannot find fails every input the
+  # same way, whatever the prompt, so these statuses abort like a lost server
+  # (D-019). Any other status can come from one prompt, so it fails that input
+  # alone.
+  keep_or_abort_api <- function(cnd) {
+    if (isTRUE(cnd$status %in% c(401L, 403L, 404L))) {
+      abort_with_results(cnd)
+    }
+    keep_failure(cnd)
+  }
   results <- vector("list", length(inputs))
   names(results) <- names(inputs)
   # A data frame also returns the reply id and the token counts of each reply
   # (D-013, D-014), so it asks for the body and reads the answer out of it
   # here. The answer is read by the helper the single call uses, so a reply
   # fails the same way. `results` still holds what `simplify = TRUE` returns,
-  # so the `results` field of a lost-server abort does not change.
+  # so the `results` field of an abort does not depend on the format.
   body_frame <- format == "data.frame"
   reply_fields <- vector("list", length(inputs))
   # The single calls return the body only for status 200, so the abort a bad
@@ -1202,12 +1226,9 @@ lms_chat_batch <- function(
           token = token
         )
       },
-      rlmstudio_api_error = keep_failure,
+      rlmstudio_api_error = keep_or_abort_api,
       rlmstudio_bad_response = keep_failure,
-      rlmstudio_no_server = function(cnd) {
-        cnd$results <- results
-        stop(cnd)
-      }
+      rlmstudio_no_server = abort_with_results
     )
     # `[i]` rather than `[[i]]`, so a NULL reply keeps its slot in the list.
     results[i] <- list(res)
