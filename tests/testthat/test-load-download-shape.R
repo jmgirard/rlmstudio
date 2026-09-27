@@ -376,6 +376,8 @@ test_that("print() shows progress and speed only for finite numbers above 0", {
     "total 1e400" = list(c("1e400", "50", "10"), progress = FALSE, speed = TRUE),
     "downloaded 1e400" = list(c("100", "1e400", "10"), progress = FALSE, speed = TRUE),
     "total -1" = list(c("-1", "50", "10"), progress = FALSE, speed = TRUE),
+    # Finite and above 0, but the percentage divides to Inf.
+    "total 1e-300" = list(c("1e-300", "1e10", "10"), progress = FALSE, speed = TRUE),
     "speed 1e400" = list(c("100", "50", "1e400"), progress = TRUE, speed = FALSE),
     "speed 0" = list(c("100", "50", "0"), progress = TRUE, speed = FALSE),
     "speed -1" = list(c("100", "50", "-1"), progress = TRUE, speed = FALSE),

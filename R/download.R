@@ -306,7 +306,8 @@ print.lms_download_status <- function(x, ...) {
 
   # Calculate and format progress. A total of 0 or below would print as NaN,
   # Inf, or a negative percentage, and a size that is not finite has no
-  # meaningful percentage, so the line is left out for both.
+  # meaningful percentage, so the line is left out for both. A tiny total can
+  # still divide to Inf, so the percentage itself must be finite too.
   if (
     !is.null(total) &&
       !is.null(downloaded) &&
@@ -315,10 +316,12 @@ print.lms_download_status <- function(x, ...) {
       total > 0
   ) {
     pct <- round((downloaded / total) * 100, 1)
-    dl_gb <- round(downloaded / (1024^3), 2)
-    tot_gb <- round(total / (1024^3), 2)
+    if (is.finite(pct)) {
+      dl_gb <- round(downloaded / (1024^3), 2)
+      tot_gb <- round(total / (1024^3), 2)
 
-    cli::cli_text("{.strong Progress:} {pct}% ({dl_gb} GB / {tot_gb} GB)")
+      cli::cli_text("{.strong Progress:} {pct}% ({dl_gb} GB / {tot_gb} GB)")
+    }
   }
 
   # Format speed

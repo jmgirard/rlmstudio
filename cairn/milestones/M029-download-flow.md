@@ -64,6 +64,8 @@
 - 2026-09-27: claim audit: 31 claims read, 4 corrected — NEWS.md, R/download.R
 - 2026-09-27: The four fixes were wording in two NEWS entries and one print comment, made after the check. The same reader re-read them and found all four true. `devtools::test()`: 370 tests, 0 failed. A negative `downloaded_bytes` still prints a negative percentage, which Scope leaves out.
 - 2026-09-27: status set to review.
+- 2026-09-27: review pass 1 found no gate failure. Three fixes (D1, D3, D9) were made at the gate, and D2 and D4 became one candidate row.
+- 2026-09-27: step-7 approval: m029-download-flow approved for merge
 
 ## Decisions
 
@@ -94,3 +96,9 @@ Review pass 1, 2026-09-27, on branch head `9f4b1cd`. Main had not moved since th
   - D12: the failed-status print test does not set `rlmstudio.quiet`.
 - [S] blame-history lens: no findings. It checked D-017, D-018, M027, and M028.
 - [S] prior-review lens: no prior-review evidence applies. The GitHub probe returned no inline review comments.
+- Triage at the gate, 2026-09-27, as proposed. None of the findings fails a criterion, so there is no return.
+  - D1 and D3, fixed now. If the computed percentage is not finite, `print()` leaves out the Progress line. The AC4 test gained a "total 1e-300" case, which failed in a scratch copy without the guard and passes with it.
+  - D9, fixed now. The older `lms_download()` NEWS entry now names the two new rules.
+  - D2 and D4, follow-up. One candidate row for negative or over-total progress and a speed that rounds to 0.
+  - D5 rejected, because exact status matching is D-017's rule. D6 rejected, because the non-breaking space behaves as `id_fault()` does (LESSONS M013). D7 rejected, because AC5 requires the paused abort text. D8 rejected, because the LM Studio docs list no reason field in a download reply. D10 rejected, because a non-string status can never be `"failed"`. D11 rejected, because rule 2 states the failed message. D12 rejected, because `print()` ignores quiet.
+- After the fixes, `devtools::document()` left no diff, and `devtools::test()` gave 370 tests, 0 failed.
