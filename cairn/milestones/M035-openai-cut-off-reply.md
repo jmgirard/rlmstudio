@@ -48,7 +48,7 @@ Observed on 2026-09-27 with google/gemma-3-1b. At `max_tokens` 2, a strict integ
 - [x] T3: Reword the `"length"` detail in `abort_unread_reply()` to name the context length and `max_tokens`. Update the existing `max_tokens` message tests to assert both.
 - [x] T4: Write the AC2 and AC3 tests first. Raise the warning in `openai_reply_value()`, not in `lms_chat_openai()`. The data-frame batch reads the body through that helper in `read_reply()`. Use `cli::cli_warn(class = "rlmstudio_reply_cut_off")` outside the quiet helpers. Raise it only after every abort check in `openai_reply_value()` passes, just before the value returns, so a reply never both warns and fails. Make sure that `simplify = FALSE` returns before the warning.
 - [x] T5: Write the AC4 tests first. In `lms_chat_batch()`, wrap the whole expression for each input inside the `tryCatch()` in `withCallingHandlers()`. Both branches go inside it, `read_reply()` included, because the data-frame format warns after `lms_chat()` returns. The handler records the position and muffles only `rlmstudio_reply_cut_off`. `tryCatch()` lets a warning through (M014 lesson). Join the positions with `cli::ansi_collapse(trunc = Inf)` (M018 lesson). Give the batch warning after the failed-inputs warning.
-- [ ] T6: Write the AC6 roxygen text in `R/conditions.R` and the three chat pages. Add `@aliases rlmstudio_reply_cut_off`, run `devtools::document()`, and add the two NEWS bullets. Grep `man/` for "Cut-off reply", and make sure that it appears on those three pages only.
+- [x] T6: Write the AC6 roxygen text in `R/conditions.R` and the three chat pages. Add `@aliases rlmstudio_reply_cut_off`, run `devtools::document()`, and add the two NEWS bullets. Grep `man/` for "Cut-off reply", and make sure that it appears on those three pages only.
 
 ## Work log
 
@@ -66,6 +66,7 @@ Observed on 2026-09-27 with google/gemma-3-1b. At `max_tokens` 2, a strict integ
 - 2026-09-27: T4 done. `warn_if_cut_off()` runs in `openai_reply_value()` after every abort check, just before each text return. The AC2 and AC3 tests went red before it. `devtools::test()` clean.
 - 2026-09-27: planted a warning before the `simplify = FALSE` return of `lms_chat_openai()`. The AC5 test went red, and the plant was reverted.
 - 2026-09-27: T5 done. The batch muffles each input's cut-off warning inside its `tryCatch()` and warns once after the failed-inputs warning. New `tests/testthat/test-chat-batch-cut-off.R` went red before the change. A plant that left the data-frame path unmuffled turned it red too. `devtools::test()` clean.
+- 2026-09-27: T6 done. "Cut-off reply" section and `rlmstudio_reply_cut_off` alias on the conditions page, inherited by the three chat pages. A grep of `man/` finds the phrase on those four pages only. The shared "Malformed response" text links to the conditions page, so it does not carry the phrase. Two NEWS bullets. `devtools::document()` gives no diff on a second run, and `devtools::test()` is clean.
 
 ## Decisions
 
