@@ -40,7 +40,10 @@ generated tokens. Default is FALSE.}
 \item{simplify}{Logical. If TRUE, extracts the core text response. Default is
 TRUE.}
 
-\item{...}{Additional arguments passed to the selected API body.}
+\item{...}{Additional arguments passed to the selected API body.
+The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
+\code{NULL} aborts before the call checks for a running server, because the
+package reads a whole reply and not a streamed one.}
 
 \item{schema}{A JSON Schema that the reply must match, or \code{NULL}. It needs
 \code{api_type = "openai"}, and any other \code{api_type} aborts before the request.
@@ -86,9 +89,9 @@ three for a status-200 body that does not parse as JSON.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{schema}, or \code{ttl} aborts with an argument message and no
-condition class
-even when the server is down. A condition of class
+\code{input}, \code{inputs}, \code{schema}, or \code{ttl}, or a \code{stream} in the \code{...} of a chat
+function, aborts with an argument message and no condition class even when
+the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor

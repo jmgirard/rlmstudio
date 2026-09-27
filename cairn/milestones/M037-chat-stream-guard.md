@@ -44,9 +44,9 @@ on other `...` fields stay with the server (D-003).
       With `FALSE`, every request body sent holds `"stream":false`. With
       `NULL`, no request body sent holds a `stream` field.
 - [ ] AC3: The help page in `man/` of each export that AC1 enumerates says,
-      at its `...` argument, that `stream` is the one field there that the
-      package checks. It also says that a `stream` other than `FALSE` or
-      `NULL` aborts before the server probe.
+      at its `...` argument, that the package checks a `stream` there, and
+      that a `stream` other than `FALSE` or `NULL` aborts before the server
+      probe.
 - [ ] AC4: `devtools::test()` passes with no failures, and
       `devtools::check()` gives 0 errors and 0 warnings.
 
@@ -74,7 +74,7 @@ on other `...` fields stay with the server (D-003).
       `lms_chat_batch()` on the `rlm_chat_dots()` result (`R/chat.R:1195`).
       Tests green. Per the M003 lesson, delete each call site in a scratch
       copy and see its test go red.
-- [ ] T3: Write the `...` help text on the five functions, run
+- [x] T3: Write the `...` help text on the five functions, run
       `devtools::document()`, and add a `NEWS.md` bullet. Start the server
       and set `RLMSTUDIO_API_TOKEN` (M009 lesson). Then run
       `devtools::test()` and `devtools::check()`.
@@ -88,6 +88,9 @@ on other `...` fields stay with the server (D-003).
 - 2026-09-27: plan chose to leave `lms_chat()` without its own check over a check at its top because each route delegates to a checked function before any probe; falsified by a route of `lms_chat()` that reaches the probe or a request without a checked delegate.
 - 2026-09-27: T1 done. D-023 appended. The stream abort test is red on `rlmstudio_no_server` from `lms_chat_openresponses()`, and the FALSE and NULL test passes on the current code.
 - 2026-09-27: T2 done. `rlm_check_stream()` runs in the three direct functions and in `lms_chat_batch()`. The batch reads the raw `list(...)`, because `rlm_chat_dots()` keeps only the first of two same-named values, which the duplicate probe caught. Deleting each of the four call sites in a scratch copy turned the test red. `devtools::test()`: 10194 passed, 0 failed.
+- 2026-09-27: amendment (mini gate): AC3 no longer says that `stream` is the one checked field in `...`, because `lms_chat_openai()` refuses a `response_format` next to `schema` and `lms_chat_native()` warns on and drops a `logprobs`. The user chose narrowing over listing every checked field.
+- 2026-09-27: re-audit: AC3 (full) — nothing. The reader noted that "server probe" is internal wording, and AC3 binds the meaning, not the words.
+- 2026-09-27: T3 done. Help text at `...` on the five chat pages, `stream` added to the argument list of the conditions page's "Server not running" section, and a NEWS bullet. The help says "before the call checks for a running server" in place of "server probe". `devtools::test()`: 10194 passed, 0 failed. `devtools::check()`: 0 errors, 0 warnings, 0 notes. `document()` still warns on the `@aliases` tag at `R/conditions.R:257`, as the existing candidate row records.
 
 ## Decisions
 

@@ -22,6 +22,9 @@
 #' @param simplify Logical. If TRUE, extracts the core text response. Default is
 #'   TRUE.
 #' @param ... Additional arguments passed to the selected API body.
+#'   The package checks a `stream` here. A `stream` other than `FALSE` or
+#'   `NULL` aborts before the call checks for a running server, because the
+#'   package reads a whole reply and not a streamed one.
 #' @param schema A JSON Schema that the reply must match, or `NULL`. It needs
 #'   `api_type = "openai"`, and any other `api_type` aborts before the request.
 #'   See [lms_chat_openai()] for its form and for what is returned.
@@ -144,6 +147,9 @@ lms_chat <- function(
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature). This
 #'   endpoint accepts a `ttl` field and ignores it. The model keeps the idle
 #'   time that the server sets.
+#'   The package checks a `stream` here. A `stream` other than `FALSE` or
+#'   `NULL` aborts before the call checks for a running server, because the
+#'   package reads a whole reply and not a streamed one.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
@@ -269,6 +275,9 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments. A `response_format` here cannot be
 #'   combined with `schema`.
+#'   The package checks a `stream` here. A `stream` other than `FALSE` or
+#'   `NULL` aborts before the call checks for a running server, because the
+#'   package reads a whole reply and not a streamed one.
 #' @param schema A JSON Schema, written as a named list, that the reply must
 #'   match, or `NULL` for a free text reply. It is sent as the `schema` field
 #'   of a `response_format` of type `"json_schema"`, with the name
@@ -886,6 +895,9 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #' @param simplify Logical. If TRUE, parses output to text.
 #' @param ... Additional API arguments. This endpoint rejects a `ttl` field
 #'   with status 400, which raises `rlmstudio_api_error`.
+#'   The package checks a `stream` here. A `stream` other than `FALSE` or
+#'   `NULL` aborts before the call checks for a running server, because the
+#'   package reads a whole reply and not a streamed one.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. The body can
@@ -1086,6 +1098,9 @@ reply_columns$openai <- reply_columns$openresponses
 #' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,
 #'   `logprobs`, `schema`, or `ttl`. A `schema`, a `ttl`, and the `api_type`
 #'   that each needs are checked before the first call.
+#'   The package checks a `stream` here. A `stream` other than `FALSE` or
+#'   `NULL` aborts before the call checks for a running server, because the
+#'   package reads a whole reply and not a streamed one.
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
