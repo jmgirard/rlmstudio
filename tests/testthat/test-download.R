@@ -12,3 +12,18 @@ test_that("the server-down abort names lms_server_start", {
   local_mocked_bindings(is_server_running = function(...) FALSE)
   expect_error(lms_download("google/gemma-3-1b"), "lms_server_start")
 })
+
+test_that("print() shows a job_id with braces and does not run it", {
+  status <- structure(
+    list(job_id = brace_probe, status = "downloading"),
+    class = "lms_download_status"
+  )
+  shown <- capture_shown(print(status))
+  expect_null(shown$error)
+  expect_match(
+    shown$messages,
+    paste("Download Job:", brace_probe_val),
+    fixed = TRUE
+  )
+  expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
+})

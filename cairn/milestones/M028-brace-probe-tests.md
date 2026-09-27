@@ -1,13 +1,13 @@
 # M028: Brace tests for the six cli sites that show server or CLI text
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — the deliverable is tests, and no code under `R/` changes
-- **Branch/PR:** —
+- **Branch/PR:** m028-brace-probe-tests
 
 ## Goal
 
@@ -38,7 +38,7 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 
 ## Tasks
 
-- [ ] T1: Add the two print tests to `tests/testthat/test-chat.R` and `tests/testthat/test-download.R`. Build a `lms_chat_result` object whose `text` holds the probe, and a `lms_download_status` object whose `job_id` holds it. Capture the output with `capture.output()` or `expect_snapshot()`, and use the M027 status test as the model.
+- [x] T1: Add the two print tests to `tests/testthat/test-chat.R` and `tests/testthat/test-download.R`. Build a `lms_chat_result` object whose `text` holds the probe, and a `lms_download_status` object whose `job_id` holds it. Capture the output with `capture.output()` or `expect_snapshot()`, and use the M027 status test as the model.
 - [ ] T2: Add the `lms_download()` test in `tests/testthat/test-download.R`. Serve a status-200 reply through the mock transport (`helper-mock-http.R`) with a `job_id` that holds the probe, and a `status` other than `"already_downloaded"`.
 - [ ] T3: Add the `lms_daemon_stop()` and `check_lms_version()` tests. Stub `processx::run` with `local_mocked_bindings(.package = "processx")`, as `test-daemon.R` and `test-serve.R` do. The daemon stub returns a non-zero status and a stderr that holds the probe and neither "part of LM Studio" nor "not running". The version stub returns output that holds the probe and no version number. Stub `lms_path()` so that no real CLI is needed.
 - [ ] T4: Add the `install_lmstudio(method = "headless")` test. Set `RLMSTUDIO_ALLOW_INSTALL=TRUE` with `withr::local_envvar()`. Stub `Sys.which` so that `curl` is found. Stub `processx::run` to return a non-zero status and a stdout that holds the probe. The stub must count its calls. If the stub was not called exactly once, the test fails. That way an install never runs for real. Assert on the message of the outer abort, which is the condition the user sees.
@@ -51,3 +51,5 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 - 2026-09-27: plan gate chose one brace test per site over a grep of `R/` for `paste()` format strings, because such a grep skips under R CMD check (LESSONS, M005); falsified by a new unsafe site that the grep catches.
 - 2026-09-27: plan gate chose a milestone over closing the row with no tests, because no test covers six of the eight sites; falsified by six tests that catch no new defect.
 - 2026-09-27: the fresh reader re-ran the reduced audit on the revised Scope list, AC1, and AC2. It found nothing and confirmed the cited line ranges.
+- 2026-09-27: implement started on branch m028-brace-probe-tests. No question gate, because the plan left no choice open.
+- 2026-09-27: T1 done. New `helper-brace-probe.R` holds the probe and a capture helper. At `{.val}` sites cli shows the probe in quotes with its inner quotes escaped, so those tests match `encodeString(probe, quote = '"')`. The braces are shown as written in both forms.
