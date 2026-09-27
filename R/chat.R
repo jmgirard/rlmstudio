@@ -444,6 +444,17 @@ openai_reply_value <- function(resp, resp_data, logprobs, schema) {
     ))
   }
   if (!is.null(schema)) {
+    # A reply that a length limit ended is not a whole answer, also when what
+    # the model wrote so far parses, such as a lone digit (D-021).
+    if (identical(finish_reason, "length")) {
+      abort_unread_reply(
+        resp,
+        res_text,
+        "OpenAI API Failed",
+        "The reply is not complete.",
+        finish_reason
+      )
+    }
     return(parse_schema_reply(
       resp,
       res_text,

@@ -280,6 +280,34 @@ test_that("a reply cut off at the token limit names max_tokens", {
   }
 })
 
+test_that("a schema reply cut off at the token limit aborts even when it parses", {
+  cut_body <- completion_body(quoted("3"), finish_reason = "length")
+  calls <- list(
+    "lms_chat_openai()" = function(body) {
+      call_with_reply(body, schema = score_schema)$value
+    },
+    "lms_chat()" = function(body) {
+      testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+      local_request_recorder(mock_response(200L, body))
+      lms_chat("a-model", "Rate this.", api_type = "openai", schema = score_schema)
+    }
+  )
+  for (label in names(calls)) {
+    call <- calls[[label]]
+    err <- expect_error(call(cut_body), class = "rlmstudio_bad_response", info = label)
+    expect_identical(err$status, 200L, info = label)
+    expect_identical(err$content, "3", info = label)
+    expect_identical(err$finish_reason, "length", info = label)
+    message <- gsub("\\s+", " ", conditionMessage(err))
+    expect_match(message, "OpenAI API Failed", info = label)
+    expect_match(message, "max_tokens", info = label)
+
+    # The same reply that the model ended on its own is a whole answer.
+    done <- call(completion_body(quoted("3"), finish_reason = "stop"))
+    expect_identical(done, 3L, info = label)
+  }
+})
+
 test_that("a reply naming a file is not read from disk", {
   # `jsonlite::fromJSON()` would read this file and return its contents as the
   # answer. The URL case above cannot show the difference offline, because a
@@ -611,6 +639,70 @@ test_that("a batch with no failed reply keeps the vector format warning", {
   expect_length(warnings, 1L)
   expect_match(warnings, "cannot store replies parsed")
   expect_identical(out, rep(list(list(score = 3L)), 3L))
+})
+
+test_that("a batch with a schema fails an input whose reply was cut off", {
+  responses <- function() {
+    list(
+      mock_response(200L, completion_body(quoted("3"))),
+      mock_response(200L, completion_body(quoted("3"), finish_reason = "length")),
+      mock_response(200L, completion_body(quoted("3")))
+    )
+  }
+  for (format in c("list", "data.frame")) {
+    res <- collect_warnings(batch_with_sequence(responses(), format))
+    out <- if (format == "list") res$value else res$value$output
+    expect_identical(out[[1]], 3L, info = format)
+    expect_s3_class(out[[2]], "rlmstudio_bad_response")
+    expect_identical(out[[2]]$content, "3", info = format)
+    expect_identical(out[[2]]$finish_reason, "length", info = format)
+    expect_identical(out[[3]], 3L, info = format)
+
+    # The failed-inputs warning alone, and no cut-off warning.
+    expect_identical(length(res$warnings), 1L, info = format)
+    expect_match(
+      conditionMessage(res$warnings[[1]]),
+      "1 input failed, at position 2\\.",
+      info = format
+    )
+    cut_off <- warnings_of_class(res$warnings, "rlmstudio_reply_cut_off")
+    expect_identical(length(cut_off), 0L, info = format)
+  }
+})
+
+test_that("simplify = FALSE returns a cut-off reply unchanged", {
+  body <- completion_body(quoted("3"), finish_reason = "length")
+  for (schema in list(NULL, score_schema)) {
+    info <- if (is.null(schema)) "no schema" else "a schema"
+    res <- collect_warnings(
+      call_with_reply(body, schema = schema, simplify = FALSE)
+    )
+    expect_identical(res$value$value, jsonlite::parse_json(body), info = info)
+    # Stated apart from the parser.
+    expect_identical(res$value$value$choices[[1]]$message$content, "3", info = info)
+    expect_identical(res$value$value$choices[[1]]$finish_reason, "length", info = info)
+    expect_identical(length(res$warnings), 0L, info = info)
+  }
+
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    mock_response(200L, completion_body(quoted("a"))),
+    mock_response(200L, body)
+  ))
+  res <- collect_warnings(
+    lms_chat_batch(
+      "a-model",
+      c("first", "second"),
+      format = "list",
+      simplify = FALSE,
+      quiet = TRUE,
+      api_type = "openai"
+    )
+  )
+  expect_identical(res$value[[2]], jsonlite::parse_json(body))
+  expect_identical(res$value[[2]]$choices[[1]]$finish_reason, "length")
+  expect_identical(res$value[[1]]$choices[[1]]$message$content, "a")
+  expect_identical(length(res$warnings), 0L)
 })
 
 test_that("a server that stops during a batch still aborts", {
