@@ -65,13 +65,20 @@ all.
   `tokens_per_second`, `time_to_first_token_seconds`, and
   `model_load_time_seconds`. A batch run over many items can report throughput
   from these numbers.
-- **Idle TTL.** A `ttl` field in a chat request sets how long a model stays
-  loaded without a request. `lms load --ttl <seconds>` does the same from the
-  command line. `lms_load()` names no `ttl` argument.
+- **Idle TTL** (corrected M034). A `ttl` field in a request sets how many
+  seconds a model stays loaded without a request. It applies only to a model
+  that the request itself loads, which the docs call JIT loading.
+  `lms load --ttl <seconds>` sets it from the command line. On LM Studio
+  0.4.25+1, `/v1/chat/completions` and `/v1/embeddings` honored `ttl`.
+  `/v1/responses` returned 200 and kept the 60-minute default.
+  `/api/v1/chat` and `/api/v1/models/load` answered 400 with
+  "Unrecognized key(s) in object: 'ttl'". A `ttl` sent to a model that was
+  already loaded did not change its idle time. The server accepted `"abc"`
+  and `-5` without an error and used its default — observed 2026-09-27.
 - **Load configuration.** `/api/v1/models/load` accepts `context_length`,
   `eval_batch_size`, `flash_attention`, `num_experts`,
   `offload_kv_cache_to_gpu`, and `echo_load_config`. `lms_load()` names all
-  six already. The documented load field it does not name is `ttl`.
+  six already. The endpoint rejects `ttl` (corrected M034).
 - **Reasoning control.** `/api/v1/chat` accepts a `reasoning` field with the
   values off, on, low, medium, and high. `/v1/responses` accepts
   `reasoning.effort`. A model states its allowed values in the
@@ -142,8 +149,8 @@ scores many items.
    to a server that requires a token, and `...` offers no way around it.
 2. Embeddings. `/v1/embeddings` is a whole endpoint with no wrapper, and text
    embeddings serve the research workflow directly.
-3. A `ttl` argument on `lms_load()` and on the chat wrappers. It is the one
-   documented load field the package does not name.
+3. A `ttl` argument on the chat and embedding wrappers whose endpoint honors
+   it. The load endpoint rejects `ttl` (corrected M034).
 4. Per-call statistics from the native chat response, for throughput reporting
    over a batch.
 5. Structured output on `/v1/chat/completions`, for one parsed score per item.

@@ -9,6 +9,7 @@ _Last hygiene check: 2026-09-27 (M033 done and archived, M030 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M034 | The OpenAI chat and embedding functions take a ttl for a model that the request loads | planned | none | normal | milestones/M034-chat-embed-ttl.md |
 | M033 | The socket tests share one port helper that leaves the random seed alone | done | none | normal | milestones/archive/M033-shared-port-helpers.md |
 | M032 | A download status picks the unit of a size or speed after rounding | done | none | normal | milestones/archive/M032-download-unit-rounding.md |
 | M031 | A chat batch stops at an API failure that holds for every input | done | none | normal | milestones/archive/M031-batch-early-stop.md |
@@ -25,7 +26,7 @@ _Last hygiene check: 2026-09-27 (M033 done and archived, M030 row pruned)_
 - A `chunk_size` argument on `lms_embed()` with a progress bar, so a long input vector goes out as several requests. M012 sends the whole vector in one POST, added 2026-09-20, M012 plan gate
 - `lms_chat_openai()` takes its prompt as `messages`, a list, so M013's text guard does not reach it. A malformed messages list still goes to the server unchecked, added 2026-09-20, M013 scope
 - The chat wrappers send an `input` of length two as a JSON array rather than one prompt. M013 leaves the length alone, because narrowing a named formal is a permanent API restriction. Decide whether a length rule belongs there, added 2026-09-20, M013 plan gate
-- A `ttl` argument on `lms_load()` and the chat wrappers. It sets how long an idle model stays in memory and is the one documented load field the package does not name, added 2026-09-19, cairn/references/lmstudio-api-surface.md
+- A `ttl` argument on `lms_load()`. On 2026-09-27, `/api/v1/models/load` answered 400 "Unrecognized key(s) in object: 'ttl'", and only `lms load --ttl` sets it. Promote once the load endpoint accepts `ttl`. A user who needs a `ttl` on an explicit load is the other trigger, through the command-line route. M034 took the chat and embedding part of this row, added 2026-09-19, cairn/references/lmstudio-api-surface.md, M034 plan gate
 - Structured output on `/v1/responses` and `/api/v1/chat`. M017 covers `/v1/chat/completions` only, the one endpoint the LM Studio docs describe for it. Promote once the docs or a live request show that another endpoint honors a schema, added 2026-09-21, M017 scope
 - Bind parsed batch replies into data-frame columns. With `schema`, `lms_chat_batch(format = "data.frame")` returns an `output` list-column after M017, added 2026-09-21, M017 scope
 - A loaded-instance table, the view `lms ps` prints, flattened from the `loaded_instances` field that `list_models(detailed = TRUE)` already returns, added 2026-09-19, cairn/references/lmstudio-api-surface.md
