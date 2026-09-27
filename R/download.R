@@ -338,8 +338,10 @@ print.lms_download_status <- function(x, ...) {
 #' Format a byte count in a unit that keeps the value at 1 or more
 #'
 #' The unit is the largest of B, KB, MB, GB, and TB (base 1024) in which the
-#' value is 1 or more, and B for a value below 1024. The value keeps three
-#' significant digits, so a count above 0 never shows as 0.
+#' value, rounded to three significant digits, is 1 or more. When no unit
+#' gives such a value, the unit is B. So 1023.9 bytes shows as `"1 KB"`, and
+#' 1023 bytes shows as `"1020 B"`. The value keeps three significant digits,
+#' so a count above 0 never shows as 0.
 #'
 #' @param bytes A finite number of 0 or more.
 #' @return One string, such as `"1.5 KB"`.
@@ -347,9 +349,12 @@ print.lms_download_status <- function(x, ...) {
 #' @noRd
 format_bytes <- function(bytes) {
   units <- c("B", "KB", "MB", "GB", "TB")
-  power <- 0
-  while (power < length(units) - 1 && bytes >= 1024^(power + 1)) {
-    power <- power + 1
+  # Start at the largest unit and step down while the rounded value is below
+  # 1. The unit is picked after the rounding, so a value that rounds up to 1
+  # in a unit shows in that unit.
+  power <- length(units) - 1
+  while (power > 0 && signif(bytes / 1024^power, 3) < 1) {
+    power <- power - 1
   }
   # `format()` also shows three digits for a subnormal number, which
   # `signif()` alone leaves at full length.

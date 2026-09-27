@@ -450,6 +450,35 @@ test_that("print() shows sizes and speed in a unit that keeps the value at 1 or 
   )
 })
 
+test_that("print() picks the unit after it rounds the value", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  # Below each threshold, 1023.9 of the lower unit rounds to 1 in the higher
+  # unit, and 1023 of the lower unit stays there as 1020.
+  speeds <- c(
+    "1023.9" = "Speed: 1 KB/s",
+    "1023" = "Speed: 1020 B/s",
+    "1048473.6" = "Speed: 1 MB/s",
+    "1047552" = "Speed: 1020 KB/s",
+    "1073636966.4" = "Speed: 1 GB/s",
+    "1072693248" = "Speed: 1020 MB/s",
+    "1099404253593.6" = "Speed: 1 TB/s",
+    "1098437885952" = "Speed: 1020 GB/s"
+  )
+  for (speed in names(speeds)) {
+    expect_match(
+      print_status_numbers("100", "50", speed),
+      speeds[[speed]],
+      fixed = TRUE,
+      info = speed
+    )
+  }
+  expect_match(
+    print_status_numbers("1023.9", "1023", "10"),
+    "(1020 B / 1 KB)",
+    fixed = TRUE
+  )
+})
+
 test_that("print() rounds the percentage down to one decimal", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   cases <- list(
