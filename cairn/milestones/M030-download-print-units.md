@@ -87,6 +87,8 @@ plan gate). The print method of `lms_chat_result` stays as it is.
 - 2026-09-27: T1-T5 done. The new tests failed first with `0 GB`, `0 MB/s`, and `100%` for 9996 of 10000. With each new bound removed in turn, a test went red. The `is.finite(pct)` guard is gone, because a downloaded size from 0 to the total keeps the ratio from 0 to 1. `devtools::test()` passed 9302 tests, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-27: claim audit: 23 claims read, 3 corrected — R/download.R, NEWS.md, tests/testthat/test-load-download-shape.R
 - 2026-09-27: the claim audit found that `signif()` leaves a subnormal number at full length. `format_bytes()` now wraps it in `format(digits = 3)`, and a test pins `5e-324` as `4.94e-324 B/s`. The NEWS entry now names B for a value below 1. The reader re-read the three claims once, and all three hold. `devtools::test()` passed 9303 tests, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
+- 2026-09-27: review pass 1 found no gate failure. D1, D3, and D6 were fixed at the gate, D4 became a candidate row, and D2 and D5 were rejected.
+- 2026-09-27: step-7 approval: m030-download-print-units approved for merge
 
 ## Decisions
 
@@ -106,3 +108,4 @@ Pass 1, 2026-09-27, branch m030-download-print-units at 7320d77. The branch hold
   - D4: 999.6 prints `1000 B` and 1023.9 prints `1020 B`, where a reader can expect `1 KB`. AC2 states this rule.
   - D5: tiny speeds print in scientific notation, such as `1e-09 B/s`. AC2 pins this text.
   - D6: the test comment of the `"total 1e-300"` case still names a division to Inf, a code path that is gone.
+- Triage at the gate: D1, D3, and D6 fixed now. D1: the three examples now show `(737 MB / 737 MB)`, the new print of 0.72 GiB, and `devtools::build_readme()` rebuilt README.md. D3: two speed cases pin `1 TB/s` and `1020 TB/s`. With the cap removed, the second case failed with "subscript out of bounds". D6: the comment now says only that the downloaded size is above the total. `devtools::test()` then passed 9305 tests. D4 became a candidate row. D2 rejected, because R's own print follows `scipen` and `OutDec` too, so a user who sets them asks for that output. D5 rejected, because AC2 pins that text.

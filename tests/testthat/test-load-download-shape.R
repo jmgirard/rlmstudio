@@ -376,8 +376,7 @@ test_that("print() shows progress and speed only for finite numbers above 0", {
     "total 1e400" = list(c("1e400", "50", "10"), progress = FALSE, speed = TRUE),
     "downloaded 1e400" = list(c("100", "1e400", "10"), progress = FALSE, speed = TRUE),
     "total -1" = list(c("-1", "50", "10"), progress = FALSE, speed = TRUE),
-    # Finite and above 0, but the downloaded size is above the total, and the
-    # percentage would divide to Inf.
+    # Finite and above 0, but the downloaded size is above the total.
     "total 1e-300" = list(c("1e-300", "1e10", "10"), progress = FALSE, speed = TRUE),
     "speed 1e400" = list(c("100", "50", "1e400"), progress = TRUE, speed = FALSE),
     "speed 0" = list(c("100", "50", "0"), progress = TRUE, speed = FALSE),
@@ -431,7 +430,10 @@ test_that("print() shows sizes and speed in a unit that keeps the value at 1 or 
     "1024" = "Speed: 1 KB/s",
     "1536" = "Speed: 1.5 KB/s",
     "1234567" = "Speed: 1.18 MB/s",
-    "5242880" = "Speed: 5 MB/s"
+    "5242880" = "Speed: 5 MB/s",
+    # 1024^4 is 1 TB, and 1024^5 stays in TB, the largest unit.
+    "1099511627776" = "Speed: 1 TB/s",
+    "1125899906842624" = "Speed: 1020 TB/s"
   )
   for (speed in names(speeds)) {
     expect_match(
