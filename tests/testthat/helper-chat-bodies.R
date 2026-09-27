@@ -20,6 +20,25 @@ completion_body <- function(content_json, finish_reason = "stop") {
   )
 }
 
+# A chat completions response with two choices, as a request with `n` 2 could
+# get. `contents` holds the JSON text of each choice's content, and `reasons`
+# the finish reason of each choice.
+two_choice_body <- function(contents, reasons) {
+  choices <- sprintf(
+    paste0(
+      '{"index": %d, "message": {"role": "assistant", "content": %s}, ',
+      '"finish_reason": "%s"}'
+    ),
+    0:1,
+    contents,
+    reasons
+  )
+  sprintf(
+    '{"id": "chatcmpl-1", "object": "chat.completion", "choices": [%s]}',
+    paste(choices, collapse = ", ")
+  )
+}
+
 # The reply content as the JSON string the server would send for `text`.
 quoted <- function(text) {
   as.character(jsonlite::toJSON(text, auto_unbox = TRUE))

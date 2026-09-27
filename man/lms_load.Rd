@@ -277,8 +277,9 @@ The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: each of these
 functions reads the body only after a 200, and reports every other status
 as an \code{rlmstudio_api_error} instead. A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}}
-also carries two more fields. The \code{content} field holds the reply content,
-and the \code{finish_reason} field holds the finish reason of the first choice.
+also carries two more fields. The \code{content} field holds the reply content
+of the first choice, and the \code{finish_reason} field holds the finish reason
+of the first choice.
 Both are \code{NULL} for a response with no \code{choices}. In the third case,
 \code{content} holds the value that was read, which is \code{NULL} for \code{null} or
 missing content. For the second, third, and fourth cases, the message names the
