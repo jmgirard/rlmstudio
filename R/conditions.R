@@ -213,8 +213,9 @@
 #' status as an integer. Today the status is always 200: each of these
 #' functions reads the body only after a 200, and reports every other status
 #' as an `rlmstudio_api_error` instead. A condition from [lms_chat_openai()]
-#' also carries two more fields. The `content` field holds the reply content,
-#' and the `finish_reason` field holds the finish reason of the first choice.
+#' also carries two more fields. The `content` field holds the reply content
+#' of the first choice, and the `finish_reason` field holds the finish reason
+#' of the first choice.
 #' Both are `NULL` for a response with no `choices`. In the third case,
 #' `content` holds the value that was read, which is `NULL` for `null` or
 #' missing content. For the second, third, and fourth cases, the message names the
@@ -235,8 +236,10 @@
 #' `logprobs = TRUE`, and a `schema` with `logprobs = TRUE`. The call returns
 #' what the same reply returns without the cut-off. A `schema` reply with
 #' `logprobs = FALSE` raises `rlmstudio_bad_response` instead, as the
-#' "Malformed response" section says. With `simplify = FALSE`, the call
-#' returns the body with no warning.
+#' "Malformed response" section says. The warning and that abort read the
+#' finish reason of the first choice, which is the choice that the call
+#' returns. No other choice is read. With `simplify = FALSE`, the call
+#' returns the body with every choice and no warning.
 #'
 #' [lms_chat()] gives the warning through [lms_chat_openai()] with
 #' `api_type = "openai"`. [lms_chat_batch()] gives one warning of this class

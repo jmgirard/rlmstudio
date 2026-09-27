@@ -303,6 +303,12 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   `rlmstudio_bad_response`, also when it parses. With `simplify = TRUE` in
 #'   any other setting, such a reply whose content is one string is returned
 #'   with a warning. See the "Cut-off reply" section.
+#'
+#'   With `simplify = TRUE`, the reply is read from the first element of the
+#'   `choices` field. No other choice is read. A request with `n` in `...`
+#'   therefore returns the first choice alone, and the cut-off warning and
+#'   abort report the finish reason of that choice alone. With
+#'   `simplify = FALSE`, the body holds every choice.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
