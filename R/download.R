@@ -18,9 +18,10 @@
 #' @return A character string containing the download \code{job_id}, or
 #'   \code{"already_downloaded"}, invisibly, if the model is already
 #'   downloaded. The call aborts with \code{rlmstudio_bad_response} when the
-#'   reply holds neither a \code{job_id} string nor the status
-#'   \code{"already_downloaded"}. It also aborts when the reply is not a JSON
-#'   object whose \code{status} is a string.
+#'   reply's \code{status} is \code{"failed"}. It also aborts when the status
+#'   is not \code{"already_downloaded"} and the reply holds no \code{job_id}
+#'   string with a character that is not whitespace. It also aborts when the
+#'   reply is not a JSON object whose \code{status} is a string.
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
@@ -84,6 +85,10 @@ lms_download <- function(
       return(invisible("already_downloaded"))
     }
 
+    if (identical(resp_data[["status"]], "failed")) {
+      rlm_abort_download_failed(resp, resp_data[["job_id"]])
+    }
+
     job_id <- resp_data[["job_id"]]
     rlm_alert_success(
       "Download job started successfully. Job ID: {.val {job_id}}"
@@ -96,10 +101,13 @@ lms_download <- function(
 
 #' Find the first way a download reply breaks its shape rules
 #'
-#' The body is a JSON object whose `status` is a string. Unless `status` is
-#' `"already_downloaded"`, its `job_id` is a string too. The rules check types
-#' and not status values, so a status that a later LM Studio adds still passes
-#' (D-017). Fields are read by exact name.
+#' The body is a JSON object whose `status` is a string. A status of
+#' `"already_downloaded"` or `"failed"` passes with any `job_id`, and
+#' `lms_download()` handles each of them itself. For any other status, the
+#' `job_id` is a string with a character that is not whitespace. Apart from
+#' those two values, the rules check types and not status values, so a status
+#' that a later LM Studio adds still passes (D-017, narrowed by D-018). Fields
+#' are read by exact name.
 #'
 #' @param body The body, parsed with `simplifyVector = FALSE`.
 #' @return `NULL` when the body passes, or one clause naming the fault.
@@ -112,13 +120,44 @@ download_reply_fault <- function(body) {
   if (!is_json_string(body[["status"]])) {
     return("`status` is not a string.")
   }
-  if (identical(body[["status"]], "already_downloaded")) {
+  if (body[["status"]] %in% c("already_downloaded", "failed")) {
     return(NULL)
   }
-  if (!is_json_string(body[["job_id"]])) {
+  job_id <- body[["job_id"]]
+  if (!is_json_string(job_id)) {
     return("`job_id` is not a string.")
   }
+  if (!grepl("[^[:space:]]", job_id)) {
+    return("`job_id` is a string with no character that is not whitespace.")
+  }
   NULL
+}
+
+#' Abort on a download reply whose status is "failed"
+#'
+#' The reply is well formed, so the hint of `rlm_abort_bad_reply()` about
+#' another program on the host does not apply. The condition class is still
+#' `rlmstudio_bad_response`, as for a load reply that is not `"loaded"`
+#' (D-018). The job id is named only when it is a string with a character
+#' that is not whitespace. It is spliced in as a value, so cli does not run
+#' its braces.
+#'
+#' @param resp The httr2 response, with status 200.
+#' @param job_id The reply's `job_id` field, of any type, or `NULL`.
+#' @return Never returns. Always aborts.
+#'
+#' @noRd
+rlm_abort_download_failed <- function(resp, job_id) {
+  detail <- "LM Studio reports that the download failed."
+  if (is_json_string(job_id) && grepl("[^[:space:]]", job_id)) {
+    detail <- paste0(detail, " Job ID: ", encodeString(job_id, quote = '"'), ".")
+  }
+  rlm_abort_bad_response(
+    resp,
+    "API Download Failed",
+    detail,
+    hint = "The reply does not say why the download failed."
+  )
 }
 
 #' Get the status of a download job
@@ -265,17 +304,28 @@ print.lms_download_status <- function(x, ...) {
   status_text <- status_col(status)
   cli::cli_text("{.strong Status:} {status_text}")
 
-  # Calculate and format progress
-  if (!is.null(total) && !is.null(downloaded)) {
+  # Calculate and format progress. A total of 0 or below would print as NaN,
+  # Inf, or a negative percentage, and a size that is not finite has no
+  # meaningful percentage, so the line is left out for both. A tiny total can
+  # still divide to Inf, so the percentage itself must be finite too.
+  if (
+    !is.null(total) &&
+      !is.null(downloaded) &&
+      is.finite(total) &&
+      is.finite(downloaded) &&
+      total > 0
+  ) {
     pct <- round((downloaded / total) * 100, 1)
-    dl_gb <- round(downloaded / (1024^3), 2)
-    tot_gb <- round(total / (1024^3), 2)
+    if (is.finite(pct)) {
+      dl_gb <- round(downloaded / (1024^3), 2)
+      tot_gb <- round(total / (1024^3), 2)
 
-    cli::cli_text("{.strong Progress:} {pct}% ({dl_gb} GB / {tot_gb} GB)")
+      cli::cli_text("{.strong Progress:} {pct}% ({dl_gb} GB / {tot_gb} GB)")
+    }
   }
 
   # Format speed
-  if (!is.null(speed) && speed > 0) {
+  if (!is.null(speed) && is.finite(speed) && speed > 0) {
     spd_mb <- round(speed / (1024^2), 2)
     cli::cli_text("{.strong Speed:} {spd_mb} MB/s")
   }

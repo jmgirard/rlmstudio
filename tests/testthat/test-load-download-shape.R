@@ -222,6 +222,76 @@ test_that("a download reply that passes the rules returns the job id or already_
   }
 })
 
+test_that("a download reply with status failed aborts with rlmstudio_bad_response", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_options(rlmstudio.quiet = TRUE)
+  # The failed check comes before the job id rule, so a reply whose job id
+  # breaks that rule still gets the failed message. The message names a job id
+  # only when it holds a character that is not whitespace.
+  cases <- list(
+    "job_id job-1" = list(job_id = '"job-1"', named = '"job-1"'),
+    "job_id with braces" = list(job_id = '"{1 + 1}"', named = '"{1 + 1}"'),
+    "job_id absent" = list(job_id = NULL, named = NULL),
+    "job_id as number" = list(job_id = "1", named = NULL),
+    "job_id empty" = list(job_id = '""', named = NULL),
+    "job_id blank" = list(job_id = '" \\t"', named = NULL)
+  )
+  for (label in names(cases)) {
+    case <- cases[[label]]
+    fields <- c(status = '"failed"', job_id = case$job_id)
+    local_request_sequence(list(mock_response(200L, shape_object(fields))))
+    cnd <- shape_raised_by(download_call())
+    expect_true(inherits(cnd, "rlmstudio_bad_response"), info = label)
+    if (!inherits(cnd, "rlmstudio_bad_response")) next
+    expect_identical(cnd$status, 200L, info = label)
+    message <- conditionMessage(cnd)
+    expect_match(message, "API Download Failed", fixed = TRUE, info = label)
+    expect_match(
+      message,
+      "LM Studio reports that the download failed",
+      fixed = TRUE,
+      info = label
+    )
+    expect_no_match(message, "Something other than LM Studio", fixed = TRUE, info = label)
+    expect_no_match(message, "is not a string", fixed = TRUE, info = label)
+    if (is.null(case$named)) {
+      expect_no_match(message, "Job ID", fixed = TRUE, info = label)
+    } else {
+      expect_match(message, paste("Job ID:", case$named), fixed = TRUE, info = label)
+    }
+  }
+})
+
+test_that("a blank job_id aborts lms_download() with rlmstudio_bad_response", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_options(rlmstudio.quiet = TRUE)
+  blanks <- c('""', '" "', '"\\t"', '"\\n"', '" \\t\\n"')
+  cases <- list()
+  for (status in c('"downloading"', '"paused"', '"queued"')) {
+    for (blank in blanks) {
+      cases[[length(cases) + 1L]] <- list(
+        label = paste("status", status, "job_id", blank),
+        body = shape_object(c(status = status, job_id = blank)),
+        names = "`job_id` is a string with no character that is not whitespace"
+      )
+    }
+  }
+  expect_shape_faults(cases, download_call, "API Download Failed")
+})
+
+test_that("each status but already_downloaded and failed returns the job id", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  withr::local_options(rlmstudio.quiet = TRUE)
+  # "queued" is a status the LM Studio docs do not list.
+  for (status in c("downloading", "paused", "completed", "queued")) {
+    body <- shape_object(c(status = paste0('"', status, '"'), job_id = '"job-1"'))
+    local_request_sequence(list(mock_response(200L, body)))
+    result <- withVisible(download_call())
+    expect_identical(result$value, "job-1", info = status)
+    expect_true(result$visible, info = status)
+  }
+})
+
 test_that("the LM Studio docs example of the download reply reads", {
   # The "Response" block of lmstudio-ai/docs 1_developer/2_rest/download.md,
   # as of commit 2e643a417b.
@@ -295,6 +365,46 @@ test_that("print() shows the status text and does not run it", {
   status <- status_call()
   printed <- paste(capture_messages(print(status)), collapse = "")
   expect_match(printed, "Status: {1 + 1}", fixed = TRUE)
+})
+
+test_that("print() shows progress and speed only for finite numbers above 0", {
+  # jsonlite reads 1e400 as Inf. Each case lists total, downloaded, and speed,
+  # then whether the Progress and Speed lines appear.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  cases <- list(
+    "both sizes 0" = list(c("0", "0", "10"), progress = FALSE, speed = TRUE),
+    "total 1e400" = list(c("1e400", "50", "10"), progress = FALSE, speed = TRUE),
+    "downloaded 1e400" = list(c("100", "1e400", "10"), progress = FALSE, speed = TRUE),
+    "total -1" = list(c("-1", "50", "10"), progress = FALSE, speed = TRUE),
+    # Finite and above 0, but the percentage divides to Inf.
+    "total 1e-300" = list(c("1e-300", "1e10", "10"), progress = FALSE, speed = TRUE),
+    "speed 1e400" = list(c("100", "50", "1e400"), progress = TRUE, speed = FALSE),
+    "speed 0" = list(c("100", "50", "0"), progress = TRUE, speed = FALSE),
+    "speed -1" = list(c("100", "50", "-1"), progress = TRUE, speed = FALSE),
+    "all finite and positive" = list(c("100", "50", "10"), progress = TRUE, speed = TRUE)
+  )
+  for (label in names(cases)) {
+    case <- cases[[label]]
+    fields <- replace(status_fields, number_fields, case[[1]])
+    local_request_sequence(list(mock_response(200L, shape_object(fields))))
+    status <- status_call()
+    printed <- paste(capture_messages(print(status)), collapse = "")
+    expect_identical(grepl("Progress:", printed, fixed = TRUE), case$progress, info = label)
+    expect_identical(grepl("Speed:", printed, fixed = TRUE), case$speed, info = label)
+    expect_no_match(printed, "NaN", fixed = TRUE, info = label)
+    expect_no_match(printed, "Inf", fixed = TRUE, info = label)
+  }
+})
+
+test_that("a status reply with status failed returns and prints", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  body <- shape_object(replace(status_fields, "status", '"failed"'))
+  local_request_sequence(list(mock_response(200L, body)))
+  status <- status_call()
+  expect_s3_class(status, "lms_download_status")
+  expect_identical(status[["status"]], "failed")
+  printed <- paste(capture_messages(print(status)), collapse = "")
+  expect_match(printed, "Status: failed", fixed = TRUE)
 })
 
 test_that("the LM Studio docs example of the status reply reads and prints", {

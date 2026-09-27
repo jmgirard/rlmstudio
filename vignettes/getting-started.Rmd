@@ -85,12 +85,12 @@ lms_download_status(job_id)
 if (job_id != "already_downloaded") {
   repeat {
     res <- lms_download_status(job_id)
-    if (res$status %in% c("completed", "failed", "error")) {
+    if (res[["status"]] %in% c("completed", "failed", "error", "paused")) {
       break
     }
     Sys.sleep(3)
   }
-  if (res$status != "completed") {
+  if (res[["status"]] != "completed") {
     cli::cli_abort("Model download failed.")
   }
 }
