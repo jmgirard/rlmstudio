@@ -1,6 +1,6 @@
 # M028: Brace tests for the six cli sites that show server or CLI text
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -42,7 +42,7 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 - [x] T2: Add the `lms_download()` test in `tests/testthat/test-download.R`. Serve a status-200 reply through the mock transport (`helper-mock-http.R`) with a `job_id` that holds the probe, and a `status` other than `"already_downloaded"`.
 - [x] T3: Add the `lms_daemon_stop()` and `check_lms_version()` tests. Stub `processx::run` with `local_mocked_bindings(.package = "processx")`, as `test-daemon.R` and `test-serve.R` do. The daemon stub returns a non-zero status and a stderr that holds the probe and neither "part of LM Studio" nor "not running". The version stub returns output that holds the probe and no version number. Stub `lms_path()` so that no real CLI is needed.
 - [x] T4: Add the `install_lmstudio(method = "headless")` test. Set `RLMSTUDIO_ALLOW_INSTALL=TRUE` with `withr::local_envvar()`. Stub `Sys.which` so that `curl` is found. Stub `processx::run` to return a non-zero status and a stdout that holds the probe. The stub must count its calls. If the stub was not called exactly once, the test fails. That way an install never runs for real. The outer abort keeps only the first line of the inner abort, so a wrapper around `cli::cli_abort` records each abort message. Assert on the inner abort's message, and assert that the outer abort is the condition the user sees.
-- [ ] T5: For each of the six tests, edit a scratch copy of its site. Put the server or CLI text into the format string itself. Examples are `cli::cli_text(x$text)`, or `paste0()` into the bullet. Make sure that the test goes red, then restore the site. Record one work-log line with the six red results. Run `devtools::test()` and `git diff --stat main -- R/`.
+- [x] T5: For each of the six tests, edit a scratch copy of its site. Put the server or CLI text into the format string itself. Examples are `cli::cli_text(x$text)`, or `paste0()` into the bullet. Make sure that the test goes red, then restore the site. Record one work-log line with the six red results. Run `devtools::test()` and `git diff --stat main -- R/`.
 
 ## Work log
 
@@ -55,3 +55,5 @@ Six cli call sites show server or CLI text and have no brace test. If braces in 
 - 2026-09-27: T1 done. New `helper-brace-probe.R` holds the probe and a capture helper. At `{.val}` sites cli shows the probe in quotes with its inner quotes escaped, so those tests match `encodeString(probe, quote = '"')`. The braces are shown as written in both forms.
 - 2026-09-27: T2 and T3 done, and `devtools::test()` passes. T2, T3, and T4 share one commit, because T3 and T4 both edit `test-setup.R`.
 - 2026-09-27: T4 done. The first run showed that the outer abort keeps only the first line of the inner abort, so the installer output never reaches the user. The test reads the inner abort through a wrapper around `cli::cli_abort`, and T4's wording now says so. The dropped output is a new candidate row for `/hotfix`, because this milestone does not change `R/`.
+- 2026-09-27: T5 done. Each site was planted in turn with its text in the format string, through `cli::cli_text(x$text)` or `paste0()`. All six tests went red, each with 2 failed expectations. The sites are the chat reply, the status heading, the download alert, the daemon stop, the version check, and the installer abort. No other test in each file failed. `devtools::test()` then passed with 9123 expectations, and `git diff --stat main -- R/` printed nothing.
+- 2026-09-27: claim audit: not owed — internal tier
