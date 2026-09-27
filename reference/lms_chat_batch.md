@@ -140,19 +140,20 @@ This function calls
 once for each element of `inputs`. It raises `rlmstudio_no_server`
 itself, before the first call.
 
-An `rlmstudio_api_error` or an `rlmstudio_bad_response` that
+An `rlmstudio_bad_response` that
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-raises for one input does not abort the batch. The batch goes on to the
-next input. Where the result is a list, or the `output` list-column that
-a `schema` gives, the element for that input holds the condition without
-its backtrace. An `rlmstudio_bad_response` for reply content that does
-not parse keeps that content in its `content` field. Where the result is
-text, the element holds `NA`. The result is text with
-`format = "vector"` when it returns a vector (`simplify = TRUE`, no
-`schema`, `logprobs = FALSE`), and with a data frame whose replies are
-not parsed (no `schema`, or `logprobs = TRUE`). The `logprobs` column
-holds `NULL` for a failed input. A reply with no readable answer text,
-such as one whose content is `null`, fails as an
+raises for one input fails that input alone. So does an
+`rlmstudio_api_error` with any `status` other than 401, 403, or 404. The
+batch goes on to the next input. Where the result is a list, or the
+`output` list-column that a `schema` gives, the element for that input
+holds the condition without its backtrace. An `rlmstudio_bad_response`
+for reply content that does not parse keeps that content in its
+`content` field. Where the result is text, the element holds `NA`. The
+result is text with `format = "vector"` when it returns a vector
+(`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and with a data
+frame whose replies are not parsed (no `schema`, or `logprobs = TRUE`).
+The `logprobs` column holds `NULL` for a failed input. A reply with no
+readable answer text, such as one whose content is `null`, fails as an
 `rlmstudio_bad_response` in the same way. So does a status-200 body that
 does not parse as JSON, such as an HTML page from a proxy or an empty
 body. That input fails alone, and the other elements keep their replies.
@@ -160,9 +161,16 @@ Use `format = "list"` to keep the conditions. The call gives one warning
 that names the count and the positions of the failed inputs. That
 warning shows even with `quiet = TRUE`.
 
+An `rlmstudio_api_error` with `status` 401, 403, or 404 aborts the batch
+with that condition, and no request goes out after that input. Such a
+status comes from a fault that does not depend on the prompt, such as a
+token that the server refuses, so every later input fails in the same
+way. The condition carries a `results` field, as described in the "API
+failure" section below. No warning about failed inputs is given.
+
 An `rlmstudio_no_server` from
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-still aborts the batch. Its `results` field holds the results so far, as
+also aborts the batch. Its `results` field holds the results so far, as
 described in the "Server not running" section below. An error of any
 other class aborts the batch unchanged.
 
@@ -240,9 +248,15 @@ returns a response that the wrapper treats as a failure. The condition
 carries a `status` field, which holds the HTTP response status as an
 integer.
 
-`lms_chat_batch()` does not abort on it. The element of the failed input
-holds the condition, or `NA` where the result is text, and the batch
-warns once and goes on. See the details of `lms_chat_batch()`.
+`lms_chat_batch()` aborts on it when its `status` is 401, 403, or 404,
+and no request goes out after that input. The condition then carries a
+`results` field that follows the rule for a lost server in the "Server
+not running" section: its elements before the failed input hold the
+values that `format = "list"` returns for those inputs, and the element
+of the failed input and every element after it are `NULL`. For any other
+status, the element of the failed input holds the condition, or `NA`
+where the result is text, and the batch warns once and goes on. See the
+details of `lms_chat_batch()`.
 
 ## Malformed response
 

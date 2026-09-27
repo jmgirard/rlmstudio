@@ -2,6 +2,19 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now aborts at an input that fails with an `rlmstudio_api_error` of
+  status 401, 403, or 404. It aborts with that condition and sends no
+  more requests. LM Studio sends 401 for a token that it refuses. With
+  `api_type = "native"`, it sends 404 for a model that it cannot find.
+  In both cases, every later input fails in the same way. The condition
+  carries a `results` field, as for a lost server. Its elements before
+  the failed input hold what `format = "list"` returns, and the other
+  elements are `NULL`. Before, the batch stored the condition, sent a
+  request for every other input, and warned at the end. Any other
+  status, and an `rlmstudio_bad_response`, still fail their own input
+  alone.
+
 - If a download reply has a `status` of `"failed"`,
   [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
   now aborts with `rlmstudio_bad_response`. The message says that LM

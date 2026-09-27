@@ -151,11 +151,12 @@ formats add no such column.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function calls <code><a href="lms_chat.html">lms_chat()</a></code> once for each element of <code>inputs</code>. It
 raises <code>rlmstudio_no_server</code> itself, before the first call.</p>
-<p>An <code>rlmstudio_api_error</code> or an <code>rlmstudio_bad_response</code> that <code><a href="lms_chat.html">lms_chat()</a></code>
-raises for one input does not abort the batch. The batch goes on to the
-next input. Where the result is a list, or the <code>output</code> list-column that a
-<code>schema</code> gives, the element for that input holds the condition without its
-backtrace. An <code>rlmstudio_bad_response</code> for reply content that does not
+<p>An <code>rlmstudio_bad_response</code> that <code><a href="lms_chat.html">lms_chat()</a></code> raises for one input fails
+that input alone. So does an <code>rlmstudio_api_error</code> with any <code>status</code> other
+than 401, 403, or 404. The batch goes on to the next input. Where the
+result is a list, or the <code>output</code> list-column that a <code>schema</code> gives, the
+element for that input holds the condition without its backtrace. An
+<code>rlmstudio_bad_response</code> for reply content that does not
 parse keeps that content in its <code>content</code> field. Where the result is text,
 the element holds <code>NA</code>. The result is text with <code>format = "vector"</code> when it
 returns a vector (<code>simplify = TRUE</code>, no <code>schema</code>, <code>logprobs = FALSE</code>), and
@@ -169,7 +170,13 @@ keep their replies. Use <code>format = "list"</code>
 to keep the conditions. The call gives one warning that names the count
 and the positions of the failed inputs. That warning shows even with
 <code>quiet = TRUE</code>.</p>
-<p>An <code>rlmstudio_no_server</code> from <code><a href="lms_chat.html">lms_chat()</a></code> still aborts the batch. Its
+<p>An <code>rlmstudio_api_error</code> with <code>status</code> 401, 403, or 404 aborts the batch
+with that condition, and no request goes out after that input. Such a
+status comes from a fault that does not depend on the prompt, such as a
+token that the server refuses, so every later input fails in the same
+way. The condition carries a <code>results</code> field, as described in the "API
+failure" section below. No warning about failed inputs is given.</p>
+<p>An <code>rlmstudio_no_server</code> from <code><a href="lms_chat.html">lms_chat()</a></code> also aborts the batch. Its
 <code>results</code> field holds the results so far, as described in the "Server not
 running" section below. An error of any other class aborts the batch
 unchanged.</p>
@@ -228,9 +235,15 @@ error instead. That error aborts the batch and carries no <code>results</code> f
 returns a response that the wrapper treats as a failure. The condition
 carries a <code>status</code> field, which holds the HTTP response status as an
 integer.</p>
-<p><code>lms_chat_batch()</code> does not abort on it. The element of the failed input
-holds the condition, or <code>NA</code> where the result is text, and the batch warns
-once and goes on. See the details of <code>lms_chat_batch()</code>.</p>
+<p><code>lms_chat_batch()</code> aborts on it when its <code>status</code> is 401, 403, or 404, and
+no request goes out after that input. The condition then carries a
+<code>results</code> field that follows the rule for a lost server in the "Server not
+running" section: its elements before the failed input hold the values that
+<code>format = "list"</code> returns for those inputs, and the element of the failed
+input and every element after it are <code>NULL</code>. For any other status, the
+element of the failed input holds the condition, or <code>NA</code> where the result
+is text, and the batch warns once and goes on. See the details of
+<code>lms_chat_batch()</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="malformed-response">Malformed response<a class="anchor" aria-label="anchor" href="#malformed-response"></a></h2>
