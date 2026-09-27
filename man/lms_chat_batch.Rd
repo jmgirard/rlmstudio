@@ -100,9 +100,9 @@ Process a vector of inputs sequentially through LM Studio.
 This function calls \code{\link[=lms_chat]{lms_chat()}} once for each element of \code{inputs}. It
 raises \code{rlmstudio_no_server} itself, before the first call.
 
-An \code{rlmstudio_api_error} or an \code{rlmstudio_bad_response} that \code{\link[=lms_chat]{lms_chat()}}
-raises for one input does not abort the batch. The batch goes on to the
-next input. Where the result is a list, or the \code{output} list-column that a
+An \code{rlmstudio_bad_response} that \code{\link[=lms_chat]{lms_chat()}} raises for one input fails
+that input alone. So does an \code{rlmstudio_api_error} with any \code{status} other
+than 401, 403, or 404. The batch goes on to the next input. Where the result is a list, or the \code{output} list-column that a
 \code{schema} gives, the element for that input holds the condition without its
 backtrace. An \code{rlmstudio_bad_response} for reply content that does not
 parse keeps that content in its \code{content} field. Where the result is text,
@@ -119,7 +119,13 @@ to keep the conditions. The call gives one warning that names the count
 and the positions of the failed inputs. That warning shows even with
 \code{quiet = TRUE}.
 
-An \code{rlmstudio_no_server} from \code{\link[=lms_chat]{lms_chat()}} still aborts the batch. Its
+An \code{rlmstudio_api_error} with \code{status} 401, 403, or 404 aborts the batch
+with that condition, and no request goes out after that input. Such a
+status comes from a fault that does not depend on the prompt, such as a
+token that the server refuses, so every later input fails in the same way. The condition carries a \code{results} field, as described in the "API
+failure" section below. No warning about failed inputs is given.
+
+An \code{rlmstudio_no_server} from \code{\link[=lms_chat]{lms_chat()}} also aborts the batch. Its
 \code{results} field holds the results so far, as described in the "Server not
 running" section below. An error of any other class aborts the batch
 unchanged.
@@ -178,9 +184,15 @@ returns a response that the wrapper treats as a failure. The condition
 carries a \code{status} field, which holds the HTTP response status as an
 integer.
 
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input
-holds the condition, or \code{NA} where the result is text, and the batch warns
-once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} aborts on it when its \code{status} is 401, 403, or 404, and
+no request goes out after that input. The condition then carries a
+\code{results} field that follows the rule for a lost server in the "Server not
+running" section: its elements before the failed input hold the values that
+\code{format = "list"} returns for those inputs, and the element of the failed
+input and every element after it are \code{NULL}. For any other status, the
+element of the failed input holds the condition, or \code{NA} where the result
+is text, and the batch warns once and goes on. See the details of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 }
 
 \section{Malformed response}{

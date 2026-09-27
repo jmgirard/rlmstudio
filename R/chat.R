@@ -1055,9 +1055,9 @@ reply_columns$openai <- reply_columns$openresponses
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call.
 #'
-#' An `rlmstudio_api_error` or an `rlmstudio_bad_response` that [lms_chat()]
-#' raises for one input does not abort the batch. The batch goes on to the
-#' next input. Where the result is a list, or the `output` list-column that a
+#' An `rlmstudio_bad_response` that [lms_chat()] raises for one input fails
+#' that input alone. So does an `rlmstudio_api_error` with any `status` other
+#' than 401, 403, or 404. The batch goes on to the next input. Where the result is a list, or the `output` list-column that a
 #' `schema` gives, the element for that input holds the condition without its
 #' backtrace. An `rlmstudio_bad_response` for reply content that does not
 #' parse keeps that content in its `content` field. Where the result is text,
@@ -1074,7 +1074,13 @@ reply_columns$openai <- reply_columns$openresponses
 #' and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`.
 #'
-#' An `rlmstudio_no_server` from [lms_chat()] still aborts the batch. Its
+#' An `rlmstudio_api_error` with `status` 401, 403, or 404 aborts the batch
+#' with that condition, and no request goes out after that input. Such a
+#' status comes from a fault that does not depend on the prompt, such as a
+#' token that the server refuses, so every later input fails in the same way. The condition carries a `results` field, as described in the "API
+#' failure" section below. No warning about failed inputs is given.
+#'
+#' An `rlmstudio_no_server` from [lms_chat()] also aborts the batch. Its
 #' `results` field holds the results so far, as described in the "Server not
 #' running" section below. An error of any other class aborts the batch
 #' unchanged.
@@ -1169,7 +1175,7 @@ lms_chat_batch <- function(
   # (D-013, D-014), so it asks for the body and reads the answer out of it
   # here. The answer is read by the helper the single call uses, so a reply
   # fails the same way. `results` still holds what `simplify = TRUE` returns,
-  # so the `results` field of a lost-server abort does not change.
+  # so the `results` field of an abort does not depend on the format.
   body_frame <- format == "data.frame"
   reply_fields <- vector("list", length(inputs))
   # The single calls return the body only for status 200, so the abort a bad

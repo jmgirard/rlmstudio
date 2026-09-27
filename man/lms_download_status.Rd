@@ -78,9 +78,15 @@ returns a response that the wrapper treats as a failure. The condition
 carries a \code{status} field, which holds the HTTP response status as an
 integer.
 
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input
-holds the condition, or \code{NA} where the result is text, and the batch warns
-once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} aborts on it when its \code{status} is 401, 403, or 404, and
+no request goes out after that input. The condition then carries a
+\code{results} field that follows the rule for a lost server in the "Server not
+running" section: its elements before the failed input hold the values that
+\code{format = "list"} returns for those inputs, and the element of the failed
+input and every element after it are \code{NULL}. For any other status, the
+element of the failed input holds the condition, or \code{NA} where the result
+is text, and the batch warns once and goes on. See the details of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 }
 
 \section{Malformed response}{

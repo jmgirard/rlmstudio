@@ -40,7 +40,7 @@
 - [x] T1: Start the local LM Studio server with the token from the user's token file. On each of the three routes, send one chat request with a bad token. Send one for a model that is not loaded. If the server offers a setting for just-in-time loading, turn it off first. Log the status and error text of each route in one work-log line. A route can send a status outside 401, 403, and 404 for the missing model. In that case, add a candidate row that names the route and the status.
 - [x] T2: Write the AC1 to AC3 tests in `tests/testthat/test-chat-batch.R` through the shared recorder (D-004). Reuse `run_failing_batch()` where it fits. Plant a 401 at the middle input and see the tests fail against the current code.
 - [x] T3: Change the `rlmstudio_api_error` handler of `lms_chat_batch()` at `R/chat.R:1205`. For status 401, 403, or 404, it aborts with the condition and a `results` field. For any other status, it keeps the stored failure. Run `devtools::test()`.
-- [ ] T4: Rewrite the `lms_chat_batch()` details at `R/chat.R:1054-1080` and the "API failure" section at `R/conditions.R:56-61`. State the `results` rule next to the lost-server text. Add the `NEWS.md` entry. Run `devtools::document()`, then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set.
+- [x] T4: Rewrite the `lms_chat_batch()` details at `R/chat.R:1054-1080` and the "API failure" section at `R/conditions.R:56-61`. State the `results` rule next to the lost-server text. Add the `NEWS.md` entry. Run `devtools::document()`, then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set.
 
 ## Work log
 
@@ -54,6 +54,7 @@
 - 2026-09-27: T1 live check on LM Studio at localhost:1234. A bad, malformed, or absent token gives 401 `invalid_api_key` on all three routes. A model id that is not downloaded gives 404 `model_not_found` on `/api/v1/chat`. On `/v1/responses` and `/v1/chat/completions` it gives 200 with a reply from the loaded model, or 400 "No models loaded" with no model loaded. JIT loading stayed on, because a model that is not downloaded cannot load. A downloaded model that is not loaded was not tried. Candidate row added for the two OpenAI-style routes.
 - 2026-09-27: T2 added seven tests and `run_stopping_batch()` to `tests/testthat/test-chat-batch.R`. Against the old handler, a 401 at input two gave a stored slot, a warning, and three requests, so the stop tests fail. This checkpoint is red until T3.
 - 2026-09-27: T3 made the `rlmstudio_api_error` handler abort with a `results` field on status 401, 403, or 404, through one helper that the lost-server handler now shares. `devtools::test()` gave 380 tests, 0 failed, 0 skipped.
+- 2026-09-27: T4 rewrote the `lms_chat_batch()` details and the "API failure" section, and added the NEWS entry. The "Malformed response" section keeps its "does not abort" sentence, because it is about `rlmstudio_bad_response`. `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 

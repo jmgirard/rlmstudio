@@ -56,9 +56,15 @@
 #' carries a `status` field, which holds the HTTP response status as an
 #' integer.
 #'
-#' [lms_chat_batch()] does not abort on it. The element of the failed input
-#' holds the condition, or `NA` where the result is text, and the batch warns
-#' once and goes on. See the details of [lms_chat_batch()].
+#' [lms_chat_batch()] aborts on it when its `status` is 401, 403, or 404, and
+#' no request goes out after that input. The condition then carries a
+#' `results` field that follows the rule for a lost server in the "Server not
+#' running" section: its elements before the failed input hold the values that
+#' `format = "list"` returns for those inputs, and the element of the failed
+#' input and every element after it are `NULL`. For any other status, the
+#' element of the failed input holds the condition, or `NA` where the result
+#' is text, and the batch warns once and goes on. See the details of
+#' [lms_chat_batch()].
 #'
 #' @section Malformed response:
 #' A condition of class `rlmstudio_bad_response` is raised when the server
