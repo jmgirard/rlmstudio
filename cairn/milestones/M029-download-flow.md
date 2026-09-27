@@ -21,13 +21,13 @@
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_download()` aborts with `rlmstudio_bad_response` on a status-200 reply whose `status` is `"failed"`. The message says that LM Studio reports that the download failed. If the reply's `job_id` is a string with a character that is not whitespace, the message names it. The message does not say that something other than LM Studio can be answering. A test in `tests/testthat/test-load-download-shape.R` asserts the class and the message text for each `job_id` form. The forms are `"job-1"`, `"{1 + 1}"` (shown with its braces), absent, `1`, `""`, and `" \t"`.
-- [ ] AC2: `lms_download()` aborts with `rlmstudio_bad_response` on a reply with two properties. Its `status` is neither `"already_downloaded"` nor `"failed"`. Its `job_id` is a string with no character outside `[:space:]`. The message holds the clause "`job_id` is a string with no character that is not whitespace". A test asserts the class and that clause for the `job_id` values `""`, `" "`, `"\t"`, `"\n"`, and `" \t\n"`. It does this under the statuses `"downloading"`, `"paused"`, and `"queued"`.
-- [ ] AC3: In the same test file, a reply whose `job_id` is `"job-1"` returns `"job-1"` visibly for each of four statuses. The statuses are `"downloading"`, `"paused"`, `"completed"`, and `"queued"`, which the docs do not list. The existing `"already_downloaded"` cases still return `"already_downloaded"` invisibly. A status reply whose `status` is `"failed"` returns an `lms_download_status` object with that status, and `print()` shows "failed".
-- [ ] AC4: `print()` on an `lms_download_status` object shows the Progress line only for finite sizes with a `total_size_bytes` above 0. It shows the Speed line only for a finite `bytes_per_second` above 0. A test prints eight cases. For each case, it asserts which of the two lines appear, and that the output holds neither "NaN" nor "Inf". The cases are both sizes 0, a total of `1e400`, a downloaded of `1e400` with a finite total, and a total of `-1`. They are also speeds of `1e400`, `0`, and `-1`, and finite positive values for all three fields.
-- [ ] AC5: `grep -n '\$' vignettes/*.Rmd` prints only the `knitr::opts_chunk$set(` lines. The `wait` chunk of each vignette ends its loop on `"completed"`, `"failed"`, `"error"`, or `"paused"`. It aborts with "Model download failed." on each of these except `"completed"`.
-- [ ] AC6: Three texts state the failed-status rule and the blank job id rule. They are the "Malformed response" section in `R/conditions.R`, the `@return` of `lms_download()`, and the roxygen of `download_reply_fault()`. The section's count of exceptions to the type-only rule matches the rules that it lists. `NEWS.md` has one entry for each of three changes: the failed-status abort, the blank job id abort, and the print fix.
-- [ ] AC7: `devtools::document()` produces no diff. `devtools::test()` and `devtools::check()` finish with 0 errors and 0 warnings.
+- [x] AC1: `lms_download()` aborts with `rlmstudio_bad_response` on a status-200 reply whose `status` is `"failed"`. The message says that LM Studio reports that the download failed. If the reply's `job_id` is a string with a character that is not whitespace, the message names it. The message does not say that something other than LM Studio can be answering. A test in `tests/testthat/test-load-download-shape.R` asserts the class and the message text for each `job_id` form. The forms are `"job-1"`, `"{1 + 1}"` (shown with its braces), absent, `1`, `""`, and `" \t"`.
+- [x] AC2: `lms_download()` aborts with `rlmstudio_bad_response` on a reply with two properties. Its `status` is neither `"already_downloaded"` nor `"failed"`. Its `job_id` is a string with no character outside `[:space:]`. The message holds the clause "`job_id` is a string with no character that is not whitespace". A test asserts the class and that clause for the `job_id` values `""`, `" "`, `"\t"`, `"\n"`, and `" \t\n"`. It does this under the statuses `"downloading"`, `"paused"`, and `"queued"`.
+- [x] AC3: In the same test file, a reply whose `job_id` is `"job-1"` returns `"job-1"` visibly for each of four statuses. The statuses are `"downloading"`, `"paused"`, `"completed"`, and `"queued"`, which the docs do not list. The existing `"already_downloaded"` cases still return `"already_downloaded"` invisibly. A status reply whose `status` is `"failed"` returns an `lms_download_status` object with that status, and `print()` shows "failed".
+- [x] AC4: `print()` on an `lms_download_status` object shows the Progress line only for finite sizes with a `total_size_bytes` above 0. It shows the Speed line only for a finite `bytes_per_second` above 0. A test prints eight cases. For each case, it asserts which of the two lines appear, and that the output holds neither "NaN" nor "Inf". The cases are both sizes 0, a total of `1e400`, a downloaded of `1e400` with a finite total, and a total of `-1`. They are also speeds of `1e400`, `0`, and `-1`, and finite positive values for all three fields.
+- [x] AC5: `grep -n '\$' vignettes/*.Rmd` prints only the `knitr::opts_chunk$set(` lines. The `wait` chunk of each vignette ends its loop on `"completed"`, `"failed"`, `"error"`, or `"paused"`. It aborts with "Model download failed." on each of these except `"completed"`.
+- [x] AC6: Three texts state the failed-status rule and the blank job id rule. They are the "Malformed response" section in `R/conditions.R`, the `@return` of `lms_download()`, and the roxygen of `download_reply_fault()`. The section's count of exceptions to the type-only rule matches the rules that it lists. `NEWS.md` has one entry for each of three changes: the failed-status abort, the blank job id abort, and the print fix.
+- [x] AC7: `devtools::document()` produces no diff. `devtools::test()` and `devtools::check()` finish with 0 errors and 0 warnings.
 
 ## Coverage
 
@@ -68,3 +68,29 @@
 ## Decisions
 
 ## Review
+
+Review pass 1, 2026-09-27, on branch head `9f4b1cd`. Main had not moved since the branch was cut. Surface tier user-facing, so all three lenses ran.
+
+- AC1 evidence: the `test_file()` run of `test-load-download-shape.R` gave "a download reply with status failed aborts with rlmstudio_bad_response" 42 expectations and 0 failed. Its cases are `"job-1"`, `"{1 + 1}"`, absent, `1`, `""`, and `" \t"`.
+- AC2 evidence: the same run gave "a blank job_id aborts lms_download() with rlmstudio_bad_response" 75 expectations and 0 failed. That covers 5 blank forms under 3 statuses.
+- AC3 evidence: the same run gave "each status but already_downloaded and failed returns the job id" 8 expectations and 0 failed. It gave "a status reply with status failed returns and prints" 3 expectations and 0 failed. The existing test with the `"already_downloaded"` cases gave 0 failed.
+- AC4 evidence: the same run gave "print() shows progress and speed only for finite numbers above 0" 32 expectations and 0 failed. That covers the eight named cases.
+- AC5 evidence: `grep -n '\$' vignettes/*.Rmd` printed only `getting-started.Rmd:21` and `headless-config.Rmd:21`, both `knitr::opts_chunk$set(`. Both `wait` chunks stop on the four statuses (getting-started lines 88 to 94, headless-config lines 85 to 91). Each aborts with "Model download failed." unless the status is `"completed"`.
+- AC6 evidence: `R/conditions.R` says "with four exceptions" and lists the load, already-downloaded, failed, and blank job id rules. Rule 2 states the failed message. The `@return` of `lms_download()` states both rules. The `download_reply_fault()` roxygen states both and cites D-018. `NEWS.md` lines 3 to 5 hold one entry for each of the three changes.
+- AC7 evidence: `devtools::document()` left `git status` clean. `devtools::test()` gave 370 tests, 0 failed, 0 errors, 0 skipped. `devtools::check()` with the server started and the token set gave 0 errors, 0 warnings, and 0 notes, and the vignettes rebuilt.
+- Consistency gate: `cairn_validate` gave all checks passed. `pkgdown::check_pkgdown()` gave no problems. The README is not touched. The branch adds no top-level file. No DESIGN principle changed, so `cairn_impact` was skipped. NEWS has the entries.
+- [O] diff-bug lens: 12 findings, ranked.
+  - D1: a finite total above 0 but tiny still divides to `Inf`. With total `1e-300` and downloaded `1e10`, the print shows "Progress: Inf% (9.31 GB / 0 GB)". Reproduced in review. AC4 as written passes, but the NEWS claim "no `Inf`" is false for this input.
+  - D2: a negative `downloaded_bytes` prints a negative percentage, and a downloaded size above the total prints over 100%.
+  - D3: the AC4 test has no tiny-total case, so it misses D1.
+  - D4: a tiny positive speed such as `1e-9` prints "Speed: 0 MB/s".
+  - D5: the failed check matches `"failed"` exactly, so `"FAILED"` passes as a started job.
+  - D6: a job id of a non-breaking space alone passes the blank rule, as `id_fault()` also lets it pass.
+  - D7: the vignettes abort on `"paused"` with "Model download failed.", which mislabels a pause.
+  - D8: the failed abort reads no `error` or `message` field, and its hint says the reply does not say why.
+  - D9: the older NEWS entry for `lms_download()` in the same development version still says that the call returns any string `job_id`.
+  - D10: no test runs a failed reply whose `status` is a non-string, and no brace sentinel such as `{stop()}` is used for the failed job id.
+  - D11: the help page does not quote the failed hint text.
+  - D12: the failed-status print test does not set `rlmstudio.quiet`.
+- [S] blame-history lens: no findings. It checked D-017, D-018, M027, and M028.
+- [S] prior-review lens: no prior-review evidence applies. The GitHub probe returned no inline review comments.
