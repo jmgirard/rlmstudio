@@ -1,13 +1,13 @@
 # M037: The chat functions refuse a stream field before any request
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — five exported chat functions start to reject an argument value that they sent before
-- **Branch/PR:** —
+- **Branch/PR:** m037-chat-stream-guard
 
 ## Goal
 
@@ -59,7 +59,7 @@ on other `...` fields stay with the server (D-003).
 
 ## Tasks
 
-- [ ] T1: Append D-023 to `cairn/DECISIONS.md`: the package checks a
+- [x] T1: Append D-023 to `cairn/DECISIONS.md`: the package checks a
       `stream` in `...`. This narrows D-003 and trades GP4. A named
       argument whose one legal value is `FALSE` adds nothing. D-023 annotates
       the `stream = TRUE` examples in the Consequences of D-015 and D-019.
@@ -86,6 +86,7 @@ on other `...` fields stay with the server (D-003).
 - 2026-09-27: plan gate chose to abort every `stream` but `FALSE` or `NULL` over `isTRUE()` values only because the package reads a whole reply and cannot know how the server reads `1` or `"true"`; falsified by a server that treats such a value as off.
 - 2026-09-27: plan gate chose a check on `...` with D-023 over a named `stream = FALSE` argument (GP4) because a formal with one legal value adds nothing and the streaming candidate must then redefine it; falsified by a user who needs `stream` documented as an argument.
 - 2026-09-27: plan chose to leave `lms_chat()` without its own check over a check at its top because each route delegates to a checked function before any probe; falsified by a route of `lms_chat()` that reaches the probe or a request without a checked delegate.
+- 2026-09-27: T1 done. D-023 appended. The stream abort test is red on `rlmstudio_no_server` from `lms_chat_openresponses()`, and the FALSE and NULL test passes on the current code.
 
 ## Decisions
 
