@@ -114,6 +114,7 @@ as M030 review rejected them.
 - 2026-09-27: T4 ran `devtools::test()` (9408 passed, 0 failed) and `devtools::check()` (0 errors, 0 warnings, 0 notes).
 - 2026-09-27: claim audit: 19 claims read, 0 corrected — R/download.R, NEWS.md, tests/testthat/test-load-download-shape.R
 - 2026-09-27: review recorded evidence for AC1 to AC3 and passed the consistency gate. Three reviewers reported four minor findings and no defect.
+- 2026-09-27: step-7 approval: m032-download-unit-rounding approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
@@ -142,3 +143,5 @@ Independent review: three fresh reviewers ran. The prior-review reviewer found n
 - D2: `format_bytes()` aborts on `NA` and `NaN`, and prints `-5 B` and `Inf TB`. Proposed triage: reject. The only caller passes a finite value of 0 or more, as the `@param` states, and the old code did the same.
 - D3: the NEWS phrase "three significant digits" sits next to the four-digit figures `1000 B` and `1020 B`. Proposed triage: reject. The figure `1020` has three significant digits, and the bullet gives it as an example.
 - D4: the four `1020` probes pass on the old code too. Proposed triage: reject. The four round-up probes and the progress probe fail on the old code, and the `1020` probes catch a rule that moves up at 1000.
+
+The maintainer accepted the proposed triage at the merge gate on 2026-09-27: D1 to D4 are rejected.
