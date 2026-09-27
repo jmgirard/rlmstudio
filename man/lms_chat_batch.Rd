@@ -35,7 +35,10 @@ one value and no missing values.}
 
 \item{...}{Additional arguments passed to \code{lms_chat}, such as \code{api_type},
 \code{logprobs}, \code{schema}, or \code{ttl}. A \code{schema}, a \code{ttl}, and the \code{api_type}
-that each needs are checked before the first call.}
+that each needs are checked before the first call.
+The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
+\code{NULL} aborts before the call checks for a running server, because the
+package reads a whole reply and not a streamed one.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
@@ -137,9 +140,9 @@ unchanged.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{schema}, or \code{ttl} aborts with an argument message and no
-condition class
-even when the server is down. A condition of class
+\code{input}, \code{inputs}, \code{schema}, or \code{ttl}, or a \code{stream} in the \code{...} of a chat
+function, aborts with an argument message and no condition class even when
+the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor

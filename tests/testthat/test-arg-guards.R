@@ -692,3 +692,145 @@ test_that("the ttl value check runs before the route check", {
   )
   expect_identical(probe$calls, 0L)
 })
+
+# The functions that send a chat request, read from NAMESPACE. Each is called
+# with its placeholders, an `api_type` when `route` is not NULL, and `dots`.
+stream_domain <- function() {
+  grep("^lms_chat", sort(getNamespaceExports("rlmstudio")), value = TRUE)
+}
+
+stream_routes <- function(name) {
+  if (name %in% c("lms_chat", "lms_chat_batch")) {
+    list("openresponses", "openai", "native")
+  } else {
+    list(NULL)
+  }
+}
+
+stream_call <- function(name, route, dots) {
+  fn <- get(name, envir = asNamespace("rlmstudio"))
+  args <- baseline_args(name)
+  if (!is.null(route)) args$api_type <- route
+  do.call(fn, c(args, dots))
+}
+
+stream_label <- function(name, route, dots) {
+  paste(name, "on", if (is.null(route)) "its route" else route, "with", deparse1(dots))
+}
+
+stream_bad_dots <- list(
+  list(stream = TRUE),
+  list(stream = 1),
+  list(stream = 0),
+  list(stream = "true"),
+  list(stream = "false"),
+  list(stream = NA),
+  list(stream = logical(0)),
+  list(stream = c(FALSE, TRUE)),
+  # `utils::modifyList()` and `[[` read the first of two same-named dots. A
+  # later bad one is refused by policy, and a first-match check misses it.
+  list(stream = FALSE, stream = TRUE)
+)
+
+test_that("the stream domain is read from NAMESPACE and is not empty", {
+  # A record of what the enumeration found when this was written, never the
+  # source of the domain. A new chat function turns this red.
+  expect_setequal(
+    stream_domain(),
+    c(
+      "lms_chat",
+      "lms_chat_batch",
+      "lms_chat_native",
+      "lms_chat_openai",
+      "lms_chat_openresponses"
+    )
+  )
+})
+
+test_that("a stream other than FALSE or NULL aborts before the server probe", {
+  probe <- local_counting_probe()
+
+  for (name in stream_domain()) {
+    for (route in stream_routes(name)) {
+      for (dots in stream_bad_dots) {
+        label <- stream_label(name, route, dots)
+        err <- expect_error(
+          stream_call(name, route, dots),
+          "must be `FALSE` or `NULL`",
+          fixed = TRUE,
+          info = label
+        )
+        expect_match(conditionMessage(err), "stream", info = label)
+        expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+      }
+    }
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+# A reply that the route of `name` reads as text.
+stream_reply <- function(name, route) {
+  if (!is.null(route)) {
+    name <- paste0("lms_chat_", route)
+  }
+  switch(
+    name,
+    lms_chat_openresponses = responses_reply(),
+    lms_chat_openai = openai_reply(),
+    lms_chat_native = native_reply()
+  )
+}
+
+test_that("stream = FALSE is sent and stream = NULL is left out", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  for (name in stream_domain()) {
+    for (route in stream_routes(name)) {
+      for (value in list(FALSE, NULL)) {
+        dots <- list(stream = value)
+        label <- stream_label(name, route, dots)
+        recorder <- local_request_recorder(
+          mock_response(200L, stream_reply(name, route))
+        )
+        expect_no_error(stream_call(name, route, dots))
+        expected <- if (identical(name, "lms_chat_batch")) 2L else 1L
+        expect_identical(length(recorder$requests), expected, info = label)
+        for (req in recorder$requests) {
+          body <- request_target(req)$body
+          if (is.null(value)) {
+            expect_false("stream" %in% names(body), info = label)
+          } else {
+            expect_identical(body[["stream"]], FALSE, info = label)
+          }
+        }
+      }
+    }
+  }
+})
+
+test_that("a FALSE with names or attributes passes, as isFALSE() reads it", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  for (value in list(c(a = FALSE), structure(FALSE, foo = 1))) {
+    label <- deparse1(value)
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", list(), stream = value))
+    expect_identical(length(recorder$requests), 1L, info = label)
+    body <- request_target(recorder$requests[[1]])$body
+    expect_identical(body[["stream"]], FALSE, info = label)
+  }
+})
+
+test_that("a long stream value is cut short in the message", {
+  probe <- local_counting_probe()
+
+  err <- expect_error(
+    lms_chat_openai("a-model", list(), stream = seq_len(1000) + 0.5),
+    "must be `FALSE` or `NULL`",
+    fixed = TRUE
+  )
+  expect_lt(nchar(conditionMessage(err)), 300)
+  expect_match(conditionMessage(err), "...", fixed = TRUE)
+  expect_identical(probe$calls, 0L)
+})
+
