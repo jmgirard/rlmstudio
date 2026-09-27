@@ -45,7 +45,7 @@ as M030 review rejected them.
      coverage-complete counts AC checkboxes positionally (M107); departures:
      a "Deviations from RR<NN>" table ends this section. -->
 
-- [ ] AC1: `print()` on a download status shows each size and the speed in
+- [x] AC1: `print()` on a download status shows each size and the speed in
       the largest of B, KB, MB, GB, and TB (base 1024) in which the value,
       rounded to three significant digits, is 1 or more. When no unit gives
       such a value, the unit is B. A test in
@@ -57,11 +57,11 @@ as M030 review rejected them.
       on the progress line, such as 1023 of 1023.9 bytes printing
       `(1020 B / 1 KB)`. The expectations that the M030 test already holds
       pass unchanged.
-- [ ] AC2: The NEWS.md bullet that describes the unit rule for a download
+- [x] AC2: The NEWS.md bullet that describes the unit rule for a download
       status states the rule of AC1, with 1023.9 bytes printing `1 KB` as an
       example. Its phrase "and B for a value below 1" is replaced by the AC1
       fallback: B when no unit gives a rounded value of 1 or more.
-- [ ] AC3: `devtools::test()` and `devtools::check()` are clean (0 errors,
+- [x] AC3: `devtools::test()` and `devtools::check()` are clean (0 errors,
       0 warnings).
 
 ## Coverage
@@ -113,6 +113,7 @@ as M030 review rejected them.
 - 2026-09-27: T3 amended the M030 NEWS bullet to state the rounded-value rule, with 1023.9 bytes as `1 KB` and 1023 bytes as `1020 B`.
 - 2026-09-27: T4 ran `devtools::test()` (9408 passed, 0 failed) and `devtools::check()` (0 errors, 0 warnings, 0 notes).
 - 2026-09-27: claim audit: 19 claims read, 0 corrected — R/download.R, NEWS.md, tests/testthat/test-load-download-shape.R
+- 2026-09-27: review recorded evidence for AC1 to AC3 and passed the consistency gate. Three reviewers reported four minor findings and no defect.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
@@ -126,3 +127,18 @@ as M030 review rejected them.
      results, review findings + triage. EXEMPT from the 150-line cap (M55),
      as are the work log (D-046) and the decisions section (D-074); evidence
      never scrambles plan-owned content. -->
+
+Review run 2026-09-27 on branch head d5af197. The branch already holds origin/main.
+
+- AC1: a new test in `tests/testthat/test-load-download-shape.R` pins two speeds below each of the four thresholds. Each expectation has the `Speed: ` prefix. The test also pins `(1020 B / 1 KB)` for 1023 of 1023.9 bytes. A direct probe printed `1 KB`, `1 MB`, `1 GB`, and `1 TB` for the four round-up values. It printed `1020 B`, `1020 KB`, `1020 MB`, and `1020 GB` for the other four values. It printed `0.4 B` for 0.4 bytes. The `format_bytes()` from main printed `1020` in the lower unit for all four round-up values, so the test can fail. The diff only adds lines to the test file, and the M030 expectations pass in the full run.
+- AC2: NEWS.md line 8 now states the rule. The unit is the largest in which the rounded value is 1 or more. When no unit gives such a value, the unit is B. It gives 1023.9 bytes as `1 KB` and 1023 bytes as `1020 B`. A search of NEWS.md finds no "and B for a value below 1" and no milestone number.
+- AC3: `devtools::test()` passed 9408 with 0 failures, 0 errors, and 0 skips. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The LM Studio server was running and the token was set.
+
+Consistency gate: `cairn_validate.py` passed all checks. `devtools::document()` left no diff. `pkgdown::check_pkgdown()` found no problems. The branch does not touch README.Rmd or README.md, and it adds no top-level file. NEWS.md holds the entry for AC2.
+
+Independent review: three fresh reviewers ran. The prior-review reviewer found no finding, and the repo has no GitHub review comments. The blame-history reviewer found no finding. The diff-bug reviewer found no defect and gave four minor findings, most severe first:
+
+- D1: a value of 100,000 TB or more can print in scientific form, such as `1e+05 TB`. Proposed triage: reject. The `format_bytes()` from main prints the same `1e+05 TB`, so the branch did not add it, and the Scope leaves `scipen` out.
+- D2: `format_bytes()` aborts on `NA` and `NaN`, and prints `-5 B` and `Inf TB`. Proposed triage: reject. The only caller passes a finite value of 0 or more, as the `@param` states, and the old code did the same.
+- D3: the NEWS phrase "three significant digits" sits next to the four-digit figures `1000 B` and `1020 B`. Proposed triage: reject. The figure `1020` has three significant digits, and the bullet gives it as an example.
+- D4: the four `1020` probes pass on the old code too. Proposed triage: reject. The four round-up probes and the progress probe fail on the old code, and the `1020` probes catch a rule that moves up at 1000.
