@@ -28,7 +28,7 @@ on other `...` fields stay with the server (D-003).
 
 ## Acceptance criteria
 
-- [ ] AC1: For every export whose name starts with `lms_chat`, as
+- [x] AC1: For every export whose name starts with `lms_chat`, as
       `getNamespaceExports("rlmstudio")` lists them, a `stream` in `...`
       with any of the values `TRUE`, `1`, `0`, `"true"`, `"false"`, `NA`,
       `logical(0)`, or `c(FALSE, TRUE)` aborts with an error. No class of
@@ -38,16 +38,16 @@ on other `...` fields stay with the server (D-003).
       each case with `is_server_running()` mocked to return `FALSE`. It also
       mocks `httr2::req_perform()` to fail on any call. The test sees the
       stream abort, not `rlmstudio_no_server` and not a request.
-- [ ] AC2: Take each export that AC1 enumerates, and `lms_chat()` and
+- [x] AC2: Take each export that AC1 enumerates, and `lms_chat()` and
       `lms_chat_batch()` on each `api_type`. A call with `stream = FALSE`
       or `stream = NULL` in `...` does not abort, and it sends its request.
       With `FALSE`, every request body sent holds `"stream":false`. With
       `NULL`, no request body sent holds a `stream` field.
-- [ ] AC3: The help page in `man/` of each export that AC1 enumerates says,
+- [x] AC3: The help page in `man/` of each export that AC1 enumerates says,
       at its `...` argument, that the package checks a `stream` there, and
       that a `stream` other than `FALSE` or `NULL` aborts before the server
       probe.
-- [ ] AC4: `devtools::test()` passes with no failures, and
+- [x] AC4: `devtools::test()` passes with no failures, and
       `devtools::check()` gives 0 errors and 0 warnings.
 
 ## Coverage
@@ -97,3 +97,13 @@ on other `...` fields stay with the server (D-003).
 ## Decisions
 
 ## Review
+
+Pass 1, 2026-09-27, on `m037-chat-stream-guard` at `b0bd31a`, with main unmoved since the branch was cut.
+
+- AC1: `test_file("tests/testthat/test-arg-guards.R")`. "a stream other than FALSE or NULL aborts before the server probe" ran 244 expectations, 0 failed, and the probe count stayed 0. The domain test lists the five `lms_chat*` exports from `getNamespaceExports()`. Pass.
+- AC2: in the same run, "stream = FALSE is sent and stream = NULL is left out" ran 60 expectations, 0 failed, and covered every export and each `api_type` of `lms_chat()` and `lms_chat_batch()`. Pass.
+- AC3: a Python parse of the `\item{...}` entry of each of the five `man/lms_chat*.Rd` pages found "The package checks a \code{stream} here" and "other than \code{FALSE} or \code{NULL} aborts before the call checks for a running server" on all five. Pass.
+- AC4: `devtools::test()` with the server running and the token set passed 10194 tests with 0 failed, 0 errors, and 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Pass.
+- Gate: `cairn_validate` passed all checks, and `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. README is untouched, NEWS has the entry, and there is no new top-level file. DESIGN is unchanged, so `cairn_impact` was not run.
+- Lenses: diff-bug [O] reported 8 items. Blame-history [S] found nothing. Prior-review [S] found no prior-review evidence (no PR comments, and no archived finding reintroduced).
+
