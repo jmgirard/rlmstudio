@@ -41,7 +41,7 @@ Observed on 2026-09-27 with google/gemma-3-1b: a `/v1/chat/completions` request 
 
 - [x] T1: Add a two-choice chat completions body helper to `tests/testthat/helper-chat-bodies.R`, beside `completion_body()`. Write the AC1 and AC2 tests in a new `tests/testthat/test-chat-first-choice.R`. In a scratch copy, make `openai_reply_value()` (`R/chat.R:429-430`) read the last choice, and make sure that each test goes red. Read fields with `[[`, per the M018 lesson.
 - [x] T2: Edit the `@return` of `lms_chat_openai()` (`R/chat.R:285-305`) and the "Cut-off reply" and "Malformed response" sections (`R/conditions.R:175-240`). Run `devtools::document()`. Make sure that the change reaches `man/lms_chat_openai.Rd`, `man/lms_chat.Rd`, `man/lms_chat_batch.Rd`, and `man/rlmstudio-conditions.Rd`.
-- [ ] T3: Add the NEWS bullet. Run `devtools::test()`.
+- [x] T3: Add the NEWS bullet. Run `devtools::test()`.
 
 ## Work log
 
@@ -51,6 +51,7 @@ Observed on 2026-09-27 with google/gemma-3-1b: a `/v1/chat/completions` request 
 - 2026-09-27: implement started on m036-openai-first-choice. Question gate skipped, nothing open.
 - 2026-09-27: T1 done. `two_choice_body()` and three tests in `test-chat-first-choice.R`. Plant "read the last choice" turned all three tests red, and plant "finish reason from the last choice" also did. `devtools::test()` 9885 pass, 0 fail.
 - 2026-09-27: T2 done. First-choice text in the `@return` of `lms_chat_openai()` and in the "Cut-off reply" and "Malformed response" sections. `devtools::document()` wrote it to the four named pages. The "Malformed response" change also reaches the eight other pages that inherit that section.
+- 2026-09-27: T3 done. One NEWS bullet under the development version. A second `devtools::document()` gave no diff. `devtools::test()` 9885 pass, 0 fail.
 
 ## Decisions
 
