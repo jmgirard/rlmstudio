@@ -12,6 +12,7 @@ lms_chat_openai(
   simplify = TRUE,
   ...,
   schema = NULL,
+  ttl = NULL,
   token = NULL
 )
 }
@@ -41,6 +42,12 @@ array. An empty object nested in the schema, such as \code{properties}, is
 written \code{setNames(list(), character())}, because \code{list()} is sent as the
 empty array \verb{[]}. The package checks only that \code{schema} is a named list,
 an empty list, or \code{NULL}. The server checks the schema itself.}
+
+\item{ttl}{A whole number of seconds from 1 to \code{.Machine$integer.max}, or
+\code{NULL} to leave it out. It is how long the model stays loaded with no
+request. It has an effect only on a model that this request loads, which
+the server does for a model that is not loaded yet. A model that is
+already loaded keeps its idle time.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the

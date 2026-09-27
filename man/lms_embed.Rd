@@ -10,6 +10,7 @@ lms_embed(
   host = "http://localhost:1234",
   simplify = TRUE,
   ...,
+  ttl = NULL,
   token = NULL
 )
 }
@@ -33,6 +34,12 @@ that reason: LM Studio ignores \code{dimensions}, so asking for a narrower
 vector has no effect. \code{encoding_format = "base64"} is untested against LM
 Studio: a server that honors it returns embeddings this function cannot
 read, and the default \code{simplify = TRUE} path then aborts.}
+
+\item{ttl}{A whole number of seconds from 1 to \code{.Machine$integer.max}, or
+\code{NULL} to leave it out. It is how long the model stays loaded with no
+request. It has an effect only on a model that this request loads, which
+the server does for a model that is not loaded yet. A model that is
+already loaded keeps its idle time.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the

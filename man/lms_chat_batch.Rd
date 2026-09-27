@@ -34,8 +34,8 @@ one value and no missing values.}
 \item{quiet}{Logical. Whether to suppress the progress bar.}
 
 \item{...}{Additional arguments passed to \code{lms_chat}, such as \code{api_type},
-\code{logprobs}, or \code{schema}. A \code{schema} and the \code{api_type} it needs are
-checked before the first call.}
+\code{logprobs}, \code{schema}, or \code{ttl}. A \code{schema}, a \code{ttl}, and the \code{api_type}
+that each needs are checked before the first call.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the

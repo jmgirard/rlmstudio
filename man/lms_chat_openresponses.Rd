@@ -31,7 +31,9 @@ missing values.}
 \item{simplify}{Logical. If TRUE, parses output to text and dataframe. If
 FALSE, returns raw list.}
 
-\item{...}{Additional API arguments (e.g., top_logprobs, temperature).}
+\item{...}{Additional API arguments (e.g., top_logprobs, temperature). This
+endpoint accepts a \code{ttl} field and ignores it. The model keeps the idle
+time that the server sets.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the

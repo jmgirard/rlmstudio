@@ -44,7 +44,7 @@ The facts behind the scope were observed on 2026-09-27 against LM Studio 0.4.25+
 - [x] T1: Write the AC3 value tests and the AC2 route tests in `tests/testthat/test-arg-guards.R` first, next to the `schema_calls` tests. Then add the value check and the route check to `R/utils-args.R`, modeled on `rlm_check_schema()` and `rlm_check_schema_route()`. If `guarded_exports("ttl")` returns fewer than the three functions that take `ttl`, make the value test fail. Plant a value check that accepts `0` and a route check that skips `"native"`, and see each test go red.
 - [x] T2: Add `ttl` after `...` on `lms_chat_openai()` and `lms_embed()`. The check runs above `stop_if_no_server()`. If `ttl` is not `NULL`, the body gets `as.integer(ttl)`. Write the AC1 body tests first. Read the serialized bytes, as the M012 lesson on array forms describes.
 - [x] T3: Add `ttl` after `...` on `lms_chat()`. Run the value check and the route check next to the `schema` checks, and forward `ttl` on the `"openai"` route. In `lms_chat_batch()`, read `ttl` through `rlm_chat_dots()` and check it with `schema`, before `stop_if_no_server()`. Write the AC2 body tests for both functions first. Test the `"openai"` route of `lms_chat()` directly, because its delegate checks again (M013 lesson).
-- [ ] T4: Write the roxygen text for the five pages in AC4, run `devtools::document()`, and add the AC5 entry to `NEWS.md`. Write each claim about the server from the 2026-09-27 observations or from T5, not from memory.
+- [x] T4: Write the roxygen text for the five pages in AC4, run `devtools::document()`, and add the AC5 entry to `NEWS.md`. Write each claim about the server from the 2026-09-27 observations or from T5, not from memory.
 - [ ] T5: With a running server, call `lms_embed()` with `ttl = 120` and `lms_chat_openai()` with `ttl = 100`, each on a model that is not loaded. Make sure that `lms ps` shows each TTL. Send a request with a `ttl` to a model that is already loaded, and make sure that its TTL does not change. Unload what the check loaded, restore the server state, and log one line.
 
 ## Work log
@@ -58,6 +58,7 @@ The facts behind the scope were observed on 2026-09-27 against LM Studio 0.4.25+
 - 2026-09-27: implement started on branch `m034-chat-embed-ttl`. The question gate was skipped, because the plan left no choice open.
 - 2026-09-27: T1 to T3 done in one checkpoint, because the T1 tests cover the functions that T2 and T3 change. The body tests are in the new `tests/testthat/test-ttl.R`. Four planted defects each turned a test red: a value check that accepts 0, a route check that skips native, no batch check, and no `ttl` in the embed body. `devtools::test()` passed with 9721 tests.
 - 2026-09-27: T2 finding: httr2 writes the double 1e5 as `100000`, so `as.integer()` changes nothing on the wire today. It stays so that the field is an integer whatever the serializer does with a double.
+- 2026-09-27: T4 done. `ttl` is documented on the three function pages, the batch `...` entry names it, and the openresponses and native `...` entries say what their endpoint does with it. The NEWS entry is added. A second `devtools::document()` wrote nothing, and `devtools::test()` passed with 9721 tests.
 
 ## Decisions
 

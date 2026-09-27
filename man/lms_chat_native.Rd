@@ -27,7 +27,8 @@ missing values.}
 
 \item{simplify}{Logical. If TRUE, parses output to text.}
 
-\item{...}{Additional API arguments.}
+\item{...}{Additional API arguments. This endpoint rejects a \code{ttl} field
+with status 400, which raises \code{rlmstudio_api_error}.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the

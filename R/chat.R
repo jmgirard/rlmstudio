@@ -25,6 +25,12 @@
 #' @param schema A JSON Schema that the reply must match, or `NULL`. It needs
 #'   `api_type = "openai"`, and any other `api_type` aborts before the request.
 #'   See [lms_chat_openai()] for its form and for what is returned.
+#' @param ttl A whole number of seconds from 1 to `.Machine$integer.max`, or
+#'   `NULL`. It is how long the model stays loaded with no request. It needs
+#'   `api_type = "openai"`, and any other `api_type`, the default included,
+#'   aborts before the request. It has an effect only on a model that this
+#'   request loads, which the server does for a model that is not loaded yet.
+#'   A model that is already loaded keeps its idle time.
 #' @return Depending on the arguments provided:
 #' \itemize{
 #'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
@@ -133,7 +139,9 @@ lms_chat <- function(
 #' @param logprobs Logical. Whether to return token probabilities.
 #' @param simplify Logical. If TRUE, parses output to text and dataframe. If
 #'   FALSE, returns raw list.
-#' @param ... Additional API arguments (e.g., top_logprobs, temperature).
+#' @param ... Additional API arguments (e.g., top_logprobs, temperature). This
+#'   endpoint accepts a `ttl` field and ignores it. The model keeps the idle
+#'   time that the server sets.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
@@ -268,6 +276,11 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   written `setNames(list(), character())`, because `list()` is sent as the
 #'   empty array `[]`. The package checks only that `schema` is a named list,
 #'   an empty list, or `NULL`. The server checks the schema itself.
+#' @param ttl A whole number of seconds from 1 to `.Machine$integer.max`, or
+#'   `NULL` to leave it out. It is how long the model stays loaded with no
+#'   request. It has an effect only on a model that this request loads, which
+#'   the server does for a model that is not loaded yet. A model that is
+#'   already loaded keeps its idle time.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
@@ -812,7 +825,8 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param simplify Logical. If TRUE, parses output to text.
-#' @param ... Additional API arguments.
+#' @param ... Additional API arguments. This endpoint rejects a `ttl` field
+#'   with status 400, which raises `rlmstudio_api_error`.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. The body can
@@ -1010,8 +1024,8 @@ reply_columns$openai <- reply_columns$openresponses
 #' @param simplify Logical. If TRUE, parses outputs.
 #' @param quiet Logical. Whether to suppress the progress bar.
 #' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,
-#'   `logprobs`, or `schema`. A `schema` and the `api_type` it needs are
-#'   checked before the first call.
+#'   `logprobs`, `schema`, or `ttl`. A `schema`, a `ttl`, and the `api_type`
+#'   that each needs are checked before the first call.
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.

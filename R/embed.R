@@ -19,6 +19,11 @@
 #'   vector has no effect. `encoding_format = "base64"` is untested against LM
 #'   Studio: a server that honors it returns embeddings this function cannot
 #'   read, and the default `simplify = TRUE` path then aborts.
+#' @param ttl A whole number of seconds from 1 to `.Machine$integer.max`, or
+#'   `NULL` to leave it out. It is how long the model stays loaded with no
+#'   request. It has an effect only on a model that this request loads, which
+#'   the server does for a model that is not loaded yet. A model that is
+#'   already loaded keeps its idle time.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
