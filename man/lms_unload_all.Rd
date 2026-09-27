@@ -139,23 +139,29 @@ rules and returns \code{FALSE} for a body that breaks one.
 \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} also raise it
 for a status-200 reply of their own with the wrong shape. Each reply must
 follow the rule of its function. Each field is read by its exact name. The
-rules check the type of a field and not its value, with two exceptions. The
-\code{status} of a load reply must be \code{"loaded"}, and a download reply whose
-\code{status} is \code{"already_downloaded"} needs no \code{job_id}.
+rules check the type of a field and not its value, with four exceptions.
+The \code{status} of a load reply must be \code{"loaded"}. A download reply whose
+\code{status} is \code{"already_downloaded"} needs no \code{job_id}. A download reply whose
+\code{status} is \code{"failed"} always aborts. The \code{job_id} of any other download
+reply must hold a character that is not whitespace.
 \enumerate{
 \item A reply of \code{\link[=lms_load]{lms_load()}} is a JSON object whose \code{status} is the string
 \code{"loaded"}. With \code{echo_load_config = TRUE}, its \code{load_config} is also a
 JSON object.
-\item A reply of \code{\link[=lms_download]{lms_download()}} is a JSON object whose \code{status} is a string.
-If the status is not \code{"already_downloaded"}, its \code{job_id} is a string.
+\item A reply of \code{\link[=lms_download]{lms_download()}} is a JSON object whose \code{status} is a string
+other than \code{"failed"}. If the status is not \code{"already_downloaded"}, its
+\code{job_id} is a string with a character that is not whitespace. For a
+\code{"failed"} status, the message says that LM Studio reports that the
+download failed. It names the reply's \code{job_id} if that is a string with
+a character that is not whitespace.
 \item A reply of \code{\link[=lms_download_status]{lms_download_status()}} is a JSON object whose \code{job_id} and
 \code{status} are strings. Its \code{total_size_bytes}, \code{downloaded_bytes}, and
 \code{bytes_per_second} are each a number, or absent, or \code{null}.
 }
 
-The message names the field that broke the rule, or it says that the body
-is not a JSON object. It also says that something other than LM Studio may
-be answering on the host.
+For the other faults, the message names the field that broke the rule, or
+it says that the body is not a JSON object. It also says that something
+other than LM Studio may be answering on the host.
 
 \code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
 it returns are placed by the index that the response reports, so a block
