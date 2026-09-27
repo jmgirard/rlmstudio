@@ -139,6 +139,11 @@ the reply stays a string. With a <code>schema</code>, <code>simplify = TRUE</cod
 <code>rlmstudio_bad_response</code>, also when it parses. With <code>simplify = TRUE</code> in
 any other setting, such a reply whose content is one string is returned
 with a warning. See the "Cut-off reply" section.</p>
+<p>With <code>simplify = TRUE</code>, the reply is read from the first element of the
+<code>choices</code> field. No other element of <code>choices</code> is read. A request with
+<code>n</code> in <code>...</code> therefore returns the first choice alone, and the cut-off
+warning and abort depend on the finish reason of that choice alone. With
+<code>simplify = FALSE</code>, the body holds every choice.</p>
     </div>
     <div class="section level2">
     <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
@@ -334,8 +339,9 @@ once and goes on. See the details of <code><a href="lms_chat_batch.html">lms_cha
 status as an integer. Today the status is always 200: each of these
 functions reads the body only after a 200, and reports every other status
 as an <code>rlmstudio_api_error</code> instead. A condition from <code>lms_chat_openai()</code>
-also carries two more fields. The <code>content</code> field holds the reply content,
-and the <code>finish_reason</code> field holds the finish reason of the first choice.
+also carries two more fields. The <code>content</code> field holds the reply content
+of the first choice, and the <code>finish_reason</code> field holds the finish reason
+of the first choice.
 Both are <code>NULL</code> for a response with no <code>choices</code>. In the third case,
 <code>content</code> holds the value that was read, which is <code>NULL</code> for <code>null</code> or
 missing content. For the second, third, and fourth cases, the message names the
@@ -359,8 +365,10 @@ content that is one string, in three settings: no <code>schema</code>,
 <code>logprobs = TRUE</code>, and a <code>schema</code> with <code>logprobs = TRUE</code>. The call returns
 what the same reply returns without the cut-off. A <code>schema</code> reply with
 <code>logprobs = FALSE</code> raises <code>rlmstudio_bad_response</code> instead, as the
-"Malformed response" section says. With <code>simplify = FALSE</code>, the call
-returns the body with no warning.</p>
+"Malformed response" section says. The warning and that abort read the
+finish reason of the first choice, which is the choice that the call
+reads. No other element of <code>choices</code> is read. With <code>simplify = FALSE</code>, the call
+returns the body with every choice and no warning.</p>
 <p><code><a href="lms_chat.html">lms_chat()</a></code> gives the warning through <code>lms_chat_openai()</code> with
 <code>api_type = "openai"</code>. <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> gives one warning of this class
 for the whole batch in place of one for each input. It names the count and

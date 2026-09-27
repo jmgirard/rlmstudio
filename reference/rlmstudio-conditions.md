@@ -300,12 +300,13 @@ functions reads the body only after a 200, and reports every other
 status as an `rlmstudio_api_error` instead. A condition from
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
 also carries two more fields. The `content` field holds the reply
-content, and the `finish_reason` field holds the finish reason of the
-first choice. Both are `NULL` for a response with no `choices`. In the
-third case, `content` holds the value that was read, which is `NULL` for
-`null` or missing content. For the second, third, and fourth cases, the
-message names the `content` field, so you can read what the model wrote
-without a second request. The other messages of the chat functions and
+content of the first choice, and the `finish_reason` field holds the
+finish reason of the first choice. Both are `NULL` for a response with
+no `choices`. In the third case, `content` holds the value that was
+read, which is `NULL` for `null` or missing content. For the second,
+third, and fourth cases, the message names the `content` field, so you
+can read what the model wrote without a second request. The other
+messages of the chat functions and
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 name `simplify = FALSE`, which returns the body unchanged, with one
 exception. A body that did not parse as JSON is checked before that
@@ -327,8 +328,10 @@ string, in three settings: no `schema`, `logprobs = TRUE`, and a
 `schema` with `logprobs = TRUE`. The call returns what the same reply
 returns without the cut-off. A `schema` reply with `logprobs = FALSE`
 raises `rlmstudio_bad_response` instead, as the "Malformed response"
-section says. With `simplify = FALSE`, the call returns the body with no
-warning.
+section says. The warning and that abort read the finish reason of the
+first choice, which is the choice that the call reads. No other element
+of `choices` is read. With `simplify = FALSE`, the call returns the body
+with every choice and no warning.
 
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 gives the warning through

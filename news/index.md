@@ -2,6 +2,15 @@
 
 ## rlmstudio (development version)
 
+- The help of
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now says that with `simplify = TRUE`, a reply is read from its first
+  choice alone. A request with `n` in `...` returns the first choice,
+  and the cut-off warning and abort depend on the finish reason of that
+  choice alone. With `simplify = FALSE`, the body holds every choice.
+  The behavior is unchanged. `lms_chat(api_type = "openai")` and
+  `lms_chat_batch(api_type = "openai")` read replies in the same way.
+
 - If the server reports the finish reason `"length"`,
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   with a `schema`, `simplify = TRUE`, and `logprobs = FALSE` now aborts

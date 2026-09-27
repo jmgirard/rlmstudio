@@ -287,8 +287,9 @@ once and goes on. See the details of <code><a href="lms_chat_batch.html">lms_cha
 status as an integer. Today the status is always 200: each of these
 functions reads the body only after a 200, and reports every other status
 as an <code>rlmstudio_api_error</code> instead. A condition from <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>
-also carries two more fields. The <code>content</code> field holds the reply content,
-and the <code>finish_reason</code> field holds the finish reason of the first choice.
+also carries two more fields. The <code>content</code> field holds the reply content
+of the first choice, and the <code>finish_reason</code> field holds the finish reason
+of the first choice.
 Both are <code>NULL</code> for a response with no <code>choices</code>. In the third case,
 <code>content</code> holds the value that was read, which is <code>NULL</code> for <code>null</code> or
 missing content. For the second, third, and fourth cases, the message names the
