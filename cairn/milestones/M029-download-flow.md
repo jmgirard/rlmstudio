@@ -44,7 +44,7 @@
 - [x] T1: Write the tests for AC1 to AC3 first, in the download block of `tests/testthat/test-load-download-shape.R` (near line 185). In a scratch copy, plant a wrong message and a swapped check order. Make sure that the message tests go red (LESSONS M026).
 - [x] T2: In `R/download.R`, `download_reply_fault()` (line 108) checks for `"failed"` after `"already_downloaded"` and before the job id. The job id rule uses `grepl("[^[:space:]]", x)`, as `list_models()` does for an instance id. `lms_download()` (line 76) aborts a failed reply through `rlm_abort_bad_response()` with its own hint. It splices the job id in as a value (LESSONS M012). The helper roxygen cites D-018.
 - [x] T3: Write the print tests for AC4. Then guard the Progress line and the Speed line in `print.lms_download_status()` with `is.finite()` and the above-0 tests.
-- [ ] T4: Change the `wait` chunks of `vignettes/getting-started.Rmd` (line 84) and `vignettes/headless-config.Rmd` (line 81). Read `res[["status"]]`, and add `"paused"` to the stop states.
+- [x] T4: Change the `wait` chunks of `vignettes/getting-started.Rmd` (line 84) and `vignettes/headless-config.Rmd` (line 81). Read `res[["status"]]`, and add `"paused"` to the stop states.
 - [ ] T5: Update the "Malformed response" section in `R/conditions.R` (lines 106 to 125) and the `@return` of `lms_download()`. Add three NEWS entries. Run `devtools::document()`.
 - [ ] T6: Run `lms server start`, and set `RLMSTUDIO_API_TOKEN` (LESSONS M009). Then run `devtools::test()` and `devtools::check()`.
 
@@ -58,6 +58,7 @@
 - 2026-09-27: implement started on branch `m029-download-flow`. No implement gate, because the plan left no choice open.
 - 2026-09-27: T1 and T2 done. Tests for AC1 to AC3 went red before the fix. Four plants in a scratch copy each turned them red: a wrong failed message, the failed check moved behind the job id rule, an empty-only blank rule, and a blank job id named. `devtools::test()`: 369 tests, 0 failed.
 - 2026-09-27: T3 done. The eight-case print test failed nine expectations before the guard and passes after it. `devtools::test()`: 370 tests, 0 failed.
+- 2026-09-27: T4 done. Both `wait` chunks read `res[["status"]]` and stop on `"paused"`. `grep -n '\$' vignettes/*.Rmd` prints only the two `knitr::opts_chunk$set(` lines. The vignette builds run at T6.
 
 ## Decisions
 
