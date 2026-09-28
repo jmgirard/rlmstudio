@@ -103,7 +103,7 @@ before each request was rejected at the gate (work log).
       reply. The cases are an unknown name with one chat model loaded, and a name in other letter case. The
       others are a key asked for a model loaded under another id, and an unknown name with two chat models loaded. The script restores the loaded
       models in the `finally` clause of a `tryCatch()` (LESSONS, M017).
-- [ ] T2: Add the `code` field to `rlm_abort_api()` in `R/utils-api-error.R:86`, read with `[[` by exact name
+- [x] T2: Add the `code` field to `rlm_abort_api()` in `R/utils-api-error.R:86`, read with `[[` by exact name
       (LESSONS, M018). Tests first, on both routes, for the four bodies that AC5 names.
 - [ ] T3: Add the model check to `R/chat.R`. Call it in `lms_chat_openai()` and `lms_chat_openresponses()` after
       `parse_ok_body()` and before the `simplify` branch. The lookup reads `key` and `loaded_instances[].id` of every
@@ -130,6 +130,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: plan decided, with no question, that a reply with no `model` string skips the check. Every mocked chat body in the tests has no `model` field. Falsified by a live reply from another model that has no `model` field.
 - 2026-09-28: implement started on branch m049-chat-model-mismatch. Question gate skipped, because the plan left no choice open.
 - 2026-09-28: T1 done. The recorder wrote four cases on both routes into `tests/testthat/model_mismatch_live/`, and each reply matched the Scope probe. The reference page records the facts as a dated observation. The server was off at the first run and was started with `lms server start`.
+- 2026-09-28: T2 done. `rlm_abort_api()` sets `code` from the new `api_error_code()` on every API error. The new tests in `test-model-check.R` failed on the missing field before the change, and the suite passes after it.
 
 ## Decisions
 
