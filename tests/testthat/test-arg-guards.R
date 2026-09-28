@@ -997,6 +997,35 @@ messages_probes <- list(
     }),
     rule = "rule6"
   ),
+  # A NULL list cell is written as null, the same as an NA cell.
+  list(
+    label = "a row of NA and a NULL list cell",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$content <- list("hi", NULL)
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a row of NA and a NULL cell in an I() list column",
+    value = local({
+      df <- data.frame(role = c(NA, "user"))
+      df$content <- I(list(NULL, "hi"))
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a row of NA, an NA matrix row, and a NULL list cell",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$m <- matrix(c(1, NA, 2, NA), 2)
+      df$content <- list("hi", NULL)
+      df
+    }),
+    rule = "rule6"
+  ),
   list(
     label = "a data frame of one NA row",
     value = data.frame(role = NA_character_, content = NA_character_),
@@ -1122,6 +1151,45 @@ test_that("a messages value that keeps every rule reaches the request", {
       label = "a data frame row with one cell that is not NA",
       value = data.frame(role = c("user", NA), content = c("hi", "yo")),
       sent = list(list(role = "user", content = "hi"), list(content = "yo"))
+    ),
+    # A list() cell is written as [] and a list(NA) cell as [null]. Both are
+    # field values, so such a row is not empty.
+    list(
+      label = "a row of NA and a list() cell",
+      value = local({
+        df <- data.frame(role = c("user", NA))
+        df$content <- list("hi", list())
+        df
+      }),
+      sent = list(list(role = "user", content = "hi"), list(content = list()))
+    ),
+    # is.na() on the whole data frame spreads the matrix over two columns, so
+    # a rule that reads it by column position looks at the wrong cells.
+    list(
+      label = "a NULL list cell after a matrix column, and a later value",
+      value = local({
+        df <- data.frame(role = c("user", NA))
+        df$m <- matrix(c(1, NA, 2, NA), 2)
+        df$content <- list("hi", NULL)
+        df$name <- c("a", "b")
+        df
+      }),
+      sent = list(
+        list(role = "user", m = list(1L, 2L), content = "hi", name = "a"),
+        list(m = list("NA", "NA"), content = NULL, name = "b")
+      )
+    ),
+    list(
+      label = "a row of NA and a list(NA) cell",
+      value = local({
+        df <- data.frame(role = c("user", NA))
+        df$content <- list("hi", list(NA))
+        df
+      }),
+      sent = list(
+        list(role = "user", content = "hi"),
+        list(content = list(NULL))
+      )
     ),
     list(
       label = "a tibble-classed data frame",

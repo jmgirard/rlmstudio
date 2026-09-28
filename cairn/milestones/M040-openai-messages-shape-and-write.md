@@ -1,13 +1,13 @@
 # M040: The OpenAI chat function refuses a messages value that jsonlite cannot write or that breaks a shape rule
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes which `messages` values an exported function accepts
-- **Branch/PR:** —
+- **Branch/PR:** m040-openai-messages-shape-and-write
 
 ## Goal
 
@@ -88,7 +88,7 @@ chat functions take no `messages` argument.
 
 ## Tasks
 
-- [ ] T1: In `data_frame_messages_fault()` (`R/utils-args.R:427`), count a
+- [x] T1: In `data_frame_messages_fault()` (`R/utils-args.R:427`), count a
   `NULL` list cell as empty in the empty-row rule. Add the abort and pass
   cases to the `messages` probe tables in `tests/testthat/test-arg-guards.R`.
 - [ ] T2: Add the outer `dim` rule to `messages_fault()` and the message
@@ -112,6 +112,8 @@ chat functions take no `messages` argument.
 - 2026-09-27: created by /milestone-plan. Absorbs three candidate rows from the M039 review (the `NULL` cell row, the list-matrix, and the classes and names below the message level).
 - 2026-09-27: criteria audit (full mode, fresh reader) returned 10 findings. Seven were fixed at the gate: goal wording, `NULL` names wording, literal jsonlite options, no condition class, the help sentence on content, a message-level `dim` rule, and wider probes. Three became gate questions. The reader also asked for a D-entry that narrows D-003. None was written, because D-020 already limits D-003 to fields in `...`.
 - 2026-09-27: second fresh reader on the changed criteria returned 7 findings, all fixed: the walk starts at list-column cells, `dim` rules run before names rules, rule-order probes moved into AC4, the old class test is rewritten in T4, wider name probes, and the jsonlite text is kept verbatim.
+- 2026-09-27: status in-progress on branch m040-openai-messages-shape-and-write. Question gate skipped, because nothing was left open and jsonlite is already an import.
+- 2026-09-27: T1 done. `empty_rows()` reads each column alone, because `is.na()` on the whole data frame spreads a matrix column over several. Three abort probes and three pass probes added. The old `is.na()` rule planted in place turned the abort test red. `devtools::test()` passed.
 - 2026-09-27: plan gate chose to refuse a list-matrix over sending it flat in storage order, because the order can differ from the order on screen; falsified by a user who builds `messages` as a matrix on purpose.
 - 2026-09-27: plan gate chose to treat only a `NULL` cell as empty over any length-0 cell, because `list()` writes the field value `[]`; falsified by a server that treats a message holding only an empty-array field as no message.
 - 2026-09-27: plan gate chose to refuse repeated names below the message level over `NA` and empty names alone, because jsonlite renames a repeated `a` to `a.1`; falsified by a jsonlite version that keeps repeated keys.

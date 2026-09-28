@@ -433,10 +433,38 @@ data_frame_messages_fault <- function(value) {
       "You gave a data frame that has no columns or a column name that is missing or repeated."
     )
   }
-  if (any(rowSums(!is.na(value)) == 0L)) {
+  if (any(empty_rows(value))) {
     return("You gave a data frame with a row in which every cell is NA.")
   }
   NULL
+}
+
+#' Which rows of a messages data frame does jsonlite write as nothing?
+#'
+#' A cell is empty when `is.na()` says so, or when it is a `NULL` cell of a
+#' list column. jsonlite writes both as `null`. A `list()` cell is written as
+#' `[]` and a `list(NA)` cell as `[null]`, which are field values, so neither
+#' is empty. A matrix or data-frame column counts as empty in a row when each
+#' of its cells there is `NA`. The columns are read one at a time, because
+#' `is.na()` on the whole data frame spreads such a column over several.
+#'
+#' @param value A data frame.
+#' @return A logical vector with one element per row of `value`.
+#'
+#' @noRd
+empty_rows <- function(value) {
+  empty <- rep(TRUE, nrow(value))
+  for (column in value) {
+    if (is.list(column) && !is.data.frame(column)) {
+      column_empty <- is.na(column) | vapply(column, is.null, logical(1))
+    } else if (length(dim(column)) == 2L) {
+      column_empty <- rowSums(!is.na(column)) == 0L
+    } else {
+      column_empty <- is.na(column)
+    }
+    empty <- empty & column_empty
+  }
+  empty
 }
 
 #' Is this one message a list with a usable name on each field?
