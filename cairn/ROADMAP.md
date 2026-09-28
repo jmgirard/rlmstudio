@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-28 (M045 done, M042 row pruned)_
+_Last hygiene check: 2026-09-28 (M046 done, M043 row pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-28 (M045 done, M042 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M046 | The OpenAI chat function counts an array row with no cells as a field value | review | M044 | normal | milestones/M046-openai-messages-cell-free-rows.md |
+| M046 | The OpenAI chat function counts an array row with no cells as a field value | done | M044 | normal | milestones/archive/M046-openai-messages-cell-free-rows.md |
 | M045 | The OpenAI chat function refuses a number that jsonlite writes as a string or drops | done | M044 | normal | milestones/archive/M045-openai-messages-non-finite-numbers.md |
 | M044 | The functions that send a JSON body send the text that jsonlite writes | done | none | normal | milestones/archive/M044-json-body-as-written.md |
-| M043 | The OpenAI chat function refuses a messages value that holds a value that is not an atomic vector, a list, or NULL | done | none | normal | milestones/archive/M043-openai-messages-non-vector-values.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
