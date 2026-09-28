@@ -38,7 +38,7 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `lms_chat_openai()` passes each frame below through every
+- [x] AC1: `lms_chat_openai()` passes each frame below through every
       `messages` rule. The recorded request body holds the extra column in
       row 2 as jsonlite writes it. Each frame has the columns
       `role = c("user", NA)` and `content = c("Hi", NA)` plus one extra
@@ -51,7 +51,7 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
       - a 2-by-3-by-0 array, written `[[],[],[]]`
       - a data-frame column whose one column is a 2-by-0 numeric matrix,
         written `{"m":[]}`
-- [ ] AC2: `lms_chat_openai()` still aborts before the server probe with the
+- [x] AC2: `lms_chat_openai()` still aborts before the server probe with the
       empty-row detail for three frames of the same form. This behavior is
       on main, and the criterion pins it. The extra column is one of these:
       - a data frame with no columns, whose cell in row 2 is written `{}`
@@ -59,14 +59,14 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
         cell in row 2 is written `{}`
       - a data frame whose one column is a data frame with no columns,
         whose cell in row 2 is written `{"m":{}}`
-- [ ] AC3: The help at `messages` in `R/chat.R` and
+- [x] AC3: The help at `messages` in `R/chat.R` and
       `man/lms_chat_openai.Rd` states two rules. A column with a `dim`
       attribute and no cells in a row is not empty in that row. A
       data-frame column counts as empty in a row when each of its own
       columns is empty in that row. So a data frame with no columns counts
       as empty. The `empty_rows()` roxygen says the same. NEWS.md has one
       entry for the AC1 change, with no milestone number.
-- [ ] AC4: `devtools::document()` leaves the tree clean, and
+- [x] AC4: `devtools::document()` leaves the tree clean, and
       `devtools::test()` passes. `devtools::check()` gives 0 errors and 0
       warnings, and each note has a reason.
 
@@ -116,3 +116,11 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+Main had not moved since the branch was cut (`3f4cf51`), and no PR existed.
+
+- AC1 (2026-09-28): the test "a column with no cells in a row is not empty" ran 12 expectations with 0 failures. Its six cases are the six columns AC1 lists. Each case checks for no error and checks the recorded body against the row-2 text AC1 states. At T2, the old `empty_rows()` turned this test red with the empty-row detail.
+- AC2 (2026-09-28): the test "a data-frame column with only empty columns counts as empty" ran 7 expectations with 0 failures. For each of the three columns AC2 lists, it checks that `rlm_json_text()` writes the row-2 cell as `{}`, `{}`, or `{"m":{}}`. It also checks the empty-row detail. The probe count stayed 0.
+- AC3 (2026-09-28): `R/chat.R:290-297` and `man/lms_chat_openai.Rd:47-53` say that a `dim` column with no cells in a row is not empty in that row. They also give the data-frame rule. If each of its own columns is empty in a row, a data-frame column counts as empty there. So one with no columns counts as empty. The `empty_rows()` roxygen (`R/utils-args.R:873-885`) states both rules. The branch adds one NEWS.md entry, and no `M0NN` appears in the NEWS diff.
+- AC4 (2026-09-28): `devtools::document()` left `git status` empty. With the token set and the server started, `devtools::test()` ran 437 tests and 12482 expectations with 0 failures, 0 skips, and 0 errors. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate (2026-09-28): `cairn_validate.py` passed with exit 0. No DESIGN.md principle changed, so `cairn_impact` was skipped. `document()` left no diff, and `man/` changed only through it. The branch leaves README.Rmd alone. `pkgdown::check_pkgdown()` found no problems. NEWS.md has the entry. The branch adds no top-level file. The full check is under AC4.
