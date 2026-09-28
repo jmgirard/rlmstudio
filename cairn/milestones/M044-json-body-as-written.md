@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M044: The functions that send a JSON body send the text that jsonlite writes
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -112,7 +112,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 - [x] T3: Update the roxygen that AC3 names, including the
       `req_body_json()` mention at `R/utils-args.R:389`, and NEWS.md. Run
       `devtools::document()`.
-- [ ] T4: Run `devtools::test()` and `devtools::check()`. The check needs
+- [x] T4: Run `devtools::test()` and `devtools::check()`. The check needs
       `RLMSTUDIO_API_TOKEN` and a started server (LESSONS, M009).
 
 ## Work log
@@ -132,6 +132,9 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 - 2026-09-28: T1 done. The AC2 test went to a new file, `tests/testthat/test-body-write.R`, and `request_body_text()` joined `helper-mock-http.R` with a dry-run time limit. On main, eight AC1 values fail and the 2-by-2 control passes. All six AC2 functions fail at the time limit in the dry run.
 - 2026-09-28: T2 done. `rlm_json_text()` and `rlm_req_body()` sit after `lms_client()` in `R/chat.R`. The seven sites and `messages_write_fault()` use them, and the `messages_write_fault()` roxygen was rewritten here as well. `lms_unload()` put back on httr2's writer failed the AC2 case for `lms_unload` alone. `grep -rn 'req_body_json' R/` finds no line. `devtools::test()` gave 0 failed, 0 errors, 12303 passed.
 - 2026-09-28: T3 done. NEWS.md has one entry with three sub-points. On main, httr2's walk over a `POSIXlt` value did not return in 100 seconds at the default `expressions` limit, and failed with "evaluation nested too deeply" at `expressions = 500`, so the entry names both. The obfuscated-value abort gained a test in `test-body-write.R`, which fails with `lms_unload()` on httr2's writer. `devtools::document()` changed no file.
+- 2026-09-28: T4 done. With the server started and the token set, `devtools::test()` gave 0 failed, 0 errors, 12305 passed. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+- claim audit: 37 claims read, 2 corrected — R/chat.R, tests/testthat/test-body-write.R
+- 2026-09-28: the two corrections are comment-only. The `rlm_req_body()` roxygen now says a 2-by-0 list matrix column becomes `NULL` cells sent as `null`. The test-body-write.R header no longer says D-003 covers dot values. `devtools::document()` then changed no file. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

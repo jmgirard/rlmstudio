@@ -1,8 +1,8 @@
 # Every function that sends a JSON body sends the text that jsonlite writes
 # from it. httr2 1.3.0 req_body_json() rebuilt each list in the body first,
 # and on a POSIXlt value that walk recursed with no end. The value reaches
-# the body through `...` on each function below, and nothing checks it
-# there, as D-003 states.
+# the body through `...` on each function below, and no argument check reads
+# its value there (D-003 leaves dot fields to the server).
 
 test_that("a POSIXlt value in the dots reaches each request", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)

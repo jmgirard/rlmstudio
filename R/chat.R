@@ -1674,7 +1674,8 @@ rlm_json_text <- function(x) {
 #' text. The httr2 JSON body helper is not used, because httr2 1.3.0 rebuilds
 #' each list in the body before it writes it, with `x[] <- lapply(x, ...)`.
 #' On a data frame, that turns a zero-width matrix or array column into `NA`
-#' and a 2-by-0 list matrix into `NULL`. On a `POSIXlt` value, it recurses
+#' and a 2-by-0 list matrix column into a list of `NULL` cells, sent as
+#' `null`. On a `POSIXlt` value, it recurses
 #' with no end. The rebuild exists to reveal `httr2::obfuscated()` values,
 #' which jsonlite cannot write, so such a value in `...` now fails with the
 #' jsonlite error.
