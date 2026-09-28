@@ -1459,6 +1459,319 @@ test_that("a function column aborts with no warning on the way", {
   expect_identical(probe$calls, 0L)
 })
 
+# A column that is neither an atomic vector nor a list is never empty, and
+# is.na() is not called on it, so it gives no warning. Each column sits in
+# rows that are otherwise NA, so the empty-row rule would win if the column
+# counted as empty. `$<-` builds the frame where it accepts the value. It
+# refuses an environment in a frame with one or more rows, so that frame
+# uses structure().
+test_that("a column that is not a vector is not empty and gives no warning", {
+  probe <- local_counting_probe()
+  s4_env <- new.env()
+  s4_class <- methods::setClass(
+    "rlmstudioM042Probe",
+    representation(v = "numeric"),
+    where = s4_env
+  )
+  ref_generator <- methods::setRefClass(
+    "rlmstudioM042RefProbe",
+    fields = list(v = "numeric"),
+    where = s4_env
+  )
+  na_frame <- function(n, column) {
+    df <- data.frame(role = rep(NA_character_, n))
+    df$x <- column
+    df
+  }
+
+  cases <- list(
+    "an environment" = structure(
+      list(role = NA_character_, x = new.env()),
+      class = "data.frame",
+      row.names = 1L
+    ),
+    "a formula" = na_frame(3L, y ~ x),
+    "a symbol" = na_frame(1L, quote(x)),
+    "a call" = na_frame(2L, quote(f(x))),
+    "an S4 object" = na_frame(1L, s4_class(v = 1)),
+    "a reference-class object" = structure(
+      list(role = NA_character_, x = ref_generator(v = 1)),
+      class = "data.frame",
+      row.names = 1L
+    ),
+    "an external pointer" = na_frame(1L, methods::new("externalptr")),
+    "an expression vector" = na_frame(1L, expression(1)),
+    "a symbol in a data-frame column" = local({
+      inner <- na_frame(1L, quote(x))
+      df <- data.frame(role = NA_character_)
+      df$sub <- inner
+      df
+    })
+  )
+
+  for (label in names(cases)) {
+    err <- expect_no_warning(
+      expect_error(
+        lms_chat_openai("a-model", cases[[label]]),
+        messages_rule_details[["rule10"]],
+        fixed = TRUE,
+        info = label
+      )
+    )
+    expect_true(
+      startsWith(conditionMessage(err), messages_headers[["value"]]),
+      info = label
+    )
+  }
+
+  function_cases <- list(
+    "a function" = na_frame(1L, function() "x"),
+    "a function in a data-frame column" = local({
+      df <- data.frame(role = NA_character_)
+      df$sub <- na_frame(1L, function() "x")
+      df
+    })
+  )
+  for (label in names(function_cases)) {
+    expect_no_warning(
+      expect_error(
+        lms_chat_openai("a-model", function_cases[[label]]),
+        messages_rule_details[["rule12"]],
+        fixed = TRUE,
+        info = label
+      )
+    )
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+# empty_rows() reads a column that is neither an atomic vector nor a list as
+# not empty in each row, with no warning, at top level and one level down.
+# The whole call cannot show this for an S4 class definition with a slot,
+# because jsonlite warns when it writes one.
+test_that("empty_rows() finds no empty row in a column that is not a vector", {
+  class_env <- new.env()
+  methods::setClass(
+    "rlmstudioM042Slotted",
+    representation(v = "numeric"),
+    where = class_env
+  )
+  generator <- methods::setClass(
+    "rlmstudioM042Generator",
+    representation(v = "numeric"),
+    where = class_env
+  )
+  ref_generator <- methods::setRefClass(
+    "rlmstudioM042Ref",
+    fields = list(v = "numeric"),
+    where = class_env
+  )
+  na_frame <- function(n, column) {
+    df <- data.frame(role = rep(NA_character_, n))
+    df$x <- column
+    df
+  }
+
+  columns <- list(
+    "an environment" = new.env(),
+    "a formula" = y ~ x,
+    "a symbol" = quote(x),
+    "a call" = quote(f(x)),
+    "an S4 object" = generator(v = 1),
+    "a reference-class object" = ref_generator(v = 1),
+    "an external pointer" = methods::new("externalptr"),
+    "an expression vector" = expression(1),
+    "a function" = function() "x",
+    "a class generator" = generator,
+    "a class definition with a slot" = methods::getClass(
+      "rlmstudioM042Slotted",
+      where = class_env
+    ),
+    "a class definition with no slot" = methods::getClass("numeric")
+  )
+
+  for (label in names(columns)) {
+    # `$<-` refuses an environment in a frame with rows.
+    top <- structure(
+      list(role = NA_character_, x = columns[[label]]),
+      class = "data.frame",
+      row.names = 1L
+    )
+    nested <- data.frame(role = NA_character_)
+    nested$sub <- top
+    for (value in list(top, nested)) {
+      expect_no_warning(result <- empty_rows(value))
+      expect_identical(result, FALSE, info = label)
+    }
+  }
+  expect_no_warning(formula_result <- empty_rows(na_frame(3L, y ~ x)))
+  expect_identical(formula_result, rep(FALSE, 3L))
+})
+
+# jsonlite writes an S4 class definition with a slot as an object that maps
+# each slot name to its class, with a warning, so such a column is sent. A
+# class definition with no slot fails the trial write.
+test_that("an S4 class-definition column is sent only when it has a slot", {
+  class_env <- new.env()
+  methods::setClass(
+    "rlmstudioM042Sent",
+    representation(v = "numeric"),
+    where = class_env
+  )
+  class_frame <- function(definition) {
+    structure(
+      list(role = NA_character_, x = definition),
+      class = "data.frame",
+      row.names = 1L
+    )
+  }
+
+  probe <- local_counting_probe()
+  expect_warning(
+    expect_error(
+      lms_chat_openai(
+        "a-model",
+        class_frame(methods::getClass("rlmstudioM042Sent", where = class_env))
+      ),
+      class = "rlmstudio_no_server"
+    ),
+    "collapse=FALSE called for named list.",
+    fixed = TRUE
+  )
+  expect_identical(probe$calls, 1L)
+
+  probe <- local_counting_probe()
+  err <- expect_error(
+    lms_chat_openai("a-model", class_frame(methods::getClass("numeric"))),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_true(startsWith(conditionMessage(err), messages_headers[["value"]]))
+  expect_identical(probe$calls, 0L)
+})
+
+# A column with a dim attribute is read row by row, through the cells whose
+# first index is the row. The frames are built with `$<-`, because
+# data.frame() spreads an array of two or more dimensions over several
+# columns and drops the dim of a one-dimensional array. Row 2 of `role` is
+# NA, so the array column alone decides whether row 2 is empty. An outcome
+# of "server" means the value passes every messages rule and reaches the
+# server probe.
+dim_column_frame <- function(column) {
+  df <- data.frame(role = c("user", NA))
+  df$x <- column
+  df
+}
+
+test_that("a column with a dim attribute is read row by row", {
+  # Row 2 of a c(2, 2, 2) array holds the cells at even positions 2, 4, 6, 8.
+  row2_cells <- c(2L, 4L, 6L, 8L)
+  one_null_list3 <- as.list(1:8)
+  one_null_list3[2L] <- list(NULL)
+  all_null_list3 <- as.list(1:8)
+  all_null_list3[row2_cells] <- list(NULL)
+  one_na_atomic3 <- replace(1:8, 2L, NA)
+  all_na_atomic3 <- replace(1:8, row2_cells, NA)
+  one_null_list4 <- as.list(1:16)
+  one_null_list4[4L] <- list(NULL)
+
+  nested_one_na <- local({
+    inner <- data.frame(a = c(1, NA))
+    inner$x <- array(one_na_atomic3, c(2, 2, 2))
+    df <- data.frame(role = c("user", NA))
+    df$sub <- inner
+    df
+  })
+  nested_all_na <- local({
+    inner <- data.frame(a = c(1, NA))
+    inner$x <- array(all_na_atomic3, c(2, 2, 2))
+    df <- data.frame(role = c("user", NA))
+    df$sub <- inner
+    df
+  })
+
+  cases <- list(
+    list(
+      label = "a 3-D list column with one NULL cell in row 2",
+      value = dim_column_frame(array(one_null_list3, c(2, 2, 2))),
+      outcome = "rule11"
+    ),
+    list(
+      label = "a 3-D atomic column with one NA cell in row 2",
+      value = dim_column_frame(array(one_na_atomic3, c(2, 2, 2))),
+      outcome = "server"
+    ),
+    list(
+      label = "a 3-D atomic column with NA in every cell of row 2",
+      value = dim_column_frame(array(all_na_atomic3, c(2, 2, 2))),
+      outcome = "rule6"
+    ),
+    list(
+      label = "a 3-D list column with NULL in every cell of row 2",
+      value = dim_column_frame(array(all_null_list3, c(2, 2, 2))),
+      outcome = "rule6"
+    ),
+    list(
+      label = "a 4-D list column with one NULL cell in row 2",
+      value = dim_column_frame(array(one_null_list4, c(2, 2, 2, 2))),
+      outcome = "rule11"
+    ),
+    list(
+      label = "a 3-D atomic column with one NA cell in a nested data frame",
+      value = nested_one_na,
+      outcome = "server"
+    ),
+    list(
+      label = "a 3-D atomic column with an NA row in a nested data frame",
+      value = nested_all_na,
+      outcome = "rule6"
+    ),
+    # Controls whose result the change leaves as it was.
+    list(
+      label = "a 2-D atomic column with one NA cell in row 2",
+      value = dim_column_frame(matrix(c(1, 2, 3, NA), 2)),
+      outcome = "server"
+    ),
+    list(
+      label = "a 1-D atomic column with NA in row 2",
+      value = dim_column_frame(array(c("a", NA), 2)),
+      outcome = "rule6"
+    ),
+    list(
+      label = "a 1-D list column with NULL in row 2",
+      value = dim_column_frame(array(list("a", NULL), 2)),
+      outcome = "rule6"
+    )
+  )
+
+  for (case in cases) {
+    probe <- local_counting_probe()
+    if (case$outcome == "server") {
+      expect_error(
+        lms_chat_openai("a-model", case$value),
+        class = "rlmstudio_no_server",
+        info = case$label
+      )
+      expect_identical(probe$calls, 1L, info = case$label)
+    } else {
+      err <- expect_error(
+        lms_chat_openai("a-model", case$value),
+        messages_rule_details[[case$outcome]],
+        fixed = TRUE,
+        info = case$label
+      )
+      other <- setdiff(c("rule6", "rule11"), case$outcome)
+      expect_no_match(
+        conditionMessage(err),
+        messages_rule_details[[other]],
+        fixed = TRUE,
+        info = case$label
+      )
+      expect_identical(probe$calls, 0L, info = case$label)
+    }
+  }
+})
+
 # The messages field of the body a captured request sends, parsed back with no
 # simplification, so a list of objects stays a list of lists.
 sent_messages <- function(req) {
@@ -1785,6 +2098,85 @@ test_that("matrix forms the list-array rule allows reach the request", {
     expect_identical(
       sent_messages(recorder$requests[[1]]),
       case$sent,
+      info = case$label
+    )
+  }
+})
+
+# The lms_chat_openai() help gives the sent form of one list-matrix row. The
+# form is stated here as JSON text, so a change to what jsonlite sends turns
+# the test red. A boxed value parses back as a list, so the comparison sees
+# the boxing.
+test_that("a list-matrix column is sent with its cells boxed", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  help_row <- data.frame(role = "user", content = "hi")
+  help_row$tags <- matrix(list("a", NULL, list(k = "v")), 1)
+  help_form <- '{"role":"user","content":"hi","tags":[["a"],null,{"k":["v"]}]}'
+
+  # unbox() unboxes a cell and a value in a list at any depth. A data frame
+  # in a cell is sent as an array of objects with its values not boxed.
+  other_row <- data.frame(role = "user")
+  other_row$m <- matrix(
+    list(
+      jsonlite::unbox("a"),
+      list(list(z = 1)),
+      list(q = jsonlite::unbox("b")),
+      data.frame(k = "v")
+    ),
+    1
+  )
+  other_form <- '{"role":"user","m":["a",[{"z":[1]}],{"q":"b"},[{"k":"v"}]]}'
+
+  cases <- list(
+    list(label = "the help example", value = help_row, form = help_form),
+    list(label = "unbox and a data frame", value = other_row, form = other_form)
+  )
+  for (case in cases) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", case$value))
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      list(jsonlite::parse_json(case$form, simplifyVector = FALSE)),
+      info = case$label
+    )
+  }
+})
+
+# A three-dimensional atomic column with one NA in a row passes the empty-row
+# rule. jsonlite sends that NA as null in a character or logical column and
+# as the string "NA" in a numeric column.
+test_that("an NA in a three-dimensional atomic column is sent as jsonlite writes it", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  array_row <- function(values) {
+    df <- data.frame(role = c("user", "user"))
+    df$x <- array(values, c(2L, 2L, 2L))
+    df
+  }
+  cases <- list(
+    list(
+      label = "numeric",
+      value = array_row(c(1, NA, 3, 4, 5, 6, 7, 8)),
+      form = '[{"role":"user","x":[[1,5],[3,7]]},{"role":"user","x":[["NA",6],[4,8]]}]'
+    ),
+    list(
+      label = "logical",
+      value = array_row(c(TRUE, NA, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+      form = '[{"role":"user","x":[[true,true],[true,true]]},{"role":"user","x":[[null,true],[true,true]]}]'
+    ),
+    list(
+      label = "character",
+      value = array_row(c("a", NA, "c", "d", "e", "f", "g", "h")),
+      form = '[{"role":"user","x":[["a","e"],["c","g"]]},{"role":"user","x":[[null,"f"],["d","h"]]}]'
+    )
+  )
+  for (case in cases) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", case$value))
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      jsonlite::parse_json(case$form, simplifyVector = FALSE),
       info = case$label
     )
   }

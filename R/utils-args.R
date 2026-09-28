@@ -701,15 +701,20 @@ data_frame_messages_fault <- function(value) {
 #' list column. jsonlite leaves out an atomic `NA` cell and writes an `NA` or
 #' `NULL` list cell as `null`. A `list()` cell is written as `[]` and a
 #' `list(NA)` cell as `[null]`, which are field values, so neither is empty.
-#' A matrix column, a list-matrix column included, counts as empty in a row
-#' when each of its cells there is empty. jsonlite writes an atomic matrix row
-#' of `NA` as `"NA"` strings, but the rule refuses the row, as it did before
-#' `NULL` cells counted. A data-frame column counts as empty in a row when
-#' this rule finds that row of it empty. A function column is never empty.
-#' `is.na()` on it warns, and the function rule refuses it later. The columns
-#' are read one at a time,
-#' because `is.na()` on the whole data frame spreads a matrix column over
-#' several.
+#' A column with a `dim` attribute whose first extent is the row count, a
+#' list array included, counts as empty in a row when each cell whose first
+#' index is that row is empty. `is.na()` keeps the `dim` of the column, so
+#' `apply()` reads those cells for each row. jsonlite writes a numeric matrix
+#' row of `NA` as `"NA"` strings and a character or logical one as `null`,
+#' but the rule refuses the row either way, as it did before `NULL` cells
+#' counted. A data-frame column counts as empty in a row
+#' when this rule finds that row of it empty. A column that is neither an
+#' atomic vector nor a list, such as a function, an environment, or a symbol,
+#' is never empty and is not passed to `is.na()`, which warns on most such
+#' columns. The
+#' function rule or the trial write judges it later. The columns are read
+#' one at a time, because `is.na()` on the whole data frame spreads a matrix
+#' column over several.
 #'
 #' @param value A data frame.
 #' @return A logical vector with one element per row of `value`.
@@ -720,15 +725,18 @@ empty_rows <- function(value) {
   for (column in value) {
     if (is.data.frame(column)) {
       column_empty <- empty_rows(column)
-    } else if (is.function(column)) {
+    } else if (!is.atomic(column) && !is.list(column)) {
       column_empty <- FALSE
     } else {
       cell_empty <- is.na(column)
       if (is.list(column)) {
-        cell_empty <- cell_empty | vapply(column, is.null, logical(1))
+        cell_empty[] <- cell_empty | vapply(column, is.null, logical(1))
       }
-      column_empty <- if (length(dim(column)) == 2L) {
-        rowSums(!cell_empty) == 0L
+      column_dim <- dim(column)
+      column_empty <- if (
+        !is.null(column_dim) && column_dim[[1L]] == nrow(value)
+      ) {
+        apply(cell_empty, 1L, all)
       } else {
         cell_empty
       }

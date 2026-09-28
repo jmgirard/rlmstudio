@@ -254,8 +254,7 @@
 #' because it is the only sign that an answer is not complete.
 #'
 #' @name rlmstudio-conditions
-#' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response
-#'   rlmstudio_reply_cut_off
+#' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response rlmstudio_reply_cut_off
 #'
 #' @examples
 #' \dontrun{
