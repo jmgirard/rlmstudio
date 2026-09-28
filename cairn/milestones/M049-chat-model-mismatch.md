@@ -115,7 +115,7 @@ before each request was rejected at the gate (work log).
 - [x] T4: In `lms_chat_batch()`, abort with results at `rlmstudio_model_mismatch`, with a class test inside the
       `rlmstudio_bad_response` handler. Extend `keep_or_abort_api()` to a 400 whose `code` is `"model_not_found"`. Tests
       first for AC4 and the batch part of AC5.
-- [ ] T5: Write the help text that AC6 names, against the T1 record, and the NEWS entry. Run
+- [x] T5: Write the help text that AC6 names, against the T1 record, and the NEWS entry. Run
       `devtools::document()`.
 - [ ] T6: Run `devtools::test()`. Then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server
       started (LESSONS, M009).
@@ -134,6 +134,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: T3 done. `check_reply_model()` and `reply_model_serves()` in `R/chat.R`, and `request_model_list()` in `R/list.R`, which `list_models()` now calls. A failed lookup opens its message with "<label>, because the model-list lookup failed". In scratch copies, deleting the call on either route turned 13 or 14 of the 18 tests red, and an exact-case key compare turned the recorded letter-case test red. Suite passes.
 - 2026-09-28: minor amendment to T4. A separate `rlmstudio_model_mismatch` handler before the `rlmstudio_bad_response` one does not abort. `tryCatch()` runs a handler inside the handlers named after it, so the re-raised condition was kept as a failed input. The class test now sits inside the `rlmstudio_bad_response` handler.
 - 2026-09-28: T4 done. `keep_or_abort_bad()` aborts at a mismatch, and `keep_or_abort_api()` aborts at a 400 whose `code` is `"model_not_found"`. Both stop tests failed before the change, and the keep-going control passed before and after it. Suite passes.
+- 2026-09-28: T5 done. A new "Reply from another model" section on `rlmstudio-conditions`, inherited by the four chat pages, plus the `code` field, the batch stops, the alias, and two NEWS entries. `devtools::document()` rewrote every page that inherits the changed sections. Suite passes.
 
 ## Decisions
 

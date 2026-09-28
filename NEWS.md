@@ -1,5 +1,12 @@
 # rlmstudio (development version)
 
+* `lms_chat_openai()` and `lms_chat_openresponses()` now abort on a reply from a model other than the one asked for, with either setting of `simplify`. With one chat model loaded, LM Studio 0.4.25+1 answered a model name that it could not find with status 200 and a reply from the loaded model. The new condition class is `rlmstudio_model_mismatch`, which is also an `rlmstudio_bad_response`. Its `model` field holds the asked name, and its `reply_model` field holds the `model` field of the reply. `lms_chat()` raises it through the two functions. `lms_chat_native()` does not check the reply.
+  * If the `model` field of the reply differs from the asked name, the call sends one request for the model list. The reply is accepted if a loaded instance of a model whose key equals the asked name, in any letter case, answered. A model loaded under another id, such as with `lms load --identifier`, therefore still works by its key.
+  * If that request fails, the call raises the condition of the failure, and the message says that the model-list lookup failed.
+  * `lms_chat_batch()` aborts at such a reply on the `"openai"` and `"openresponses"` routes, with a `results` field as for a lost server.
+
+* An `rlmstudio_api_error` now carries a `code` field. It holds the string at `error.code` of the response body, or `NULL`. With two or more chat models loaded, LM Studio answers a model name that it cannot find with status 400 and the code `"model_not_found"`. `lms_chat_batch()` now aborts at that error with a `results` field. Before, each input failed alone, and the batch sent every request. A 400 with another code, or with no code, still fails its own input alone.
+
 * The `lms_embed()` help page now describes a limit of LM Studio 0.4.25+1. The server embeds only the first tokens of each text, up to the context length of the loaded model instance. A longer text returns a vector for its start, with no error or warning, and the reply reported 0 tokens on that version. The page names two ways to avoid the cut. One is to split a long text before the call. The other is to unload the model and load it again with a larger `context_length`.
 
 * `lms_embed()` now sends its input in batches, one request for each run of at most `batch_size` texts. The default `batch_size` is 100. A new `quiet` argument controls a progress bar, which shows when a call sends more than one request.

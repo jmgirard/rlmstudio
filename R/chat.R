@@ -49,11 +49,15 @@
 #' With `simplify = TRUE`, it can raise `rlmstudio_bad_response` through any
 #' of the three, for a reply that holds no readable answer text. With either
 #' setting of `simplify`, it raises `rlmstudio_bad_response` through any of the
-#' three for a status-200 body that does not parse as JSON.
+#' three for a status-200 body that does not parse as JSON. With either
+#' setting of `simplify`, it raises `rlmstudio_model_mismatch` through
+#' [lms_chat_openresponses()] or [lms_chat_openai()] for a reply from a model
+#' other than the one asked for.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Cut-off reply
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 lms_chat <- function(
   model,
@@ -173,9 +177,14 @@ lms_chat <- function(
 #'   message names the first broken rule in the order the section below
 #'   gives. Parts of other types are not checked. With `logprobs = FALSE`, the value is not read, and the call
 #'   returns the text.
+#'
+#'   With either setting of `simplify`, a reply from a model other than the
+#'   one asked for raises `rlmstudio_model_mismatch`. See the "Reply from
+#'   another model" section.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 lms_chat_openresponses <- function(
   model,
@@ -436,10 +445,15 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   `n` in `...` therefore returns the first choice alone, and the cut-off
 #'   warning and abort depend on the finish reason of that choice alone. With
 #'   `simplify = FALSE`, the body holds every choice.
+#'
+#'   With either setting of `simplify`, a reply from a model other than the
+#'   one asked for raises `rlmstudio_model_mismatch`. See the "Reply from
+#'   another model" section.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Cut-off reply
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 #' @examples
 #' \dontrun{
@@ -1380,8 +1394,10 @@ reply_columns$openai <- reply_columns$openresponses
 #' raises `rlmstudio_no_server` itself, before the first call.
 #'
 #' An `rlmstudio_bad_response` that [lms_chat()] raises for one input fails
-#' that input alone. So does an `rlmstudio_api_error` with any `status` other
-#' than 401, 403, or 404. The batch goes on to the next input. Where the
+#' that input alone, unless it is an `rlmstudio_model_mismatch`. So does an
+#' `rlmstudio_api_error` with any `status` other than 401, 403, or 404,
+#' unless its `status` is 400 and its `code` is `"model_not_found"`. The batch
+#' goes on to the next input. Where the
 #' result is a list, or the `output` list-column that a `schema` gives, the
 #' element for that input holds the condition without its backtrace. An
 #' `rlmstudio_bad_response` for reply content that does not
@@ -1406,6 +1422,12 @@ reply_columns$openai <- reply_columns$openresponses
 #' way. The condition carries a `results` field, as described in the "API
 #' failure" section below. No warning about failed inputs is given.
 #'
+#' The batch aborts in the same way at an `rlmstudio_api_error` with `status`
+#' 400 and the `code` `"model_not_found"`, and at an
+#' `rlmstudio_model_mismatch`. The chat routes give these for a model name
+#' that the server cannot find, so every later input fails in the same way.
+#' See the "Reply from another model" section below.
+#'
 #' An `rlmstudio_no_server` from [lms_chat()] also aborts the batch. Its
 #' `results` field holds the results so far, as described in the "Server not
 #' running" section below. An error of any other class aborts the batch
@@ -1414,6 +1436,7 @@ reply_columns$openai <- reply_columns$openresponses
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Cut-off reply
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 lms_chat_batch <- function(
   model,
