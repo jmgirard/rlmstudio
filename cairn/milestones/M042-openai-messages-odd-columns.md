@@ -186,6 +186,8 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: T8 done. The NEWS sub-item now carries the RR01 text, with its one trailing condition moved to the front, and the `empty_rows()` comment says "judges". `devtools::document()` changed no file. `devtools::test()`: 11745 expectations, 0 failures. `devtools::check()` with the API token: 0 errors, 0 warnings, 0 notes.
 - claim audit: 48 claims read, 2 corrected — NEWS.md
 - 2026-09-27: the claim reader re-read NEWS.md line 4 and found both corrections true. A non-vector column never gave the empty-row error on main either, so the sub-item now says only the warning is gone. A slotted class definition is named as sent. The reader's optional tightening for an S4 object that contains a basic type was not applied, because the line's scope already excludes atomic columns. Status set to review.
+- 2026-09-28: review pass 3 passed all six criteria. The gate fixed Q1, Q2, Q3, and Q7 on the branch and rejected five findings. The pass-2 line above that says a non-vector column never gave the empty-row error on main is wrong for a Matrix column, which stopped with a plain `rowSums()` error on main.
+- step-7 approval: m042-openai-messages-odd-columns approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -260,3 +262,4 @@ Pass-3 independent review. The [S] history reader found no regression. The [S] p
 - Q7 (Air would re-wrap one new entry at `tests/testthat/test-arg-guards.R:1586-1587`): fix now, that hunk only. The other Air drift is on main.
 - Q8 (`apply()` is slower than `rowSums()`, 0.069 s against 0.001 s at 200,000 rows): reject, negligible.
 - Q9 (a classed array whose `is.na()` drops `dim` would make `apply()` error): reject, no real class found.
+- Gate (pass 3): the maintainer accepted the dispositions above. Q1, Q2, Q3, and Q7 were fixed on the branch. With main's `empty_rows()`, the three-row formula case warns "is.na() applied to non-(list or vector) of type 'language'", so the new Q3 check can fail. `devtools::test()` after the fixes: 11746 expectations, 0 failures. `devtools::document()` printed no warning and changed no file.

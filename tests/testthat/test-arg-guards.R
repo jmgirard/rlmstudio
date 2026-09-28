@@ -1583,8 +1583,10 @@ test_that("empty_rows() finds no empty row in a column that is not a vector", {
     "an expression vector" = expression(1),
     "a function" = function() "x",
     "a class generator" = generator,
-    "a class definition with a slot" =
-      methods::getClass("rlmstudioM042Slotted", where = class_env),
+    "a class definition with a slot" = methods::getClass(
+      "rlmstudioM042Slotted",
+      where = class_env
+    ),
     "a class definition with no slot" = methods::getClass("numeric")
   )
 
@@ -1602,10 +1604,8 @@ test_that("empty_rows() finds no empty row in a column that is not a vector", {
       expect_identical(result, FALSE, info = label)
     }
   }
-  expect_identical(
-    empty_rows(na_frame(3L, y ~ x)),
-    rep(FALSE, 3L)
-  )
+  expect_no_warning(formula_result <- empty_rows(na_frame(3L, y ~ x)))
+  expect_identical(formula_result, rep(FALSE, 3L))
 })
 
 # jsonlite writes an S4 class definition with a slot as an object that maps

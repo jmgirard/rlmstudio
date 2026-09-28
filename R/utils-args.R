@@ -710,7 +710,8 @@ data_frame_messages_fault <- function(value) {
 #' counted. A data-frame column counts as empty in a row
 #' when this rule finds that row of it empty. A column that is neither an
 #' atomic vector nor a list, such as a function, an environment, or a symbol,
-#' is never empty and is not passed to `is.na()`, which warns on it. The
+#' is never empty and is not passed to `is.na()`, which warns on most such
+#' columns. The
 #' function rule or the trial write judges it later. The columns are read
 #' one at a time, because `is.na()` on the whole data frame spreads a matrix
 #' column over several.
