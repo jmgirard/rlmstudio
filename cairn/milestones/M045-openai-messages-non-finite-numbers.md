@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M045: The OpenAI chat function refuses a number that jsonlite writes as a string or drops
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M044   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP3, GP4   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it adds a refusal to an exported function and changes its help   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m045-openai-messages-non-finite-numbers   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -103,13 +103,13 @@ the numeric matrix `NA` closes with this milestone.
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate. -->
 
-- [ ] T1: Write the AC1, AC2, and AC3 tests in
+- [x] T1: Write the AC1, AC2, and AC3 tests in
       `tests/testthat/test-arg-guards.R`, beside the non-vector tests
       (line 1587). Match the detail text, not the header alone (LESSONS,
       M026). Confirm that the AC1 and AC3 tests are red on main. Rewrite
       the test "an NA in a three-dimensional atomic column is sent as
       jsonlite writes it" (line 2415), whose numeric case now aborts.
-- [ ] T2: Add the rule and its walk to `R/utils-args.R` and call it from
+- [x] T2: Add the rule and its walk to `R/utils-args.R` and call it from
       `rlm_check_messages()`. Plant two defects in a scratch copy and see
       a test go red for each: no data-frame exception, and no `AsIs`
       case.
@@ -128,9 +128,16 @@ the numeric matrix `NA` closes with this milestone.
 - 2026-09-28: plan gate chose a rule over unclassed and `I()` numbers over a rule that refuses `Inf` of any class, because a class test and a type test in one rule make the promise inexact; falsified by a classed number other than `AsIs` that a user sends and that jsonlite writes as `"Inf"` or `"NA"`.
 - 2026-09-28: plan gate chose to refuse such numbers over sending `null` in their place, because `na = "null"` also turns every left-out `NA` cell of a data frame into a `null` field; falsified by a jsonlite option that writes a non-finite number as `null` and leaves data-frame cells alone.
 - 2026-09-28: the M044 re-cut kept the dependency on M044. M044 now makes the request send what jsonlite writes, and the numbers this milestone refuses are written the same way before and after. The dependency stays because both edit `rlm_check_messages()` and its help. The Out pointer to array rows moved to M046.
+- 2026-09-28: implement started on branch `m045-openai-messages-non-finite-numbers`. No question gate, because the plan left nothing open.
+- 2026-09-28: T1 done. The AC1 and AC3 tests were red on main, and the AC2 test was green. The 3-D array test now covers character and logical columns alone.
+- 2026-09-28: minor amendment to T1. Three more fixtures sent a numeric array `NA` and now abort. They test the empty-row rule, so they now use character values.
+- 2026-09-28: T2 done. `has_unsendable_number()` runs between the non-vector rule and the trial write. Each planted defect turned a test red.
+- 2026-09-28: the AC2 test gained a named-zone `POSIXlt` field. Its `gmtoff` part is an integer `NA`, and a first walk refused it.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
+
+- 2026-09-28: The number walk starts from the value that `unclass_messages()` returns. Below the messages, it does not enter a list whose class is not `"AsIs"` or a data frame. jsonlite writes such a list by its class. A named-zone `POSIXlt` holds an integer `NA` in `gmtoff` and is sent as a date and time.
 
 ## Review
 <!-- owner: review · exclusive. -->

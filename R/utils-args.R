@@ -362,14 +362,19 @@ rlm_check_messages <- function(value) {
     )
   } else {
     type <- non_vector_type(value)
-    fault <- if (is.null(type)) {
-      messages_write_fault(value)
-    } else {
+    fault <- if (!is.null(type)) {
       paste0(
         "You gave a field value of type \"",
         type,
         "\", which is not an atomic vector, a list, or NULL."
       )
+    } else if (has_unsendable_number(value)) {
+      paste(
+        "You gave a number that is NA, NaN, or infinite, which jsonlite would",
+        "send as a string or leave out."
+      )
+    } else {
+      messages_write_fault(value)
     }
   }
   if (!is.null(fault)) {
@@ -472,6 +477,91 @@ non_vector_type <- function(value) {
     return(NULL)
   }
   typeof(value)
+}
+
+#' Does this messages value hold a number jsonlite cannot send as a number?
+#'
+#' jsonlite writes an `NA`, `NaN`, `Inf`, or `-Inf` in a double or integer
+#' vector as the string `"NA"`, `"NaN"`, `"Inf"`, or `"-Inf"`. In an atomic
+#' column with no `dim` attribute, of a data frame at any depth, it leaves
+#' such a cell out of the row instead. There the rule reads `Inf` and `-Inf`
+#' alone, because an `NA` or `NaN` cell is a missing field, as
+#' `empty_rows()` reads it. The rule reads a number whose class attribute is
+#' absent or is `"AsIs"`. A number with another class, such as a `Date`, is
+#' written by that class and passes. The walk is the walk of
+#' `non_vector_type()`, which runs first, so each value it reaches is an
+#' atomic vector, a list, or `NULL`. It starts from the value that
+#' `unclass_messages()` returns, which is the value sent. Below the messages,
+#' it does not go into a list whose class is not `"AsIs"` or a data frame,
+#' because jsonlite writes such a list by its class. A `POSIXlt` in a zone
+#' with a name holds an integer `NA` in its `gmtoff` part, and jsonlite
+#' writes it as a date and time.
+#'
+#' @param value A `messages` value that passed the function rule and the
+#'   non-vector rule.
+#' @return `TRUE` when the walk reaches such a number.
+#'
+#' @noRd
+has_unsendable_number <- function(value) {
+  unclassed <- unclass_messages(value)
+  if (is.data.frame(unclassed)) {
+    return(is_or_holds_unsendable_number(unclassed))
+  }
+  for (message in unclassed) {
+    for (field in message) {
+      if (is_or_holds_unsendable_number(field)) {
+        return(TRUE)
+      }
+    }
+  }
+  FALSE
+}
+
+#' The walk behind `has_unsendable_number()`, from one value in a message
+#'
+#' @param value Any value found inside a message, or a data frame.
+#' @return `TRUE` when `value` is, or holds, such a number.
+#'
+#' @noRd
+is_or_holds_unsendable_number <- function(value) {
+  if (is.data.frame(value)) {
+    for (column in value) {
+      if (is.atomic(column) && is.null(attr(column, "dim", exact = TRUE))) {
+        if (is_plain_number(column) && any(is.infinite(column))) {
+          return(TRUE)
+        }
+      } else if (is_or_holds_unsendable_number(column)) {
+        return(TRUE)
+      }
+    }
+    return(FALSE)
+  }
+  if (is.list(value)) {
+    value_class <- oldClass(value)
+    if (!is.null(value_class) && !identical(value_class, "AsIs")) {
+      return(FALSE)
+    }
+    for (element in value) {
+      if (is_or_holds_unsendable_number(element)) {
+        return(TRUE)
+      }
+    }
+    return(FALSE)
+  }
+  is_plain_number(value) && !all(is.finite(value))
+}
+
+#' Is this a double or integer vector with no class but `"AsIs"`?
+#'
+#' `oldClass()` reads the class attribute alone, so a matrix passes.
+#'
+#' @param value Any value.
+#' @return `TRUE` or `FALSE`.
+#'
+#' @noRd
+is_plain_number <- function(value) {
+  (is.double(value) || is.integer(value)) &&
+    (is.null(oldClass(value)) || identical(oldClass(value), "AsIs"))
 }
 
 #' Remove the class of a messages list and of each of its messages
