@@ -70,7 +70,22 @@ single string.</p></dd>
 
 
 <dt id="arg-messages">messages<a class="anchor" aria-label="anchor" href="#arg-messages"></a></dt>
-<dd><p>List. A structured list of role and content pairs.</p></dd>
+<dd><p>The messages to send. Give an unnamed list with one element
+per message, such as <code>list(list(role = "user", content = "Hi"))</code>, or a
+data frame with at least one row. A data frame is sent as one message per
+row, with one field per column. A cell that is <code>NA</code> is left out of its
+message. The call aborts before it checks for a
+running server if <code>messages</code> breaks one of these rules:</p><ul><li><p><code>messages</code> is a list or a data frame.</p></li>
+<li><p>A data frame has at least one row, and any other list has at least one
+element.</p></li>
+<li><p>A list that is not a data frame has no names. A single message not
+wrapped in a list, such as <code>list(role = "user", content = "Hi")</code>,
+breaks this rule.</p></li>
+<li><p>Each element of such a list is a list of length one or more, and each
+of its fields has a name that is not <code>NA</code> and not empty. A data frame
+as an element breaks this rule.</p></li>
+</ul><p>The package does not check the roles, the content, or any other field of
+a message. The server checks them.</p></dd>
 
 
 <dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
@@ -155,9 +170,9 @@ warning and abort depend on the finish reason of that choice alone. With
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, <code>schema</code>, or <code>ttl</code>, or a <code>stream</code> in the <code>...</code> of a chat
-function, aborts with an argument message and no condition class even when
-the server is down. A condition of class
+<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, or <code>ttl</code>, or a <code>stream</code> in the
+<code>...</code> of a chat function, aborts with an argument message and no condition
+class even when the server is down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor

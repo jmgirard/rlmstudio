@@ -2,6 +2,19 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now checks `messages` before the request. It must be a data frame with
+  at least one row, or an unnamed list of one or more messages. Each
+  message must be a list of one or more fields, and each field must have
+  a name. A message must not be a data frame. Any other value aborts. A
+  single message that is not in a list, such as
+  `list(role = "user", content = "Hi")`, also aborts. The error has no
+  condition class, and it comes before the check for a running server.
+  Before, the call sent such a value to the server. For some values,
+  such as a single string, the server answered with an error that did
+  not name the fault. The package does not check the roles or the
+  content of a message.
+
 - A `stream` in the `...` of
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
