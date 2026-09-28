@@ -113,7 +113,7 @@ the numeric matrix `NA` closes with this milestone.
       `rlm_check_messages()`. Plant two defects in a scratch copy and see
       a test go red for each: no data-frame exception, and no `AsIs`
       case.
-- [ ] T3: Update the help and roxygen that AC4 names, and NEWS.md. Run
+- [x] T3: Update the help and roxygen that AC4 names, and NEWS.md. Run
       the AC4 grep. Run `devtools::document()`.
 - [ ] T4: Run `devtools::test()` and `devtools::check()`. The check needs
       `RLMSTUDIO_API_TOKEN` and a started server (LESSONS, M009).
@@ -133,6 +133,7 @@ the numeric matrix `NA` closes with this milestone.
 - 2026-09-28: minor amendment to T1. Three more fixtures sent a numeric array `NA` and now abort. They test the empty-row rule, so they now use character values.
 - 2026-09-28: T2 done. `has_unsendable_number()` runs between the non-vector rule and the trial write. Each planted defect turned a test red.
 - 2026-09-28: the AC2 test gained a named-zone `POSIXlt` field. Its `gmtoff` part is an integer `NA`, and a first walk refused it.
+- 2026-09-28: T3 done. The help, the roxygen, and NEWS state the rule. The AC4 grep finds three lines, and each states what jsonlite writes or wrote before. `document()` rewrote `man/lms_chat_openai.Rd`.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

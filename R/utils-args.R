@@ -330,11 +330,13 @@ schema_fault <- function(value) {
 #' `messages` is a named argument of `lms_chat_openai()`, so GP4 puts the check
 #' on the package, and it runs before the server probe (D-008). The shape
 #' rules read the shape of the value and the names at each level, and their
-#' abort carries the named-list hint. Three value rules follow, under a header
+#' abort carries the named-list hint. Four value rules follow, under a header
 #' of their own and with no hint: a function anywhere inside the value, a
 #' value anywhere inside it that is not an atomic vector, a list, or `NULL`,
-#' and a trial write that asks jsonlite to write it. Those three kinds are the
-#' only field values the package judges. The
+#' a number that jsonlite writes as a string or leaves out, and a trial write
+#' that asks jsonlite to write it. `has_unsendable_number()` states the
+#' number rule and the data-frame column case it leaves out. Those four kinds
+#' are the only field values the package judges. The
 #' server judges a role, a content value, and any other field value, as D-003
 #' states for API fields. A data frame passes, because jsonlite writes it as
 #' one JSON object per row.
@@ -794,8 +796,9 @@ has_bad_name <- function(value) {
 #' jsonlite writes a data frame with no columns, or a row whose cells are all
 #' `NA`, as an empty message. When list columns hold the `NA`, the message has
 #' a `null` field for each list column. A matrix column is the exception: its
-#' `NA` cells are written as an array, of `null` for a character matrix and of
-#' `"NA"` for a numeric one, but such a row is refused all the same. jsonlite
+#' `NA` cells are written as an array, of `null` for a character matrix, but
+#' such a row is refused all the same. A numeric matrix with such a row is
+#' refused here too, before the number rule of `rlm_check_messages()`. jsonlite
 #' writes a column named `NA` or `""` under a number, and it renames a
 #' repeated column name with a suffix. The column rule runs first, because a
 #' data frame with no columns also has rows in which every cell is `NA`.
@@ -833,10 +836,13 @@ data_frame_messages_fault <- function(value) {
 #' A column with a `dim` attribute whose first extent is the row count, a
 #' list array included, counts as empty in a row when each cell whose first
 #' index is that row is empty. `is.na()` keeps the `dim` of the column, so
-#' `apply()` reads those cells for each row. jsonlite writes a numeric matrix
-#' row of `NA` as `"NA"` strings and a character or logical one as `null`,
-#' but the rule refuses the row either way, as it did before `NULL` cells
-#' counted. A data-frame column counts as empty in a row
+#' `apply()` reads those cells for each row. jsonlite writes a character or
+#' logical matrix row of `NA` as `null`, but the rule refuses the row, as it
+#' did before `NULL` cells counted. It refuses a numeric one too, before the
+#' number rule of `rlm_check_messages()` reads it. An `NA` or `NaN` cell of
+#' an atomic column with no `dim` is empty here, and the number rule leaves
+#' it alone, because jsonlite leaves it out of the row. A data-frame column
+#' counts as empty in a row
 #' when this rule finds that row of it empty. A column that is neither an
 #' atomic vector nor a list, such as a function, an environment, or a symbol,
 #' is never empty and is not passed to `is.na()`, which warns on most such
