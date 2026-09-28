@@ -178,3 +178,18 @@ Evidence gathered 2026-09-28 at 57c267a, which contains origin/main (bb00074).
 - AC4: The `messages` help in `R/chat.R` lists the new rule between the function rule and the jsonlite-write rule. It says that a `NULL` field passes, and its closing paragraph names the new kind. NEWS.md has a new entry that covers the list form and the data-frame form. The M042 sub-bullet now gives the new error, not the jsonlite-write error, and no longer says that a class definition with a slot is sent. The M040 example "or an environment" is gone (grep finds no match). `devtools::document()` left the tree clean.
 - AC5: `devtools::test()` gave 426 tests, 0 failed, 0 skipped, 0 warnings. After `lms server start` with the token set, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - Gate: `cairn_validate.py` passed (exit 0). No DESIGN principle changed, so the impact report was skipped. `devtools::document()` gave no diff. README.Rmd and README.md are unchanged. The repo has no pkgdown site and the branch adds no top-level file. NEWS.md has the entry. The check is clean.
+
+Independent review: three fresh reviewers, [O] diff, [S] history, [S] prior review. No finding shows a criterion failing. Proposed dispositions go to the gate.
+
+- O1: A vector with a class set by hand, such as `structure(1L, class = "NULL")`, passes every rule and is sent as junk. NEWS says "a class attribute set by hand does not change the result", and the help says the same. A reader can think that such values are refused. A run shows the fault. Proposed: fix now, narrow the NEWS and help wording to values that are not vectors.
+- O2: The help says "an S4 object breaks this rule". An S4 object that contains `"list"` passes and is walked. An S4 object that contains `"numeric"` is sent without its other slots. A run shows both. Proposed: fix now, narrow the help sentence.
+- O3: Neither the help nor NEWS says that a `POSIXlt` field fails inside httr2. Proposed: reject, because the `/hotfix` candidate row covers it.
+- O4: A reference-class object is named as type "S4". Proposed: reject, because the plan gate chose `typeof()` and recorded this risk.
+- O5: The AC1 grid takes its expected type from `typeof(value)`, the same way the code does. Proposed: fix now, state the type of each kind by hand.
+- O6: Raw, complex, pairlist, an S4 object that contains `"list"`, and an environment as an attribute pass untested. Proposed: reject, because the outcomes are reasonable and outside the criteria.
+- O7: The `is.function()` test in `non_vector_type()` cannot be reached. Proposed: reject, because it keeps the walk safe on its own.
+- O8: cli wraps the detail line in a narrow console. Proposed: reject, because every older rule does the same.
+- S1: The deleted M042 test was the only test that a jsonlite warning in the trial write passes through. Proposed: reject, because no contract promises that behavior.
+- S2: The deleted M042 test was one that RR01 said to keep. Proposed: reject, because RR01 option b-prime retires it and T3 records the reason.
+- S3: The NEWS edits to earlier development bullets state present behavior correctly. Noted, no action.
+- P: The prior-review lens found no finding that the diff reopens.
