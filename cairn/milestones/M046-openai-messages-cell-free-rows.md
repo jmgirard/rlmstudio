@@ -110,6 +110,7 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
 - 2026-09-28: T4 done. With the token set and the server started, `devtools::test()` passed, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. A second `devtools::document()` left the tree clean. The check left the server off, as LESSONS M009 says.
 - 2026-09-28: claim audit: 16 claims read, 1 corrected — NEWS.md, R/chat.R, man/lms_chat_openai.Rd, R/utils-args.R, tests/testthat/test-arg-guards.R. The fresh [O] reader found every claim true. It flagged one AC2 test comment that called `{"m":{}}` an object with no field value. The comment now says `{}`, or an object whose only field holds `{}`, and the same reader's one re-read found it true.
 - 2026-09-28: status set to review.
+- step-7 approval: m046-openai-messages-cell-free-rows approved for merge, with the proposed triage: fix O1, O2, O3, and the list-array part of O6, file O5 with the classed matrix as one candidate row, and reject O4 and P1.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
@@ -136,3 +137,5 @@ Independent review (2026-09-28), three fresh reviewers. Proposed dispositions go
 - O7 (diff-bug): jsonlite writes `array(numeric(0), c(2,3,0,2))` as `[[],[],[]]`, which "nested empty arrays" still describes. Proposed: noted.
 - P1 (prior review): the AC2 test pins RR01 finding B1, the nested data frame with no columns, as an abort, and RR01 called that a false abort. Proposed: reject. The first M044 plan gate absorbed B1 and kept M040's recursion on purpose (`d5061db`, M044 work log). Scope Out and AC2 carry that choice.
 - Blame-history: no findings.
+
+Triage at the merge gate (2026-09-28), as proposed. O1, O2, and O3 were fixed now in the help and NEWS. O6 was fixed now for the list array with the test "a list array with no cells in a row gets the list-array detail", 5 expectations, 0 failures. O5 and the classed-matrix part of O6 became one candidate row in ROADMAP. O4 and P1 were rejected for the reasons above, and O7 was noted. After the fixes, `devtools::document()` rewrote `man/lms_chat_openai.Rd` alone, and `devtools::test()` ran 438 tests and 12487 expectations with 0 failures, 0 skips, and 0 errors. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `cairn_validate.py` passed.

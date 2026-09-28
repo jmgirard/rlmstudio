@@ -49,8 +49,8 @@ counts as empty in a row when each of its cells in that row is empty.
 Such a column with no cells in a row, such as a 2-by-0 matrix, is not
 empty in that row, because jsonlite writes that row of it as \verb{[]} or
 as nested empty arrays. A data-frame column counts as empty in a row
-when each of its own columns is empty in that row. So a data frame
-with no columns counts as empty in every row. A column that
+when each of its own columns is empty in that row. So a data-frame
+column with no columns counts as empty in every row. A column that
 is neither an atomic vector nor a list, such as an environment, never
 counts as empty.
 \item \code{messages}, when it is a list and not a data frame, has no \code{dim}

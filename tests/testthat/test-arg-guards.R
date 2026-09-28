@@ -2350,6 +2350,32 @@ test_that("a data-frame column with only empty columns counts as empty", {
   expect_identical(probe$calls, 0L)
 })
 
+# A list array of three dimensions with no cells in a row is not empty in
+# that row, so the empty-row rule passes it. The list-array rule then
+# refuses it, because the column has three dimensions.
+test_that("a list array with no cells in a row gets the list-array detail", {
+  probe <- local_counting_probe()
+
+  cases <- list(
+    "a 2-by-0-by-3 list array" = array(list(), c(2L, 0L, 3L)),
+    "a 2-by-3-by-0 list array" = array(list(), c(2L, 3L, 0L))
+  )
+  for (label in names(cases)) {
+    err <- expect_error(
+      lms_chat_openai("a-model", no_cell_frame(cases[[label]])),
+      messages_rule_details[["rule11"]],
+      fixed = TRUE,
+      info = label
+    )
+    expect_no_match(
+      conditionMessage(err),
+      messages_rule_details[["rule6"]],
+      fixed = TRUE
+    )
+  }
+  expect_identical(probe$calls, 0L)
+})
+
 # A column with a dim attribute is read row by row, through the cells whose
 # first index is the row. The frames are built with `$<-`, because
 # data.frame() spreads an array of two or more dimensions over several
