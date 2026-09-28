@@ -42,7 +42,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
       share their first N words and differ only after them, and they get the same vector. The third text differs
       from the first only in its first word, and it gets a different vector. The call gives no warning. The same
       three texts with `simplify = FALSE` return a body whose `usage` reports 0 prompt tokens.
-- [ ] AC3: `devtools::test()` and `devtools::check()` pass with 0 errors and 0 warnings, and
+- [x] AC3: `devtools::test()` and `devtools::check()` pass with 0 errors and 0 warnings, and
       `devtools::document()` leaves no diff.
 
 ## Coverage
@@ -99,3 +99,8 @@ package cannot count tokens, so both go to one candidate row that names the evid
   expectations. They cover no warning, the same vector for texts one and two, and another vector for text three.
   They also cover `usage` 0 prompt tokens with `simplify = FALSE`. The test failed on a planted defect at T2.
   Pass.
+- AC3: `devtools::test()` passed 464 tests, 12876 expectations, 0 failures, 0 skips. `devtools::check()` with the
+  token and the server running gave 0 errors, 0 warnings, and 0 notes. `devtools::document()` left no diff. Pass.
+- Gate: `cairn_validate.py` exit 0, all checks passed. `pkgdown::check_pkgdown()` found no problems. NEWS.md has
+  a bullet with no milestone number. README.Rmd and `.Rbuildignore` are not touched. DESIGN.md is not touched, so
+  `cairn_impact` does not apply. No driving RR.
