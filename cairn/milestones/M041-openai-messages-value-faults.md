@@ -39,7 +39,7 @@ functions take no `messages` argument.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `lms_chat_openai()` aborts before the server probe when
+- [x] AC1: `lms_chat_openai()` aborts before the server probe when
   `messages` holds a function at any place that a recursive walk of its
   lists and data frames reaches. The walk reaches four kinds of place. They
   are a field of a message and an element of a list at any depth below a
@@ -48,7 +48,7 @@ functions take no `messages` argument.
   function, which jsonlite sends as its source text, unless a rule that AC3
   orders earlier fires. The call gives no R
   warning on the way to the abort. A message with no function is sent.
-- [ ] AC2: `lms_chat_openai()` aborts before the server probe when a list
+- [x] AC2: `lms_chat_openai()` aborts before the server probe when a list
   with a `dim` attribute sits inside a message. Inside a message means a
   field, an element of a list at any depth below a field, or a cell of a
   list column. A column of a data frame that is a list with one, three, or
@@ -57,7 +57,7 @@ functions take no `messages` argument.
   the list-column cells of any data frame it reaches. Two kinds of value are
   still sent. One is an atomic matrix field. The other is a list-matrix
   column of any data frame, wherever that data frame sits.
-- [ ] AC3: Each abort names one rule. All shape rules of M038 to M040 run
+- [x] AC3: Each abort names one rule. All shape rules of M038 to M040 run
   first. Then come the AC2 rule, the name rule, the AC1 function rule, and
   the trial write. So a list array with repeated dimnames gets the AC2
   detail. A list-matrix inside a message that holds a function also gets
@@ -65,14 +65,14 @@ functions take no `messages` argument.
   no hint. Their header is "`messages` holds a field value that cannot be
   sent as JSON." Every other rule keeps its named-list hint. Its header
   stays "`messages` must be a data frame or an unnamed list of messages."
-- [ ] AC4: The help at `messages` in `R/chat.R` and
+- [x] AC4: The help at `messages` in `R/chat.R` and
   `man/lms_chat_openai.Rd` states the AC1 rule, the AC2 rule, and the two
   headers. It no longer says that a list with a `dim` inside a message is
   not checked. Its sentence on field values says that the package refuses a
   function and a value that jsonlite cannot write, and checks no other field
   value. NEWS.md has one entry for the two rules and the new header, with no
   milestone numbers.
-- [ ] AC5: `devtools::document()` leaves the tree clean, apart from the
+- [x] AC5: `devtools::document()` leaves the tree clean, apart from the
   known `@aliases` warning at `R/conditions.R:257`. `devtools::test()`
   passes. `devtools::check()` with the API token gives 0 errors and 0
   warnings, and any note is justified.
@@ -151,3 +151,12 @@ functions take no `messages` argument.
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Evidence, 2026-09-27, on branch head 2aa3e25 (main at b60baea, already merged into the branch):
+
+- AC1: a probe script through `rlm_check_messages()` aborted with the value-fault header and the function detail for a closure field, a primitive field, a function in a list in a field, a function in a list-column cell, a function as a data-frame column, and a classed function. None gave an R warning. A message with a nested list and no function passed. `lms_chat_openai()` calls `rlm_check_messages()` before `stop_if_no_server()` (`R/chat.R:418`). The rule12 probes in `test-arg-guards.R` pass in the suite run.
+- AC2: the same script aborted with the shape header and the inner `dim` detail for six values. They were a list-matrix field, a one-dimensional and a three-dimensional list array field, and a list-matrix in a list field. They were also a list-matrix in a list-column cell and a three-dimensional list-array column. An atomic matrix field, a top-level list-matrix column, and a data-frame field with a list-matrix column passed.
+- AC3: in the probe script, a list array with repeated dimnames and a list-matrix that holds a function both got the inner `dim` detail. A function under an empty name got the name detail. The shape faults kept the old header and the named-list hint. The function aborts used the new header with no hint. In `R/utils-args.R`, `rlm_check_messages()` runs `messages_fault()` first, then `has_function()`, then `messages_write_fault()`. The probe loop in the suite asserts the header, the absence of the other header, and the hint for every rule.
+- AC4: the diff of `R/chat.R` at `messages` adds the inner `dim` rule, the function rule, and both headers. It drops "A list with a `dim` inside a message is not checked." The field-value sentence now says the package refuses a function and a value that jsonlite cannot write, and checks no other value. `man/lms_chat_openai.Rd` matches after `document()`. The "not checked" lines left in the help concern names and array values, not the `dim` rule. NEWS.md has one entry with three sub-items and no milestone number.
+- AC5: `devtools::document()` left `git status` clean and printed only the known `@aliases` warning at `conditions.R:257`. `devtools::test()` gave 0 failures, 0 warnings, 0 skips, and 11621 passes. `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate: `cairn_validate.py` passed every check. No DESIGN principle changed, so `cairn_impact.py` did not run. `document()` gave no diff. The branch does not touch `README.Rmd`. The repo has no `_pkgdown.yml`. NEWS.md has the entry. The branch adds no top-level file. The full check is under AC5.
