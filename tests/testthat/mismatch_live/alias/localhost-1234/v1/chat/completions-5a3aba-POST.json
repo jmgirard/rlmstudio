@@ -1,0 +1,33 @@
+{
+    "id": "chatcmpl-rz2tab910z7fhyfix202xg",
+    "object": "chat.completion",
+    "created": 1790630233,
+    "model": "my-qwen",
+    "choices": [
+        {
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "hi",
+                "reasoning_content": "",
+                "tool_calls": [
+
+                ]
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+        }
+    ],
+    "usage": {
+        "prompt_tokens": 14,
+        "completion_tokens": 2,
+        "total_tokens": 16,
+        "completion_tokens_details": {
+            "reasoning_tokens": 0
+        }
+    },
+    "stats": {
+
+    },
+    "system_fingerprint": "my-qwen"
+}

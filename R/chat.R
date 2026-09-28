@@ -49,11 +49,15 @@
 #' With `simplify = TRUE`, it can raise `rlmstudio_bad_response` through any
 #' of the three, for a reply that holds no readable answer text. With either
 #' setting of `simplify`, it raises `rlmstudio_bad_response` through any of the
-#' three for a status-200 body that does not parse as JSON.
+#' three for a status-200 body that does not parse as JSON. With either
+#' setting of `simplify`, it raises `rlmstudio_model_mismatch` through
+#' [lms_chat_openresponses()] or [lms_chat_openai()] for a reply from a model
+#' other than the one asked for.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Cut-off reply
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 lms_chat <- function(
   model,
@@ -173,9 +177,14 @@ lms_chat <- function(
 #'   message names the first broken rule in the order the section below
 #'   gives. Parts of other types are not checked. With `logprobs = FALSE`, the value is not read, and the call
 #'   returns the text.
+#'
+#'   With either setting of `simplify`, a reply from a model other than the
+#'   one asked for raises `rlmstudio_model_mismatch`. See the "Reply from
+#'   another model" section.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 lms_chat_openresponses <- function(
   model,
@@ -209,6 +218,14 @@ lms_chat_openresponses <- function(
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "OpenResponses Failed")
+    check_reply_model(
+      resp,
+      resp_data,
+      model,
+      host,
+      token,
+      "OpenResponses Failed"
+    )
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -435,10 +452,15 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   `n` in `...` therefore returns the first choice alone, and the cut-off
 #'   warning and abort depend on the finish reason of that choice alone. With
 #'   `simplify = FALSE`, the body holds every choice.
+#'
+#'   With either setting of `simplify`, a reply from a model other than the
+#'   one asked for raises `rlmstudio_model_mismatch`. See the "Reply from
+#'   another model" section.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Cut-off reply
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 #' @examples
 #' \dontrun{
@@ -496,10 +518,21 @@ lms_chat_openai <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    # Every OpenAI condition carries these two fields, so a caller can read
-    # them without checking which fault it caught.
+    # Every OpenAI condition about the reply carries these two fields, so a
+    # caller can read them without checking which fault it caught. A
+    # condition from the model-list lookup does not.
     resp_data <- parse_ok_body(
       resp,
+      "OpenAI API Failed",
+      content = NULL,
+      finish_reason = NULL
+    )
+    check_reply_model(
+      resp,
+      resp_data,
+      model,
+      host,
+      token,
       "OpenAI API Failed",
       content = NULL,
       finish_reason = NULL
@@ -645,7 +678,8 @@ warn_if_cut_off <- function(finish_reason) {
 #' @param resp_data The parsed response body.
 #' @param label Character. The calling wrapper's label.
 #' @param ... Extra condition fields, such as the `content` and
-#'   `finish_reason` fields that every OpenAI condition carries.
+#'   `finish_reason` fields that every OpenAI condition about the reply
+#'   carries.
 #'
 #' @noRd
 check_body_object <- function(resp, resp_data, label, ...) {
@@ -657,6 +691,110 @@ check_body_object <- function(resp, resp_data, label, ...) {
       ...
     )
   }
+}
+
+#' Abort on a chat reply from a model other than the one asked for
+#'
+#' LM Studio can answer a model name that it cannot find with a reply from
+#' the one chat model it has loaded, under status 200 (M049 work log). The
+#' `model` field of the reply names the loaded instance that answered. Its id
+#' can differ from the key the caller asked for, so a name that differs
+#' starts one model-list request, and the reply is accepted when the
+#' answering instance belongs to a model whose key equals the asked name in
+#' any letter case (D-025). A reply with no `model` string is not checked.
+#' Fields are read with `[[`, because `$` would read a field whose name only
+#' starts with the one asked for. The asked name is compared as a plain
+#' string, because `identical()` also compares names, class, and the S4 bit,
+#' and a named, classed, or S4 string passes `rlm_check_id()`. `unclass()`
+#' keeps the S4 bit, and `[[` drops it.
+#'
+#' Runs before the caller's `simplify` branch, so `simplify = FALSE` cannot
+#' return a reply from the wrong model.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param model Character. The model name the call sent.
+#' @param host,token The host and token of the call, for the model list.
+#' @param label Character. The calling wrapper's label.
+#' @param ... Extra condition fields, such as the `content` and
+#'   `finish_reason` fields that `lms_chat_openai()` gives each
+#'   `rlmstudio_bad_response` about its reply.
+#'
+#' @noRd
+check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
+  reply_model <- if (is_json_object(resp_data)) resp_data[["model"]]
+  if (!is_one_string(reply_model) || !grepl("[^[:space:]]", reply_model)) {
+    return(invisible())
+  }
+  model <- unclass(model)[[1]]
+  if (identical(reply_model, model)) {
+    return(invisible())
+  }
+  if (reply_model_serves(model, reply_model, host, token, label)) {
+    return(invisible())
+  }
+  # The names are placed in the detail as text, so braces in a name that the
+  # server sent are not read as cli markup.
+  rlm_abort_bad_response(
+    resp,
+    label,
+    paste0(
+      "The reply came from the model \"",
+      reply_model,
+      "\", not from the model \"",
+      model,
+      "\" that the call asked for."
+    ),
+    hint = paste(
+      "LM Studio can answer a model name that it cannot find with a model",
+      "that is loaded. Check the name with",
+      "{.code list_models(loaded = TRUE)}, or load the model with",
+      "{.fn lms_load}."
+    ),
+    class = "rlmstudio_model_mismatch",
+    model = model,
+    reply_model = reply_model,
+    ...
+  )
+}
+
+#' Does a loaded instance of the asked model have the reply's id?
+#'
+#' Reads the model list of every model type through the checks of
+#' `list_models()`, with no message. A failed lookup raises the condition of
+#' that failure, under a label that names the chat function and the lookup.
+#'
+#' @param model Character. The model name the call sent.
+#' @param reply_model Character. The `model` field of the reply.
+#' @param host,token The host and token of the call.
+#' @param label Character. The calling wrapper's label.
+#' @return `TRUE` when a model whose key equals `model` in any letter case has
+#'   a loaded instance whose id is `reply_model`, else `FALSE`.
+#'
+#' @noRd
+reply_model_serves <- function(model, reply_model, host, token, label) {
+  lookup_label <- paste0(label, ", because the model-list lookup failed")
+  if (!is_server_running(host)) {
+    cli::cli_abort(
+      c(
+        "x" = "{lookup_label}: the LM Studio server is not running.",
+        "i" = "Run {.fn lms_server_start} first."
+      ),
+      class = "rlmstudio_no_server",
+      call = NULL
+    )
+  }
+  models <- request_model_list(host, token, lookup_label)$body[["models"]]
+  for (entry in models) {
+    if (!identical(tolower(entry[["key"]]), tolower(model))) {
+      next
+    }
+    ids <- vapply(entry[["loaded_instances"]], \(x) x[["id"]], character(1))
+    if (reply_model %in% ids) {
+      return(TRUE)
+    }
+  }
+  FALSE
 }
 
 #' Build the structured-output field of a chat completions request
@@ -1273,8 +1411,10 @@ reply_columns$openai <- reply_columns$openresponses
 #' raises `rlmstudio_no_server` itself, before the first call.
 #'
 #' An `rlmstudio_bad_response` that [lms_chat()] raises for one input fails
-#' that input alone. So does an `rlmstudio_api_error` with any `status` other
-#' than 401, 403, or 404. The batch goes on to the next input. Where the
+#' that input alone, unless it is an `rlmstudio_model_mismatch`. So does an
+#' `rlmstudio_api_error` with any `status` other than 401, 403, or 404,
+#' unless its `status` is 400 and its `code` is `"model_not_found"`. The batch
+#' goes on to the next input. Where the
 #' result is a list, or the `output` list-column that a `schema` gives, the
 #' element for that input holds the condition without its backtrace. An
 #' `rlmstudio_bad_response` for reply content that does not
@@ -1299,6 +1439,13 @@ reply_columns$openai <- reply_columns$openresponses
 #' way. The condition carries a `results` field, as described in the "API
 #' failure" section below. No warning about failed inputs is given.
 #'
+#' The batch aborts in the same way at an `rlmstudio_api_error` with `status`
+#' 400 and the `code` `"model_not_found"`, and at an
+#' `rlmstudio_model_mismatch`. The `"openai"` and `"openresponses"` routes
+#' give these for a model name that the server cannot find, so every later
+#' input fails in the same way.
+#' See the "Reply from another model" section below.
+#'
 #' An `rlmstudio_no_server` from [lms_chat()] also aborts the batch. Its
 #' `results` field holds the results so far, as described in the "Server not
 #' running" section below. An error of any other class aborts the batch
@@ -1307,6 +1454,7 @@ reply_columns$openai <- reply_columns$openresponses
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Cut-off reply
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 lms_chat_batch <- function(
   model,
@@ -1391,10 +1539,27 @@ lms_chat_batch <- function(
   }
   # A refused token or a model the server cannot find fails every input the
   # same way, whatever the prompt, so these statuses abort like a lost server
-  # (D-019). Any other status can come from one prompt, so it fails that input
-  # alone.
+  # (D-019). The OpenAI and OpenResponses routes answered a model they could
+  # not find with status 400 and the code "model_not_found" when two chat
+  # models were loaded (D-025). Any other status can come from one prompt, so
+  # it fails that input alone.
   keep_or_abort_api <- function(cnd) {
-    if (isTRUE(cnd$status %in% c(401L, 403L, 404L))) {
+    if (
+      isTRUE(cnd[["status"]] %in% c(401L, 403L, 404L)) ||
+        (identical(cnd[["status"]], 400L) &&
+          identical(cnd[["code"]], "model_not_found"))
+    ) {
+      abort_with_results(cnd)
+    }
+    keep_failure(cnd)
+  }
+  # A reply from another model means that the wrong model answers every
+  # input, so it aborts (D-025). The test sits in this handler and not in a
+  # handler of its own, because `tryCatch()` runs a handler inside the
+  # handlers named after it. The condition that such a handler raises again
+  # would reach this one and be kept.
+  keep_or_abort_bad <- function(cnd) {
+    if (inherits(cnd, "rlmstudio_model_mismatch")) {
       abort_with_results(cnd)
     }
     keep_failure(cnd)
@@ -1482,7 +1647,7 @@ lms_chat_batch <- function(
         rlmstudio_reply_cut_off = note_cut_off
       ),
       rlmstudio_api_error = keep_or_abort_api,
-      rlmstudio_bad_response = keep_failure,
+      rlmstudio_bad_response = keep_or_abort_bad,
       rlmstudio_no_server = abort_with_results
     )
     # `[i]` rather than `[[i]]`, so a NULL reply keeps its slot in the list.

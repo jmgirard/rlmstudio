@@ -62,12 +62,33 @@ api_error_message <- function(resp) {
   if (is_message_string(body)) body else fallback
 }
 
+#' Pick the error code out of a failed response
+#'
+#' LM Studio sends an `error.code` string on some failures, such as
+#' `"model_not_found"` for a model name it cannot find. Fields are read with
+#' `[[`, because `$` would read a field whose name only starts with the one
+#' asked for.
+#'
+#' @param resp An httr2 response the caller has decided to abort on.
+#' @return The string at `error.code` of the body, or `NULL` when the body
+#'   does not parse, `error` is not a JSON object, or its `code` is not one
+#'   string.
+#'
+#' @noRd
+api_error_code <- function(resp) {
+  parsed <- tryCatch(parse_json_body(resp), error = function(e) NULL)
+  err <- if (is_json_object(parsed)) parsed[["error"]]
+  code <- if (is_json_object(err)) err[["code"]]
+  if (is_one_string(code)) code else NULL
+}
+
 #' Abort on a failed REST response
 #'
 #' The one abort path for every REST wrapper that handles a failed response.
 #' The condition carries the class `rlmstudio_api_error` so callers can catch
-#' an API failure by class, and a `status` field holding the response status as
-#' an integer.
+#' an API failure by class, a `status` field holding the response status as
+#' an integer, and a `code` field holding the `error.code` string of the body
+#' or `NULL`.
 #'
 #' A response with status 401 or 403 means the server refused the call on
 #' authentication grounds, so the abort adds a hint. The hint that fits depends
@@ -96,6 +117,7 @@ rlm_abort_api <- function(resp, label, token_sent = FALSE) {
     body,
     class = "rlmstudio_api_error",
     status = status,
+    code = api_error_code(resp),
     call = NULL
   )
 }
@@ -123,6 +145,10 @@ rlm_abort_api <- function(resp, label, token_sent = FALSE) {
 #'   own hint, because `simplify = FALSE` cannot help there.
 #' @param ... Extra fields for the condition, passed on by name. A field given
 #'   as `NULL` is kept, so a caller can test for it with `names()`.
+#' @param class Character or `NULL`. Classes placed before
+#'   `rlmstudio_bad_response`, such as `rlmstudio_model_mismatch`. It comes
+#'   after `...`, so it matches only its full name and never catches a
+#'   shortened field name meant for `...`.
 #' @return Never returns. Always aborts.
 #'
 #' @noRd
@@ -134,11 +160,12 @@ rlm_abort_bad_response <- function(
     "The server returned a response this package cannot read.",
     "Call again with {.code simplify = FALSE} to get the body unchanged."
   ),
-  ...
+  ...,
+  class = NULL
 ) {
   cli::cli_abort(
     c("x" = "{label}: {detail}", "i" = hint),
-    class = "rlmstudio_bad_response",
+    class = c(class, "rlmstudio_bad_response"),
     status = as.integer(httr2::resp_status(resp)),
     ...,
     call = NULL

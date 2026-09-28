@@ -102,10 +102,14 @@ element after it.
 A condition of class \code{rlmstudio_api_error} is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a \code{status} field, which holds the HTTP response status as an
-integer.
+integer. It also carries a \code{code} field. The field holds the string at
+\code{error.code} of the response body, such as \code{"model_not_found"}. It is
+\code{NULL} when the body does not parse, when \code{error} is not a JSON object, or
+when its \code{code} is not one string.
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} aborts on it when its \code{status} is 401, 403, or 404, and
-no request goes out after that input. The condition then carries a
+when its \code{status} is 400 and its \code{code} is \code{"model_not_found"}. No request
+goes out after that input. The condition then carries a
 \code{results} field that follows the rule for a lost server in the "Server not
 running" section: its elements before the failed input hold the values that
 \code{format = "list"} returns for those inputs, and the element of the failed
@@ -273,17 +277,20 @@ not a JSON object. A body of \code{null} gets the message about its missing
 \code{output} or \code{choices} field instead.
 \code{\link[=lms_chat]{lms_chat()}} can raise the condition through all three chat functions.
 
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it. The element of the failed input
-holds the condition, or \code{NA} where the result is text, and the batch warns
-once and goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it, except on the subclass
+\code{rlmstudio_model_mismatch}, as the "Reply from another model" section of
+\link{rlmstudio-conditions} says. The element of the failed input holds the
+condition, or \code{NA} where the result is text, and the batch warns once and
+goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 
 The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: each of these
 functions reads the body only after a 200, and reports every other status
 as an \code{rlmstudio_api_error} instead. A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}}
-also carries two more fields. The \code{content} field holds the reply content
-of the first choice, and the \code{finish_reason} field holds the finish reason
-of the first choice.
+about its reply also carries two more fields. A condition from the
+model-list lookup does not, as the "Reply from another model" section
+says. The \code{content} field holds the reply content of the first choice,
+and the \code{finish_reason} field holds the finish reason of the first choice.
 Both are \code{NULL} for a response with no \code{choices}. In the third case,
 \code{content} holds the value that was read, which is \code{NULL} for \code{null} or
 missing content. For the second, third, and fourth cases, the message names the

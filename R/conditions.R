@@ -1,7 +1,9 @@
 #' Conditions raised by rlmstudio
 #'
 #' The functions in this package that talk to the LM Studio REST API raise
-#' three condition classes of their own. Each one is raised through
+#' four condition classes of their own. One of them,
+#' `rlmstudio_model_mismatch`, is also an `rlmstudio_bad_response`, and the
+#' "Reply from another model" section describes it. Each one is raised through
 #' [cli::cli_abort()], so each one is an R error that you can catch by class
 #' with [base::tryCatch()]. The chat functions on the OpenAI route also give
 #' one warning class of their own, described in the "Cut-off reply" section.
@@ -64,10 +66,14 @@
 #' A condition of class `rlmstudio_api_error` is raised when a REST call
 #' returns a response that the wrapper treats as a failure. The condition
 #' carries a `status` field, which holds the HTTP response status as an
-#' integer.
+#' integer. It also carries a `code` field. The field holds the string at
+#' `error.code` of the response body, such as `"model_not_found"`. It is
+#' `NULL` when the body does not parse, when `error` is not a JSON object, or
+#' when its `code` is not one string.
 #'
 #' [lms_chat_batch()] aborts on it when its `status` is 401, 403, or 404, and
-#' no request goes out after that input. The condition then carries a
+#' when its `status` is 400 and its `code` is `"model_not_found"`. No request
+#' goes out after that input. The condition then carries a
 #' `results` field that follows the rule for a lost server in the "Server not
 #' running" section: its elements before the failed input hold the values that
 #' `format = "list"` returns for those inputs, and the element of the failed
@@ -230,17 +236,20 @@
 #' `output` or `choices` field instead.
 #' [lms_chat()] can raise the condition through all three chat functions.
 #'
-#' [lms_chat_batch()] does not abort on it. The element of the failed input
-#' holds the condition, or `NA` where the result is text, and the batch warns
-#' once and goes on. See the details of [lms_chat_batch()].
+#' [lms_chat_batch()] does not abort on it, except on the subclass
+#' `rlmstudio_model_mismatch`, as the "Reply from another model" section of
+#' [rlmstudio-conditions] says. The element of the failed input holds the
+#' condition, or `NA` where the result is text, and the batch warns once and
+#' goes on. See the details of [lms_chat_batch()].
 #'
 #' The condition carries a `status` field, which holds the HTTP response
 #' status as an integer. Today the status is always 200: each of these
 #' functions reads the body only after a 200, and reports every other status
 #' as an `rlmstudio_api_error` instead. A condition from [lms_chat_openai()]
-#' also carries two more fields. The `content` field holds the reply content
-#' of the first choice, and the `finish_reason` field holds the finish reason
-#' of the first choice.
+#' about its reply also carries two more fields. A condition from the
+#' model-list lookup does not, as the "Reply from another model" section
+#' says. The `content` field holds the reply content of the first choice,
+#' and the `finish_reason` field holds the finish reason of the first choice.
 #' Both are `NULL` for a response with no `choices`. In the third case,
 #' `content` holds the value that was read, which is `NULL` for `null` or
 #' missing content. For the second, third, and fourth cases, the message names the
@@ -271,15 +280,69 @@
 #' for the whole batch in place of one for each input. It names the count and
 #' the positions of the cut-off inputs, and each of those elements keeps its
 #' reply. It comes after the warning about failed inputs. A batch that aborts
-#' on a lost server, or on status 401, 403, or 404, gives this warning before
-#' the abort. It names the cut-off inputs whose replies the `results` field of
-#' the abort holds. The native and OpenResponses routes give no such warning.
+#' with a `results` field gives this warning before the abort. It names the
+#' cut-off inputs whose replies the `results` field of the abort holds. The
+#' native and OpenResponses routes give no such warning.
 #'
 #' The warning shows whatever `quiet` and the `rlmstudio.quiet` option say,
 #' because it is the only sign that an answer is not complete.
 #'
+#' @section Reply from another model:
+#' [lms_chat_openai()] and [lms_chat_openresponses()] read the `model` field
+#' of each status-200 reply, with either setting of `simplify`. On LM Studio
+#' 0.4.25+1 with one chat model loaded, both routes answered a model name that
+#' the server could not find with status 200 and a reply from the loaded
+#' model. With two chat models loaded, they answered with status 400 and the
+#' `code` `"model_not_found"`, as the "API failure" section describes. The
+#' `model` field names the loaded instance that answered. Its id can differ
+#' from the key that the call asked for.
+#'
+#' If the `model` field equals the name that the call sent, the reply is
+#' accepted. If it differs, the call sends one request for the model list to
+#' `api/v1/models` on the same host, with the token of the call, and prints no
+#' message. The reply is accepted if a model whose key equals the asked name
+#' in any letter case has a loaded instance whose id is the `model` field.
+#' Otherwise the call aborts with a condition of class
+#' `rlmstudio_model_mismatch`. That condition is also an
+#' `rlmstudio_bad_response`, and its `status` is 200. Its `model` field holds
+#' the asked name, and its `reply_model` field holds the `model` field of the
+#' reply. The message names both. A condition from [lms_chat_openai()] also
+#' carries the `content` and `finish_reason` fields, both `NULL`.
+#'
+#' The check runs before the reply is read, so it also runs with
+#' `logprobs = TRUE`, with a `schema` on [lms_chat_openai()], and for a reply
+#' with no answer text. A reply is not checked if its body is not a JSON
+#' object, if it has no `model` field, or if its `model` is not one string or
+#' holds only whitespace. A body that is not a JSON object is returned with
+#' `simplify = FALSE`, and with `simplify = TRUE` it raises the error that the
+#' "Malformed response" section describes. If the instance that answered is
+#' unloaded before the model-list request, the call aborts, also when that
+#' instance belongs to the asked model.
+#'
+#' If the model-list request fails, the call raises the condition of that
+#' failure. The message opens with the label of the chat function, followed
+#' by "because the model-list lookup failed". A status other than 200 raises
+#' `rlmstudio_api_error`. A body that does not parse as JSON, or that breaks a
+#' rule of a model list in the "Malformed response" section, raises
+#' `rlmstudio_bad_response`. A server that the port check before the request
+#' cannot reach raises `rlmstudio_no_server`. A condition from the lookup does
+#' not carry the `content` and `finish_reason` fields, also when
+#' [lms_chat_openai()] raises it.
+#'
+#' [lms_chat()] runs the check through [lms_chat_openai()] and
+#' [lms_chat_openresponses()]. [lms_chat_native()] does not check the reply.
+#' On LM Studio 0.4.25+1, `/api/v1/chat` answered a name that it could not
+#' find with status 404, which raises `rlmstudio_api_error`.
+#'
+#' [lms_chat_batch()] aborts at the first input that raises
+#' `rlmstudio_model_mismatch`, on the `"openai"` and `"openresponses"` routes.
+#' It also aborts at an `rlmstudio_api_error` with status 400 whose `code` is
+#' `"model_not_found"`. No request goes out after that input. In both cases,
+#' the condition carries a `results` field that follows the rule for a lost
+#' server in the "Server not running" section.
+#'
 #' @name rlmstudio-conditions
-#' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response rlmstudio_reply_cut_off
+#' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response rlmstudio_reply_cut_off rlmstudio_model_mismatch
 #'
 #' @examples
 #' \dontrun{
