@@ -156,6 +156,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: the audit narrowed "the chat routes" to the OpenAI and OpenResponses routes in NEWS, the batch help, and a comment. It limited the `schema` clause to `lms_chat_openai()`, and it stated that a lookup condition carries no `content` or `finish_reason` field. A new assertion in the lookup parse-failure test backs that sentence. Suite: 488 tests, 0 failed, 2 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes, and the server was started again after it.
 - 2026-09-28: status review. T7 and T8 are done, and AC2 waits for fresh evidence at review.
 - 2026-09-28: review pass 2 started on head a812ed4, which already contains `origin/main`. No PR exists. Fresh evidence for AC1 to AC7 is recorded under "Pass 2", AC2 is ticked, and the consistency gate passed. Three fresh reviewers are running.
+- 2026-09-28: review pass 2: 9 findings logged with proposed dispositions. R1 shows AC2(a) failing for an S4 model string. The step-7 gate decides.
 
 ## Decisions
 
@@ -278,3 +279,30 @@ failed.
 Consistency gate, pass 2: `cairn_validate.py` passed with exit 0. No DESIGN.md principle changed, so
 `cairn_impact` did not run. `devtools::document()` left no diff, and `pkgdown::check_pkgdown()` found no problems.
 `NEWS.md` has entries with no milestone numbers. The branch adds no top-level file, and README is not touched.
+
+Independent review, pass 2: three fresh reviewers ([O] diff-bug, [S] blame-history, [S] prior-review) on head
+a812ed4. The prior-review lens found no archived finding that the diff reverses, and the PR-comment probe returned
+no comments. It and the [O] lens found that the fixes for O1, O10, O11, O12, and P2 hold. The code at each finding below was
+read again, and each finding holds. Each has a proposed disposition, which the step-7 gate decides.
+
+- R1 (fix now, AC2(a) fails): `R/chat.R:719`. `unclass()` keeps the S4 bit, so an S4 subclass of `character`
+  stays unequal to the plain reply name. `rlm_check_id()` accepts such a name. A run with `new("MyChr",
+  "org/model-x")` and a reply from `org/model-x` sent 2 requests and aborted as a mismatch. `as.character()` and
+  `paste0()` each give a plain string.
+- R2 (fix now): `R/utils-api-error.R:161`. The branch adds the `class` option of `rlm_abort_bad_response()` before
+  `...`. LESSONS (M017) says to place such an option after `...`, because it catches a shortened field name. No
+  current caller passes such a field.
+- R3 (fix now): `cairn/DESIGN.md:53` names only the `status` field of `rlm_abort_api()`. The branch adds `code`.
+- R4 (fix now): D-024 says that the embedding batch differs from the chat batch in three ways. The chat batch now
+  stops at a `model_not_found` 400, and `lms_embed()` does not. D-025 does not annotate D-024. The fix is one new
+  entry, because DECISIONS is history.
+- R5 (fix now): the comment at `R/chat.R:514` and the "Malformed response" text at `R/conditions.R:248` say that
+  every `lms_chat_openai()` condition carries `content` and `finish_reason`. A failed lookup carries neither.
+- R6 (fix now): `air format --check` flags lines that the branch added in `R/chat.R`, `R/utils-api-error.R`, and
+  `test-model-check.R`. DESIGN.md says that code is formatted with Air. Some flagged lines in those files are older.
+- R7 (fix now): the T8 text at `R/conditions.R:315` to `:318` has short, ragged lines.
+- R8 (fix now): the `finally` clause of `data-raw/record-model-mismatch-cassette.R:137` skips the second unload if
+  the first fails. It also hides a failed load under a failed unload. Each unload needs its own `tryCatch()`.
+- R9 (follow-up): a name without its publisher, such as `"gemma-3-1b"`, can be served by `google/gemma-3-1b`, and
+  the key compare then aborts. No probe covered it. It joins the candidate row "Four model-name cases outside
+  M049", next to O2.
