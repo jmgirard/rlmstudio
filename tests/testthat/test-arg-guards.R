@@ -2302,7 +2302,9 @@ test_that("a column with no cells in a row is not empty", {
 # A data-frame column counts as empty in a row when each of its own columns
 # is empty in that row. A data frame with no columns has no such column, so
 # it counts as empty. The cell in row 2 of each column below is written as
-# an object with no field value, stated here and checked against jsonlite.
+# `{}`, or as an object whose only field holds `{}`, and the rule counts that
+# cell as empty. The written form is stated here and checked against
+# jsonlite.
 test_that("a data-frame column with only empty columns counts as empty", {
   probe <- local_counting_probe()
 

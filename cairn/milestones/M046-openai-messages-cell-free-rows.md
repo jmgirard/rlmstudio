@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M046: The OpenAI chat function counts an array row with no cells as a field value
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M044   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -108,6 +108,8 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
 - 2026-09-28: T2 done. `empty_rows()` returns `FALSE` for each row of a `dim` column whose extents after the first multiply to zero. With the old `empty_rows()` put back through `assignInNamespace()`, the AC1 test was red with the empty-row detail. With the fix, its 12 expectations passed, and `devtools::test()` passed with no failure or skip.
 - 2026-09-28: T3 done. The `messages` help, the `empty_rows()` roxygen, and one NEWS entry state both rules. `devtools::document()` rewrote `man/lms_chat_openai.Rd` alone.
 - 2026-09-28: T4 done. With the token set and the server started, `devtools::test()` passed, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. A second `devtools::document()` left the tree clean. The check left the server off, as LESSONS M009 says.
+- 2026-09-28: claim audit: 16 claims read, 1 corrected — NEWS.md, R/chat.R, man/lms_chat_openai.Rd, R/utils-args.R, tests/testthat/test-arg-guards.R. The fresh [O] reader found every claim true. It flagged one AC2 test comment that called `{"m":{}}` an object with no field value. The comment now says `{}`, or an object whose only field holds `{}`, and the same reader's one re-read found it true.
+- 2026-09-28: status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
