@@ -891,3 +891,118 @@ test_that("a 401 on the first batch aborts with no results field", {
   expect_identical(length(recorder$requests), 1L)
   expect_false("results" %in% names(err))
 })
+
+
+# simplify = FALSE over batches ------------------------------------------------
+
+test_that("simplify = FALSE returns one parsed body per request, in order", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  replies <- list(
+    batch_reply(1:100),
+    batch_reply(101:200, order = 100:1),
+    batch_reply(201:250)
+  )
+  local_request_sequence(replies)
+
+  out <- lms_embed("test-embed", batch_inputs, simplify = FALSE, batch_size = 100)
+
+  expect_identical(out, lapply(replies, httr2::resp_body_json))
+})
+
+test_that("simplify = FALSE keeps the condition of a failed request", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    batch_reply(1:2),
+    error_reply(500L),
+    batch_reply(5)
+  ))
+
+  expect_warning(
+    out <- lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2),
+    "2 inputs failed, at positions 3 and 4."
+  )
+
+  expect_length(out, 3L)
+  expect_identical(out[[1]], httr2::resp_body_json(batch_reply(1:2)))
+  expect_s3_class(out[[2]], "rlmstudio_api_error")
+  expect_identical(out[[2]]$status, 500L)
+  expect_identical(out[[3]], httr2::resp_body_json(batch_reply(5)))
+})
+
+test_that("with simplify = FALSE an abort carries the list so far", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(batch_reply(1:2), error_reply(404L)))
+
+  err <- expect_error(
+    lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2),
+    class = "rlmstudio_api_error"
+  )
+  expect_identical(
+    err$results,
+    list(httr2::resp_body_json(batch_reply(1:2)), NULL, NULL)
+  )
+})
+
+
+# The progress bar -------------------------------------------------------------
+
+# Record the bars that are made and the updates they get, without drawing any.
+local_bar_recorder <- function(.env = parent.frame()) {
+  log <- new.env(parent = emptyenv())
+  log$bars <- list()
+  log$updates <- list()
+  local_mocked_bindings(
+    cli_progress_bar = function(...) {
+      log$bars[[length(log$bars) + 1L]] <- list(...)
+      "bar-id"
+    },
+    cli_progress_update = function(...) {
+      log$updates[[length(log$updates) + 1L]] <- list(...)
+      invisible()
+    },
+    cli_progress_done = function(...) invisible(),
+    .package = "cli",
+    .env = .env
+  )
+  log
+}
+
+run_250 <- function(...) {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    batch_reply(1:100),
+    batch_reply(101:200),
+    batch_reply(201:250)
+  ))
+  lms_embed("test-embed", batch_inputs, batch_size = 100, ...)
+}
+
+test_that("a call of three requests shows one bar that counts inputs", {
+  withr::local_options(rlmstudio.quiet = NULL)
+  log <- local_bar_recorder()
+
+  run_250()
+
+  expect_length(log$bars, 1L)
+  expect_identical(log$bars[[1]]$total, 250L)
+  expect_length(log$updates, 3L)
+  expect_identical(
+    vapply(log$updates, function(u) as.integer(u$inc), integer(1)),
+    c(100L, 100L, 50L)
+  )
+})
+
+test_that("no bar shows when quiet, or for one request", {
+  log <- local_bar_recorder()
+
+  run_250(quiet = TRUE)
+  expect_length(log$bars, 0L)
+
+  withr::with_options(list(rlmstudio.quiet = TRUE), run_250())
+  expect_length(log$bars, 0L)
+
+  withr::local_options(rlmstudio.quiet = NULL)
+  drive_embed(in_order_body, input = three_inputs)
+  expect_length(log$bars, 0L)
+  expect_length(log$updates, 0L)
+})

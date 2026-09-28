@@ -92,7 +92,7 @@ requests: none were asked for, so nothing records them.
       `rlmstudio_api_error` outside 401, 403, and 404, fill its rows with `NA`, and warn once past `quiet`. Abort
       at once on 401, 403, or 404 and on a lost server, with `results`, as `lms_chat_batch()` does. If all
       requests fail, abort with the first condition. Tests first (AC3, AC4).
-- [ ] T4: Return the list of parsed bodies under `simplify = FALSE`. For more than one request, add the progress
+- [x] T4: Return the list of parsed bodies under `simplify = FALSE`. For more than one request, add the progress
       bar through `is_quiet()`. Tests first (AC5, AC6).
 - [ ] T5: Add the live test of AC1 that compares `batch_size = 2` with one request.
 - [ ] T6: Rewrite the `lms_embed()` roxygen, update the `results` text in `R/conditions.R`, and add the NEWS
@@ -110,6 +110,7 @@ requests: none were asked for, so nothing records them.
 - 2026-09-28: T1 done. `rlm_check_batch_size()` reuses `ttl_fault()` and rejects `NULL`. The eleven-value test went red with the check moved after the probe.
 - 2026-09-28: T2 done. The loop in `R/embed.R` also carries the T3 and T4 code, because they share it. The two `simplify = FALSE` tests now expect a list of one. Four planted defects each turned `test-embed.R` red: overlapping batches, no width check, a named `input`, and rows placed by batch rank.
 - 2026-09-28: T3 done. Tests cover a bad reply and an API failure mid-call, the warning under `quiet`, the all-failed abort, a lost server, and 401, 403, and 404 after a success and before one. Five planted defects each turned the file red. A 401 before any success carries no `results` field, the reading of AC4 that says the field follows a successful request.
+- 2026-09-28: T4 done. Tests cover the list of three bodies, a failed slot, an abort's list, and the bar through mocked `cli` functions. Four planted defects each turned the file red.
 
 ## Decisions
 
