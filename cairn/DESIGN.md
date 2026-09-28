@@ -37,7 +37,7 @@ Read from NAMESPACE and the pkgdown reference index on 2026-09-17.
 
 - Setup: `install_lmstudio`, `has_lms`, `check_lms_version`, `lms_path`.
 - Daemon and server: `lms_daemon_start`, `lms_daemon_stop`, `lms_daemon_status`, `with_lms_daemon`, `lms_server_start`, `lms_server_stop`, `lms_server_status`, `lms_server_ready` (corrected M010).
-- Model management: `list_models`, `lms_download`, `lms_download_status`, `lms_load`, `lms_unload`, `lms_unload_all`.
+- Model management: `list_models`, `list_instances`, `lms_download`, `lms_download_status`, `lms_load`, `lms_unload`, `lms_unload_all`.
 - Chat and inference: `lms_chat`, `lms_chat_batch`, `lms_chat_native`, `lms_chat_openai`, `lms_chat_openresponses`.
 - Analysis (experimental): `lms_score_expected`.
 - S3 classes: `lms_chat_result` (text plus token logprobs) and `lms_download_status`, each with a print method.

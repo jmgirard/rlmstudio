@@ -44,6 +44,7 @@ reference:
     desc: "Discover, download, load, and manage local models."
     contents:
       - list_models
+      - list_instances
       - lms_download
       - lms_download_status
       - lms_load

@@ -29,7 +29,7 @@ milestone.
 
 | Endpoint | Method | rlmstudio | Notes |
 |---|---|---|---|
-| `/api/v1/models` | GET | `list_models()` | Returns six core columns by default. `detailed = TRUE` returns every field. |
+| `/api/v1/models` | GET | `list_models()`, `list_instances()` | `list_models()` returns six core columns by default, and `detailed = TRUE` returns every field. `list_instances()` returns one row per loaded instance. |
 | `/api/v1/models/load` | POST | `lms_load()` | |
 | `/api/v1/models/unload` | POST | `lms_unload()`, `lms_unload_all()` | |
 | `/api/v1/models/download` | POST | `lms_download()` | |
@@ -128,8 +128,10 @@ all.
   instance's configuration. The `capabilities` block carries `vision`,
   `trained_for_tool_use`, and `reasoning`. With `detailed = TRUE`,
   `list_models()` returns all of this, and it derives a `state` column from
-  `loaded_instances`. It does not flatten the per-instance configuration into
-  rows, which is the table `lms ps` prints.
+  `loaded_instances`. `list_instances()` flattens `loaded_instances` into one
+  row per instance, with each `config` field in a column, which is the table
+  `lms ps` prints (M050). It lacks four fields that `lms ps --json` reports:
+  the generation status, the queued requests, the ttl, and the last-used time.
 - **Streaming.** A chat request with `stream: true` returns Server Sent Events.
   There are nineteen named event types. Nine cover the run itself:
   `chat.start`, `model_load.start`, `model_load.progress`, `model_load.end`,
@@ -189,7 +191,7 @@ scores many items.
 5. Structured output on `/v1/chat/completions`, for one parsed score per item.
 6. A loaded-instance table, the `lms ps` view, flattened from the
    `loaded_instances` field that `list_models(detailed = TRUE)` already
-   returns.
+   returns. Wrapped by M050 as `list_instances()`.
 7. Stateful chat through `response_id` and `previous_response_id`.
 8. Streaming. This changes the return shape, so it needs its own design work.
 

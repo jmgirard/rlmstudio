@@ -131,7 +131,50 @@ list_models <- function(
 #' List loaded model instances
 #'
 #' Retrieves the loaded model instances on the server via the LM Studio REST
-#' API, one row per instance.
+#' API, one row per instance, with the load configuration of each instance in
+#' columns. It is the view that `lms ps` prints, read from the same model list
+#' that [list_models()] reads, so it honors `host` and `token`.
+#'
+#' The model list does not carry four fields that `lms ps --json` reports: the
+#' generation status, the queued requests, the ttl, and the last-used time.
+#'
+#' @section Columns:
+#' The first four columns are character columns:
+#'
+#' - `id`: the id of the instance.
+#' - `key`: the key of its model.
+#' - `type`: the type of its model, such as `"llm"` or `"embedding"`.
+#' - `display_name`: the display name of its model, or `NA` when the model
+#'   list gives none.
+#'
+#' Rows follow the order of the models in the model list, then the order of
+#' the instances of a model. Two instances with the same id, or two models
+#' with the same key, give separate rows.
+#'
+#' After the four columns, the frame has one column for each field name in the
+#' `config` object of an instance, in order of first appearance. When one
+#' `config` holds a name twice, the first value counts. A row whose `config`
+#' lacks the field, or has no `config`, holds `NA` there, or `NULL` in a
+#' list-column.
+#'
+#' A column takes the field name as it is, with no name repair, so a name such
+#' as `a-b` needs backticks or `[[`. A field name that is empty, or that equals
+#' one of the four column names or the column name of an earlier field, takes
+#' the prefix `config.`, again and again while the name still clashes. A field
+#' named `id` so gives the column `config.id`.
+#'
+#' The column type follows the values of the field that are present and not
+#' `null`:
+#'
+#' - All strings give a character column.
+#' - All numbers give a double column, whole numbers included.
+#' - All booleans give a logical column.
+#' - No such values give a logical column of `NA`.
+#'
+#' In these four kinds, a `null` value is `NA`. Any other mix, or any JSON
+#' object or array, gives a list-column. It holds each value as
+#' [jsonlite::parse_json()] returns it, and `NULL` where the field is absent or
+#' `null`.
 #'
 #' @param type Character vector. The types of models to include. Defaults to
 #'   \code{c("llm", "embedding")}.
@@ -143,7 +186,33 @@ list_models <- function(
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #'
+#' @seealso [LM Studio List Models
+#'   API](https://lmstudio.ai/docs/developer/rest/list), and [list_models()]
+#'   for one row per model.
+#'
+#' @return A \code{data.frame} with one row per loaded instance of a model
+#'   whose type is in `type`, with the columns that the "Columns" section
+#'   describes. If there is no such instance, it returns a \code{data.frame}
+#'   with zero rows and the four character columns, invisibly, and prints a
+#'   message unless `quiet = TRUE` or the `rlmstudio.quiet` option is `TRUE`.
+#'
+#' @inheritSection rlmstudio-conditions Server not running
+#' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#' lms_load("google/gemma-3-1b")
+#'
+#' # One row per loaded instance, with its load configuration
+#' list_instances()
+#'
+#' # Only the loaded embedding models
+#' list_instances(type = "embedding")
+#' }
 list_instances <- function(
   type = c("llm", "embedding"),
   quiet = FALSE,
