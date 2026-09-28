@@ -95,7 +95,7 @@ requests: none were asked for, so nothing records them.
 - [x] T4: Return the list of parsed bodies under `simplify = FALSE`. For more than one request, add the progress
       bar through `is_quiet()`. Tests first (AC5, AC6).
 - [x] T5: Add the live test of AC1 that compares `batch_size = 2` with one request.
-- [ ] T6: Rewrite the `lms_embed()` roxygen, update the `results` text in `R/conditions.R`, and add the NEWS
+- [x] T6: Rewrite the `lms_embed()` roxygen, update the `results` text in `R/conditions.R`, and add the NEWS
       entry. Run `devtools::document()`, `devtools::test()`, and `devtools::check()` with the token (AC7).
 
 ## Work log
@@ -112,6 +112,7 @@ requests: none were asked for, so nothing records them.
 - 2026-09-28: T3 done. Tests cover a bad reply and an API failure mid-call, the warning under `quiet`, the all-failed abort, a lost server, and 401, 403, and 404 after a success and before one. Five planted defects each turned the file red. A 401 before any success carries no `results` field, the reading of AC4 that says the field follows a successful request.
 - 2026-09-28: T4 done. Tests cover the list of three bodies, a failed slot, an abort's list, and the bar through mocked `cli` functions. Four planted defects each turned the file red.
 - 2026-09-28: T5 done. The live test skips unless nomic-embed-text-v1.5 is already loaded, so it never loads a model. Run live with `NOT_CRAN=true`, it passed with 2 expectations and failed on a planted row reversal. A `lms load` here made a second instance, `text-embedding-nomic-embed-text-v1.5:2`, which the session unloaded along with the server it started.
+- 2026-09-28: T6 done. The `lms_embed()` help gains a details section, the conditions page gains an `lms_embed()` paragraph in two sections and names `batch_size` among the pre-probe arguments, and NEWS has the entry. `devtools::test()` clean, and `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 

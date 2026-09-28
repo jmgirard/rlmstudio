@@ -1,8 +1,8 @@
 #' Turn Text into Embedding Vectors
 #'
 #' Sends one or more texts to an embedding model and returns the vector that
-#' the model produced for each one. The whole input vector travels in a single
-#' request.
+#' the model produced for each one. The texts go out in batches of at most
+#' `batch_size`, one request per batch, in the order given.
 #'
 #' @param model Character. The loaded embedding model name. Must be one name,
 #'   given as a single string.
@@ -11,8 +11,8 @@
 #'   missing values.
 #' @param host Character. Server URL.
 #' @param simplify Logical. If `TRUE`, the default, returns a numeric matrix
-#'   with one row per input. Any other value returns the parsed response body
-#'   unchanged.
+#'   with one row per input. Any other value returns a list of the parsed
+#'   response bodies, unchanged, one per request.
 #' @param ... Additional fields for the request body. LM Studio ignores a
 #'   field it does not recognize, and two OpenAI fields are worth naming for
 #'   that reason: LM Studio ignores `dimensions`, so asking for a narrower
@@ -28,14 +28,45 @@
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param batch_size A whole number from 1 to `.Machine$integer.max`. The
-#'   most texts that one request carries.
+#'   most texts that one request carries. The default is 100. A value at
+#'   least as large as `length(input)` sends every text in one request.
 #' @param quiet Logical or `NULL`. Whether to suppress the progress bar. `NULL`
-#'   reads the `rlmstudio.quiet` option.
-#' @return If `simplify = FALSE`, a list representing the raw JSON response.
-#'   Otherwise, a double matrix with one row per input text and one column per
-#'   embedding dimension. The row at position `i` holds the embedding that the
-#'   response reported for the input at position `i`. The matrix carries no
-#'   row or column names.
+#'   reads the `rlmstudio.quiet` option. The bar shows only when the call sends
+#'   more than one request. `quiet` does not suppress the warning about failed
+#'   inputs.
+#' @return If `simplify = FALSE`, a list with one element per request, in
+#'   request order. Each element is the parsed JSON body of that request, or
+#'   the condition of a request that failed. A call with one request returns
+#'   a list of one. Otherwise, a double matrix with one row per input text and
+#'   one column per embedding dimension. The row at position `i` holds the
+#'   embedding that the response reported for the input at position `i`, or
+#'   `NA` for an input whose request failed. The matrix carries no row or
+#'   column names.
+#' @details
+#' Before each request after the first, the function checks again that the
+#' server is running.
+#'
+#' A request that fails with an `rlmstudio_bad_response`, or with an
+#' `rlmstudio_api_error` whose `status` is not 401, 403, or 404, fails the
+#' inputs it carried alone. Their rows hold `NA`, or their element of the
+#' `simplify = FALSE` list holds the condition without its backtrace. The call
+#' goes on to the next request and then gives one warning that names the
+#' count and the positions of the failed inputs. That warning shows even with
+#' `quiet = TRUE`. If every request fails, the call aborts with the condition
+#' of the first failed request, and no warning is given.
+#'
+#' Three faults end the call at once, and no request goes out after them:
+#' a server that the check before a request finds gone, an
+#' `rlmstudio_api_error` with `status` 401, 403, or 404, and a request whose
+#' embeddings have another number of dimensions than those of an earlier
+#' request. The last one aborts with `rlmstudio_bad_response`. Each abort
+#' after a request that succeeded carries a `results` field. With
+#' `simplify = TRUE`, it is the matrix so far, with `NA` in each row whose
+#' embedding did not arrive. With `simplify = FALSE`, it is the list so far,
+#' with `NULL` in the element of the request that ended the call and in every
+#' element after it. An abort before any
+#' request succeeded carries no `results` field. An error of any other class
+#' aborts the call unchanged.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response

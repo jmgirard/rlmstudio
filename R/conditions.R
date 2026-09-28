@@ -10,7 +10,7 @@
 #' Functions that call the LM Studio REST API open a TCP connection to the
 #' hostname and port named in `host` before they send the request. A function
 #' that checks its own arguments does that first, so a bad `model`, `job_id`,
-#' `input`, `inputs`, `messages`, `schema`, or `ttl`, or a `stream` in the
+#' `input`, `inputs`, `messages`, `schema`, `ttl`, or `batch_size`, or a `stream` in the
 #' `...` of a chat function, aborts with an argument message and no condition
 #' class even when the server is down. A condition of class
 #' `rlmstudio_no_server` is raised when that connection cannot be opened. A
@@ -51,6 +51,14 @@
 #' such as a server that stops during a request, raises an `httr2_failure`
 #' error instead. That error aborts the batch and carries no `results` field.
 #'
+#' [lms_embed()] checks the server before each request, and a request carries
+#' at most `batch_size` inputs. If a check after the first request finds the
+#' server gone, the call aborts with `rlmstudio_no_server`. Once a request has
+#' succeeded, the condition carries a `results` field. With `simplify = TRUE`,
+#' `results` is a matrix with `NA` in each row whose embedding did not arrive.
+#' With `simplify = FALSE`, it is a list with one element per request and
+#' `NULL` from the request not sent on.
+#'
 #' @section API failure:
 #' A condition of class `rlmstudio_api_error` is raised when a REST call
 #' returns a response that the wrapper treats as a failure. The condition
@@ -66,6 +74,13 @@
 #' element of the failed input holds the condition, or `NA` where the result
 #' is text, and the batch warns once and goes on. See the details of
 #' [lms_chat_batch()].
+#'
+#' [lms_embed()] follows the same rule for each request. A 401, 403, or 404
+#' aborts the call, and once a request has succeeded the condition carries a
+#' `results` field, a matrix or a list as the "Server not running" section
+#' describes. Any other status fails the inputs of that request alone, and
+#' the call warns once and goes on. If every request fails, the call aborts
+#' with the first condition. See the details of [lms_embed()].
 #'
 #' @section Malformed response:
 #' A condition of class `rlmstudio_bad_response` is raised when the server

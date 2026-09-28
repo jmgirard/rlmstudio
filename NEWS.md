@@ -1,5 +1,10 @@
 # rlmstudio (development version)
 
+* `lms_embed()` now sends its input in batches, one request for each run of at most `batch_size` texts. The default `batch_size` is 100. A new `quiet` argument controls a progress bar, which shows when a call sends more than one request.
+  * A request that fails with `rlmstudio_bad_response`, or with `rlmstudio_api_error` at a status other than 401, 403, or 404, leaves the rows of its inputs `NA`. The call goes on and warns once, even when quiet. If every request fails, the call aborts with the first failure.
+  * A 401, 403, or 404, a server lost between requests, and a batch whose embeddings have another width abort the call. After a request that succeeded, the condition carries the rows so far in a `results` field.
+  * With `simplify = FALSE`, `lms_embed()` now returns a list of parsed bodies, one per request. A call with one request returns a list of one. Before, it returned the body itself.
+
 * `lms_chat_openai()` no longer counts a matrix or array column of a `messages` data frame as empty in a row that holds no cells of it. An example is a row of a 2-by-0 matrix. jsonlite writes that row of the column as `[]`, or as nested empty arrays such as `[[],[],[]]`. Before, a row in which every other cell was `NA` aborted with "You gave a data frame with a row in which every cell is NA or a NULL list cell."
   * If the column is an atomic matrix or array with no class attribute, or a list matrix, such a row is now sent. If a data-frame column holds such a matrix, the row is also sent, as `{"m":[]}`.
   * A list array of three or more dimensions now aborts with the error for a list with a `dim` attribute.

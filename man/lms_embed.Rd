@@ -27,8 +27,8 @@ missing values.}
 \item{host}{Character. Server URL.}
 
 \item{simplify}{Logical. If \code{TRUE}, the default, returns a numeric matrix
-with one row per input. Any other value returns the parsed response body
-unchanged.}
+with one row per input. Any other value returns a list of the parsed
+response bodies, unchanged, one per request.}
 
 \item{...}{Additional fields for the request body. LM Studio ignores a
 field it does not recognize, and two OpenAI fields are worth naming for
@@ -48,29 +48,61 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
 
 \item{batch_size}{A whole number from 1 to \code{.Machine$integer.max}. The
-most texts that one request carries.}
+most texts that one request carries. The default is 100. A value at
+least as large as \code{length(input)} sends every text in one request.}
 
 \item{quiet}{Logical or \code{NULL}. Whether to suppress the progress bar. \code{NULL}
-reads the \code{rlmstudio.quiet} option.}
+reads the \code{rlmstudio.quiet} option. The bar shows only when the call sends
+more than one request. \code{quiet} does not suppress the warning about failed
+inputs.}
 }
 \value{
-If \code{simplify = FALSE}, a list representing the raw JSON response.
-Otherwise, a double matrix with one row per input text and one column per
-embedding dimension. The row at position \code{i} holds the embedding that the
-response reported for the input at position \code{i}. The matrix carries no
-row or column names.
+If \code{simplify = FALSE}, a list with one element per request, in
+request order. Each element is the parsed JSON body of that request, or
+the condition of a request that failed. A call with one request returns
+a list of one. Otherwise, a double matrix with one row per input text and
+one column per embedding dimension. The row at position \code{i} holds the
+embedding that the response reported for the input at position \code{i}, or
+\code{NA} for an input whose request failed. The matrix carries no row or
+column names.
 }
 \description{
 Sends one or more texts to an embedding model and returns the vector that
-the model produced for each one. The whole input vector travels in a single
-request.
+the model produced for each one. The texts go out in batches of at most
+\code{batch_size}, one request per batch, in the order given.
+}
+\details{
+Before each request after the first, the function checks again that the
+server is running.
+
+A request that fails with an \code{rlmstudio_bad_response}, or with an
+\code{rlmstudio_api_error} whose \code{status} is not 401, 403, or 404, fails the
+inputs it carried alone. Their rows hold \code{NA}, or their element of the
+\code{simplify = FALSE} list holds the condition without its backtrace. The call
+goes on to the next request and then gives one warning that names the
+count and the positions of the failed inputs. That warning shows even with
+\code{quiet = TRUE}. If every request fails, the call aborts with the condition
+of the first failed request, and no warning is given.
+
+Three faults end the call at once, and no request goes out after them:
+a server that the check before a request finds gone, an
+\code{rlmstudio_api_error} with \code{status} 401, 403, or 404, and a request whose
+embeddings have another number of dimensions than those of an earlier
+request. The last one aborts with \code{rlmstudio_bad_response}. Each abort
+after a request that succeeded carries a \code{results} field. With
+\code{simplify = TRUE}, it is the matrix so far, with \code{NA} in each row whose
+embedding did not arrive. With \code{simplify = FALSE}, it is the list so far,
+with \code{NULL} in the element of the request that ended the call and in every
+element after it. An abort before any
+request succeeded carries no \code{results} field. An error of any other class
+aborts the call unchanged.
 }
 \section{Server not running}{
 
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{messages}, \code{schema}, or \code{ttl}, or a \code{stream} in the
+\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, or a \code{stream} in the
 \code{...} of a chat function, aborts with an argument message and no condition
 class even when the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
@@ -110,6 +142,14 @@ and every element after it are \code{NULL}. The check before the first input
 adds no \code{results} field. A connection that fails after the check passes,
 such as a server that stops during a request, raises an \code{httr2_failure}
 error instead. That error aborts the batch and carries no \code{results} field.
+
+\code{\link[=lms_embed]{lms_embed()}} checks the server before each request, and a request carries
+at most \code{batch_size} inputs. If a check after the first request finds the
+server gone, the call aborts with \code{rlmstudio_no_server}. Once a request has
+succeeded, the condition carries a \code{results} field. With \code{simplify = TRUE},
+\code{results} is a matrix with \code{NA} in each row whose embedding did not arrive.
+With \code{simplify = FALSE}, it is a list with one element per request and
+\code{NULL} from the request not sent on.
 }
 
 \section{API failure}{
@@ -128,6 +168,13 @@ input and every element after it are \code{NULL}. For any other status, the
 element of the failed input holds the condition, or \code{NA} where the result
 is text, and the batch warns once and goes on. See the details of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+
+\code{\link[=lms_embed]{lms_embed()}} follows the same rule for each request. A 401, 403, or 404
+aborts the call, and once a request has succeeded the condition carries a
+\code{results} field, a matrix or a list as the "Server not running" section
+describes. Any other status fails the inputs of that request alone, and
+the call warns once and goes on. If every request fails, the call aborts
+with the first condition. See the details of \code{\link[=lms_embed]{lms_embed()}}.
 }
 
 \section{Malformed response}{
