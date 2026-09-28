@@ -1,5 +1,10 @@
 # rlmstudio (development version)
 
+* `lms_chat_openai()` now refuses two more kinds of `messages` value before the check for a running server. The errors have no condition class.
+  * A list with a `dim` attribute inside a message aborts, such as a list-matrix as a field or in a list-column cell. So does a list column of a data frame with one, three, or more dimensions. Before, jsonlite sent such a list as nested arrays with each cell in an array of its own. A one-dimensional list column with more than one row was refused before too, with a jsonlite error. An atomic matrix field and a list-matrix column are still sent.
+  * A function anywhere inside `messages` aborts, such as a field, a data-frame column, or a list-column cell. Before, jsonlite sent the function's source text.
+  * Two errors get a new header, "`messages` holds a field value that cannot be sent as JSON." They are the error for a function and the error for a value that jsonlite cannot write. They no longer show the form of a message. Before, it opened with "`messages` must be a data frame or an unnamed list of messages." The other `messages` errors keep that header.
+
 * `lms_chat_openai()` now refuses more `messages` values before the check for a running server. The errors have no condition class.
   * A data frame row whose cells are all `NA` or `NULL` list cells aborts. Before, it was sent as a message with `null` fields. A row with a `list()` or `list(NA)` cell is still sent.
   * A list of messages with a `dim` attribute, such as a matrix of messages, aborts. So does a message that is a list with a `dim` attribute. Before, a matrix was sent flat in column order, and such a message was sent with each field in an array.

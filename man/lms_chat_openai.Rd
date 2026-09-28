@@ -46,9 +46,15 @@ cell is sent as \verb{[]} and a \code{list(NA)} cell as \verb{[null]}, so a row 
 such a cell is sent. A matrix or data-frame column counts as empty in
 a row when each of its cells in that row is empty.
 \item \code{messages}, when it is a list and not a data frame, has no \code{dim}
-attribute, such as a matrix or an array of messages. A list with a
-\code{dim} inside a message is not checked.
+attribute, such as a matrix or an array of messages.
 \item A message that is a list has no \code{dim} attribute.
+\item No list inside a message has a \code{dim} attribute. The rule reads each
+field, each list at any depth below a field, and each cell of a list
+column. jsonlite would send such a list as nested arrays with each
+cell in an array of its own. A list column of a data frame with one,
+three, or more dimensions also breaks this rule. An atomic matrix
+field is sent as an array of arrays. A list-matrix column of any data
+frame is sent, one row of cells for each message.
 \item No message, and no list or data frame inside a message or inside a
 cell or column of a data frame, has a name that is \code{NA}, empty, or
 repeated. jsonlite would send an \code{NA} or empty name as a number and
@@ -56,6 +62,18 @@ rename a repeated name \code{a} to \code{a.1}. A list with no names passes. The
 names of a list column are not checked, because they are not sent.
 The names of an atomic vector and the column names of a matrix are
 not checked, because jsonlite sends those values as arrays.
+}
+
+The error for each rule above opens with "\code{messages} must be a data
+frame or an unnamed list of messages." and shows the form of a message.
+Two more rules are checked after them. Their error opens with
+"\code{messages} holds a field value that cannot be sent as JSON." and shows
+no form:
+\itemize{
+\item No function sits inside \code{messages}: not as a field, in a list below a
+field, as a column of a data frame, or in a cell of a list column.
+jsonlite would send a function as its source text. A function with a
+class gets the error of this rule, not the error of the next one.
 \item jsonlite can write the value, with the options that the request uses.
 If it cannot, the error gives the jsonlite message. This rule is
 checked last.
@@ -68,9 +86,10 @@ array. A data frame and its columns keep their classes. A kept class that
 jsonlite has no method for, such as a field with the class \code{"foo"} alone,
 breaks the last rule.
 
-The package checks the shape of \code{messages} and whether jsonlite can
-write it. It does not check the values of the roles, the content, or any
-other field of a message. The server checks them.}
+The package checks the shape of \code{messages}. Of the field values, it
+refuses a function and a value that jsonlite cannot write. It does not
+check any other value of a role, the content, or another field of a
+message. The server checks them.}
 
 \item{host}{Character. Server URL.}
 

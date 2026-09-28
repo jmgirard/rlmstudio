@@ -328,12 +328,15 @@ schema_fault <- function(value) {
 #' Reject a messages value that cannot be sent as a list of messages
 #'
 #' `messages` is a named argument of `lms_chat_openai()`, so GP4 puts the check
-#' on the package, and it runs before the server probe (D-008). The rules read
-#' the shape of the value and the names at each level, and a trial write then
-#' asks jsonlite to write it. The package does not judge a role, a content
-#' value, or any other field value. The server does, as D-003 states for API
-#' fields. A data frame passes, because jsonlite
-#' writes it as one JSON object per row.
+#' on the package, and it runs before the server probe (D-008). The shape
+#' rules read the shape of the value and the names at each level, and their
+#' abort carries the named-list hint. Two value rules follow, under a header of
+#' their own and with no hint: a function anywhere inside the value, and a
+#' trial write that asks jsonlite to write it. A function and a value that
+#' jsonlite cannot write are the only field values the package judges. The
+#' server judges a role, a content value, and any other field value, as D-003
+#' states for API fields. A data frame passes, because jsonlite writes it as
+#' one JSON object per row.
 #'
 #' @param value The value the caller passed as `messages`.
 #' @return `value`, invisibly.
@@ -341,15 +344,29 @@ schema_fault <- function(value) {
 #' @noRd
 rlm_check_messages <- function(value) {
   fault <- messages_fault(value)
-  if (is.null(fault)) {
-    fault <- messages_write_fault(value)
-  }
   if (!is.null(fault)) {
     cli::cli_abort(
       c(
         "{.arg messages} must be a data frame or an unnamed list of messages.",
         "x" = "{fault}",
         "i" = "Each message is a named list, such as {.code list(role = \"user\", content = \"Hi\")}."
+      ),
+      call = NULL
+    )
+  }
+  if (has_function(value)) {
+    fault <- paste(
+      "You gave a field value that is a function, which jsonlite would send",
+      "as its source text."
+    )
+  } else {
+    fault <- messages_write_fault(value)
+  }
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "{.arg messages} holds a field value that cannot be sent as JSON.",
+        "x" = "{fault}"
       ),
       call = NULL
     )
@@ -367,7 +384,8 @@ rlm_check_messages <- function(value) {
 #' message is returned as a value, and the abort splices it in, so cli does
 #' not read its braces.
 #'
-#' @param value A `messages` value that passed `messages_fault()`.
+#' @param value A `messages` value that passed `messages_fault()` and holds
+#'   no function.
 #' @return A detail that holds the jsonlite message, or `NULL` when the write
 #'   works.
 #'
@@ -387,6 +405,34 @@ messages_write_fault <- function(value) {
       paste("You gave a value that jsonlite cannot write:", conditionMessage(e))
     }
   )
+}
+
+#' Does a function sit anywhere inside this messages value?
+#'
+#' jsonlite writes a function as an array of its source lines, with no error,
+#' so the trial write does not catch one. The walk goes down every list, and a
+#' data frame is a list of its columns, so it reads each column, each cell of
+#' a list or list-matrix column, and each nested data frame. A `for` loop
+#' reads the elements as stored, for the reason `any_holds_list_array()`
+#' states.
+#'
+#' @param value A `messages` value that passed `messages_fault()`.
+#' @return `TRUE` when the walk reaches a function.
+#'
+#' @noRd
+has_function <- function(value) {
+  if (is.function(value)) {
+    return(TRUE)
+  }
+  if (!is.list(value)) {
+    return(FALSE)
+  }
+  for (element in value) {
+    if (has_function(element)) {
+      return(TRUE)
+    }
+  }
+  FALSE
 }
 
 #' Remove the class of a messages list and of each of its messages
@@ -459,7 +505,95 @@ messages_fault <- function(value) {
       )
     }
   }
+  if (has_inner_list_array(value)) {
+    return(inner_list_array_detail)
+  }
   nested_names_fault(value)
+}
+
+inner_list_array_detail <- paste(
+  "You gave a list with a dim attribute inside a message, such as a",
+  "list-matrix field."
+)
+
+#' Is there a list with a dim attribute inside a message?
+#'
+#' jsonlite writes such a list as nested arrays with each cell boxed, such as
+#' `[[[1],[3]],[[2],[4]]]` for a two-by-two list-matrix. The walk starts at the
+#' messages, whose own `dim` the rules before it read, and goes down every
+#' list. It reads the attribute and not `dim()`, because `dim()` of a data
+#' frame is not `NULL`. A data frame is walked column by column. Its
+#' list-matrix column is sent one row of cells per message, so that column
+#' passes and its cells are read. A list column with one, three, or more
+#' dimensions is refused.
+#'
+#' @param value A list of messages, or a data frame.
+#' @return `TRUE` when the walk reaches a list with a `dim` attribute.
+#'
+#' @noRd
+has_inner_list_array <- function(value) {
+  if (is.data.frame(value)) {
+    for (column in value) {
+      if (is.data.frame(column)) {
+        if (has_inner_list_array(column)) {
+          return(TRUE)
+        }
+      } else if (is.list(column)) {
+        column_dim <- attr(column, "dim", exact = TRUE)
+        if (!is.null(column_dim) && length(column_dim) != 2L) {
+          return(TRUE)
+        }
+        if (any_holds_list_array(column)) {
+          return(TRUE)
+        }
+      }
+    }
+    return(FALSE)
+  }
+  for (message in value) {
+    if (any_holds_list_array(message)) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+#' Does any element of this list hold a list with a dim attribute?
+#'
+#' A `for` loop reads the elements as stored. `vapply()` would call an
+#' `as.list()` method first. For a `POSIXlt` of length one, that method
+#' returns a list that holds the same `POSIXlt` again.
+#'
+#' @param value A list.
+#' @return `TRUE` when `is_or_holds_list_array()` is `TRUE` for an element.
+#'
+#' @noRd
+any_holds_list_array <- function(value) {
+  for (element in value) {
+    if (is_or_holds_list_array(element)) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+#' The walk behind `has_inner_list_array()`, from one value inside a message
+#'
+#' @param value Any value found inside a message.
+#' @return `TRUE` when `value` is, or holds, a list with a `dim` attribute.
+#'
+#' @noRd
+is_or_holds_list_array <- function(value) {
+  if (!is.list(value)) {
+    return(FALSE)
+  }
+  if (is.data.frame(value)) {
+    return(has_inner_list_array(value))
+  }
+  if (!is.null(attr(value, "dim", exact = TRUE))) {
+    return(TRUE)
+  }
+  any_holds_list_array(value)
 }
 
 #' Does any object that jsonlite writes as an object have a bad name?
@@ -555,6 +689,9 @@ data_frame_messages_fault <- function(value) {
       "You gave a data frame with a row in which every cell is NA or a NULL list cell."
     )
   }
+  if (has_inner_list_array(value)) {
+    return(inner_list_array_detail)
+  }
   nested_names_fault(value)
 }
 
@@ -568,7 +705,9 @@ data_frame_messages_fault <- function(value) {
 #' when each of its cells there is empty. jsonlite writes an atomic matrix row
 #' of `NA` as `"NA"` strings, but the rule refuses the row, as it did before
 #' `NULL` cells counted. A data-frame column counts as empty in a row when
-#' this rule finds that row of it empty. The columns are read one at a time,
+#' this rule finds that row of it empty. A function column is never empty.
+#' `is.na()` on it warns, and the function rule refuses it later. The columns
+#' are read one at a time,
 #' because `is.na()` on the whole data frame spreads a matrix column over
 #' several.
 #'
@@ -581,6 +720,8 @@ empty_rows <- function(value) {
   for (column in value) {
     if (is.data.frame(column)) {
       column_empty <- empty_rows(column)
+    } else if (is.function(column)) {
+      column_empty <- FALSE
     } else {
       cell_empty <- is.na(column)
       if (is.list(column)) {

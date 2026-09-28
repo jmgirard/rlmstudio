@@ -854,8 +854,19 @@ messages_rule_details <- c(
   rule7 = "You gave a list with a dim attribute, such as a matrix of messages.",
   rule8 = "You gave a message with a dim attribute, such as a list array.",
   rule9 = "You gave a message, or a list or data frame inside one, with a name that is NA, empty, or repeated.",
-  rule10 = "You gave a value that jsonlite cannot write:"
+  rule10 = "You gave a value that jsonlite cannot write:",
+  rule11 = "You gave a list with a dim attribute inside a message, such as a list-matrix field.",
+  rule12 = "You gave a field value that is a function, which jsonlite would send as its source text."
 )
+
+# The function rule and the trial-write rule report a value fault under their
+# own header, with no hint. Every other rule reports a shape fault.
+messages_value_rules <- c("rule10", "rule12")
+messages_headers <- c(
+  shape = "`messages` must be a data frame or an unnamed list of messages.",
+  value = "`messages` holds a field value that cannot be sent as JSON."
+)
+messages_shape_hint <- "Each message is a named list"
 
 good_message <- list(role = "user", content = "hi")
 
@@ -1214,6 +1225,158 @@ messages_probes <- list(
       class = c("foo", "data.frame")
     ),
     rule = "rule6"
+  ),
+  # jsonlite writes a list with a dim inside a message as nested arrays with
+  # each cell boxed. The rule runs before the names rule, so repeated
+  # dimnames, which names() reads, get the dim text.
+  list(
+    label = "a list-matrix field",
+    value = list(list(role = "user", content = matrix(list(1, 2, 3, 4), 2))),
+    rule = "rule11"
+  ),
+  list(
+    label = "a one-dimensional list array field",
+    value = list(list(role = "user", content = array(list("a", "b"), 2))),
+    rule = "rule11"
+  ),
+  list(
+    label = "a three-dimensional list array field",
+    value = list(
+      list(role = "user", content = array(as.list(1:8), c(2, 2, 2)))
+    ),
+    rule = "rule11"
+  ),
+  list(
+    label = "a list array field with repeated dimnames",
+    value = list(list(
+      role = "user",
+      content = array(list("a", "b"), 2, list(c("x", "x")))
+    )),
+    rule = "rule11"
+  ),
+  list(
+    label = "a list array inside a list field",
+    value = list(list(
+      role = "user",
+      content = list(list(type = "text", text = array(list("a"), 1)))
+    )),
+    rule = "rule11"
+  ),
+  list(
+    label = "a list array in a list-column cell",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- list("hi", matrix(list(1, 2), 1))
+      df
+    }),
+    rule = "rule11"
+  ),
+  list(
+    label = "a one-dimensional list-array column",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- array(list("a", "b"), 2)
+      df
+    }),
+    rule = "rule11"
+  ),
+  list(
+    label = "a three-dimensional list-array column",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- array(as.list(1:8), c(2, 2, 2))
+      df
+    }),
+    rule = "rule11"
+  ),
+  list(
+    label = "a list array in a list-column cell of a data-frame field",
+    value = list(list(
+      role = "user",
+      content = local({
+        inner <- data.frame(a = 1)
+        inner$b <- list(array(list("x"), 1))
+        inner
+      })
+    )),
+    rule = "rule11"
+  ),
+  # jsonlite writes a function as an array of its source lines, with no error.
+  list(
+    label = "a closure field",
+    value = list(list(role = "user", content = function(x) x)),
+    rule = "rule12"
+  ),
+  list(
+    label = "a primitive field",
+    value = list(list(role = "user", content = sum)),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function inside a list field",
+    value = list(list(
+      role = "user",
+      content = list(list(type = "text", text = function() "x"))
+    )),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function in a list-column cell",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- list("hi", mean)
+      df
+    }),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function in a list-matrix column cell",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$m <- matrix(list(1, sum, 2, 3), 2)
+      df
+    }),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function as a data-frame column",
+    value = local({
+      df <- data.frame(role = "user")
+      df$content <- function() "x"
+      df
+    }),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function column in a nested data frame",
+    value = local({
+      inner <- data.frame(a = 1)
+      inner$f <- function() "x"
+      df <- data.frame(role = "user")
+      df$sub <- inner
+      df
+    }),
+    rule = "rule12"
+  ),
+  # A function with a class jsonlite has no method for gets the function
+  # rule, which runs before the trial write.
+  list(
+    label = "a foo-classed function field",
+    value = list(
+      list(role = "user", content = structure(function() "x", class = "foo"))
+    ),
+    rule = "rule12"
+  ),
+  # The rules before the function rule win.
+  list(
+    label = "a function and a repeated name",
+    value = list(list(role = "user", role = "system", content = sum)),
+    rule = "rule9"
+  ),
+  list(
+    label = "a list-matrix field that holds a function",
+    value = list(list(role = "user", content = matrix(list(sum, 1), 1))),
+    rule = "rule11"
   )
 )
 
@@ -1228,6 +1391,34 @@ test_that("a messages value that breaks a rule aborts before the server probe", 
       info = p$label
     )
     expect_match(conditionMessage(err), "`messages`", fixed = TRUE, info = p$label)
+    # The header of the rule's kind opens the message, and the other kind's
+    # header is absent. Only a shape fault carries the named-list hint.
+    kind <- if (p$rule %in% messages_value_rules) "value" else "shape"
+    expect_true(
+      startsWith(conditionMessage(err), messages_headers[[kind]]),
+      info = p$label
+    )
+    expect_no_match(
+      conditionMessage(err),
+      messages_headers[[setdiff(names(messages_headers), kind)]],
+      fixed = TRUE,
+      info = p$label
+    )
+    if (kind == "shape") {
+      expect_match(
+        conditionMessage(err),
+        messages_shape_hint,
+        fixed = TRUE,
+        info = p$label
+      )
+    } else {
+      expect_no_match(
+        conditionMessage(err),
+        messages_shape_hint,
+        fixed = TRUE,
+        info = p$label
+      )
+    }
     # No package class on an argument fault (D-008).
     expect_identical(
       class(err),
@@ -1243,6 +1434,27 @@ test_that("a messages value that breaks a rule aborts before the server probe", 
         info = paste(p$label, "names", other)
       )
     }
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("a function column aborts with no warning on the way", {
+  probe <- local_counting_probe()
+  top <- data.frame(role = "user")
+  top$content <- function() "x"
+  inner <- data.frame(a = 1)
+  inner$f <- function() "x"
+  nested <- data.frame(role = "user")
+  nested$sub <- inner
+
+  for (value in list(top, nested)) {
+    expect_no_warning(
+      expect_error(
+        lms_chat_openai("a-model", value),
+        messages_rule_details[["rule12"]],
+        fixed = TRUE
+      )
+    )
   }
   expect_identical(probe$calls, 0L)
 })
@@ -1512,6 +1724,70 @@ test_that("a value jsonlite cannot write aborts with the jsonlite message", {
   expect_match(conditionMessage(err), "`messages`", fixed = TRUE)
   expect_identical(class(err), c("rlang_error", "error", "condition"))
   expect_identical(probe$calls, 0L)
+})
+
+# The list-array rule leaves an atomic matrix field and a list-matrix column
+# of any data frame alone, and the function rule leaves a message with no
+# function alone. Each value below reaches the request.
+test_that("matrix forms the list-array rule allows reach the request", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  top <- data.frame(role = "user")
+  top$m <- matrix(list("a", "b"), 1)
+  inner <- data.frame(a = 1)
+  inner$m <- matrix(list("a", "b"), 1)
+  nested <- data.frame(role = "user")
+  nested$sub <- inner
+
+  cases <- list(
+    list(
+      label = "a message with a nested list and no function",
+      value = list(list(
+        role = "user",
+        content = list(list(type = "text", text = "hi"))
+      )),
+      sent = list(list(
+        role = "user",
+        content = list(list(type = "text", text = "hi"))
+      ))
+    ),
+    list(
+      label = "an atomic matrix field",
+      value = list(list(role = "user", m = matrix(1:4, 2))),
+      sent = list(list(role = "user", m = list(list(1L, 3L), list(2L, 4L))))
+    ),
+    list(
+      label = "a list-matrix column",
+      value = top,
+      sent = list(list(role = "user", m = list(list("a"), list("b"))))
+    ),
+    list(
+      label = "a list-matrix column of a nested data frame",
+      value = nested,
+      sent = list(list(
+        role = "user",
+        sub = list(a = 1L, m = list(list("a"), list("b")))
+      ))
+    ),
+    list(
+      label = "a data-frame field with a list-matrix column",
+      value = list(list(role = "user", content = inner)),
+      sent = list(list(
+        role = "user",
+        content = list(list(a = 1L, m = list(list("a"), list("b"))))
+      ))
+    )
+  )
+
+  for (case in cases) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", case$value), message = NULL)
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      case$sent,
+      info = case$label
+    )
+  }
 })
 
 test_that("a Date, a factor, and an I() field reach the request", {
