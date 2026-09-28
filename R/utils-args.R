@@ -459,7 +459,95 @@ messages_fault <- function(value) {
       )
     }
   }
+  if (has_inner_list_array(value)) {
+    return(inner_list_array_detail)
+  }
   nested_names_fault(value)
+}
+
+inner_list_array_detail <- paste(
+  "You gave a list with a dim attribute inside a message, such as a",
+  "list-matrix field."
+)
+
+#' Is there a list with a dim attribute inside a message?
+#'
+#' jsonlite writes such a list as nested arrays with each cell boxed, such as
+#' `[[[1],[3]],[[2],[4]]]` for a two-by-two list-matrix. The walk starts at the
+#' messages, whose own `dim` the rules before it read, and goes down every
+#' list. It reads the attribute and not `dim()`, because `dim()` of a data
+#' frame is not `NULL`. A data frame is walked column by column. Its
+#' list-matrix column is sent one row of cells per message, so that column
+#' passes and its cells are read. A list column with one, three, or more
+#' dimensions is refused.
+#'
+#' @param value A list of messages, or a data frame.
+#' @return `TRUE` when the walk reaches a list with a `dim` attribute.
+#'
+#' @noRd
+has_inner_list_array <- function(value) {
+  if (is.data.frame(value)) {
+    for (column in value) {
+      if (is.data.frame(column)) {
+        if (has_inner_list_array(column)) {
+          return(TRUE)
+        }
+      } else if (is.list(column)) {
+        column_dim <- attr(column, "dim", exact = TRUE)
+        if (!is.null(column_dim) && length(column_dim) != 2L) {
+          return(TRUE)
+        }
+        if (any_holds_list_array(column)) {
+          return(TRUE)
+        }
+      }
+    }
+    return(FALSE)
+  }
+  for (message in value) {
+    if (any_holds_list_array(message)) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+#' Does any element of this list hold a list with a dim attribute?
+#'
+#' A `for` loop reads the elements as stored. `vapply()` would call an
+#' `as.list()` method first. For a `POSIXlt` of length one, that method
+#' returns a list that holds the same `POSIXlt` again.
+#'
+#' @param value A list.
+#' @return `TRUE` when `is_or_holds_list_array()` is `TRUE` for an element.
+#'
+#' @noRd
+any_holds_list_array <- function(value) {
+  for (element in value) {
+    if (is_or_holds_list_array(element)) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+#' The walk behind `has_inner_list_array()`, from one value inside a message
+#'
+#' @param value Any value found inside a message.
+#' @return `TRUE` when `value` is, or holds, a list with a `dim` attribute.
+#'
+#' @noRd
+is_or_holds_list_array <- function(value) {
+  if (!is.list(value)) {
+    return(FALSE)
+  }
+  if (is.data.frame(value)) {
+    return(has_inner_list_array(value))
+  }
+  if (!is.null(attr(value, "dim", exact = TRUE))) {
+    return(TRUE)
+  }
+  any_holds_list_array(value)
 }
 
 #' Does any object that jsonlite writes as an object have a bad name?
@@ -554,6 +642,9 @@ data_frame_messages_fault <- function(value) {
     return(
       "You gave a data frame with a row in which every cell is NA or a NULL list cell."
     )
+  }
+  if (has_inner_list_array(value)) {
+    return(inner_list_array_detail)
   }
   nested_names_fault(value)
 }

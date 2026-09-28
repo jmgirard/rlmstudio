@@ -854,7 +854,9 @@ messages_rule_details <- c(
   rule7 = "You gave a list with a dim attribute, such as a matrix of messages.",
   rule8 = "You gave a message with a dim attribute, such as a list array.",
   rule9 = "You gave a message, or a list or data frame inside one, with a name that is NA, empty, or repeated.",
-  rule10 = "You gave a value that jsonlite cannot write:"
+  rule10 = "You gave a value that jsonlite cannot write:",
+  rule11 = "You gave a list with a dim attribute inside a message, such as a list-matrix field.",
+  rule12 = "You gave a field value that is a function, which jsonlite would send as its source text."
 )
 
 good_message <- list(role = "user", content = "hi")
@@ -1214,6 +1216,81 @@ messages_probes <- list(
       class = c("foo", "data.frame")
     ),
     rule = "rule6"
+  ),
+  # jsonlite writes a list with a dim inside a message as nested arrays with
+  # each cell boxed. The rule runs before the names rule, so repeated
+  # dimnames, which names() reads, get the dim text.
+  list(
+    label = "a list-matrix field",
+    value = list(list(role = "user", content = matrix(list(1, 2, 3, 4), 2))),
+    rule = "rule11"
+  ),
+  list(
+    label = "a one-dimensional list array field",
+    value = list(list(role = "user", content = array(list("a", "b"), 2))),
+    rule = "rule11"
+  ),
+  list(
+    label = "a three-dimensional list array field",
+    value = list(
+      list(role = "user", content = array(as.list(1:8), c(2, 2, 2)))
+    ),
+    rule = "rule11"
+  ),
+  list(
+    label = "a list array field with repeated dimnames",
+    value = list(list(
+      role = "user",
+      content = array(list("a", "b"), 2, list(c("x", "x")))
+    )),
+    rule = "rule11"
+  ),
+  list(
+    label = "a list array inside a list field",
+    value = list(list(
+      role = "user",
+      content = list(list(type = "text", text = array(list("a"), 1)))
+    )),
+    rule = "rule11"
+  ),
+  list(
+    label = "a list array in a list-column cell",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- list("hi", matrix(list(1, 2), 1))
+      df
+    }),
+    rule = "rule11"
+  ),
+  list(
+    label = "a one-dimensional list-array column",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- array(list("a", "b"), 2)
+      df
+    }),
+    rule = "rule11"
+  ),
+  list(
+    label = "a three-dimensional list-array column",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- array(as.list(1:8), c(2, 2, 2))
+      df
+    }),
+    rule = "rule11"
+  ),
+  list(
+    label = "a list array in a list-column cell of a data-frame field",
+    value = list(list(
+      role = "user",
+      content = local({
+        inner <- data.frame(a = 1)
+        inner$b <- list(array(list("x"), 1))
+        inner
+      })
+    )),
+    rule = "rule11"
   )
 )
 

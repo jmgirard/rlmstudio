@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M041: The OpenAI chat function refuses a function or a list array inside a message, with a header for value faults
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP4   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes which `messages` values an exported function accepts and the text of its abort   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m041-openai-messages-value-faults   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -89,7 +89,7 @@ functions take no `messages` argument.
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Add the AC2 rule in `R/utils-args.R`. It walks from each message
+- [x] T1: Add the AC2 rule in `R/utils-args.R`. It walks from each message
   down. It exempts a data frame and its list-matrix columns, reads its
   list-column cells, and refuses its other list-array columns. It runs after the message `dim` rule and before
   `nested_names_fault()` in `messages_fault()` and
@@ -136,6 +136,8 @@ functions take no `messages` argument.
 - 2026-09-27: plan gate chose to frame the function rule as a write rule with no D-entry over a new D-entry annotating D-003, because D-020 already limits D-003 to fields in `...`; falsified by a later rule that judges a field value jsonlite writes faithfully.
 - 2026-09-27: plan committed while the second audit of the changed criteria (full mode, same [O] reader) still runs. Its findings land as a gated amendment before implement starts.
 - 2026-09-27: second audit returned 4 findings, and all earlier findings but one were resolved. Three clear fixes applied: list-matrix columns of any data frame stay allowed, AC1 yields to earlier rules, and AC3 wording on the order. The gate chose to refuse a list-array column with one, three, or more dimensions over leaving it, because a three-dimensional column is sent boxed; falsified by a user who sends such a column on purpose. AC2, AC3, T1, and T4 amended.
+- 2026-09-27: implement started on branch m041-openai-messages-value-faults. Question gate skipped, because the plan left no choice open.
+- 2026-09-27: T1 done. `has_inner_list_array()` walks with `for` loops, because `as.list()` on a `POSIXlt` returns a `POSIXlt`. Nine rule11 probes added. With the rule returning FALSE in place, the probe loop went red. `devtools::test()` passed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
