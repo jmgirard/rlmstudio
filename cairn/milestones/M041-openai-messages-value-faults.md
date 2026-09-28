@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M041: The OpenAI chat function refuses a function or a list array inside a message, with a header for value faults
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -123,7 +123,7 @@ functions take no `messages` argument.
   function column.
 - [x] T5: Help at `messages` in `R/chat.R` per AC4, then
   `devtools::document()`. One NEWS.md entry.
-- [ ] T6: Run `devtools::test()` and `devtools::check()` with the API token
+- [x] T6: Run `devtools::test()` and `devtools::check()` with the API token
   (see the LESSONS line on the vignettes and the server).
 
 ## Work log
@@ -142,6 +142,9 @@ functions take no `messages` argument.
 - 2026-09-27: T3 done. `rlm_check_messages()` aborts shape faults with the old header and hint, then value faults with the new header and no hint. The probe loop now asserts the header, the other header's absence, and the hint per kind. With the old header on value faults, 26 checks went red. `devtools::test()` passed.
 - 2026-09-27: T4 done. The probes and the no-warning test landed in T1 to T3. A new test sends five controls and compares the sent messages: a nested list with no function, an atomic matrix field, and a list-matrix column at the top, nested, and in a data-frame field. A planted refusal of list-matrix columns turned it red. `devtools::test()` passed.
 - 2026-09-27: T5 done. Help at `messages` gains the inner `dim` rule, the two headers, and the function rule, and drops "not checked". One NEWS entry with three sub-items. `devtools::document()` rewrote `man/lms_chat_openai.Rd` and gave only the known `@aliases` warning. `devtools::test()` passed.
+- 2026-09-27: T6 done. `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-27: claim audit: 34 claims read, 2 corrected — NEWS.md, R/chat.R, man/lms_chat_openai.Rd. NEWS now says that a one-dimensional list column of more than one row already failed the jsonlite write. The help says that a classed function gets the function error first, because it also fails the write.
+- 2026-09-27: the audit found 11 `tests/testthat/_problems/` files that the mutation runs wrote and `git add -A` committed in T1 to T4. Removed. `devtools::test()` passed after the fixes. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

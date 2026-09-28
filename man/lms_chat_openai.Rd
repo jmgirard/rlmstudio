@@ -73,7 +73,7 @@ no form:
 \item No function sits inside \code{messages}: not as a field, in a list below a
 field, as a column of a data frame, or in a cell of a list column.
 jsonlite would send a function as its source text. A function with a
-class breaks this rule and not the next one.
+class gets the error of this rule, not the error of the next one.
 \item jsonlite can write the value, with the options that the request uses.
 If it cannot, the error gives the jsonlite message. This rule is
 checked last.
