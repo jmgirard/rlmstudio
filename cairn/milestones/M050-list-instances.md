@@ -99,7 +99,7 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 
 ## Tasks
 
-- [ ] T1: Write the tests of AC1 and AC3 over mocked replies (`tests/testthat/helper-mock-http.R`). Then write
+- [x] T1: Write the tests of AC1 and AC3 over mocked replies (`tests/testthat/helper-mock-http.R`). Then write
       `list_instances()` in `R/list.R` after `list_models()`: `request_model_list()`, the type filter, the four
       columns, and the empty result. Guard the message with `if (!quiet)`, as `list_models()` does at
       `R/list.R:66-71`. `rlm_inform(quiet = FALSE)` ignores the option. Export it through roxygen.
@@ -124,3 +124,4 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: plan gate chose a zero-row frame with four columns for the empty case over the `data.frame()` of `list_models()`; falsified by user code that relies on the two functions returning the same empty value.
 - 2026-09-28: plan criteria audit (full mode, fresh [O] reader) returned 21 findings on the draft. The clear ones are fixed above, and three judgment calls went to the plan gate. A re-audit of the criteria that the gate changed is running at the plan commit.
 - 2026-09-28: re-audit of the criteria that the gate changed (full mode, same fresh [O] reader) found every earlier finding resolved and returned four clear fixes. The fixes are an empty-name read in T2, two AC2 naming test cases, the "earlier, different field" wording, and an AC4 typo, all applied.
+- 2026-09-28: T1 done. `list_instances()` returns the four fixed columns and the empty result, with tests in `tests/testthat/test-list-instances.R`. The suite passes, with two live embedding tests skipped because the nomic model is not loaded.

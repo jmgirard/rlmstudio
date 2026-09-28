@@ -128,6 +128,76 @@ list_models <- function(
   return(df)
 }
 
+#' List loaded model instances
+#'
+#' Retrieves the loaded model instances on the server via the LM Studio REST
+#' API, one row per instance.
+#'
+#' @param type Character vector. The types of models to include. Defaults to
+#'   \code{c("llm", "embedding")}.
+#' @param quiet Logical. If \code{TRUE}, suppresses the message printed when
+#'   no instance is found. Defaults to \code{FALSE}. Does not suppress the
+#'   abort raised when the server is not running.
+#' @param host Character. The host address of the local server.
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
+#'
+#' @export
+list_instances <- function(
+  type = c("llm", "embedding"),
+  quiet = FALSE,
+  host = "http://localhost:1234",
+  token = NULL
+) {
+  stop_if_no_server(host)
+
+  label <- "API List Failed"
+  got <- request_model_list(host, token, label)
+  models <- got$body[["models"]]
+
+  rows <- list()
+  for (model in models) {
+    if (!model[["type"]] %in% type) {
+      next
+    }
+    display_name <- model[["display_name"]]
+    if (is.null(display_name)) {
+      display_name <- NA_character_
+    }
+    for (instance in model[["loaded_instances"]]) {
+      rows[[length(rows) + 1L]] <- list(
+        id = instance[["id"]],
+        key = model[["key"]],
+        type = model[["type"]],
+        display_name = display_name
+      )
+    }
+  }
+
+  if (length(rows) == 0) {
+    if (!quiet) {
+      rlm_inform(c(
+        "i" = "No loaded model instances of type {.val {type}} found on host {.url {host}}."
+      ))
+    }
+    return(invisible(data.frame(
+      id = character(),
+      key = character(),
+      type = character(),
+      display_name = character()
+    )))
+  }
+
+  column <- function(name) vapply(rows, function(row) row[[name]], character(1))
+  data.frame(
+    id = column("id"),
+    key = column("key"),
+    type = column("type"),
+    display_name = column("display_name")
+  )
+}
+
 #' Request the model list and check its body
 #'
 #' The request and the checks that `list_models()` runs after its server
