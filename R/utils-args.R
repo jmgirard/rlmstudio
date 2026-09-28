@@ -379,6 +379,12 @@ unclass_messages <- function(value) {
 #' names attribute as a JSON object, even when every name is empty, so a list
 #' with names is refused whatever the names are.
 #'
+#' `unclass_messages()` runs `lapply()`, which drops a `dim` attribute, so a
+#' list-matrix would be sent flat in column order. A message with a `dim` is
+#' written with each field boxed in an array. Each `dim` rule runs before the
+#' names rule at its level, because `names()` reads the dimnames of a list
+#' array.
+#'
 #' @param value The value the caller passed.
 #' @return A one-sentence detail, or `NULL` when the value is usable.
 #'
@@ -396,10 +402,20 @@ messages_fault <- function(value) {
   if (length(value) == 0L) {
     return("You gave no messages.")
   }
+  if (!is.null(dim(value))) {
+    return(
+      "You gave a list with a dim attribute, such as a matrix of messages."
+    )
+  }
   if (!is.null(names(value))) {
     return("You gave a list with names, which is sent as one JSON object.")
   }
   for (message in value) {
+    if (
+      is.list(message) && !is.data.frame(message) && !is.null(dim(message))
+    ) {
+      return("You gave a message with a dim attribute, such as a list array.")
+    }
     if (!is_named_message(message)) {
       return(
         "You gave a message that is not a list with a name on each field."

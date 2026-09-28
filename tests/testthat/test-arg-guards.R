@@ -850,7 +850,9 @@ messages_rule_details <- c(
   rule3 = "You gave a list with names, which is sent as one JSON object.",
   rule4 = "You gave a message that is not a list with a name on each field.",
   rule5 = "You gave a data frame that has no columns or a column name that is missing or repeated.",
-  rule6 = "You gave a data frame with a row in which every cell is NA."
+  rule6 = "You gave a data frame with a row in which every cell is NA.",
+  rule7 = "You gave a list with a dim attribute, such as a matrix of messages.",
+  rule8 = "You gave a message with a dim attribute, such as a list array."
 )
 
 good_message <- list(role = "user", content = "hi")
@@ -996,6 +998,42 @@ messages_probes <- list(
       df
     }),
     rule = "rule6"
+  ),
+  # The dim rules run before the names rule at their level, so a list array
+  # with dimnames, which names() reads, gets the dim text.
+  list(
+    label = "a list-matrix of messages",
+    value = matrix(
+      list(good_message, good_message, good_message, good_message),
+      2
+    ),
+    rule = "rule7"
+  ),
+  list(
+    label = "a one-dimensional list array",
+    value = array(list(good_message, good_message), dim = 2),
+    rule = "rule7"
+  ),
+  list(
+    label = "a one-dimensional list array with names",
+    value = array(
+      list(good_message, good_message),
+      dim = 2,
+      dimnames = list(c("a", "b"))
+    ),
+    rule = "rule7"
+  ),
+  list(
+    label = "a message that is a one-dimensional list array with names",
+    value = list(
+      good_message,
+      array(
+        list("user", "hi"),
+        dim = 2,
+        dimnames = list(c("role", "content"))
+      )
+    ),
+    rule = "rule8"
   ),
   # A NULL list cell is written as null, the same as an NA cell.
   list(
