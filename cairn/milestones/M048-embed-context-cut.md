@@ -29,14 +29,14 @@ package cannot count tokens, so both go to one candidate row that names the evid
 
 ## Acceptance criteria
 
-- [ ] AC1: The `lms_embed()` help page says that the server embeds only the first tokens of each text, up to the
+- [x] AC1: The `lms_embed()` help page says that the server embeds only the first tokens of each text, up to the
       context length of the loaded model instance, as observed on LM Studio 0.4.25+1. It says that the server
       then returns a vector for the cut text with no error or warning. It says that the reply's `usage` field
       reported 0 tokens on that version, so the count does not show the cut. It names two ways to avoid the cut.
       The first is to split a long text before the call. The second is to load the model with a larger
       `context_length` through `lms_load()`, up to the `max_context_length` column of
       `list_models(detailed = TRUE)`.
-- [ ] AC2: The cut that the `lms_embed()` help page describes holds on a live LM Studio server with
+- [x] AC2: The cut that the `lms_embed()` help page describes holds on a live LM Studio server with
       text-embedding-nomic-embed-text-v1.5 loaded. Let N be the `context_length` of that loaded instance in
       `list_models(detailed = TRUE)`. One `lms_embed()` call sends three texts in one request. The first two texts
       share their first N words and differ only after them, and they get the same vector. The third text differs
@@ -83,7 +83,19 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - 2026-09-28: claim audit: 22 claims read, 1 corrected — NEWS.md, R/embed.R, man/lms_embed.Rd, tests/testthat/test-embed.R
 - 2026-09-28: the corrected claim is the NEWS bullet, which said "loaded model" where the help page says "loaded model instance". The reader did not reach the server. The T2 live run already read `context_length` from the embedding instance, which settles its one open doubt.
 - 2026-09-28: all tasks done, status set to review.
+- 2026-09-28: review started. AC1 and AC2 have evidence. The AC3 check and the three reviewers are still running (checkpoint).
 
 ## Decisions
 
 ## Review
+
+- Sync: 2026-09-28, `origin/main` at 7cf66ab, the branch base. No merge needed.
+- AC1: `tools::Rd2txt("man/lms_embed.Rd")` renders the paragraph. It states each clause of AC1: the cut at the
+  context length of the loaded model instance on LM Studio 0.4.25+1, and a vector with no error or warning. It also
+  states `usage` of 0 tokens and the two ways to avoid the cut. Live, `list_models(type = "embedding", detailed = TRUE)` has a
+  `max_context_length` column (2048 for nomic), and `lms_load()` has a `context_length` argument. Pass.
+- AC2: live run on LM Studio 0.4.25+1, nomic loaded as one instance at `context_length` 2048. The test
+  "live: the server embeds only the first context-length tokens" ran, did not skip, and passed 4 of 4
+  expectations. They cover no warning, the same vector for texts one and two, and another vector for text three.
+  They also cover `usage` 0 prompt tokens with `simplify = FALSE`. The test failed on a planted defect at T2.
+  Pass.
