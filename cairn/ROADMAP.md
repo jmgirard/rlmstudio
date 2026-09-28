@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-28 (M042 done, M039 row pruned, RB01 and RR01 archived)_
+_Last hygiene check: 2026-09-28 (M043 done, M040 row pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-28 (M042 done, M039 row pruned, RB01 and RR01 archi
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M043 | The OpenAI chat function refuses a messages value that holds a value that is not an atomic vector, a list, or NULL | review | none | normal | milestones/M043-openai-messages-non-vector-values.md |
+| M043 | The OpenAI chat function refuses a messages value that holds a value that is not an atomic vector, a list, or NULL | done | none | normal | milestones/archive/M043-openai-messages-non-vector-values.md |
 | M042 | The OpenAI chat function reads each row of an array or non-vector messages column on its own | done | none | normal | milestones/archive/M042-openai-messages-odd-columns.md |
 | M041 | The OpenAI chat function refuses a function or a list array inside a message, with a header for value faults | done | none | normal | milestones/archive/M041-openai-messages-value-faults.md |
-| M040 | The OpenAI chat function refuses a messages value that jsonlite cannot write or that breaks a shape rule | done | none | normal | milestones/archive/M040-openai-messages-shape-and-write.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
