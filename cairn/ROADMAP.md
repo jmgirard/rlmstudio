@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-27 (M041 done, M038 row pruned, two candidate rows 
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M042 | The OpenAI chat function reads each row of an array or non-vector messages column on its own | planned | none | normal | milestones/M042-openai-messages-odd-columns.md |
+| M042 | The OpenAI chat function reads each row of an array or non-vector messages column on its own | in-progress | none | normal | milestones/M042-openai-messages-odd-columns.md |
 | M041 | The OpenAI chat function refuses a function or a list array inside a message, with a header for value faults | done | none | normal | milestones/archive/M041-openai-messages-value-faults.md |
 | M040 | The OpenAI chat function refuses a messages value that jsonlite cannot write or that breaks a shape rule | done | none | normal | milestones/archive/M040-openai-messages-shape-and-write.md |
 | M039 | The OpenAI chat function sends a classed messages list and refuses a data frame with a bad column name or an empty row | done | none | normal | milestones/archive/M039-openai-messages-class-and-frame.md |

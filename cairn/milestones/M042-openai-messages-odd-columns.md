@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M042: The OpenAI chat function reads each row of an array or non-vector messages column on its own
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP4   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes which error an exported function gives for a `messages` value, and its help   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m042-openai-messages-odd-columns   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -119,7 +119,7 @@ choice to send it as jsonlite writes it.
   lines 300-301 for AC3. Add a test that sends the AC3 example row and
   compares the request body with the sent form in the help. Run
   `devtools::document()` and `devtools::test()`.
-- [ ] T4: Join the `@aliases` tag at `R/conditions.R:257` onto one line.
+- [x] T4: Join the `@aliases` tag at `R/conditions.R:257` onto one line.
   Run `devtools::document()` and make sure that it prints no warning.
 - [ ] T5: Add the NEWS entry. Run `devtools::document()`,
   `devtools::test()`, and `devtools::check()` with the API token (see the
@@ -133,6 +133,8 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: plan gate chose to state the boxed list-matrix cells in the help over unboxing them or refusing the column. M041 chose to send the column, and the fault is only in the help. Falsified by a server or model that misreads a one-element array in a list-matrix field.
 - 2026-09-27: plan gate chose to fold the `@aliases` fix into this milestone over a separate trivial commit. AC5 can then require a `document()` run with no warning. No behavior falsifies it, because it is a scheduling choice.
 - 2026-09-27: plan committed while the second audit of the revised criteria (full mode, same [O] reader) still runs. Its findings land as a gated amendment before implement starts.
+- 2026-09-27: implement started on branch m042-openai-messages-odd-columns. The second audit's findings never reached the file, so a fresh [O] reader re-runs it before T1.
+- 2026-09-27: T4 done. The `@aliases` tag is on one line, and `devtools::document()` printed no warning and changed no file under `man/`.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
