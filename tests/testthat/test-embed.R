@@ -1006,3 +1006,34 @@ test_that("no bar shows when quiet, or for one request", {
   expect_length(log$bars, 0L)
   expect_length(log$updates, 0L)
 })
+
+
+# Against a live server --------------------------------------------------------
+
+test_that("live: batches of two give the vectors of one request", {
+  testthat::skip_on_cran()
+  skip_if_no_server()
+
+  # The test never loads a model, so a run leaves the server as it found it.
+  model <- "text-embedding-nomic-embed-text-v1.5"
+  loaded <- tryCatch(
+    list_models(loaded = TRUE, type = "embedding", quiet = TRUE)$key,
+    error = function(e) character()
+  )
+  if (!model %in% loaded) {
+    testthat::skip(paste(model, "is not loaded."))
+  }
+
+  texts <- c(
+    "a cat sat on the mat",
+    "the stock market fell sharply today",
+    "R is a language for statistics",
+    "short",
+    "embedding vectors from a local server"
+  )
+  one <- lms_embed(model, texts)
+  batched <- lms_embed(model, texts, batch_size = 2, quiet = TRUE)
+
+  expect_identical(dim(batched), c(5L, ncol(one)))
+  expect_lt(max(abs(batched - one)), 1e-6)
+})
