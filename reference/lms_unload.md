@@ -132,10 +132,14 @@ the call and in every element after it.
 A condition of class `rlmstudio_api_error` is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a `status` field, which holds the HTTP response status as an
-integer.
+integer. It also carries a `code` field. The field holds the string at
+`error.code` of the response body, such as `"model_not_found"`. It is
+`NULL` when the body does not parse, when `error` is not a JSON object,
+or when its `code` is not one string.
 
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-aborts on it when its `status` is 401, 403, or 404, and no request goes
+aborts on it when its `status` is 401, 403, or 404, and when its
+`status` is 400 and its `code` is `"model_not_found"`. No request goes
 out after that input. The condition then carries a `results` field that
 follows the rule for a lost server in the "Server not running" section:
 its elements before the failed input hold the values that

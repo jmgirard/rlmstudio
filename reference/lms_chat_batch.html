@@ -155,8 +155,10 @@ formats add no such column.</p>
     <p>This function calls <code><a href="lms_chat.html">lms_chat()</a></code> once for each element of <code>inputs</code>. It
 raises <code>rlmstudio_no_server</code> itself, before the first call.</p>
 <p>An <code>rlmstudio_bad_response</code> that <code><a href="lms_chat.html">lms_chat()</a></code> raises for one input fails
-that input alone. So does an <code>rlmstudio_api_error</code> with any <code>status</code> other
-than 401, 403, or 404. The batch goes on to the next input. Where the
+that input alone, unless it is an <code>rlmstudio_model_mismatch</code>. So does an
+<code>rlmstudio_api_error</code> with any <code>status</code> other than 401, 403, or 404,
+unless its <code>status</code> is 400 and its <code>code</code> is <code>"model_not_found"</code>. The batch
+goes on to the next input. Where the
 result is a list, or the <code>output</code> list-column that a <code>schema</code> gives, the
 element for that input holds the condition without its backtrace. An
 <code>rlmstudio_bad_response</code> for reply content that does not
@@ -179,6 +181,12 @@ status comes from a fault that does not depend on the prompt, such as a
 token that the server refuses, so every later input fails in the same
 way. The condition carries a <code>results</code> field, as described in the "API
 failure" section below. No warning about failed inputs is given.</p>
+<p>The batch aborts in the same way at an <code>rlmstudio_api_error</code> with <code>status</code>
+400 and the <code>code</code> <code>"model_not_found"</code>, and at an
+<code>rlmstudio_model_mismatch</code>. The <code>"openai"</code> and <code>"openresponses"</code> routes
+give these for a model name that the server cannot find, so every later
+input fails in the same way.
+See the "Reply from another model" section below.</p>
 <p>An <code>rlmstudio_no_server</code> from <code><a href="lms_chat.html">lms_chat()</a></code> also aborts the batch. Its
 <code>results</code> field holds the results so far, as described in the "Server not
 running" section below. An error of any other class aborts the batch
@@ -245,9 +253,13 @@ element after it.</p>
 <p>A condition of class <code>rlmstudio_api_error</code> is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a <code>status</code> field, which holds the HTTP response status as an
-integer.</p>
+integer. It also carries a <code>code</code> field. The field holds the string at
+<code>error.code</code> of the response body, such as <code>"model_not_found"</code>. It is
+<code>NULL</code> when the body does not parse, when <code>error</code> is not a JSON object, or
+when its <code>code</code> is not one string.</p>
 <p><code>lms_chat_batch()</code> aborts on it when its <code>status</code> is 401, 403, or 404, and
-no request goes out after that input. The condition then carries a
+when its <code>status</code> is 400 and its <code>code</code> is <code>"model_not_found"</code>. No request
+goes out after that input. The condition then carries a
 <code>results</code> field that follows the rule for a lost server in the "Server not
 running" section: its elements before the failed input hold the values that
 <code>format = "list"</code> returns for those inputs, and the element of the failed
@@ -393,16 +405,19 @@ such as <code>5</code>, <code>"s"</code>, or <code>true</code>. The message says
 not a JSON object. A body of <code>null</code> gets the message about its missing
 <code>output</code> or <code>choices</code> field instead.
 <code><a href="lms_chat.html">lms_chat()</a></code> can raise the condition through all three chat functions.</p>
-<p><code>lms_chat_batch()</code> does not abort on it. The element of the failed input
-holds the condition, or <code>NA</code> where the result is text, and the batch warns
-once and goes on. See the details of <code>lms_chat_batch()</code>.</p>
+<p><code>lms_chat_batch()</code> does not abort on it, except on the subclass
+<code>rlmstudio_model_mismatch</code>, as the "Reply from another model" section of
+<a href="rlmstudio-conditions.html">rlmstudio-conditions</a> says. The element of the failed input holds the
+condition, or <code>NA</code> where the result is text, and the batch warns once and
+goes on. See the details of <code>lms_chat_batch()</code>.</p>
 <p>The condition carries a <code>status</code> field, which holds the HTTP response
 status as an integer. Today the status is always 200: each of these
 functions reads the body only after a 200, and reports every other status
 as an <code>rlmstudio_api_error</code> instead. A condition from <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>
-also carries two more fields. The <code>content</code> field holds the reply content
-of the first choice, and the <code>finish_reason</code> field holds the finish reason
-of the first choice.
+about its reply also carries two more fields. A condition from the
+model-list lookup does not, as the "Reply from another model" section
+says. The <code>content</code> field holds the reply content of the first choice,
+and the <code>finish_reason</code> field holds the finish reason of the first choice.
 Both are <code>NULL</code> for a response with no <code>choices</code>. In the third case,
 <code>content</code> holds the value that was read, which is <code>NULL</code> for <code>null</code> or
 missing content. For the second, third, and fourth cases, the message names the
@@ -435,11 +450,63 @@ returns the body with every choice and no warning.</p>
 for the whole batch in place of one for each input. It names the count and
 the positions of the cut-off inputs, and each of those elements keeps its
 reply. It comes after the warning about failed inputs. A batch that aborts
-on a lost server, or on status 401, 403, or 404, gives this warning before
-the abort. It names the cut-off inputs whose replies the <code>results</code> field of
-the abort holds. The native and OpenResponses routes give no such warning.</p>
+with a <code>results</code> field gives this warning before the abort. It names the
+cut-off inputs whose replies the <code>results</code> field of the abort holds. The
+native and OpenResponses routes give no such warning.</p>
 <p>The warning shows whatever <code>quiet</code> and the <code>rlmstudio.quiet</code> option say,
 because it is the only sign that an answer is not complete.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="reply-from-another-model">Reply from another model<a class="anchor" aria-label="anchor" href="#reply-from-another-model"></a></h2>
+
+
+<p><code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> and <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> read the <code>model</code> field
+of each status-200 reply, with either setting of <code>simplify</code>. On LM Studio
+0.4.25+1 with one chat model loaded, both routes answered a model name that
+the server could not find with status 200 and a reply from the loaded
+model. With two chat models loaded, they answered with status 400 and the
+<code>code</code> <code>"model_not_found"</code>, as the "API failure" section describes. The
+<code>model</code> field names the loaded instance that answered. Its id can differ
+from the key that the call asked for.</p>
+<p>If the <code>model</code> field equals the name that the call sent, the reply is
+accepted. If it differs, the call sends one request for the model list to
+<code>api/v1/models</code> on the same host, with the token of the call, and prints no
+message. The reply is accepted if a model whose key equals the asked name
+in any letter case has a loaded instance whose id is the <code>model</code> field.
+Otherwise the call aborts with a condition of class
+<code>rlmstudio_model_mismatch</code>. That condition is also an
+<code>rlmstudio_bad_response</code>, and its <code>status</code> is 200. Its <code>model</code> field holds
+the asked name, and its <code>reply_model</code> field holds the <code>model</code> field of the
+reply. The message names both. A condition from <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> also
+carries the <code>content</code> and <code>finish_reason</code> fields, both <code>NULL</code>.</p>
+<p>The check runs before the reply is read, so it also runs with
+<code>logprobs = TRUE</code>, with a <code>schema</code> on <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>, and for a reply
+with no answer text. A reply is not checked if its body is not a JSON
+object, if it has no <code>model</code> field, or if its <code>model</code> is not one string or
+holds only whitespace. A body that is not a JSON object is returned with
+<code>simplify = FALSE</code>, and with <code>simplify = TRUE</code> it raises the error that the
+"Malformed response" section describes. If the instance that answered is
+unloaded before the model-list request, the call aborts, also when that
+instance belongs to the asked model.</p>
+<p>If the model-list request fails, the call raises the condition of that
+failure. The message opens with the label of the chat function, followed
+by "because the model-list lookup failed". A status other than 200 raises
+<code>rlmstudio_api_error</code>. A body that does not parse as JSON, or that breaks a
+rule of a model list in the "Malformed response" section, raises
+<code>rlmstudio_bad_response</code>. A server that the port check before the request
+cannot reach raises <code>rlmstudio_no_server</code>. A condition from the lookup does
+not carry the <code>content</code> and <code>finish_reason</code> fields, also when
+<code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> raises it.</p>
+<p><code><a href="lms_chat.html">lms_chat()</a></code> runs the check through <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> and
+<code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>. <code><a href="lms_chat_native.html">lms_chat_native()</a></code> does not check the reply.
+On LM Studio 0.4.25+1, <code>/api/v1/chat</code> answered a name that it could not
+find with status 404, which raises <code>rlmstudio_api_error</code>.</p>
+<p><code>lms_chat_batch()</code> aborts at the first input that raises
+<code>rlmstudio_model_mismatch</code>, on the <code>"openai"</code> and <code>"openresponses"</code> routes.
+It also aborts at an <code>rlmstudio_api_error</code> with status 400 whose <code>code</code> is
+<code>"model_not_found"</code>. No request goes out after that input. In both cases,
+the condition carries a <code>results</code> field that follows the rule for a lost
+server in the "Server not running" section.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

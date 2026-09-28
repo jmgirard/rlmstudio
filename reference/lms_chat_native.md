@@ -155,10 +155,14 @@ the call and in every element after it.
 A condition of class `rlmstudio_api_error` is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a `status` field, which holds the HTTP response status as an
-integer.
+integer. It also carries a `code` field. The field holds the string at
+`error.code` of the response body, such as `"model_not_found"`. It is
+`NULL` when the body does not parse, when `error` is not a JSON object,
+or when its `code` is not one string.
 
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-aborts on it when its `status` is 401, 403, or 404, and no request goes
+aborts on it when its `status` is 401, 403, or 404, and when its
+`status` is 400 and its `code` is `"model_not_found"`. No request goes
 out after that input. The condition then carries a `results` field that
 follows the rule for a lost server in the "Server not running" section:
 its elements before the failed input hold the values that
@@ -382,9 +386,12 @@ A body of `null` gets the message about its missing `output` or
 can raise the condition through all three chat functions.
 
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-does not abort on it. The element of the failed input holds the
-condition, or `NA` where the result is text, and the batch warns once
-and goes on. See the details of
+does not abort on it, except on the subclass `rlmstudio_model_mismatch`,
+as the "Reply from another model" section of
+[rlmstudio-conditions](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+says. The element of the failed input holds the condition, or `NA` where
+the result is text, and the batch warns once and goes on. See the
+details of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
 
 The condition carries a `status` field, which holds the HTTP response
@@ -392,14 +399,15 @@ status as an integer. Today the status is always 200: each of these
 functions reads the body only after a 200, and reports every other
 status as an `rlmstudio_api_error` instead. A condition from
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-also carries two more fields. The `content` field holds the reply
-content of the first choice, and the `finish_reason` field holds the
-finish reason of the first choice. Both are `NULL` for a response with
-no `choices`. In the third case, `content` holds the value that was
-read, which is `NULL` for `null` or missing content. For the second,
-third, and fourth cases, the message names the `content` field, so you
-can read what the model wrote without a second request. The other
-messages of the chat functions and
+about its reply also carries two more fields. A condition from the
+model-list lookup does not, as the "Reply from another model" section
+says. The `content` field holds the reply content of the first choice,
+and the `finish_reason` field holds the finish reason of the first
+choice. Both are `NULL` for a response with no `choices`. In the third
+case, `content` holds the value that was read, which is `NULL` for
+`null` or missing content. For the second, third, and fourth cases, the
+message names the `content` field, so you can read what the model wrote
+without a second request. The other messages of the chat functions and
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 name `simplify = FALSE`, which returns the body unchanged, with one
 exception. A body that did not parse as JSON is checked before that

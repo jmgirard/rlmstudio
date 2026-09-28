@@ -237,9 +237,13 @@ element after it.</p>
 <p>A condition of class <code>rlmstudio_api_error</code> is raised when a REST call
 returns a response that the wrapper treats as a failure. The condition
 carries a <code>status</code> field, which holds the HTTP response status as an
-integer.</p>
+integer. It also carries a <code>code</code> field. The field holds the string at
+<code>error.code</code> of the response body, such as <code>"model_not_found"</code>. It is
+<code>NULL</code> when the body does not parse, when <code>error</code> is not a JSON object, or
+when its <code>code</code> is not one string.</p>
 <p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> aborts on it when its <code>status</code> is 401, 403, or 404, and
-no request goes out after that input. The condition then carries a
+when its <code>status</code> is 400 and its <code>code</code> is <code>"model_not_found"</code>. No request
+goes out after that input. The condition then carries a
 <code>results</code> field that follows the rule for a lost server in the "Server not
 running" section: its elements before the failed input hold the values that
 <code>format = "list"</code> returns for those inputs, and the element of the failed
@@ -385,16 +389,19 @@ such as <code>5</code>, <code>"s"</code>, or <code>true</code>. The message says
 not a JSON object. A body of <code>null</code> gets the message about its missing
 <code>output</code> or <code>choices</code> field instead.
 <code><a href="lms_chat.html">lms_chat()</a></code> can raise the condition through all three chat functions.</p>
-<p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> does not abort on it. The element of the failed input
-holds the condition, or <code>NA</code> where the result is text, and the batch warns
-once and goes on. See the details of <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code>.</p>
+<p><code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> does not abort on it, except on the subclass
+<code>rlmstudio_model_mismatch</code>, as the "Reply from another model" section of
+<a href="rlmstudio-conditions.html">rlmstudio-conditions</a> says. The element of the failed input holds the
+condition, or <code>NA</code> where the result is text, and the batch warns once and
+goes on. See the details of <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code>.</p>
 <p>The condition carries a <code>status</code> field, which holds the HTTP response
 status as an integer. Today the status is always 200: each of these
 functions reads the body only after a 200, and reports every other status
 as an <code>rlmstudio_api_error</code> instead. A condition from <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>
-also carries two more fields. The <code>content</code> field holds the reply content
-of the first choice, and the <code>finish_reason</code> field holds the finish reason
-of the first choice.
+about its reply also carries two more fields. A condition from the
+model-list lookup does not, as the "Reply from another model" section
+says. The <code>content</code> field holds the reply content of the first choice,
+and the <code>finish_reason</code> field holds the finish reason of the first choice.
 Both are <code>NULL</code> for a response with no <code>choices</code>. In the third case,
 <code>content</code> holds the value that was read, which is <code>NULL</code> for <code>null</code> or
 missing content. For the second, third, and fourth cases, the message names the

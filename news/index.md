@@ -2,6 +2,42 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  and
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+  now abort on a reply from a model other than the one asked for, with
+  either setting of `simplify`. With one chat model loaded, LM Studio
+  0.4.25+1 answered a model name that it could not find with status 200
+  and a reply from the loaded model. The new condition class is
+  `rlmstudio_model_mismatch`, which is also an `rlmstudio_bad_response`.
+  Its `model` field holds the asked name, and its `reply_model` field
+  holds the `model` field of the reply.
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  raises it through the two functions.
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
+  does not check the reply.
+
+  - If the `model` field of the reply differs from the asked name, the
+    call sends one request for the model list. The reply is accepted if
+    a loaded instance of a model whose key equals the asked name, in any
+    letter case, answered. A model loaded under another id, such as with
+    `lms load --identifier`, therefore still works by its key.
+  - If that request fails, the call raises the condition of the failure,
+    and the message says that the model-list lookup failed.
+  - [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    aborts at such a reply on the `"openai"` and `"openresponses"`
+    routes, with a `results` field as for a lost server.
+
+- An `rlmstudio_api_error` now carries a `code` field. It holds the
+  string at `error.code` of the response body, or `NULL`. With two chat
+  models loaded, the `/v1/chat/completions` and `/v1/responses`
+  endpoints of LM Studio 0.4.25+1 answered a model name that they could
+  not find with status 400 and the code `"model_not_found"`.
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now aborts at that error with a `results` field. Before, each input
+  failed alone, and the batch sent every request. A 400 with another
+  code, or with no code, still fails its own input alone.
+
 - The
   [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
   help page now describes a limit of LM Studio 0.4.25+1. The server

@@ -101,4 +101,5 @@ catch them.
   [`rlmstudio_api_error`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
   [`rlmstudio_bad_response`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
   [`rlmstudio_reply_cut_off`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
+  [`rlmstudio_model_mismatch`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
   : Conditions raised by rlmstudio
