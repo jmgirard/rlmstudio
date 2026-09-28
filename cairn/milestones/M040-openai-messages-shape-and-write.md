@@ -103,7 +103,7 @@ chat functions take no `messages` argument.
   "a class below the message level still reaches jsonlite"
   (`tests/testthat/test-arg-guards.R:1190-1215`), because its calls now
   abort before the probe.
-- [ ] T5: Update the help at `messages` (`R/chat.R:268-297`), the roxygen
+- [x] T5: Update the help at `messages` (`R/chat.R:268-297`), the roxygen
   comment on `rlm_check_messages()`, and NEWS.md. Run
   `devtools::document()`, `devtools::test()`, and `devtools::check()`.
 
@@ -117,6 +117,7 @@ chat functions take no `messages` argument.
 - 2026-09-27: T2 done. The message `dim` rule skips a data frame, which rule 4 refuses with its own text. Four probes added. Removing each `dim` rule in place turned the abort test red. `devtools::test()` passed.
 - 2026-09-27: T3 done. `nested_names_fault()` and `has_bad_name()` walk both forms. Seven abort probes and three pass probes added. Four planted walk defects each turned a test red: no repeated-name check, no list-column cells, no data-frame branch, and reading list-column names. The last one needed the pass probe to use an empty list-column name. `devtools::test()` passed.
 - 2026-09-27: T4 done. `messages_write_fault()` runs after `messages_fault()`. Nine probes added: five for the write and four rule-order probes, which a new test shows also fail the write. A braces test and a Date, factor, and `I()` pass test were added. The old test that let a class below the message level reach jsonlite is replaced. Three plants each turned a test red: no write check, the write before the rules, and the jsonlite text passed to cli as format text. `devtools::test()` passed.
+- 2026-09-27: T5 done. Help at `messages` and NEWS updated. `devtools::document()` gives no further diff, apart from the known `@aliases` warning at `R/conditions.R:257`. `devtools::test()` passed. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-27: plan gate chose to refuse a list-matrix over sending it flat in storage order, because the order can differ from the order on screen; falsified by a user who builds `messages` as a matrix on purpose.
 - 2026-09-27: plan gate chose to treat only a `NULL` cell as empty over any length-0 cell, because `list()` writes the field value `[]`; falsified by a server that treats a message holding only an empty-array field as no message.
 - 2026-09-27: plan gate chose to refuse repeated names below the message level over `NA` and empty names alone, because jsonlite renames a repeated `a` to `a.1`; falsified by a jsonlite version that keeps repeated keys.
