@@ -226,12 +226,12 @@ test_that("a response recorded from a live server builds the matrix", {
 
 # simplify = FALSE ----------------------------------------------------------
 
-test_that("simplify = FALSE returns the parsed body unchanged", {
+test_that("simplify = FALSE returns the parsed body unchanged, in a list of one", {
   out <- drive_embed(in_order_body, input = three_inputs, simplify = FALSE)$value
 
   expect_identical(
     out,
-    httr2::resp_body_json(mock_response(200L, in_order_body))
+    list(httr2::resp_body_json(mock_response(200L, in_order_body)))
   )
 })
 
@@ -251,7 +251,7 @@ test_that("simplify = FALSE returns a body the response check rejects", {
   out <- drive_embed(ragged, input = three_inputs, simplify = FALSE)$value
   expect_identical(
     out,
-    httr2::resp_body_json(mock_response(200L, ragged))
+    list(httr2::resp_body_json(mock_response(200L, ragged)))
   )
 })
 
@@ -639,8 +639,106 @@ test_that("a bad batch_size aborts, named, before the server probe", {
 })
 
 test_that("a good batch_size passes the check", {
-  for (value in list(1, 1L, 3, 100, .Machine$integer.max)) {
+  # Each value sends the three inputs in one request, so one reply serves it.
+  # Sizes below the input count are driven by the batch tests below.
+  for (value in list(3, 3L, 100, .Machine$integer.max)) {
     run <- drive_embed(in_order_body, input = three_inputs, batch_size = value)
     expect_identical(dim(run$value), c(3L, 5L), info = deparse(value))
   }
+})
+
+
+# Batches -------------------------------------------------------------------
+
+# The vector served for input `i`: three values that no other input shares.
+input_vector <- function(i, width = 3L) i + seq_len(width) / 10
+
+# A reply for the inputs at `positions`, one element per input, with the
+# element order given by `order` (a permutation of the positions' ranks).
+batch_reply <- function(positions, order = seq_along(positions), width = 3L) {
+  elements <- vapply(
+    order,
+    function(k) embed_element(k - 1L, input_vector(positions[[k]], width)),
+    character(1)
+  )
+  mock_response(200L, do.call(embed_body, as.list(elements)))
+}
+
+batch_inputs <- stats::setNames(
+  paste("text", seq_len(250)),
+  paste0("id", seq_len(250))
+)
+
+test_that("250 inputs at batch_size 100 go out as three ordered requests", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    batch_reply(1:100),
+    # Served in reverse, so only the index can put these rows in place.
+    batch_reply(101:200, order = 100:1),
+    batch_reply(201:250)
+  ))
+
+  out <- lms_embed(
+    "test-embed",
+    batch_inputs,
+    ttl = 60,
+    dimensions = 3,
+    batch_size = 100
+  )
+
+  expect_length(recorder$requests, 3L)
+  sent <- lapply(recorder$requests, sent_body)
+  expected_rows <- list(1:100, 101:200, 201:250)
+  for (b in 1:3) {
+    label <- paste("request", b)
+    body <- sent[[b]]
+    expect_identical(body$model, "test-embed", info = label)
+    expect_identical(body$ttl, 60L, info = label)
+    expect_identical(body$dimensions, 3L, info = label)
+    # A JSON array arrives as an unnamed list, an object as a named one.
+    expect_true(is.list(body$input), info = label)
+    expect_null(names(body$input), info = label)
+    expect_identical(
+      unlist(body$input),
+      unname(batch_inputs[expected_rows[[b]]]),
+      info = label
+    )
+  }
+
+  expect_identical(dim(out), c(250L, 3L))
+  for (i in seq_len(250)) {
+    expect_equal(out[i, ], input_vector(i), info = paste("row", i))
+  }
+})
+
+test_that("a batch_size of 1 sends one request per input", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(lapply(1:3, batch_reply))
+
+  out <- lms_embed("test-embed", three_inputs, batch_size = 1)
+
+  expect_length(recorder$requests, 3L)
+  for (i in 1:3) {
+    expect_identical(unlist(sent_body(recorder$requests[[i]])$input), three_inputs[[i]])
+    expect_equal(out[i, ], input_vector(i))
+  }
+})
+
+test_that("a later batch of another width aborts, carrying the rows so far", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    batch_reply(1:2),
+    batch_reply(3:4, width = 4L),
+    batch_reply(5)
+  ))
+
+  err <- expect_error(
+    lms_embed("test-embed", paste("text", 1:5), batch_size = 2),
+    "inputs 3 to 4 have 4 dimensions, and earlier ones have 3",
+    class = "rlmstudio_bad_response"
+  )
+  expected <- matrix(NA_real_, nrow = 5, ncol = 3)
+  expected[1, ] <- input_vector(1)
+  expected[2, ] <- input_vector(2)
+  expect_identical(err$results, expected)
 })

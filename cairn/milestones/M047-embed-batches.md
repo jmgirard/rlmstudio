@@ -85,7 +85,7 @@ requests: none were asked for, so nothing records them.
 - [x] T1: Add `batch_size = 100` and `quiet = NULL` after `...` in `lms_embed()` (`R/embed.R`). Add a
       `rlm_check_batch_size()` in `R/utils-args.R` modeled on `rlm_check_ttl()`, but with no `NULL`. Call it
       before `stop_if_no_server()`. Tests first (AC2).
-- [ ] T2: Split `input` into consecutive batches and send one request per batch. Build each batch's rows with
+- [x] T2: Split `input` into consecutive batches and send one request per batch. Build each batch's rows with
       `embed_matrix()` against that batch's length, then place them at the batch's input positions. Abort on a
       width that differs from an earlier batch. Tests first (AC1, the width case of AC4).
 - [ ] T3: Probe the server before each request. Store a per-request `rlmstudio_bad_response` or
@@ -108,6 +108,7 @@ requests: none were asked for, so nothing records them.
 - 2026-09-28: plan gate chose to keep going past a failed batch over stopping at the first failure because it follows D-011 and D-019 and keeps finished rows. Falsified by a user who needs the call to stop at the first failed batch.
 - 2026-09-28: implement started on m047-embed-batches. No gate questions were open, because the plan gate settled the name, the default, and the failure rule.
 - 2026-09-28: T1 done. `rlm_check_batch_size()` reuses `ttl_fault()` and rejects `NULL`. The eleven-value test went red with the check moved after the probe.
+- 2026-09-28: T2 done. The loop in `R/embed.R` also carries the T3 and T4 code, because they share it. The two `simplify = FALSE` tests now expect a list of one. Four planted defects each turned `test-embed.R` red: overlapping batches, no width check, a named `input`, and rows placed by batch rank.
 
 ## Decisions
 
