@@ -45,7 +45,8 @@ A list that is not a data frame is sent without its class attribute, and
 each of its messages is sent without its class attribute. A class on a
 field inside a message is kept, so a field wrapped in \code{\link[=I]{I()}} is sent as an
 array. A data frame and its columns keep their classes. jsonlite writes
-the body, and it fails on a kept class that it has no method for.
+the body. It fails on a kept class when no entry of the class vector has
+a jsonlite method, such as a field with the class \code{"foo"} alone.
 
 The package does not check the roles, the content, or any other field of
 a message. The server checks them.}

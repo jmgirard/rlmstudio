@@ -354,8 +354,8 @@ rlm_check_messages <- function(value) {
 
 #' Remove the class of a messages list and of each of its messages
 #'
-#' jsonlite has no method for most S3 classes, so a classed list would fail
-#' after the server probe. The class goes from the outer list and from each
+#' jsonlite has no method for most S3 classes, so a list with such a class
+#' would fail after the server probe. The class goes from the outer list and from each
 #' message alone. A class below them, such as `I()` on a field, changes how
 #' jsonlite writes the field, so it stays. A data frame keeps its class,
 #' because `unclass()` turns it into a list of columns. Run it after
@@ -412,7 +412,8 @@ messages_fault <- function(value) {
 #' Which data-frame rule did this messages value break?
 #'
 #' jsonlite writes a data frame with no columns, or a row whose cells are all
-#' `NA`, as an empty message. It writes a column named `NA` or `""` under a
+#' `NA`, as an empty message. When a list column holds the `NA`, the message
+#' has one field, which is `null`. It writes a column named `NA` or `""` under a
 #' number, and it renames a repeated column name with a suffix. The column rule
 #' runs first, because a data frame with no columns also has rows in which
 #' every cell is `NA`.
