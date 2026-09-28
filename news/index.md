@@ -2,6 +2,31 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now refuses a value inside `messages` that is not an atomic vector, a
+  list, or `NULL`, before the check for a running server. The rule reads
+  a list message and a data frame at any depth. Examples are an
+  environment, a symbol, a call, a formula, and an expression vector. So
+  are an external pointer, an S4 object, a reference-class object, and
+  an S4 class definition. The error opens with “`messages` holds a field
+  value that cannot be sent as JSON.” and names the type of the value,
+  such as “environment” or “S4”. The error has no condition class. The
+  rule reads the storage type, so a class set by hand on such a value
+  does not hide it. A vector or a list with a class set by hand is not
+  refused, and jsonlite still writes it by that class. For example,
+  `structure(1L, class = "NULL")` is sent as `null`. Before, most such
+  values aborted with the jsonlite error, but some were sent. Some
+  values with a class set by hand, such as `"POSIXt"` or `"NULL"`, were
+  sent as printed text or `null`. An environment, a call, an expression
+  vector, or an external pointer was sent in this way. An S4 class
+  definition was sent too. With a slot, it was sent as an object that
+  maps each slot name to its class. As a data-frame column, it also gave
+  a jsonlite warning. As a field or a list cell, a class definition with
+  no slot was sent as an empty array. A function still gets the error
+  for a function. A `NULL` field is still sent. So is an S4 object whose
+  class contains an atomic type, such as `"numeric"`, but without its
+  other slots.
+
 - If the first extent of an array column of a `messages` data frame is
   the row count,
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
@@ -21,12 +46,8 @@
     such as an environment, a symbol, or an expression vector, no longer
     gives an R warning from the empty-row check. It never counts as
     empty, so the later rules decide the call. A function aborts with
-    the error for a function. An environment, a symbol, a call, an
-    expression vector, a formula, an external pointer, an S4 object that
-    `new()` makes, or a reference-class object, with no class attribute
-    added by hand, aborts with the error for a value that jsonlite
-    cannot write. An S4 class definition with a slot is not refused.
-    jsonlite writes it with a warning, and the call sends it.
+    the error for a function. Any other such column aborts with the
+    error for a value that is not an atomic vector, a list, or `NULL`.
 
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   now refuses two more kinds of `messages` value before the check for a
@@ -68,9 +89,9 @@
     jsonlite sent an `NA` or empty name as a number and renamed a
     repeated `a` to `a.1`.
   - A value that jsonlite cannot write aborts with the jsonlite message.
-    An example is a field with a class that jsonlite has no method for,
-    or an environment. Before, the call failed after the check for a
-    running server, with an error that did not name `messages`.
+    An example is a field with a class that jsonlite has no method for.
+    Before, the call failed after the check for a running server, with
+    an error that did not name `messages`.
 
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   now sends a `messages` list that has a class attribute. The call
