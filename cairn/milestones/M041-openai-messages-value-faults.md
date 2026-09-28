@@ -45,20 +45,23 @@ functions take no `messages` argument.
   are a field of a message and an element of a list at any depth below a
   field. They are also a column of a data frame, at the top or nested in a
   column, and a cell of a list column or a list-matrix column. The detail says that a field value is a
-  function, which jsonlite sends as its source text. The call gives no R
+  function, which jsonlite sends as its source text, unless a rule that AC3
+  orders earlier fires. The call gives no R
   warning on the way to the abort. A message with no function is sent.
 - [ ] AC2: `lms_chat_openai()` aborts before the server probe when a list
   with a `dim` attribute sits inside a message. Inside a message means a
   field, an element of a list at any depth below a field, or a cell of a
-  list column. The detail says that a list inside a message has a `dim`
-  attribute. A data frame is not such a list. Three values are still sent:
-  an atomic matrix field, and a list-matrix column of a data frame, both of
-  `messages` itself and nested in a column.
-- [ ] AC3: Each abort names one rule. The shape rules of M038 to M040 run
-  first, up to the message `dim` rule. Then come the AC2 rule, the name
-  rule, the AC1 function rule, and the trial write. So a list array with
-  repeated dimnames gets the AC2 detail. A list-matrix that holds a function
-  also gets the AC2 detail. The AC1 rule and the trial-write rule abort with
+  list column. A column of a data frame that is a list with one, three, or
+  more dimensions also aborts. The detail says that a list inside a message
+  has a `dim` attribute. A data frame is not such a list, but the rule reads
+  the list-column cells of any data frame it reaches. Two kinds of value are
+  still sent. One is an atomic matrix field. The other is a list-matrix
+  column of any data frame, wherever that data frame sits.
+- [ ] AC3: Each abort names one rule. All shape rules of M038 to M040 run
+  first. Then come the AC2 rule, the name rule, the AC1 function rule, and
+  the trial write. So a list array with repeated dimnames gets the AC2
+  detail. A list-matrix inside a message that holds a function also gets
+  the AC2 detail. The AC1 rule and the trial-write rule abort with
   no hint. Their header is "`messages` holds a field value that cannot be
   sent as JSON." Every other rule keeps its named-list hint. Its header
   stays "`messages` must be a data frame or an unnamed list of messages."
@@ -87,7 +90,8 @@ functions take no `messages` argument.
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
 - [ ] T1: Add the AC2 rule in `R/utils-args.R`. It walks from each message
-  down, skips a data frame, and runs after the message `dim` rule and before
+  down. It exempts a data frame and its list-matrix columns, reads its
+  list-column cells, and refuses its other list-array columns. It runs after the message `dim` rule and before
   `nested_names_fault()` in `messages_fault()` and
   `data_frame_messages_fault()`. One detail text. Delete the rule in a
   scratch copy and see its probes go red.
@@ -110,10 +114,12 @@ functions take no `messages` argument.
   is a function with class `"foo"`. AC2 probes are a list-matrix field and
   a one-dimensional and a three-dimensional list array field. More AC2
   probes are one with repeated dimnames, one in a list field, and one in a
-  list-column cell. Order probes: a function with a bad
+  list-column cell. Two more are a data-frame column that is a
+  one-dimensional and a three-dimensional list array. Order probes: a function with a bad
   name, and a list-matrix that holds a function. Sent controls through
   `sent_messages()`: a message with no function, an atomic matrix field, and
-  a list-matrix column at both depths. Assert no warning on the data-frame
+  a list-matrix column at both depths, and a data frame as a message field
+  with a list-matrix column. Assert no warning on the data-frame
   function column.
 - [ ] T5: Help at `messages` in `R/chat.R` per AC4, then
   `devtools::document()`. One NEWS.md entry.
@@ -129,6 +135,7 @@ functions take no `messages` argument.
 - 2026-09-27: plan gate chose to refuse a list array inside a message over sending it as boxed nested arrays, to match the M040 rule for a list array as a whole message; falsified by a server or model that reads the boxed form as intended.
 - 2026-09-27: plan gate chose to frame the function rule as a write rule with no D-entry over a new D-entry annotating D-003, because D-020 already limits D-003 to fields in `...`; falsified by a later rule that judges a field value jsonlite writes faithfully.
 - 2026-09-27: plan committed while the second audit of the changed criteria (full mode, same [O] reader) still runs. Its findings land as a gated amendment before implement starts.
+- 2026-09-27: second audit returned 4 findings, and all earlier findings but one were resolved. Three clear fixes applied: list-matrix columns of any data frame stay allowed, AC1 yields to earlier rules, and AC3 wording on the order. The gate chose to refuse a list-array column with one, three, or more dimensions over leaving it, because a three-dimensional column is sent boxed; falsified by a user who sends such a column on purpose. AC2, AC3, T1, and T4 amended.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
