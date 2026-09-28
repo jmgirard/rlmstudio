@@ -106,7 +106,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
       that can recurse on main in `setTimeLimit()` or a subprocess, so the
       red run ends. Confirm that each AC1 value but the 2-by-2 matrix and
       each AC2 function is red on main.
-- [ ] T2: Add the helper, use it at the seven sites, and route
+- [x] T2: Add the helper, use it at the seven sites, and route
       `messages_write_fault()` through it. Put one site back to
       `req_body_json()` in a scratch copy and see its AC2 case go red.
 - [ ] T3: Update the roxygen that AC3 names, including the
@@ -130,6 +130,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 - 2026-09-28: plan gate deleted the unpushed branch `m044-openai-messages-cell-free-rows`. Its tests are at `a1fb74e` and `e3b521b` while git keeps the objects.
 - 2026-09-28: /milestone-implement started on branch `m044-json-body-as-written`. No implementation question was open, so the gate was skipped.
 - 2026-09-28: T1 done. The AC2 test went to a new file, `tests/testthat/test-body-write.R`, and `request_body_text()` joined `helper-mock-http.R` with a dry-run time limit. On main, eight AC1 values fail and the 2-by-2 control passes. All six AC2 functions fail at the time limit in the dry run.
+- 2026-09-28: T2 done. `rlm_json_text()` and `rlm_req_body()` sit after `lms_client()` in `R/chat.R`. The seven sites and `messages_write_fault()` use them, and the `messages_write_fault()` roxygen was rewritten here as well. `lms_unload()` put back on httr2's writer failed the AC2 case for `lms_unload` alone. `grep -rn 'req_body_json' R/` finds no line. `devtools::test()` gave 0 failed, 0 errors, 12303 passed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

@@ -203,7 +203,7 @@ lms_chat_openresponses <- function(
 
   resp <- lms_client(host, token = token) |>
     httr2::req_url_path("v1/responses") |>
-    httr2::req_body_json(body) |>
+    rlm_req_body(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
@@ -467,7 +467,7 @@ lms_chat_openai <- function(
 
   resp <- lms_client(host, token = token) |>
     httr2::req_url_path("v1/chat/completions") |>
-    httr2::req_body_json(body) |>
+    rlm_req_body(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
@@ -1037,7 +1037,7 @@ lms_chat_native <- function(
 
   resp <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/chat") |>
-    httr2::req_body_json(body) |>
+    rlm_req_body(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
@@ -1645,4 +1645,45 @@ lms_client <- function(host = "http://localhost:1234", token = NULL) {
   }
 
   httr2::req_auth_bearer_token(req, resolved)
+}
+
+#' Write a request body as JSON
+#'
+#' Each function that sends a JSON body writes it here, and the `messages`
+#' trial write in `messages_write_fault()` writes through the same function.
+#' The options are the defaults of the httr2 JSON body helper. The trial write
+#' and the sent body therefore use one writer with one set of options, so a
+#' `messages` value that passes the trial write is sent as jsonlite writes it.
+#'
+#' @param x The body, or the value to try.
+#' @return The JSON text, as a character string.
+#'
+#' @noRd
+rlm_json_text <- function(x) {
+  as.character(jsonlite::toJSON(
+    x,
+    auto_unbox = TRUE,
+    digits = 22,
+    null = "null"
+  ))
+}
+
+#' Attach a JSON body to a request
+#'
+#' The body is written once by `rlm_json_text()`, and the request sends that
+#' text. The httr2 JSON body helper is not used, because httr2 1.3.0 rebuilds
+#' each list in the body before it writes it, with `x[] <- lapply(x, ...)`.
+#' On a data frame, that turns a zero-width matrix or array column into `NA`
+#' and a 2-by-0 list matrix into `NULL`. On a `POSIXlt` value, it recurses
+#' with no end. The rebuild exists to reveal `httr2::obfuscated()` values,
+#' which jsonlite cannot write, so such a value in `...` now fails with the
+#' jsonlite error.
+#'
+#' @param req An httr2 request.
+#' @param body The body, a list.
+#' @return `req` with the body attached.
+#'
+#' @noRd
+rlm_req_body <- function(req, body) {
+  httr2::req_body_raw(req, rlm_json_text(body), type = "application/json")
 }

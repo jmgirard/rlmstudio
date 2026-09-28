@@ -75,7 +75,7 @@ lms_embed <- function(
 
   resp <- lms_client(host, token = token) |>
     httr2::req_url_path("v1/embeddings") |>
-    httr2::req_body_json(body) |>
+    rlm_req_body(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 

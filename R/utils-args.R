@@ -386,13 +386,14 @@ rlm_check_messages <- function(value) {
 
 #' Can jsonlite write this messages value?
 #'
-#' The request body is written by `httr2::req_body_json()`, which calls
-#' `jsonlite::toJSON()` with the three options below, after the server probe.
+#' The request body is written by `rlm_json_text()` after the server probe.
 #' A value that jsonlite cannot write, such as a field with a class that has
 #' no jsonlite method, would fail there with an error that does not name
-#' `messages`. So the value is written once here, the same way. The jsonlite
-#' message is returned as a value, and the abort splices it in, so cli does
-#' not read its braces.
+#' `messages`. So the value is written once here by the same function. The
+#' trial write and the sent body go through one helper with the same
+#' options, so a `messages` value that passes the trial write is sent as
+#' jsonlite writes it. The jsonlite message is returned as a value, and the
+#' abort splices it in, so cli does not read its braces.
 #'
 #' @param value A `messages` value that passed `messages_fault()` and holds
 #'   no function.
@@ -403,12 +404,7 @@ rlm_check_messages <- function(value) {
 messages_write_fault <- function(value) {
   tryCatch(
     {
-      jsonlite::toJSON(
-        unclass_messages(value),
-        auto_unbox = TRUE,
-        digits = 22,
-        null = "null"
-      )
+      rlm_json_text(unclass_messages(value))
       NULL
     },
     error = function(e) {
