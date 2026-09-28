@@ -163,6 +163,31 @@ rlm_check_ttl <- function(value) {
   invisible(value)
 }
 
+#' Check the batch size of a batched call
+#'
+#' The same range as `ttl`, for the same reason: the count is compared with
+#' R integers and must be one whole number. Unlike `ttl`, it has no `NULL`
+#' form, because every call sends at least one batch.
+#'
+#' @param value The value the caller passed as `batch_size`.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_batch_size <- function(value) {
+  fault <- if (is.null(value)) "You gave `NULL`." else ttl_fault(value)
+  if (!is.null(fault)) {
+    max_size <- format(.Machine$integer.max)
+    cli::cli_abort(
+      c(
+        "{.arg batch_size} must be one whole number from 1 to {max_size}.",
+        "x" = "{fault}"
+      ),
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
 #' Which rule did this ttl break?
 #'
 #' Returns plain text rather than a cli string, for the reason `id_fault()`

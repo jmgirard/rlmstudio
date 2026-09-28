@@ -29,7 +29,7 @@ Get the status of a download job
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{messages}, \code{schema}, or \code{ttl}, or a \code{stream} in the
+\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, or a \code{stream} in the
 \code{...} of a chat function, aborts with an argument message and no condition
 class even when the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
@@ -69,6 +69,15 @@ and every element after it are \code{NULL}. The check before the first input
 adds no \code{results} field. A connection that fails after the check passes,
 such as a server that stops during a request, raises an \code{httr2_failure}
 error instead. That error aborts the batch and carries no \code{results} field.
+
+\code{\link[=lms_embed]{lms_embed()}} checks the server before each request, and a request carries
+at most \code{batch_size} inputs. If a check after the first request finds the
+server gone, the call aborts with \code{rlmstudio_no_server}. Once a request has
+succeeded, the condition carries a \code{results} field. With \code{simplify = TRUE},
+\code{results} is a matrix with \code{NA} in each row whose embedding did not arrive.
+With \code{simplify = FALSE}, it is a list with one element per batch, with
+\code{NULL} in the element of the request that ended the call and in every
+element after it.
 }
 
 \section{API failure}{
@@ -87,6 +96,13 @@ input and every element after it are \code{NULL}. For any other status, the
 element of the failed input holds the condition, or \code{NA} where the result
 is text, and the batch warns once and goes on. See the details of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+
+\code{\link[=lms_embed]{lms_embed()}} follows the same rule for each request. A 401, 403, or 404
+aborts the call, and once a request has succeeded the condition carries a
+\code{results} field, a matrix or a list as the "Server not running" section
+describes. Any other status fails the inputs of that request alone, and
+the call warns once and goes on. If every request fails, the call aborts
+with the first condition. See the details of \code{\link[=lms_embed]{lms_embed()}}.
 }
 
 \section{Malformed response}{
@@ -165,6 +181,15 @@ other than LM Studio may be answering on the host.
 it returns are placed by the index that the response reports, so a block
 with a missing, repeated, or out-of-range index would otherwise pair a
 vector with the wrong text and give back a matrix that is silently wrong.
+
+\code{\link[=lms_embed]{lms_embed()}} reads each request on its own. A bad body, of either kind
+above, fails the inputs of that request alone, and the call warns once and
+goes on. The call aborts with the condition only if every request fails,
+and then with the condition of the first. With \code{simplify = TRUE}, it also
+aborts with \code{rlmstudio_bad_response} for a request whose embeddings have
+another number of dimensions than those of an earlier request. That
+condition carries a \code{results} field, a matrix as the "Server not running"
+section describes. See the details of \code{\link[=lms_embed]{lms_embed()}}.
 
 \code{\link[=lms_chat_native]{lms_chat_native()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it with
 \code{simplify = TRUE} when the reply holds no readable answer text. Both read

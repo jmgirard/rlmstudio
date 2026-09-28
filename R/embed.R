@@ -1,8 +1,8 @@
 #' Turn Text into Embedding Vectors
 #'
 #' Sends one or more texts to an embedding model and returns the vector that
-#' the model produced for each one. The whole input vector travels in a single
-#' request.
+#' the model produced for each one. The texts go out in batches of at most
+#' `batch_size`, one request per batch, in the order given.
 #'
 #' @param model Character. The loaded embedding model name. Must be one name,
 #'   given as a single string.
@@ -11,8 +11,9 @@
 #'   missing values.
 #' @param host Character. Server URL.
 #' @param simplify Logical. If `TRUE`, the default, returns a numeric matrix
-#'   with one row per input. Any other value returns the parsed response body
-#'   unchanged.
+#'   with one row per input. Any other value returns a list with one element
+#'   per request: the parsed response body, unchanged, or the condition of a
+#'   request that failed.
 #' @param ... Additional fields for the request body. LM Studio ignores a
 #'   field it does not recognize, and two OpenAI fields are worth naming for
 #'   that reason: LM Studio ignores `dimensions`, so asking for a narrower
@@ -27,11 +28,49 @@
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @return If `simplify = FALSE`, a list representing the raw JSON response.
-#'   Otherwise, a double matrix with one row per input text and one column per
-#'   embedding dimension. The row at position `i` holds the embedding that the
-#'   response reported for the input at position `i`. The matrix carries no
-#'   row or column names.
+#' @param batch_size A whole number from 1 to `.Machine$integer.max`. The
+#'   most texts that one request carries. The default is 100. A value at
+#'   least as large as `length(input)` sends every text in one request.
+#' @param quiet Logical or `NULL`. Whether to suppress the progress bar. `NULL`
+#'   reads the `rlmstudio.quiet` option. The bar shows only when the call sends
+#'   more than one request. `quiet` does not suppress the warning about failed
+#'   inputs.
+#' @return If `simplify = FALSE`, a list with one element per request, in
+#'   request order. Each element is the parsed JSON body of that request, or
+#'   the condition of a request that failed. A call with one request returns
+#'   a list of one. Otherwise, a double matrix with one row per input text and
+#'   one column per embedding dimension. The row at position `i` holds the
+#'   embedding that the response reported for the input at position `i`, or
+#'   `NA` for an input whose request failed. The matrix carries no row or
+#'   column names.
+#' @details
+#' Before each request after the first, the function checks again that the
+#' server is running.
+#'
+#' A request that fails with an `rlmstudio_bad_response`, or with an
+#' `rlmstudio_api_error` whose `status` is not 401, 403, or 404, fails the
+#' inputs it carried alone. Their rows hold `NA`, or their element of the
+#' `simplify = FALSE` list holds the condition without its backtrace. The call
+#' goes on to the next request and then gives one warning that names the
+#' count and the positions of the failed inputs. That warning shows even with
+#' `quiet = TRUE`. If every request fails, the call aborts with the condition
+#' of the first failed request, and no warning is given.
+#'
+#' Two faults end the call at once, and no request goes out after them: a
+#' server that the check before a request finds gone, and an
+#' `rlmstudio_api_error` with `status` 401, 403, or 404. With
+#' `simplify = TRUE`, a third fault does the same: a request whose embeddings
+#' have another number of dimensions than those of an earlier request. It
+#' aborts with `rlmstudio_bad_response`. With `simplify = FALSE`, the bodies
+#' do not go through the matrix checks, so bodies of two widths are returned
+#' with no abort. Each abort
+#' after a request that succeeded carries a `results` field. With
+#' `simplify = TRUE`, it is the matrix so far, with `NA` in each row whose
+#' embedding did not arrive. With `simplify = FALSE`, it is the list so far,
+#' with `NULL` in the element of the request that ended the call and in every
+#' element after it. An abort before any
+#' request succeeded carries no `results` field. An error of any other class
+#' aborts the call unchanged.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
@@ -51,49 +90,205 @@ lms_embed <- function(
   simplify = TRUE,
   ...,
   ttl = NULL,
-  token = NULL
+  token = NULL,
+  batch_size = 100,
+  quiet = NULL
 ) {
   rlm_check_id(model, "model")
   rlm_check_text(input, "input")
   rlm_check_ttl(ttl)
+  rlm_check_batch_size(batch_size)
 
   stop_if_no_server(host)
 
-  # as.list() is what keeps a single input an array of one rather than a bare
-  # string: jsonlite serializes an unnamed list as a JSON array whatever its
-  # length, while auto-unboxing would turn a length-one character vector into
-  # a scalar. unname() is what keeps the list unnamed: as.list() carries the
-  # vector's names over, and jsonlite writes a named list as a JSON object.
-  # `setNames(df$text, df$id)` is an ordinary way to reach this function.
-  body <- list(model = model, input = as.list(unname(input)))
   # An R integer is written as a JSON integer whatever the serializer does
   # with a double. The check has already made the value whole and in range.
+  base <- list(model = model)
   if (!is.null(ttl)) {
-    body$ttl <- as.integer(ttl)
+    base$ttl <- as.integer(ttl)
   }
-  body <- utils::modifyList(body, list(...))
+  dots <- list(...)
+  client <- lms_client(host, token = token)
+  has_token <- !is.null(rlm_token(token))
 
-  resp <- lms_client(host, token = token) |>
+  # Consecutive runs of at most `batch_size` inputs, in input order. The size
+  # can be as large as `.Machine$integer.max`, where integer sums overflow, so
+  # the ends are computed as doubles and cut back to the input length.
+  n <- length(input)
+  starts <- seq(1, n, by = batch_size)
+  batches <- lapply(starts, function(s) seq.int(s, min(s + batch_size - 1, n)))
+
+  show_bar <- length(batches) > 1L && !is_quiet(quiet)
+  if (show_bar) {
+    pb <- cli::cli_progress_bar(
+      name = "Embedding",
+      total = n,
+      format = "{cli::pb_name} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}"
+    )
+    on.exit(cli::cli_progress_done(id = pb), add = TRUE)
+  }
+
+  # With `simplify = TRUE` the rows go into one matrix, made once the first
+  # request succeeds, because only a reply says how wide a vector is. A failed
+  # request leaves its rows NA. With `simplify = FALSE` each request's parsed
+  # body takes one slot of a list.
+  out <- NULL
+  bodies <- vector("list", length(batches))
+  any_ok <- FALSE
+  failed <- integer()
+  first_failure <- NULL
+
+  # A lost server or a fault that holds for every request ends the call, as
+  # in `lms_chat_batch()` (D-011, D-019). Once a request has succeeded, the
+  # condition carries what the call has so far, so a long run does not lose
+  # it. Before that no vectors have arrived, and the condition is unchanged.
+  abort_with_results <- function(cnd) {
+    if (any_ok) {
+      cnd$results <- if (isTRUE(simplify)) out else bodies
+    }
+    stop(cnd)
+  }
+  # A failed request loses its own rows, not the whole call. The backtrace is
+  # dropped from the kept copy, because it makes each slot large and says
+  # nothing about the inputs.
+  keep_failure <- function(cnd) {
+    if (is.null(first_failure)) {
+      first_failure <<- cnd
+    }
+    cnd$trace <- NULL
+    cnd
+  }
+  # A refused token or a model the server cannot find fails every request the
+  # same way, whatever the texts, so these statuses end the call (D-019).
+  keep_or_abort_api <- function(cnd) {
+    if (isTRUE(cnd$status %in% c(401L, 403L, 404L))) {
+      abort_with_results(cnd)
+    }
+    keep_failure(cnd)
+  }
+
+  for (b in seq_along(batches)) {
+    rows <- batches[[b]]
+    # The probe before the first request ran above. Without this one, a
+    # server that stops between two requests makes the next request abort
+    # with an `httr2_failure` that carries no `results`.
+    if (b > 1L) {
+      tryCatch(
+        stop_if_no_server(host),
+        rlmstudio_no_server = abort_with_results
+      )
+    }
+
+    # as.list() is what keeps a single input an array of one rather than a
+    # bare string: jsonlite serializes an unnamed list as a JSON array
+    # whatever its length, while auto-unboxing would turn a length-one
+    # character vector into a scalar. unname() is what keeps the list
+    # unnamed: as.list() carries the vector's names over, and jsonlite writes
+    # a named list as a JSON object. `setNames(df$text, df$id)` is an
+    # ordinary way to reach this function.
+    body <- c(base, list(input = as.list(unname(input[rows]))))
+    body <- utils::modifyList(body, dots)
+
+    res <- tryCatch(
+      embed_request(client, body, has_token, simplify),
+      rlmstudio_api_error = keep_or_abort_api,
+      rlmstudio_bad_response = keep_failure
+    )
+
+    if (inherits(res, c("rlmstudio_api_error", "rlmstudio_bad_response"))) {
+      failed <- c(failed, rows)
+      if (!isTRUE(simplify)) {
+        bodies[b] <- list(res)
+      }
+    } else if (isTRUE(simplify)) {
+      if (is.null(out)) {
+        out <- matrix(NA_real_, nrow = n, ncol = ncol(res$value))
+      } else if (ncol(res$value) != ncol(out)) {
+        # Vectors of two widths cannot share a matrix, and no rule says which
+        # width is right, so the call ends rather than guess.
+        width_fault <- tryCatch(
+          rlm_abort_bad_response(
+            res$resp,
+            "Embeddings Failed",
+            cli::format_inline(
+              if (length(rows) == 1L) {
+                "the embedding of input {rows} has {ncol(res$value)} dimension{?s}, and earlier ones have {ncol(out)}."
+              } else {
+                "the embeddings of inputs {min(rows)} to {max(rows)} have {ncol(res$value)} dimension{?s}, and earlier ones have {ncol(out)}."
+              }
+            )
+          ),
+          rlmstudio_bad_response = identity
+        )
+        abort_with_results(width_fault)
+      }
+      out[rows, ] <- res$value
+      any_ok <- TRUE
+    } else {
+      bodies[b] <- list(res$value)
+      any_ok <- TRUE
+    }
+
+    if (show_bar) {
+      cli::cli_progress_update(id = pb, inc = length(rows))
+    }
+  }
+
+  if (!any_ok) {
+    stop(first_failure)
+  }
+
+  if (length(failed) > 0L) {
+    # Shown whatever `quiet` says, because it is the only signal that some
+    # vectors are missing (D-010, D-011). The positions are joined here,
+    # because cli shortens a vector of more than 20 values and would drop
+    # some of them.
+    positions <- cli::ansi_collapse(failed, trunc = Inf)
+    detail <- if (isTRUE(simplify)) {
+      "The rows of those inputs hold {.code NA}. Use {.code simplify = FALSE} to keep the conditions."
+    } else {
+      "The element of each request that carried them holds the {.cls rlmstudio_api_error} or {.cls rlmstudio_bad_response} condition."
+    }
+    cli::cli_warn(c(
+      "{length(failed)} input{?s} failed, at {cli::qty(length(failed))}position{?s} {positions}.",
+      "i" = detail
+    ))
+  }
+
+  if (isTRUE(simplify)) out else bodies
+}
+
+#' Send one embeddings request and read its reply
+#'
+#' @param client The httr2 request that `lms_client()` built.
+#' @param body List. The request body, whose `input` is one batch.
+#' @param has_token Logical. Whether a token was sent, for the abort hint.
+#' @param simplify Logical. Whether to build the matrix from the reply.
+#' @return A list of `value`, the matrix or the parsed body, and `resp`.
+#'
+#' @noRd
+embed_request <- function(client, body, has_token, simplify) {
+  resp <- client |>
     httr2::req_url_path("v1/embeddings") |>
     rlm_req_body(body) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
   if (httr2::resp_status(resp) != 200) {
-    rlm_abort_api(resp, "Embeddings Failed", !is.null(rlm_token(token)))
+    rlm_abort_api(resp, "Embeddings Failed", has_token)
   }
 
   resp_data <- parse_ok_body(resp, "Embeddings Failed")
 
   if (!isTRUE(simplify)) {
-    return(resp_data)
+    return(list(value = resp_data, resp = resp))
   }
 
   # The count comes from the body that was actually sent rather than from the
-  # `input` argument. R rejects a call that names `input` twice, so today the
-  # two are always the same length; reading the body keeps them the same if a
-  # later change ever puts the inputs together some other way.
-  embed_matrix(resp_data, length(body[["input"]]), resp)
+  # batch. R rejects a call that names `input` twice, so today the two are
+  # always the same length; reading the body keeps them the same if a later
+  # change ever puts the inputs together some other way.
+  list(value = embed_matrix(resp_data, length(body[["input"]]), resp), resp = resp)
 }
 
 #' Is this value one number?

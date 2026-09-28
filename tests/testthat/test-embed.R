@@ -226,12 +226,12 @@ test_that("a response recorded from a live server builds the matrix", {
 
 # simplify = FALSE ----------------------------------------------------------
 
-test_that("simplify = FALSE returns the parsed body unchanged", {
+test_that("simplify = FALSE returns the parsed body unchanged, in a list of one", {
   out <- drive_embed(in_order_body, input = three_inputs, simplify = FALSE)$value
 
   expect_identical(
     out,
-    httr2::resp_body_json(mock_response(200L, in_order_body))
+    list(httr2::resp_body_json(mock_response(200L, in_order_body)))
   )
 })
 
@@ -251,7 +251,7 @@ test_that("simplify = FALSE returns a body the response check rejects", {
   out <- drive_embed(ragged, input = three_inputs, simplify = FALSE)$value
   expect_identical(
     out,
-    httr2::resp_body_json(mock_response(200L, ragged))
+    list(httr2::resp_body_json(mock_response(200L, ragged)))
   )
 })
 
@@ -587,4 +587,611 @@ test_that("lms_embed sends no Authorization header without a token", {
 
   headers <- request_target(run$requests[[1]])$headers
   expect_null(headers$authorization)
+})
+
+
+# The batch size ------------------------------------------------------------
+
+# Each value is a fault of a different kind: no value, a missing value of two
+# types, two values of the wrong type, two values, and five numbers out of range
+# or not whole.
+batch_size_bad_values <- list(
+  NULL,
+  NA,
+  NA_real_,
+  TRUE,
+  "10",
+  c(1, 2),
+  0,
+  -1,
+  1.5,
+  Inf,
+  2^31
+)
+
+test_that("a bad batch_size aborts, named, before the server probe", {
+  probe <- new.env(parent = emptyenv())
+  probe$calls <- 0L
+  local_mocked_bindings(
+    is_server_running = function(...) {
+      probe$calls <- probe$calls + 1L
+      TRUE
+    }
+  )
+  recorder <- local_request_recorder()
+
+  for (value in batch_size_bad_values) {
+    label <- paste("batch_size =", deparse(value))
+    err <- expect_error(
+      lms_embed("test-embed", three_inputs, batch_size = value),
+      "`batch_size` must be one whole number from 1 to",
+      fixed = TRUE,
+      info = label
+    )
+    # An argument fault carries no condition class of the package (D-008).
+    expect_false(
+      inherits(err, c("rlmstudio_no_server", "rlmstudio_api_error")),
+      info = label
+    )
+  }
+  expect_identical(probe$calls, 0L)
+  expect_length(recorder$requests, 0L)
+})
+
+test_that("a good batch_size passes the check", {
+  # Each value sends the three inputs in one request, so one reply serves it.
+  # Sizes below the input count are driven by the batch tests below.
+  for (value in list(3, 3L, 100, .Machine$integer.max)) {
+    run <- drive_embed(in_order_body, input = three_inputs, batch_size = value)
+    expect_identical(dim(run$value), c(3L, 5L), info = deparse(value))
+  }
+})
+
+
+# Batches -------------------------------------------------------------------
+
+# The vector served for input `i`: three values that no other input shares.
+input_vector <- function(i, width = 3L) i + seq_len(width) / 10
+
+# A reply for the inputs at `positions`, one element per input, with the
+# element order given by `order` (a permutation of the positions' ranks).
+batch_reply <- function(positions, order = seq_along(positions), width = 3L) {
+  elements <- vapply(
+    order,
+    function(k) embed_element(k - 1L, input_vector(positions[[k]], width)),
+    character(1)
+  )
+  mock_response(200L, do.call(embed_body, as.list(elements)))
+}
+
+batch_inputs <- stats::setNames(
+  paste("text", seq_len(250)),
+  paste0("id", seq_len(250))
+)
+
+test_that("250 inputs at batch_size 100 go out as three ordered requests", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    batch_reply(1:100),
+    # Served in reverse, so only the index can put these rows in place.
+    batch_reply(101:200, order = 100:1),
+    batch_reply(201:250)
+  ))
+
+  out <- lms_embed(
+    "test-embed",
+    batch_inputs,
+    ttl = 60,
+    dimensions = 3,
+    batch_size = 100
+  )
+
+  expect_length(recorder$requests, 3L)
+  sent <- lapply(recorder$requests, sent_body)
+  expected_rows <- list(1:100, 101:200, 201:250)
+  for (b in 1:3) {
+    label <- paste("request", b)
+    body <- sent[[b]]
+    expect_identical(body$model, "test-embed", info = label)
+    expect_identical(body$ttl, 60L, info = label)
+    expect_identical(body$dimensions, 3L, info = label)
+    # A JSON array arrives as an unnamed list, an object as a named one.
+    expect_true(is.list(body$input), info = label)
+    expect_null(names(body$input), info = label)
+    expect_identical(
+      unlist(body$input),
+      unname(batch_inputs[expected_rows[[b]]]),
+      info = label
+    )
+  }
+
+  expect_identical(dim(out), c(250L, 3L))
+  for (i in seq_len(250)) {
+    expect_equal(out[i, ], input_vector(i), info = paste("row", i))
+  }
+})
+
+test_that("a batch_size of 1 sends one request per input", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(lapply(1:3, batch_reply))
+
+  out <- lms_embed("test-embed", three_inputs, batch_size = 1)
+
+  expect_length(recorder$requests, 3L)
+  for (i in 1:3) {
+    expect_identical(unlist(sent_body(recorder$requests[[i]])$input), three_inputs[[i]])
+    expect_equal(out[i, ], input_vector(i))
+  }
+})
+
+test_that("a later batch of another width aborts, carrying the rows so far", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    batch_reply(1:2),
+    batch_reply(3:4, width = 4L),
+    batch_reply(5)
+  ))
+
+  err <- expect_error(
+    lms_embed("test-embed", paste("text", 1:5), batch_size = 2),
+    "inputs 3 to 4 have 4 dimensions, and earlier ones have 3",
+    class = "rlmstudio_bad_response"
+  )
+  # The third request never goes out.
+  expect_length(recorder$requests, 2L)
+  expected <- matrix(NA_real_, nrow = 5, ncol = 3)
+  expected[1, ] <- input_vector(1)
+  expected[2, ] <- input_vector(2)
+  expect_identical(err$results, expected)
+})
+
+test_that("the width abort names a batch of one input by its position", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    batch_reply(1:2),
+    batch_reply(3:4),
+    batch_reply(5, width = 4L)
+  ))
+
+  expect_error(
+    lms_embed("test-embed", paste("text", 1:5), batch_size = 2),
+    "the embedding of input 5 has 4 dimensions, and earlier ones have 3",
+    class = "rlmstudio_bad_response"
+  )
+})
+
+
+# Failed batches --------------------------------------------------------------
+
+# A reply that `embed_matrix()` rejects: one element for a batch of two.
+short_reply <- function(position) batch_reply(position)
+
+error_reply <- function(status) {
+  mock_response(status, sprintf('{"error": "status %s"}', status))
+}
+
+five_inputs <- paste("text", 1:5)
+
+# Run `expr` and keep every warning it gives, so a test can count them.
+# `expect_warning()` catches one and lets a second go by.
+collect_warnings <- function(expr) {
+  warnings <- list()
+  value <- withCallingHandlers(
+    expr,
+    warning = function(w) {
+      warnings[[length(warnings) + 1L]] <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, warnings = warnings)
+}
+
+test_that("a bad reply for one batch leaves its rows NA and the call goes on", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    batch_reply(1:2),
+    short_reply(3),
+    batch_reply(5)
+  ))
+
+  run <- collect_warnings(lms_embed("test-embed", five_inputs, batch_size = 2))
+  out <- run$value
+  expect_length(run$warnings, 1L)
+  expect_match(
+    conditionMessage(run$warnings[[1]]),
+    "2 inputs failed, at positions 3 and 4.",
+    fixed = TRUE
+  )
+
+  expect_length(recorder$requests, 3L)
+  expect_equal(out[1, ], input_vector(1))
+  expect_equal(out[2, ], input_vector(2))
+  expect_true(all(is.na(out[3:4, ])))
+  expect_equal(out[5, ], input_vector(5))
+})
+
+test_that("an API failure for one batch leaves its rows NA and the call goes on", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    error_reply(400L),
+    batch_reply(3:4),
+    error_reply(500L)
+  ))
+
+  expect_warning(
+    out <- lms_embed("test-embed", five_inputs, batch_size = 2),
+    "3 inputs failed, at positions 1, 2, and 5."
+  )
+
+  expect_true(all(is.na(out[c(1, 2, 5), ])))
+  expect_equal(out[3, ], input_vector(3))
+  expect_equal(out[4, ], input_vector(4))
+})
+
+test_that("the width is set by the first batch that succeeds", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    error_reply(500L),
+    batch_reply(3:4, width = 4L),
+    batch_reply(5, width = 4L)
+  ))
+
+  expect_warning(
+    out <- lms_embed("test-embed", five_inputs, batch_size = 2),
+    "2 inputs failed, at positions 1 and 2."
+  )
+  expect_identical(dim(out), c(5L, 4L))
+  expect_true(all(is.na(out[1:2, ])))
+  for (i in 3:5) {
+    expect_equal(out[i, ], input_vector(i, width = 4L), info = paste("row", i))
+  }
+})
+
+test_that("the warning names every failed position past twenty", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    error_reply(500L),
+    error_reply(500L),
+    batch_reply(23:33)
+  ))
+
+  run <- collect_warnings(
+    lms_embed("test-embed", paste("text", 1:33), batch_size = 11)
+  )
+  expect_length(run$warnings, 1L)
+  # Written out here rather than built by cli, the function that joins them.
+  expected <- paste0(
+    "22 inputs failed, at positions ",
+    paste(1:21, collapse = ", "),
+    ", and 22."
+  )
+  expect_match(conditionMessage(run$warnings[[1]]), expected, fixed = TRUE)
+})
+
+test_that("the failed-inputs warning shows when the call is quiet", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  local_request_sequence(list(batch_reply(1:2), error_reply(500L)))
+  expect_warning(
+    lms_embed("test-embed", paste("text", 1:3), batch_size = 2, quiet = TRUE),
+    "1 input failed, at position 3."
+  )
+
+  withr::local_options(rlmstudio.quiet = TRUE)
+  local_request_sequence(list(batch_reply(1:2), error_reply(500L)))
+  expect_warning(
+    lms_embed("test-embed", paste("text", 1:3), batch_size = 2),
+    "1 input failed, at position 3."
+  )
+})
+
+test_that("when every batch fails, the call aborts with the first failure", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    error_reply(400L),
+    short_reply(3),
+    error_reply(500L)
+  ))
+
+  # No warning comes before the abort. `expect_no_warning()` fails on one.
+  err <- expect_no_warning(
+    tryCatch(
+      lms_embed("test-embed", five_inputs, batch_size = 2),
+      error = identity
+    )
+  )
+  expect_s3_class(err, "rlmstudio_api_error")
+  expect_identical(err$status, 400L)
+  expect_false("results" %in% names(err))
+})
+
+
+# Aborts that keep the rows so far -------------------------------------------
+
+# The rows that the first batch of two fills, with the other three NA.
+first_two_rows <- function() {
+  expected <- matrix(NA_real_, nrow = 5, ncol = 3)
+  expected[1, ] <- input_vector(1)
+  expected[2, ] <- input_vector(2)
+  expected
+}
+
+test_that("a server lost between batches aborts, carrying the rows so far", {
+  probe <- new.env(parent = emptyenv())
+  probe$calls <- 0L
+  local_mocked_bindings(
+    is_server_running = function(...) {
+      probe$calls <- probe$calls + 1L
+      probe$calls < 2L
+    }
+  )
+  recorder <- local_request_sequence(list(batch_reply(1:2)))
+
+  err <- expect_error(
+    lms_embed("test-embed", five_inputs, batch_size = 2),
+    class = "rlmstudio_no_server"
+  )
+  expect_length(recorder$requests, 1L)
+  expect_identical(err$results, first_two_rows())
+})
+
+test_that("a 401, 403, or 404 aborts at once, carrying the rows so far", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  for (status in c(401L, 403L, 404L)) {
+    label <- paste("status", status)
+    recorder <- local_request_sequence(list(
+      batch_reply(1:2),
+      error_reply(status)
+    ))
+    err <- expect_error(
+      lms_embed("test-embed", five_inputs, batch_size = 2),
+      class = "rlmstudio_api_error"
+    )
+    expect_identical(err$status, status, info = label)
+    # The third request never goes out.
+    expect_identical(length(recorder$requests), 2L, info = label)
+    expect_identical(err$results, first_two_rows(), info = label)
+  }
+})
+
+test_that("a 401 on the first batch aborts with no results field", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(error_reply(401L)))
+
+  err <- expect_error(
+    lms_embed("test-embed", five_inputs, batch_size = 2),
+    class = "rlmstudio_api_error"
+  )
+  expect_identical(length(recorder$requests), 1L)
+  expect_false("results" %in% names(err))
+})
+
+test_that("a 404 after a failed batch and no success carries no results field", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(error_reply(500L), error_reply(404L)))
+
+  err <- expect_error(
+    lms_embed("test-embed", five_inputs, batch_size = 2),
+    class = "rlmstudio_api_error"
+  )
+  expect_identical(err$status, 404L)
+  expect_identical(length(recorder$requests), 2L)
+  expect_false("results" %in% names(err))
+})
+
+
+# simplify = FALSE over batches ------------------------------------------------
+
+test_that("simplify = FALSE returns one parsed body per request, in order", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  replies <- list(
+    batch_reply(1:100),
+    batch_reply(101:200, order = 100:1),
+    batch_reply(201:250)
+  )
+  local_request_sequence(replies)
+
+  out <- lms_embed("test-embed", batch_inputs, simplify = FALSE, batch_size = 100)
+
+  expect_identical(out, lapply(replies, httr2::resp_body_json))
+})
+
+test_that("simplify = FALSE keeps the condition of a failed request", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    batch_reply(1:2),
+    error_reply(500L),
+    batch_reply(5)
+  ))
+
+  run <- collect_warnings(
+    lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2)
+  )
+  out <- run$value
+  expect_length(run$warnings, 1L)
+  expect_match(
+    conditionMessage(run$warnings[[1]]),
+    "2 inputs failed, at positions 3 and 4.",
+    fixed = TRUE
+  )
+
+  expect_length(out, 3L)
+  expect_identical(out[[1]], httr2::resp_body_json(batch_reply(1:2)))
+  expect_s3_class(out[[2]], "rlmstudio_api_error")
+  expect_identical(out[[2]]$status, 500L)
+  # The kept copy drops the backtrace that the raised condition carried.
+  expect_null(out[[2]]$trace)
+  expect_identical(out[[3]], httr2::resp_body_json(batch_reply(5)))
+})
+
+test_that("with simplify = FALSE an abort carries the list so far", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(batch_reply(1:2), error_reply(404L)))
+
+  err <- expect_error(
+    lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2),
+    class = "rlmstudio_api_error"
+  )
+  expect_identical(
+    err$results,
+    list(httr2::resp_body_json(batch_reply(1:2)), NULL, NULL)
+  )
+})
+
+
+# The progress bar -------------------------------------------------------------
+
+# Record the bars that are made and the updates they get, without drawing any.
+local_bar_recorder <- function(.env = parent.frame()) {
+  log <- new.env(parent = emptyenv())
+  log$bars <- list()
+  log$updates <- list()
+  local_mocked_bindings(
+    cli_progress_bar = function(...) {
+      log$bars[[length(log$bars) + 1L]] <- list(...)
+      "bar-id"
+    },
+    cli_progress_update = function(...) {
+      log$updates[[length(log$updates) + 1L]] <- list(...)
+      invisible()
+    },
+    cli_progress_done = function(...) invisible(),
+    .package = "cli",
+    .env = .env
+  )
+  log
+}
+
+run_250 <- function(...) {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    batch_reply(1:100),
+    batch_reply(101:200),
+    batch_reply(201:250)
+  ))
+  lms_embed("test-embed", batch_inputs, batch_size = 100, ...)
+}
+
+test_that("a call of three requests shows one bar that counts inputs", {
+  withr::local_options(rlmstudio.quiet = NULL)
+  log <- local_bar_recorder()
+
+  run_250()
+
+  expect_length(log$bars, 1L)
+  expect_identical(log$bars[[1]]$total, 250L)
+  expect_length(log$updates, 3L)
+  expect_identical(
+    vapply(log$updates, function(u) as.integer(u$inc), integer(1)),
+    c(100L, 100L, 50L)
+  )
+})
+
+test_that("no bar shows when quiet, or for one request", {
+  log <- local_bar_recorder()
+
+  # The option says not quiet, so only the argument can hide the bar.
+  withr::with_options(list(rlmstudio.quiet = FALSE), run_250(quiet = TRUE))
+  expect_length(log$bars, 0L)
+
+  withr::with_options(list(rlmstudio.quiet = TRUE), run_250())
+  expect_length(log$bars, 0L)
+
+  withr::local_options(rlmstudio.quiet = NULL)
+  drive_embed(in_order_body, input = three_inputs)
+  expect_length(log$bars, 0L)
+  expect_length(log$updates, 0L)
+})
+
+
+# Against a live server --------------------------------------------------------
+
+test_that("live: batches of two give the vectors of one request", {
+  testthat::skip_on_cran()
+  skip_if_no_server()
+
+  # The test never loads a model, so a run leaves the server as it found it.
+  model <- "text-embedding-nomic-embed-text-v1.5"
+  loaded <- tryCatch(
+    list_models(loaded = TRUE, type = "embedding", quiet = TRUE)$key,
+    error = function(e) character()
+  )
+  if (!model %in% loaded) {
+    testthat::skip(paste(model, "is not loaded."))
+  }
+
+  texts <- c(
+    "a cat sat on the mat",
+    "the stock market fell sharply today",
+    "R is a language for statistics",
+    "short",
+    "embedding vectors from a local server"
+  )
+  one <- lms_embed(model, texts)
+  batched <- lms_embed(model, texts, batch_size = 2, quiet = TRUE)
+
+  expect_identical(dim(batched), c(5L, ncol(one)))
+  expect_lt(max(abs(batched - one)), 1e-6)
+})
+
+
+# simplify = FALSE: the aborts that apply and the one that does not -------------
+
+test_that("with simplify = FALSE, every batch failing aborts with the first", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  # A reply with too few vectors is not a failure here, because this form
+  # skips the matrix checks, so both requests fail on status.
+  local_request_sequence(list(error_reply(500L), error_reply(400L)))
+
+  err <- expect_no_warning(
+    tryCatch(
+      lms_embed(
+        "test-embed",
+        paste("text", 1:4),
+        simplify = FALSE,
+        batch_size = 2
+      ),
+      error = identity
+    )
+  )
+  expect_s3_class(err, "rlmstudio_api_error")
+  expect_identical(err$status, 500L)
+  expect_false("results" %in% names(err))
+})
+
+test_that("with simplify = FALSE, a lost server carries the list so far", {
+  probe <- new.env(parent = emptyenv())
+  probe$calls <- 0L
+  local_mocked_bindings(
+    is_server_running = function(...) {
+      probe$calls <- probe$calls + 1L
+      probe$calls < 2L
+    }
+  )
+  local_request_sequence(list(batch_reply(1:2)))
+
+  err <- expect_error(
+    lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(
+    err$results,
+    list(httr2::resp_body_json(batch_reply(1:2)), NULL, NULL)
+  )
+})
+
+test_that("with simplify = FALSE, bodies of two widths come back with no abort", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  replies <- list(
+    batch_reply(1:2),
+    batch_reply(3:4, width = 4L),
+    batch_reply(5)
+  )
+  local_request_sequence(replies)
+
+  out <- expect_no_error(
+    lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2)
+  )
+  expect_identical(out, lapply(replies, httr2::resp_body_json))
 })
