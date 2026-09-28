@@ -1,13 +1,13 @@
 # M050: A table of loaded model instances
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP1, GP2, GP3, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — the milestone adds an exported function
-- **Branch/PR:** —
+- **Branch/PR:** m050-list-instances
 
 ## Goal
 

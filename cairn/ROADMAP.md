@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-28 (M049 done, M046 row pruned, two M001 lessons pr
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M050 | A table of loaded model instances | planned | none | normal | milestones/M050-list-instances.md |
+| M050 | A table of loaded model instances | in-progress | none | normal | milestones/M050-list-instances.md |
 | M049 | A chat call aborts on a reply from a different model | done | none | normal | milestones/archive/M049-chat-model-mismatch.md |
 | M048 | The embedding help page describes the cut of a text longer than the context | done | none | normal | milestones/archive/M048-embed-context-cut.md |
 | M047 | The embedding function sends a long input in batches | done | none | normal | milestones/archive/M047-embed-batches.md |
