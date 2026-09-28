@@ -850,7 +850,11 @@ messages_rule_details <- c(
   rule3 = "You gave a list with names, which is sent as one JSON object.",
   rule4 = "You gave a message that is not a list with a name on each field.",
   rule5 = "You gave a data frame that has no columns or a column name that is missing or repeated.",
-  rule6 = "You gave a data frame with a row in which every cell is NA."
+  rule6 = "You gave a data frame with a row in which every cell is NA or a NULL list cell.",
+  rule7 = "You gave a list with a dim attribute, such as a matrix of messages.",
+  rule8 = "You gave a message with a dim attribute, such as a list array.",
+  rule9 = "You gave a message, or a list or data frame inside one, with a name that is NA, empty, or repeated.",
+  rule10 = "You gave a value that jsonlite cannot write:"
 )
 
 good_message <- list(role = "user", content = "hi")
@@ -997,6 +1001,207 @@ messages_probes <- list(
     }),
     rule = "rule6"
   ),
+  # The dim rules run before the names rule at their level, so a list array
+  # of one dimension with dimnames, which names() reads, gets the dim text.
+  list(
+    label = "a list-matrix of messages",
+    value = matrix(
+      list(good_message, good_message, good_message, good_message),
+      2
+    ),
+    rule = "rule7"
+  ),
+  list(
+    label = "a one-dimensional list array",
+    value = array(list(good_message, good_message), dim = 2),
+    rule = "rule7"
+  ),
+  list(
+    label = "a one-dimensional list array with names",
+    value = array(
+      list(good_message, good_message),
+      dim = 2,
+      dimnames = list(c("a", "b"))
+    ),
+    rule = "rule7"
+  ),
+  list(
+    label = "a message that is a one-dimensional list array with names",
+    value = list(
+      good_message,
+      array(
+        list("user", "hi"),
+        dim = 2,
+        dimnames = list(c("role", "content"))
+      )
+    ),
+    rule = "rule8"
+  ),
+  # jsonlite writes an NA or empty name under a number and renames a repeated
+  # name "a" to "a.1", at the message level and below.
+  list(
+    label = "a repeated field name in a message",
+    value = list(list(role = "user", role = "system", content = "hi")),
+    rule = "rule9"
+  ),
+  list(
+    label = "a partly named list in content",
+    value = list(list(role = "user", content = list(a = "x", "y"))),
+    rule = "rule9"
+  ),
+  list(
+    label = "a list in content whose names are all empty",
+    value = list(
+      list(role = "user", content = stats::setNames(list("x", "y"), c("", "")))
+    ),
+    rule = "rule9"
+  ),
+  list(
+    label = "an NA name two levels down",
+    value = list(list(
+      role = "user",
+      content = list(list(type = "text", text = stats::setNames(list("x"), NA)))
+    )),
+    rule = "rule9"
+  ),
+  list(
+    label = "an I() list with a repeated name",
+    value = list(
+      good_message,
+      list(role = "user", content = I(list(a = "x", a = "y")))
+    ),
+    rule = "rule9"
+  ),
+  list(
+    label = "a list-column cell with a repeated name",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- list("hi", list(a = "x", a = "y"))
+      df
+    }),
+    rule = "rule9"
+  ),
+  list(
+    label = "a nested data-frame column with an empty name",
+    value = local({
+      df <- data.frame(role = "user")
+      df$content <- stats::setNames(data.frame(a = "x", b = "y"), c("a", ""))
+      df
+    }),
+    rule = "rule9"
+  ),
+  # The trial write runs last. Each value below fails it, and the first four
+  # also break a rule of their own, which wins.
+  list(
+    label = "a NULL-cell row and a foo-classed cell",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$content <- list(structure("x", class = "foo"), NULL)
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a list-matrix with an environment field",
+    value = matrix(
+      list(list(role = "user", content = new.env()), good_message),
+      1
+    ),
+    rule = "rule7"
+  ),
+  list(
+    label = "a list-array message with an environment field",
+    value = list(
+      array(list("user", new.env()), 2, list(c("role", "content")))
+    ),
+    rule = "rule8"
+  ),
+  list(
+    label = "a repeated name and an environment field",
+    value = list(list(role = "user", role = "system", content = new.env())),
+    rule = "rule9"
+  ),
+  list(
+    label = "a foo-classed field",
+    value = list(list(role = "user", content = structure("x", class = "foo"))),
+    rule = "rule10"
+  ),
+  list(
+    label = "foo-classed content parts",
+    value = list(list(
+      role = "user",
+      content = structure(list(list(type = "text", text = "x")), class = "foo")
+    )),
+    rule = "rule10"
+  ),
+  list(
+    label = "a foo-classed data-frame column",
+    value = local({
+      df <- data.frame(content = "hi")
+      df$role <- structure("user", class = "foo")
+      df
+    }),
+    rule = "rule10"
+  ),
+  list(
+    label = "an environment field",
+    value = list(list(role = "user", content = new.env())),
+    rule = "rule10"
+  ),
+  list(
+    label = "a quote() field",
+    value = list(list(role = "user", content = quote(x))),
+    rule = "rule10"
+  ),
+  # A NULL list cell is written as null, the same as an NA cell.
+  list(
+    label = "a row of NA and a NULL list cell",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$content <- list("hi", NULL)
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a row of NA and a NULL cell in an I() list column",
+    value = local({
+      df <- data.frame(role = c(NA, "user"))
+      df$content <- I(list(NULL, "hi"))
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a row of NA, an NA matrix row, and a NULL list cell",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$m <- matrix(c(1, NA, 2, NA), 2)
+      df$content <- list("hi", NULL)
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a row of NA and a list-matrix row of NULL cells",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$m <- matrix(list(1, NULL, 2, NULL), 2)
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a row of NA and a NULL list cell in a nested data frame",
+    value = local({
+      inner <- data.frame(a = c(1, NA))
+      inner$b <- list(1, NULL)
+      df <- data.frame(role = c("user", NA))
+      df$sub <- inner
+      df
+    }),
+    rule = "rule6"
+  ),
   list(
     label = "a data frame of one NA row",
     value = data.frame(role = NA_character_, content = NA_character_),
@@ -1123,6 +1328,84 @@ test_that("a messages value that keeps every rule reaches the request", {
       value = data.frame(role = c("user", NA), content = c("hi", "yo")),
       sent = list(list(role = "user", content = "hi"), list(content = "yo"))
     ),
+    # A list() cell is written as [] and a list(NA) cell as [null]. Both are
+    # field values, so such a row is not empty.
+    list(
+      label = "a row of NA and a list() cell",
+      value = local({
+        df <- data.frame(role = c("user", NA))
+        df$content <- list("hi", list())
+        df
+      }),
+      sent = list(list(role = "user", content = "hi"), list(content = list()))
+    ),
+    list(
+      label = "a fully named nested list",
+      value = list(list(role = "user", content = list(a = "x", b = "y"))),
+      sent = list(list(role = "user", content = list(a = "x", b = "y")))
+    ),
+    list(
+      label = "an unnamed nested list",
+      value = list(list(role = "user", content = list("x", "y"))),
+      sent = list(list(role = "user", content = list("x", "y")))
+    ),
+    # jsonlite does not write the names of a list column, so they are not
+    # read, even when one of them is empty.
+    list(
+      label = "a list column with names, one of them empty",
+      value = local({
+        df <- data.frame(role = c("user", "user"))
+        df$content <- list(p = "hi", "yo")
+        stopifnot(identical(names(df$content), c("p", "")))
+        df
+      }),
+      sent = list(
+        list(role = "user", content = "hi"),
+        list(role = "user", content = "yo")
+      )
+    ),
+    # is.na() on the whole data frame spreads the matrix over two columns, so
+    # a rule that reads it by column position looks at the wrong cells.
+    list(
+      label = "a NULL list cell after a matrix column, and a later value",
+      value = local({
+        df <- data.frame(role = c("user", NA))
+        df$m <- matrix(c(1, NA, 2, NA), 2)
+        df$content <- list("hi", NULL)
+        df$name <- c("a", "b")
+        df
+      }),
+      sent = list(
+        list(role = "user", m = list(1L, 2L), content = "hi", name = "a"),
+        list(m = list("NA", "NA"), content = NULL, name = "b")
+      )
+    ),
+    list(
+      label = "a row of NA and a list(NA) cell",
+      value = local({
+        df <- data.frame(role = c("user", NA))
+        df$content <- list("hi", list(NA))
+        df
+      }),
+      sent = list(
+        list(role = "user", content = "hi"),
+        list(content = list(NULL))
+      )
+    ),
+    # A list-matrix column is read per row, so a NULL cell beside a value in
+    # the same row leaves the row with a field value.
+    list(
+      label = "a row of NA and a list-matrix row with one value",
+      value = local({
+        df <- data.frame(role = c("user", NA))
+        df$m <- matrix(list(1, NULL, NULL, 2), 2)
+        df
+      }),
+      sent = list(
+        list(role = "user", m = list(list(1L), NULL)),
+        list(m = list(NULL, list(2L)))
+      )
+    ),
     list(
       label = "a tibble-classed data frame",
       value = structure(
@@ -1186,27 +1469,65 @@ test_that("a messages value that keeps every rule reaches the request", {
   }
 })
 
-# A class below the outer list and its messages is not removed. A class that
-# jsonlite has no method for therefore still fails there, when the request body
-# is written, as it did before. The recorder never writes the body, so the
-# test writes it with a dry run.
-test_that("a class below the message level still reaches jsonlite", {
-  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-
-  classed_content <- list(list(
-    role = "user",
-    content = structure(list(list(type = "text", text = "x")), class = "foo")
-  ))
-  classed_column <- data.frame(content = "hi")
-  classed_column$role <- structure("user", class = "foo")
-
-  for (value in list(classed_content, classed_column)) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    lms_chat_openai("a-model", value)
+# The rule-order probes above get the text of their own rule. Each of them
+# also fails the trial write, so the rule wins over the write for its reason.
+test_that("each rule-order probe also fails the jsonlite write", {
+  order_labels <- c(
+    "a NULL-cell row and a foo-classed cell",
+    "a list-matrix with an environment field",
+    "a list-array message with an environment field",
+    "a repeated name and an environment field"
+  )
+  labels <- vapply(messages_probes, `[[`, character(1), "label")
+  expect_true(all(order_labels %in% labels))
+  for (p in messages_probes[labels %in% order_labels]) {
     expect_error(
-      sent_messages(recorder$requests[[1]]),
-      "No method asJSON S3 class: foo",
-      fixed = TRUE
+      jsonlite::toJSON(
+        unclass_messages(p$value),
+        auto_unbox = TRUE,
+        digits = 22,
+        null = "null"
+      ),
+      "No method asJSON S3 class",
+      fixed = TRUE,
+      info = p$label
     )
   }
+})
+
+# A class below the outer list and its messages is not removed, so a class
+# that jsonlite has no method for fails the trial write before the server
+# probe. The abort carries the jsonlite message as it is, braces included.
+test_that("a value jsonlite cannot write aborts with the jsonlite message", {
+  probe <- local_counting_probe()
+
+  err <- expect_error(
+    lms_chat_openai(
+      "a-model",
+      list(list(role = "user", content = structure("x", class = "{x}")))
+    ),
+    "You gave a value that jsonlite cannot write: No method asJSON S3 class: {x}",
+    fixed = TRUE
+  )
+  expect_match(conditionMessage(err), "`messages`", fixed = TRUE)
+  expect_identical(class(err), c("rlang_error", "error", "condition"))
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("a Date, a factor, and an I() field reach the request", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+  expect_no_error(lms_chat_openai(
+    "a-model",
+    list(list(
+      role = I("user"),
+      content = factor("hi"),
+      date = as.Date("2026-01-01")
+    ))
+  ))
+  expect_identical(
+    sent_messages(recorder$requests[[1]]),
+    list(list(role = list("user"), content = "hi", date = "2026-01-01"))
+  )
 })

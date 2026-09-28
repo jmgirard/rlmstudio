@@ -38,18 +38,39 @@ of its fields has a name that is not \code{NA} and not empty. A data frame
 as an element breaks this rule.
 \item A data frame has at least one column, and no column name is \code{NA},
 empty, or repeated.
-\item A data frame has no row in which every cell is \code{NA}.
+\item A data frame has no row in which every cell is \code{NA} or is a \code{NULL}
+cell of a list column. jsonlite leaves out an \code{NA} cell of another
+column and writes an \code{NA} or \code{NULL} list cell as \code{null}, so such a row
+holds no field value. A \code{list()}
+cell is sent as \verb{[]} and a \code{list(NA)} cell as \verb{[null]}, so a row with
+such a cell is sent. A matrix or data-frame column counts as empty in
+a row when each of its cells in that row is empty.
+\item \code{messages}, when it is a list and not a data frame, has no \code{dim}
+attribute, such as a matrix or an array of messages. A list with a
+\code{dim} inside a message is not checked.
+\item A message that is a list has no \code{dim} attribute.
+\item No message, and no list or data frame inside a message or inside a
+cell or column of a data frame, has a name that is \code{NA}, empty, or
+repeated. jsonlite would send an \code{NA} or empty name as a number and
+rename a repeated name \code{a} to \code{a.1}. A list with no names passes. The
+names of a list column are not checked, because they are not sent.
+The names of an atomic vector and the column names of a matrix are
+not checked, because jsonlite sends those values as arrays.
+\item jsonlite can write the value, with the options that the request uses.
+If it cannot, the error gives the jsonlite message. This rule is
+checked last.
 }
 
 A list that is not a data frame is sent without its class attribute, and
 each of its messages is sent without its class attribute. A class on a
 field inside a message is kept, so a field wrapped in \code{\link[=I]{I()}} is sent as an
-array. A data frame and its columns keep their classes. jsonlite writes
-the body. It fails on a kept class when no entry of the class vector has
-a jsonlite method, such as a field with the class \code{"foo"} alone.
+array. A data frame and its columns keep their classes. A kept class that
+jsonlite has no method for, such as a field with the class \code{"foo"} alone,
+breaks the last rule.
 
-The package does not check the roles, the content, or any other field of
-a message. The server checks them.}
+The package checks the shape of \code{messages} and whether jsonlite can
+write it. It does not check the values of the roles, the content, or any
+other field of a message. The server checks them.}
 
 \item{host}{Character. Server URL.}
 

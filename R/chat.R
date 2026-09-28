@@ -282,17 +282,38 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     as an element breaks this rule.
 #'   * A data frame has at least one column, and no column name is `NA`,
 #'     empty, or repeated.
-#'   * A data frame has no row in which every cell is `NA`.
+#'   * A data frame has no row in which every cell is `NA` or is a `NULL`
+#'     cell of a list column. jsonlite leaves out an `NA` cell of another
+#'     column and writes an `NA` or `NULL` list cell as `null`, so such a row
+#'     holds no field value. A `list()`
+#'     cell is sent as `[]` and a `list(NA)` cell as `[null]`, so a row with
+#'     such a cell is sent. A matrix or data-frame column counts as empty in
+#'     a row when each of its cells in that row is empty.
+#'   * `messages`, when it is a list and not a data frame, has no `dim`
+#'     attribute, such as a matrix or an array of messages. A list with a
+#'     `dim` inside a message is not checked.
+#'   * A message that is a list has no `dim` attribute.
+#'   * No message, and no list or data frame inside a message or inside a
+#'     cell or column of a data frame, has a name that is `NA`, empty, or
+#'     repeated. jsonlite would send an `NA` or empty name as a number and
+#'     rename a repeated name `a` to `a.1`. A list with no names passes. The
+#'     names of a list column are not checked, because they are not sent.
+#'     The names of an atomic vector and the column names of a matrix are
+#'     not checked, because jsonlite sends those values as arrays.
+#'   * jsonlite can write the value, with the options that the request uses.
+#'     If it cannot, the error gives the jsonlite message. This rule is
+#'     checked last.
 #'
 #'   A list that is not a data frame is sent without its class attribute, and
 #'   each of its messages is sent without its class attribute. A class on a
 #'   field inside a message is kept, so a field wrapped in [I()] is sent as an
-#'   array. A data frame and its columns keep their classes. jsonlite writes
-#'   the body. It fails on a kept class when no entry of the class vector has
-#'   a jsonlite method, such as a field with the class `"foo"` alone.
+#'   array. A data frame and its columns keep their classes. A kept class that
+#'   jsonlite has no method for, such as a field with the class `"foo"` alone,
+#'   breaks the last rule.
 #'
-#'   The package does not check the roles, the content, or any other field of
-#'   a message. The server checks them.
+#'   The package checks the shape of `messages` and whether jsonlite can
+#'   write it. It does not check the values of the roles, the content, or any
+#'   other field of a message. The server checks them.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the

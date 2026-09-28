@@ -328,10 +328,12 @@ schema_fault <- function(value) {
 #' Reject a messages value that cannot be sent as a list of messages
 #'
 #' `messages` is a named argument of `lms_chat_openai()`, so GP4 puts the check
-#' on the package, and it runs before the server probe (D-008). The check
-#' reads the list and the names of each message. Roles, content, and every
-#' other field inside a message stay with the server (D-003). A data frame
-#' passes, because jsonlite writes it as one JSON object per row.
+#' on the package, and it runs before the server probe (D-008). The rules read
+#' the shape of the value and the names at each level, and a trial write then
+#' asks jsonlite to write it. The package does not judge a role, a content
+#' value, or any other field value. The server does, as D-003 states for API
+#' fields. A data frame passes, because jsonlite
+#' writes it as one JSON object per row.
 #'
 #' @param value The value the caller passed as `messages`.
 #' @return `value`, invisibly.
@@ -339,6 +341,9 @@ schema_fault <- function(value) {
 #' @noRd
 rlm_check_messages <- function(value) {
   fault <- messages_fault(value)
+  if (is.null(fault)) {
+    fault <- messages_write_fault(value)
+  }
   if (!is.null(fault)) {
     cli::cli_abort(
       c(
@@ -350,6 +355,38 @@ rlm_check_messages <- function(value) {
     )
   }
   invisible(value)
+}
+
+#' Can jsonlite write this messages value?
+#'
+#' The request body is written by `httr2::req_body_json()`, which calls
+#' `jsonlite::toJSON()` with the three options below, after the server probe.
+#' A value that jsonlite cannot write, such as a field with a class that has
+#' no jsonlite method, would fail there with an error that does not name
+#' `messages`. So the value is written once here, the same way. The jsonlite
+#' message is returned as a value, and the abort splices it in, so cli does
+#' not read its braces.
+#'
+#' @param value A `messages` value that passed `messages_fault()`.
+#' @return A detail that holds the jsonlite message, or `NULL` when the write
+#'   works.
+#'
+#' @noRd
+messages_write_fault <- function(value) {
+  tryCatch(
+    {
+      jsonlite::toJSON(
+        unclass_messages(value),
+        auto_unbox = TRUE,
+        digits = 22,
+        null = "null"
+      )
+      NULL
+    },
+    error = function(e) {
+      paste("You gave a value that jsonlite cannot write:", conditionMessage(e))
+    }
+  )
 }
 
 #' Remove the class of a messages list and of each of its messages
@@ -379,6 +416,12 @@ unclass_messages <- function(value) {
 #' names attribute as a JSON object, even when every name is empty, so a list
 #' with names is refused whatever the names are.
 #'
+#' `unclass_messages()` runs `lapply()`, which drops a `dim` attribute, so a
+#' list-matrix would be sent flat in column order. A message with a `dim` is
+#' written with each field boxed in an array. Each `dim` rule runs before the
+#' names rule at its level, because `names()` reads the dimnames of a
+#' one-dimensional list array.
+#'
 #' @param value The value the caller passed.
 #' @return A one-sentence detail, or `NULL` when the value is usable.
 #'
@@ -396,17 +439,91 @@ messages_fault <- function(value) {
   if (length(value) == 0L) {
     return("You gave no messages.")
   }
+  if (!is.null(dim(value))) {
+    return(
+      "You gave a list with a dim attribute, such as a matrix of messages."
+    )
+  }
   if (!is.null(names(value))) {
     return("You gave a list with names, which is sent as one JSON object.")
   }
   for (message in value) {
+    if (
+      is.list(message) && !is.data.frame(message) && !is.null(dim(message))
+    ) {
+      return("You gave a message with a dim attribute, such as a list array.")
+    }
     if (!is_named_message(message)) {
       return(
         "You gave a message that is not a list with a name on each field."
       )
     }
   }
+  nested_names_fault(value)
+}
+
+#' Does any object that jsonlite writes as an object have a bad name?
+#'
+#' jsonlite writes an `NA` or empty name under a number, and it renames a
+#' repeated name `a` to `a.1`. The walk reads the names of each list and data
+#' frame it reaches, from the value handed to it down. A list whose names
+#' attribute is `NULL` is written as an array and has no names to read. A
+#' list column of a data frame is written one cell per row, and its own names
+#' are not written, so the walk reads its cells and not its names. Any other
+#' value, such as an environment, ends the walk there. The trial write in
+#' `rlm_check_messages()` reports such a value.
+#'
+#' @param value A list of messages, one message, or a data frame.
+#' @return A one-sentence detail, or `NULL` when no name is bad.
+#'
+#' @noRd
+nested_names_fault <- function(value) {
+  if (has_bad_name(value)) {
+    return(paste(
+      "You gave a message, or a list or data frame inside one, with a name",
+      "that is NA, empty, or repeated."
+    ))
+  }
   NULL
+}
+
+#' The walk behind `nested_names_fault()`
+#'
+#' @param value Any value found inside `messages`.
+#' @return `TRUE` when the walk from `value` reaches a bad name.
+#'
+#' @noRd
+has_bad_name <- function(value) {
+  if (!is.list(value)) {
+    return(FALSE)
+  }
+  nms <- names(value)
+  if (
+    !is.null(nms) && (anyNA(nms) || !all(nzchar(nms)) || anyDuplicated(nms))
+  ) {
+    return(TRUE)
+  }
+  if (is.data.frame(value)) {
+    for (column in value) {
+      cells <- if (is.list(column) && !is.data.frame(column)) {
+        column
+      } else {
+        list(column)
+      }
+      for (cell in cells) {
+        if (has_bad_name(cell)) {
+          return(TRUE)
+        }
+      }
+    }
+    return(FALSE)
+  }
+  for (element in value) {
+    if (has_bad_name(element)) {
+      return(TRUE)
+    }
+  }
+  FALSE
 }
 
 #' Which data-frame rule did this messages value break?
@@ -433,10 +550,51 @@ data_frame_messages_fault <- function(value) {
       "You gave a data frame that has no columns or a column name that is missing or repeated."
     )
   }
-  if (any(rowSums(!is.na(value)) == 0L)) {
-    return("You gave a data frame with a row in which every cell is NA.")
+  if (any(empty_rows(value))) {
+    return(
+      "You gave a data frame with a row in which every cell is NA or a NULL list cell."
+    )
   }
-  NULL
+  nested_names_fault(value)
+}
+
+#' Which rows of a messages data frame hold no field value?
+#'
+#' A cell is empty when `is.na()` says so, or when it is a `NULL` cell of a
+#' list column. jsonlite leaves out an atomic `NA` cell and writes an `NA` or
+#' `NULL` list cell as `null`. A `list()` cell is written as `[]` and a
+#' `list(NA)` cell as `[null]`, which are field values, so neither is empty.
+#' A matrix column, a list-matrix column included, counts as empty in a row
+#' when each of its cells there is empty. jsonlite writes an atomic matrix row
+#' of `NA` as `"NA"` strings, but the rule refuses the row, as it did before
+#' `NULL` cells counted. A data-frame column counts as empty in a row when
+#' this rule finds that row of it empty. The columns are read one at a time,
+#' because `is.na()` on the whole data frame spreads a matrix column over
+#' several.
+#'
+#' @param value A data frame.
+#' @return A logical vector with one element per row of `value`.
+#'
+#' @noRd
+empty_rows <- function(value) {
+  empty <- rep(TRUE, nrow(value))
+  for (column in value) {
+    if (is.data.frame(column)) {
+      column_empty <- empty_rows(column)
+    } else {
+      cell_empty <- is.na(column)
+      if (is.list(column)) {
+        cell_empty <- cell_empty | vapply(column, is.null, logical(1))
+      }
+      column_empty <- if (length(dim(column)) == 2L) {
+        rowSums(!cell_empty) == 0L
+      } else {
+        cell_empty
+      }
+    }
+    empty <- empty & column_empty
+  }
+  empty
 }
 
 #' Is this one message a list with a usable name on each field?
