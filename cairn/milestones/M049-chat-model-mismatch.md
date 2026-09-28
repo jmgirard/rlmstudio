@@ -119,7 +119,7 @@ before each request was rejected at the gate (work log).
       `devtools::document()`.
 - [x] T6: Run `devtools::test()`. Then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server
       started (LESSONS, M009).
-- [ ] T7: Review finding O1. Compare the asked name in `check_reply_model()` and `reply_model_serves()` in
+- [x] T7: Review finding O1. Compare the asked name in `check_reply_model()` and `reply_model_serves()` in
       `R/chat.R` as a plain string, with no names or class. Tests first on both routes with both settings of
       `simplify`: a named model string and a classed one, each answered by the same model, send 1 request.
 - [ ] T8: Review findings O10, O11, O12, and P2. Read `cnd[["code"]]` and `cnd[["status"]]` in
@@ -148,6 +148,8 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: review checkpoint: evidence recorded and AC1 to AC7 ticked, consistency gate passed. Three fresh reviewers are running, and triage is still owed.
 - 2026-09-28: review: 18 findings logged with proposed dispositions. O1 shows AC2(a) failing for a named model string. The step-7 gate decides.
 - 2026-09-28: review return 1 (defect): AC2(a) fails, because a named or classed model string that the same model answers aborts as a mismatch. The user chose to send it back at the gate. Status in-progress, with T7 and T8 added.
+- 2026-09-28: implement resumed on the branch, which already contains `origin/main`. Question gate skipped, because T7 and T8 leave no choice open.
+- 2026-09-28: T7 done. `check_reply_model()` strips names and class from the asked name before the compare, so `reply_model_serves()` also gets a plain string. The new test failed on all 8 cases before the change with a second request, the lookup. The request body already writes both forms as a plain string. Suite: 486 tests, 0 failed, 2 live embedding tests skipped because the embedding model was not loaded.
 
 ## Decisions
 

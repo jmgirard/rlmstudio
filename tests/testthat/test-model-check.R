@@ -318,6 +318,26 @@ test_that("a reply whose model equals the asked name sends no other request", {
   }
 })
 
+test_that("a named or classed model string that the same model answers sends no other request", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  asked <- list(
+    named = c(a = "org/model-x"),
+    classed = structure("org/model-x", class = c("glue", "character"))
+  )
+  for (kind in names(asked)) {
+    for (route in chat_routes) {
+      for (simplify in c(TRUE, FALSE)) {
+        info <- paste(kind, route, simplify)
+        recorder <- local_request_sequence(list(
+          reply_with_model(route, quoted("org/model-x"))
+        ))
+        expect_no_error(mocked_call(route, asked[[kind]], simplify))
+        expect_identical(length(recorder$requests), 1L, info = info)
+      }
+    }
+  }
+})
+
 test_that("a recorded reply to a key in other letter case is accepted after one lookup", {
   for (route in chat_routes) {
     for (simplify in c(TRUE, FALSE)) {
