@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M042: The OpenAI chat function reads each row of an array or non-vector messages column on its own
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -159,6 +159,8 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: T2 done. `empty_rows()` treats a column that is neither atomic nor a list as never empty. Before the branch change, all eight non-function probes went red on the `is.na()` warning, and the function probe stayed green. `devtools::test()`: 0 failures.
 - 2026-09-27: T3 done. The help's list-matrix text and example were written from a jsonlite run of the same rows. A new test sends the help example and a second row with `unbox()`, a nested list, and a data frame in cells, and compares each `messages` element with JSON text stated in the test. `devtools::test()`: 0 failures.
 - 2026-09-27: T5 done. NEWS.md has one entry for the AC1 and AC2 changes. `devtools::document()` changed nothing, `devtools::test()` gave 0 failures, and `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes, so no NOTE needs a reason.
+- claim audit: 31 claims read, 5 corrected — tests/testthat/test-arg-guards.R, R/utils-args.R, R/chat.R, man/lms_chat_openai.Rd
+- 2026-09-27: the claim reader re-read the five corrections and found each correct. `devtools::test()` after them: 0 failures. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

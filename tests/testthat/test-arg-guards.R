@@ -1463,7 +1463,8 @@ test_that("a function column aborts with no warning on the way", {
 # is.na() is not called on it, so it gives no warning. Each column sits in
 # rows that are otherwise NA, so the empty-row rule would win if the column
 # counted as empty. `$<-` builds the frame where it accepts the value. It
-# refuses an environment at any row count, so that frame uses structure().
+# refuses an environment in a frame with one or more rows, so that frame
+# uses structure().
 test_that("a column that is not a vector is not empty and gives no warning", {
   probe <- local_counting_probe()
   s4_env <- new.env()
@@ -1523,9 +1524,11 @@ test_that("a column that is not a vector is not empty and gives no warning", {
 
 # A column with a dim attribute is read row by row, through the cells whose
 # first index is the row. The frames are built with `$<-`, because
-# data.frame() recycles an array to its length. Row 2 of `role` is NA, so the
-# array column alone decides whether row 2 is empty. An outcome of "server"
-# means the value passes every messages rule and reaches the server probe.
+# data.frame() spreads an array of two or more dimensions over several
+# columns and drops the dim of a one-dimensional array. Row 2 of `role` is
+# NA, so the array column alone decides whether row 2 is empty. An outcome
+# of "server" means the value passes every messages rule and reaches the
+# server probe.
 dim_column_frame <- function(column) {
   df <- data.frame(role = c("user", NA))
   df$x <- column
@@ -1533,7 +1536,7 @@ dim_column_frame <- function(column) {
 }
 
 test_that("a column with a dim attribute is read row by row", {
-  # Row 2 of a c(2, 2, 2) array holds the cells at odd positions 2, 4, 6, 8.
+  # Row 2 of a c(2, 2, 2) array holds the cells at even positions 2, 4, 6, 8.
   row2_cells <- c(2L, 4L, 6L, 8L)
   one_null_list3 <- as.list(1:8)
   one_null_list3[2L] <- list(NULL)

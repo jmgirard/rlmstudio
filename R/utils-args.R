@@ -704,9 +704,10 @@ data_frame_messages_fault <- function(value) {
 #' A column with a `dim` attribute whose first extent is the row count, a
 #' list array included, counts as empty in a row when each cell whose first
 #' index is that row is empty. `is.na()` keeps the `dim` of the column, so
-#' `apply()` reads those cells for each row. jsonlite writes an atomic matrix
-#' row of `NA` as `"NA"` strings, but the rule refuses the row, as it did
-#' before `NULL` cells counted. A data-frame column counts as empty in a row
+#' `apply()` reads those cells for each row. jsonlite writes a numeric matrix
+#' row of `NA` as `"NA"` strings and a character or logical one as `null`,
+#' but the rule refuses the row either way, as it did before `NULL` cells
+#' counted. A data-frame column counts as empty in a row
 #' when this rule finds that row of it empty. A column that is neither an
 #' atomic vector nor a list, such as a function, an environment, or a symbol,
 #' is never empty and is not passed to `is.na()`, which warns on it. The

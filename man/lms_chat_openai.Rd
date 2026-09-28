@@ -43,9 +43,10 @@ cell of a list column. jsonlite leaves out an \code{NA} cell of another
 column and writes an \code{NA} or \code{NULL} list cell as \code{null}, so such a row
 holds no field value. A \code{list()}
 cell is sent as \verb{[]} and a \code{list(NA)} cell as \verb{[null]}, so a row with
-such a cell is sent. A column with a \code{dim} attribute of any length,
-such as a matrix or an array, or a data-frame column, counts as empty
-in a row when each of its cells in that row is empty. A column that
+such a cell is sent. A column with a \code{dim} attribute of any length
+whose first extent is the row count, such as a matrix or an array, or
+a data-frame column, counts as empty in a row when each of its cells
+in that row is empty. A column that
 is neither an atomic vector nor a list, such as an environment, never
 counts as empty.
 \item \code{messages}, when it is a list and not a data frame, has no \code{dim}

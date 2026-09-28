@@ -287,9 +287,10 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     column and writes an `NA` or `NULL` list cell as `null`, so such a row
 #'     holds no field value. A `list()`
 #'     cell is sent as `[]` and a `list(NA)` cell as `[null]`, so a row with
-#'     such a cell is sent. A column with a `dim` attribute of any length,
-#'     such as a matrix or an array, or a data-frame column, counts as empty
-#'     in a row when each of its cells in that row is empty. A column that
+#'     such a cell is sent. A column with a `dim` attribute of any length
+#'     whose first extent is the row count, such as a matrix or an array, or
+#'     a data-frame column, counts as empty in a row when each of its cells
+#'     in that row is empty. A column that
 #'     is neither an atomic vector nor a list, such as an environment, never
 #'     counts as empty.
 #'   * `messages`, when it is a list and not a data frame, has no `dim`
