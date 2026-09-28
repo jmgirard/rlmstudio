@@ -84,7 +84,7 @@ choice to send it as jsonlite writes it.
   environment, never counts as empty.
 - [x] AC5: The `@aliases` tag at `R/conditions.R:257` sits on one line.
   `devtools::document()` prints no warning and changes no file under `man/`.
-- [ ] AC6: NEWS.md has one entry for the changes in AC1 and AC2, with no
+- [x] AC6: NEWS.md has one entry for the changes in AC1 and AC2, with no
   milestone number. `devtools::test()` gives 0 failures. `devtools::check()`
   gives 0 errors and 0 warnings.
 
@@ -175,3 +175,5 @@ Sync: the branch contains `origin/main` (b828540), so no merge was needed. The r
 - AC3 evidence: `R/chat.R` and `man/lms_chat_openai.Rd` carry the four sentences AC3 names and the example row with its sent form. A jsonlite write of that row with the package options gave `[{"role":"user","content":"hi","tags":[["a"],null,{"k":["v"]}]}]`. That matches the help. The test "a list-matrix column is sent with its cells boxed" compares the sent `messages` element with a one-element array of that form. It passed. `devtools::document()` changed no file.
 - AC4 evidence: the old sentence on matrix and data-frame columns is gone. The new text states the empty-row rule for a column with a `dim` attribute of any length and for a data-frame column. It states that a column that is neither an atomic vector nor a list never counts as empty. It adds the qualifier "whose first extent is the row count". That qualifier matches AC1 and the Out scope on hand-built frames.
 - AC5 evidence: `R/conditions.R:257` holds the `@aliases` tag on one line. `devtools::document()` printed only its two info lines and no warning. `git status` showed no change under `man/`.
+- AC6 evidence: NEWS.md has one new entry, with a sub-item, for the AC1 and AC2 changes. The added lines hold no milestone number. `devtools::test()` gave 11678 expectations, 0 failures, 0 errors, and 0 skips. `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate: `cairn_validate.py` exited 0. No DESIGN principle changed, so `cairn_impact` was skipped. `devtools::document()` gave no diff. The diff does not touch README.Rmd, and the repo has no pkgdown site. No new top-level file.
