@@ -3,6 +3,29 @@
 ## rlmstudio (development version)
 
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now refuses more `messages` values before the check for a running
+  server. The errors have no condition class.
+
+  - A data frame row whose cells are all `NA` or `NULL` list cells
+    aborts. Before, it was sent as a message with `null` fields. A row
+    with a [`list()`](https://rdrr.io/r/base/list.html) or `list(NA)`
+    cell is still sent.
+  - A list of messages with a `dim` attribute, such as a matrix of
+    messages, aborts. So does a message that is a list with a `dim`
+    attribute. Before, a matrix was sent flat in column order, and such
+    a message was sent with each field in an array.
+  - A name that is `NA`, empty, or repeated aborts. The rule applies to
+    a message and to each list or data frame inside a message or inside
+    a data frame cell or column. Before, a repeated field name in a
+    message was sent, and so was a bad name below the message level.
+    jsonlite sent an `NA` or empty name as a number and renamed a
+    repeated `a` to `a.1`.
+  - A value that jsonlite cannot write aborts with the jsonlite message.
+    An example is a field with a class that jsonlite has no method for,
+    or an environment. Before, the call failed after the check for a
+    running server, with an error that did not name `messages`.
+
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   now sends a `messages` list that has a class attribute. The call
   removes the class of the outer list and of each message after the
   check, and before it builds the request. Before, a class that jsonlite
