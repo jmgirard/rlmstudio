@@ -2226,6 +2226,128 @@ test_that("empty_rows() finds no empty row in a column that is not a vector", {
   expect_identical(formula_result, rep(FALSE, 3L))
 })
 
+# A column with a dim attribute and no cells in a row is written as `[]`, or
+# as nested empty arrays, which are field values. Row 2 of `role` and
+# `content` is NA, so the extra column alone decides whether row 2 is empty.
+no_cell_frame <- function(column) {
+  df <- data.frame(role = c("user", NA), content = c("Hi", NA))
+  df$x <- column
+  df
+}
+
+test_that("a column with no cells in a row is not empty", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  nested_matrix <- local({
+    inner <- data.frame(row.names = 1:2)
+    inner$m <- matrix(numeric(0), 2L, 0L)
+    inner
+  })
+  cases <- list(
+    list(
+      label = "a 2-by-0 numeric matrix",
+      column = matrix(numeric(0), 2L, 0L),
+      row2 = "[]"
+    ),
+    list(
+      label = "a 2-by-0 character matrix",
+      column = matrix(character(0), 2L, 0L),
+      row2 = "[]"
+    ),
+    list(
+      label = "a 2-by-0 list matrix",
+      column = matrix(list(), 2L, 0L),
+      row2 = "[]"
+    ),
+    list(
+      label = "a 2-by-0-by-3 array",
+      column = array(numeric(0), c(2L, 0L, 3L)),
+      row2 = "[]"
+    ),
+    list(
+      label = "a 2-by-3-by-0 array",
+      column = array(numeric(0), c(2L, 3L, 0L)),
+      row2 = "[[],[],[]]"
+    ),
+    list(
+      label = "a data-frame column whose column is a 2-by-0 matrix",
+      column = nested_matrix,
+      row2 = '{"m":[]}'
+    )
+  )
+  for (case in cases) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(
+      lms_chat_openai("a-model", no_cell_frame(case$column)),
+      message = NULL
+    )
+    expected <- jsonlite::parse_json(
+      paste0(
+        '[{"role":"user","content":"Hi","x":',
+        case$row2,
+        '},{"x":',
+        case$row2,
+        "}]"
+      ),
+      simplifyVector = FALSE
+    )
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      expected,
+      info = case$label
+    )
+  }
+})
+
+# A data-frame column counts as empty in a row when each of its own columns
+# is empty in that row. A data frame with no columns has no such column, so
+# it counts as empty. The cell in row 2 of each column below is written as
+# an object with no field value, stated here and checked against jsonlite.
+test_that("a data-frame column with only empty columns counts as empty", {
+  probe <- local_counting_probe()
+
+  nested_empty <- local({
+    inner <- data.frame(row.names = 1:2)
+    inner$m <- data.frame(row.names = 1:2)
+    inner
+  })
+  cases <- list(
+    list(
+      label = "a data frame with no columns",
+      column = data.frame(row.names = 1:2),
+      row2 = "{}"
+    ),
+    list(
+      label = "a data frame whose numeric column is NA in row 2",
+      column = data.frame(a = c(1, NA)),
+      row2 = "{}"
+    ),
+    list(
+      label = "a data frame whose column is a data frame with no columns",
+      column = nested_empty,
+      row2 = '{"m":{}}'
+    )
+  )
+  for (case in cases) {
+    written <- jsonlite::parse_json(
+      rlm_json_text(case$column),
+      simplifyVector = FALSE
+    )
+    expect_identical(
+      written[[2]],
+      jsonlite::parse_json(case$row2, simplifyVector = FALSE),
+      info = case$label
+    )
+    expect_error(
+      lms_chat_openai("a-model", no_cell_frame(case$column)),
+      messages_rule_details[["rule6"]],
+      fixed = TRUE,
+      info = case$label
+    )
+  }
+  expect_identical(probe$calls, 0L)
+})
+
 # A column with a dim attribute is read row by row, through the cells whose
 # first index is the row. The frames are built with `$<-`, because
 # data.frame() spreads an array of two or more dimensions over several

@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M046: The OpenAI chat function counts an array row with no cells as a field value
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M044   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP4   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes which `messages` values `lms_chat_openai()` sends   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m046-openai-messages-cell-free-rows   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -82,7 +82,7 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate. -->
 
-- [ ] T1: Write the AC1 test "a column with no cells in a row is not
+- [x] T1: Write the AC1 test "a column with no cells in a row is not
       empty" and the AC2 test "a data-frame column with only empty columns
       counts as empty" in `tests/testthat/test-arg-guards.R`, beside "a
       column that is not a vector is not empty and gives no warning". Use
@@ -103,6 +103,8 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
 
 - 2026-09-28: created by /milestone-plan in the M044 re-cut. It carries the first M044 plan's rule, which rested on a write that httr2 changed. It now depends on M044, which makes the request send what jsonlite writes. The first M044 plan's gate choices (M040's recursion kept) and its audit stand in the M044 work log.
 - 2026-09-28: criteria audit (full mode, fresh [O] reader) passed AC1 and AC4. AC2 now says that the cell in row 2, not the row, is written `{}`, and it gained a nested data frame with no columns, written `{"m":{}}`, which the recursion also counts as empty. Test names moved to T1.
+- 2026-09-28: implement started on branch m046-openai-messages-cell-free-rows. The plan left no choice open, so no question gate ran.
+- 2026-09-28: T1 done. The tests come from draft `a1fb74e`. They add the nested data frame with no columns and check that jsonlite writes each row-2 cell as AC2 states. The AC1 test is red with the empty-row detail. The AC2 test is green.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
