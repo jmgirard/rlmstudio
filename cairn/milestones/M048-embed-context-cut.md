@@ -109,9 +109,9 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - O1: the second remedy fails for a user whose model is already loaded. `lms_load()` without `force` returns
   early with "already loaded" (R/load.R:79-88, read at review). Proposed fix now: the help and NEWS say to
   unload first with `lms_unload()`.
-- O2: the probe might show a cut fixed near 512 tokens, not one at `context_length`. Proposed reject. A live
-  probe at review, nomic at 2048, found a vector equal to the 5000-word one from 2100 words on, and a different
-  one at 2040 words (difference 0.031). Record the two points in the references page.
+- O2: the probe fits a cut fixed near 512 tokens as well as a cut at `context_length`. Proposed reject. A live
+  probe at review ran with nomic at 2048. The vector equals the 5000-word vector from 2100 words on. At 2040
+  words it differs by 0.031. Record the two points in the references page.
 - O3: the live test pins only an upper bound on the cut, so a cut at 64 tokens passes it. Proposed fix now: a
   fourth text that differs from text one at word N %/% 2 gets another vector.
 - O4: the `tryCatch()` around `list_models()` turns a 401 or a bad reply into the skip "is not loaded". The
@@ -122,7 +122,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
   does. Proposed fix now.
 - O7: the help names the ceiling, not where the current context length shows. Proposed fix now: one clause
   naming the `loaded_instances` column of `list_models(detailed = TRUE)`.
-- O8: the 1e-6 tolerance could fail on GPU rounding. Proposed reject: the neighbor test uses it, and the planted
+- O8: GPU rounding can break the 1e-6 tolerance. Proposed reject: the neighbor test uses it, and the planted
   defect gave 0.090.
 - O9: the milestone file had uncommitted changes. Reject: stale, committed at c5d8c4d and 0ab29f5.
 - S1: the NEWS bullet sits below the batching bullet. M046 and M047 put the newest bullet first. Proposed fix now.
