@@ -34,7 +34,7 @@ own candidate row.
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_chat_openai()` aborts before `stop_if_no_server()` runs when
+- [x] AC1: `lms_chat_openai()` aborts before `stop_if_no_server()` runs when
       `messages` breaks one of four rules. The error's class vector is
       `c("rlang_error", "error", "condition")`, its message names
       `messages`, and its detail names the broken rule, with one detail text
@@ -53,19 +53,19 @@ own candidate row.
       unnamed list, a partly named list, a list with an NA name, and
       `list()`. Rule 4 also takes a bad element placed second after a good
       one.
-- [ ] AC2: Five `messages` values pass the check and reach the request. Two
+- [x] AC2: Five `messages` values pass the check and reach the request. Two
       are data frames, one with `role` and `content` columns and one with a
       single column `x`. Three are lists of one message, whose `content` is
       one string, a list of `list(type = "text", text = ...)` parts, or the
       number `5`. A test asserts that the
       `messages` field of each sent body equals an expected value that the
       test states.
-- [ ] AC3: The `messages` entry on the `lms_chat_openai()` page in `man/`
+- [x] AC3: The `messages` entry on the `lms_chat_openai()` page in `man/`
       states the four rules of AC1, that a data frame with at least one row
       passes, and that the check runs before the server check. The argument
       list on the `rlmstudio-conditions` page names `messages`. `NEWS.md`
       has a bullet for the new abort.
-- [ ] AC4: `devtools::test()` passes with no failures, and
+- [x] AC4: `devtools::test()` passes with no failures, and
       `devtools::check()` gives 0 errors and 0 warnings.
 
 ## Coverage
@@ -116,3 +116,14 @@ own candidate row.
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-09-27 on the branch head 28a95ee, which contains `origin/main`. LM Studio server on, `RLMSTUDIO_API_TOKEN` set.
+
+- AC1: `devtools::test()` passed 10328, failed 0, skipped 0. The test "a messages value that breaks a rule aborts before the server probe" runs all 18 values that AC1 lists. For each value it asserts the detail text of its rule, stated in the test, and asserts that the other three details are absent. It pins the class vector to `c("rlang_error", "error", "condition")`. It mocks `is_server_running()` to return `FALSE`, fails on any request, and asserts a probe count of 0. The code read shows the call at `R/chat.R:369`, above `stop_if_no_server()`. The implement work log records the test going red with the call site deleted and with a wrong rule 3 detail.
+- AC2: in the same run, the test "a messages value that keeps every rule reaches the request" sends the five values that AC2 lists. It asserts one request for each. The test parses each sent body back from `httr2::req_dry_run()`. It asserts that the `messages` field equals the value that the test states.
+- AC3: a read of `man/lms_chat_openai.Rd` shows the `messages` entry. It states the four rules of AC1 as a list. It states that a data frame with at least one row passes. It states that the call aborts before it checks for a running server. `man/rlmstudio-conditions.Rd` names `messages` in its argument list. `NEWS.md` has a bullet for the new abort. `devtools::document()` gave no diff.
+- AC4: `devtools::test()` passed 10328, failed 0, skipped 0. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+
+Consistency gate: `cairn_validate.py` exited 0. `devtools::document()` gave no diff, and its `@aliases` message at `R/conditions.R:258` is the same on `main`. README.Rmd and README.md are unchanged on the branch. The repo has no pkgdown site. The branch adds no top-level file. `NEWS.md` has the entry, with no milestone number. No principle text in DESIGN.md changed, so the impact report was skipped.
+
+Independent review: three fresh reviewers ran. The diff reviewer reported 8 findings. The history reviewer and the prior-review reviewer reported none, and GitHub holds no review threads.
