@@ -1,6 +1,6 @@
 # M048: The embedding help page describes the cut of a text longer than the context
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -64,7 +64,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - [x] T3: Add the AC1 paragraph to the `@details` of `R/embed.R`, written against the probe record from T1. Run
       `devtools::document()`.
 - [x] T4: Add a NEWS.md bullet under the development version that says what the help page now documents.
-- [ ] T5: Run `devtools::test()`. Then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server
+- [x] T5: Run `devtools::test()`. Then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server
       started (LESSONS, M009).
 
 ## Work log
@@ -79,6 +79,10 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - 2026-09-28: `devtools::test()` passed 464 tests with 0 failures and 0 skips. The Full Integration test unloaded `google/gemma-3-1b`, as the candidate row says. The session reloads it at the end.
 - 2026-09-28: T3 done. The `@details` of `R/embed.R` has the AC1 paragraph, and `devtools::document()` rewrote `man/lms_embed.Rd`.
 - 2026-09-28: T4 done. NEWS.md has a bullet under the development version, after the batching bullet.
+- 2026-09-28: T5 done. `devtools::check()` with the token and the server running gave 0 errors, 0 warnings, and 0 notes. `devtools::document()` left no diff.
+- 2026-09-28: claim audit: 22 claims read, 1 corrected — NEWS.md, R/embed.R, man/lms_embed.Rd, tests/testthat/test-embed.R
+- 2026-09-28: the corrected claim is the NEWS bullet, which said "loaded model" where the help page says "loaded model instance". The reader did not reach the server. The T2 live run already read `context_length` from the embedding instance, which settles its one open doubt.
+- 2026-09-28: all tasks done, status set to review.
 
 ## Decisions
 
