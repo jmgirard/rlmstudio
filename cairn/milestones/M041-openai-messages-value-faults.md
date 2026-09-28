@@ -121,7 +121,7 @@ functions take no `messages` argument.
   a list-matrix column at both depths, and a data frame as a message field
   with a list-matrix column. Assert no warning on the data-frame
   function column.
-- [ ] T5: Help at `messages` in `R/chat.R` per AC4, then
+- [x] T5: Help at `messages` in `R/chat.R` per AC4, then
   `devtools::document()`. One NEWS.md entry.
 - [ ] T6: Run `devtools::test()` and `devtools::check()` with the API token
   (see the LESSONS line on the vignettes and the server).
@@ -141,6 +141,7 @@ functions take no `messages` argument.
 - 2026-09-27: T2 done. `has_function()` runs in `rlm_check_messages()` after `messages_fault()` and before the trial write. `empty_rows()` treats a function column as not empty. Eight rule12 probes, two order probes, and a no-warning test added. With the rule off, and apart from that with the `empty_rows()` change undone, the tests went red. `devtools::test()` passed.
 - 2026-09-27: T3 done. `rlm_check_messages()` aborts shape faults with the old header and hint, then value faults with the new header and no hint. The probe loop now asserts the header, the other header's absence, and the hint per kind. With the old header on value faults, 26 checks went red. `devtools::test()` passed.
 - 2026-09-27: T4 done. The probes and the no-warning test landed in T1 to T3. A new test sends five controls and compares the sent messages: a nested list with no function, an atomic matrix field, and a list-matrix column at the top, nested, and in a data-frame field. A planted refusal of list-matrix columns turned it red. `devtools::test()` passed.
+- 2026-09-27: T5 done. Help at `messages` gains the inner `dim` rule, the two headers, and the function rule, and drops "not checked". One NEWS entry with three sub-items. `devtools::document()` rewrote `man/lms_chat_openai.Rd` and gave only the known `@aliases` warning. `devtools::test()` passed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

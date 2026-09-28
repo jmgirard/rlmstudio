@@ -290,9 +290,15 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     such a cell is sent. A matrix or data-frame column counts as empty in
 #'     a row when each of its cells in that row is empty.
 #'   * `messages`, when it is a list and not a data frame, has no `dim`
-#'     attribute, such as a matrix or an array of messages. A list with a
-#'     `dim` inside a message is not checked.
+#'     attribute, such as a matrix or an array of messages.
 #'   * A message that is a list has no `dim` attribute.
+#'   * No list inside a message has a `dim` attribute. The rule reads each
+#'     field, each list at any depth below a field, and each cell of a list
+#'     column. jsonlite would send such a list as nested arrays with each
+#'     cell in an array of its own. A list column of a data frame with one,
+#'     three, or more dimensions also breaks this rule. An atomic matrix
+#'     field is sent as an array of arrays. A list-matrix column of any data
+#'     frame is sent, one row of cells for each message.
 #'   * No message, and no list or data frame inside a message or inside a
 #'     cell or column of a data frame, has a name that is `NA`, empty, or
 #'     repeated. jsonlite would send an `NA` or empty name as a number and
@@ -300,6 +306,16 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     names of a list column are not checked, because they are not sent.
 #'     The names of an atomic vector and the column names of a matrix are
 #'     not checked, because jsonlite sends those values as arrays.
+#'
+#'   The error for each rule above opens with "`messages` must be a data
+#'   frame or an unnamed list of messages." and shows the form of a message.
+#'   Two more rules are checked after them. Their error opens with
+#'   "`messages` holds a field value that cannot be sent as JSON." and shows
+#'   no form:
+#'   * No function sits inside `messages`: not as a field, in a list below a
+#'     field, as a column of a data frame, or in a cell of a list column.
+#'     jsonlite would send a function as its source text. A function with a
+#'     class breaks this rule and not the next one.
 #'   * jsonlite can write the value, with the options that the request uses.
 #'     If it cannot, the error gives the jsonlite message. This rule is
 #'     checked last.
@@ -311,9 +327,10 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   jsonlite has no method for, such as a field with the class `"foo"` alone,
 #'   breaks the last rule.
 #'
-#'   The package checks the shape of `messages` and whether jsonlite can
-#'   write it. It does not check the values of the roles, the content, or any
-#'   other field of a message. The server checks them.
+#'   The package checks the shape of `messages`. Of the field values, it
+#'   refuses a function and a value that jsonlite cannot write. It does not
+#'   check any other value of a role, the content, or another field of a
+#'   message. The server checks them.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
