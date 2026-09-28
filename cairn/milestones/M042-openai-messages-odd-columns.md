@@ -115,7 +115,7 @@ choice to send it as jsonlite writes it.
   one-dimensional atomic column and a one-dimensional list column as
   controls whose result does not change. Revert the fix in a scratch copy
   and make sure that the new probes go red. Run `devtools::test()`.
-- [ ] T2: In `empty_rows()`, replace the function branch with one branch
+- [x] T2: In `empty_rows()`, replace the function branch with one branch
   for a column that is neither an atomic vector nor a list. Update the
   comment above the function. Add probes for an environment, a formula, a
   symbol, a call, an S4 object, an external pointer, and an expression
@@ -156,6 +156,7 @@ choice to send it as jsonlite writes it.
 - re-audit: AC6 (full) — nothing
 - 2026-09-27: T2's revert step now expects each probe other than the function probe to go red, because a revert to the old function branch keeps that probe green.
 - 2026-09-27: T1 done. `empty_rows()` reads a `dim` column through `apply()` when its first extent is the row count. With the old `empty_rows()` swapped in, cases 1 and 2, the 4-D list probe, and the nested one-`NA` probe gave the empty-row detail. The three all-empty probes and the controls gave the same result before and after, so they cannot go red on revert. `devtools::test()`: 0 failures.
+- 2026-09-27: T2 done. `empty_rows()` treats a column that is neither atomic nor a list as never empty. Before the branch change, all eight non-function probes went red on the `is.na()` warning, and the function probe stayed green. `devtools::test()`: 0 failures.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

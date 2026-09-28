@@ -1459,6 +1459,68 @@ test_that("a function column aborts with no warning on the way", {
   expect_identical(probe$calls, 0L)
 })
 
+# A column that is neither an atomic vector nor a list is never empty, and
+# is.na() is not called on it, so it gives no warning. Each column sits in
+# rows that are otherwise NA, so the empty-row rule would win if the column
+# counted as empty. `$<-` builds the frame where it accepts the value. It
+# refuses an environment at any row count, so that frame uses structure().
+test_that("a column that is not a vector is not empty and gives no warning", {
+  probe <- local_counting_probe()
+  s4_env <- new.env()
+  s4_class <- methods::setClass(
+    "rlmstudioM042Probe",
+    representation(v = "numeric"),
+    where = s4_env
+  )
+  na_frame <- function(n, column) {
+    df <- data.frame(role = rep(NA_character_, n))
+    df$x <- column
+    df
+  }
+
+  cases <- list(
+    "an environment" = structure(
+      list(role = NA_character_, x = new.env()),
+      class = "data.frame",
+      row.names = 1L
+    ),
+    "a formula" = na_frame(3L, y ~ x),
+    "a symbol" = na_frame(1L, quote(x)),
+    "a call" = na_frame(2L, quote(f(x))),
+    "an S4 object" = na_frame(1L, s4_class(v = 1)),
+    "an external pointer" = na_frame(1L, methods::new("externalptr")),
+    "an expression vector" = na_frame(1L, expression(1)),
+    "a symbol in a data-frame column" = local({
+      inner <- na_frame(1L, quote(x))
+      df <- data.frame(role = NA_character_)
+      df$sub <- inner
+      df
+    })
+  )
+
+  for (label in names(cases)) {
+    err <- expect_no_warning(
+      expect_error(
+        lms_chat_openai("a-model", cases[[label]]),
+        messages_rule_details[["rule10"]],
+        fixed = TRUE,
+        info = label
+      )
+    )
+    expect_true(
+      startsWith(conditionMessage(err), messages_headers[["value"]]),
+      info = label
+    )
+  }
+
+  expect_error(
+    lms_chat_openai("a-model", na_frame(1L, function() "x")),
+    messages_rule_details[["rule12"]],
+    fixed = TRUE
+  )
+  expect_identical(probe$calls, 0L)
+})
+
 # A column with a dim attribute is read row by row, through the cells whose
 # first index is the row. The frames are built with `$<-`, because
 # data.frame() recycles an array to its length. Row 2 of `role` is NA, so the
