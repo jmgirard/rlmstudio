@@ -173,6 +173,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: claim audit: 162 claims read, 0 corrected — NEWS.md, R/chat.R, R/conditions.R, R/list.R, R/utils-api-error.R, data-raw/record-model-mismatch-cassette.R, tests/testthat/test-model-check.R
 - 2026-09-28: status review. T9 and T10 are done, and AC2 waits for fresh evidence at review.
 - 2026-09-28: review pass 3 started on head da340ad, which contains `origin/main`. No PR exists. Evidence for AC1 to AC7 is under "Pass 3", AC2 is ticked, and the consistency gate passed. The blame and prior-review lenses found nothing, and the [O] lens is still running.
+- 2026-09-28: review pass 3: 5 findings logged with proposed dispositions, and none shows a criterion failing. The step-7 gate decides.
 
 ## Decisions
 
@@ -367,3 +368,23 @@ failed.
 Consistency gate, pass 3: `cairn_validate.py` passed with exit 0. The DESIGN.md change is a conventions line, not
 a principle, so `cairn_impact` did not run. `pkgdown::check_pkgdown()` found no problems. `NEWS.md` has entries
 with no milestone numbers. The branch adds no top-level file, and README is not touched.
+
+Independent review, pass 3: three fresh reviewers ([O] diff-bug, [S] blame-history, [S] prior-review) on head
+da340ad. The blame lens and the prior-review lens found nothing. The prior-review lens ran Air and R on the pass-2
+fixes, and they hold. The PR-comment probe returned no comments. The [O] lens found that the T9 and T10 fixes hold,
+that the pass-1 and pass-2 rejects hold, and that no criterion fails. The code at each finding below was read again,
+and each finding holds. Each has a proposed disposition, which the step-7 gate decides.
+
+- Q1 (follow-up): `R/chat.R:729` and `:789` compare the asked name with no trim. `rlm_check_id()` accepts
+  `"google/gemma-3-1b "`. A mocked reply from `google/gemma-3-1b` to that name sent 2 requests and aborted as a
+  mismatch. No probe showed whether LM Studio trims the name. It joins the candidate row "Five model-name cases
+  outside M049", next to O2 and R9.
+- Q2 (follow-up): the recorded `model_not_found` message names `google/gemma-4-e4b@4bit` and
+  `gemma-4-e4b-it-mlx` as valid names. This backs O2 and R9, and it joins the same candidate row as evidence.
+- Q3 (fix now): the T10 work-log line says that no `air.toml` exists. `git ls-files` lists `air.toml`. The fix is
+  one new work-log line, because the work log is history.
+- Q4 (fix now): in `data-raw/record-model-mismatch-cassette.R:154`, `second_loaded` is set after the load
+  returns. A load that loads the model and then fails leaves the model loaded. The fix sets the flag before the
+  load, because `unload_quietly()` tolerates a failed unload.
+- Q5 (reject): a failed lookup carries the status of the lookup, not the chat reply. The message opens with
+  "because the model-list lookup failed", which AC3 requires and the help states.
