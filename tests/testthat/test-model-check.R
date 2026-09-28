@@ -403,6 +403,32 @@ test_that("a reply with no model string is not checked", {
   }
 })
 
+test_that("a status-200 body that is not a JSON object is not checked", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  bodies <- c("5", '"org/model-y"', '["org/model-y"]', "null")
+  for (route in chat_routes) {
+    for (body in bodies) {
+      info <- paste(route, body)
+      recorder <- local_request_sequence(list(mock_response(200L, body)))
+      expect_identical(
+        mocked_call(route, "org/model-x", simplify = FALSE),
+        jsonlite::parse_json(body),
+        info = info
+      )
+      expect_identical(length(recorder$requests), 1L, info = info)
+
+      recorder <- local_request_sequence(list(mock_response(200L, body)))
+      err <- expect_error(
+        mocked_call(route, "org/model-x", simplify = TRUE),
+        class = "rlmstudio_bad_response",
+        info = info
+      )
+      expect_false(inherits(err, "rlmstudio_model_mismatch"), info = info)
+      expect_identical(length(recorder$requests), 1L, info = info)
+    }
+  }
+})
+
 # A failed lookup ---------------------------------------------------------------
 
 # Assert that `err` names the chat label and the failed lookup. cli wraps the
@@ -512,6 +538,26 @@ test_that("the lookup sends the call's token to the same host and prints nothing
       "Bearer lookup-token",
       info = route
     )
+  }
+})
+
+# `list_models()` prints a message only for an empty list, so this case would
+# catch a lookup that went through it with `quiet = FALSE`.
+test_that("a lookup that gets an empty model list prints nothing", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (route in chat_routes) {
+    recorder <- local_request_sequence(list(
+      reply_with_model(route, quoted("x-instance")),
+      model_list_response()
+    ))
+    expect_silent(
+      err <- tryCatch(
+        mocked_call(route, "org/model-x"),
+        rlmstudio_model_mismatch = identity
+      )
+    )
+    expect_mismatch(err, "org/model-x", "x-instance", route)
+    expect_identical(length(recorder$requests), 2L, info = route)
   }
 })
 

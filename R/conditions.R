@@ -238,9 +238,9 @@
 #'
 #' [lms_chat_batch()] does not abort on it, except on the subclass
 #' `rlmstudio_model_mismatch`, as the "Reply from another model" section of
-#' [rlmstudio-conditions] says. The element of the failed input holds the condition, or `NA` where
-#' the result is text, and the batch warns once and goes on. See the details
-#' of [lms_chat_batch()].
+#' [rlmstudio-conditions] says. The element of the failed input holds the
+#' condition, or `NA` where the result is text, and the batch warns once and
+#' goes on. See the details of [lms_chat_batch()].
 #'
 #' The condition carries a `status` field, which holds the HTTP response
 #' status as an integer. Today the status is always 200: each of these
@@ -280,7 +280,8 @@
 #' the positions of the cut-off inputs, and each of those elements keeps its
 #' reply. It comes after the warning about failed inputs. A batch that aborts
 #' with a `results` field gives this warning before the abort. It names the
-#' cut-off inputs whose replies the `results` field of the abort holds. The native and OpenResponses routes give no such warning.
+#' cut-off inputs whose replies the `results` field of the abort holds. The
+#' native and OpenResponses routes give no such warning.
 #'
 #' The warning shows whatever `quiet` and the `rlmstudio.quiet` option say,
 #' because it is the only sign that an answer is not complete.
@@ -309,8 +310,11 @@
 #'
 #' The check runs before the reply is read, so it also runs with
 #' `logprobs = TRUE`, with a `schema`, and for a reply with no answer text. A
-#' reply is not checked if it has no `model` field, or if its `model` is not
-#' one string or holds only whitespace. If the instance that answered is
+#' reply is not checked if its body is not a JSON object, if it has no `model`
+#' field, or if its `model` is not one string or holds only whitespace. A body
+#' that is not a JSON object is returned with `simplify = FALSE`, and with
+#' `simplify = TRUE` it raises the error that the "Malformed response" section
+#' describes. If the instance that answered is
 #' unloaded before the model-list request, the call aborts, also when that
 #' instance belongs to the asked model.
 #'

@@ -352,9 +352,9 @@ not a JSON object. A body of \code{null} gets the message about its missing
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it, except on the subclass
 \code{rlmstudio_model_mismatch}, as the "Reply from another model" section of
-\link{rlmstudio-conditions} says. The element of the failed input holds the condition, or \code{NA} where
-the result is text, and the batch warns once and goes on. See the details
-of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+\link{rlmstudio-conditions} says. The element of the failed input holds the
+condition, or \code{NA} where the result is text, and the batch warns once and
+goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 
 The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: each of these

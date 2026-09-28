@@ -122,7 +122,7 @@ before each request was rejected at the gate (work log).
 - [x] T7: Review finding O1. Compare the asked name in `check_reply_model()` and `reply_model_serves()` in
       `R/chat.R` as a plain string, with no names or class. Tests first on both routes with both settings of
       `simplify`: a named model string and a classed one, each answered by the same model, send 1 request.
-- [ ] T8: Review findings O10, O11, O12, and P2. Read `cnd[["code"]]` and `cnd[["status"]]` in
+- [x] T8: Review findings O10, O11, O12, and P2. Read `cnd[["code"]]` and `cnd[["status"]]` in
       `keep_or_abort_api()`. Add a lookup test with an empty model list that prints nothing. State on
       `rlmstudio-conditions` that a status-200 body that is not a JSON object skips the check. Rewrap the two long
       roxygen lines in `R/conditions.R`. Then run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
@@ -150,6 +150,8 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: review return 1 (defect): AC2(a) fails, because a named or classed model string that the same model answers aborts as a mismatch. The user chose to send it back at the gate. Status in-progress, with T7 and T8 added.
 - 2026-09-28: implement resumed on the branch, which already contains `origin/main`. Question gate skipped, because T7 and T8 leave no choice open.
 - 2026-09-28: T7 done. `check_reply_model()` strips names and class from the asked name before the compare, so `reply_model_serves()` also gets a plain string. The new test failed on all 8 cases before the change with a second request, the lookup. The request body already writes both forms as a plain string. Suite: 486 tests, 0 failed, 2 live embedding tests skipped because the embedding model was not loaded.
+- 2026-09-28: T8 done. `keep_or_abort_api()` reads `status` and `code` with `[[`. A new test gives the lookup an empty model list and asserts no output. It went red on both routes when a scratch copy printed the `list_models()` empty-list message in the lookup. A second new test covers four status-200 bodies that are not JSON objects on both routes. Each sends 1 request, is returned with `simplify = FALSE`, and raises a bad response that is not a mismatch with `simplify = TRUE`. It went red when a scratch copy read such a body as the model name. `rlmstudio-conditions` states this case, and the two long roxygen lines are rewrapped.
+- 2026-09-28: T8 checks. `devtools::test()` ran 488 tests with 0 failed and 2 live embedding tests skipped. `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes. A second `devtools::document()` changed nothing. The check left the server off, and `lms server start` started it again.
 
 ## Decisions
 

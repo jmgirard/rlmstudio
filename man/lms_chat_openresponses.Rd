@@ -313,9 +313,9 @@ not a JSON object. A body of \code{null} gets the message about its missing
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it, except on the subclass
 \code{rlmstudio_model_mismatch}, as the "Reply from another model" section of
-\link{rlmstudio-conditions} says. The element of the failed input holds the condition, or \code{NA} where
-the result is text, and the batch warns once and goes on. See the details
-of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+\link{rlmstudio-conditions} says. The element of the failed input holds the
+condition, or \code{NA} where the result is text, and the batch warns once and
+goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 
 The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: each of these
@@ -360,8 +360,11 @@ carries the \code{content} and \code{finish_reason} fields, both \code{NULL}.
 
 The check runs before the reply is read, so it also runs with
 \code{logprobs = TRUE}, with a \code{schema}, and for a reply with no answer text. A
-reply is not checked if it has no \code{model} field, or if its \code{model} is not
-one string or holds only whitespace. If the instance that answered is
+reply is not checked if its body is not a JSON object, if it has no \code{model}
+field, or if its \code{model} is not one string or holds only whitespace. A body
+that is not a JSON object is returned with \code{simplify = FALSE}, and with
+\code{simplify = TRUE} it raises the error that the "Malformed response" section
+describes. If the instance that answered is
 unloaded before the model-list request, the call aborts, also when that
 instance belongs to the asked model.
 

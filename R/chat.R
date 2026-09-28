@@ -1530,8 +1530,9 @@ lms_chat_batch <- function(
   # alone.
   keep_or_abort_api <- function(cnd) {
     if (
-      isTRUE(cnd$status %in% c(401L, 403L, 404L)) ||
-        (identical(cnd$status, 400L) && identical(cnd$code, "model_not_found"))
+      isTRUE(cnd[["status"]] %in% c(401L, 403L, 404L)) ||
+        (identical(cnd[["status"]], 400L) &&
+          identical(cnd[["code"]], "model_not_found"))
     ) {
       abort_with_results(cnd)
     }
