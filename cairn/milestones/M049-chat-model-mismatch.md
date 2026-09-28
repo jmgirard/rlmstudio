@@ -47,7 +47,7 @@ before each request was rejected at the gate (work log).
       answers. Further tests fire the abort on both functions with `logprobs = TRUE`, and on `lms_chat_openai()`
       with a `schema`. One test fires it on a mismatched reply that holds no answer text. Two tests fire it
       through `lms_chat()`, on the default route and on `api_type = "openai"`.
-- [ ] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
+- [x] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
       functions with both settings of `simplify`.
       (a) The reply's `model` equals the asked name. The call sends no request after the chat request.
       (b) The asked name differs in letter case only from the key of the model whose loaded instance answered.
@@ -155,6 +155,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: claim audit: 86 claims read, 7 corrected — NEWS.md, R/chat.R, R/conditions.R, tests/testthat/test-model-check.R
 - 2026-09-28: the audit narrowed "the chat routes" to the OpenAI and OpenResponses routes in NEWS, the batch help, and a comment. It limited the `schema` clause to `lms_chat_openai()`, and it stated that a lookup condition carries no `content` or `finish_reason` field. A new assertion in the lookup parse-failure test backs that sentence. Suite: 488 tests, 0 failed, 2 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes, and the server was started again after it.
 - 2026-09-28: status review. T7 and T8 are done, and AC2 waits for fresh evidence at review.
+- 2026-09-28: review pass 2 started on head a812ed4, which already contains `origin/main`. No PR exists. Fresh evidence for AC1 to AC7 is recorded under "Pass 2", AC2 is ticked, and the consistency gate passed. Three fresh reviewers are running.
 
 ## Decisions
 
@@ -240,3 +241,40 @@ returned no comments. Each finding has a proposed disposition, which the step-7 
 Gate 2026-09-28: the user accepted the dispositions above and sent the milestone back. O1 fails AC2(a), so the AC2
 box is unticked. T7 carries O1, and T8 carries O10, O11, O12, and P2. O2 and O3 joined the ROADMAP candidate row
 "Four model-name cases outside M049". The 11 rejects stand with the reasons above. `NEWS.md` has two entries under the development version.
+
+### Pass 2
+
+Evidence run 2026-09-28 on branch head a812ed4, which contains `origin/main` (dc91202), after T7 and T8. The full
+`devtools::test()` ran 488 tests with 0 failed, 0 errors, 0 skipped. `test-model-check.R` ran 24 tests with 0
+failed.
+
+- AC1: `test-model-check.R` lines 176 to 305 pass, with the same cases and assertions as pass 1. The recorded
+  unknown name, the mocked key in other letter case, and the mocked instance id abort on both routes with both
+  settings of `simplify`. The `logprobs`, `schema`, no-answer-text, and two `lms_chat()` tests pass.
+- AC2: `test-model-check.R` lines 307 to 404 pass on both routes with both settings of `simplify`. Case (a) has two
+  tests. At line 307 the plain name `"org/model-x"` sends 1 request. At line 321 a named string
+  `c(a = "org/model-x")` and a `glue`-classed string, each answered by `org/model-x`, send 1 request each, which
+  covers finding O1. Cases (b) and (c), at lines 341 and 365, play the recorded `case` and `alias` replies. The
+  request log holds 2 URLs, and the second is `http://localhost:1234/api/v1/models`. Case (d), at line 389,
+  covers a missing `model`, JSON `null`, a number, an array, an empty string, and a whitespace string. Each sends 1
+  request.
+- AC3: `test-model-check.R` lines 448 to 574 pass on both routes. The 401, unparsed body, `"models": 5`, and lost
+  server tests pass as in pass 1. The host, path, and header test at line 523 passes under `expect_silent()`. The
+  new test at line 551 gives the lookup an empty model list and passes under `expect_silent()`.
+- AC4: `test-model-check.R` lines 576 to 602 pass on both routes in the three formats, with `results`
+  `list("reply", NULL, NULL)` and 3 requests.
+- AC5: `test-model-check.R` lines 57 to 87 and 604 to 660 pass on both routes. The recorded `not_found` reply
+  gives `code` `"model_not_found"` and aborts a batch after 1 request. The bodies with `"E42"`, no code, and a
+  string `error` give `"E42"`, `NULL`, and `NULL`. Each fails its own input alone. `keep_or_abort_api()`
+  now reads `status` and `code` with `[[`.
+- AC6: a grep finds `rlmstudio_model_mismatch`, `reply_model`, or `model_not_found` 9 to 12 times in each of the
+  four chat pages and 10 times in `man/rlmstudio-conditions.Rd`. At lines 337 to 340, that page states that a
+  status-200 body that is not a JSON object skips the check. It also states that an instance unloaded before the
+  lookup makes the call abort. `NEWS.md` has the two entries.
+- AC7: `devtools::test()` ran 488 tests with 0 failed and 0 errors. `devtools::check()` with the API token set
+  gave 0 errors, 0 warnings, and 0 notes. `devtools::document()` left `git status` clean. The check left the
+  server off, and `lms server start` started it again.
+
+Consistency gate, pass 2: `cairn_validate.py` passed with exit 0. No DESIGN.md principle changed, so
+`cairn_impact` did not run. `devtools::document()` left no diff, and `pkgdown::check_pkgdown()` found no problems.
+`NEWS.md` has entries with no milestone numbers. The branch adds no top-level file, and README is not touched.
