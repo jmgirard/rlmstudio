@@ -853,7 +853,8 @@ messages_rule_details <- c(
   rule6 = "You gave a data frame with a row in which every cell is NA.",
   rule7 = "You gave a list with a dim attribute, such as a matrix of messages.",
   rule8 = "You gave a message with a dim attribute, such as a list array.",
-  rule9 = "You gave a message, or a list or data frame inside one, with a name that is NA, empty, or repeated."
+  rule9 = "You gave a message, or a list or data frame inside one, with a name that is NA, empty, or repeated.",
+  rule10 = "You gave a value that jsonlite cannot write:"
 )
 
 good_message <- list(role = "user", content = "hi")
@@ -1088,6 +1089,69 @@ messages_probes <- list(
       df
     }),
     rule = "rule9"
+  ),
+  # The trial write runs last. Each value below fails it, and the first four
+  # also break a rule of their own, which wins.
+  list(
+    label = "a NULL-cell row and a foo-classed cell",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$content <- list(structure("x", class = "foo"), NULL)
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a list-matrix with an environment field",
+    value = matrix(
+      list(list(role = "user", content = new.env()), good_message),
+      1
+    ),
+    rule = "rule7"
+  ),
+  list(
+    label = "a list-array message with an environment field",
+    value = list(
+      array(list("user", new.env()), 2, list(c("role", "content")))
+    ),
+    rule = "rule8"
+  ),
+  list(
+    label = "a repeated name and an environment field",
+    value = list(list(role = "user", role = "system", content = new.env())),
+    rule = "rule9"
+  ),
+  list(
+    label = "a foo-classed field",
+    value = list(list(role = "user", content = structure("x", class = "foo"))),
+    rule = "rule10"
+  ),
+  list(
+    label = "foo-classed content parts",
+    value = list(list(
+      role = "user",
+      content = structure(list(list(type = "text", text = "x")), class = "foo")
+    )),
+    rule = "rule10"
+  ),
+  list(
+    label = "a foo-classed data-frame column",
+    value = local({
+      df <- data.frame(content = "hi")
+      df$role <- structure("user", class = "foo")
+      df
+    }),
+    rule = "rule10"
+  ),
+  list(
+    label = "an environment field",
+    value = list(list(role = "user", content = new.env())),
+    rule = "rule10"
+  ),
+  list(
+    label = "a quote() field",
+    value = list(list(role = "user", content = quote(x))),
+    rule = "rule10"
   ),
   # A NULL list cell is written as null, the same as an NA cell.
   list(
@@ -1371,27 +1435,65 @@ test_that("a messages value that keeps every rule reaches the request", {
   }
 })
 
-# A class below the outer list and its messages is not removed. A class that
-# jsonlite has no method for therefore still fails there, when the request body
-# is written, as it did before. The recorder never writes the body, so the
-# test writes it with a dry run.
-test_that("a class below the message level still reaches jsonlite", {
-  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-
-  classed_content <- list(list(
-    role = "user",
-    content = structure(list(list(type = "text", text = "x")), class = "foo")
-  ))
-  classed_column <- data.frame(content = "hi")
-  classed_column$role <- structure("user", class = "foo")
-
-  for (value in list(classed_content, classed_column)) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    lms_chat_openai("a-model", value)
+# The rule-order probes above get the text of their own rule. Each of them
+# also fails the trial write, so the rule wins over the write for its reason.
+test_that("each rule-order probe also fails the jsonlite write", {
+  order_labels <- c(
+    "a NULL-cell row and a foo-classed cell",
+    "a list-matrix with an environment field",
+    "a list-array message with an environment field",
+    "a repeated name and an environment field"
+  )
+  labels <- vapply(messages_probes, `[[`, character(1), "label")
+  expect_true(all(order_labels %in% labels))
+  for (p in messages_probes[labels %in% order_labels]) {
     expect_error(
-      sent_messages(recorder$requests[[1]]),
-      "No method asJSON S3 class: foo",
-      fixed = TRUE
+      jsonlite::toJSON(
+        unclass_messages(p$value),
+        auto_unbox = TRUE,
+        digits = 22,
+        null = "null"
+      ),
+      "No method asJSON S3 class",
+      fixed = TRUE,
+      info = p$label
     )
   }
+})
+
+# A class below the outer list and its messages is not removed, so a class
+# that jsonlite has no method for fails the trial write before the server
+# probe. The abort carries the jsonlite message as it is, braces included.
+test_that("a value jsonlite cannot write aborts with the jsonlite message", {
+  probe <- local_counting_probe()
+
+  err <- expect_error(
+    lms_chat_openai(
+      "a-model",
+      list(list(role = "user", content = structure("x", class = "{x}")))
+    ),
+    "You gave a value that jsonlite cannot write: No method asJSON S3 class: {x}",
+    fixed = TRUE
+  )
+  expect_match(conditionMessage(err), "`messages`", fixed = TRUE)
+  expect_identical(class(err), c("rlang_error", "error", "condition"))
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("a Date, a factor, and an I() field reach the request", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+  expect_no_error(lms_chat_openai(
+    "a-model",
+    list(list(
+      role = I("user"),
+      content = factor("hi"),
+      date = as.Date("2026-01-01")
+    ))
+  ))
+  expect_identical(
+    sent_messages(recorder$requests[[1]]),
+    list(list(role = list("user"), content = "hi", date = "2026-01-01"))
+  )
 })

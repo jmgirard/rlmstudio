@@ -328,10 +328,12 @@ schema_fault <- function(value) {
 #' Reject a messages value that cannot be sent as a list of messages
 #'
 #' `messages` is a named argument of `lms_chat_openai()`, so GP4 puts the check
-#' on the package, and it runs before the server probe (D-008). The check
-#' reads the list and the names of each message. Roles, content, and every
-#' other field inside a message stay with the server (D-003). A data frame
-#' passes, because jsonlite writes it as one JSON object per row.
+#' on the package, and it runs before the server probe (D-008). The rules read
+#' the shape of the value and the names at each level, and a trial write then
+#' asks jsonlite to write it. The package does not judge a role, a content
+#' value, or any other field value. The server does (D-003 for the fields in
+#' `...`, D-020 for a named argument). A data frame passes, because jsonlite
+#' writes it as one JSON object per row.
 #'
 #' @param value The value the caller passed as `messages`.
 #' @return `value`, invisibly.
@@ -339,6 +341,9 @@ schema_fault <- function(value) {
 #' @noRd
 rlm_check_messages <- function(value) {
   fault <- messages_fault(value)
+  if (is.null(fault)) {
+    fault <- messages_write_fault(value)
+  }
   if (!is.null(fault)) {
     cli::cli_abort(
       c(
@@ -350,6 +355,38 @@ rlm_check_messages <- function(value) {
     )
   }
   invisible(value)
+}
+
+#' Can jsonlite write this messages value?
+#'
+#' The request body is written by `httr2::req_body_json()`, which calls
+#' `jsonlite::toJSON()` with the three options below, after the server probe.
+#' A value that jsonlite cannot write, such as a field with a class that has
+#' no jsonlite method, would fail there with an error that does not name
+#' `messages`. So the value is written once here, the same way. The jsonlite
+#' message is returned as a value, and the abort splices it in, so cli does
+#' not read its braces.
+#'
+#' @param value A `messages` value that passed `messages_fault()`.
+#' @return A detail that holds the jsonlite message, or `NULL` when the write
+#'   works.
+#'
+#' @noRd
+messages_write_fault <- function(value) {
+  tryCatch(
+    {
+      jsonlite::toJSON(
+        unclass_messages(value),
+        auto_unbox = TRUE,
+        digits = 22,
+        null = "null"
+      )
+      NULL
+    },
+    error = function(e) {
+      paste("You gave a value that jsonlite cannot write:", conditionMessage(e))
+    }
+  )
 }
 
 #' Remove the class of a messages list and of each of its messages
