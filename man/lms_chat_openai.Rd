@@ -43,8 +43,11 @@ cell of a list column. jsonlite leaves out an \code{NA} cell of another
 column and writes an \code{NA} or \code{NULL} list cell as \code{null}, so such a row
 holds no field value. A \code{list()}
 cell is sent as \verb{[]} and a \code{list(NA)} cell as \verb{[null]}, so a row with
-such a cell is sent. A matrix or data-frame column counts as empty in
-a row when each of its cells in that row is empty.
+such a cell is sent. A column with a \code{dim} attribute of any length,
+such as a matrix or an array, or a data-frame column, counts as empty
+in a row when each of its cells in that row is empty. A column that
+is neither an atomic vector nor a list, such as an environment, never
+counts as empty.
 \item \code{messages}, when it is a list and not a data frame, has no \code{dim}
 attribute, such as a matrix or an array of messages.
 \item A message that is a list has no \code{dim} attribute.
@@ -54,7 +57,15 @@ column. jsonlite would send such a list as nested arrays with each
 cell in an array of its own. A list column of a data frame with one,
 three, or more dimensions also breaks this rule. An atomic matrix
 field is sent as an array of arrays. A list-matrix column of any data
-frame is sent, one row of cells for each message.
+frame is sent, one row of cells for each message. jsonlite does not
+unbox a value inside a list-matrix cell, at any depth in a list,
+unless \code{jsonlite::unbox()} wraps it. A data frame in a cell is sent as
+an array of objects whose values are not boxed. So a length-one
+atomic cell is sent as a one-element array, such as \verb{["a"]}, and a
+\code{NULL} cell is sent as \code{null}. For example, a row with \code{role}
+\code{"user"}, \code{content} \code{"hi"}, and the cells \code{"a"}, \code{NULL}, and
+\code{list(k = "v")} in a list-matrix column \code{tags} is sent as
+\verb{\{"role":"user","content":"hi","tags":[["a"],null,\{"k":["v"]\}]\}}.
 \item No message, and no list or data frame inside a message or inside a
 cell or column of a data frame, has a name that is \code{NA}, empty, or
 repeated. jsonlite would send an \code{NA} or empty name as a number and

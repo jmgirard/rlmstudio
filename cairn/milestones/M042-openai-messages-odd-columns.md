@@ -126,7 +126,7 @@ choice to send it as jsonlite writes it.
   warning. Add a probe for a function column in a row that is otherwise
   `NA`, which asserts the function detail. Revert the branch in a scratch
   copy and make sure that each probe other than the function probe goes red. Run `devtools::test()`.
-- [ ] T3: Edit the `messages` help in `R/chat.R`. Replace the empty-row
+- [x] T3: Edit the `messages` help in `R/chat.R`. Replace the empty-row
   sentence at lines 290-291 for AC4. Replace the list-matrix sentence at
   lines 300-301 for AC3. Add a test that sends the AC3 example row and
   compares the request body with the sent form in the help. Run
@@ -157,6 +157,7 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: T2's revert step now expects each probe other than the function probe to go red, because a revert to the old function branch keeps that probe green.
 - 2026-09-27: T1 done. `empty_rows()` reads a `dim` column through `apply()` when its first extent is the row count. With the old `empty_rows()` swapped in, cases 1 and 2, the 4-D list probe, and the nested one-`NA` probe gave the empty-row detail. The three all-empty probes and the controls gave the same result before and after, so they cannot go red on revert. `devtools::test()`: 0 failures.
 - 2026-09-27: T2 done. `empty_rows()` treats a column that is neither atomic nor a list as never empty. Before the branch change, all eight non-function probes went red on the `is.na()` warning, and the function probe stayed green. `devtools::test()`: 0 failures.
+- 2026-09-27: T3 done. The help's list-matrix text and example were written from a jsonlite run of the same rows. A new test sends the help example and a second row with `unbox()`, a nested list, and a data frame in cells, and compares each `messages` element with JSON text stated in the test. `devtools::test()`: 0 failures.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

@@ -1972,6 +1972,46 @@ test_that("matrix forms the list-array rule allows reach the request", {
   }
 })
 
+# The lms_chat_openai() help gives the sent form of one list-matrix row. The
+# form is stated here as JSON text, so a change to what jsonlite sends turns
+# the test red. A boxed value parses back as a list, so the comparison sees
+# the boxing.
+test_that("a list-matrix column is sent with its cells boxed", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  help_row <- data.frame(role = "user", content = "hi")
+  help_row$tags <- matrix(list("a", NULL, list(k = "v")), 1)
+  help_form <- '{"role":"user","content":"hi","tags":[["a"],null,{"k":["v"]}]}'
+
+  # unbox() unboxes a cell and a value in a list at any depth. A data frame
+  # in a cell is sent as an array of objects with its values not boxed.
+  other_row <- data.frame(role = "user")
+  other_row$m <- matrix(
+    list(
+      jsonlite::unbox("a"),
+      list(list(z = 1)),
+      list(q = jsonlite::unbox("b")),
+      data.frame(k = "v")
+    ),
+    1
+  )
+  other_form <- '{"role":"user","m":["a",[{"z":[1]}],{"q":"b"},[{"k":"v"}]]}'
+
+  cases <- list(
+    list(label = "the help example", value = help_row, form = help_form),
+    list(label = "unbox and a data frame", value = other_row, form = other_form)
+  )
+  for (case in cases) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", case$value))
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      list(jsonlite::parse_json(case$form, simplifyVector = FALSE)),
+      info = case$label
+    )
+  }
+})
+
 test_that("a Date, a factor, and an I() field reach the request", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
