@@ -44,9 +44,13 @@ column and writes an \code{NA} or \code{NULL} list cell as \code{null}, so such 
 holds no field value. A \code{list()}
 cell is sent as \verb{[]} and a \code{list(NA)} cell as \verb{[null]}, so a row with
 such a cell is sent. A column with a \code{dim} attribute of any length
-whose first extent is the row count, such as a matrix or an array, or
-a data-frame column, counts as empty in a row when each of its cells
-in that row is empty. A column that
+whose first extent is the row count, such as a matrix or an array,
+counts as empty in a row when each of its cells in that row is empty.
+Such a column with no cells in a row, such as a 2-by-0 matrix, is not
+empty in that row, because jsonlite writes that row of it as \verb{[]} or
+as nested empty arrays. A data-frame column counts as empty in a row
+when each of its own columns is empty in that row. So a data-frame
+column with no columns counts as empty in every row. A column that
 is neither an atomic vector nor a list, such as an environment, never
 counts as empty.
 \item \code{messages}, when it is a list and not a data frame, has no \code{dim}
