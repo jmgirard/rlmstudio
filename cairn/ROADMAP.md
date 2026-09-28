@@ -9,6 +9,7 @@ _Last hygiene check: 2026-09-27 (M037 done and archived, M034 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M038 | The OpenAI chat function refuses a messages value it cannot send as a list of messages | planned | none | normal | milestones/M038-openai-messages-guard.md |
 | M037 | The chat functions refuse a stream field before any request | done | none | normal | milestones/archive/M037-chat-stream-guard.md |
 | M036 | The chat completions help says that a reply is read from its first choice | done | none | normal | milestones/archive/M036-openai-first-choice.md |
 | M035 | A chat completions reply that the token limit cut off no longer passes as complete | done | none | normal | milestones/archive/M035-openai-cut-off-reply.md |
@@ -23,7 +24,6 @@ _Last hygiene check: 2026-09-27 (M037 done and archived, M034 row pruned)_
 - The argument-guard loops in `tests/testthat/test-arg-guards.R` report one failure for ten functions. A non-matching error aborts the whole `test_that()` block. The first broken function then hides the other nine. The file still turns red. The diagnostics alone are coarse, added 2026-09-20, M013 review finding 7
 - Run `lms daemon up` then `lms daemon status --json` on a headless llmster install, as on Linux. On macOS with the desktop app installed, `up` returned only once the daemon ran, so M016 dropped its wait. If `up` returns early there, a wait on `lms_daemon_start()` has a reason, added 2026-09-20, milestones/archive/M016-daemon-start-wait.md
 - A `chunk_size` argument on `lms_embed()` with a progress bar, so a long input vector goes out as several requests. M012 sends the whole vector in one POST, added 2026-09-20, M012 plan gate
-- `lms_chat_openai()` takes its prompt as `messages`, a list, so M013's text guard does not reach it. A malformed messages list still goes to the server unchecked, added 2026-09-20, M013 scope
 - The chat wrappers send an `input` of length two as a JSON array rather than one prompt. M013 leaves the length alone, because narrowing a named formal is a permanent API restriction. Decide whether a length rule belongs there, added 2026-09-20, M013 plan gate
 - A `ttl` argument on `lms_load()`. On 2026-09-27, `/api/v1/models/load` answered 400 "Unrecognized key(s) in object: 'ttl'", and only `lms load --ttl` sets it. Promote once the load endpoint accepts `ttl`. A user who needs a `ttl` on an explicit load is the other trigger, through the command-line route. M034 took the chat and embedding part of this row, added 2026-09-19, cairn/references/lmstudio-api-surface.md, M034 plan gate
 - Structured output on `/v1/responses` and `/api/v1/chat`. M017 covers `/v1/chat/completions` only, the one endpoint the LM Studio docs describe for it. Promote once the docs or a live request show that another endpoint honors a schema, added 2026-09-21, M017 scope
