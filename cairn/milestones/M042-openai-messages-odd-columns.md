@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M042: The OpenAI chat function reads each row of an array or non-vector messages column on its own
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -168,6 +168,8 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: the user adopted the reader's AC2 text verbatim. AC2 now binds `empty_rows()` for the no-warning clause and excludes a class definition with a slot from the abort clause. T6 added for the review return work, and Coverage maps AC2 to T2 and T6.
 - 2026-09-27: T1 and T2 text compressed to bring the plan-owned body under the 150-line cap.
 - 2026-09-27: T6 done. A direct `empty_rows()` test covers twelve kinds at top level and nested, and it gave 26 failures with the old function branch swapped in. A probe pins the slotted and slotless class-definition columns. The function probe now checks for no warning and has a nested case. NEWS narrowed, and a candidate row added. `devtools::test()`: 11736 expectations, 0 failures. `devtools::check()`: 0 errors, 0 warnings, 0 notes.
+- claim audit: 18 claims read, 0 corrected — NEWS.md, tests/testthat/test-arg-guards.R
+- 2026-09-27: the claim reader noted that `empty_rows()` returns `logical(0)` for a zero-length column in a one-row frame built by hand. The call still aborts at the trial write, and hand-built frames are Scope Out. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
