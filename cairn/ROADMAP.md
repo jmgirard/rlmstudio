@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-27 (M040 planned from three candidate rows, one candidate row added)_
+_Last hygiene check: 2026-09-27 (M040 done, M037 row pruned, one candidate row added)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-27 (M040 planned from three candidate rows, one can
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M040 | The OpenAI chat function refuses a messages value that jsonlite cannot write or that breaks a shape rule | review | none | normal | milestones/M040-openai-messages-shape-and-write.md |
+| M040 | The OpenAI chat function refuses a messages value that jsonlite cannot write or that breaks a shape rule | done | none | normal | milestones/archive/M040-openai-messages-shape-and-write.md |
 | M039 | The OpenAI chat function sends a classed messages list and refuses a data frame with a bad column name or an empty row | done | none | normal | milestones/archive/M039-openai-messages-class-and-frame.md |
 | M038 | The OpenAI chat function refuses a messages value it cannot send as a list of messages | done | none | normal | milestones/archive/M038-openai-messages-guard.md |
-| M037 | The chat functions refuse a stream field before any request | done | none | normal | milestones/archive/M037-chat-stream-guard.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
