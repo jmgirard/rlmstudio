@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-28 (M046 done, M043 row pruned)_
+_Last hygiene check: 2026-09-28 (M047 done, M044 row pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-28 (M046 done, M043 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M047 | The embedding function sends a long input in batches | review | none | normal | milestones/M047-embed-batches.md |
+| M047 | The embedding function sends a long input in batches | done | none | normal | milestones/archive/M047-embed-batches.md |
 | M046 | The OpenAI chat function counts an array row with no cells as a field value | done | M044 | normal | milestones/archive/M046-openai-messages-cell-free-rows.md |
 | M045 | The OpenAI chat function refuses a number that jsonlite writes as a string or drops | done | M044 | normal | milestones/archive/M045-openai-messages-non-finite-numbers.md |
-| M044 | The functions that send a JSON body send the text that jsonlite writes | done | none | normal | milestones/archive/M044-json-body-as-written.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -27,6 +26,7 @@ _Last hygiene check: 2026-09-28 (M046 done, M043 row pruned)_
 - The argument-guard loops in `tests/testthat/test-arg-guards.R` report one failure for ten functions. A non-matching error aborts the whole `test_that()` block. The first broken function then hides the other nine. The file still turns red. The diagnostics alone are coarse, added 2026-09-20, M013 review finding 7
 - Run `lms daemon up` then `lms daemon status --json` on a headless llmster install, as on Linux. On macOS with the desktop app installed, `up` returned only once the daemon ran, so M016 dropped its wait. If `up` returns early there, a wait on `lms_daemon_start()` has a reason, added 2026-09-20, milestones/archive/M016-daemon-start-wait.md
 - `lms_embed()` gets no signal for a text longer than the model's context. A 5000-word text against the 2048-token context of nomic-embed-text-v1.5 returned a vector with no error, and `usage` reported 0 tokens (observed 2026-09-28). Decide whether to document it, warn, or split the text and combine the vectors, added 2026-09-28, M047 plan gate
+- The failed-inputs warning of `lms_embed()` names each failed position. A failed batch fails a run of consecutive positions, so 400 failures give a warning of 400 numbers. Give runs as ranges, such as "1 to 100". Promote on a user who finds the warning too long to read, added 2026-09-28, M047 review finding O11
 - The chat wrappers send an `input` of length two as a JSON array rather than one prompt. M013 leaves the length alone, because narrowing a named formal is a permanent API restriction. Decide whether a length rule belongs there, added 2026-09-20, M013 plan gate
 - A `ttl` argument on `lms_load()`. On 2026-09-27, `/api/v1/models/load` answered 400 "Unrecognized key(s) in object: 'ttl'", and only `lms load --ttl` sets it. Promote once the load endpoint accepts `ttl`. A user who needs a `ttl` on an explicit load is the other trigger, through the command-line route. M034 took the chat and embedding part of this row, added 2026-09-19, cairn/references/lmstudio-api-surface.md, M034 plan gate
 - Structured output on `/v1/responses` and `/api/v1/chat`. M017 covers `/v1/chat/completions` only, the one endpoint the LM Studio docs describe for it. Promote once the docs or a live request show that another endpoint honors a schema, added 2026-09-21, M017 scope
