@@ -95,7 +95,7 @@ functions take no `messages` argument.
   `nested_names_fault()` in `messages_fault()` and
   `data_frame_messages_fault()`. One detail text. Delete the rule in a
   scratch copy and see its probes go red.
-- [ ] T2: Add the AC1 rule after the name rule and before
+- [x] T2: Add the AC1 rule after the name rule and before
   `messages_write_fault()`. It walks the same places as `has_bad_name()`,
   data-frame columns included. Make `empty_rows()` read a function column
   with no `is.na()` warning. One detail text that names the source-text
@@ -138,6 +138,7 @@ functions take no `messages` argument.
 - 2026-09-27: second audit returned 4 findings, and all earlier findings but one were resolved. Three clear fixes applied: list-matrix columns of any data frame stay allowed, AC1 yields to earlier rules, and AC3 wording on the order. The gate chose to refuse a list-array column with one, three, or more dimensions over leaving it, because a three-dimensional column is sent boxed; falsified by a user who sends such a column on purpose. AC2, AC3, T1, and T4 amended.
 - 2026-09-27: implement started on branch m041-openai-messages-value-faults. Question gate skipped, because the plan left no choice open.
 - 2026-09-27: T1 done. `has_inner_list_array()` walks with `for` loops, because `as.list()` on a `POSIXlt` returns a `POSIXlt`. Nine rule11 probes added. With the rule returning FALSE in place, the probe loop went red. `devtools::test()` passed.
+- 2026-09-27: T2 done. `has_function()` runs in `rlm_check_messages()` after `messages_fault()` and before the trial write. `empty_rows()` treats a function column as not empty. Eight rule12 probes, two order probes, and a no-warning test added. With the rule off, and apart from that with the `empty_rows()` change undone, the tests went red. `devtools::test()` passed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

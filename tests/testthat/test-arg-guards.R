@@ -1291,6 +1291,83 @@ messages_probes <- list(
       })
     )),
     rule = "rule11"
+  ),
+  # jsonlite writes a function as an array of its source lines, with no error.
+  list(
+    label = "a closure field",
+    value = list(list(role = "user", content = function(x) x)),
+    rule = "rule12"
+  ),
+  list(
+    label = "a primitive field",
+    value = list(list(role = "user", content = sum)),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function inside a list field",
+    value = list(list(
+      role = "user",
+      content = list(list(type = "text", text = function() "x"))
+    )),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function in a list-column cell",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- list("hi", mean)
+      df
+    }),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function in a list-matrix column cell",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$m <- matrix(list(1, sum, 2, 3), 2)
+      df
+    }),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function as a data-frame column",
+    value = local({
+      df <- data.frame(role = "user")
+      df$content <- function() "x"
+      df
+    }),
+    rule = "rule12"
+  ),
+  list(
+    label = "a function column in a nested data frame",
+    value = local({
+      inner <- data.frame(a = 1)
+      inner$f <- function() "x"
+      df <- data.frame(role = "user")
+      df$sub <- inner
+      df
+    }),
+    rule = "rule12"
+  ),
+  # A function with a class jsonlite has no method for gets the function
+  # rule, which runs before the trial write.
+  list(
+    label = "a foo-classed function field",
+    value = list(
+      list(role = "user", content = structure(function() "x", class = "foo"))
+    ),
+    rule = "rule12"
+  ),
+  # The rules before the function rule win.
+  list(
+    label = "a function and a repeated name",
+    value = list(list(role = "user", role = "system", content = sum)),
+    rule = "rule9"
+  ),
+  list(
+    label = "a list-matrix field that holds a function",
+    value = list(list(role = "user", content = matrix(list(sum, 1), 1))),
+    rule = "rule11"
   )
 )
 
@@ -1320,6 +1397,27 @@ test_that("a messages value that breaks a rule aborts before the server probe", 
         info = paste(p$label, "names", other)
       )
     }
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("a function column aborts with no warning on the way", {
+  probe <- local_counting_probe()
+  top <- data.frame(role = "user")
+  top$content <- function() "x"
+  inner <- data.frame(a = 1)
+  inner$f <- function() "x"
+  nested <- data.frame(role = "user")
+  nested$sub <- inner
+
+  for (value in list(top, nested)) {
+    expect_no_warning(
+      expect_error(
+        lms_chat_openai("a-model", value),
+        messages_rule_details[["rule12"]],
+        fixed = TRUE
+      )
+    )
   }
   expect_identical(probe$calls, 0L)
 })

@@ -341,6 +341,12 @@ schema_fault <- function(value) {
 #' @noRd
 rlm_check_messages <- function(value) {
   fault <- messages_fault(value)
+  if (is.null(fault) && has_function(value)) {
+    fault <- paste(
+      "You gave a field value that is a function, which jsonlite would send",
+      "as its source text."
+    )
+  }
   if (is.null(fault)) {
     fault <- messages_write_fault(value)
   }
@@ -387,6 +393,34 @@ messages_write_fault <- function(value) {
       paste("You gave a value that jsonlite cannot write:", conditionMessage(e))
     }
   )
+}
+
+#' Does a function sit anywhere inside this messages value?
+#'
+#' jsonlite writes a function as an array of its source lines, with no error,
+#' so the trial write does not catch one. The walk goes down every list, and a
+#' data frame is a list of its columns, so it reads each column, each cell of
+#' a list or list-matrix column, and each nested data frame. A `for` loop
+#' reads the elements as stored, for the reason `any_holds_list_array()`
+#' states.
+#'
+#' @param value A `messages` value that passed `messages_fault()`.
+#' @return `TRUE` when the walk reaches a function.
+#'
+#' @noRd
+has_function <- function(value) {
+  if (is.function(value)) {
+    return(TRUE)
+  }
+  if (!is.list(value)) {
+    return(FALSE)
+  }
+  for (element in value) {
+    if (has_function(element)) {
+      return(TRUE)
+    }
+  }
+  FALSE
 }
 
 #' Remove the class of a messages list and of each of its messages
@@ -659,7 +693,9 @@ data_frame_messages_fault <- function(value) {
 #' when each of its cells there is empty. jsonlite writes an atomic matrix row
 #' of `NA` as `"NA"` strings, but the rule refuses the row, as it did before
 #' `NULL` cells counted. A data-frame column counts as empty in a row when
-#' this rule finds that row of it empty. The columns are read one at a time,
+#' this rule finds that row of it empty. A function column is never empty.
+#' `is.na()` on it warns, and the function rule refuses it later. The columns
+#' are read one at a time,
 #' because `is.na()` on the whole data frame spreads a matrix column over
 #' several.
 #'
@@ -672,6 +708,8 @@ empty_rows <- function(value) {
   for (column in value) {
     if (is.data.frame(column)) {
       column_empty <- empty_rows(column)
+    } else if (is.function(column)) {
+      column_empty <- FALSE
     } else {
       cell_empty <- is.na(column)
       if (is.list(column)) {
