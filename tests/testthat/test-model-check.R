@@ -494,3 +494,94 @@ test_that("the lookup sends the call's token to the same host and prints nothing
     )
   }
 })
+
+# The batch stops ---------------------------------------------------------------
+
+batch_formats <- c("vector", "list", "data.frame")
+
+# The value that `format = "list"` holds for the good reply of the batch.
+good_value <- "reply"
+
+test_that("a batch aborts with its results at the first mismatched input", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (route in chat_routes) {
+    for (format in batch_formats) {
+      info <- paste(route, format)
+      recorder <- local_request_sequence(list(
+        reply_with_model(route, quoted("org/model-x")),
+        reply_with_model(route, quoted("org/model-y")),
+        two_models_list(),
+        reply_with_model(route, quoted("org/model-x"))
+      ))
+      err <- expect_error(
+        lms_chat_batch(
+          "org/model-x",
+          c("first", "second", "third"),
+          format = format,
+          quiet = TRUE,
+          api_type = route
+        ),
+        class = "rlmstudio_model_mismatch"
+      )
+      expect_true(inherits(err, "rlmstudio_bad_response"), info = info)
+      expect_identical(err$results, list(good_value, NULL, NULL), info = info)
+      expect_identical(length(recorder$requests), 3L, info = info)
+    }
+  }
+})
+
+test_that("a recorded model_not_found reply aborts a batch with its results", {
+  for (route in chat_routes) {
+    log <- local_request_log()
+    err <- with_recorded_case(
+      "not_found",
+      expect_error(
+        lms_chat_batch(
+          "not-a-model",
+          c(mismatch_prompt, mismatch_prompt),
+          host = "http://localhost:1234",
+          quiet = TRUE,
+          api_type = route,
+          temperature = 0
+        ),
+        class = "rlmstudio_api_error"
+      )
+    )
+    expect_identical(err$status, 400L, info = route)
+    expect_identical(err$code, "model_not_found", info = route)
+    expect_identical(err$results, list(NULL, NULL), info = route)
+    expect_identical(length(log$urls), 1L, info = route)
+  }
+})
+
+test_that("a batch keeps going past a 400 with another code or no code", {
+  bodies <- c(
+    '{"error": {"message": "boom", "code": "E42"}}',
+    '{"error": {"message": "boom"}}',
+    '{"error": "boom"}'
+  )
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (route in chat_routes) {
+    for (body in bodies) {
+      info <- paste(route, body)
+      recorder <- local_request_sequence(list(
+        reply_with_model(route, quoted("org/model-x")),
+        mock_response(400L, body),
+        reply_with_model(route, quoted("org/model-x"))
+      ))
+      expect_warning(
+        out <- lms_chat_batch(
+          "org/model-x",
+          c("first", "second", "third"),
+          format = "list",
+          quiet = TRUE,
+          api_type = route
+        ),
+        "1 input failed"
+      )
+      expect_true(inherits(out[[2]], "rlmstudio_api_error"), info = info)
+      expect_identical(out[c(1, 3)], list(good_value, good_value), info = info)
+      expect_identical(length(recorder$requests), 3L, info = info)
+    }
+  }
+})

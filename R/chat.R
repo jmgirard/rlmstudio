@@ -1498,10 +1498,26 @@ lms_chat_batch <- function(
   }
   # A refused token or a model the server cannot find fails every input the
   # same way, whatever the prompt, so these statuses abort like a lost server
-  # (D-019). Any other status can come from one prompt, so it fails that input
+  # (D-019). The chat routes answer a model they cannot find with status 400
+  # and the code "model_not_found" when two or more chat models are loaded
+  # (D-025). Any other status can come from one prompt, so it fails that input
   # alone.
   keep_or_abort_api <- function(cnd) {
-    if (isTRUE(cnd$status %in% c(401L, 403L, 404L))) {
+    if (
+      isTRUE(cnd$status %in% c(401L, 403L, 404L)) ||
+        (identical(cnd$status, 400L) && identical(cnd$code, "model_not_found"))
+    ) {
+      abort_with_results(cnd)
+    }
+    keep_failure(cnd)
+  }
+  # A reply from another model means that the wrong model answers every
+  # input, so it aborts (D-025). The test sits in this handler and not in a
+  # handler of its own, because `tryCatch()` runs a handler inside the
+  # handlers named after it. The condition that such a handler raises again
+  # would reach this one and be kept.
+  keep_or_abort_bad <- function(cnd) {
+    if (inherits(cnd, "rlmstudio_model_mismatch")) {
       abort_with_results(cnd)
     }
     keep_failure(cnd)
@@ -1589,7 +1605,7 @@ lms_chat_batch <- function(
         rlmstudio_reply_cut_off = note_cut_off
       ),
       rlmstudio_api_error = keep_or_abort_api,
-      rlmstudio_bad_response = keep_failure,
+      rlmstudio_bad_response = keep_or_abort_bad,
       rlmstudio_no_server = abort_with_results
     )
     # `[i]` rather than `[[i]]`, so a NULL reply keeps its slot in the list.
