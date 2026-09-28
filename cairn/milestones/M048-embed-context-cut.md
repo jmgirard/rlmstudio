@@ -85,6 +85,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - 2026-09-28: all tasks done, status set to review.
 - 2026-09-28: review started. AC1 and AC2 have evidence. The AC3 check and the three reviewers are still running (checkpoint).
 - 2026-09-28: gate fixes for review findings O1, O3, O5, O6, O7, S1, and S2 are on the branch. Tests and check are rerunning before the merge chip.
+- step-7 approval: m048-embed-context-cut approved for merge
 
 ## Decisions
 
