@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M044: The functions that send a JSON body send the text that jsonlite writes
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP4   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes the request body that seven exported functions send   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m044-json-body-as-written   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -97,7 +97,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate. -->
 
-- [ ] T1: Write the AC1 test "messages reach the request as jsonlite
+- [x] T1: Write the AC1 test "messages reach the request as jsonlite
       writes them" in `tests/testthat/test-arg-guards.R` and the AC2 test
       "a POSIXlt value in the dots reaches each request" beside the
       wrapper tests. Read the raw body from `httr2::req_dry_run()`, because
@@ -128,6 +128,8 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 - 2026-09-28: plan gate chose to write the body with jsonlite and send it raw over running httr2's walk in the trial write, because the walk is httr2 internals and drops zero-width columns with no message. Falsified by an httr2 release that exports a body writer with no walk, or by a user who needs an `obfuscated()` value in a body.
 - 2026-09-28: plan gate chose all seven body sites over `lms_chat_openai()` alone, because a `POSIXlt` value in `...` recurses at each site. Falsified by a site whose server rejects the text that jsonlite writes but accepts httr2's form.
 - 2026-09-28: plan gate deleted the unpushed branch `m044-openai-messages-cell-free-rows`. Its tests are at `a1fb74e` and `e3b521b` while git keeps the objects.
+- 2026-09-28: /milestone-implement started on branch `m044-json-body-as-written`. No implementation question was open, so the gate was skipped.
+- 2026-09-28: T1 done. The AC2 test went to a new file, `tests/testthat/test-body-write.R`, and `request_body_text()` joined `helper-mock-http.R` with a dry-run time limit. On main, eight AC1 values fail and the 2-by-2 control passes. All six AC2 functions fail at the time limit in the dry run.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
