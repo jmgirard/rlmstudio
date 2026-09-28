@@ -1,0 +1,108 @@
+# M039: The OpenAI chat function sends a classed messages list and refuses a data frame with a bad column name or an empty row
+
+- **Status:** planned
+- **Priority:** normal
+- **Depends on:** —
+- **Driving RR:** —
+- **Principles touched:** GP4
+- **Resolves:** —
+- **Surface tier:** user-facing — it changes what the exported `lms_chat_openai()` sends and refuses
+- **Branch/PR:** —
+
+## Goal
+
+`lms_chat_openai()` sends a `messages` list that has a class attribute at
+the outer level or on a message. It refuses a data frame that jsonlite sends
+with empty or renamed messages, before the server probe.
+
+## Scope
+
+**In:** The check in `R/utils-args.R` reads `messages` as the caller passed
+it. The call builds the request body without the class attribute of a list
+that is not a data frame. It also removes the class of each element. Two new data-frame
+rules, each with one detail text: a column rule (no columns, or a column
+name that is `NA`, empty, or repeated) and an empty-row rule. Help at
+`messages`, NEWS, and tests.
+
+**Out:** A class below the message level, such as a classed `content` value
+or a classed data-frame column, still reaches jsonlite. It becomes a new
+candidate row. A recursive rule must allow the classes jsonlite can write,
+such as `I()`, `Date`, and `factor`. Repeated field names inside a
+list message stay unchecked, because no finding reported them.
+
+## Acceptance criteria
+
+- [ ] AC1: When `messages` is a list that is not a data frame, the check
+      reads the value as passed, so a data frame or a `POSIXlt` value as a
+      message still aborts with the rule-4 text. After the check, the call
+      removes the class attribute of the outer list and of each of its
+      elements, and of nothing below them. The sent `messages` field of a
+      value with a class at those two levels equals the field sent for the
+      same value with no class. The tests vary the position: the outer list,
+      the first message, a later message, and both levels at once. They
+      also vary the form: one S3 class, a class vector of two entries,
+      `"list"`, and `I()`. A
+      field wrapped in `I()`, such as `role = I("user")`, is sent as the
+      array `["user"]`, as before. A `content` list with an S3 class still
+      fails in jsonlite, as before, because its class reaches jsonlite.
+- [ ] AC2: The call keeps the class vector of a data frame `messages`
+      value. Probes built with `structure()` for the class vectors
+      `c("tbl_df", "tbl", "data.frame")` and `c("foo", "data.frame")` are
+      sent as one message per row, and they meet the AC3 rules. The call
+      does not remove the class of a data-frame column. jsonlite handles it.
+- [ ] AC3: If a data frame `messages` value breaks one of two rules, the
+      call aborts before the server probe, with no condition class. The column
+      rule: it has no columns, or a column name that is `NA`, empty, or
+      repeated. Its detail text is "You gave a data frame that has no
+      columns or a column name that is missing or repeated.". The empty-row
+      rule: a row `i` for which `all(is.na(value)[i, ])` is `TRUE`, with the
+      data-frame method of `is.na()`. Its detail text is "You gave a data
+      frame with a row in which every cell is NA.". Each abort holds its own
+      detail text and no other rule's detail text. The call checks the
+      column rule first, so a data frame with no columns gets the column
+      text alone. The column-rule probes
+      are rows with zero columns, a column named `NA`, a column named `""`,
+      and two columns of the same name. The empty-row probes put `NA` in a
+      character, a numeric (`NaN` too), a factor, a `Date`, and a list
+      column. They put it at the first, a middle, and the last row, and in
+      a data frame of one row. A data frame that keeps both rules still
+      reaches the request. Two such probes are near the line. One has an
+      `NA` cell in every row. One has a row with one cell that is not `NA`.
+- [ ] AC4: The help of `lms_chat_openai()` at `messages` and NEWS.md state
+      the class removal at the two levels, that a class below them is not
+      removed, that a data frame and its columns keep their classes, and the
+      two data-frame rules.
+
+## Coverage
+
+- AC1 → T1, T2
+- AC2 → T1, T2
+- AC3 → T1, T3
+- AC4 → T4
+
+## Tasks
+
+- [ ] T1: Write the tests first in `tests/testthat/test-arg-guards.R`. Add
+      the two rule texts to `messages_rule_details` as `rule5` and
+      `rule6`. Add the AC3 probes to `messages_probes`. Add the AC1 and AC2
+      values to the `passes` table of the test "a messages value that keeps
+      every rule reaches the request". Add a rule-4 probe for a `POSIXlt`
+      message. Make sure that the new tests fail on main.
+- [ ] T2: In `lms_chat_openai()` (`R/chat.R:377`), build the body from the
+      value with its class removed at the two levels. Leave a data frame
+      alone. Plant a regression: remove the class removal, and make sure
+      that the AC1 tests go red.
+- [ ] T3: Add the two data-frame rules to `messages_fault()`
+      (`R/utils-args.R:366`), ahead of the `nrow()` return. Plant a wrong
+      detail text and make sure that the rule test goes red.
+- [ ] T4: Update the `messages` help at `R/chat.R:268-282` and add a NEWS
+      item. Run `devtools::document()`, `devtools::test()`, and
+      `devtools::check()` with the token from memory set.
+
+## Work log
+
+- 2026-09-27: created by /milestone-plan.
+- 2026-09-27: criteria audit (full mode, fresh [O] reader) returned ten findings. The draft took eight fixes. The check comes before the class removal, and the removal stops at two levels. `I()` on a field stays. The probes vary position and form. A classed data frame stays. `is.na()` defines the empty row. The criteria bind the function, and they name the two texts. Two findings went to the gate.
+- 2026-09-27: second audit pass (full mode, same reader) on the gate-changed criteria returned five findings, all fixed. The column rule runs first. AC2 names two `structure()` probes and leaves a column class to jsonlite. AC1 adds a classed `content` probe. AC4 covers the data-frame classes.
+- 2026-09-27: plan gate chose to remove the class after the check over refusing any class but `AsIs`, because no value that serializes today is refused; falsified by a classed list whose class carries meaning the server needs.
+- 2026-09-27: plan gate chose to refuse repeated column names over leaving them to jsonlite, because jsonlite renames them without a message; falsified by a user who relies on the `.1` rename.
