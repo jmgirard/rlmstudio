@@ -112,6 +112,8 @@ list message stay unchecked, because no finding reported them.
 - 2026-09-27: T4 done. The `messages` help and NEWS state the class removal, the kept classes, and the two data-frame rules. `devtools::document()` warns only on the known `@aliases` line (candidate row). `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
 - 2026-09-27: claim audit: 32 claims read, 3 corrected — R/utils-args.R, R/chat.R, man/lms_chat_openai.Rd, NEWS.md. The corrections cover the list-column NA row, which jsonlite writes as a `null` field, and a kept class, which fails only when no entry of its class vector has a jsonlite method. The re-read of the three is pending.
 - 2026-09-27: the claim re-read found two of the three corrections right. The `data_frame_messages_fault()` doc now says that the message has a `null` field for each list column, and one long comment line was rewrapped. The stopping rule ends the audit here. Status set to review.
+- 2026-09-27: review found four criteria met and eight findings. Two comment-only fixes landed after the gate.
+- 2026-09-27: step-7 approval: m039-openai-messages-class-and-frame approved for merge
 
 ## Review
 
@@ -134,3 +136,5 @@ Independent review: three fresh reviewers. The prior-review lens found no archiv
 - O6: a row of empty strings passes. The server checks content, as D-003 states. Proposed: reject.
 - O7 and S1: three roxygen comment lines in `R/utils-args.R` run past 80 characters. Proposed: fix now, comment only.
 - O8: the help sentence on a kept class is true, but for `c("foo", "bar")` jsonlite names `bar`, and the test covers a single class alone. Proposed: reject.
+
+Gate outcome, 2026-09-27: the maintainer accepted every proposed disposition. O5, O7, and S1 were fixed on the branch. The O5 comment was written against observed output: a character matrix writes `null` and a numeric one writes `"NA"`, which differs from the reviewer's account. Two comment lines were rewrapped. The detail string at `R/utils-args.R:431` stays one line, because it is a string that the tests match. `document()` left no diff, and the argument-guard tests passed. O1, O2, and O4 go to candidate rows at hygiene. O3, O6, and O8 are rejected.

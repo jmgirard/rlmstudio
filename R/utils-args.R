@@ -356,9 +356,9 @@ rlm_check_messages <- function(value) {
 #'
 #' jsonlite has no method for most S3 classes, so a list with such a class
 #' would fail after the server probe. The class goes from the outer list and
-#' from each message alone. A class below them, such as `I()` on a field, changes how
-#' jsonlite writes the field, so it stays. A data frame keeps its class,
-#' because `unclass()` turns it into a list of columns. Run it after
+#' from each message alone. A class below them, such as `I()` on a field,
+#' changes how jsonlite writes the field, so it stays. A data frame keeps its
+#' class, because `unclass()` turns it into a list of columns. Run it after
 #' `rlm_check_messages()`, which reads the value as the caller passed it.
 #'
 #' @param value A `messages` value that passed `rlm_check_messages()`.
@@ -413,10 +413,12 @@ messages_fault <- function(value) {
 #'
 #' jsonlite writes a data frame with no columns, or a row whose cells are all
 #' `NA`, as an empty message. When list columns hold the `NA`, the message has
-#' a `null` field for each list column. It writes a column named `NA` or `""`
-#' under a number, and it renames a repeated column name with a suffix. The column rule
-#' runs first, because a data frame with no columns also has rows in which
-#' every cell is `NA`.
+#' a `null` field for each list column. A matrix column is the exception: its
+#' `NA` cells are written as an array, of `null` for a character matrix and of
+#' `"NA"` for a numeric one, but such a row is refused all the same. jsonlite
+#' writes a column named `NA` or `""` under a number, and it renames a
+#' repeated column name with a suffix. The column rule runs first, because a
+#' data frame with no columns also has rows in which every cell is `NA`.
 #'
 #' @param value A data frame with at least one row.
 #' @return A one-sentence detail, or `NULL` when the value is usable.
