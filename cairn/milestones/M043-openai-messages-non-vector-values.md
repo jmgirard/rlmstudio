@@ -163,6 +163,8 @@ candidate row on such values closes with this milestone.
 - 2026-09-28: T5 done. After `lms server start` with the token set, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes at d3839fa.
 - 2026-09-28: claim audit: 38 claims read, 3 corrected — NEWS.md, R/chat.R, R/utils-args.R, man/lms_chat_openai.Rd. The NEWS entry now says that a class definition with no slot was sent as `[]` as a field or list cell. It says that the jsonlite warning came only for a data-frame column. The help and the `non_vector_type()` comment add the object-or-array case. The same reader re-read the three and found them correct. After the fixes, `devtools::test()` gave 426 tests, 0 failed, 0 skipped. The check ran before these comment and documentation fixes.
 - 2026-09-28: status set to review.
+- 2026-09-28: review gate: findings O1, O2, O5 fixed on the branch, eight rejected, all logged in the Review section.
+- 2026-09-28: step-7 approval: m043-openai-messages-non-vector-values approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -193,3 +195,4 @@ Independent review: three fresh reviewers, [O] diff, [S] history, [S] prior revi
 - S2: The deleted M042 test was one that RR01 said to keep. Proposed: reject, because RR01 option b-prime retires it and T3 records the reason.
 - S3: The NEWS edits to earlier development bullets state present behavior correctly. Noted, no action.
 - P: The prior-review lens found no finding that the diff reopens.
+- Gate 2026-09-28: the user accepted the proposed dispositions. O1, O2, and O5 were fixed on the branch, and the other eight were rejected with the reasons above. The help and NEWS now say that a classed vector or list passes and is written by its class. The help says what happens to an S4 object that contains `"numeric"` or `"list"`. The grid test states each type by hand. A planted `class(value)[1]` in `non_vector_type()` turned that test red. After the fixes, `devtools::test()` gave 426 tests, 0 failed, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.

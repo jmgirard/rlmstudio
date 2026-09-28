@@ -1564,15 +1564,36 @@ non_vector_positions <- list(
   }
 )
 
+# The type the error names for each kind, stated apart from the value, so a
+# wrong type in the detail fails the test.
+non_vector_types <- c(
+  "an environment" = "environment",
+  "a symbol" = "symbol",
+  "a call" = "language",
+  "a formula" = "language",
+  "an expression vector" = "expression",
+  "an external pointer" = "externalptr",
+  "an S4 object" = "S4",
+  "a reference-class object" = "S4",
+  "a class definition with a slot" = "S4",
+  "a class definition with no slot" = "S4",
+  "an environment with class POSIXt" = "environment",
+  "an environment with class classRepresentation" = "environment",
+  "a call with class function" = "language",
+  "an expression vector with class json" = "expression",
+  "an external pointer with class NULL" = "externalptr"
+)
+
 test_that("a value that is not a vector, a list, or NULL aborts with its own detail", {
   probe <- local_counting_probe()
   kinds <- non_vector_kinds()
+  expect_setequal(names(kinds), names(non_vector_types))
   n_cases <- 0L
 
   for (kind in names(kinds)) {
     for (position in names(non_vector_positions)) {
       value <- kinds[[kind]]()
-      type <- typeof(value)
+      type <- non_vector_types[[kind]]
       label <- paste(kind, "as", position)
       messages <- non_vector_positions[[position]](value)
       err <- expect_no_warning(

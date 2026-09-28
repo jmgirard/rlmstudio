@@ -89,12 +89,17 @@ class gets the error of this rule, not the error of a later one.
 \item Each value inside \code{messages}, in the places the rule above reads, is
 an atomic vector, a list, or \code{NULL}. An environment, a symbol, a
 call, a formula, an expression vector, an external pointer, or an S4
-object breaks this rule, and the error names its type. A class set
-by hand does not change the result. jsonlite would send such a value
-as printed text, as \code{null}, or as an object or array of other data,
-or it would fail. A \code{NULL} field passes and is sent
-as \code{null}. An S4 object whose class contains an atomic type, such as
-\code{"numeric"}, passes this rule.
+object breaks this rule, and the error names its type. The rule reads
+the storage type, so a class set by hand on such a value does not
+hide it. jsonlite would send such a value as printed text, as \code{null},
+or as an object or array of other data, or it would fail. A \code{NULL}
+field passes and is sent as \code{null}. An S4 object whose class contains
+an atomic type, such as \code{"numeric"}, passes this rule, and jsonlite
+sends its data part without its other slots. An S4 object whose class
+contains \code{"list"} passes, and the rule reads its elements. The rule
+does not read the class of a vector or a list. A vector with a class
+set by hand, such as \code{structure(1L, class = "NULL")}, passes, and
+jsonlite writes it by that class.
 \item jsonlite can write the value, with the options that the request uses.
 If it cannot, the error gives the jsonlite message. This rule is
 checked last.
