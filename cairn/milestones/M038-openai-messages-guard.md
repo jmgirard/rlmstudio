@@ -114,6 +114,7 @@ own candidate row.
 - 2026-09-27: status set to review.
 - 2026-09-27: review gate. Findings 1, 6, and 7 fixed on the branch, 2 and 3 moved to one candidate row, and 4, 5, and 8 rejected.
 - 2026-09-27: step-7 approval: m038-openai-messages-guard approved for merge
+- 2026-09-27: after the gate fixes, with the server on and the token set: devtools::test() 10334 passed, 0 failed. devtools::check() 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 
