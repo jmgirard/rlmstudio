@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-28 (M047 done, M044 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M048 | The embedding help page describes the cut of a text longer than the context | planned | none | normal | milestones/M048-embed-context-cut.md |
+| M048 | The embedding help page describes the cut of a text longer than the context | in-progress | none | normal | milestones/M048-embed-context-cut.md |
 | M047 | The embedding function sends a long input in batches | done | none | normal | milestones/archive/M047-embed-batches.md |
 | M046 | The OpenAI chat function counts an array row with no cells as a field value | done | M044 | normal | milestones/archive/M046-openai-messages-cell-free-rows.md |
 | M045 | The OpenAI chat function refuses a number that jsonlite writes as a string or drops | done | M044 | normal | milestones/archive/M045-openai-messages-non-finite-numbers.md |

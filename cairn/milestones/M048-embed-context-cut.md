@@ -1,13 +1,13 @@
 # M048: The embedding help page describes the cut of a text longer than the context
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — the help page of an exported function
-- **Branch/PR:** —
+- **Branch/PR:** m048-embed-context-cut
 
 ## Goal
 
@@ -53,7 +53,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
 
 ## Tasks
 
-- [ ] T1: Record the probe facts from Scope in `cairn/references/lmstudio-api-surface.md` as a dated
+- [x] T1: Record the probe facts from Scope in `cairn/references/lmstudio-api-surface.md` as a dated
       observation with the LM Studio version. Put it under the features of endpoints the package calls.
 - [ ] T2: Add a live test after the existing live test in `tests/testthat/test-embed.R` (near line 1110). It skips
       as that test does and never loads a model. It reads N from the `loaded_instances` config of
@@ -73,6 +73,8 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - 2026-09-28: criteria audit (full) by a fresh [O] reader returned six findings. All six were fixed before the gate. The claims name LM Studio 0.4.25+1. N comes from the loaded instance. The third text differs in its first word. One request carries all texts. The test checks for no warning and for `usage`. AC2 states the server behavior, not the test.
 - 2026-09-28: plan gate chose documenting the cut over a warning from an estimated token count. The server has no tokenize endpoint and reports 0 tokens, so an estimate fires wrongly in both directions. Falsified by an LM Studio reply or endpoint that gives a token count.
 - 2026-09-28: plan gate chose documenting the cut over splitting a long text and averaging the vectors. That changes what a vector means and needs a token count that the package cannot get. Falsified by a user who needs one vector for a whole long document.
+- 2026-09-28: implement started on branch m048-embed-context-cut. The question gate was skipped, because the plan left no choice open.
+- 2026-09-28: T1 done. The probe facts are an "Embedding context cut" entry in `cairn/references/lmstudio-api-surface.md`, dated and with the LM Studio version.
 
 ## Decisions
 
