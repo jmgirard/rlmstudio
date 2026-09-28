@@ -59,14 +59,18 @@ choice to send it as jsonlite writes it.
   The call aborts with the empty-row detail.
 - [ ] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
   atomic vector nor a list counts as not empty in each row. Examples are an
-  environment, a formula, a symbol, a call, an S4 object, an external
-  pointer, an expression vector, and a function. This holds for a column of
-  `messages` and for a column of a data-frame column. The call gives no R
-  warning for a column of these kinds. In a frame that breaks no other
-  `messages` rule and holds no function, a column of each of these kinds
-  other than a function aborts with the value-fault header and the
-  jsonlite-write detail. A function column in a row that is otherwise `NA`
-  aborts with the function detail.
+  environment, a formula, a symbol, a call, an S4 object whose `typeof()` is
+  `"S4"` (such as a reference-class object), an external pointer, an
+  expression vector, and a function (any value for which `is.function()` is
+  TRUE). This holds for a column of `messages` and for a column of a
+  data-frame column. `empty_rows()` gives no R warning for such a column. In
+  a frame that passes the shape, column-name, empty-row, list-`dim`,
+  nested-name and function rules, every such column aborts with the
+  value-fault header and the jsonlite-write detail. The one exception is an
+  S4 class definition with at least one slot
+  (`methods::is(x, "classRepresentation")` and `length(x@slots) > 0`), which
+  jsonlite writes as an object mapping slot names to class names. A function
+  column in a row that is otherwise `NA` aborts with the function detail.
 - [x] AC3: The `messages` help of `lms_chat_openai()` says that jsonlite
   does not unbox a value inside a list-matrix cell, at any depth in a list,
   unless `jsonlite::unbox()` wraps it. A data frame in a cell is sent as an
@@ -92,7 +96,7 @@ choice to send it as jsonlite writes it.
 <!-- owner: plan · create/amend-via-gate -->
 
 - AC1 → T1
-- AC2 → T2
+- AC2 → T2, T6
 - AC3 → T3
 - AC4 → T3
 - AC5 → T4
@@ -137,6 +141,17 @@ choice to send it as jsonlite writes it.
   `devtools::test()`, and `devtools::check()` with the API token (see the
   M009 lesson on the vignette build). Give a reason for each NOTE in the
   work log.
+- [ ] T6: Review return work. Add a test that calls `empty_rows()` on each
+  AC2 kind, at top level and inside a data-frame column, with a slotted
+  and a slotless class definition, a function, and a class generator. It
+  expects no warning and all `FALSE`. Add a probe for a slotted
+  class-definition column that expects the jsonlite warning and one server
+  probe, and one for a slotless column that expects the jsonlite-write
+  abort. Add a nested function-column probe and a no-warning check on the
+  function probe. Narrow NEWS.md to match AC2, and fix its sentence on list
+  arrays of three or more dimensions, which the empty-row error beats. Add
+  a candidate row for a slotted class-definition column. Run
+  `devtools::test()` and `devtools::check()`.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -164,6 +179,7 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: review returned the milestone to in-progress (defect return 1). AC2 fails: an S4 class-definition column warns from jsonlite and reaches the server probe. Proposed fix-now items O2 and O5 are in the Review section.
 - 2026-09-27: implement resumed. The question gate chose to narrow AC2 over a new refusal for S4 columns.
 - re-audit: AC2 (full) — the proposed narrowing was false for a class definition with no slots, which aborts at the trial write. "An S4 object that jsonlite can write" was unbounded. The reader offered a text that bounds the exception to a class definition with a slot and asked for an `empty_rows()`-level test and a NEWS fix. This is the second AC2 re-audit, so the wording goes to the user.
+- 2026-09-27: the user adopted the reader's AC2 text verbatim. AC2 now binds `empty_rows()` for the no-warning clause and excludes a class definition with a slot from the abort clause. T6 added for the review return work, and Coverage maps AC2 to T2 and T6.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
