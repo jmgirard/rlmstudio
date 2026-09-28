@@ -458,9 +458,10 @@ The condition carries a \code{status} field, which holds the HTTP response
 status as an integer. Today the status is always 200: each of these
 functions reads the body only after a 200, and reports every other status
 as an \code{rlmstudio_api_error} instead. A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}}
-also carries two more fields. The \code{content} field holds the reply content
-of the first choice, and the \code{finish_reason} field holds the finish reason
-of the first choice.
+about its reply also carries two more fields. A condition from the
+model-list lookup does not, as the "Reply from another model" section
+says. The \code{content} field holds the reply content of the first choice,
+and the \code{finish_reason} field holds the finish reason of the first choice.
 Both are \code{NULL} for a response with no \code{choices}. In the third case,
 \code{content} holds the value that was read, which is \code{NULL} for \code{null} or
 missing content. For the second, third, and fourth cases, the message names the
@@ -528,10 +529,9 @@ The check runs before the reply is read, so it also runs with
 \code{logprobs = TRUE}, with a \code{schema} on \code{\link[=lms_chat_openai]{lms_chat_openai()}}, and for a reply
 with no answer text. A reply is not checked if its body is not a JSON
 object, if it has no \code{model} field, or if its \code{model} is not one string or
-holds only whitespace. A body
-that is not a JSON object is returned with \code{simplify = FALSE}, and with
-\code{simplify = TRUE} it raises the error that the "Malformed response" section
-describes. If the instance that answered is
+holds only whitespace. A body that is not a JSON object is returned with
+\code{simplify = FALSE}, and with \code{simplify = TRUE} it raises the error that the
+"Malformed response" section describes. If the instance that answered is
 unloaded before the model-list request, the call aborts, also when that
 instance belongs to the asked model.
 

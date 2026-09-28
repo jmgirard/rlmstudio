@@ -246,9 +246,10 @@
 #' status as an integer. Today the status is always 200: each of these
 #' functions reads the body only after a 200, and reports every other status
 #' as an `rlmstudio_api_error` instead. A condition from [lms_chat_openai()]
-#' also carries two more fields. The `content` field holds the reply content
-#' of the first choice, and the `finish_reason` field holds the finish reason
-#' of the first choice.
+#' about its reply also carries two more fields. A condition from the
+#' model-list lookup does not, as the "Reply from another model" section
+#' says. The `content` field holds the reply content of the first choice,
+#' and the `finish_reason` field holds the finish reason of the first choice.
 #' Both are `NULL` for a response with no `choices`. In the third case,
 #' `content` holds the value that was read, which is `NULL` for `null` or
 #' missing content. For the second, third, and fourth cases, the message names the
@@ -312,10 +313,9 @@
 #' `logprobs = TRUE`, with a `schema` on [lms_chat_openai()], and for a reply
 #' with no answer text. A reply is not checked if its body is not a JSON
 #' object, if it has no `model` field, or if its `model` is not one string or
-#' holds only whitespace. A body
-#' that is not a JSON object is returned with `simplify = FALSE`, and with
-#' `simplify = TRUE` it raises the error that the "Malformed response" section
-#' describes. If the instance that answered is
+#' holds only whitespace. A body that is not a JSON object is returned with
+#' `simplify = FALSE`, and with `simplify = TRUE` it raises the error that the
+#' "Malformed response" section describes. If the instance that answered is
 #' unloaded before the model-list request, the call aborts, also when that
 #' instance belongs to the asked model.
 #'

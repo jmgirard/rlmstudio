@@ -141,7 +141,10 @@ two_models_list <- function() {
 }
 
 # The label that opens each route's messages.
-route_label <- c(openai = "OpenAI API Failed", openresponses = "OpenResponses Failed")
+route_label <- c(
+  openai = "OpenAI API Failed",
+  openresponses = "OpenResponses Failed"
+)
 
 # Assert that `err` reports a reply from `reply_model` to a call for `asked`.
 expect_mismatch <- function(err, asked, reply_model, info = NULL) {
@@ -497,7 +500,10 @@ test_that("a lookup body that does not parse raises a bad response", {
     )
     expect_false(inherits(err, "rlmstudio_model_mismatch"), info = route)
     expect_lookup_message(err, route)
-    expect_true(grepl("did not parse as JSON", conditionMessage(err)), info = route)
+    expect_true(
+      grepl("did not parse as JSON", conditionMessage(err)),
+      info = route
+    )
     expect_false(
       any(c("content", "finish_reason") %in% names(err)),
       info = route
@@ -518,7 +524,10 @@ test_that("a lookup body that fails a model-list check raises a bad response", {
     )
     expect_false(inherits(err, "rlmstudio_model_mismatch"), info = route)
     expect_lookup_message(err, route)
-    expect_true(grepl("`models` is not an array", conditionMessage(err)), info = route)
+    expect_true(
+      grepl("`models` is not an array", conditionMessage(err)),
+      info = route
+    )
   }
 })
 

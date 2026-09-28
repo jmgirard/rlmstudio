@@ -130,7 +130,7 @@ before each request was rejected at the gate (work log).
       that also drops the S4 bit, such as with `as.character()`. Tests first on both routes with both settings of
       `simplify`: an S4 subclass of `character` answered by the same model sends 1 request. Move the `class` option
       of `rlm_abort_bad_response()` after `...`.
-- [ ] T10: Review findings R3 to R8. Add the `code` field to the `rlm_abort_api()` line of `cairn/DESIGN.md`. Add
+- [x] T10: Review findings R3 to R8. Add the `code` field to the `rlm_abort_api()` line of `cairn/DESIGN.md`. Add
       one D-entry that annotates D-024 and D-025 with the fourth batch difference. Fix the comment at
       `R/chat.R:514` and the "Malformed response" text so that a failed lookup is the exception. Run Air on the
       lines the branch added. Rewrap the T8 help text. Give each unload in the recorder `finally` clause its own
@@ -169,6 +169,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: review return 2 (defect): AC2(a) fails, because an S4 model string that the same model answers aborts as a mismatch. The user chose to send it back at the gate. Status in-progress, AC2 unticked, with T9 and T10 added. R9 joined the candidate row.
 - 2026-09-28: implement resumed on the branch, which already contains `origin/main`. Question gate skipped, because T9 and T10 leave no choice open.
 - 2026-09-28: T9 done. The new S4 test failed on all 4 route and `simplify` cases with a second request, the lookup. `check_reply_model()` now reads the asked name as `unclass(model)[[1]]`. In a scratch run it gave the plain string for an S4, named, `glue`, and plain name, and for an S3 class with its own `as.character()` method, where `as.character()` did not. The `class` option of `rlm_abort_bad_response()` now follows `...`, and its one caller names it in full. Suite: 489 tests, 0 failed, 0 skipped.
+- 2026-09-28: T10 done. DESIGN.md names the `code` field, and D-026 records the fourth batch difference, after `R/embed.R` showed that the embedding batch stops only at 401, 403, and 404. The comment, the helper doc, and the "Malformed response" text now except a lookup condition, and the T8 help text is rewrapped. Each recorder unload runs alone, and a scratch run showed a failed unload warn while the other ran and the first error surfaced. `air format` rewrote the two new files, and two branch hunks in `R/chat.R` were fixed by hand. Three older hits stay, and no `air.toml` exists. Suite: 489 tests, 0 failed. `devtools::check()` gave 0 errors, 0 warnings, 0 notes, a second `devtools::document()` changed nothing, and the server was started again.
 
 ## Decisions
 

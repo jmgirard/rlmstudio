@@ -218,7 +218,14 @@ lms_chat_openresponses <- function(
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "OpenResponses Failed")
-    check_reply_model(resp, resp_data, model, host, token, "OpenResponses Failed")
+    check_reply_model(
+      resp,
+      resp_data,
+      model,
+      host,
+      token,
+      "OpenResponses Failed"
+    )
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -511,8 +518,9 @@ lms_chat_openai <- function(
     httr2::req_perform()
 
   if (httr2::resp_status(resp) == 200) {
-    # Every OpenAI condition carries these two fields, so a caller can read
-    # them without checking which fault it caught.
+    # Every OpenAI condition about the reply carries these two fields, so a
+    # caller can read them without checking which fault it caught. A
+    # condition from the model-list lookup does not.
     resp_data <- parse_ok_body(
       resp,
       "OpenAI API Failed",
@@ -670,7 +678,8 @@ warn_if_cut_off <- function(finish_reason) {
 #' @param resp_data The parsed response body.
 #' @param label Character. The calling wrapper's label.
 #' @param ... Extra condition fields, such as the `content` and
-#'   `finish_reason` fields that every OpenAI condition carries.
+#'   `finish_reason` fields that every OpenAI condition about the reply
+#'   carries.
 #'
 #' @noRd
 check_body_object <- function(resp, resp_data, label, ...) {
@@ -730,8 +739,11 @@ check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
     resp,
     label,
     paste0(
-      "The reply came from the model \"", reply_model,
-      "\", not from the model \"", model, "\" that the call asked for."
+      "The reply came from the model \"",
+      reply_model,
+      "\", not from the model \"",
+      model,
+      "\" that the call asked for."
     ),
     hint = paste(
       "LM Studio can answer a model name that it cannot find with a model",

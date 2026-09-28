@@ -50,8 +50,12 @@
 for (pkg in c("pkgload", "httptest2", "withr")) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     stop(
-      "This script needs the ", pkg, " package. ",
-      "Install it with install.packages(\"", pkg, "\").",
+      "This script needs the ",
+      pkg,
+      " package. ",
+      "Install it with install.packages(\"",
+      pkg,
+      "\").",
       call. = FALSE
     )
   }
@@ -75,8 +79,12 @@ loaded <- list_models(loaded = TRUE, type = "llm", quiet = TRUE, host = host)
 loaded_keys <- if (nrow(loaded) > 0) loaded$key else character()
 if (length(setdiff(loaded_keys, first)) > 0) {
   stop(
-    "Unload every chat model other than ", first, " first. ",
-    "Loaded now: ", paste(loaded_keys, collapse = ", "), ".",
+    "Unload every chat model other than ",
+    first,
+    " first. ",
+    "Loaded now: ",
+    paste(loaded_keys, collapse = ", "),
+    ".",
     call. = FALSE
   )
 }
@@ -119,13 +127,27 @@ lms_cli <- function(...) {
   }
 }
 
+# Unload a model that this script loaded. A failed unload warns, so it does
+# not skip the other unload or hide the error that ended the recording.
+unload_quietly <- function(id) {
+  tryCatch(
+    lms_unload(id, host = host),
+    error = function(e) {
+      warning("Unloading ", id, " failed: ", conditionMessage(e), call. = FALSE)
+    }
+  )
+}
+
 # `on.exit()` at the top level of a script run by Rscript never runs, so the
-# unloads sit in a `finally` clause instead.
+# unloads sit in a `finally` clause instead. Each flag is set only after its
+# load succeeds.
+first_loaded <- FALSE
 second_loaded <- FALSE
 invisible(tryCatch(
   {
     if (!was_loaded) {
       lms_load(first, host = host)
+      first_loaded <- TRUE
     }
     record_case("unknown", "not-a-model")
     record_case("case", "Google/Gemma-3-1B")
@@ -136,10 +158,10 @@ invisible(tryCatch(
   },
   finally = {
     if (second_loaded) {
-      lms_unload(second_id, host = host)
+      unload_quietly(second_id)
     }
-    if (!was_loaded) {
-      lms_unload(first, host = host)
+    if (first_loaded) {
+      unload_quietly(first)
     }
   }
 ))
@@ -148,7 +170,11 @@ invisible(tryCatch(
 # `.json` body, and any other reply as a `.R` file that rebuilds the response.
 recorded <- function(case_dir, route) {
   dir <- file.path(fresh, case_dir, "localhost-1234", "v1")
-  pattern <- if (route == "openai") "^completions-.*-POST" else "^responses-.*-POST"
+  pattern <- if (route == "openai") {
+    "^completions-.*-POST"
+  } else {
+    "^responses-.*-POST"
+  }
   path <- if (route == "openai") file.path(dir, "chat") else dir
   file <- list.files(path, pattern = pattern, full.names = TRUE)
   if (length(file) != 1L) {
@@ -167,14 +193,31 @@ recorded <- function(case_dir, route) {
 expect_reply <- function(case_dir, status, model = NULL, code = NULL) {
   for (route in c("openai", "openresponses")) {
     got <- recorded(case_dir, route)
-    message(case_dir, " ", route, ": status ", got$status,
-            ", model ", format(got$body[["model"]]),
-            ", error.code ", format(got$body[["error"]][["code"]]))
-    if (!identical(got$status, status) ||
+    message(
+      case_dir,
+      " ",
+      route,
+      ": status ",
+      got$status,
+      ", model ",
+      format(got$body[["model"]]),
+      ", error.code ",
+      format(got$body[["error"]][["code"]])
+    )
+    if (
+      !identical(got$status, status) ||
         (!is.null(model) && !identical(got$body[["model"]], model)) ||
-        (!is.null(code) && !identical(got$body[["error"]][["code"]], code))) {
-      stop("The ", case_dir, " case on the ", route, " route did not ",
-           "record the reply the tests expect.", call. = FALSE)
+        (!is.null(code) && !identical(got$body[["error"]][["code"]], code))
+    ) {
+      stop(
+        "The ",
+        case_dir,
+        " case on the ",
+        route,
+        " route did not ",
+        "record the reply the tests expect.",
+        call. = FALSE
+      )
     }
   }
 }
