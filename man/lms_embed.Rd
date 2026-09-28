@@ -11,7 +11,9 @@ lms_embed(
   simplify = TRUE,
   ...,
   ttl = NULL,
-  token = NULL
+  token = NULL,
+  batch_size = 100,
+  quiet = NULL
 )
 }
 \arguments{
@@ -44,6 +46,12 @@ setting is on. A model that is already loaded keeps its idle time.}
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
+
+\item{batch_size}{A whole number from 1 to \code{.Machine$integer.max}. The
+most texts that one request carries.}
+
+\item{quiet}{Logical or \code{NULL}. Whether to suppress the progress bar. \code{NULL}
+reads the \code{rlmstudio.quiet} option.}
 }
 \value{
 If \code{simplify = FALSE}, a list representing the raw JSON response.

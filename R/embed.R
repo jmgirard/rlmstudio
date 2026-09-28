@@ -27,6 +27,10 @@
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
+#' @param batch_size A whole number from 1 to `.Machine$integer.max`. The
+#'   most texts that one request carries.
+#' @param quiet Logical or `NULL`. Whether to suppress the progress bar. `NULL`
+#'   reads the `rlmstudio.quiet` option.
 #' @return If `simplify = FALSE`, a list representing the raw JSON response.
 #'   Otherwise, a double matrix with one row per input text and one column per
 #'   embedding dimension. The row at position `i` holds the embedding that the
@@ -51,11 +55,14 @@ lms_embed <- function(
   simplify = TRUE,
   ...,
   ttl = NULL,
-  token = NULL
+  token = NULL,
+  batch_size = 100,
+  quiet = NULL
 ) {
   rlm_check_id(model, "model")
   rlm_check_text(input, "input")
   rlm_check_ttl(ttl)
+  rlm_check_batch_size(batch_size)
 
   stop_if_no_server(host)
 

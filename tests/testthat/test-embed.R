@@ -588,3 +588,59 @@ test_that("lms_embed sends no Authorization header without a token", {
   headers <- request_target(run$requests[[1]])$headers
   expect_null(headers$authorization)
 })
+
+
+# The batch size ------------------------------------------------------------
+
+# Each value is a fault of a different kind: no value, a missing value of two
+# types, a value of the wrong type, two values, and five numbers out of range
+# or not whole.
+batch_size_bad_values <- list(
+  NULL,
+  NA,
+  NA_real_,
+  TRUE,
+  "10",
+  c(1, 2),
+  0,
+  -1,
+  1.5,
+  Inf,
+  2^31
+)
+
+test_that("a bad batch_size aborts, named, before the server probe", {
+  probe <- new.env(parent = emptyenv())
+  probe$calls <- 0L
+  local_mocked_bindings(
+    is_server_running = function(...) {
+      probe$calls <- probe$calls + 1L
+      TRUE
+    }
+  )
+  recorder <- local_request_recorder()
+
+  for (value in batch_size_bad_values) {
+    label <- paste("batch_size =", deparse(value))
+    err <- expect_error(
+      lms_embed("test-embed", three_inputs, batch_size = value),
+      "`batch_size` must be one whole number from 1 to",
+      fixed = TRUE,
+      info = label
+    )
+    # An argument fault carries no condition class of the package (D-008).
+    expect_false(
+      inherits(err, c("rlmstudio_no_server", "rlmstudio_api_error")),
+      info = label
+    )
+  }
+  expect_identical(probe$calls, 0L)
+  expect_length(recorder$requests, 0L)
+})
+
+test_that("a good batch_size passes the check", {
+  for (value in list(1, 1L, 3, 100, .Machine$integer.max)) {
+    run <- drive_embed(in_order_body, input = three_inputs, batch_size = value)
+    expect_identical(dim(run$value), c(3L, 5L), info = deparse(value))
+  }
+})

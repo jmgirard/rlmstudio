@@ -1,13 +1,13 @@
 # M047: The embedding function sends a long input in batches
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP3, GP4, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — it adds two arguments and changes the `simplify = FALSE` return of an exported function
-- **Branch/PR:** —
+- **Branch/PR:** m047-embed-batches
 
 ## Goal
 
@@ -82,7 +82,7 @@ requests: none were asked for, so nothing records them.
 
 ## Tasks
 
-- [ ] T1: Add `batch_size = 100` and `quiet = NULL` after `...` in `lms_embed()` (`R/embed.R`). Add a
+- [x] T1: Add `batch_size = 100` and `quiet = NULL` after `...` in `lms_embed()` (`R/embed.R`). Add a
       `rlm_check_batch_size()` in `R/utils-args.R` modeled on `rlm_check_ttl()`, but with no `NULL`. Call it
       before `stop_if_no_server()`. Tests first (AC2).
 - [ ] T2: Split `input` into consecutive batches and send one request per batch. Build each batch's rows with
@@ -106,6 +106,8 @@ requests: none were asked for, so nothing records them.
 - 2026-09-28: plan gate chose the name `batch_size` over `chunk_size` because "chunk" in embedding work names splitting one long text. Falsified by users who look for `chunk_size` and miss the argument.
 - 2026-09-28: plan gate chose a default of 100 over one request by default because speed was flat from 8 texts per request upward. Falsified by a server or model on which 100 texts per request is measurably slower than one request.
 - 2026-09-28: plan gate chose to keep going past a failed batch over stopping at the first failure because it follows D-011 and D-019 and keeps finished rows. Falsified by a user who needs the call to stop at the first failed batch.
+- 2026-09-28: implement started on m047-embed-batches. No gate questions were open, because the plan gate settled the name, the default, and the failure rule.
+- 2026-09-28: T1 done. `rlm_check_batch_size()` reuses `ttl_fault()` and rejects `NULL`. The eleven-value test went red with the check moved after the probe.
 
 ## Decisions
 
