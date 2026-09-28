@@ -209,6 +209,7 @@ lms_chat_openresponses <- function(
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "OpenResponses Failed")
+    check_reply_model(resp, resp_data, model, host, token, "OpenResponses Failed")
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -504,6 +505,16 @@ lms_chat_openai <- function(
       content = NULL,
       finish_reason = NULL
     )
+    check_reply_model(
+      resp,
+      resp_data,
+      model,
+      host,
+      token,
+      "OpenAI API Failed",
+      content = NULL,
+      finish_reason = NULL
+    )
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
@@ -657,6 +668,102 @@ check_body_object <- function(resp, resp_data, label, ...) {
       ...
     )
   }
+}
+
+#' Abort on a chat reply from a model other than the one asked for
+#'
+#' LM Studio can answer a model name that it cannot find with a reply from
+#' the one chat model it has loaded, under status 200 (M049 work log). The
+#' `model` field of the reply names the loaded instance that answered. Its id
+#' can differ from the key the caller asked for, so a name that differs
+#' starts one model-list request, and the reply is accepted when the
+#' answering instance belongs to a model whose key equals the asked name in
+#' any letter case (D-025). A reply with no `model` string is not checked.
+#' Fields are read with `[[`, because `$` would read a field whose name only
+#' starts with the one asked for.
+#'
+#' Runs before the caller's `simplify` branch, so `simplify = FALSE` cannot
+#' return a reply from the wrong model.
+#'
+#' @param resp The httr2 response, for the status the abort carries.
+#' @param resp_data The parsed response body.
+#' @param model Character. The model name the call sent.
+#' @param host,token The host and token of the call, for the model list.
+#' @param label Character. The calling wrapper's label.
+#' @param ... Extra condition fields, such as the `content` and
+#'   `finish_reason` fields that every OpenAI condition carries.
+#'
+#' @noRd
+check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
+  reply_model <- if (is_json_object(resp_data)) resp_data[["model"]]
+  if (!is_one_string(reply_model) || !grepl("[^[:space:]]", reply_model)) {
+    return(invisible())
+  }
+  if (identical(reply_model, model)) {
+    return(invisible())
+  }
+  if (reply_model_serves(model, reply_model, host, token, label)) {
+    return(invisible())
+  }
+  # The names are placed in the detail as text, so braces in a name that the
+  # server sent are not read as cli markup.
+  rlm_abort_bad_response(
+    resp,
+    label,
+    paste0(
+      "The reply came from the model \"", reply_model,
+      "\", not from the model \"", model, "\" that the call asked for."
+    ),
+    hint = paste(
+      "LM Studio can answer a model name that it cannot find with a model",
+      "that is loaded. Check the name with",
+      "{.code list_models(loaded = TRUE)}, or load the model with",
+      "{.fn lms_load}."
+    ),
+    class = "rlmstudio_model_mismatch",
+    model = model,
+    reply_model = reply_model,
+    ...
+  )
+}
+
+#' Does a loaded instance of the asked model have the reply's id?
+#'
+#' Reads the model list of every model type through the checks of
+#' `list_models()`, with no message. A failed lookup raises the condition of
+#' that failure, under a label that names the chat function and the lookup.
+#'
+#' @param model Character. The model name the call sent.
+#' @param reply_model Character. The `model` field of the reply.
+#' @param host,token The host and token of the call.
+#' @param label Character. The calling wrapper's label.
+#' @return `TRUE` when a model whose key equals `model` in any letter case has
+#'   a loaded instance whose id is `reply_model`, else `FALSE`.
+#'
+#' @noRd
+reply_model_serves <- function(model, reply_model, host, token, label) {
+  lookup_label <- paste0(label, ", because the model-list lookup failed")
+  if (!is_server_running(host)) {
+    cli::cli_abort(
+      c(
+        "x" = "{lookup_label}: the LM Studio server is not running.",
+        "i" = "Run {.fn lms_server_start} first."
+      ),
+      class = "rlmstudio_no_server",
+      call = NULL
+    )
+  }
+  models <- request_model_list(host, token, lookup_label)$body[["models"]]
+  for (entry in models) {
+    if (!identical(tolower(entry[["key"]]), tolower(model))) {
+      next
+    }
+    ids <- vapply(entry[["loaded_instances"]], \(x) x[["id"]], character(1))
+    if (reply_model %in% ids) {
+      return(TRUE)
+    }
+  }
+  FALSE
 }
 
 #' Build the structured-output field of a chat completions request

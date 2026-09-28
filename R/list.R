@@ -58,20 +58,9 @@ list_models <- function(
 ) {
   stop_if_no_server(host)
 
-  resp <- lms_client(host, token = token) |>
-    httr2::req_url_path("api/v1/models") |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
-
-  if (httr2::resp_status(resp) != 200) {
-    rlm_abort_api(resp, "API List Failed", !is.null(rlm_token(token)))
-  }
-
-  body <- parse_ok_body(resp, "API List Failed")
-  fault <- model_list_fault(body)
-  if (!is.null(fault)) {
-    rlm_abort_bad_reply(resp, "API List Failed", fault, "a model list")
-  }
+  got <- request_model_list(host, token, "API List Failed")
+  resp <- got$resp
+  body <- got$body
 
   if (length(body[["models"]]) == 0) {
     if (!quiet) {
@@ -137,6 +126,38 @@ list_models <- function(
   }
 
   return(df)
+}
+
+#' Request the model list and check its body
+#'
+#' The request and the checks that `list_models()` runs after its server
+#' probe. The model check of the chat functions runs them too, so a model list
+#' fails there with the same classes.
+#'
+#' @param host Character. The base URL of the server.
+#' @param token Character or `NULL`. The API token, resolved as the calling
+#'   function resolves it.
+#' @param label Character. The label that opens every message.
+#' @return A list with `resp`, the httr2 response, and `body`, the body as
+#'   `parse_json_body()` returns it with `simplifyVector = FALSE`.
+#'
+#' @noRd
+request_model_list <- function(host, token, label) {
+  resp <- lms_client(host, token = token) |>
+    httr2::req_url_path("api/v1/models") |>
+    httr2::req_error(is_error = \(resp) FALSE) |>
+    httr2::req_perform()
+
+  if (httr2::resp_status(resp) != 200) {
+    rlm_abort_api(resp, label, !is.null(rlm_token(token)))
+  }
+
+  body <- parse_ok_body(resp, label)
+  fault <- model_list_fault(body)
+  if (!is.null(fault)) {
+    rlm_abort_bad_reply(resp, label, fault, "a model list")
+  }
+  list(resp = resp, body = body)
 }
 
 #' Find the first way a model-list body breaks its shape rules
