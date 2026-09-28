@@ -33,20 +33,20 @@ chat functions take no `messages` argument.
 
 ## Acceptance criteria
 
-- [ ] AC1: A data-frame `messages` value with a row in which each cell is
+- [x] AC1: A data-frame `messages` value with a row in which each cell is
   `NA` or is a list-column cell that is `NULL` aborts before the server
   probe. The abort gives the empty-row detail text. A row with a `list()` or
   a `list(NA)` cell and `NA` in every other cell reaches the request. Tests in
   `tests/testthat/test-arg-guards.R` fire the abort for a plain list column
   and for an `I()` list column, and send the two passing rows.
-- [ ] AC2: A `messages` list that is not a data frame and has a `dim`
+- [x] AC2: A `messages` list that is not a data frame and has a `dim`
   attribute aborts before the server probe. A list message with a `dim`
   attribute also aborts there. Each abort has its own detail text. Each
   `dim` rule runs before the names rule at its level. Tests fire the first
   for a list-matrix and for a one-dimensional list array with and without
   names. Tests fire the second for a one-dimensional list array with names
   as a message.
-- [ ] AC3: A walk reads each message and each list and data frame below it.
+- [x] AC3: A walk reads each message and each list and data frame below it.
   For a data-frame `messages` value, it starts at each cell of a list column
   and at each data-frame column. The names of a list column itself are not
   read, because jsonlite does not write them. The walk reads the names
@@ -60,7 +60,7 @@ chat functions take no `messages` argument.
   a nested data-frame column with an empty name. Tests also show that a
   fully named and an unnamed nested list, and a list column with names,
   reach the request.
-- [ ] AC4: The call writes `unclass_messages(messages)` with
+- [x] AC4: The call writes `unclass_messages(messages)` with
   `jsonlite::toJSON(auto_unbox = TRUE, digits = 22, null = "null")`. The
   write comes after the rules of AC1 to AC3 and the older `messages` rules,
   and before the server probe. If that
@@ -72,7 +72,7 @@ chat functions take no `messages` argument.
   and an `I()` field reach the request. For each rule of AC1 to AC3, a test
   sends a value that breaks that rule and also fails the write, and gets the
   rule's detail text.
-- [ ] AC5: The help at `messages` in `R/chat.R` and NEWS.md state the rules
+- [x] AC5: The help at `messages` in `R/chat.R` and NEWS.md state the rules
   of AC1 to AC4. The help no longer says that the package leaves the content
   of a message to the server alone. `devtools::document()` gives no diff.
   `devtools::test()` passes. `devtools::check()` gives 0 errors and 0
@@ -128,3 +128,26 @@ chat functions take no `messages` argument.
 ## Decisions
 
 ## Review
+
+Evidence, 2026-09-27, branch head c4d1762, up to date with `origin/main`. `devtools::test()`: 0 failed, 0 errors, 0 skipped, 10966 expectations. The `arg-guards` file alone has 2094. Each probe below was also run by hand through `rlm_check_messages()`. `R/chat.R:397` calls it before `stop_if_no_server()` at `R/chat.R:402`.
+
+- AC1: a row of `NA` and a `NULL` cell aborts with the empty-row detail. This holds in a plain list column and in an `I()` list column. A row with a `list()` cell and a row with a `list(NA)` cell pass. The probe tables in `tests/testthat/test-arg-guards.R` hold both aborts and the two passing rows.
+- AC2: a list-matrix, a one-dimensional list array, and the same array with names each abort with the outer `dim` detail. A message that is a one-dimensional list array with names aborts with the message `dim` detail. The named cases get the `dim` text and not the names text, so each `dim` rule runs first. The probe table holds all four.
+- AC3: the five list-form probes and the two data-frame probes each abort with the names detail. A fully named nested list, an unnamed nested list, and a list column whose own names repeat each pass. The probe tables hold all ten cases.
+- AC4: `messages_write_fault()` calls `jsonlite::toJSON()` on `unclass_messages(value)` with `auto_unbox = TRUE`, `digits = 22`, and `null = "null"`. If `messages_fault()` finds nothing, it runs. Four values each abort with "You gave a value that jsonlite cannot write:" and the jsonlite text. They are a `"foo"` field, a `"foo"` data-frame column, an environment field, and a `quote()` field. The error class is `rlang_error`, `error`, `condition` only. A test with the class `"{x}"` shows the braces reach the message as written. A `Date`, a `factor`, and an `I()` field pass. Four rule-order probes break one rule each and also fail the write, and each gets its rule's detail. A separate test shows each of the four fails the write alone.
+- AC5: the help at `messages` in `R/chat.R` and `man/lms_chat_openai.Rd` list the empty-row, two `dim`, names, and write rules. The old sentence that left the content of a message to the server is gone. The new text says the package checks the shape and the write, and not the field values. NEWS.md has one entry with four sub-items, one per rule, with no milestone numbers. `devtools::document()` left the tree clean, apart from the known `@aliases` warning at `R/conditions.R:257`. `devtools::test()` passed as above. `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate: `cairn_validate.py` exit 0, all checks pass. No DESIGN principle changed, so `cairn_impact` was skipped. README.Rmd and README.md are unchanged on the branch. No `_pkgdown.yml`. No new top-level files.
+
+Findings from three fresh reviewers, ranked. Disposition is set at the merge gate.
+
+- O1: `empty_rows()` tests a list column before the `dim` branch. A list-matrix column then gives one value per cell and not per row. `data.frame(role = c("user", NA))` with `m = matrix(list(1, NULL, NULL, 2), 2)` aborts, but jsonlite writes row 2 as `{"m":[null,[2]]}`. Reproduced. On main this value passed.
+- O2: a nested data-frame column reads `is.na()` only, so a `NULL` list cell inside it does not count as empty. A row of `NA` and such a cell passes and sends `{"sub":{"b":null}}`.
+- O3: `has_bad_name()` recurses outside any handler. At 3000 levels of nesting the call fails with "node stack overflow", which does not name `messages`. It still stops before the server probe.
+- O4: the empty-row detail says "every cell is NA" also for a row that holds a `NULL` cell.
+- O5: a write abort keeps the header "`messages` must be a data frame or an unnamed list of messages" and the named-list hint. Neither states the fault for an environment field.
+- O6: the help bullet "A list that is not a data frame has no `dim` attribute" reads as any list. The code checks only `messages` itself and each message.
+- O7: the help says names are checked on each list or data frame inside a cell or column. A matrix column with repeated column names and a named atomic field pass, because jsonlite writes them as arrays.
+- O8: a function field and a `POSIXlt` field pass. Both are in the Out list and a candidate row.
+- S1: the M039 test "a class below the message level still reaches jsonlite" was removed. T4 planned this, and the rule10 probes cover the same values.
+- S2: the internal roxygen of `rlm_check_messages()` cites D-020 for leaving field values to the server. D-020 is about the package checking a named argument.
+- P: prior-review lens found no regression of an archived review finding. No inline PR review comments exist on GitHub.
