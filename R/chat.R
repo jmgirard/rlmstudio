@@ -283,9 +283,11 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   * A data frame has at least one column, and no column name is `NA`,
 #'     empty, or repeated.
 #'   * A data frame has no row in which every cell is `NA` or is a `NULL`
-#'     cell of a list column. jsonlite writes both as `null`. A `list()` cell
-#'     is sent as `[]` and a `list(NA)` cell as `[null]`, so a row with such a
-#'     cell is sent.
+#'     cell of a list column. jsonlite leaves out an `NA` cell of another
+#'     column and writes an `NA` or `NULL` list cell as `null`, so such a row
+#'     holds no field value. A `list()`
+#'     cell is sent as `[]` and a `list(NA)` cell as `[null]`, so a row with
+#'     such a cell is sent.
 #'   * A list that is not a data frame has no `dim` attribute, such as a
 #'     matrix or an array of messages.
 #'   * A message that is a list has no `dim` attribute.

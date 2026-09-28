@@ -1002,7 +1002,7 @@ messages_probes <- list(
     rule = "rule6"
   ),
   # The dim rules run before the names rule at their level, so a list array
-  # with dimnames, which names() reads, gets the dim text.
+  # of one dimension with dimnames, which names() reads, gets the dim text.
   list(
     label = "a list-matrix of messages",
     value = matrix(

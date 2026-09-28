@@ -39,9 +39,11 @@ as an element breaks this rule.
 \item A data frame has at least one column, and no column name is \code{NA},
 empty, or repeated.
 \item A data frame has no row in which every cell is \code{NA} or is a \code{NULL}
-cell of a list column. jsonlite writes both as \code{null}. A \code{list()} cell
-is sent as \verb{[]} and a \code{list(NA)} cell as \verb{[null]}, so a row with such a
-cell is sent.
+cell of a list column. jsonlite leaves out an \code{NA} cell of another
+column and writes an \code{NA} or \code{NULL} list cell as \code{null}, so such a row
+holds no field value. A \code{list()}
+cell is sent as \verb{[]} and a \code{list(NA)} cell as \verb{[null]}, so a row with
+such a cell is sent.
 \item A list that is not a data frame has no \code{dim} attribute, such as a
 matrix or an array of messages.
 \item A message that is a list has no \code{dim} attribute.

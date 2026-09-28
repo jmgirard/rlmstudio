@@ -419,8 +419,8 @@ unclass_messages <- function(value) {
 #' `unclass_messages()` runs `lapply()`, which drops a `dim` attribute, so a
 #' list-matrix would be sent flat in column order. A message with a `dim` is
 #' written with each field boxed in an array. Each `dim` rule runs before the
-#' names rule at its level, because `names()` reads the dimnames of a list
-#' array.
+#' names rule at its level, because `names()` reads the dimnames of a
+#' one-dimensional list array.
 #'
 #' @param value The value the caller passed.
 #' @return A one-sentence detail, or `NULL` when the value is usable.
@@ -556,13 +556,16 @@ data_frame_messages_fault <- function(value) {
   nested_names_fault(value)
 }
 
-#' Which rows of a messages data frame does jsonlite write as nothing?
+#' Which rows of a messages data frame hold no field value?
 #'
 #' A cell is empty when `is.na()` says so, or when it is a `NULL` cell of a
-#' list column. jsonlite writes both as `null`. A `list()` cell is written as
-#' `[]` and a `list(NA)` cell as `[null]`, which are field values, so neither
-#' is empty. A matrix or data-frame column counts as empty in a row when each
-#' of its cells there is `NA`. The columns are read one at a time, because
+#' list column. jsonlite leaves out an atomic `NA` cell and writes an `NA` or
+#' `NULL` list cell as `null`. A `list()` cell is written as `[]` and a
+#' `list(NA)` cell as `[null]`, which are field values, so neither is empty.
+#' A matrix or data-frame column counts as empty in a row when each of its
+#' cells there is `NA`. jsonlite writes such a matrix row as `"NA"` strings,
+#' but the rule refuses the row, as it did before `NULL` cells counted. The
+#' columns are read one at a time, because
 #' `is.na()` on the whole data frame spreads such a column over several.
 #'
 #' @param value A data frame.
