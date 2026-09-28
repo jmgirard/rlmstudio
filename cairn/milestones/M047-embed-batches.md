@@ -88,7 +88,7 @@ requests: none were asked for, so nothing records them.
 - [x] T2: Split `input` into consecutive batches and send one request per batch. Build each batch's rows with
       `embed_matrix()` against that batch's length, then place them at the batch's input positions. Abort on a
       width that differs from an earlier batch. Tests first (AC1, the width case of AC4).
-- [ ] T3: Probe the server before each request. Store a per-request `rlmstudio_bad_response` or
+- [x] T3: Probe the server before each request. Store a per-request `rlmstudio_bad_response` or
       `rlmstudio_api_error` outside 401, 403, and 404, fill its rows with `NA`, and warn once past `quiet`. Abort
       at once on 401, 403, or 404 and on a lost server, with `results`, as `lms_chat_batch()` does. If all
       requests fail, abort with the first condition. Tests first (AC3, AC4).
@@ -109,6 +109,7 @@ requests: none were asked for, so nothing records them.
 - 2026-09-28: implement started on m047-embed-batches. No gate questions were open, because the plan gate settled the name, the default, and the failure rule.
 - 2026-09-28: T1 done. `rlm_check_batch_size()` reuses `ttl_fault()` and rejects `NULL`. The eleven-value test went red with the check moved after the probe.
 - 2026-09-28: T2 done. The loop in `R/embed.R` also carries the T3 and T4 code, because they share it. The two `simplify = FALSE` tests now expect a list of one. Four planted defects each turned `test-embed.R` red: overlapping batches, no width check, a named `input`, and rows placed by batch rank.
+- 2026-09-28: T3 done. Tests cover a bad reply and an API failure mid-call, the warning under `quiet`, the all-failed abort, a lost server, and 401, 403, and 404 after a success and before one. Five planted defects each turned the file red. A 401 before any success carries no `results` field, the reading of AC4 that says the field follows a successful request.
 
 ## Decisions
 
