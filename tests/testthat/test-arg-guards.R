@@ -814,7 +814,9 @@ test_that("a FALSE with names or attributes passes, as isFALSE() reads it", {
   for (value in list(c(a = FALSE), structure(FALSE, foo = 1))) {
     label <- deparse1(value)
     recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(lms_chat_openai("a-model", list(), stream = value))
+    expect_no_error(
+      lms_chat_openai("a-model", arg_placeholders$messages, stream = value)
+    )
     expect_identical(length(recorder$requests), 1L, info = label)
     body <- request_target(recorder$requests[[1]])$body
     expect_identical(body[["stream"]], FALSE, info = label)
@@ -825,7 +827,11 @@ test_that("a long stream value is cut short in the message", {
   probe <- local_counting_probe()
 
   err <- expect_error(
-    lms_chat_openai("a-model", list(), stream = seq_len(1000) + 0.5),
+    lms_chat_openai(
+      "a-model",
+      arg_placeholders$messages,
+      stream = seq_len(1000) + 0.5
+    ),
     "must be `FALSE` or `NULL`",
     fixed = TRUE
   )
@@ -834,3 +840,159 @@ test_that("a long stream value is cut short in the message", {
   expect_identical(probe$calls, 0L)
 })
 
+
+# lms_chat_openai(messages =) is checked before the server probe. Each rule has
+# one detail text, stated here rather than read from the package, so a detail
+# that names the wrong rule turns the test red.
+messages_rule_details <- c(
+  rule1 = "You gave a value that is neither a list nor a data frame.",
+  rule2 = "You gave no messages.",
+  rule3 = "You gave a list with names, which is sent as one JSON object.",
+  rule4 = "You gave a message that is not a list with a name on each field."
+)
+
+good_message <- list(role = "user", content = "hi")
+
+messages_probes <- list(
+  list(label = "NULL", value = NULL, rule = "rule1"),
+  list(label = "a string", value = "hi", rule = "rule1"),
+  list(label = "a character vector", value = c("a", "b"), rule = "rule1"),
+  list(label = "a number", value = 5, rule = "rule1"),
+  list(label = "NA", value = NA, rule = "rule1"),
+  list(label = "a function", value = function() NULL, rule = "rule1"),
+  list(
+    label = "a data frame of zero rows",
+    value = data.frame(role = character(), content = character()),
+    rule = "rule2"
+  ),
+  list(label = "an empty list", value = list(), rule = "rule2"),
+  list(
+    label = "a fully named list",
+    value = list(a = good_message),
+    rule = "rule3"
+  ),
+  list(
+    label = "a list whose names are all empty",
+    value = structure(list(good_message), names = ""),
+    rule = "rule3"
+  ),
+  list(label = "one unwrapped message", value = good_message, rule = "rule3"),
+  list(label = "a string element", value = list("hi"), rule = "rule4"),
+  list(
+    label = "a named character element",
+    value = list(c(role = "user", content = "hi")),
+    rule = "rule4"
+  ),
+  list(
+    label = "an unnamed list element",
+    value = list(list("user", "hi")),
+    rule = "rule4"
+  ),
+  list(
+    label = "a partly named list element",
+    value = list(list(role = "user", "hi")),
+    rule = "rule4"
+  ),
+  list(
+    label = "a list element with an NA name",
+    value = list(structure(list("user", "hi"), names = c("role", NA))),
+    rule = "rule4"
+  ),
+  list(label = "an empty list element", value = list(list()), rule = "rule4"),
+  list(
+    label = "a bad element after a good one",
+    value = list(good_message, "hi"),
+    rule = "rule4"
+  )
+)
+
+test_that("a messages value that breaks a rule aborts before the server probe", {
+  probe <- local_counting_probe()
+
+  for (p in messages_probes) {
+    err <- expect_error(
+      lms_chat_openai("a-model", p$value),
+      messages_rule_details[[p$rule]],
+      fixed = TRUE,
+      info = p$label
+    )
+    expect_match(conditionMessage(err), "`messages`", fixed = TRUE, info = p$label)
+    # No package class on an argument fault (D-008).
+    expect_identical(
+      class(err),
+      c("rlang_error", "error", "condition"),
+      info = p$label
+    )
+    # The detail of every other rule is absent, so the abort names one rule.
+    for (other in setdiff(names(messages_rule_details), p$rule)) {
+      expect_no_match(
+        conditionMessage(err),
+        messages_rule_details[[other]],
+        fixed = TRUE,
+        info = paste(p$label, "names", other)
+      )
+    }
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+# The messages field of the body a captured request sends, parsed back with no
+# simplification, so a list of objects stays a list of lists.
+sent_messages <- function(req) {
+  require_httpuv()
+  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  jsonlite::parse_json(rawToChar(out$body), simplifyVector = FALSE)$messages
+}
+
+test_that("a messages value that keeps every rule reaches the request", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  passes <- list(
+    list(
+      label = "a data frame with role and content",
+      value = data.frame(
+        role = c("system", "user"),
+        content = c("Be brief.", "hi")
+      ),
+      sent = list(
+        list(role = "system", content = "Be brief."),
+        list(role = "user", content = "hi")
+      )
+    ),
+    list(
+      label = "a data frame with one column x",
+      value = data.frame(x = "a"),
+      sent = list(list(x = "a"))
+    ),
+    list(
+      label = "string content",
+      value = list(list(role = "user", content = "hi")),
+      sent = list(list(role = "user", content = "hi"))
+    ),
+    list(
+      label = "content parts",
+      value = list(
+        list(role = "user", content = list(list(type = "text", text = "hi")))
+      ),
+      sent = list(
+        list(role = "user", content = list(list(type = "text", text = "hi")))
+      )
+    ),
+    list(
+      label = "number content",
+      value = list(list(role = "user", content = 5)),
+      sent = list(list(role = "user", content = 5L))
+    )
+  )
+
+  for (p in passes) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", p$value))
+    expect_identical(length(recorder$requests), 1L, info = p$label)
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      p$sent,
+      info = p$label
+    )
+  }
+})

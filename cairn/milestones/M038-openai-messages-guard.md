@@ -1,13 +1,13 @@
 # M038: The OpenAI chat function refuses a messages value it cannot send as a list of messages
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — an exported chat function starts to reject `messages` values that it sent before
-- **Branch/PR:** —
+- **Branch/PR:** m038-openai-messages-guard
 
 ## Goal
 
@@ -77,7 +77,7 @@ own candidate row.
 
 ## Tasks
 
-- [ ] T1: Write the failing tests for AC1 and AC2 in
+- [x] T1: Write the failing tests for AC1 and AC2 in
       `tests/testthat/test-arg-guards.R`. Use `local_no_request_allowed()`
       and `local_request_recorder()` from
       `tests/testthat/helper-mock-http.R`. Per the M026 lesson, assert the
@@ -106,6 +106,8 @@ own candidate row.
 - 2026-09-27: plan gate chose to check the list and each message over also refusing an NA in string content, because content belongs to the server. Falsified by a user whose NA content gets the misleading server error.
 - 2026-09-27: plan gate chose to check the list and each message over checking only the garbled shapes, because an argument fault is knowable offline. Falsified by a working call that the check refuses.
 - 2026-09-27: plan gate chose to keep data frames over refusing them, because they work today. Falsified by a data frame that sends a malformed message.
+- 2026-09-27: implement started on branch m038-openai-messages-guard. No question gate, because the plan fixes the four rules and says one detail text per rule.
+- 2026-09-27: T1 done. AC1 test red (the probe is reached), AC2 test green before the change. Three existing calls that sent `list()` or `"hi"` as messages now send one valid message (minor amendment).
 
 ## Decisions
 
