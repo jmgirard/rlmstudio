@@ -20,7 +20,24 @@ lms_chat_openai(
 \item{model}{Character. The loaded model name. Must be one name, given as a
 single string.}
 
-\item{messages}{List. A structured list of role and content pairs.}
+\item{messages}{The messages to send. Give an unnamed list with one element
+per message, such as \code{list(list(role = "user", content = "Hi"))}, or a
+data frame with at least one row. A data frame is sent as one message per
+row, with one field per column. The call aborts before it checks for a
+running server if \code{messages} breaks one of these rules:
+\itemize{
+\item \code{messages} is a list or a data frame.
+\item A data frame has at least one row, and any other list has at least one
+element.
+\item A list that is not a data frame has no names. A single message not
+wrapped in a list, such as \code{list(role = "user", content = "Hi")},
+breaks this rule.
+\item Each element of such a list is a list of length one or more, and each
+of its fields has a name that is not \code{NA} and not empty.
+}
+
+The package does not check the roles, the content, or any other field of
+a message. The server checks them.}
 
 \item{host}{Character. Server URL.}
 
@@ -93,7 +110,8 @@ array format.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{schema}, or \code{ttl}, or a \code{stream} in the \code{...} of a chat
+\code{input}, \code{inputs}, \code{messages}, \code{schema}, or \code{ttl}, or a \code{stream} in the
+\code{...} of a chat
 function, aborts with an argument message and no condition class even when
 the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

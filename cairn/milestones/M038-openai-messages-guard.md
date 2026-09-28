@@ -92,7 +92,7 @@ own candidate row.
       `lms_chat()` and `lms_chat_batch()` OpenAI tests included. Per the
       M003 lesson, delete the call site in a scratch copy and see the AC1
       test go red.
-- [ ] T3: Write the `messages` help text (`R/chat.R:268`), add `messages`
+- [x] T3: Write the `messages` help text (`R/chat.R:268`), add `messages`
       to the argument list at `R/conditions.R:12-13`, run
       `devtools::document()`, and add a `NEWS.md` bullet. Start the server
       and set `RLMSTUDIO_API_TOKEN` (M009 lesson). Then run
@@ -109,6 +109,7 @@ own candidate row.
 - 2026-09-27: implement started on branch m038-openai-messages-guard. No question gate, because the plan fixes the four rules and says one detail text per rule.
 - 2026-09-27: T1 done. AC1 test red (the probe is reached), AC2 test green before the change. Three existing calls that sent `list()` or `"hi"` as messages now send one valid message (minor amendment).
 - 2026-09-27: T2 done. `rlm_check_messages()`, `messages_fault()`, and `is_named_message()` added. The call runs after the model check. devtools::test(): 10328 passed, 0 failed. In a scratch copy, deleting the call site and giving rule 3 the rule 2 detail each turned the AC1 test red.
+- 2026-09-27: T3 done. `messages` help, conditions page, and NEWS bullet written, docs regenerated. With the server on and the token set: devtools::test() 10328 passed, 0 failed. devtools::check() 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 

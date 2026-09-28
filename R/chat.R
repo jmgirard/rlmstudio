@@ -265,7 +265,22 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
 #'   single string.
-#' @param messages List. A structured list of role and content pairs.
+#' @param messages The messages to send. Give an unnamed list with one element
+#'   per message, such as `list(list(role = "user", content = "Hi"))`, or a
+#'   data frame with at least one row. A data frame is sent as one message per
+#'   row, with one field per column. The call aborts before it checks for a
+#'   running server if `messages` breaks one of these rules:
+#'   * `messages` is a list or a data frame.
+#'   * A data frame has at least one row, and any other list has at least one
+#'     element.
+#'   * A list that is not a data frame has no names. A single message not
+#'     wrapped in a list, such as `list(role = "user", content = "Hi")`,
+#'     breaks this rule.
+#'   * Each element of such a list is a list of length one or more, and each
+#'     of its fields has a name that is not `NA` and not empty.
+#'
+#'   The package does not check the roles, the content, or any other field of
+#'   a message. The server checks them.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the

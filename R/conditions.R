@@ -10,7 +10,8 @@
 #' Functions that call the LM Studio REST API open a TCP connection to the
 #' hostname and port named in `host` before they send the request. A function
 #' that checks its own arguments does that first, so a bad `model`, `job_id`,
-#' `input`, `inputs`, `schema`, or `ttl`, or a `stream` in the `...` of a chat
+#' `input`, `inputs`, `messages`, `schema`, or `ttl`, or a `stream` in the
+#' `...` of a chat
 #' function, aborts with an argument message and no condition class even when
 #' the server is down. A condition of class
 #' `rlmstudio_no_server` is raised when that connection cannot be opened. A
