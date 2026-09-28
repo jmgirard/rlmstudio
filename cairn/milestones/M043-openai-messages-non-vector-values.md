@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M043: The OpenAI chat function refuses a messages value that holds a value that is not an atomic vector, a list, or NULL
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -139,7 +139,7 @@ candidate row on such values closes with this milestone.
   jsonlite write".
 - [x] T4: Update the `messages` help in `R/chat.R` (lines 322 to 345) and
   NEWS.md as AC4 states. Run `devtools::document()`.
-- [ ] T5: Run `devtools::test()` and `devtools::check()`. Before the
+- [x] T5: Run `devtools::test()` and `devtools::check()`. Before the
   check, run `lms server start` and set `RLMSTUDIO_API_TOKEN` (LESSONS,
   M009).
 
@@ -160,6 +160,9 @@ candidate row on such values closes with this milestone.
 - 2026-09-28: T2 done. `non_vector_type()` in `R/utils-args.R` walks as `has_function()` does and returns the `typeof()` of the first value that is not atomic, a list, `NULL`, or a function. `rlm_check_messages()` calls it between the function rule and the trial write. The three stale comments name the new rule. `test-arg-guards.R` passes except the two M042 tests that T3 changes, which now get the new detail.
 - 2026-09-28: T3 done. The M042 test on a column that is not a vector expects `rule13`. The test that sent an S4 class definition with a slot is deleted, because the AC1 grid covers both class definitions. `devtools::test()` gives 426 tests, 0 failed, 0 skipped.
 - 2026-09-28: T4 done. The `messages` help in `R/chat.R` lists the new rule between the function rule and the trial write, says that a `NULL` field passes, and names the new kind in its closing paragraph. NEWS has a new entry. The M042 sub-bullet no longer names the jsonlite error for these kinds, and it no longer says that a slotted class definition is sent. The M040 example "or an environment" is gone. `devtools::document()` rewrote `man/lms_chat_openai.Rd` alone.
+- 2026-09-28: T5 done. After `lms server start` with the token set, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes at d3839fa.
+- 2026-09-28: claim audit: 38 claims read, 3 corrected — NEWS.md, R/chat.R, R/utils-args.R, man/lms_chat_openai.Rd. The NEWS entry now says that a class definition with no slot was sent as `[]` as a field or list cell. It says that the jsonlite warning came only for a data-frame column. The help and the `non_vector_type()` comment add the object-or-array case. The same reader re-read the three and found them correct. After the fixes, `devtools::test()` gave 426 tests, 0 failed, 0 skipped. The check ran before these comment and documentation fixes.
+- 2026-09-28: status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

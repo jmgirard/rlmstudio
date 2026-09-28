@@ -91,7 +91,8 @@ an atomic vector, a list, or \code{NULL}. An environment, a symbol, a
 call, a formula, an expression vector, an external pointer, or an S4
 object breaks this rule, and the error names its type. A class set
 by hand does not change the result. jsonlite would send such a value
-as printed text or \code{null}, or fail. A \code{NULL} field passes and is sent
+as printed text, as \code{null}, or as an object or array of other data,
+or it would fail. A \code{NULL} field passes and is sent
 as \code{null}. An S4 object whose class contains an atomic type, such as
 \code{"numeric"}, passes this rule.
 \item jsonlite can write the value, with the options that the request uses.

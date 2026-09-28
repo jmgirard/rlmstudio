@@ -333,7 +333,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     call, a formula, an expression vector, an external pointer, or an S4
 #'     object breaks this rule, and the error names its type. A class set
 #'     by hand does not change the result. jsonlite would send such a value
-#'     as printed text or `null`, or fail. A `NULL` field passes and is sent
+#'     as printed text, as `null`, or as an object or array of other data,
+#'     or it would fail. A `NULL` field passes and is sent
 #'     as `null`. An S4 object whose class contains an atomic type, such as
 #'     `"numeric"`, passes this rule.
 #'   * jsonlite can write the value, with the options that the request uses.

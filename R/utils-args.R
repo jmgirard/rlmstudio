@@ -449,7 +449,8 @@ has_function <- function(value) {
 #'
 #' jsonlite has a method for a vector, a list, or a data frame alone. It
 #' writes any other value by its class attribute: as printed text, as `null`,
-#' or not at all. So a class set by hand on an environment or a call can make
+#' as an object or array of other data, such as the slots of a class
+#' definition, or not at all. So a class set by hand on an environment or a call can make
 #' the trial write pass and send junk. The rule reads the storage type, which
 #' a class does not change. `is.null()` is read on its own, because
 #' `is.atomic(NULL)` is `FALSE` from R 4.4.0. The walk is the walk of
