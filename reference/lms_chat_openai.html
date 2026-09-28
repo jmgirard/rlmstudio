@@ -124,7 +124,7 @@ The names of an atomic vector and the column names of a matrix are
 not checked, because jsonlite sends those values as arrays.</p></li>
 </ul><p>The error for each rule above opens with "<code>messages</code> must be a data
 frame or an unnamed list of messages." and shows the form of a message.
-Three more rules are checked after them. Their error opens with
+Four more rules are checked after them. Their error opens with
 "<code>messages</code> holds a field value that cannot be sent as JSON." and shows
 no form:</p><ul><li><p>No function sits inside <code>messages</code>: not as a field, in a list below a
 field, as a column of a data frame, or in a cell of a list column.
@@ -144,6 +144,24 @@ contains <code>"list"</code> passes, and the rule reads its elements. The rule
 does not read the class of a vector or a list. A vector with a class
 set by hand, such as <code>structure(1L, class = "NULL")</code>, passes, and
 jsonlite writes it by that class.</p></li>
+<li><p>No number inside <code>messages</code> is <code>NA</code>, <code>NaN</code>, <code>Inf</code>, or <code>-Inf</code>. The
+rule reads a double or integer vector with no class or with the class
+<code>"AsIs"</code> alone, such as a field wrapped in <code><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I()</a></code>. jsonlite would send
+such a number as the string <code>"NA"</code>, <code>"NaN"</code>, <code>"Inf"</code>, or <code>"-Inf"</code>.
+The rule reads a field,
+an element of a field, a list at any depth below a field, a cell of a
+list column or a list-matrix column, and a matrix or array column. An
+atomic column with no <code>dim</code> attribute, of a data frame at any depth,
+is the exception. jsonlite leaves an <code>NA</code>, <code>NaN</code>, <code>Inf</code>, or <code>-Inf</code>
+cell of such a column out of its message. There the rule refuses
+<code>Inf</code> and <code>-Inf</code> alone, and an <code>NA</code> or <code>NaN</code> cell is left out as a
+missing field. A number with another class, such as a <code>Date</code>, is
+written by its class, so <code>as.Date(NA)</code> is sent as <code>null</code> and
+<code>as.Date(Inf)</code> as <code>"Inf"</code>. Below a message, the rule reads the parts
+of a list whose class is neither <code>"AsIs"</code> nor a data frame only when
+jsonlite writes that list as it writes the list without its class,
+such as a list with the class <code>c("foo", "list")</code>. It does not read
+the parts of a <code>POSIXlt</code> value.</p></li>
 <li><p>jsonlite can write the value, with the options that the request uses.
 If it cannot, the error gives the jsonlite message. This rule is
 checked last.</p></li>
@@ -155,9 +173,11 @@ jsonlite has no method for, such as a field with the class <code>"foo"</code> al
 breaks the last rule.</p>
 <p>The package checks the shape of <code>messages</code>. Of the field values, it
 refuses a function, a value that is not an atomic vector, a list, or
-<code>NULL</code>, and a value that jsonlite cannot write. It does not
-check any other value of a role, the content, or another field of a
-message. The server checks them.</p></dd>
+<code>NULL</code>, a number with no class or with the class <code>"AsIs"</code> alone that
+jsonlite would send as a string or, in a data-frame column, would leave
+out because it is infinite, and a value that jsonlite cannot write. It
+does not check any other value of a role, the content, or another field
+of a message. The server checks them.</p></dd>
 
 
 <dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>

@@ -2,6 +2,29 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now refuses an `NA`, `NaN`, `Inf`, or `-Inf` number inside `messages`,
+  before the check for a running server. Before, jsonlite sent it as the
+  string `"NA"`, `"NaN"`, `"Inf"`, or `"-Inf"`. In some data-frame
+  columns, it left an `Inf` cell out of the message with no warning. The
+  error opens with “`messages` holds a field value that cannot be sent
+  as JSON.” and has no condition class. The rule reads a double or
+  integer vector with no class or with the class `"AsIs"` alone. It
+  reads a field, a list below a field, a list-column or list-matrix
+  cell, and a matrix or array column.
+
+  - In an atomic data-frame column with no `dim` attribute, only `Inf`
+    and `-Inf` abort. An `NA` or `NaN` cell there is still left out of
+    its message.
+  - A number with another class is still written by its class. For
+    example, `as.Date(NA)` is sent as `null` and `as.Date(Inf)` as
+    `"Inf"`.
+  - Take a list below a field with a class other than `"AsIs"`. If
+    jsonlite writes it as it writes the list without its class, the rule
+    reads its parts. An example is a list with the class
+    `c("foo", "list")`. The rule does not read the parts of a `POSIXlt`
+    value.
+
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
   [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
@@ -67,13 +90,13 @@
   in a row only if each of its cells in that row is `NA` or a `NULL`
   list cell. Before, a row with one empty cell in an array of three or
   more dimensions sometimes aborted as a row in which every cell is
-  `NA`. Now a three-dimensional atomic column with one `NA` in a row is
-  sent. jsonlite writes that `NA` as `null` in a character or logical
-  column and as the string `"NA"` in a numeric column. A list column of
-  three or more dimensions aborts with the error for a list with a `dim`
-  attribute. If a row is empty in every column, the error “You gave a
-  data frame with a row in which every cell is NA or a NULL list cell.”
-  comes first.
+  `NA`. Now a three-dimensional character or logical column with one
+  `NA` in a row is sent, and jsonlite writes that `NA` as `null`. A
+  numeric one aborts with the error for a number that is `NA`, `NaN`, or
+  infinite. A list column of three or more dimensions aborts with the
+  error for a list with a `dim` attribute. If a row is empty in every
+  column, the error “You gave a data frame with a row in which every
+  cell is NA or a NULL list cell.” comes first.
 
   - A data-frame column that is neither an atomic vector nor a list,
     such as an environment, a symbol, or an expression vector, no longer
