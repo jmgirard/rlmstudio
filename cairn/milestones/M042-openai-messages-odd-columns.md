@@ -101,7 +101,7 @@ choice to send it as jsonlite writes it.
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
 
-- [ ] T1: In `empty_rows()` (`R/utils-args.R:718`), read a column with a
+- [x] T1: In `empty_rows()` (`R/utils-args.R:718`), read a column with a
   `dim` attribute row by row, through the cells whose first index is the
   row. Keep the result one value per row. Add probes to
   `tests/testthat/test-arg-guards.R` for the three AC1 cases, built with
@@ -155,6 +155,7 @@ choice to send it as jsonlite writes it.
 - re-audit: AC5 (full) — nothing
 - re-audit: AC6 (full) — nothing
 - 2026-09-27: T2's revert step now expects each probe other than the function probe to go red, because a revert to the old function branch keeps that probe green.
+- 2026-09-27: T1 done. `empty_rows()` reads a `dim` column through `apply()` when its first extent is the row count. With the old `empty_rows()` swapped in, cases 1 and 2, the 4-D list probe, and the nested one-`NA` probe gave the empty-row detail. The three all-empty probes and the controls gave the same result before and after, so they cannot go red on revert. `devtools::test()`: 0 failures.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

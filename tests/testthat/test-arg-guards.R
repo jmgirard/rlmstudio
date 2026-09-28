@@ -1459,6 +1459,126 @@ test_that("a function column aborts with no warning on the way", {
   expect_identical(probe$calls, 0L)
 })
 
+# A column with a dim attribute is read row by row, through the cells whose
+# first index is the row. The frames are built with `$<-`, because
+# data.frame() recycles an array to its length. Row 2 of `role` is NA, so the
+# array column alone decides whether row 2 is empty. An outcome of "server"
+# means the value passes every messages rule and reaches the server probe.
+dim_column_frame <- function(column) {
+  df <- data.frame(role = c("user", NA))
+  df$x <- column
+  df
+}
+
+test_that("a column with a dim attribute is read row by row", {
+  # Row 2 of a c(2, 2, 2) array holds the cells at odd positions 2, 4, 6, 8.
+  row2_cells <- c(2L, 4L, 6L, 8L)
+  one_null_list3 <- as.list(1:8)
+  one_null_list3[2L] <- list(NULL)
+  all_null_list3 <- as.list(1:8)
+  all_null_list3[row2_cells] <- list(NULL)
+  one_na_atomic3 <- replace(1:8, 2L, NA)
+  all_na_atomic3 <- replace(1:8, row2_cells, NA)
+  one_null_list4 <- as.list(1:16)
+  one_null_list4[4L] <- list(NULL)
+
+  nested_one_na <- local({
+    inner <- data.frame(a = c(1, NA))
+    inner$x <- array(one_na_atomic3, c(2, 2, 2))
+    df <- data.frame(role = c("user", NA))
+    df$sub <- inner
+    df
+  })
+  nested_all_na <- local({
+    inner <- data.frame(a = c(1, NA))
+    inner$x <- array(all_na_atomic3, c(2, 2, 2))
+    df <- data.frame(role = c("user", NA))
+    df$sub <- inner
+    df
+  })
+
+  cases <- list(
+    list(
+      label = "a 3-D list column with one NULL cell in row 2",
+      value = dim_column_frame(array(one_null_list3, c(2, 2, 2))),
+      outcome = "rule11"
+    ),
+    list(
+      label = "a 3-D atomic column with one NA cell in row 2",
+      value = dim_column_frame(array(one_na_atomic3, c(2, 2, 2))),
+      outcome = "server"
+    ),
+    list(
+      label = "a 3-D atomic column with NA in every cell of row 2",
+      value = dim_column_frame(array(all_na_atomic3, c(2, 2, 2))),
+      outcome = "rule6"
+    ),
+    list(
+      label = "a 3-D list column with NULL in every cell of row 2",
+      value = dim_column_frame(array(all_null_list3, c(2, 2, 2))),
+      outcome = "rule6"
+    ),
+    list(
+      label = "a 4-D list column with one NULL cell in row 2",
+      value = dim_column_frame(array(one_null_list4, c(2, 2, 2, 2))),
+      outcome = "rule11"
+    ),
+    list(
+      label = "a 3-D atomic column with one NA cell in a nested data frame",
+      value = nested_one_na,
+      outcome = "server"
+    ),
+    list(
+      label = "a 3-D atomic column with an NA row in a nested data frame",
+      value = nested_all_na,
+      outcome = "rule6"
+    ),
+    # Controls whose result the change leaves as it was.
+    list(
+      label = "a 2-D atomic column with one NA cell in row 2",
+      value = dim_column_frame(matrix(c(1, 2, 3, NA), 2)),
+      outcome = "server"
+    ),
+    list(
+      label = "a 1-D atomic column with NA in row 2",
+      value = dim_column_frame(array(c("a", NA), 2)),
+      outcome = "rule6"
+    ),
+    list(
+      label = "a 1-D list column with NULL in row 2",
+      value = dim_column_frame(array(list("a", NULL), 2)),
+      outcome = "rule6"
+    )
+  )
+
+  for (case in cases) {
+    probe <- local_counting_probe()
+    if (case$outcome == "server") {
+      expect_error(
+        lms_chat_openai("a-model", case$value),
+        class = "rlmstudio_no_server",
+        info = case$label
+      )
+      expect_identical(probe$calls, 1L, info = case$label)
+    } else {
+      err <- expect_error(
+        lms_chat_openai("a-model", case$value),
+        messages_rule_details[[case$outcome]],
+        fixed = TRUE,
+        info = case$label
+      )
+      other <- setdiff(c("rule6", "rule11"), case$outcome)
+      expect_no_match(
+        conditionMessage(err),
+        messages_rule_details[[other]],
+        fixed = TRUE,
+        info = case$label
+      )
+      expect_identical(probe$calls, 0L, info = case$label)
+    }
+  }
+})
+
 # The messages field of the body a captured request sends, parsed back with no
 # simplification, so a list of objects stays a list of lists.
 sent_messages <- function(req) {
