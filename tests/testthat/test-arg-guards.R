@@ -852,7 +852,8 @@ messages_rule_details <- c(
   rule5 = "You gave a data frame that has no columns or a column name that is missing or repeated.",
   rule6 = "You gave a data frame with a row in which every cell is NA.",
   rule7 = "You gave a list with a dim attribute, such as a matrix of messages.",
-  rule8 = "You gave a message with a dim attribute, such as a list array."
+  rule8 = "You gave a message with a dim attribute, such as a list array.",
+  rule9 = "You gave a message, or a list or data frame inside one, with a name that is NA, empty, or repeated."
 )
 
 good_message <- list(role = "user", content = "hi")
@@ -1035,6 +1036,59 @@ messages_probes <- list(
     ),
     rule = "rule8"
   ),
+  # jsonlite writes an NA or empty name under a number and renames a repeated
+  # name "a" to "a.1", at the message level and below.
+  list(
+    label = "a repeated field name in a message",
+    value = list(list(role = "user", role = "system", content = "hi")),
+    rule = "rule9"
+  ),
+  list(
+    label = "a partly named list in content",
+    value = list(list(role = "user", content = list(a = "x", "y"))),
+    rule = "rule9"
+  ),
+  list(
+    label = "a list in content whose names are all empty",
+    value = list(
+      list(role = "user", content = stats::setNames(list("x", "y"), c("", "")))
+    ),
+    rule = "rule9"
+  ),
+  list(
+    label = "an NA name two levels down",
+    value = list(list(
+      role = "user",
+      content = list(list(type = "text", text = stats::setNames(list("x"), NA)))
+    )),
+    rule = "rule9"
+  ),
+  list(
+    label = "an I() list with a repeated name",
+    value = list(
+      good_message,
+      list(role = "user", content = I(list(a = "x", a = "y")))
+    ),
+    rule = "rule9"
+  ),
+  list(
+    label = "a list-column cell with a repeated name",
+    value = local({
+      df <- data.frame(role = c("user", "user"))
+      df$content <- list("hi", list(a = "x", a = "y"))
+      df
+    }),
+    rule = "rule9"
+  ),
+  list(
+    label = "a nested data-frame column with an empty name",
+    value = local({
+      df <- data.frame(role = "user")
+      df$content <- stats::setNames(data.frame(a = "x", b = "y"), c("a", ""))
+      df
+    }),
+    rule = "rule9"
+  ),
   # A NULL list cell is written as null, the same as an NA cell.
   list(
     label = "a row of NA and a NULL list cell",
@@ -1200,6 +1254,31 @@ test_that("a messages value that keeps every rule reaches the request", {
         df
       }),
       sent = list(list(role = "user", content = "hi"), list(content = list()))
+    ),
+    list(
+      label = "a fully named nested list",
+      value = list(list(role = "user", content = list(a = "x", b = "y"))),
+      sent = list(list(role = "user", content = list(a = "x", b = "y")))
+    ),
+    list(
+      label = "an unnamed nested list",
+      value = list(list(role = "user", content = list("x", "y"))),
+      sent = list(list(role = "user", content = list("x", "y")))
+    ),
+    # jsonlite does not write the names of a list column, so they are not
+    # read, even when one of them is empty.
+    list(
+      label = "a list column with names, one of them empty",
+      value = local({
+        df <- data.frame(role = c("user", "user"))
+        df$content <- list(p = "hi", "yo")
+        stopifnot(identical(names(df$content), c("p", "")))
+        df
+      }),
+      sent = list(
+        list(role = "user", content = "hi"),
+        list(role = "user", content = "yo")
+      )
     ),
     # is.na() on the whole data frame spreads the matrix over two columns, so
     # a rule that reads it by column position looks at the wrong cells.

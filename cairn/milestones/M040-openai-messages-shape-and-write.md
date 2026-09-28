@@ -94,7 +94,7 @@ chat functions take no `messages` argument.
 - [x] T2: Add the outer `dim` rule to `messages_fault()` and the message
   `dim` rule beside `is_named_message()`, each with its own detail text. Add
   the probes.
-- [ ] T3: Add the name walk as a helper that `messages_fault()` calls after
+- [x] T3: Add the name walk as a helper that `messages_fault()` calls after
   the message rules, in both forms. Add the probes, including the passing
   nested lists.
 - [ ] T4: Add the trial write to `rlm_check_messages()` after
@@ -115,6 +115,7 @@ chat functions take no `messages` argument.
 - 2026-09-27: status in-progress on branch m040-openai-messages-shape-and-write. Question gate skipped, because nothing was left open and jsonlite is already an import.
 - 2026-09-27: T1 done. `empty_rows()` reads each column alone, because `is.na()` on the whole data frame spreads a matrix column over several. Three abort probes and three pass probes added. The old `is.na()` rule planted in place turned the abort test red. `devtools::test()` passed.
 - 2026-09-27: T2 done. The message `dim` rule skips a data frame, which rule 4 refuses with its own text. Four probes added. Removing each `dim` rule in place turned the abort test red. `devtools::test()` passed.
+- 2026-09-27: T3 done. `nested_names_fault()` and `has_bad_name()` walk both forms. Seven abort probes and three pass probes added. Four planted walk defects each turned a test red: no repeated-name check, no list-column cells, no data-frame branch, and reading list-column names. The last one needed the pass probe to use an empty list-column name. `devtools::test()` passed.
 - 2026-09-27: plan gate chose to refuse a list-matrix over sending it flat in storage order, because the order can differ from the order on screen; falsified by a user who builds `messages` as a matrix on purpose.
 - 2026-09-27: plan gate chose to treat only a `NULL` cell as empty over any length-0 cell, because `list()` writes the field value `[]`; falsified by a server that treats a message holding only an empty-array field as no message.
 - 2026-09-27: plan gate chose to refuse repeated names below the message level over `NA` and empty names alone, because jsonlite renames a repeated `a` to `a.1`; falsified by a jsonlite version that keeps repeated keys.

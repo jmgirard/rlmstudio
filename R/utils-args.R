@@ -422,7 +422,71 @@ messages_fault <- function(value) {
       )
     }
   }
+  nested_names_fault(value)
+}
+
+#' Does any object that jsonlite writes as an object have a bad name?
+#'
+#' jsonlite writes an `NA` or empty name under a number, and it renames a
+#' repeated name `a` to `a.1`. The walk reads the names of each list and data
+#' frame it reaches, from the value handed to it down. A list whose names
+#' attribute is `NULL` is written as an array and has no names to read. A
+#' list column of a data frame is written one cell per row, and its own names
+#' are not written, so the walk reads its cells and not its names. Any other
+#' value, such as an environment, ends the walk there. The trial write in
+#' `rlm_check_messages()` reports such a value.
+#'
+#' @param value A list of messages, one message, or a data frame.
+#' @return A one-sentence detail, or `NULL` when no name is bad.
+#'
+#' @noRd
+nested_names_fault <- function(value) {
+  if (has_bad_name(value)) {
+    return(paste(
+      "You gave a message, or a list or data frame inside one, with a name",
+      "that is NA, empty, or repeated."
+    ))
+  }
   NULL
+}
+
+#' The walk behind `nested_names_fault()`
+#'
+#' @param value Any value found inside `messages`.
+#' @return `TRUE` when the walk from `value` reaches a bad name.
+#'
+#' @noRd
+has_bad_name <- function(value) {
+  if (!is.list(value)) {
+    return(FALSE)
+  }
+  nms <- names(value)
+  if (
+    !is.null(nms) && (anyNA(nms) || !all(nzchar(nms)) || anyDuplicated(nms))
+  ) {
+    return(TRUE)
+  }
+  if (is.data.frame(value)) {
+    for (column in value) {
+      cells <- if (is.list(column) && !is.data.frame(column)) {
+        column
+      } else {
+        list(column)
+      }
+      for (cell in cells) {
+        if (has_bad_name(cell)) {
+          return(TRUE)
+        }
+      }
+    }
+    return(FALSE)
+  }
+  for (element in value) {
+    if (has_bad_name(element)) {
+      return(TRUE)
+    }
+  }
+  FALSE
 }
 
 #' Which data-frame rule did this messages value break?
@@ -452,7 +516,7 @@ data_frame_messages_fault <- function(value) {
   if (any(empty_rows(value))) {
     return("You gave a data frame with a row in which every cell is NA.")
   }
-  NULL
+  nested_names_fault(value)
 }
 
 #' Which rows of a messages data frame does jsonlite write as nothing?
