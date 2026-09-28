@@ -162,6 +162,8 @@ choice to send it as jsonlite writes it.
 - claim audit: 31 claims read, 5 corrected — tests/testthat/test-arg-guards.R, R/utils-args.R, R/chat.R, man/lms_chat_openai.Rd
 - 2026-09-27: the claim reader re-read the five corrections and found each correct. `devtools::test()` after them: 0 failures. Status set to review.
 - 2026-09-27: review returned the milestone to in-progress (defect return 1). AC2 fails: an S4 class-definition column warns from jsonlite and reaches the server probe. Proposed fix-now items O2 and O5 are in the Review section.
+- 2026-09-27: implement resumed. The question gate chose to narrow AC2 over a new refusal for S4 columns.
+- re-audit: AC2 (full) — the proposed narrowing was false for a class definition with no slots, which aborts at the trial write. "An S4 object that jsonlite can write" was unbounded. The reader offered a text that bounds the exception to a class definition with a slot and asked for an `empty_rows()`-level test and a NEWS fix. This is the second AC2 re-audit, so the wording goes to the user.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
