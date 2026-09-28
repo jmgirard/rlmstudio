@@ -40,6 +40,12 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rlmstudio-development-version">rlmstudio (development version)<a class="anchor" aria-label="anchor" href="#rlmstudio-development-version"></a></h2>
 <ul><li>
+<p><code><a href="../reference/lms_chat_openai.html">lms_chat_openai()</a></code> no longer counts a matrix or array column of a <code>messages</code> data frame as empty in a row that holds no cells of it. An example is a row of a 2-by-0 matrix. jsonlite writes that row of the column as <code>[]</code>, or as nested empty arrays such as <code>[[],[],[]]</code>. Before, a row in which every other cell was <code>NA</code> aborted with “You gave a data frame with a row in which every cell is NA or a NULL list cell.”</p>
+<ul><li>If the column is an atomic matrix or array with no class attribute, or a list matrix, such a row is now sent. If a data-frame column holds such a matrix, the row is also sent, as <code>{"m":[]}</code>.</li>
+<li>A list array of three or more dimensions now aborts with the error for a list with a <code>dim</code> attribute.</li>
+<li>A data-frame column with no columns still counts as empty in every row.</li>
+</ul></li>
+<li>
 <p><code><a href="../reference/lms_chat_openai.html">lms_chat_openai()</a></code> now refuses an <code>NA</code>, <code>NaN</code>, <code>Inf</code>, or <code>-Inf</code> number inside <code>messages</code>, before the check for a running server. Before, jsonlite sent it as the string <code>"NA"</code>, <code>"NaN"</code>, <code>"Inf"</code>, or <code>"-Inf"</code>. In some data-frame columns, it left an <code>Inf</code> cell out of the message with no warning. The error opens with “<code>messages</code> holds a field value that cannot be sent as JSON.” and has no condition class. The rule reads a double or integer vector with no class or with the class <code>"AsIs"</code> alone. It reads a field, a list below a field, a list-column or list-matrix cell, and a matrix or array column.</p>
 <ul><li>In an atomic data-frame column with no <code>dim</code> attribute, only <code>Inf</code> and <code>-Inf</code> abort. An <code>NA</code> or <code>NaN</code> cell there is still left out of its message.</li>
 <li>A number with another class is still written by its class. For example, <code>as.Date(NA)</code> is sent as <code>null</code> and <code>as.Date(Inf)</code> as <code>"Inf"</code>.</li>

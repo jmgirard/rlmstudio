@@ -3,6 +3,22 @@
 ## rlmstudio (development version)
 
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  no longer counts a matrix or array column of a `messages` data frame
+  as empty in a row that holds no cells of it. An example is a row of a
+  2-by-0 matrix. jsonlite writes that row of the column as `[]`, or as
+  nested empty arrays such as `[[],[],[]]`. Before, a row in which every
+  other cell was `NA` aborted with “You gave a data frame with a row in
+  which every cell is NA or a NULL list cell.”
+
+  - If the column is an atomic matrix or array with no class attribute,
+    or a list matrix, such a row is now sent. If a data-frame column
+    holds such a matrix, the row is also sent, as `{"m":[]}`.
+  - A list array of three or more dimensions now aborts with the error
+    for a list with a `dim` attribute.
+  - A data-frame column with no columns still counts as empty in every
+    row.
+
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   now refuses an `NA`, `NaN`, `Inf`, or `-Inf` number inside `messages`,
   before the check for a running server. Before, jsonlite sent it as the
   string `"NA"`, `"NaN"`, `"Inf"`, or `"-Inf"`. In some data-frame
