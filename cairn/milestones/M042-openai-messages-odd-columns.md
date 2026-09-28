@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M042: The OpenAI chat function reads each row of an array or non-vector messages column on its own
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** blocked   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -96,11 +96,11 @@ choice to send it as jsonlite writes it.
 <!-- owner: plan · create/amend-via-gate -->
 
 - AC1 → T1
-- AC2 → T2, T6
+- AC2 → T2, T6, T7
 - AC3 → T3
 - AC4 → T3
 - AC5 → T4
-- AC6 → T5
+- AC6 → T5, T7
 
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
@@ -138,6 +138,9 @@ choice to send it as jsonlite writes it.
   arrays of three or more dimensions, which the empty-row error beats. Add
   a candidate row for a slotted class-definition column. Run
   `devtools::test()` and `devtools::check()`.
+- [x] T7: Pass-2 review items. Qualify the NEWS sentence on a 3-D `NA`, and
+  quote the empty-row error there. Add a sent-form test for that `NA`, a
+  whole-call reference-class probe, and the O3 and O4 candidate rows.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -171,6 +174,9 @@ choice to send it as jsonlite writes it.
 - claim audit: 18 claims read, 0 corrected — NEWS.md, tests/testthat/test-arg-guards.R
 - 2026-09-27: the claim reader noted that `empty_rows()` returns `logical(0)` for a zero-length column in a one-row frame built by hand. The call still aborts at the trial write, and hand-built frames are Scope Out. Status set to review.
 - 2026-09-27: review pass 2 returned the milestone to in-progress (defect return 2). AC2 fails again: a classed non-vector column that jsonlite can write is sent, where AC2 says it aborts. This is AC2's second failure by the same kind of cause, a jsonlite write the text did not foresee, so the thrash rule's wrong-approach trigger fires. The alternative on record is the one the implement gate set aside: refuse such columns in code.
+- 2026-09-27: implement resumed after defect return 2. The question gate chose a review brief for the AC2 repair and chose to do the pass-2 review items now.
+- 2026-09-27: T7 done. NEWS qualifies the 3-D `NA` sentence and quotes the empty-row error. A new test pins the sent form of an `NA` in a 3-D numeric, logical, and character column. The AC2 whole-call test has a reference-class probe. The O3 and O4 candidate rows are in ROADMAP, with P2 in the O4 row. `devtools::test()`: 11745 expectations, 0 failures.
+- 2026-09-27: blocked on RB01. The brief is committed on the milestone branch, not on main, because the branch holds the current M042 tracking and main's copy is behind it.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

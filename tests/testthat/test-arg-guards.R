@@ -1473,6 +1473,11 @@ test_that("a column that is not a vector is not empty and gives no warning", {
     representation(v = "numeric"),
     where = s4_env
   )
+  ref_generator <- methods::setRefClass(
+    "rlmstudioM042RefProbe",
+    fields = list(v = "numeric"),
+    where = s4_env
+  )
   na_frame <- function(n, column) {
     df <- data.frame(role = rep(NA_character_, n))
     df$x <- column
@@ -1489,6 +1494,11 @@ test_that("a column that is not a vector is not empty and gives no warning", {
     "a symbol" = na_frame(1L, quote(x)),
     "a call" = na_frame(2L, quote(f(x))),
     "an S4 object" = na_frame(1L, s4_class(v = 1)),
+    "a reference-class object" = structure(
+      list(role = NA_character_, x = ref_generator(v = 1)),
+      class = "data.frame",
+      row.names = 1L
+    ),
     "an external pointer" = na_frame(1L, methods::new("externalptr")),
     "an expression vector" = na_frame(1L, expression(1)),
     "a symbol in a data-frame column" = local({
@@ -2128,6 +2138,45 @@ test_that("a list-matrix column is sent with its cells boxed", {
     expect_identical(
       sent_messages(recorder$requests[[1]]),
       list(jsonlite::parse_json(case$form, simplifyVector = FALSE)),
+      info = case$label
+    )
+  }
+})
+
+# A three-dimensional atomic column with one NA in a row passes the empty-row
+# rule. jsonlite sends that NA as null in a character or logical column and
+# as the string "NA" in a numeric column.
+test_that("an NA in a three-dimensional atomic column is sent as jsonlite writes it", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  array_row <- function(values) {
+    df <- data.frame(role = c("user", "user"))
+    df$x <- array(values, c(2L, 2L, 2L))
+    df
+  }
+  cases <- list(
+    list(
+      label = "numeric",
+      value = array_row(c(1, NA, 3, 4, 5, 6, 7, 8)),
+      form = '[{"role":"user","x":[[1,5],[3,7]]},{"role":"user","x":[["NA",6],[4,8]]}]'
+    ),
+    list(
+      label = "logical",
+      value = array_row(c(TRUE, NA, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
+      form = '[{"role":"user","x":[[true,true],[true,true]]},{"role":"user","x":[[null,true],[true,true]]}]'
+    ),
+    list(
+      label = "character",
+      value = array_row(c("a", NA, "c", "d", "e", "f", "g", "h")),
+      form = '[{"role":"user","x":[["a","e"],["c","g"]]},{"role":"user","x":[[null,"f"],["d","h"]]}]'
+    )
+  )
+  for (case in cases) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", case$value))
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      jsonlite::parse_json(case$form, simplifyVector = FALSE),
       info = case$label
     )
   }
