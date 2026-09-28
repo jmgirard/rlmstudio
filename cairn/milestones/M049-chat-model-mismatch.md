@@ -139,6 +139,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: claim audit: 68 claims read, 4 corrected — NEWS.md, R/chat.R, data-raw/record-model-mismatch-cassette.R
 - 2026-09-28: the claim audit narrowed "two or more chat models" to the two that the probe loaded, in NEWS and a code comment. D-025 keeps "two or more", because DECISIONS is history.
 - 2026-09-28: review checkpoint: evidence recorded and AC1 to AC7 ticked, consistency gate passed. Three fresh reviewers are running, and triage is still owed.
+- 2026-09-28: review: 18 findings logged with proposed dispositions. O1 shows AC2(a) failing for a named model string. The step-7 gate decides.
 
 ## Decisions
 
@@ -183,4 +184,40 @@ failures. The full `devtools::test()` ran 485 tests with 0 failed, 0 errors, 0 s
 
 Consistency gate: `cairn_validate.py` passed. No DESIGN.md principle changed, so `cairn_impact` did not run.
 `devtools::document()` left no diff, and `pkgdown::check_pkgdown()` found no problems. `NEWS.md` has entries. The
-branch adds no top-level file, and `data-raw/` is in `.Rbuildignore`. README is not touched. `NEWS.md` has two entries under the development version.
+branch adds no top-level file, and `data-raw/` is in `.Rbuildignore`. README is not touched.
+
+Independent review: three fresh reviewers ([O] diff-bug, [S] blame-history, [S] prior-review). The PR-comment probe
+returned no comments. Each finding has a proposed disposition, which the step-7 gate decides.
+
+- O1 (fix now, AC2(a) fails): `R/chat.R:716` and `:772` compare with `identical()`, which also compares names and
+  class. A mocked probe showed it. `lms_chat_openai(c(a = "org/model-x"), ...)` with a reply from `org/model-x`
+  sent a lookup and aborted with `rlmstudio_model_mismatch`. A glue string has the same risk.
+- O2 (follow-up): a name with a variant, such as `key@q4_k_m`, or a file-name id can get an instance id back. The
+  lookup compares only `key`. So the right model can answer, and the call still aborts. No probe covered it.
+- O3 (follow-up): the lookup result is not kept across the inputs of a batch. A batch by key against a model
+  loaded under another id sends 2 requests per input, and the help does not say so.
+- O4 (reject): a server lost between the port probe and the lookup raises `httr2_failure`. The
+  `rlmstudio-conditions` page states this rule for every request that loses the server midway.
+- O5 (reject): an instance id equal to the key of another model skips the lookup. This needs a user to load one
+  model under the key of another, and it is the falsifier that the plan recorded.
+- O6 (reject): `tolower()` depends on the locale for non-ASCII letters. No model key seen has a non-ASCII letter.
+- O7 (reject): the recorded `case` reply comes from a server with one chat model, which answers any name. The
+  package test still tells the rules apart, because an exact-case compare turned it red (work log, T3).
+- O8 (reject): the recorder writes `api/v1/models` twice per case, and the second write wins. Both hold the same list.
+- O9 (reject): a token that `/v1` accepts and `/api/v1/models` refuses turns an accepted reply into an API error.
+  No probe showed such a token, and the help documents a failed lookup.
+- O10 (fix now): `keep_or_abort_api()` reads `cnd$code` and `cnd$status` with `$`, against the `[[` rule (LESSONS,
+  M018).
+- O11 (fix now): `list_models(quiet = FALSE)` prints only for an empty list, and the "prints nothing" test gives a
+  list that is not empty. So a lookup through that call still passes the test. A test with an empty list closes
+  that gap.
+- O12 (fix now): the help does not say that a status-200 body that is not a JSON object skips the check.
+- O13 (reject): a lookup body that breaks a model-list rule fails its input alone in a batch. That follows the
+  batch rule for `rlmstudio_bad_response`.
+- S1 (reject): the comment on `keep_or_abort_bad()` says that `tryCatch()` runs a handler inside the handlers
+  named after it. That is correct, because `tryCatchList()` nests the handlers in that order.
+- S2 (reject): the `code` field reaches every wrapper through `rlm_abort_api()`, not only the two chat functions.
+  The help page states it for every API error, so the help is right and only the Scope prose is narrow.
+- P1 (reject): `reply_model_serves()` writes its own `rlmstudio_no_server` abort and does not call
+  `stop_if_no_server()`. That helper takes no label, and AC3 needs the lookup label in the message.
+- P2 (fix now): two roxygen lines in `R/conditions.R` run past the wrap width of the file. `NEWS.md` has two entries under the development version.
