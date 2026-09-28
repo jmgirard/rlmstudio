@@ -240,3 +240,109 @@ test_that("the first of two equal keys in one configuration counts", {
   expect_identical(names(res), c(fixed_columns, "k"))
   expect_identical(res$k, c(1, 2))
 })
+
+# The condition that `list_instances()` raises on `body`, or NULL.
+instances_raised_by <- function(body, ..., .env = parent.frame()) {
+  local_mocked_bindings(is_server_running = function(...) TRUE, .env = .env)
+  local_request_recorder(mock_response(200L, body), .env = .env)
+  shape_raised_by(list_instances(quiet = TRUE, ...))
+}
+
+# Assert that `cnd` is a bad response whose message names every text of
+# `names`.
+expect_bad_instances <- function(cnd, names, label) {
+  expect_true(inherits(cnd, "rlmstudio_bad_response"), info = label)
+  if (!inherits(cnd, "rlmstudio_bad_response")) {
+    return(invisible())
+  }
+  expect_identical(cnd$status, 200L, info = label)
+  message <- conditionMessage(cnd)
+  expect_match(message, "API List Failed", fixed = TRUE, info = label)
+  for (text in names) {
+    expect_match(message, text, fixed = TRUE, info = label)
+  }
+}
+
+loaded_llm <- instances_model("llm", "m0", instances = instance_json("i0"))
+
+test_that("a display_name that is not a string aborts with rlmstudio_bad_response", {
+  for (form in setdiff(names(json_forms), c("string", "null"))) {
+    bad <- instances_model(
+      "llm", "m1", json_forms[[form]],
+      instances = instance_json("i1")
+    )
+    cnd <- instances_raised_by(instances_body(c(loaded_llm, bad)))
+    expect_bad_instances(
+      cnd,
+      c("`display_name`", "entry 2 of `models`"),
+      paste("display_name as", form)
+    )
+  }
+})
+
+test_that("a config that is not a JSON object aborts with rlmstudio_bad_response", {
+  for (form in setdiff(names(json_forms), c("empty object", "object", "null"))) {
+    bad <- instances_model(
+      "llm", "m1",
+      instances = c(instance_json("i1"), instance_json("i2", json_forms[[form]]))
+    )
+    cnd <- instances_raised_by(instances_body(c(loaded_llm, bad)))
+    expect_bad_instances(
+      cnd,
+      c("`config`", "entry 2 of `loaded_instances` in entry 2 of `models`"),
+      paste("config as", form)
+    )
+  }
+})
+
+test_that("the two new checks skip a model outside `type` or with no instance", {
+  bad_name <- json_forms[["number"]]
+  bad_config <- instance_json("i3", json_forms[["array"]])
+  body <- instances_body(c(
+    loaded_llm,
+    instances_model("llm", "m1", bad_name),
+    instances_model("other", "m2", bad_name, instances = bad_config)
+  ))
+  expect_null(instances_raised_by(body))
+  res <- run_list_instances(body, quiet = TRUE)$value
+  expect_identical(res$id, "i0")
+})
+
+test_that("an absent or null display_name or config gives NA", {
+  body <- instances_body(c(
+    instances_model(
+      "llm", "m1", "null",
+      instances = c(
+        instance_json("i1", '{"a": 1, "b": "x"}'),
+        instance_json("i2", "null")
+      )
+    ),
+    instances_model(
+      "llm", "m2",
+      drop = "display_name",
+      instances = instance_json("i3")
+    )
+  ))
+  res <- run_list_instances(body, quiet = TRUE)$value
+  expect_identical(res$display_name, c(NA_character_, NA_character_, NA_character_))
+  expect_identical(res$a, c(1, NA, NA))
+  expect_identical(res$b, c("x", NA, NA))
+})
+
+test_that("a fault of the model list rules aborts with rlmstudio_bad_response", {
+  cnd <- instances_raised_by('{"models": {}}')
+  expect_bad_instances(cnd, "`models` is not an array", "models as object")
+})
+
+test_that("list_instances aborts with rlmstudio_no_server and sends no request", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  local_no_request_allowed()
+  expect_error(list_instances(), class = "rlmstudio_no_server")
+})
+
+test_that("a reply with a status other than 200 aborts with rlmstudio_api_error", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(500L, '{"error": "boom"}'))
+  cnd <- expect_error(list_instances(), class = "rlmstudio_api_error")
+  expect_identical(cnd$status, 500L)
+})

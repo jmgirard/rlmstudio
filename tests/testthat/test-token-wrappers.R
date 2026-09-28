@@ -21,7 +21,7 @@ wrapper_body <- paste0(
   '"loaded_instances": [{"id": "inst-1"}]}]}'
 )
 
-# The fourteen exported functions that can reach the REST API, with the number
+# The fifteen exported functions that can reach the REST API, with the number
 # of requests each one issues under these arguments. `call` takes a list of
 # extra arguments, which is either the token or nothing.
 wrapper_table <- list(
@@ -29,6 +29,11 @@ wrapper_table <- list(
     name = "list_models",
     requests = 1L,
     call = function(extra) do.call(list_models, c(list(quiet = TRUE), extra))
+  ),
+  list(
+    name = "list_instances",
+    requests = 1L,
+    call = function(extra) do.call(list_instances, c(list(quiet = TRUE), extra))
   ),
   list(
     name = "lms_load",
@@ -156,11 +161,12 @@ drive_wrapper <- function(entry, extra) {
   recorder$requests
 }
 
-test_that("the wrapper table lists the fourteen functions that reach the API", {
+test_that("the wrapper table lists the fifteen functions that reach the API", {
   expect_setequal(
     vapply(wrapper_table, function(e) e$name, character(1)),
     c(
       "list_models",
+      "list_instances",
       "lms_load",
       "lms_unload",
       "lms_unload_all",

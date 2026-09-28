@@ -105,7 +105,7 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
       `R/list.R:66-71`. `rlm_inform(quiet = FALSE)` ignores the option. Export it through roxygen.
 - [x] T2: Write the tests of AC2, then the configuration columns. Read each field by position, at the first index where
       `names(cfg)` equals the name. `[[` does not match an empty name. Build the frame with `check.names = FALSE`.
-- [ ] T3: Write the tests of AC4 and AC5, then the two new shape checks in a helper local to `list_instances()`.
+- [x] T3: Write the tests of AC4 and AC5, then the two new shape checks in a helper local to `list_instances()`.
       Add the function to the token-wrapper table and update its count. In a scratch copy, delete each new check and
       see its test go red. Check that `git diff` leaves `model_list_fault()` and `request_model_list()` unchanged.
 - [ ] T4: Record the live model list under `tests/testthat/list_instances/`, with `RLMSTUDIO_API_TOKEN` set. Put the
@@ -126,3 +126,4 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: re-audit of the criteria that the gate changed (full mode, same fresh [O] reader) found every earlier finding resolved and returned four clear fixes. The fixes are an empty-name read in T2, two AC2 naming test cases, the "earlier, different field" wording, and an AC4 typo, all applied.
 - 2026-09-28: T1 done. `list_instances()` returns the four fixed columns and the empty result, with tests in `tests/testthat/test-list-instances.R`. The suite passes, with two live embedding tests skipped because the nomic model is not loaded.
 - 2026-09-28: T2 done. The configuration columns come from the helper `config_column()` in `R/list.R`, with tests for each AC2 rule. The suite passes with the same two skips.
+- 2026-09-28: T3 done. The two new checks live in `instance_list_fault()`, and `list_instances()` joins the token-wrapper table (fifteen functions). In a scratch copy, removing the `display_name` check made 6 assertions of its test fail. Removing the `config` check made 5 fail. No other test failed. `model_list_fault()` and `request_model_list()` have no diff against main, and the three named test files have no edit.

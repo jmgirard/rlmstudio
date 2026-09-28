@@ -156,6 +156,11 @@ list_instances <- function(
   got <- request_model_list(host, token, label)
   models <- got$body[["models"]]
 
+  fault <- instance_list_fault(models, type)
+  if (!is.null(fault)) {
+    rlm_abort_bad_reply(got$resp, label, fault, "a model list")
+  }
+
   rows <- list()
   for (model in models) {
     if (!model[["type"]] %in% type) {
@@ -209,6 +214,51 @@ list_instances <- function(
   }
 
   df
+}
+
+#' Find the first way a model list breaks the rules of the instance table
+#'
+#' The checks that `list_instances()` adds to `model_list_fault()`, which it
+#' runs first through `request_model_list()`. They cover the fields that only
+#' the instance table reads, and only in a model whose `type` is in `type` and
+#' that has at least one instance:
+#'
+#' 1. The `display_name` of the model is a string, or absent, or `null`.
+#' 2. The `config` of each instance is a JSON object, or absent, or `null`.
+#'
+#' The checks live here and not in `model_list_fault()`, so `list_models()`
+#' and `lms_server_ready()` accept the same bodies as before.
+#'
+#' @param models The `models` array of a body that `model_list_fault()`
+#'   passed, as `parse_json_body()` returns it with `simplifyVector = FALSE`.
+#' @param type Character vector. The model types that the table keeps.
+#' @return `NULL` when the list passes, or one character string that names
+#'   the first field that breaks a rule.
+#'
+#' @noRd
+instance_list_fault <- function(models, type) {
+  for (i in seq_along(models)) {
+    entry <- models[[i]]
+    instances <- entry[["loaded_instances"]]
+    if (!entry[["type"]] %in% type || length(instances) == 0) {
+      next
+    }
+    where <- paste("entry", i, "of `models`")
+    display_name <- entry[["display_name"]]
+    if (!is.null(display_name) && !is_json_string(display_name)) {
+      return(paste0("`display_name` of ", where, " is not a string."))
+    }
+    for (j in seq_along(instances)) {
+      config <- instances[[j]][["config"]]
+      if (!is.null(config) && !is_json_object(config)) {
+        return(paste0(
+          "`config` of entry ", j, " of `loaded_instances` in ", where,
+          " is not a JSON object."
+        ))
+      }
+    }
+  }
+  NULL
 }
 
 #' Build one configuration column of the instance table
