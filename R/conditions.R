@@ -157,6 +157,15 @@
 #' with a missing, repeated, or out-of-range index would otherwise pair a
 #' vector with the wrong text and give back a matrix that is silently wrong.
 #'
+#' [lms_embed()] reads each request on its own. A bad body, of either kind
+#' above, fails the inputs of that request alone, and the call warns once and
+#' goes on. The call aborts with the condition only if every request fails,
+#' and then with the condition of the first. With `simplify = TRUE`, it also
+#' aborts with `rlmstudio_bad_response` for a request whose embeddings have
+#' another number of dimensions than those of an earlier request. That
+#' condition carries a `results` field, a matrix as the "Server not running"
+#' section describes. See the details of [lms_embed()].
+#'
 #' [lms_chat_native()] and [lms_chat_openresponses()] raise it with
 #' `simplify = TRUE` when the reply holds no readable answer text. Both read
 #' the answer from the items of type `"message"` in the `output` array. They

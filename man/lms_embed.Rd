@@ -27,8 +27,9 @@ missing values.}
 \item{host}{Character. Server URL.}
 
 \item{simplify}{Logical. If \code{TRUE}, the default, returns a numeric matrix
-with one row per input. Any other value returns a list of the parsed
-response bodies, unchanged, one per request.}
+with one row per input. Any other value returns a list with one element
+per request: the parsed response body, unchanged, or the condition of a
+request that failed.}
 
 \item{...}{Additional fields for the request body. LM Studio ignores a
 field it does not recognize, and two OpenAI fields are worth naming for
@@ -257,6 +258,15 @@ other than LM Studio may be answering on the host.
 it returns are placed by the index that the response reports, so a block
 with a missing, repeated, or out-of-range index would otherwise pair a
 vector with the wrong text and give back a matrix that is silently wrong.
+
+\code{\link[=lms_embed]{lms_embed()}} reads each request on its own. A bad body, of either kind
+above, fails the inputs of that request alone, and the call warns once and
+goes on. The call aborts with the condition only if every request fails,
+and then with the condition of the first. With \code{simplify = TRUE}, it also
+aborts with \code{rlmstudio_bad_response} for a request whose embeddings have
+another number of dimensions than those of an earlier request. That
+condition carries a \code{results} field, a matrix as the "Server not running"
+section describes. See the details of \code{\link[=lms_embed]{lms_embed()}}.
 
 \code{\link[=lms_chat_native]{lms_chat_native()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it with
 \code{simplify = TRUE} when the reply holds no readable answer text. Both read

@@ -726,7 +726,7 @@ test_that("a batch_size of 1 sends one request per input", {
 
 test_that("a later batch of another width aborts, carrying the rows so far", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
-  local_request_sequence(list(
+  recorder <- local_request_sequence(list(
     batch_reply(1:2),
     batch_reply(3:4, width = 4L),
     batch_reply(5)
@@ -737,10 +737,27 @@ test_that("a later batch of another width aborts, carrying the rows so far", {
     "inputs 3 to 4 have 4 dimensions, and earlier ones have 3",
     class = "rlmstudio_bad_response"
   )
+  # The third request never goes out.
+  expect_length(recorder$requests, 2L)
   expected <- matrix(NA_real_, nrow = 5, ncol = 3)
   expected[1, ] <- input_vector(1)
   expected[2, ] <- input_vector(2)
   expect_identical(err$results, expected)
+})
+
+test_that("the width abort names a batch of one input by its position", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    batch_reply(1:2),
+    batch_reply(3:4),
+    batch_reply(5, width = 4L)
+  ))
+
+  expect_error(
+    lms_embed("test-embed", paste("text", 1:5), batch_size = 2),
+    "the embedding of input 5 has 4 dimensions, and earlier ones have 3",
+    class = "rlmstudio_bad_response"
+  )
 })
 
 
@@ -755,6 +772,20 @@ error_reply <- function(status) {
 
 five_inputs <- paste("text", 1:5)
 
+# Run `expr` and keep every warning it gives, so a test can count them.
+# `expect_warning()` catches one and lets a second go by.
+collect_warnings <- function(expr) {
+  warnings <- list()
+  value <- withCallingHandlers(
+    expr,
+    warning = function(w) {
+      warnings[[length(warnings) + 1L]] <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, warnings = warnings)
+}
+
 test_that("a bad reply for one batch leaves its rows NA and the call goes on", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   recorder <- local_request_sequence(list(
@@ -763,9 +794,13 @@ test_that("a bad reply for one batch leaves its rows NA and the call goes on", {
     batch_reply(5)
   ))
 
-  expect_warning(
-    out <- lms_embed("test-embed", five_inputs, batch_size = 2),
-    "2 inputs failed, at positions 3 and 4."
+  run <- collect_warnings(lms_embed("test-embed", five_inputs, batch_size = 2))
+  out <- run$value
+  expect_length(run$warnings, 1L)
+  expect_match(
+    conditionMessage(run$warnings[[1]]),
+    "2 inputs failed, at positions 3 and 4.",
+    fixed = TRUE
   )
 
   expect_length(recorder$requests, 3L)
@@ -791,6 +826,46 @@ test_that("an API failure for one batch leaves its rows NA and the call goes on"
   expect_true(all(is.na(out[c(1, 2, 5), ])))
   expect_equal(out[3, ], input_vector(3))
   expect_equal(out[4, ], input_vector(4))
+})
+
+test_that("the width is set by the first batch that succeeds", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    error_reply(500L),
+    batch_reply(3:4, width = 4L),
+    batch_reply(5, width = 4L)
+  ))
+
+  expect_warning(
+    out <- lms_embed("test-embed", five_inputs, batch_size = 2),
+    "2 inputs failed, at positions 1 and 2."
+  )
+  expect_identical(dim(out), c(5L, 4L))
+  expect_true(all(is.na(out[1:2, ])))
+  for (i in 3:5) {
+    expect_equal(out[i, ], input_vector(i, width = 4L), info = paste("row", i))
+  }
+})
+
+test_that("the warning names every failed position past twenty", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    error_reply(500L),
+    error_reply(500L),
+    batch_reply(23:33)
+  ))
+
+  run <- collect_warnings(
+    lms_embed("test-embed", paste("text", 1:33), batch_size = 11)
+  )
+  expect_length(run$warnings, 1L)
+  # Written out here rather than built by cli, the function that joins them.
+  expected <- paste0(
+    "22 inputs failed, at positions ",
+    paste(1:21, collapse = ", "),
+    ", and 22."
+  )
+  expect_match(conditionMessage(run$warnings[[1]]), expected, fixed = TRUE)
 })
 
 test_that("the failed-inputs warning shows when the call is quiet", {
@@ -892,6 +967,19 @@ test_that("a 401 on the first batch aborts with no results field", {
   expect_false("results" %in% names(err))
 })
 
+test_that("a 404 after a failed batch and no success carries no results field", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(error_reply(500L), error_reply(404L)))
+
+  err <- expect_error(
+    lms_embed("test-embed", five_inputs, batch_size = 2),
+    class = "rlmstudio_api_error"
+  )
+  expect_identical(err$status, 404L)
+  expect_identical(length(recorder$requests), 2L)
+  expect_false("results" %in% names(err))
+})
+
 
 # simplify = FALSE over batches ------------------------------------------------
 
@@ -917,15 +1005,23 @@ test_that("simplify = FALSE keeps the condition of a failed request", {
     batch_reply(5)
   ))
 
-  expect_warning(
-    out <- lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2),
-    "2 inputs failed, at positions 3 and 4."
+  run <- collect_warnings(
+    lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2)
+  )
+  out <- run$value
+  expect_length(run$warnings, 1L)
+  expect_match(
+    conditionMessage(run$warnings[[1]]),
+    "2 inputs failed, at positions 3 and 4.",
+    fixed = TRUE
   )
 
   expect_length(out, 3L)
   expect_identical(out[[1]], httr2::resp_body_json(batch_reply(1:2)))
   expect_s3_class(out[[2]], "rlmstudio_api_error")
   expect_identical(out[[2]]$status, 500L)
+  # The kept copy drops the backtrace that the raised condition carried.
+  expect_null(out[[2]]$trace)
   expect_identical(out[[3]], httr2::resp_body_json(batch_reply(5)))
 })
 
@@ -995,7 +1091,8 @@ test_that("a call of three requests shows one bar that counts inputs", {
 test_that("no bar shows when quiet, or for one request", {
   log <- local_bar_recorder()
 
-  run_250(quiet = TRUE)
+  # The option says not quiet, so only the argument can hide the bar.
+  withr::with_options(list(rlmstudio.quiet = FALSE), run_250(quiet = TRUE))
   expect_length(log$bars, 0L)
 
   withr::with_options(list(rlmstudio.quiet = TRUE), run_250())

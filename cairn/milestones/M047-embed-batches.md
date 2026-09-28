@@ -124,6 +124,8 @@ requests: none were asked for, so nothing records them.
 - 2026-09-28: re-audit: AC4 (full) — probe wording read as one status for the family, fixed to name each of 401, 403, and 404. Two judgments not taken: a no-`results` clause before any success, and an AC3 note on the width abort.
 - 2026-09-28: re-audit: AC5 (full) — "as long as the requests" fixed to one slot per batch, and the warning added to the test list. This second line is the stop for AC5, so the final wording went to the user, who accepted it.
 - 2026-09-28: implement complete, status review. `devtools::test()` clean, `devtools::document()` no diff, and `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes. LM Studio was left as found, with the server stopped and gemma-3-1b loaded.
+- 2026-09-28: review: all seven criteria verified, gate clean, diff reviewer gave 11 findings, the other two none. The user chose fix O1 to O8, then merge.
+- 2026-09-28: step-7 approval: m047-embed-batches approved for merge
 
 ## Decisions
 
@@ -184,3 +186,16 @@ criterion failing. Dispositions are set at the merge gate.
   an early 401, 403, or 404 carries no `results`, and `quiet` defaults to `NULL` after `...`.
 - O10: `quiet` is never checked, so `quiet = "nope"` is taken. This matches `is_quiet()` elsewhere.
 - O11: the warning lists each failed position, so thousands of failures give a very long warning.
+
+Dispositions, set by the user at the merge gate on 2026-09-28:
+
+- O1 to O8: fixed now. `R/conditions.R` gains an `lms_embed()` paragraph in "Malformed response". NEWS.md and
+  `@param simplify` are corrected. The width message names a batch of one as "input 5". `test-embed.R` gains a
+  request count, a one-warning count in two tests, a cleared option, and five tests. Each new check turned red on
+  its own planted defect in a scratch copy. The O2 count was not planted.
+- O9: follow-up. A DECISIONS entry at post-merge cleanup records the three differences from `lms_chat_batch()`.
+- O10: rejected. `is_quiet()` takes an unchecked `quiet` in every function, so the diff did not add it.
+- O11: follow-up, as a candidate row at post-merge cleanup.
+
+After the fixes, a second `devtools::document()` gave no diff, and the embed tests passed (66 blocks, 0 failed).
+`devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes.

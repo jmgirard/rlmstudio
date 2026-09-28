@@ -11,8 +11,9 @@
 #'   missing values.
 #' @param host Character. Server URL.
 #' @param simplify Logical. If `TRUE`, the default, returns a numeric matrix
-#'   with one row per input. Any other value returns a list of the parsed
-#'   response bodies, unchanged, one per request.
+#'   with one row per input. Any other value returns a list with one element
+#'   per request: the parsed response body, unchanged, or the condition of a
+#'   request that failed.
 #' @param ... Additional fields for the request body. LM Studio ignores a
 #'   field it does not recognize, and two OpenAI fields are worth naming for
 #'   that reason: LM Studio ignores `dimensions`, so asking for a narrower
@@ -210,7 +211,11 @@ lms_embed <- function(
             res$resp,
             "Embeddings Failed",
             cli::format_inline(
-              "the embeddings of inputs {min(rows)} to {max(rows)} have {ncol(res$value)} dimension{?s}, and earlier ones have {ncol(out)}."
+              if (length(rows) == 1L) {
+                "the embedding of input {rows} has {ncol(res$value)} dimension{?s}, and earlier ones have {ncol(out)}."
+              } else {
+                "the embeddings of inputs {min(rows)} to {max(rows)} have {ncol(res$value)} dimension{?s}, and earlier ones have {ncol(out)}."
+              }
             )
           ),
           rlmstudio_bad_response = identity

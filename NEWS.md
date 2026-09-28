@@ -2,7 +2,7 @@
 
 * `lms_embed()` now sends its input in batches, one request for each run of at most `batch_size` texts. The default `batch_size` is 100. A new `quiet` argument controls a progress bar, which shows when a call sends more than one request.
   * A request that fails with `rlmstudio_bad_response`, or with `rlmstudio_api_error` at a status other than 401, 403, or 404, leaves the rows of its inputs `NA`. The call goes on and warns once, even when quiet. If every request fails, the call aborts with the first failure.
-  * A 401, 403, or 404 and a server lost between requests abort the call. With `simplify = TRUE`, so does a batch whose embeddings have another width. After a request that succeeded, the condition carries the rows so far in a `results` field.
+  * A 401, 403, or 404 and a server lost between requests abort the call. With `simplify = TRUE`, so does a batch whose embeddings have another width. After a request that succeeded, the condition carries a `results` field. It holds the matrix so far, with `NA` rows. With `simplify = FALSE`, it holds the list of bodies so far.
   * With `simplify = FALSE`, `lms_embed()` now returns a list of parsed bodies, one per request. A call with one request returns a list of one. Before, it returned the body itself.
 
 * `lms_chat_openai()` no longer counts a matrix or array column of a `messages` data frame as empty in a row that holds no cells of it. An example is a row of a 2-by-0 matrix. jsonlite writes that row of the column as `[]`, or as nested empty arrays such as `[[],[],[]]`. Before, a row in which every other cell was `NA` aborted with "You gave a data frame with a row in which every cell is NA or a NULL list cell."
