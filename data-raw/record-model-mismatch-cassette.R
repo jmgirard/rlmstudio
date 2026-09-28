@@ -1,7 +1,7 @@
 # Regenerate the recorded responses behind the model-check tests of
 # lms_chat_openai(), lms_chat_openresponses(), and lms_chat_batch().
 #
-# Provenance of tests/testthat/model_mismatch_live/:
+# Provenance of tests/testthat/mismatch_live/:
 #   Source:    a live LM Studio REST server at http://localhost:1234
 #   Models:    google/gemma-3-1b, and qwen/qwen3-4b-2507 loaded under the
 #              instance id "my-qwen"
@@ -62,7 +62,9 @@ second <- "qwen/qwen3-4b-2507"
 second_id <- "my-qwen"
 prompt <- "Reply with the word hi."
 
-target <- file.path("tests", "testthat", "model_mismatch_live")
+# A short name, because R CMD check notes a path in the tarball longer than
+# 100 bytes, and the recorded chat paths are long.
+target <- file.path("tests", "testthat", "mismatch_live")
 fresh <- paste0(target, "_new")
 unlink(fresh, recursive = TRUE)
 

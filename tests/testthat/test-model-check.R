@@ -1,7 +1,7 @@
 # How the chat functions treat a reply from a model other than the one asked
 # for, and a model the server cannot find.
 #
-# The recorded replies in model_mismatch_live/ come from a live LM Studio
+# The recorded replies in mismatch_live/ come from a live LM Studio
 # server. Regenerate them with data-raw/record-model-mismatch-cassette.R,
 # which carries the full provenance. The requests below must match the
 # script's requests byte for byte. Cases that a live server does not produce
@@ -36,7 +36,7 @@ with_recorded_case <- function(case_dir, expr, .env = parent.frame()) {
   local_mocked_bindings(is_server_running = function(...) TRUE, .env = .env)
   withr::local_envvar(RLMSTUDIO_API_TOKEN = NA, .local_envir = .env)
   withr::local_options(rlmstudio.token = NULL, .local_envir = .env)
-  httptest2::with_mock_dir(file.path("model_mismatch_live", case_dir), expr)
+  httptest2::with_mock_dir(file.path("mismatch_live", case_dir), expr)
 }
 
 # A mocked chat call on `route` for the model `model`.
