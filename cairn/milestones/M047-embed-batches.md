@@ -164,3 +164,23 @@ Evidence gathered 2026-09-28 on m047-embed-batches at c9dcda8, which contains or
 Consistency gate: `cairn_validate.py` passed every check. No DESIGN.md principle changed, so `cairn_impact` did not
 run. `devtools::document()` gave no diff. README.Rmd is untouched and evaluates no code. The repo has no pkgdown
 site. NEWS.md has the entry and no milestone ids. The branch adds no files, and the check gave 0 notes.
+
+Independent review, three fresh reviewers. The blame-history reviewer and the prior-review reviewer found nothing.
+The GitHub probe found no PR review comments. The diff reviewer reported 11 findings, ranked, none showing a
+criterion failing. Dispositions are set at the merge gate.
+
+- O1: the "Malformed response" section of `R/conditions.R` says `lms_embed()` raises `rlmstudio_bad_response` for
+  a bad body. After batching, a bad body fails its batch alone. The call raises it only for a call in which every batch fails.
+  The width abort is missing from that section.
+- O2: the width-abort test does not count requests. A defect that sends a third request before the abort passes it.
+- O3: no test pins that the failed-inputs warning is given once.
+- O4: the `quiet = TRUE` no-bar test does not clear `rlmstudio.quiet` first.
+- O5: four paths have no test: a kept condition with no backtrace, a 500 then a 404 with no success, a failed batch
+  then a width change, and more than 20 failed positions. The reviewer ran all four, and the code was right.
+- O6: NEWS.md says an abort carries "the rows so far". With `simplify = FALSE`, `results` is a list of bodies.
+- O7: `@param simplify` says the list holds parsed bodies. A failed slot holds a condition.
+- O8: the width message reads "inputs 5 to 5" for a batch of one.
+- O9: the embed rules differ from `lms_chat_batch()`, and no DECISIONS entry records it. An all-failed call aborts,
+  an early 401, 403, or 404 carries no `results`, and `quiet` defaults to `NULL` after `...`.
+- O10: `quiet` is never checked, so `quiet = "nope"` is taken. This matches `is_quiet()` elsewhere.
+- O11: the warning lists each failed position, so thousands of failures give a very long warning.
