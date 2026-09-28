@@ -1514,11 +1514,129 @@ test_that("a column that is not a vector is not empty and gives no warning", {
     )
   }
 
-  expect_error(
-    lms_chat_openai("a-model", na_frame(1L, function() "x")),
-    messages_rule_details[["rule12"]],
+  function_cases <- list(
+    "a function" = na_frame(1L, function() "x"),
+    "a function in a data-frame column" = local({
+      df <- data.frame(role = NA_character_)
+      df$sub <- na_frame(1L, function() "x")
+      df
+    })
+  )
+  for (label in names(function_cases)) {
+    expect_no_warning(
+      expect_error(
+        lms_chat_openai("a-model", function_cases[[label]]),
+        messages_rule_details[["rule12"]],
+        fixed = TRUE,
+        info = label
+      )
+    )
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+# empty_rows() reads a column that is neither an atomic vector nor a list as
+# not empty in each row, with no warning, at top level and one level down.
+# The whole call cannot show this for an S4 class definition with a slot,
+# because jsonlite warns when it writes one.
+test_that("empty_rows() finds no empty row in a column that is not a vector", {
+  class_env <- new.env()
+  methods::setClass(
+    "rlmstudioM042Slotted",
+    representation(v = "numeric"),
+    where = class_env
+  )
+  generator <- methods::setClass(
+    "rlmstudioM042Generator",
+    representation(v = "numeric"),
+    where = class_env
+  )
+  ref_generator <- methods::setRefClass(
+    "rlmstudioM042Ref",
+    fields = list(v = "numeric"),
+    where = class_env
+  )
+  na_frame <- function(n, column) {
+    df <- data.frame(role = rep(NA_character_, n))
+    df$x <- column
+    df
+  }
+
+  columns <- list(
+    "an environment" = new.env(),
+    "a formula" = y ~ x,
+    "a symbol" = quote(x),
+    "a call" = quote(f(x)),
+    "an S4 object" = generator(v = 1),
+    "a reference-class object" = ref_generator(v = 1),
+    "an external pointer" = methods::new("externalptr"),
+    "an expression vector" = expression(1),
+    "a function" = function() "x",
+    "a class generator" = generator,
+    "a class definition with a slot" =
+      methods::getClass("rlmstudioM042Slotted", where = class_env),
+    "a class definition with no slot" = methods::getClass("numeric")
+  )
+
+  for (label in names(columns)) {
+    # `$<-` refuses an environment in a frame with rows.
+    top <- structure(
+      list(role = NA_character_, x = columns[[label]]),
+      class = "data.frame",
+      row.names = 1L
+    )
+    nested <- data.frame(role = NA_character_)
+    nested$sub <- top
+    for (value in list(top, nested)) {
+      expect_no_warning(result <- empty_rows(value))
+      expect_identical(result, FALSE, info = label)
+    }
+  }
+  expect_identical(
+    empty_rows(na_frame(3L, y ~ x)),
+    rep(FALSE, 3L)
+  )
+})
+
+# jsonlite writes an S4 class definition with a slot as an object that maps
+# each slot name to its class, with a warning, so such a column is sent. A
+# class definition with no slot fails the trial write.
+test_that("an S4 class-definition column is sent only when it has a slot", {
+  class_env <- new.env()
+  methods::setClass(
+    "rlmstudioM042Sent",
+    representation(v = "numeric"),
+    where = class_env
+  )
+  class_frame <- function(definition) {
+    structure(
+      list(role = NA_character_, x = definition),
+      class = "data.frame",
+      row.names = 1L
+    )
+  }
+
+  probe <- local_counting_probe()
+  expect_warning(
+    expect_error(
+      lms_chat_openai(
+        "a-model",
+        class_frame(methods::getClass("rlmstudioM042Sent", where = class_env))
+      ),
+      class = "rlmstudio_no_server"
+    ),
+    "collapse=FALSE called for named list.",
     fixed = TRUE
   )
+  expect_identical(probe$calls, 1L)
+
+  probe <- local_counting_probe()
+  err <- expect_error(
+    lms_chat_openai("a-model", class_frame(methods::getClass("numeric"))),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_true(startsWith(conditionMessage(err), messages_headers[["value"]]))
   expect_identical(probe$calls, 0L)
 })
 

@@ -107,29 +107,15 @@ choice to send it as jsonlite writes it.
 
 - [x] T1: In `empty_rows()` (`R/utils-args.R:718`), read a column with a
   `dim` attribute row by row, through the cells whose first index is the
-  row. Keep the result one value per row. Add probes to
-  `tests/testthat/test-arg-guards.R` for the three AC1 cases, built with
-  `$<-`, because `data.frame()` recycles an array to its length. Add a
-  probe for a four-dimensional list column with one `NULL` in a row. Add a
-  probe for a three-dimensional list column with `NULL` in each cell of
-  row 2. Every other column of that row is `NA`, and the probe expects the
-  empty-row detail. Add a probe for a three-dimensional column inside a
-  data-frame column. Add a
-  two-dimensional matrix column as a control that keeps its result. Add a
-  one-dimensional atomic column and a one-dimensional list column as
-  controls whose result does not change. Revert the fix in a scratch copy
-  and make sure that the new probes go red. Run `devtools::test()`.
+  row. Add probes to `tests/testthat/test-arg-guards.R`, built with `$<-`,
+  for the AC1 cases, 4-D and nested columns, and 1-D and 2-D controls.
+  Revert the fix in a scratch copy and make sure that the new probes go
+  red. Run `devtools::test()`.
 - [x] T2: In `empty_rows()`, replace the function branch with one branch
-  for a column that is neither an atomic vector nor a list. Update the
-  comment above the function. Add probes for an environment, a formula, a
-  symbol, a call, an S4 object, an external pointer, and an expression
-  vector column. Put each one in a row that is otherwise `NA`. Add one such
-  column inside a data-frame column. Build each probe with `$<-` where it
-  accepts the value, else with `structure()`. Each probe
-  asserts the value-fault header, the jsonlite-write detail, and no
-  warning. Add a probe for a function column in a row that is otherwise
-  `NA`, which asserts the function detail. Revert the branch in a scratch
-  copy and make sure that each probe other than the function probe goes red. Run `devtools::test()`.
+  for a column that is neither an atomic vector nor a list. Add probes for
+  each AC2 kind in an otherwise-`NA` row, one nested, and a function
+  probe. Revert the branch in a scratch copy and make sure that each probe
+  other than the function probe goes red. Run `devtools::test()`.
 - [x] T3: Edit the `messages` help in `R/chat.R`. Replace the empty-row
   sentence at lines 290-291 for AC4. Replace the list-matrix sentence at
   lines 300-301 for AC3. Add a test that sends the AC3 example row and
@@ -141,7 +127,7 @@ choice to send it as jsonlite writes it.
   `devtools::test()`, and `devtools::check()` with the API token (see the
   M009 lesson on the vignette build). Give a reason for each NOTE in the
   work log.
-- [ ] T6: Review return work. Add a test that calls `empty_rows()` on each
+- [x] T6: Review return work. Add a test that calls `empty_rows()` on each
   AC2 kind, at top level and inside a data-frame column, with a slotted
   and a slotless class definition, a function, and a class generator. It
   expects no warning and all `FALSE`. Add a probe for a slotted
@@ -180,6 +166,8 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: implement resumed. The question gate chose to narrow AC2 over a new refusal for S4 columns.
 - re-audit: AC2 (full) — the proposed narrowing was false for a class definition with no slots, which aborts at the trial write. "An S4 object that jsonlite can write" was unbounded. The reader offered a text that bounds the exception to a class definition with a slot and asked for an `empty_rows()`-level test and a NEWS fix. This is the second AC2 re-audit, so the wording goes to the user.
 - 2026-09-27: the user adopted the reader's AC2 text verbatim. AC2 now binds `empty_rows()` for the no-warning clause and excludes a class definition with a slot from the abort clause. T6 added for the review return work, and Coverage maps AC2 to T2 and T6.
+- 2026-09-27: T1 and T2 text compressed to bring the plan-owned body under the 150-line cap.
+- 2026-09-27: T6 done. A direct `empty_rows()` test covers twelve kinds at top level and nested, and it gave 26 failures with the old function branch swapped in. A probe pins the slotted and slotless class-definition columns. The function probe now checks for no warning and has a nested case. NEWS narrowed, and a candidate row added. `devtools::test()`: 11736 expectations, 0 failures. `devtools::check()`: 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
