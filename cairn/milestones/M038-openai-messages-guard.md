@@ -1,6 +1,6 @@
 # M038: The OpenAI chat function refuses a messages value it cannot send as a list of messages
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -110,6 +110,8 @@ own candidate row.
 - 2026-09-27: T1 done. AC1 test red (the probe is reached), AC2 test green before the change. Three existing calls that sent `list()` or `"hi"` as messages now send one valid message (minor amendment).
 - 2026-09-27: T2 done. `rlm_check_messages()`, `messages_fault()`, and `is_named_message()` added. The call runs after the model check. devtools::test(): 10328 passed, 0 failed. In a scratch copy, deleting the call site and giving rule 3 the rule 2 detail each turned the AC1 test red.
 - 2026-09-27: T3 done. `messages` help, conditions page, and NEWS bullet written, docs regenerated. With the server on and the token set: devtools::test() 10328 passed, 0 failed. devtools::check() 0 errors, 0 warnings, 0 notes.
+- 2026-09-27: claim audit: 22 claims read, 2 corrected — NEWS.md, R/chat.R, man/lms_chat_openai.Rd. An empty message aborts although the NEWS wording let it pass, and an NA cell of a data frame is left out of its message. The reader re-read both corrections once and found that both hold. devtools::test() after the fix: 10328 passed, 0 failed.
+- 2026-09-27: status set to review.
 
 ## Decisions
 

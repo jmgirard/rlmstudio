@@ -23,7 +23,8 @@ single string.}
 \item{messages}{The messages to send. Give an unnamed list with one element
 per message, such as \code{list(list(role = "user", content = "Hi"))}, or a
 data frame with at least one row. A data frame is sent as one message per
-row, with one field per column. The call aborts before it checks for a
+row, with one field per column. A cell that is \code{NA} is left out of its
+message. The call aborts before it checks for a
 running server if \code{messages} breaks one of these rules:
 \itemize{
 \item \code{messages} is a list or a data frame.

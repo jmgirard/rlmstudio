@@ -268,7 +268,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @param messages The messages to send. Give an unnamed list with one element
 #'   per message, such as `list(list(role = "user", content = "Hi"))`, or a
 #'   data frame with at least one row. A data frame is sent as one message per
-#'   row, with one field per column. The call aborts before it checks for a
+#'   row, with one field per column. A cell that is `NA` is left out of its
+#'   message. The call aborts before it checks for a
 #'   running server if `messages` breaks one of these rules:
 #'   * `messages` is a list or a data frame.
 #'   * A data frame has at least one row, and any other list has at least one
