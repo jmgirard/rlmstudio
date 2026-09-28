@@ -57,7 +57,7 @@ choice to send it as jsonlite writes it.
   column of row 2 is `NA`. The call passes every `messages` rule and
   reaches the server probe. In case 3, the same frame has `NA` in every cell of row 2.
   The call aborts with the empty-row detail.
-- [ ] AC2: A data-frame column for which `is.atomic()` and `is.list()` are
+- [x] AC2: A data-frame column for which `is.atomic()` and `is.list()` are
   both FALSE counts as not empty in each row of `empty_rows()`, and
   `empty_rows()` gives no R warning for it. This holds at the top level
   of `messages` and inside a data-frame column. The domain is the twelve
@@ -238,3 +238,25 @@ Pass-2 independent review. The [S] history reader and the [S] prior-review reade
 - P7 (some probes stay green on revert): reject, the work log records which ones go red.
 - P8 (the O3 and O4 candidate rows are not written yet): fix at the gate once O3 and O4 are accepted.
 - P9 (NEWS.md:3 paraphrases the empty-row error text): fix now.
+
+Third pass, 2026-09-28, after the RR01 amendment of AC2 and tasks T7 and T8. The branch contains `origin/main` (b828540), and no PR exists.
+
+- AC1 evidence (pass 3): a probe script called `lms_chat_openai()` on port 1. Case 1 gave the list-`dim` detail, case 2 reached the server probe, case 3 gave the empty-row detail, and case 2 inside a data-frame column reached the server probe. No call warned. The row-by-row test passed 27 expectations.
+- AC2 evidence (pass 3): each of the nine whole-call kinds AC2 lists gave the value-fault header and the jsonlite-write detail with 0 warnings. The kinds are an environment, a symbol, a call, an expression vector, a formula, an S4 object, a reference-class object, an external pointer, and a symbol in a data-frame column. A function column, top level and nested, gave the function detail with 0 warnings. The test "empty_rows() finds no empty row in a column that is not a vector" passed 49 expectations, which cover the twelve kinds at two depths and the three-row formula. The test "a column that is not a vector is not empty and gives no warning" passed 32 expectations.
+- AC3 evidence (pass 3): a jsonlite write of the help row with the package options gave `[{"role":"user","content":"hi","tags":[["a"],null,{"k":["v"]}]}]`, which matches `R/chat.R:313` and `man/lms_chat_openai.Rd:69`. The help lines at `R/chat.R:307-310` carry the unbox, data-frame, one-element-array, and `null` sentences. The boxed-cells test passed 4 expectations.
+- AC4 evidence (pass 3): `R/chat.R:290-295` states the rule for a column with a `dim` attribute of any length and for a data-frame column, and says a column that is neither an atomic vector nor a list never counts as empty.
+- AC5 evidence (pass 3): `R/conditions.R:257` holds the `@aliases` tag on one line. `devtools::document()` printed no warning and changed no file.
+- AC6 evidence (pass 3): the NEWS.md diff adds one top-level entry, with one sub-item, and no milestone number. `devtools::test()` gave 11745 expectations, 0 failures, 0 errors, and 0 skips. `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate (pass 3): `cairn_validate.py` exited 0, coverage included. No DESIGN principle changed, so `cairn_impact` was skipped. `devtools::document()` gave no diff. The diff touches no README.Rmd, the repo has no pkgdown site, and the only new files are the archived RB01 and RR01 under `cairn/`.
+
+Pass-3 independent review. The [S] history reader found no regression. The [S] prior-review reader found every pass-1 and pass-2 fix-now item landed and no rejected item back, and GitHub has no PR review comments. The [O] diff reader found no criterion failing and reported nine findings, ranked. Proposed dispositions go to the maintainer at the gate.
+
+- Q1 (NEWS.md:4 says a non-vector column "still" never counts as empty, but on main a `Matrix::Matrix()` column reached `is.na()` and then stopped with a plain `rowSums()` error, confirmed by a rerun): fix now, drop "still".
+- Q2 (the `empty_rows()` comment says `is.na()` warns on such a column, but a class with an `is.na()` method, such as a Matrix class, does not warn): fix now, say "warns on most such columns".
+- Q3 (the three-row formula case in the `empty_rows()` test has no `expect_no_warning()`, though AC2 names it): fix now.
+- Q4 (the help's "at any depth in a list" can mislead for a data frame inside a list in a cell): reject, the text matches AC3 and the case needs a nested data frame.
+- Q5 (NEWS "an S4 object that `new()` makes" overlaps with the class-definition sentence): reject, the next sentence names the exception.
+- Q6 (NEWS does not say which value rule runs first): reject, "the later rules decide the call" covers it.
+- Q7 (Air would re-wrap one new entry at `tests/testthat/test-arg-guards.R:1586-1587`): fix now, that hunk only. The other Air drift is on main.
+- Q8 (`apply()` is slower than `rowSums()`, 0.069 s against 0.001 s at 200,000 rows): reject, negligible.
+- Q9 (a classed array whose `is.na()` drops `dim` would make `apply()` error): reject, no real class found.
