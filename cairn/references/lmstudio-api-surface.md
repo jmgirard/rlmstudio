@@ -94,6 +94,23 @@ all.
   gave the same vector as 5000 words, and its first 2040 words did not. So the
   cut follows `context_length` and does not sit at a fixed 512 tokens —
   observed 2026-09-28 (M048 review).
+- **A model name the server cannot serve** (M049). The probe ran on LM
+  Studio 0.4.25+1 with google/gemma-3-1b the one chat model loaded, beside an
+  embedding model. `/v1/chat/completions` and `/v1/responses` answered the
+  name `"not-a-model"` with status 200 and a reply from google/gemma-3-1b. The
+  `model` field of that reply was `"google/gemma-3-1b"`. With two chat models
+  loaded, the same request got status 400 with the `error.code`
+  `"model_not_found"`. A model key matched in any letter case:
+  `"Google/Gemma-3-1B"` got a reply whose `model` was `"google/gemma-3-1b"`.
+  An instance id did not match in another letter case. qwen/qwen3-4b-2507,
+  loaded with `lms load --identifier my-qwen` and asked for by its key,
+  answered with the `model` `"my-qwen"`. A downloaded model that was not
+  loaded was loaded by the request, and the reply named it. `/api/v1/chat`
+  answered 404 for an unknown name. `data-raw/record-model-mismatch-cassette.R`
+  records four of these cases on both routes, each with its model list. Two
+  are the unknown name, with one and with two chat models loaded. The others
+  are the key in other letter case and the key of `my-qwen` — observed
+  2026-09-28.
 - **Reasoning control.** `/api/v1/chat` accepts a `reasoning` field with the
   values off, on, low, medium, and high. `/v1/responses` accepts
   `reasoning.effort`. A model states its allowed values in the

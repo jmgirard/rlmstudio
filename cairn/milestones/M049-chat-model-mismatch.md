@@ -1,13 +1,13 @@
 # M049: A chat call aborts on a reply from a different model
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — the return and conditions of exported chat functions
-- **Branch/PR:** —
+- **Branch/PR:** m049-chat-model-mismatch
 
 ## Goal
 
@@ -97,7 +97,7 @@ before each request was rejected at the gate (work log).
 
 ## Tasks
 
-- [ ] T1: Record the probe facts from Scope in `cairn/references/lmstudio-api-surface.md` as a dated observation
+- [x] T1: Record the probe facts from Scope in `cairn/references/lmstudio-api-surface.md` as a dated observation
       under the features of endpoints the package calls. Add `data-raw/record-model-mismatch-cassette.R`, in the
       form of `data-raw/record-cutoff-cassette.R`. It records four cases on both routes, each with its model-list
       reply. The cases are an unknown name with one chat model loaded, and a name in other letter case. The
@@ -128,6 +128,8 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: plan gate chose a model-list lookup on a name difference over a string compare, and over a lookup before every request. The compare aborts every call to a model loaded under another id, and the pre-check doubles batch requests. Falsified by a reply whose `model` is not the id of the answering instance.
 - 2026-09-28: plan gate chose the check with either setting of `simplify` over `simplify = TRUE` only. The data-frame batch reads bodies with `simplify = FALSE`. Falsified by a user who needs the raw body of a substituted reply.
 - 2026-09-28: plan decided, with no question, that a reply with no `model` string skips the check. Every mocked chat body in the tests has no `model` field. Falsified by a live reply from another model that has no `model` field.
+- 2026-09-28: implement started on branch m049-chat-model-mismatch. Question gate skipped, because the plan left no choice open.
+- 2026-09-28: T1 done. The recorder wrote four cases on both routes into `tests/testthat/model_mismatch_live/`, and each reply matched the Scope probe. The reference page records the facts as a dated observation. The server was off at the first run and was started with `lms server start`.
 
 ## Decisions
 

@@ -1,0 +1,162 @@
+{
+    "models": [
+        {
+            "type": "llm",
+            "publisher": "google",
+            "key": "google/gemma-4-e4b",
+            "display_name": "Gemma 4 E4B",
+            "architecture": "gemma4",
+            "quantization": {
+                "name": "4bit",
+                "bits_per_weight": 4
+            },
+            "size_bytes": 6861915950,
+            "params_string": "4B",
+            "loaded_instances": [
+
+            ],
+            "max_context_length": 131072,
+            "format": "mlx",
+            "capabilities": {
+                "vision": true,
+                "trained_for_tool_use": true,
+                "reasoning": {
+                    "allowed_options": [
+                        "off",
+                        "on"
+                    ],
+                    "default": "on"
+                }
+            },
+            "description": null,
+            "variants": [
+                "google/gemma-4-e4b@4bit"
+            ],
+            "selected_variant": "google/gemma-4-e4b@4bit"
+        },
+        {
+            "type": "llm",
+            "publisher": "google",
+            "key": "google/gemma-4-26b-a4b-qat",
+            "display_name": "Gemma 4 26B A4B QAT",
+            "architecture": "gemma4",
+            "quantization": {
+                "name": "4bit",
+                "bits_per_weight": 4
+            },
+            "size_bytes": 15641333028,
+            "params_string": "26B",
+            "loaded_instances": [
+
+            ],
+            "max_context_length": 262144,
+            "format": "mlx",
+            "capabilities": {
+                "vision": true,
+                "trained_for_tool_use": true,
+                "reasoning": {
+                    "allowed_options": [
+                        "off",
+                        "on"
+                    ],
+                    "default": "on"
+                }
+            },
+            "description": null,
+            "variants": [
+                "google/gemma-4-26b-a4b-qat@4bit"
+            ],
+            "selected_variant": "google/gemma-4-26b-a4b-qat@4bit"
+        },
+        {
+            "type": "llm",
+            "publisher": "qwen",
+            "key": "qwen/qwen3-4b-2507",
+            "display_name": "Qwen3 4B 2507",
+            "architecture": "qwen3",
+            "quantization": {
+                "name": "4bit",
+                "bits_per_weight": 4
+            },
+            "size_bytes": 2279153300,
+            "params_string": "4B",
+            "loaded_instances": [
+                {
+                    "id": "my-qwen",
+                    "config": {
+                        "context_length": 8192,
+                        "parallel": 4,
+                        "reasoning_budget_message": ""
+                    }
+                }
+            ],
+            "max_context_length": 262144,
+            "format": "mlx",
+            "capabilities": {
+                "vision": false,
+                "trained_for_tool_use": true
+            },
+            "description": null,
+            "variants": [
+                "qwen/qwen3-4b-2507@4bit"
+            ],
+            "selected_variant": "qwen/qwen3-4b-2507@4bit"
+        },
+        {
+            "type": "llm",
+            "publisher": "google",
+            "key": "google/gemma-3-1b",
+            "display_name": "Gemma 3 1B",
+            "architecture": "gemma3_text",
+            "quantization": {
+                "name": "4bit",
+                "bits_per_weight": 4
+            },
+            "size_bytes": 771933305,
+            "params_string": "1B",
+            "loaded_instances": [
+                {
+                    "id": "google/gemma-3-1b",
+                    "config": {
+                        "context_length": 8192,
+                        "parallel": 4,
+                        "reasoning_budget_message": ""
+                    }
+                }
+            ],
+            "max_context_length": 32768,
+            "format": "mlx",
+            "capabilities": {
+                "vision": false,
+                "trained_for_tool_use": false
+            },
+            "description": null,
+            "variants": [
+                "google/gemma-3-1b@4bit"
+            ],
+            "selected_variant": "google/gemma-3-1b@4bit"
+        },
+        {
+            "type": "embedding",
+            "publisher": "nomic-ai",
+            "key": "text-embedding-nomic-embed-text-v1.5",
+            "display_name": "Nomic Embed Text v1.5",
+            "quantization": {
+                "name": "Q4_K_M",
+                "bits_per_weight": 4
+            },
+            "size_bytes": 84106624,
+            "params_string": null,
+            "loaded_instances": [
+                {
+                    "id": "text-embedding-nomic-embed-text-v1.5",
+                    "config": {
+                        "context_length": 2048
+                    }
+                }
+            ],
+            "max_context_length": 2048,
+            "format": "gguf"
+        }
+    ]
+}
