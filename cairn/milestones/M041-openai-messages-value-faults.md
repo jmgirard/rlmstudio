@@ -105,7 +105,7 @@ functions take no `messages` argument.
   sent as JSON." with no hint. Update the roxygen of `rlm_check_messages()`
   and `messages_write_fault()` so they no longer say the write rule is last
   or that no field value is judged.
-- [ ] T4: Tests in `tests/testthat/test-arg-guards.R`. Add the two details
+- [x] T4: Tests in `tests/testthat/test-arg-guards.R`. Add the two details
   to `messages_rule_details` and a header per rule. The probe loop asserts
   the rule's header and the absence of the other header. AC1 probes are a
   closure field, a primitive field, and a function in a list in a field.
@@ -140,6 +140,7 @@ functions take no `messages` argument.
 - 2026-09-27: T1 done. `has_inner_list_array()` walks with `for` loops, because `as.list()` on a `POSIXlt` returns a `POSIXlt`. Nine rule11 probes added. With the rule returning FALSE in place, the probe loop went red. `devtools::test()` passed.
 - 2026-09-27: T2 done. `has_function()` runs in `rlm_check_messages()` after `messages_fault()` and before the trial write. `empty_rows()` treats a function column as not empty. Eight rule12 probes, two order probes, and a no-warning test added. With the rule off, and apart from that with the `empty_rows()` change undone, the tests went red. `devtools::test()` passed.
 - 2026-09-27: T3 done. `rlm_check_messages()` aborts shape faults with the old header and hint, then value faults with the new header and no hint. The probe loop now asserts the header, the other header's absence, and the hint per kind. With the old header on value faults, 26 checks went red. `devtools::test()` passed.
+- 2026-09-27: T4 done. The probes and the no-warning test landed in T1 to T3. A new test sends five controls and compares the sent messages: a nested list with no function, an atomic matrix field, and a list-matrix column at the top, nested, and in a data-frame field. A planted refusal of list-matrix columns turned it red. `devtools::test()` passed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
