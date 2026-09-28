@@ -108,7 +108,7 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - [x] T3: Write the tests of AC4 and AC5, then the two new shape checks in a helper local to `list_instances()`.
       Add the function to the token-wrapper table and update its count. In a scratch copy, delete each new check and
       see its test go red. Check that `git diff` leaves `model_list_fault()` and `request_model_list()` unchanged.
-- [ ] T4: Record the live model list under `tests/testthat/list_instances/`, with `RLMSTUDIO_API_TOKEN` set. Put the
+- [x] T4: Record the live model list under `tests/testthat/list_instances/`, with `RLMSTUDIO_API_TOKEN` set. Put the
       LM Studio version and the date in a test comment. Write the recorded test and the live test of AC6.
 - [ ] T5: Write the help page, with each `@inheritSection` on one line. Update `pkgdown/_pkgdown.yml`, `NEWS.md`,
       the DESIGN function families, and the model-list paragraph and item 6 of
@@ -127,3 +127,5 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: T1 done. `list_instances()` returns the four fixed columns and the empty result, with tests in `tests/testthat/test-list-instances.R`. The suite passes, with two live embedding tests skipped because the nomic model is not loaded.
 - 2026-09-28: T2 done. The configuration columns come from the helper `config_column()` in `R/list.R`, with tests for each AC2 rule. The suite passes with the same two skips.
 - 2026-09-28: T3 done. The two new checks live in `instance_list_fault()`, and `list_instances()` joins the token-wrapper table (fifteen functions). In a scratch copy, removing the `display_name` check made 6 assertions of its test fail. Removing the `config` check made 5 fail. No other test failed. `model_list_fault()` and `request_model_list()` have no diff against main, and the three named test files have no edit.
+- 2026-09-28: minor amendment to T4: the recording comes from a new generator, `data-raw/record-list-instances-cassette.R`, because the profile test doctrine requires a committed generator for each fixture.
+- 2026-09-28: T4 done. The cassette holds one instance each of google/gemma-3-1b and the nomic embedding model, and no token or request header. The live test passed with the token set. If the server refuses the request, the live test also skips. This third skip is beside the two of AC6, and it keeps a run with no token clean, as in the live embedding tests.

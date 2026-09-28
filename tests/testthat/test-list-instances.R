@@ -346,3 +346,49 @@ test_that("a reply with a status other than 200 aborts with rlmstudio_api_error"
   cnd <- expect_error(list_instances(), class = "rlmstudio_api_error")
   expect_identical(cnd$status, 500L)
 })
+
+
+# A recorded reply and a live server -------------------------------------------
+
+test_that("a recorded model list gives one row per loaded instance", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  # The reply was recorded on 2026-09-28 from LM Studio 0.4.25+1 by
+  # data-raw/record-list-instances-cassette.R. The cassette carries no
+  # request header, so the test clears both token sources.
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = NA)
+  withr::local_options(rlmstudio.token = NULL)
+
+  httptest2::with_mock_dir("list_instances", {
+    res <- list_instances(host = "http://localhost:1234")
+  })
+
+  expect_identical(
+    res$id,
+    c("google/gemma-3-1b", "text-embedding-nomic-embed-text-v1.5")
+  )
+  expect_identical(res$type, c("llm", "embedding"))
+  expect_identical(res$context_length, c(8192, 2048))
+})
+
+test_that("live: the id column holds the instance ids of the model list", {
+  testthat::skip_on_cran()
+  skip_if_no_server()
+
+  # The test loads and unloads nothing. A server that refuses the request, as
+  # one that requires a token does when none is set, skips it as well.
+  models <- tryCatch(
+    list_models(detailed = TRUE, quiet = TRUE),
+    rlmstudio_api_error = function(cnd) {
+      testthat::skip("the server refused the model list request.")
+    }
+  )
+  ids <- unlist(lapply(models$loaded_instances, function(x) {
+    if (is.data.frame(x)) x$id else character()
+  }))
+  if (length(ids) == 0) {
+    testthat::skip("no model is loaded.")
+  }
+
+  expect_identical(list_instances(quiet = TRUE)$id, ids)
+})
