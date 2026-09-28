@@ -1972,6 +1972,35 @@ test_that("numbers jsonlite leaves out, and classed values, still reach the requ
   }
 })
 
+# jsonlite writes a list whose class vector ends in "list" as a plain list,
+# so a number inside it is written as a string. The POSIXlt case of the test
+# above is the classed list that the rule must not enter.
+test_that("a number in a classed list that jsonlite writes as a list aborts", {
+  probe <- local_counting_probe()
+  classed_list <- function(v) structure(list(a = v), class = c("foo", "list"))
+  df <- data.frame(role = "user")
+  df$c <- list(classed_list(Inf))
+  cases <- list(
+    "a double NA in a classed list field" = list(
+      list(role = "user", content = classed_list(NA_real_))
+    ),
+    "Inf in a classed list in a list-column cell" = df
+  )
+  for (label in names(cases)) {
+    err <- expect_error(
+      lms_chat_openai("a-model", cases[[label]]),
+      number_detail,
+      fixed = TRUE,
+      info = label
+    )
+    expect_true(
+      startsWith(conditionMessage(err), messages_headers[["value"]]),
+      info = label
+    )
+  }
+  expect_identical(probe$calls, 0L)
+})
+
 # The number rule runs after the non-vector rule and before the trial write.
 test_that("the number rule sits between the non-vector rule and the trial write", {
   probe <- local_counting_probe()

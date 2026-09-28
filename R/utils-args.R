@@ -334,9 +334,15 @@ schema_fault <- function(value) {
 #' of their own and with no hint: a function anywhere inside the value, a
 #' value anywhere inside it that is not an atomic vector, a list, or `NULL`,
 #' a number that jsonlite writes as a string or leaves out, and a trial write
-#' that asks jsonlite to write it. `has_unsendable_number()` states the
-#' number rule and the data-frame column case it leaves out. Those four kinds
-#' are the only field values the package judges. The
+#' that asks jsonlite to write it. The number rule refuses an `NA`, `NaN`,
+#' `Inf`, or `-Inf` in a double or integer vector whose class attribute is
+#' absent or is `"AsIs"`, because jsonlite writes it as a string. It skips a
+#' number inside a classed list that jsonlite writes by its class, such as a
+#' `POSIXlt`. In an atomic
+#' column with no `dim` attribute, of a data frame at any depth, jsonlite
+#' leaves such a cell out of the row. There the rule refuses `Inf` and `-Inf`
+#' alone, and an `NA` or `NaN` cell is a missing field, as `empty_rows()`
+#' reads it. Those four kinds are the only field values the package judges. The
 #' server judges a role, a content value, and any other field value, as D-003
 #' states for API fields. A data frame passes, because jsonlite writes it as
 #' one JSON object per row.
@@ -494,10 +500,10 @@ non_vector_type <- function(value) {
 #' `non_vector_type()`, which runs first, so each value it reaches is an
 #' atomic vector, a list, or `NULL`. It starts from the value that
 #' `unclass_messages()` returns, which is the value sent. Below the messages,
-#' it does not go into a list whose class is not `"AsIs"` or a data frame,
-#' because jsonlite writes such a list by its class. A `POSIXlt` in a zone
-#' with a name holds an integer `NA` in its `gmtoff` part, and jsonlite
-#' writes it as a date and time.
+#' it goes into a list whose class is not `"AsIs"` or a data frame only when
+#' `written_as_list()` finds that jsonlite writes it as a plain list. A
+#' `POSIXlt` in a zone with a name holds an integer `NA` in its `gmtoff` part,
+#' and jsonlite writes it as a date and time, so the walk does not go into it.
 #'
 #' @param value A `messages` value that passed the function rule and the
 #'   non-vector rule.
@@ -540,7 +546,11 @@ is_or_holds_unsendable_number <- function(value) {
   }
   if (is.list(value)) {
     value_class <- oldClass(value)
-    if (!is.null(value_class) && !identical(value_class, "AsIs")) {
+    if (
+      !is.null(value_class) &&
+        !identical(value_class, "AsIs") &&
+        !written_as_list(value)
+    ) {
       return(FALSE)
     }
     for (element in value) {
@@ -551,6 +561,25 @@ is_or_holds_unsendable_number <- function(value) {
     return(FALSE)
   }
   is_plain_number(value) && !all(is.finite(value))
+}
+
+#' Does jsonlite write this classed list as it writes the bare list?
+#'
+#' jsonlite writes a `POSIXlt` as a date and time, but it writes a list with
+#' the class `c("foo", "list")` as a plain list, so a number inside it is
+#' written as a string. The two writes use `rlm_json_text()`, as the
+#' sent body does. A write that fails returns `FALSE`, and the trial write
+#' refuses the value later.
+#'
+#' @param value A list with a class attribute.
+#' @return `TRUE` when both writes give the same text.
+#'
+#' @noRd
+written_as_list <- function(value) {
+  tryCatch(
+    identical(rlm_json_text(value), rlm_json_text(unclass(value))),
+    error = function(e) FALSE
+  )
 }
 
 #' Is this a double or integer vector with no class but `"AsIs"`?
@@ -798,7 +827,13 @@ has_bad_name <- function(value) {
 #' a `null` field for each list column. A matrix column is the exception: its
 #' `NA` cells are written as an array, of `null` for a character matrix, but
 #' such a row is refused all the same. A numeric matrix with such a row is
-#' refused here too, before the number rule of `rlm_check_messages()`. jsonlite
+#' refused here too, before the number rule of `rlm_check_messages()`. That
+#' rule refuses an `NA`, `NaN`, `Inf`, or `-Inf` in a double or integer vector
+#' whose class attribute is absent or is `"AsIs"`, because jsonlite writes it
+#' as a string. It skips a number inside a classed list that jsonlite writes
+#' by its class, such as a `POSIXlt`. An `NA` or `NaN` cell of an atomic
+#' column with no `dim` attribute passes, because jsonlite leaves that cell
+#' out of the row, and such a cell counts toward an empty row here. jsonlite
 #' writes a column named `NA` or `""` under a number, and it renames a
 #' repeated column name with a suffix. The column rule runs first, because a
 #' data frame with no columns also has rows in which every cell is `NA`.

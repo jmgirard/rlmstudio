@@ -355,9 +355,11 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     `Inf` and `-Inf` alone, and an `NA` or `NaN` cell is left out as a
 #'     missing field. A number with another class, such as a `Date`, is
 #'     written by its class, so `as.Date(NA)` is sent as `null` and
-#'     `as.Date(Inf)` as `"Inf"`. Below a message, the rule does not read
-#'     the parts of a list whose class is neither `"AsIs"` nor a data frame,
-#'     such as a `POSIXlt` value.
+#'     `as.Date(Inf)` as `"Inf"`. Below a message, the rule reads the parts
+#'     of a list whose class is neither `"AsIs"` nor a data frame only when
+#'     jsonlite writes that list as it writes the list without its class,
+#'     such as a list with the class `c("foo", "list")`. It does not read
+#'     the parts of a `POSIXlt` value.
 #'   * jsonlite can write the value, with the options that the request uses.
 #'     If it cannot, the error gives the jsonlite message. This rule is
 #'     checked last.

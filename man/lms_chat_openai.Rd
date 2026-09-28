@@ -113,9 +113,11 @@ cell of such a column out of its message. There the rule refuses
 \code{Inf} and \code{-Inf} alone, and an \code{NA} or \code{NaN} cell is left out as a
 missing field. A number with another class, such as a \code{Date}, is
 written by its class, so \code{as.Date(NA)} is sent as \code{null} and
-\code{as.Date(Inf)} as \code{"Inf"}. Below a message, the rule does not read
-the parts of a list whose class is neither \code{"AsIs"} nor a data frame,
-such as a \code{POSIXlt} value.
+\code{as.Date(Inf)} as \code{"Inf"}. Below a message, the rule reads the parts
+of a list whose class is neither \code{"AsIs"} nor a data frame only when
+jsonlite writes that list as it writes the list without its class,
+such as a list with the class \code{c("foo", "list")}. It does not read
+the parts of a \code{POSIXlt} value.
 \item jsonlite can write the value, with the options that the request uses.
 If it cannot, the error gives the jsonlite message. This rule is
 checked last.

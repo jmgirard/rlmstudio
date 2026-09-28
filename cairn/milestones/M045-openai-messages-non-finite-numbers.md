@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M045: The OpenAI chat function refuses a number that jsonlite writes as a string or drops
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M044   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -139,11 +139,18 @@ the numeric matrix `NA` closes with this milestone.
 - 2026-09-28: the claim-audit re-read found one gap left in the closing help summary, which now names the class limit. There was no second pass.
 - 2026-09-28: status set to review.
 - 2026-09-28: review returned M045 to in-progress (defect return 1). AC4 failed, because the roxygen of `data_frame_messages_fault()` and `rlm_check_messages()` does not state the plain data-frame column case. AC1 to AC3 passed.
+- 2026-09-28: AC4 fix. The roxygen of `rlm_check_messages()` and `data_frame_messages_fault()` now states the number rule and the plain data-frame column case. The AC4 grep finds the same 3 lines.
+- 2026-09-28: claim audit: 11 claims read, 2 corrected — R/utils-args.R
+- 2026-09-28: the claim audit found a code gap. A list classed `c("foo", "list")` holding a double `NA` passed and was sent as `"NA"`. The walk now enters a classed list when `written_as_list()` finds that jsonlite writes it as the bare list. A new test covers two such cases, and the help at `messages` and three roxygen blocks changed to match. Planting `written_as_list()` as always `FALSE` turned the new test red, and as always `TRUE` turned the `POSIXlt` case red.
+- 2026-09-28: the claim-audit re-read found 9 claims, 1 still wrong, now corrected in the `data_frame_messages_fault()` roxygen. There was no second pass. It also found a list classed `"json"` holding `NA_real_` sent as `"NA"`, which became a candidate row.
+- 2026-09-28: `devtools::test()` passed, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, with the token set.
+- 2026-09-28: status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
 
 - 2026-09-28: The number walk starts from the value that `unclass_messages()` returns. Below the messages, it does not enter a list whose class is not `"AsIs"` or a data frame. jsonlite writes such a list by its class. A named-zone `POSIXlt` holds an integer `NA` in `gmtoff` and is sent as a date and time.
+- 2026-09-28 (supersedes the entry above in part): Take a list whose class is not `"AsIs"` or a data frame. If jsonlite writes it as it writes the bare list, the number walk enters it. The earlier entry assumed that jsonlite writes every such list by its class. jsonlite writes a list classed `c("foo", "list")` as a plain list, so its numbers were sent as strings. The `POSIXlt` case stands, because jsonlite writes it differently from the bare list.
 
 ## Review
 <!-- owner: review · exclusive. -->
