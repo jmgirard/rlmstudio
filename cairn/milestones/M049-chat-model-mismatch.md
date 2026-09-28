@@ -1,6 +1,6 @@
 # M049: A chat call aborts on a reply from a different model
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -47,7 +47,7 @@ before each request was rejected at the gate (work log).
       answers. Further tests fire the abort on both functions with `logprobs = TRUE`, and on `lms_chat_openai()`
       with a `schema`. One test fires it on a mismatched reply that holds no answer text. Two tests fire it
       through `lms_chat()`, on the default route and on `api_type = "openai"`.
-- [x] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
+- [ ] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
       functions with both settings of `simplify`.
       (a) The reply's `model` equals the asked name. The call sends no request after the chat request.
       (b) The asked name differs in letter case only from the key of the model whose loaded instance answered.
@@ -88,7 +88,7 @@ before each request was rejected at the gate (work log).
 ## Coverage
 
 - AC1 → T1, T3
-- AC2 → T1, T3, T7
+- AC2 → T1, T3, T7, T9
 - AC3 → T3
 - AC4 → T4
 - AC5 → T1, T2, T4
@@ -126,6 +126,15 @@ before each request was rejected at the gate (work log).
       `keep_or_abort_api()`. Add a lookup test with an empty model list that prints nothing. State on
       `rlmstudio-conditions` that a status-200 body that is not a JSON object skips the check. Rewrap the two long
       roxygen lines in `R/conditions.R`. Then run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
+- [ ] T9: Review findings R1 and R2. In `check_reply_model()` in `R/chat.R`, make the asked name a plain string
+      that also drops the S4 bit, such as with `as.character()`. Tests first on both routes with both settings of
+      `simplify`: an S4 subclass of `character` answered by the same model sends 1 request. Move the `class` option
+      of `rlm_abort_bad_response()` after `...`.
+- [ ] T10: Review findings R3 to R8. Add the `code` field to the `rlm_abort_api()` line of `cairn/DESIGN.md`. Add
+      one D-entry that annotates D-024 and D-025 with the fourth batch difference. Fix the comment at
+      `R/chat.R:514` and the "Malformed response" text so that a failed lookup is the exception. Run Air on the
+      lines the branch added. Rewrap the T8 help text. Give each unload in the recorder `finally` clause its own
+      `tryCatch()`. Then run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
 
 ## Work log
 
@@ -157,6 +166,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: status review. T7 and T8 are done, and AC2 waits for fresh evidence at review.
 - 2026-09-28: review pass 2 started on head a812ed4, which already contains `origin/main`. No PR exists. Fresh evidence for AC1 to AC7 is recorded under "Pass 2", AC2 is ticked, and the consistency gate passed. Three fresh reviewers are running.
 - 2026-09-28: review pass 2: 9 findings logged with proposed dispositions. R1 shows AC2(a) failing for an S4 model string. The step-7 gate decides.
+- 2026-09-28: review return 2 (defect): AC2(a) fails, because an S4 model string that the same model answers aborts as a mismatch. The user chose to send it back at the gate. Status in-progress, AC2 unticked, with T9 and T10 added. R9 joined the candidate row.
 
 ## Decisions
 
@@ -306,3 +316,7 @@ read again, and each finding holds. Each has a proposed disposition, which the s
 - R9 (follow-up): a name without its publisher, such as `"gemma-3-1b"`, can be served by `google/gemma-3-1b`, and
   the key compare then aborts. No probe covered it. It joins the candidate row "Four model-name cases outside
   M049", next to O2.
+
+Gate 2026-09-28, pass 2: the user accepted the dispositions above and sent the milestone back. R1 fails AC2(a),
+so the AC2 box is unticked. T9 carries R1 and R2, and T10 carries R3 to R8. R9 joined the candidate row, which is
+now "Five model-name cases outside M049".
