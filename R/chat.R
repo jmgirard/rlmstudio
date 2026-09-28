@@ -280,6 +280,16 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   * Each element of such a list is a list of length one or more, and each
 #'     of its fields has a name that is not `NA` and not empty. A data frame
 #'     as an element breaks this rule.
+#'   * A data frame has at least one column, and no column name is `NA`,
+#'     empty, or repeated.
+#'   * A data frame has no row in which every cell is `NA`.
+#'
+#'   A list that is not a data frame is sent without its class attribute, and
+#'   each of its messages is sent without its class attribute. A class on a
+#'   field inside a message is kept, so a field wrapped in [I()] is sent as an
+#'   array. A data frame and its columns keep their classes. jsonlite writes
+#'   the body. It fails on a kept class when no entry of the class vector has
+#'   a jsonlite method, such as a field with the class `"foo"` alone.
 #'
 #'   The package does not check the roles, the content, or any other field of
 #'   a message. The server checks them.
@@ -374,7 +384,7 @@ lms_chat_openai <- function(
 
   stop_if_no_server(host)
 
-  body <- list(model = model, messages = messages)
+  body <- list(model = model, messages = unclass_messages(messages))
   if (isTRUE(logprobs)) {
     body$logprobs <- TRUE
   }

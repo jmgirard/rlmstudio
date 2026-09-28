@@ -36,7 +36,17 @@ breaks this rule.
 \item Each element of such a list is a list of length one or more, and each
 of its fields has a name that is not \code{NA} and not empty. A data frame
 as an element breaks this rule.
+\item A data frame has at least one column, and no column name is \code{NA},
+empty, or repeated.
+\item A data frame has no row in which every cell is \code{NA}.
 }
+
+A list that is not a data frame is sent without its class attribute, and
+each of its messages is sent without its class attribute. A class on a
+field inside a message is kept, so a field wrapped in \code{\link[=I]{I()}} is sent as an
+array. A data frame and its columns keep their classes. jsonlite writes
+the body. It fails on a kept class when no entry of the class vector has
+a jsonlite method, such as a field with the class \code{"foo"} alone.
 
 The package does not check the roles, the content, or any other field of
 a message. The server checks them.}

@@ -848,7 +848,9 @@ messages_rule_details <- c(
   rule1 = "You gave a value that is neither a list nor a data frame.",
   rule2 = "You gave no messages.",
   rule3 = "You gave a list with names, which is sent as one JSON object.",
-  rule4 = "You gave a message that is not a list with a name on each field."
+  rule4 = "You gave a message that is not a list with a name on each field.",
+  rule5 = "You gave a data frame that has no columns or a column name that is missing or repeated.",
+  rule6 = "You gave a data frame with a row in which every cell is NA."
 )
 
 good_message <- list(role = "user", content = "hi")
@@ -908,6 +910,105 @@ messages_probes <- list(
     label = "a bad element after a good one",
     value = list(good_message, "hi"),
     rule = "rule4"
+  ),
+  list(
+    label = "a POSIXlt element",
+    value = list(as.POSIXlt("2026-01-01", tz = "UTC")),
+    rule = "rule4"
+  ),
+  list(
+    label = "a classed data frame element",
+    value = list(
+      structure(data.frame(role = "user"), class = c("foo", "data.frame"))
+    ),
+    rule = "rule4"
+  ),
+  # The column rule is checked first, so a data frame with no columns, which
+  # also has rows in which every cell is NA, gets the column text alone.
+  list(
+    label = "a data frame with rows and no columns",
+    value = data.frame(row.names = 1:2),
+    rule = "rule5"
+  ),
+  list(
+    label = "a data frame with a column named NA",
+    value = stats::setNames(
+      data.frame(a = "user", b = "hi"),
+      c("role", NA)
+    ),
+    rule = "rule5"
+  ),
+  list(
+    label = "a data frame with a column named \"\"",
+    value = stats::setNames(data.frame(a = "user", b = "hi"), c("role", "")),
+    rule = "rule5"
+  ),
+  list(
+    label = "a data frame with two columns of the same name",
+    value = stats::setNames(
+      data.frame(a = "user", b = "hi"),
+      c("role", "role")
+    ),
+    rule = "rule5"
+  ),
+  list(
+    label = "a tibble-classed data frame with no columns",
+    value = structure(
+      data.frame(row.names = 1L),
+      class = c("tbl_df", "tbl", "data.frame")
+    ),
+    rule = "rule5"
+  ),
+  list(
+    label = "an NA character row first",
+    value = data.frame(role = c(NA, "user"), content = c(NA, "hi")),
+    rule = "rule6"
+  ),
+  list(
+    label = "a NaN numeric row in the middle",
+    value = data.frame(
+      role = c("user", NA, "user"),
+      n = c(1, NaN, 2)
+    ),
+    rule = "rule6"
+  ),
+  list(
+    label = "an NA factor row last",
+    value = data.frame(
+      role = factor(c("user", NA)),
+      content = c("hi", NA)
+    ),
+    rule = "rule6"
+  ),
+  list(
+    label = "an NA Date row",
+    value = data.frame(
+      role = c("user", NA),
+      date = as.Date(c("2026-01-01", NA))
+    ),
+    rule = "rule6"
+  ),
+  list(
+    label = "an NA list-column row",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$content <- list("hi", NA)
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a data frame of one NA row",
+    value = data.frame(role = NA_character_, content = NA_character_),
+    rule = "rule6"
+  ),
+  list(
+    label = "a foo-classed data frame with an NA row",
+    value = structure(
+      data.frame(role = c("user", NA), content = c("hi", NA)),
+      class = c("foo", "data.frame")
+    ),
+    rule = "rule6"
   )
 )
 
@@ -949,6 +1050,18 @@ sent_messages <- function(req) {
   jsonlite::parse_json(rawToChar(out$body), simplifyVector = FALSE)$messages
 }
 
+first_msg <- list(role = "system", content = "Be brief.")
+later_msg <- list(role = "user", content = "hi")
+classed_sent <- list(first_msg, later_msg)
+class_forms <- list(
+  "an S3 class" = function(x) structure(x, class = "foo"),
+  "a class vector of two entries" = function(x) {
+    structure(x, class = c("foo", "bar"))
+  },
+  "the class \"list\"" = function(x) structure(x, class = "list"),
+  "I()" = function(x) I(x)
+)
+
 test_that("a messages value that keeps every rule reaches the request", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
@@ -987,8 +1100,79 @@ test_that("a messages value that keeps every rule reaches the request", {
       label = "number content",
       value = list(list(role = "user", content = 5)),
       sent = list(list(role = "user", content = 5L))
+    ),
+    list(
+      label = "an I() field, sent as an array",
+      value = list(list(role = I("user"), content = "hi")),
+      sent = list(list(role = list("user"), content = "hi"))
+    ),
+    list(
+      label = "a data frame with an NA cell in every row",
+      value = data.frame(
+        role = c("user", "user"),
+        content = c(NA, "hi"),
+        name = c("a", NA)
+      ),
+      sent = list(
+        list(role = "user", name = "a"),
+        list(role = "user", content = "hi")
+      )
+    ),
+    list(
+      label = "a data frame row with one cell that is not NA",
+      value = data.frame(role = c("user", NA), content = c("hi", "yo")),
+      sent = list(list(role = "user", content = "hi"), list(content = "yo"))
+    ),
+    list(
+      label = "a tibble-classed data frame",
+      value = structure(
+        data.frame(role = c("system", "user"), content = c("Be brief.", "hi")),
+        class = c("tbl_df", "tbl", "data.frame")
+      ),
+      sent = classed_sent
+    ),
+    list(
+      label = "a foo-classed data frame",
+      value = structure(
+        data.frame(role = c("system", "user"), content = c("Be brief.", "hi")),
+        class = c("foo", "data.frame")
+      ),
+      sent = classed_sent
     )
   )
+  # A class on the outer list or on a message is removed before the body is
+  # built. Each form sits at the outer level and on a later message, and one
+  # S3 class also sits on the first message and on both levels at once.
+  for (form in names(class_forms)) {
+    add <- class_forms[[form]]
+    passes <- c(passes, list(
+      list(
+        label = paste(form, "on the outer list"),
+        value = add(list(first_msg, later_msg)),
+        sent = classed_sent
+      ),
+      list(
+        label = paste(form, "on a later message"),
+        value = list(first_msg, add(later_msg)),
+        sent = classed_sent
+      )
+    ))
+  }
+  passes <- c(passes, list(
+    list(
+      label = "an S3 class on the first message",
+      value = list(structure(first_msg, class = "foo"), later_msg),
+      sent = classed_sent
+    ),
+    list(
+      label = "an S3 class on both levels",
+      value = structure(
+        list(structure(first_msg, class = "foo"), later_msg),
+        class = "foo"
+      ),
+      sent = classed_sent
+    )
+  ))
 
   for (p in passes) {
     recorder <- local_request_recorder(mock_response(200L, openai_reply()))
@@ -998,6 +1182,31 @@ test_that("a messages value that keeps every rule reaches the request", {
       sent_messages(recorder$requests[[1]]),
       p$sent,
       info = p$label
+    )
+  }
+})
+
+# A class below the outer list and its messages is not removed. A class that
+# jsonlite has no method for therefore still fails there, when the request body
+# is written, as it did before. The recorder never writes the body, so the
+# test writes it with a dry run.
+test_that("a class below the message level still reaches jsonlite", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  classed_content <- list(list(
+    role = "user",
+    content = structure(list(list(type = "text", text = "x")), class = "foo")
+  ))
+  classed_column <- data.frame(content = "hi")
+  classed_column$role <- structure("user", class = "foo")
+
+  for (value in list(classed_content, classed_column)) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    lms_chat_openai("a-model", value)
+    expect_error(
+      sent_messages(recorder$requests[[1]]),
+      "No method asJSON S3 class: foo",
+      fixed = TRUE
     )
   }
 })

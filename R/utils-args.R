@@ -352,6 +352,26 @@ rlm_check_messages <- function(value) {
   invisible(value)
 }
 
+#' Remove the class of a messages list and of each of its messages
+#'
+#' jsonlite has no method for most S3 classes, so a list with such a class
+#' would fail after the server probe. The class goes from the outer list and
+#' from each message alone. A class below them, such as `I()` on a field,
+#' changes how jsonlite writes the field, so it stays. A data frame keeps its
+#' class, because `unclass()` turns it into a list of columns. Run it after
+#' `rlm_check_messages()`, which reads the value as the caller passed it.
+#'
+#' @param value A `messages` value that passed `rlm_check_messages()`.
+#' @return `value` with those classes removed, or a data frame unchanged.
+#'
+#' @noRd
+unclass_messages <- function(value) {
+  if (is.data.frame(value)) {
+    return(value)
+  }
+  lapply(unclass(value), unclass)
+}
+
 #' Which rule did this messages value break?
 #'
 #' Returns plain text rather than a cli string, for the reason `id_fault()`
@@ -371,7 +391,7 @@ messages_fault <- function(value) {
     if (nrow(value) == 0L) {
       return("You gave no messages.")
     }
-    return(NULL)
+    return(data_frame_messages_fault(value))
   }
   if (length(value) == 0L) {
     return("You gave no messages.")
@@ -385,6 +405,36 @@ messages_fault <- function(value) {
         "You gave a message that is not a list with a name on each field."
       )
     }
+  }
+  NULL
+}
+
+#' Which data-frame rule did this messages value break?
+#'
+#' jsonlite writes a data frame with no columns, or a row whose cells are all
+#' `NA`, as an empty message. When list columns hold the `NA`, the message has
+#' a `null` field for each list column. A matrix column is the exception: its
+#' `NA` cells are written as an array, of `null` for a character matrix and of
+#' `"NA"` for a numeric one, but such a row is refused all the same. jsonlite
+#' writes a column named `NA` or `""` under a number, and it renames a
+#' repeated column name with a suffix. The column rule runs first, because a
+#' data frame with no columns also has rows in which every cell is `NA`.
+#'
+#' @param value A data frame with at least one row.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+data_frame_messages_fault <- function(value) {
+  nms <- names(value)
+  if (
+    length(nms) == 0L || anyNA(nms) || !all(nzchar(nms)) || anyDuplicated(nms)
+  ) {
+    return(
+      "You gave a data frame that has no columns or a column name that is missing or repeated."
+    )
+  }
+  if (any(rowSums(!is.na(value)) == 0L)) {
+    return("You gave a data frame with a row in which every cell is NA.")
   }
   NULL
 }
