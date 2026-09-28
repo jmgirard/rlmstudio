@@ -1,13 +1,13 @@
 # M039: The OpenAI chat function sends a classed messages list and refuses a data frame with a bad column name or an empty row
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes what the exported `lms_chat_openai()` sends and refuses
-- **Branch/PR:** —
+- **Branch/PR:** m039-openai-messages-class-and-frame
 
 ## Goal
 
@@ -82,7 +82,7 @@ list message stay unchecked, because no finding reported them.
 
 ## Tasks
 
-- [ ] T1: Write the tests first in `tests/testthat/test-arg-guards.R`. Add
+- [x] T1: Write the tests first in `tests/testthat/test-arg-guards.R`. Add
       the two rule texts to `messages_rule_details` as `rule5` and
       `rule6`. Add the AC3 probes to `messages_probes`. Add the AC1 and AC2
       values to the `passes` table of the test "a messages value that keeps
@@ -106,3 +106,4 @@ list message stay unchecked, because no finding reported them.
 - 2026-09-27: second audit pass (full mode, same reader) on the gate-changed criteria returned five findings, all fixed. The column rule runs first. AC2 names two `structure()` probes and leaves a column class to jsonlite. AC1 adds a classed `content` probe. AC4 covers the data-frame classes.
 - 2026-09-27: plan gate chose to remove the class after the check over refusing any class but `AsIs`, because no value that serializes today is refused; falsified by a classed list whose class carries meaning the server needs.
 - 2026-09-27: plan gate chose to refuse repeated column names over leaving them to jsonlite, because jsonlite renames them without a message; falsified by a user who relies on the `.1` rename.
+- 2026-09-27: T1 done. The new probes and pass cases are in `tests/testthat/test-arg-guards.R`. On main, the rule test fails at the first data-frame probe, which reaches the server probe, and the pass test fails in jsonlite at the first classed list. The below-level test passes on main, as it must. The test-first red is expected until T2 and T3.
