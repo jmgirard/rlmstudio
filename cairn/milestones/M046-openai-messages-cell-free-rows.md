@@ -95,7 +95,7 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
       `apply()` path back in a scratch copy and see the AC1 test go red.
 - [x] T3: Update the `messages` help in `R/chat.R` (about line 288), the
       `empty_rows()` roxygen, and NEWS.md. Run `devtools::document()`.
-- [ ] T4: Run `devtools::test()` and `devtools::check()`. The check needs
+- [x] T4: Run `devtools::test()` and `devtools::check()`. The check needs
       `RLMSTUDIO_API_TOKEN` and a started server (LESSONS, M009).
 
 ## Work log
@@ -107,6 +107,7 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
 - 2026-09-28: T1 done. The tests come from draft `a1fb74e`. They add the nested data frame with no columns and check that jsonlite writes each row-2 cell as AC2 states. The AC1 test is red with the empty-row detail. The AC2 test is green.
 - 2026-09-28: T2 done. `empty_rows()` returns `FALSE` for each row of a `dim` column whose extents after the first multiply to zero. With the old `empty_rows()` put back through `assignInNamespace()`, the AC1 test was red with the empty-row detail. With the fix, its 12 expectations passed, and `devtools::test()` passed with no failure or skip.
 - 2026-09-28: T3 done. The `messages` help, the `empty_rows()` roxygen, and one NEWS entry state both rules. `devtools::document()` rewrote `man/lms_chat_openai.Rd` alone.
+- 2026-09-28: T4 done. With the token set and the server started, `devtools::test()` passed, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. A second `devtools::document()` left the tree clean. The check left the server off, as LESSONS M009 says.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
