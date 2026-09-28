@@ -145,6 +145,8 @@ functions take no `messages` argument.
 - 2026-09-27: T6 done. `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-27: claim audit: 34 claims read, 2 corrected — NEWS.md, R/chat.R, man/lms_chat_openai.Rd. NEWS now says that a one-dimensional list column of more than one row already failed the jsonlite write. The help says that a classed function gets the function error first, because it also fails the write.
 - 2026-09-27: the audit found 11 `tests/testthat/_problems/` files that the mutation runs wrote and `git add -A` committed in T1 to T4. Removed. `devtools::test()` passed after the fixes. Status set to review.
+- 2026-09-27: review triage accepted as proposed: O1 and O4 one follow-up row, O2 a follow-up row, O3, O5, O6 rejected, O7 noted.
+- 2026-09-27: step-7 approval: m041-openai-messages-value-faults approved for merge.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
