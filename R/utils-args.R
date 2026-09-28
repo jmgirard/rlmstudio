@@ -352,6 +352,26 @@ rlm_check_messages <- function(value) {
   invisible(value)
 }
 
+#' Remove the class of a messages list and of each of its messages
+#'
+#' jsonlite has no method for most S3 classes, so a classed list would fail
+#' after the server probe. The class goes from the outer list and from each
+#' message alone. A class below them, such as `I()` on a field, changes how
+#' jsonlite writes the field, so it stays. A data frame keeps its class,
+#' because `unclass()` turns it into a list of columns. Run it after
+#' `rlm_check_messages()`, which reads the value as the caller passed it.
+#'
+#' @param value A `messages` value that passed `rlm_check_messages()`.
+#' @return `value` with those classes removed, or a data frame unchanged.
+#'
+#' @noRd
+unclass_messages <- function(value) {
+  if (is.data.frame(value)) {
+    return(value)
+  }
+  lapply(unclass(value), unclass)
+}
+
 #' Which rule did this messages value break?
 #'
 #' Returns plain text rather than a cli string, for the reason `id_fault()`

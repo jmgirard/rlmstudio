@@ -88,7 +88,7 @@ list message stay unchecked, because no finding reported them.
       values to the `passes` table of the test "a messages value that keeps
       every rule reaches the request". Add a rule-4 probe for a `POSIXlt`
       message. Make sure that the new tests fail on main.
-- [ ] T2: In `lms_chat_openai()` (`R/chat.R:377`), build the body from the
+- [x] T2: In `lms_chat_openai()` (`R/chat.R:377`), build the body from the
       value with its class removed at the two levels. Leave a data frame
       alone. Plant a regression: remove the class removal, and make sure
       that the AC1 tests go red.
@@ -107,3 +107,4 @@ list message stay unchecked, because no finding reported them.
 - 2026-09-27: plan gate chose to remove the class after the check over refusing any class but `AsIs`, because no value that serializes today is refused; falsified by a classed list whose class carries meaning the server needs.
 - 2026-09-27: plan gate chose to refuse repeated column names over leaving them to jsonlite, because jsonlite renames them without a message; falsified by a user who relies on the `.1` rename.
 - 2026-09-27: T1 done. The new probes and pass cases are in `tests/testthat/test-arg-guards.R`. On main, the rule test fails at the first data-frame probe, which reaches the server probe, and the pass test fails in jsonlite at the first classed list. The below-level test passes on main, as it must. The test-first red is expected until T2 and T3.
+- 2026-09-27: T2 done. `unclass_messages()` in `R/utils-args.R` removes the class of the outer list and of each message, and `lms_chat_openai()` builds the body from it after the check. Two plants went red: with no removal, the pass test failed in jsonlite, and with a removal one level deeper, the `I()` field case and the below-level test failed. The rule test stays red until T3.

@@ -374,7 +374,7 @@ lms_chat_openai <- function(
 
   stop_if_no_server(host)
 
-  body <- list(model = model, messages = messages)
+  body <- list(model = model, messages = unclass_messages(messages))
   if (isTRUE(logprobs)) {
     body$logprobs <- TRUE
   }
