@@ -50,7 +50,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `lms_chat_openai()` sends each `messages` value below as the
+- [x] AC1: `lms_chat_openai()` sends each `messages` value below as the
       text that `jsonlite::toJSON()` writes from
       `list(model = "a-model", messages = value)`. The options are
       `auto_unbox = TRUE`, `digits = 22`, and `null = "null"`. A test
@@ -68,12 +68,12 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
       - a `POSIXlt` value
       - a data frame whose one column is a 2-by-0 numeric matrix
       - a list whose first element is a `POSIXlt` value
-- [ ] AC2: `lms_chat_native()`, `lms_chat_openresponses()`, `lms_embed()`,
+- [x] AC2: `lms_chat_native()`, `lms_chat_openresponses()`, `lms_embed()`,
       `lms_load()`, `lms_download()`, and `lms_unload()` each send a
       `POSIXlt` value given in `...` as the text that jsonlite writes from
       it. A test reads the field in the raw text of each recorded body.
       After the change, `grep -rn 'req_body_json' R/` finds no line.
-- [ ] AC3: The roxygen of `messages_write_fault()` and of the new helper
+- [x] AC3: The roxygen of `messages_write_fault()` and of the new helper
       states this. The trial write and the sent body go through one helper
       with the same options. So a `messages` value that passes the trial
       write is sent as jsonlite writes it. NEWS.md has one entry for the
@@ -81,7 +81,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
       of a `messages` data frame is now sent. A `POSIXlt` value no longer
       fails with infinite recursion. An `httr2::obfuscated()` value in
       `...` now aborts. No milestone numbers appear.
-- [ ] AC4: `devtools::document()` leaves the tree clean, and
+- [x] AC4: `devtools::document()` leaves the tree clean, and
       `devtools::test()` passes. `devtools::check()` gives 0 errors and 0
       warnings, and each note has a reason.
 
@@ -141,3 +141,21 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+Evidence gathered 2026-09-28 on `m044-json-body-as-written` at `f9986e6`; main had not moved since the branch was cut (`401c62a`).
+
+- AC1: the test "messages reach the request as jsonlite writes them" in `test-arg-guards.R` ran alone with 20 expectations, 0 failed. It compares the raw dry-run body with the jsonlite write for all nine values, and it checks two sent forms stated by hand. The [O] reviewer confirmed by probe that each value but the 2-by-2 control has another form on main.
+- AC2: `test-body-write.R` ran with 14 expectations, 0 failed. For each of the six functions, one request is recorded, and its raw body holds `"when":"2020-01-01 10:00:00"`. `grep -rn 'req_body_json' R/` found no line (exit 1).
+- AC3: a read of the branch shows the roxygen of `messages_write_fault()` (`R/utils-args.R`) and of `rlm_json_text()` (`R/chat.R`). Each says that the trial write and the sent body use one helper with the same options. So a value that passes the trial write is sent as jsonlite writes it. The diff adds one top-level NEWS.md entry. Its three sub-points name the zero-width column, the `POSIXlt` recursion, and the `obfuscated()` abort. A grep for milestone ids in that entry found 0.
+- AC4: `devtools::document()` left `git status --porcelain` empty. With the server started and the token set, `devtools::test()` gave 429 tests, 12305 expectations passed, 0 failed, 0 errors, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+- Consistency gate: `cairn_validate.py` passed (exit 0). No principle changed, so `cairn_impact` was skipped. README.Rmd is not in the diff, no `_pkgdown.yml` exists, no new top-level file was added, and NEWS.md has the entry.
+
+Independent review, three fresh reviewers. The [S] blame-history and [S] prior-review lenses found nothing. The prior-review probe of GitHub PR comments returned none. The [O] diff reviewer ranked seven findings, none a criterion failure. Dispositions below are the gate's.
+
+1. The NEWS "Before" sentence names only numeric zero-width columns. Character and logical 2-by-0 matrix columns were also dropped on main. A probe of httr2's walk on 2026-09-28 confirmed it.
+2. NEWS does not describe the nested data-frame column holding a zero-width matrix, sent as `"x":{}` on main and `"x":{"m":[]}` now.
+3. NEWS names only `POSIXlt` among values that recursed on main. `packageVersion()` and `person()` values also recursed there (probe confirmed for `packageVersion()`), and now they abort with the jsonlite "No method asJSON" error.
+4. `request_body_text()` resets any outer elapsed time limit to `Inf` on exit.
+5. The comment above `request_body_text()` reads as if the package still calls `req_body_json()`.
+6. The shared helpers live in `R/chat.R`, not an `R/utils-*.R` file.
+7. The obfuscated-value test matches message text only.
