@@ -1,6 +1,6 @@
 # M039: The OpenAI chat function sends a classed messages list and refuses a data frame with a bad column name or an empty row
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -111,3 +111,4 @@ list message stay unchecked, because no finding reported them.
 - 2026-09-27: T3 done. `data_frame_messages_fault()` in `R/utils-args.R` applies the column rule, then the empty-row rule, which counts the cells that are not `NA` per row. Two plants went red: a wrong detail text, and the empty-row rule placed first, which gave the zero-column probe the wrong text. `devtools::test()` passes.
 - 2026-09-27: T4 done. The `messages` help and NEWS state the class removal, the kept classes, and the two data-frame rules. `devtools::document()` warns only on the known `@aliases` line (candidate row). `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
 - 2026-09-27: claim audit: 32 claims read, 3 corrected — R/utils-args.R, R/chat.R, man/lms_chat_openai.Rd, NEWS.md. The corrections cover the list-column NA row, which jsonlite writes as a `null` field, and a kept class, which fails only when no entry of its class vector has a jsonlite method. The re-read of the three is pending.
+- 2026-09-27: the claim re-read found two of the three corrections right. The `data_frame_messages_fault()` doc now says that the message has a `null` field for each list column, and one long comment line was rewrapped. The stopping rule ends the audit here. Status set to review.
