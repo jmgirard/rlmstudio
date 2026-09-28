@@ -43,7 +43,7 @@ choice to send it as jsonlite writes it.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: In `lms_chat_openai()`, if the first extent of a data-frame
+- [x] AC1: In `lms_chat_openai()`, if the first extent of a data-frame
   column with a `dim` attribute equals the row count, the empty-row rule
   reads that column row by row. For each row, the rule reads the cells
   whose first index is that row. If each of those cells is empty, the
@@ -57,7 +57,7 @@ choice to send it as jsonlite writes it.
   column of row 2 is `NA`. The call passes every `messages` rule and
   reaches the server probe. In case 3, the same frame has `NA` in every cell of row 2.
   The call aborts with the empty-row detail.
-- [ ] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
+- [x] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
   atomic vector nor a list counts as not empty in each row. Examples are an
   environment, a formula, a symbol, a call, an S4 object, an external
   pointer, an expression vector, and a function. This holds for a column of
@@ -67,7 +67,7 @@ choice to send it as jsonlite writes it.
   other than a function aborts with the value-fault header and the
   jsonlite-write detail. A function column in a row that is otherwise `NA`
   aborts with the function detail.
-- [ ] AC3: The `messages` help of `lms_chat_openai()` says that jsonlite
+- [x] AC3: The `messages` help of `lms_chat_openai()` says that jsonlite
   does not unbox a value inside a list-matrix cell, at any depth in a list,
   unless `jsonlite::unbox()` wraps it. A data frame in a cell is sent as an
   array of objects whose values are not boxed. So a length-one atomic cell
@@ -76,13 +76,13 @@ choice to send it as jsonlite writes it.
   `messages` element of the request body for that example is an array that
   holds that form alone. `man/lms_chat_openai.Rd` matches after
   `devtools::document()`.
-- [ ] AC4: The `messages` help replaces its sentence on matrix and
+- [x] AC4: The `messages` help replaces its sentence on matrix and
   data-frame columns in empty rows. The new text says two things. If each
   cell of a row is empty in a column with a `dim` attribute of any length,
   or in a data-frame column, that column counts as empty in the row. A
   column that is neither an atomic vector nor a list, such as an
   environment, never counts as empty.
-- [ ] AC5: The `@aliases` tag at `R/conditions.R:257` sits on one line.
+- [x] AC5: The `@aliases` tag at `R/conditions.R:257` sits on one line.
   `devtools::document()` prints no warning and changes no file under `man/`.
 - [ ] AC6: NEWS.md has one entry for the changes in AC1 and AC2, with no
   milestone number. `devtools::test()` gives 0 failures. `devtools::check()`
@@ -167,3 +167,11 @@ choice to send it as jsonlite writes it.
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Sync: the branch contains `origin/main` (b828540), so no merge was needed. The review ran on 2026-09-27.
+
+- AC1 evidence: a scratch script called `lms_chat_openai()` on port 1 and counted warnings. Case 1 (3-D list, one `NULL` in row 2) aborted with the list-`dim` detail. Case 2 (3-D atomic, one `NA`) reached the server probe. Case 3 (all `NA` in row 2) aborted with the empty-row detail. Case 2 inside a data-frame column reached the server probe. No call warned. The test "a column with a dim attribute is read row by row" passed 27 expectations. They include a no-match check on the other detail and a zero probe count.
+- AC2 evidence: the same script gave the value-fault header and the jsonlite-write detail, with 0 warnings, for eight columns. They are an environment, a formula, a symbol, a call, an S4 object, an external pointer, an expression vector, and a nested symbol. A function column in an otherwise-`NA` row gave the function detail. The test "a column that is not a vector is not empty and gives no warning" passed.
+- AC3 evidence: `R/chat.R` and `man/lms_chat_openai.Rd` carry the four sentences AC3 names and the example row with its sent form. A jsonlite write of that row with the package options gave `[{"role":"user","content":"hi","tags":[["a"],null,{"k":["v"]}]}]`. That matches the help. The test "a list-matrix column is sent with its cells boxed" compares the sent `messages` element with a one-element array of that form. It passed. `devtools::document()` changed no file.
+- AC4 evidence: the old sentence on matrix and data-frame columns is gone. The new text states the empty-row rule for a column with a `dim` attribute of any length and for a data-frame column. It states that a column that is neither an atomic vector nor a list never counts as empty. It adds the qualifier "whose first extent is the row count". That qualifier matches AC1 and the Out scope on hand-built frames.
+- AC5 evidence: `R/conditions.R:257` holds the `@aliases` tag on one line. `devtools::document()` printed only its two info lines and no warning. `git status` showed no change under `man/`.
