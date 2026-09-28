@@ -79,14 +79,14 @@ the numeric matrix `NA` closes with this milestone.
       write" builds two probes. An environment field beside a double `NA`
       field gets the non-vector detail. A field with class `"foo"` beside a
       double `NA` field gets the number detail.
-- [ ] AC4: The help at `messages` in `R/chat.R`, `man/lms_chat_openai.Rd`,
+- [x] AC4: The help at `messages` in `R/chat.R`, `man/lms_chat_openai.Rd`,
       and the roxygen of `rlm_check_messages()`, `empty_rows()`, and
       `data_frame_messages_fault()` state the rule and the data-frame
       column case it leaves out. NEWS.md has one entry for the new refusal.
       After the change, `grep -n '"NA"' R/utils-args.R R/chat.R NEWS.md`
       finds no line that says a numeric `NA` is sent as `"NA"`. No
       milestone numbers appear.
-- [ ] AC5: `devtools::document()` leaves the tree clean, and
+- [x] AC5: `devtools::document()` leaves the tree clean, and
       `devtools::test()` passes. `devtools::check()` gives 0 errors and 0
       warnings, and each note has a reason.
 
@@ -161,3 +161,10 @@ the numeric matrix `NA` closes with this milestone.
 - AC3 evidence (2026-09-28): the test "the number rule sits between the non-vector rule and the trial write" passed with 6 expectations, 0 failed. Against main's `R/` code, it errors.
 - AC4 FAILED (2026-09-28): the roxygen of `data_frame_messages_fault()` names the number rule but does not state the plain data-frame column case it leaves out. The roxygen of `rlm_check_messages()` points to `has_unsendable_number()` for that case and does not state it. The help in `R/chat.R`, the `.Rd` file, and `empty_rows()` do state both. The grep finds 3 lines, and each says what jsonlite writes or wrote before. NEWS has one entry and no milestone numbers.
 - AC5: not run, because review stopped at AC4.
+- Pass 2 sync (2026-09-28): `origin/main` is still at `12d03e8`, the branch base. No PR exists.
+- AC1 evidence, pass 2 (2026-09-28): the test "a number jsonlite cannot send as a number aborts" passed with 100 expectations, 0 failed. Its 49-case count held after the walk change. Against main's `R/` code in a scratch copy, it errors.
+- AC2 evidence, pass 2 (2026-09-28): the test "numbers jsonlite leaves out, and classed values, still reach the request" passed with 39 expectations, 0 failed. It is a pass control, and it also passes on main's `R/` code.
+- AC3 evidence, pass 2 (2026-09-28): the test "the number rule sits between the non-vector rule and the trial write" passed with 6 expectations, 0 failed. Against main's `R/` code, it errors.
+- AC4 evidence, pass 2 (2026-09-28): the help at `messages` in `R/chat.R` and `man/lms_chat_openai.Rd` state the rule and the plain data-frame column case. So do the roxygen blocks of `rlm_check_messages()`, `data_frame_messages_fault()`, and `empty_rows()`. NEWS has one entry for the refusal. The grep finds 3 lines. Each says what jsonlite writes or sent before. `grep -nE "M[0-9]{3}"` finds no milestone number in NEWS, the help, or the `.Rd` file.
+- AC5 evidence, pass 2 (2026-09-28): `devtools::document()` left the tree clean. `devtools::test()` ran 12457 expectations with 0 failed and 0 errors. `devtools::check()` with the token set gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate, pass 2 (2026-09-28): `cairn_validate` passed. No principle in `DESIGN.md` changed, so `cairn_impact` was skipped. `document()` gave no diff, and the branch hand-edits no generated file. The branch does not touch `README.Rmd`, and the repo has no pkgdown site. NEWS has the entry, and the branch adds no top-level file.
