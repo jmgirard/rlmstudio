@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M045: The OpenAI chat function refuses a number that jsonlite writes as a string or drops
 
-- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M044   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -48,7 +48,7 @@ the numeric matrix `NA` closes with this milestone.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `lms_chat_openai()` aborts before the server probe for each
+- [x] AC1: `lms_chat_openai()` aborts before the server probe for each
       value below. The header is "`messages` holds a field value that
       cannot be sent as JSON.", and the detail names `NA`, `NaN`, and
       infinite numbers. The test "a number jsonlite cannot send as a number
@@ -64,7 +64,7 @@ the numeric matrix `NA` closes with this milestone.
         attribute, in four places: at the top level, inside a data-frame
         column, in a data frame given as a list-form field, and in a data
         frame in a list-column cell
-- [ ] AC2: `lms_chat_openai()` still sends the values below. The test
+- [x] AC2: `lms_chat_openai()` still sends the values below. The test
       "numbers jsonlite leaves out, and classed values, still reach the
       request" builds them in two groups.
       - A double `NA` or `NaN` and an integer `NA` in an atomic data-frame
@@ -73,7 +73,7 @@ the numeric matrix `NA` closes with this milestone.
       - A `Date` `NA`, a `POSIXct` `NA`, a `factor` `NA`, a character `NA`,
         and a logical `NA` as list-form fields, each sent as `null`. Also
         `as.Date(Inf)` as a list-form field, sent as `"Inf"`.
-- [ ] AC3: The rule runs after the rule for a value that is not an atomic
+- [x] AC3: The rule runs after the rule for a value that is not an atomic
       vector, a list, or `NULL`. It runs before the trial write. The test
       "the number rule sits between the non-vector rule and the trial
       write" builds two probes. An environment field beside a double `NA`
@@ -138,6 +138,7 @@ the numeric matrix `NA` closes with this milestone.
 - 2026-09-28: claim audit: 51 claims read, 4 corrected — NEWS.md, R/chat.R, man/lms_chat_openai.Rd, R/utils-args.R, tests/testthat/test-arg-guards.R
 - 2026-09-28: the claim-audit re-read found one gap left in the closing help summary, which now names the class limit. There was no second pass.
 - 2026-09-28: status set to review.
+- 2026-09-28: review returned M045 to in-progress (defect return 1). AC4 failed, because the roxygen of `data_frame_messages_fault()` and `rlm_check_messages()` does not state the plain data-frame column case. AC1 to AC3 passed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
@@ -146,3 +147,10 @@ the numeric matrix `NA` closes with this milestone.
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+- 2026-09-28 sync: `origin/main` has not moved since the branch was cut. No PR exists.
+- AC1 evidence (2026-09-28): the test "a number jsonlite cannot send as a number aborts" passed with 100 expectations, 0 failed. It builds 49 cases. They are the 5 numbers in the 8 named positions, the `I()` double `NA`, and `Inf` and `-Inf` in the 4 places. It matches the detail text and the header, and the probe count is 0. Against main's `R/` code in a scratch copy, the test errors.
+- AC2 evidence (2026-09-28): the test "numbers jsonlite leaves out, and classed values, still reach the request" passed with 39 expectations, 0 failed. The 12 plain-column cases send a body without `x`. The 5 classed and atomic `NA` fields are sent as `null`, and `as.Date(Inf)` is sent as `"Inf"`.
+- AC3 evidence (2026-09-28): the test "the number rule sits between the non-vector rule and the trial write" passed with 6 expectations, 0 failed. Against main's `R/` code, it errors.
+- AC4 FAILED (2026-09-28): the roxygen of `data_frame_messages_fault()` names the number rule but does not state the plain data-frame column case it leaves out. The roxygen of `rlm_check_messages()` points to `has_unsendable_number()` for that case and does not state it. The help in `R/chat.R`, the `.Rd` file, and `empty_rows()` do state both. The grep finds 3 lines, and each says what jsonlite writes or wrote before. NEWS has one entry and no milestone numbers.
+- AC5: not run, because review stopped at AC4.
