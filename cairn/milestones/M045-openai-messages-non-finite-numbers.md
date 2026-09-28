@@ -168,3 +168,13 @@ the numeric matrix `NA` closes with this milestone.
 - AC4 evidence, pass 2 (2026-09-28): the help at `messages` in `R/chat.R` and `man/lms_chat_openai.Rd` state the rule and the plain data-frame column case. So do the roxygen blocks of `rlm_check_messages()`, `data_frame_messages_fault()`, and `empty_rows()`. NEWS has one entry for the refusal. The grep finds 3 lines. Each says what jsonlite writes or sent before. `grep -nE "M[0-9]{3}"` finds no milestone number in NEWS, the help, or the `.Rd` file.
 - AC5 evidence, pass 2 (2026-09-28): `devtools::document()` left the tree clean. `devtools::test()` ran 12457 expectations with 0 failed and 0 errors. `devtools::check()` with the token set gave 0 errors, 0 warnings, and 0 notes.
 - Consistency gate, pass 2 (2026-09-28): `cairn_validate` passed. No principle in `DESIGN.md` changed, so `cairn_impact` was skipped. `document()` gave no diff, and the branch hand-edits no generated file. The branch does not touch `README.Rmd`, and the repo has no pkgdown site. NEWS has the entry, and the branch adds no top-level file.
+- Review lenses, pass 2 (2026-09-28): the prior-review lens found no findings. The gh probe found no PR review comments. The blame-history lens found no defect and one note (B1). The diff-bug lens found 8 findings (O1 to O8), and none breaks a criterion. The session re-ran O1 and O2 and saw the same results.
+- O1: `written_as_list()` writes a classed list twice at every level, so a deep stack is slow. 100 nested `c("foo", "list")` levels took 2.1 s in the rule and 0.03 s in the write.
+- O2: `jsonlite::unbox(NA_real_)` has the class `c("scalar", "numeric")`, passes, and is sent as `"NA"`. `unbox(Inf)` is sent as `"Inf"`. This is inside the plan gate's class bound.
+- O3: other classed numbers pass and are sent as strings, such as `structure(NA_real_, class = "numeric")`, an S4 number, and `as.POSIXct(Inf)`. This is inside the class bound too.
+- O4: a list classed `"scalar"` holding `NA_real_` passes and is sent as `"NA"`, like the `"json"` candidate row.
+- O5: the NEWS entry says the rule reads "a list below a field" and does not state the classed-list limit that the help states.
+- O6: the `has_unsendable_number()` roxygen says its walk is the walk of `non_vector_type()`, but it skips some classed lists.
+- O7: no test covers an `I()` atomic data-frame column, a 1-D array column, or a `written_as_list()` write that fails. The code handles all three.
+- O8: the classed-list writes add to the trial write, the cost behind O1.
+- B1: the field loop in `has_unsendable_number()` relies on `messages_fault()` to make each message a named list.
