@@ -151,3 +151,92 @@ test_that("quiet = TRUE and the rlmstudio.quiet option each stop the message", {
     })
   }
 })
+
+# Run `list_instances()` over one llm model whose instances carry `configs`,
+# JSON literals in instance order. An `NA` leaves the `config` field out.
+config_frame <- function(configs, .env = parent.frame()) {
+  instances <- vapply(
+    seq_along(configs),
+    function(i) {
+      config <- if (is.na(configs[[i]])) NULL else configs[[i]]
+      instance_json(paste0("i", i), config)
+    },
+    character(1)
+  )
+  body <- instances_body(instances_model("llm", "m1", instances = instances))
+  run_list_instances(body, quiet = TRUE, .env = .env)$value
+}
+
+test_that("each configuration field gets a column, in order of first appearance", {
+  res <- config_frame(c(
+    '{"b": 1, "a": "x"}',
+    '{"c": true, "a": "y"}'
+  ))
+  expect_identical(names(res), c(fixed_columns, "b", "a", "c"))
+  expect_identical(res$b, c(1, NA))
+  expect_identical(res$a, c("x", "y"))
+  expect_identical(res$c, c(NA, TRUE))
+})
+
+test_that("a field of strings, numbers, or booleans gives an atomic column", {
+  res <- config_frame(c(
+    '{"s": "a", "n": 8192, "f": 0.5, "b": true, "z": null}',
+    '{"s": null, "n": 4, "f": null, "b": false, "z": null}'
+  ))
+  expect_identical(res$s, c("a", NA))
+  expect_identical(res$n, c(8192, 4))
+  expect_identical(typeof(res$n), "double")
+  expect_identical(res$f, c(0.5, NA))
+  expect_identical(res$b, c(TRUE, FALSE))
+  expect_identical(res$z, c(NA, NA))
+})
+
+test_that("a field present in one instance only is NA in the others", {
+  res <- config_frame(c('{"parallel": 4}', '{}', NA))
+  expect_identical(names(res), c(fixed_columns, "parallel"))
+  expect_identical(res$parallel, c(4, NA, NA))
+})
+
+test_that("an object, an array, or mixed kinds give a list-column", {
+  res <- config_frame(c(
+    '{"o": {"k": 1}, "arr": [1, "a"], "mix": 1, "on": {"k": 2}}',
+    '{"o": null, "arr": [], "mix": "a"}',
+    '{"mix": true}'
+  ))
+  expect_type(res$o, "list")
+  expect_identical(res$o[[1]], list(k = 1L))
+  expect_null(res$o[[2]])
+  expect_null(res$o[[3]])
+  expect_identical(res$arr, list(list(1L, "a"), list(), NULL))
+  expect_identical(res$mix, list(1L, "a", TRUE))
+  expect_identical(res$on[[1]], list(k = 2L))
+  expect_null(res$on[[2]])
+  expect_null(res$on[[3]])
+})
+
+test_that("a configuration field keeps its name unless it clashes", {
+  res <- config_frame(c('{"a-b": 1, "id": "x", "config.id": "y", "": 2}'))
+  expect_identical(
+    names(res),
+    c(fixed_columns, "a-b", "config.id", "config.config.id", "config.")
+  )
+  expect_identical(res$id, "i1")
+  expect_identical(res[["a-b"]], 1)
+  expect_identical(res[["config.id"]], "x")
+  expect_identical(res[["config.config.id"]], "y")
+  expect_identical(res[["config."]], 2)
+
+  res <- config_frame(c('{"config.id": "y", "id": "x"}'))
+  expect_identical(
+    names(res),
+    c(fixed_columns, "config.id", "config.config.id")
+  )
+  expect_identical(res[["config.id"]], "y")
+  expect_identical(res[["config.config.id"]], "x")
+})
+
+test_that("the first of two equal keys in one configuration counts", {
+  res <- config_frame(c('{"k": 1, "k": "a"}', '{"k": 2}'))
+  expect_identical(names(res), c(fixed_columns, "k"))
+  expect_identical(res$k, c(1, 2))
+})

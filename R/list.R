@@ -170,7 +170,8 @@ list_instances <- function(
         id = instance[["id"]],
         key = model[["key"]],
         type = model[["type"]],
-        display_name = display_name
+        display_name = display_name,
+        config = instance[["config"]]
       )
     }
   }
@@ -190,11 +191,74 @@ list_instances <- function(
   }
 
   column <- function(name) vapply(rows, function(row) row[[name]], character(1))
-  data.frame(
+  df <- data.frame(
     id = column("id"),
     key = column("key"),
     type = column("type"),
     display_name = column("display_name")
+  )
+
+  configs <- lapply(rows, function(row) row[["config"]])
+  fields <- unique(unlist(lapply(configs, names)))
+  for (field in fields) {
+    name <- field
+    while (name == "" || name %in% names(df)) {
+      name <- paste0("config.", name)
+    }
+    df[[name]] <- config_column(configs, field)
+  }
+
+  df
+}
+
+#' Build one configuration column of the instance table
+#'
+#' Reads one field out of each instance configuration and picks the column
+#' type from the values that are present and not `null`. Strings give a
+#' character column, numbers a double column, and booleans a logical column,
+#' with `NA` where the field is absent or `null`. No such values give a
+#' logical column of `NA`. Any other mix, or any JSON object or array, gives a
+#' list-column that holds each value as `jsonlite::parse_json()` returns it,
+#' with `NULL` where the field is absent or `null`.
+#'
+#' @param configs A list with one element per row: the `config` object of the
+#'   instance as a named list, or `NULL` where the instance has none.
+#' @param field Character. The field name. The first entry of a configuration
+#'   with that exact name is read, and an empty name is matched too, which
+#'   `[[` does not do.
+#' @return A vector or list with one element per row.
+#'
+#' @noRd
+config_column <- function(configs, field) {
+  values <- lapply(configs, function(cfg) {
+    at <- match(field, names(cfg))
+    if (is.na(at)) NULL else cfg[[at]]
+  })
+  present <- Filter(Negate(is.null), values)
+
+  kind <- function(x) {
+    if (is_json_string(x)) {
+      "character"
+    } else if (is_json_number(x)) {
+      "double"
+    } else if (is.logical(x) && length(x) == 1L) {
+      "logical"
+    } else {
+      "other"
+    }
+  }
+  kinds <- unique(vapply(present, kind, character(1)))
+
+  if (length(kinds) == 0) {
+    return(rep(NA, length(values)))
+  }
+  if (length(kinds) > 1 || kinds == "other") {
+    return(values)
+  }
+  vapply(
+    values,
+    function(x) as.vector(if (is.null(x)) NA else x, kinds),
+    vector(kinds, 1)
   )
 }
 
