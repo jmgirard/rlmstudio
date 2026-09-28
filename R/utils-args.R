@@ -325,6 +325,84 @@ schema_fault <- function(value) {
   NULL
 }
 
+#' Reject a messages value that cannot be sent as a list of messages
+#'
+#' `messages` is a named argument of `lms_chat_openai()`, so GP4 puts the check
+#' on the package, and it runs before the server probe (D-008). The check
+#' reads the list and the names of each message. Roles, content, and every
+#' other field inside a message stay with the server (D-003). A data frame
+#' passes, because jsonlite writes it as one JSON object per row.
+#'
+#' @param value The value the caller passed as `messages`.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_messages <- function(value) {
+  fault <- messages_fault(value)
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "{.arg messages} must be a data frame or an unnamed list of messages.",
+        "x" = "{fault}",
+        "i" = "Each message is a named list, such as {.code list(role = \"user\", content = \"Hi\")}."
+      ),
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
+#' Which rule did this messages value break?
+#'
+#' Returns plain text rather than a cli string, for the reason `id_fault()`
+#' states. Each rule has one detail text. jsonlite writes a list with any
+#' names attribute as a JSON object, even when every name is empty, so a list
+#' with names is refused whatever the names are.
+#'
+#' @param value The value the caller passed.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+messages_fault <- function(value) {
+  if (!is.list(value)) {
+    return("You gave a value that is neither a list nor a data frame.")
+  }
+  if (is.data.frame(value)) {
+    if (nrow(value) == 0L) {
+      return("You gave no messages.")
+    }
+    return(NULL)
+  }
+  if (length(value) == 0L) {
+    return("You gave no messages.")
+  }
+  if (!is.null(names(value))) {
+    return("You gave a list with names, which is sent as one JSON object.")
+  }
+  for (message in value) {
+    if (!is_named_message(message)) {
+      return(
+        "You gave a message that is not a list with a name on each field."
+      )
+    }
+  }
+  NULL
+}
+
+#' Is this one message a list with a usable name on each field?
+#'
+#' @param message One element of `messages`.
+#' @return `TRUE` or `FALSE`.
+#'
+#' @noRd
+is_named_message <- function(message) {
+  if (!is.list(message) || length(message) == 0L) {
+    return(FALSE)
+  }
+  nms <- names(message)
+  !is.null(nms) && !anyNA(nms) && all(nzchar(nms))
+}
+
 #' Reject a schema sent to an endpoint that does not take one
 #'
 #' LM Studio documents structured output on `/v1/chat/completions` alone, which

@@ -83,7 +83,7 @@ own candidate row.
       `tests/testthat/helper-mock-http.R`. Per the M026 lesson, assert the
       rule text of each detail, and plant a wrong detail once to see the
       test go red.
-- [ ] T2: Add `messages_fault()` and `rlm_check_messages()` to
+- [x] T2: Add `messages_fault()` and `rlm_check_messages()` to
       `R/utils-args.R`, in the form of `schema_fault()` and
       `rlm_check_schema()`. Call the check above `stop_if_no_server()` in
       `lms_chat_openai()` (`R/chat.R:347`). jsonlite writes a list with any
@@ -108,6 +108,7 @@ own candidate row.
 - 2026-09-27: plan gate chose to keep data frames over refusing them, because they work today. Falsified by a data frame that sends a malformed message.
 - 2026-09-27: implement started on branch m038-openai-messages-guard. No question gate, because the plan fixes the four rules and says one detail text per rule.
 - 2026-09-27: T1 done. AC1 test red (the probe is reached), AC2 test green before the change. Three existing calls that sent `list()` or `"hi"` as messages now send one valid message (minor amendment).
+- 2026-09-27: T2 done. `rlm_check_messages()`, `messages_fault()`, and `is_named_message()` added. The call runs after the model check. devtools::test(): 10328 passed, 0 failed. In a scratch copy, deleting the call site and giving rule 3 the rule 2 detail each turned the AC1 test red.
 
 ## Decisions
 

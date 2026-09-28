@@ -350,6 +350,7 @@ lms_chat_openai <- function(
   token = NULL
 ) {
   rlm_check_id(model, "model")
+  rlm_check_messages(messages)
   rlm_check_schema(schema, ...names())
   rlm_check_ttl(ttl)
   rlm_check_stream(list(...))
