@@ -150,6 +150,7 @@ candidate row on such values closes with this milestone.
 - 2026-09-28: The plan gate chose one rule over both forms at any depth over a rule for data-frame columns alone. The list form sends the same bad text (RR01 fact 5). Falsified by a value that one form refuses and the other form sends.
 - 2026-09-28: The plan gate chose a detail that names `typeof()` over fixed text, because it tells the user which value is wrong. Falsified by a user report that the type name misleads, such as "S4" for a reference-class object.
 - 2026-09-28: The plan gate kept the function rule and its detail ahead of the new rule over one merged rule. The function detail says that jsonlite sends source text. Falsified by a user who reads the two details as one fault.
+- 2026-09-28: The same [O] reader re-audited the changed criteria in full mode and returned no findings. Its probes built the 30 new-position cases and the 11 AC2 pass values with no error or warning.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
