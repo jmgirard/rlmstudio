@@ -94,12 +94,14 @@
 #' answers with a status the wrapper accepts and a body the wrapper cannot
 #' read. It is raised where a wrapper checks the body before it reshapes it,
 #' rather than indexing straight into whatever arrived. Eleven functions raise
-#' it: [lms_embed()], [lms_chat()], [lms_chat_native()],
+#' it for a body they cannot read: [lms_embed()], [lms_chat()], [lms_chat_native()],
 #' [lms_chat_openresponses()], [lms_chat_openai()], [list_models()],
 #' [list_instances()], [lms_load()], [lms_download()], [lms_download_status()],
 #' and [lms_unload_all()]. [lms_chat()] raises it through the chat function it
 #' calls. [lms_unload_all()] raises it through [list_models()], and so does
-#' [lms_load()] unless `force = TRUE`.
+#' [lms_load()] unless `force = TRUE`. [lms_chat_batch()] raises it only as
+#' `rlmstudio_model_mismatch`, which the "Reply from another model" section
+#' describes.
 #'
 #' All eleven raise it for a status-200 body that does not parse as JSON, such
 #' as an HTML page from a proxy, JSON text that stops part way, or an empty

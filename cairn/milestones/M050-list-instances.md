@@ -1,6 +1,6 @@
 # M050: A table of loaded model instances
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -131,3 +131,5 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: T4 done. The cassette holds one instance each of google/gemma-3-1b and the nomic embedding model, and no token or request header. The live test passed with the token set. If the server refuses the request, the live test also skips. This third skip is beside the two of AC6, and it keeps a run with no token clean, as in the live embedding tests.
 - 2026-09-28: T5 done. The help page, `pkgdown/_pkgdown.yml`, `NEWS.md`, DESIGN, and the API reference page name the function. Minor amendment: the "Malformed response" section of `rlmstudio-conditions` now counts eleven raisers and states the two new rules, because the new help page inherits that section. A second `devtools::document()` run left no diff, and `pkgdown::check_pkgdown()` found no problems.
 - 2026-09-28: T6 done. With `RLMSTUDIO_API_TOKEN` set, `devtools::test()` gave 0 failures, 0 warnings, and 0 skips. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Nothing needed a fix.
+- 2026-09-28: claim audit: 55 claims read, 3 corrected — R/conditions.R, tests/testthat/test-list-instances.R, data-raw/record-list-instances-cassette.R
+- 2026-09-28: the claim audit reader verified its two open items on its re-read. `lms ps --json` reports `status`, `queued`, `ttlMs`, and `lastUsedTime`, and the recording has none of them. The installed LM Studio is 0.4.25+1. The last suite run after the fixes gave 0 failures, with three live tests skipped because the server had stopped.

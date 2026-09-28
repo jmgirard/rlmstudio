@@ -15,7 +15,8 @@
 #   Rscript data-raw/record-list-instances-cassette.R
 #
 # The script loads and unloads nothing. It stops before it records if the
-# loaded instances are not the two above, one each.
+# loaded llm and embedding instances are not the two above, one each. It does
+# not see a loaded instance of another model type.
 #
 # httptest2 records only when the target directory is absent, so the script
 # deletes it first. Only the response body is written to disk. No request

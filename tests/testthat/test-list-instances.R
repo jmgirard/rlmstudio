@@ -355,7 +355,8 @@ test_that("a recorded model list gives one row per loaded instance", {
 
   # The reply was recorded on 2026-09-28 from LM Studio 0.4.25+1 by
   # data-raw/record-list-instances-cassette.R. The cassette carries no
-  # request header, so the test clears both token sources.
+  # request header. The test clears both token sources, so it runs the same
+  # way whatever token this machine has set.
   withr::local_envvar(RLMSTUDIO_API_TOKEN = NA)
   withr::local_options(rlmstudio.token = NULL)
 
