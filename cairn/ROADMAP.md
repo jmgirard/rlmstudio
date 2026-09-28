@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-27 (M039 done, two candidate rows added, one extended)_
+_Last hygiene check: 2026-09-27 (M040 planned from three candidate rows, one candidate row added)_
 
 ## Milestones
 
@@ -9,6 +9,7 @@ _Last hygiene check: 2026-09-27 (M039 done, two candidate rows added, one extend
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M040 | The OpenAI chat function refuses a messages value that jsonlite cannot write or that breaks a shape rule | planned | none | normal | milestones/M040-openai-messages-shape-and-write.md |
 | M039 | The OpenAI chat function sends a classed messages list and refuses a data frame with a bad column name or an empty row | done | none | normal | milestones/archive/M039-openai-messages-class-and-frame.md |
 | M038 | The OpenAI chat function refuses a messages value it cannot send as a list of messages | done | none | normal | milestones/archive/M038-openai-messages-guard.md |
 | M037 | The chat functions refuse a stream field before any request | done | none | normal | milestones/archive/M037-chat-stream-guard.md |
@@ -49,9 +50,7 @@ _Last hygiene check: 2026-09-27 (M039 done, two candidate rows added, one extend
 - On `/v1/responses` and `/v1/chat/completions`, LM Studio does not send 404 for a model id that is not downloaded. With a model loaded, it sends 200 and a reply from the loaded model, and the reply's `model` field names that model. With no model loaded, it sends 400 with "No models loaded". `/api/v1/chat` sends 404. So on the two OpenAI-style routes, `lms_chat_batch()` does not stop for a missing model. Decide whether a chat function compares the reply's `model` field with the model it asked for, added 2026-09-27, M031 T1
 - The port helpers in `tests/testthat/helper-ports.R` try 50 adjacent ports from one start. If another service holds all 50, every socket test in that process fails, where the old `sample()` spread its tries over the range. Promote once a run fails with "No free port" on a machine that has free ports elsewhere in the range, added 2026-09-27, M033 review finding 4
 - `devtools::document()` warns that the `@aliases` tag at `R/conditions.R:257` spans two lines. The `rlmstudio_reply_cut_off` alias still renders. Join the tag onto one line and make sure that `document()` runs with no warning, added 2026-09-27, M036 review
-- A class below the message level of `lms_chat_openai(messages)` still fails in jsonlite after the server probe. Examples are a classed `content` value and a classed data-frame column. The error does not name `messages`. A rule over nested values must allow the classes jsonlite can write, such as `I()`, `Date`, and `factor`. Names below the message level are not checked either. A data-frame column whose inner name is `""` is sent under a number, added 2026-09-27, M039 plan gate, M039 review finding O4
-- A data-frame `messages` row that is `NA` in every cell but a `NULL` or length-0 list cell passes the empty-row rule of `lms_chat_openai()`, because `is.na()` is `FALSE` for those cells. On 2026-09-27, such a row was sent as `{"content":{}}`, added 2026-09-27, M039 review finding O1
-- `lms_chat_openai()` drops the `dim` attribute of a list-matrix of messages, so it is sent flat, where before it was sent nested with each field boxed. The help and NEWS name the class alone, and no test covers it. Decide whether to state it and test it, or refuse a list-matrix, added 2026-09-27, M039 review finding O2
+- A `messages` value of `lms_chat_openai()` that jsonlite writes with no error but in an odd form still reaches the server. A function field is sent as its source text. A list with a `dim` below the message level is sent as nested arrays. M040 catches write errors and named shape faults only, added 2026-09-27, M040 scope
 - [low] The macOS check job has two exits from its Package Manager workaround. If a released pak extracts zstd archives, remove the workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. If Posit Package Manager stops serving gzip macOS binaries or drops its R 4.6 path, pin the job to R 4.5. M011 rejected that pin (rows merged M022), added 2026-09-20, M011 scope and plan gate, r-lib/pkgdepends#485
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
