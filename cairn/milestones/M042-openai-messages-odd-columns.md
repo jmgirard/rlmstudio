@@ -57,7 +57,7 @@ choice to send it as jsonlite writes it.
   column of row 2 is `NA`. The call passes every `messages` rule and
   reaches the server probe. In case 3, the same frame has `NA` in every cell of row 2.
   The call aborts with the empty-row detail.
-- [ ] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
+- [x] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
   atomic vector nor a list counts as not empty in each row. Examples are an
   environment, a formula, a symbol, a call, an S4 object whose `typeof()` is
   `"S4"` (such as a reference-class object), an external pointer, an
@@ -199,3 +199,11 @@ Independent review (three fresh readers). The [S] history reader found no regres
 - O7 (no one-row or mixed-row-count nested probe; the reviewer checked both by hand): reject, coverage only.
 - O8 (a first extent that differs from the row count mis-recycles): reject, Scope Out.
 - O9 (the non-vector change is a sub-bullet of the array bullet): reject, AC6 asks for one entry.
+
+Second pass, 2026-09-27, after the AC2 amendment and T6. The branch still contains `origin/main`, and no PR exists.
+
+- AC1 evidence (pass 2): the probe script gave the same four results as pass 1, with 0 warnings. The row-by-row test passed 27 expectations.
+- AC2 evidence (pass 2): the eight kinds from pass 1 and a reference-class object gave the value-fault header and the jsonlite-write detail, with 0 warnings. A class definition with no slot gave the same abort. A class definition with a slot gave the jsonlite warning and reached the server probe, which is the one exception AC2 allows. A function column, top level and nested, gave the function detail with 0 warnings. A direct `empty_rows()` call gave `FALSE` with 0 warnings for an environment, a symbol, a slotted class definition, and a function. The three AC2 tests passed 29, 49, and 6 expectations.
+- AC3 to AC5 evidence (pass 2): the jsonlite write of the help row again matched the help, and the boxed-cells test passed 4 expectations. `devtools::document()` printed no warning and changed no file. `R/conditions.R:257` holds the `@aliases` tag on one line.
+- AC6 evidence (pass 2): NEWS.md keeps one entry for AC1 and AC2, now with the class-definition exception and the empty-row order. The added lines hold no milestone number. `devtools::test()` gave 11736 expectations, 0 failures, 0 errors, and 0 skips. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate (pass 2): `cairn_validate.py` exited 0, and `devtools::document()` gave no diff. The other profile checks are unchanged from pass 1.
