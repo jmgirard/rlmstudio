@@ -125,7 +125,7 @@ candidate row on such values closes with this milestone.
   AC3 order cases. Build frame positions with `structure()`, because
   `$<-` refuses an environment in a frame with rows. Run them and see
   the AC1 and AC3 cases red.
-- [ ] T2: Add the walk beside `has_function()` in `R/utils-args.R`. It
+- [x] T2: Add the walk beside `has_function()` in `R/utils-args.R`. It
   reads elements with a `for` loop, as the other walks do. Call it in
   `rlm_check_messages()` after the function rule. Splice the type into the
   detail as a value, so cli reads no braces from it. Update the comments
@@ -157,6 +157,7 @@ candidate row on such values closes with this milestone.
 - 2026-09-28: T1 found that `httr2::req_dry_run()` on a body with a `POSIXlt` field fails with "evaluation nested too deeply: infinite recursion", on main too. The mini gate chose to drop that value from AC2, so AC2 now lists 10 pass values. The crash became a candidate row for `/hotfix`. The rejected option was a fix inside M043, which widens the milestone.
 - 2026-09-28: re-audit: AC2 (full) — two findings. The gate accepted the Out bullet for the dropped `POSIXlt` field. It rejected a sent form derived from `jsonlite::toJSON()`, because such a form is derived from the artifact under test and cannot fail. The clause is unchanged by the amendment.
 - 2026-09-28: T1 done. The AC1 grid, the AC2 pass list, and the AC3 order test are in `test-arg-guards.R`, and `rule13` is in the detail table. The two probes with an environment or `quote()` field now expect `rule13`. `sent_messages()` moved up the file so that the pass test can use it. On main code, the grid, order, and probe tests fail with the jsonlite-write detail (red for the right reason), and the pass test passes.
+- 2026-09-28: T2 done. `non_vector_type()` in `R/utils-args.R` walks as `has_function()` does and returns the `typeof()` of the first value that is not atomic, a list, `NULL`, or a function. `rlm_check_messages()` calls it between the function rule and the trial write. The three stale comments name the new rule. `test-arg-guards.R` passes except the two M042 tests that T3 changes, which now get the new detail.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
