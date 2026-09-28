@@ -2001,6 +2001,46 @@ test_that("a number in a classed list that jsonlite writes as a list aborts", {
   expect_identical(probe$calls, 0L)
 })
 
+test_that("the number rule reads I() columns, 1-D arrays, and unwritable classed lists", {
+  # An I() atomic column has no dim, so jsonlite leaves an NA cell out and
+  # the rule refuses an Inf cell alone.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+  expect_no_error(
+    lms_chat_openai("a-model", data.frame(role = "user", x = I(NA_real_))),
+    message = NULL
+  )
+  expect_identical(
+    sent_messages(recorder$requests[[1]]),
+    list(list(role = "user"))
+  )
+  expect_error(
+    lms_chat_openai("a-model", data.frame(role = "user", x = I(Inf))),
+    number_detail,
+    fixed = TRUE
+  )
+
+  # A 1-D array column has a dim, so jsonlite writes an NA cell as "NA".
+  df <- data.frame(role = "user")
+  df$a <- array(NA_real_, 1L)
+  expect_error(lms_chat_openai("a-model", df), number_detail, fixed = TRUE)
+
+  # jsonlite cannot write this list, so the number rule does not read it and
+  # the trial write refuses it.
+  err <- expect_error(
+    lms_chat_openai(
+      "a-model",
+      list(list(
+        role = "user",
+        content = structure(list(NA_real_), class = c("AsIs", "foo"))
+      ))
+    ),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_no_match(conditionMessage(err), number_detail, fixed = TRUE)
+})
+
 # The number rule runs after the non-vector rule and before the trial write.
 test_that("the number rule sits between the non-vector rule and the trial write", {
   probe <- local_counting_probe()

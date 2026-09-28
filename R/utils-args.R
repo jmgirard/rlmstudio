@@ -496,9 +496,8 @@ non_vector_type <- function(value) {
 #' alone, because an `NA` or `NaN` cell is a missing field, as
 #' `empty_rows()` reads it. The rule reads a number whose class attribute is
 #' absent or is `"AsIs"`. A number with another class, such as a `Date`, is
-#' written by that class and passes. The walk is the walk of
-#' `non_vector_type()`, which runs first, so each value it reaches is an
-#' atomic vector, a list, or `NULL`. It starts from the value that
+#' written by that class and passes. The non-vector rule runs first, so each
+#' value the walk reaches is an atomic vector, a list, or `NULL`. It starts from the value that
 #' `unclass_messages()` returns, which is the value sent. Below the messages,
 #' it goes into a list whose class is not `"AsIs"` or a data frame only when
 #' `written_as_list()` finds that jsonlite writes it as a plain list. A

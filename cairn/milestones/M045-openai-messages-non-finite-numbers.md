@@ -145,6 +145,8 @@ the numeric matrix `NA` closes with this milestone.
 - 2026-09-28: the claim-audit re-read found 9 claims, 1 still wrong, now corrected in the `data_frame_messages_fault()` roxygen. There was no second pass. It also found a list classed `"json"` holding `NA_real_` sent as `"NA"`, which became a candidate row.
 - 2026-09-28: `devtools::test()` passed, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, with the token set.
 - 2026-09-28: status set to review.
+- 2026-09-28: review pass 2 fixed O5, O6, and O7 on the branch after the gate. `devtools::test()` then ran 12463 expectations with 0 failed.
+- 2026-09-28: step-7 approval: m045-openai-messages-non-finite-numbers approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
@@ -178,3 +180,4 @@ the numeric matrix `NA` closes with this milestone.
 - O7: no test covers an `I()` atomic data-frame column, a 1-D array column, or a `written_as_list()` write that fails. The code handles all three.
 - O8: the classed-list writes add to the trial write, the cost behind O1.
 - B1: the field loop in `has_unsendable_number()` relies on `messages_fault()` to make each message a named list.
+- Triage at the gate (2026-09-28): the user chose the recommended dispositions. O5, O6, and O7 are fixed now. The NEWS entry states the classed-list limit, and the roxygen sentence is corrected. A new test covers an `I()` column, a 1-D array column, and a classed list that jsonlite cannot write. It passes with 6 expectations, and 2 of them fail on main's code. O2 and O3 became one candidate row. O1 and O8 became another. O4 joined the `"json"` row. B1 is rejected, because `messages_fault()` runs first and aborts on a message that is not a named list.
