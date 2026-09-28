@@ -1,5 +1,7 @@
 # rlmstudio (development version)
 
+* Take a matrix or array column of a `messages` data frame with no cells in a row, such as a 2-by-0 matrix. `lms_chat_openai()` no longer counts that column as empty in that row. jsonlite writes that row of the column as `[]`, or as nested empty arrays such as `[[],[],[]]`. Those are field values, so a row in which every other cell is `NA` is now sent. Before, it aborted with "You gave a data frame with a row in which every cell is NA or a NULL list cell." A data-frame column whose own column is such a matrix is now sent in that row too, as `{"m":[]}`. A data-frame column with no columns still counts as empty in every row.
+
 * `lms_chat_openai()` now refuses an `NA`, `NaN`, `Inf`, or `-Inf` number inside `messages`, before the check for a running server. Before, jsonlite sent it as the string `"NA"`, `"NaN"`, `"Inf"`, or `"-Inf"`. In some data-frame columns, it left an `Inf` cell out of the message with no warning. The error opens with "`messages` holds a field value that cannot be sent as JSON." and has no condition class. The rule reads a double or integer vector with no class or with the class `"AsIs"` alone. It reads a field, a list below a field, a list-column or list-matrix cell, and a matrix or array column.
   * In an atomic data-frame column with no `dim` attribute, only `Inf` and `-Inf` abort. An `NA` or `NaN` cell there is still left out of its message.
   * A number with another class is still written by its class. For example, `as.Date(NA)` is sent as `null` and `as.Date(Inf)` as `"Inf"`.
