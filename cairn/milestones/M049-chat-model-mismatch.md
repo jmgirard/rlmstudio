@@ -1,6 +1,6 @@
 # M049: A chat call aborts on a reply from a different model
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -47,7 +47,7 @@ before each request was rejected at the gate (work log).
       answers. Further tests fire the abort on both functions with `logprobs = TRUE`, and on `lms_chat_openai()`
       with a `schema`. One test fires it on a mismatched reply that holds no answer text. Two tests fire it
       through `lms_chat()`, on the default route and on `api_type = "openai"`.
-- [x] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
+- [ ] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
       functions with both settings of `simplify`.
       (a) The reply's `model` equals the asked name. The call sends no request after the chat request.
       (b) The asked name differs in letter case only from the key of the model whose loaded instance answered.
@@ -88,7 +88,7 @@ before each request was rejected at the gate (work log).
 ## Coverage
 
 - AC1 → T1, T3
-- AC2 → T1, T3
+- AC2 → T1, T3, T7
 - AC3 → T3
 - AC4 → T4
 - AC5 → T1, T2, T4
@@ -119,6 +119,13 @@ before each request was rejected at the gate (work log).
       `devtools::document()`.
 - [x] T6: Run `devtools::test()`. Then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server
       started (LESSONS, M009).
+- [ ] T7: Review finding O1. Compare the asked name in `check_reply_model()` and `reply_model_serves()` in
+      `R/chat.R` as a plain string, with no names or class. Tests first on both routes with both settings of
+      `simplify`: a named model string and a classed one, each answered by the same model, send 1 request.
+- [ ] T8: Review findings O10, O11, O12, and P2. Read `cnd[["code"]]` and `cnd[["status"]]` in
+      `keep_or_abort_api()`. Add a lookup test with an empty model list that prints nothing. State on
+      `rlmstudio-conditions` that a status-200 body that is not a JSON object skips the check. Rewrap the two long
+      roxygen lines in `R/conditions.R`. Then run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
 
 ## Work log
 
@@ -140,6 +147,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: the claim audit narrowed "two or more chat models" to the two that the probe loaded, in NEWS and a code comment. D-025 keeps "two or more", because DECISIONS is history.
 - 2026-09-28: review checkpoint: evidence recorded and AC1 to AC7 ticked, consistency gate passed. Three fresh reviewers are running, and triage is still owed.
 - 2026-09-28: review: 18 findings logged with proposed dispositions. O1 shows AC2(a) failing for a named model string. The step-7 gate decides.
+- 2026-09-28: review return 1 (defect): AC2(a) fails, because a named or classed model string that the same model answers aborts as a mismatch. The user chose to send it back at the gate. Status in-progress, with T7 and T8 added.
 
 ## Decisions
 
@@ -220,4 +228,8 @@ returned no comments. Each finding has a proposed disposition, which the step-7 
   The help page states it for every API error, so the help is right and only the Scope prose is narrow.
 - P1 (reject): `reply_model_serves()` writes its own `rlmstudio_no_server` abort and does not call
   `stop_if_no_server()`. That helper takes no label, and AC3 needs the lookup label in the message.
-- P2 (fix now): two roxygen lines in `R/conditions.R` run past the wrap width of the file. `NEWS.md` has two entries under the development version.
+- P2 (fix now): two roxygen lines in `R/conditions.R` run past the wrap width of the file.
+
+Gate 2026-09-28: the user accepted the dispositions above and sent the milestone back. O1 fails AC2(a), so the AC2
+box is unticked. T7 carries O1, and T8 carries O10, O11, O12, and P2. O2 and O3 joined the ROADMAP candidate row
+"Four model-name cases outside M049". The 11 rejects stand with the reasons above. `NEWS.md` has two entries under the development version.
