@@ -3,6 +3,21 @@
 ## rlmstudio (development version)
 
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now sends a `messages` list that has a class attribute. The call
+  removes the class of the outer list and of each message after the
+  check, and before it builds the request. Before, a class that jsonlite
+  has no method for failed after the check for a running server, with an
+  error that did not name `messages`. A class on a field inside a
+  message is kept, so [`I()`](https://rdrr.io/r/base/AsIs.html) on a
+  field still makes an array. A data frame and its columns keep their
+  classes. A data frame `messages` value now also aborts before the
+  request if it has no columns, or a column name that is `NA`, empty, or
+  repeated. It also aborts if a row holds `NA` in every cell. Before,
+  jsonlite sent such a data frame with empty messages, or with a `null`
+  field for an `NA` in a list column. It also replaced a bad column name
+  with a number or a suffix.
+
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   now checks `messages` before the request. It must be a data frame with
   at least one row, or an unnamed list of one or more messages. Each
   message must be a list of one or more fields, and each field must have
