@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M042: The OpenAI chat function reads each row of an array or non-vector messages column on its own
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -184,6 +184,8 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: RR01 ingested from a Fable subagent. Triage: recommendation 1 apply (AC2 through the amendment gate, plus T8), 2 apply (the class-definition test and its row stay), 3 scheduled by merging into the class-definition candidate row, 4 scheduled as a candidate row, 5 to 7 rejected for the reasons RR01 gives. RB01 and RR01 moved to the archive. Status back to in-progress.
 - 2026-09-27: the AC2 amendment gate adopted the RR01 section 3 text verbatim. It narrows the criteria set. No re-audit reader ran, because AC2 already has two re-audit lines, so the user decided the wording. The Tasks section was compressed to keep the plan-owned body under 150 lines.
 - 2026-09-27: T8 done. The NEWS sub-item now carries the RR01 text, with its one trailing condition moved to the front, and the `empty_rows()` comment says "judges". `devtools::document()` changed no file. `devtools::test()`: 11745 expectations, 0 failures. `devtools::check()` with the API token: 0 errors, 0 warnings, 0 notes.
+- claim audit: 48 claims read, 2 corrected — NEWS.md
+- 2026-09-27: the claim reader re-read NEWS.md line 4 and found both corrections true. A non-vector column never gave the empty-row error on main either, so the sub-item now says only the warning is gone. A slotted class definition is named as sent. The reader's optional tightening for an S4 object that contains a basic type was not applied, because the line's scope already excludes atomic columns. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
