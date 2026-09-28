@@ -174,6 +174,8 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: status review. T9 and T10 are done, and AC2 waits for fresh evidence at review.
 - 2026-09-28: review pass 3 started on head da340ad, which contains `origin/main`. No PR exists. Evidence for AC1 to AC7 is under "Pass 3", AC2 is ticked, and the consistency gate passed. The blame and prior-review lenses found nothing, and the [O] lens is still running.
 - 2026-09-28: review pass 3: 5 findings logged with proposed dispositions, and none shows a criterion failing. The step-7 gate decides.
+- 2026-09-28: correction to the T10 line: `air.toml` exists and is tracked, so the Air run read it. Review finding Q3.
+- 2026-09-28: step-7 approval: m049-chat-model-mismatch approved for merge. The user accepted the pass-3 dispositions. Q3 and Q4 are fixed on the branch, Q1 and Q2 join the candidate row, and Q5 is rejected.
 
 ## Decisions
 
@@ -388,3 +390,7 @@ and each finding holds. Each has a proposed disposition, which the step-7 gate d
   load, because `unload_quietly()` tolerates a failed unload.
 - Q5 (reject): a failed lookup carries the status of the lookup, not the chat reply. The message opens with
   "because the model-list lookup failed", which AC3 requires and the help states.
+
+Gate 2026-09-28, pass 3: the user approved the merge with the dispositions above. Q3 is a correcting work-log
+line. Q4 sets both load flags before their loads in the recorder, because `lms_load()` has the same gap. Q1 and Q2
+joined the candidate row, which is now "Six model-name cases outside M049". Q5 is rejected with the reason above.

@@ -139,20 +139,21 @@ unload_quietly <- function(id) {
 }
 
 # `on.exit()` at the top level of a script run by Rscript never runs, so the
-# unloads sit in a `finally` clause instead. Each flag is set only after its
-# load succeeds.
+# unloads sit in a `finally` clause instead. Each flag is set before its load,
+# because a load can fail after the model is loaded, and `unload_quietly()`
+# only warns if the model is not loaded.
 first_loaded <- FALSE
 second_loaded <- FALSE
 invisible(tryCatch(
   {
     if (!was_loaded) {
-      lms_load(first, host = host)
       first_loaded <- TRUE
+      lms_load(first, host = host)
     }
     record_case("unknown", "not-a-model")
     record_case("case", "Google/Gemma-3-1B")
-    lms_cli("load", second, "--identifier", second_id, "-y")
     second_loaded <- TRUE
+    lms_cli("load", second, "--identifier", second_id, "-y")
     record_case("alias", second)
     record_case("not_found", "not-a-model")
   },
