@@ -124,6 +124,8 @@ chat functions take no `messages` argument.
 - 2026-09-27: plan gate chose to treat only a `NULL` cell as empty over any length-0 cell, because `list()` writes the field value `[]`; falsified by a server that treats a message holding only an empty-array field as no message.
 - 2026-09-27: plan gate chose to refuse repeated names below the message level over `NA` and empty names alone, because jsonlite renames a repeated `a` to `a.1`; falsified by a jsonlite version that keeps repeated keys.
 - 2026-09-27: plan gate chose a trial jsonlite write over a class allow-list, because the write covers each class jsonlite cannot write with no list to keep; falsified by a jsonlite write that succeeds in the check and fails in the request.
+- 2026-09-27: review gate fixes committed for findings O1, O2, O4, O6, O7, and S2. O5 went to a candidate row.
+- 2026-09-27: step-7 approval: m040-openai-messages-shape-and-write approved for merge
 
 ## Decisions
 
