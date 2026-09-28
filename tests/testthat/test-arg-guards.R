@@ -2489,6 +2489,7 @@ test_that("messages reach the request as jsonlite writes them", {
 
   cases <- list(
     "a 2-by-0 numeric matrix column" = frame(matrix(numeric(), 2L, 0L)),
+    "a 2-by-0 character matrix column" = frame(matrix(character(), 2L, 0L)),
     "a 2-by-0 list matrix column" = frame(matrix(list(), 2L, 0L)),
     "a 2-by-3-by-0 array column" = frame(array(numeric(), c(2L, 3L, 0L))),
     "a data-frame column holding a 2-by-0 matrix" = frame(zero_width_frame()),

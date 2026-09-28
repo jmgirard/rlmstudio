@@ -135,6 +135,8 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 - 2026-09-28: T4 done. With the server started and the token set, `devtools::test()` gave 0 failed, 0 errors, 12305 passed. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
 - claim audit: 37 claims read, 2 corrected — R/chat.R, tests/testthat/test-body-write.R
 - 2026-09-28: the two corrections are comment-only. The `rlm_req_body()` roxygen now says a 2-by-0 list matrix column becomes `NULL` cells sent as `null`. The test-body-write.R header no longer says D-003 covers dot values. `devtools::document()` then changed no file. Status set to review.
+- 2026-09-28: review gate fixed four NEWS and comment findings and rejected three. The Review section has each disposition.
+- step-7 approval: m044-json-body-as-written approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
@@ -159,3 +161,11 @@ Independent review, three fresh reviewers. The [S] blame-history and [S] prior-r
 5. The comment above `request_body_text()` reads as if the package still calls `req_body_json()`.
 6. The shared helpers live in `R/chat.R`, not an `R/utils-*.R` file.
 7. The obfuscated-value test matches message text only.
+
+Gate dispositions, 2026-09-28:
+- Findings 1, 2, 3: fixed in NEWS.md. Probes on 2026-09-28 showed the nested column sent as `{}` on main and `{"m":[]}` now. They also showed that `person()` recursed on main, and that `packageVersion()` and `person()` values now abort with "No method asJSON S3 class". The AC1 test gained a 2-by-0 character matrix column, and `test-body-write.R` gained a `packageVersion()` abort test. With `rlm_req_body()` put back on httr2's writer in memory, each new case failed.
+- Finding 5: fixed. The helper comment now names the old writer.
+- Finding 4: rejected. A transient limit lasts until the top-level run ends, so the reset keeps a 30-second limit off later tests.
+- Finding 6: rejected. It follows the `lms_client()` precedent in `R/chat.R`, with no runtime effect.
+- Finding 7: rejected. The jsonlite error has no condition class, and the test fails on main.
+- After the fixes: `devtools::document()` changed no file. `devtools::test()` gave 430 tests, 12309 expectations passed, 0 failed, 0 errors.

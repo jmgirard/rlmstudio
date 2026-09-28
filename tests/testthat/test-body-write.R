@@ -44,3 +44,18 @@ test_that("an obfuscated value in the dots aborts with the jsonlite error", {
   )
   expect_identical(length(recorder$requests), 0L)
 })
+
+# httr2's rebuild also recursed with no end on a packageVersion() value.
+# jsonlite has no method for its class, so the write now fails at once.
+test_that("a packageVersion() value in the dots aborts with the jsonlite error", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(mock_response(200L, "{}"))
+  setTimeLimit(elapsed = 10, transient = TRUE)
+  on.exit(setTimeLimit(elapsed = Inf), add = TRUE)
+  expect_error(
+    lms_unload("a-model", v = packageVersion("httr2")),
+    "No method asJSON S3 class: numeric_version",
+    fixed = TRUE
+  )
+  expect_identical(length(recorder$requests), 0L)
+})

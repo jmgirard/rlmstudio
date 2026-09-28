@@ -158,9 +158,10 @@ request_target <- function(req) {
 }
 
 # The body text a captured request sends, unparsed, so a test can compare it
-# byte for byte with a jsonlite write. httr2 1.3.0 req_body_json() rebuilds
-# the body when the request is dry-run, and a POSIXlt value there recurses
-# with no end, so the dry run gets `seconds` and then fails.
+# byte for byte with a jsonlite write. The old httr2 1.3.0 writer,
+# req_body_json(), rebuilt the body when the request was dry-run, and a
+# POSIXlt value there recursed with no end. So the dry run gets `seconds` and
+# then fails, and a red run on the old writer ends.
 request_body_text <- function(req, seconds = 30) {
   require_httpuv()
   setTimeLimit(elapsed = seconds, transient = TRUE)
