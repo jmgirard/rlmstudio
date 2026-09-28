@@ -104,3 +104,26 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - Gate: `cairn_validate.py` exit 0, all checks passed. `pkgdown::check_pkgdown()` found no problems. NEWS.md has
   a bullet with no milestone number. README.Rmd and `.Rbuildignore` are not touched. DESIGN.md is not touched, so
   `cairn_impact` does not apply. No driving RR.
+- Reviewers: [O] diff-bug 9 findings, [S] blame-history 3, [S] prior-review 0 (no regression of an archived
+  finding, and no GitHub review threads). Dispositions below are proposed, pending the gate.
+- O1: the second remedy fails for a user whose model is already loaded. `lms_load()` without `force` returns
+  early with "already loaded" (R/load.R:79-88, read at review). Proposed fix now: the help and NEWS say to
+  unload first with `lms_unload()`.
+- O2: the probe might show a cut fixed near 512 tokens, not one at `context_length`. Proposed reject. A live
+  probe at review, nomic at 2048, found a vector equal to the 5000-word one from 2100 words on, and a different
+  one at 2040 words (difference 0.031). Record the two points in the references page.
+- O3: the live test pins only an upper bound on the cut, so a cut at 64 tokens passes it. Proposed fix now: a
+  fourth text that differs from text one at word N %/% 2 gets another vector.
+- O4: the `tryCatch()` around `list_models()` turns a 401 or a bad reply into the skip "is not loaded". The
+  neighboring live test has the same pattern. Proposed follow-up: one candidate row for both live tests.
+- O5 and S3: N is the largest context of all loaded instances, where AC2 says "that loaded instance". A missing
+  `context_length` gives `max(NULL)`. Proposed fix now: skip unless exactly one instance with a context length.
+- O6: the NEWS bullet says "reports" with no version, and it uses "You can". Neighbors state what the package
+  does. Proposed fix now.
+- O7: the help names the ceiling, not where the current context length shows. Proposed fix now: one clause
+  naming the `loaded_instances` column of `list_models(detailed = TRUE)`.
+- O8: the 1e-6 tolerance could fail on GPU rounding. Proposed reject: the neighbor test uses it, and the planted
+  defect gave 0.090.
+- O9: the milestone file had uncommitted changes. Reject: stale, committed at c5d8c4d and 0ab29f5.
+- S1: the NEWS bullet sits below the batching bullet. M046 and M047 put the newest bullet first. Proposed fix now.
+- S2: the new live test lacks the neighbor's comment that it never loads a model. Proposed fix now.
