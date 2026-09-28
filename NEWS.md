@@ -1,5 +1,8 @@
 # rlmstudio (development version)
 
+* If the first extent of an array column of a `messages` data frame is the row count, `lms_chat_openai()` now reads that column one row at a time. Such a column counts as empty in a row only if each of its cells in that row is `NA` or a `NULL` list cell. Before, a row with one empty cell in an array of three or more dimensions sometimes aborted as a row in which every cell is `NA`. Now a three-dimensional atomic column with one `NA` in a row is sent. A list column of three or more dimensions aborts with the error for a list with a `dim` attribute.
+  * A data-frame column that is neither an atomic vector nor a list, such as an environment, a symbol, or an expression vector, no longer gives an R warning. It never counts as empty. So it aborts with the error for a value that jsonlite cannot write, or with the error for a function, and not with the empty-row error.
+
 * `lms_chat_openai()` now refuses two more kinds of `messages` value before the check for a running server. The errors have no condition class.
   * A list with a `dim` attribute inside a message aborts, such as a list-matrix as a field or in a list-column cell. So does a list column of a data frame with one, three, or more dimensions. Before, jsonlite sent such a list as nested arrays with each cell in an array of its own. A one-dimensional list column with more than one row was refused before too, with a jsonlite error. An atomic matrix field and a list-matrix column are still sent.
   * A function anywhere inside `messages` aborts, such as a field, a data-frame column, or a list-column cell. Before, jsonlite sent the function's source text.

@@ -133,7 +133,7 @@ choice to send it as jsonlite writes it.
   `devtools::document()` and `devtools::test()`.
 - [x] T4: Join the `@aliases` tag at `R/conditions.R:257` onto one line.
   Run `devtools::document()` and make sure that it prints no warning.
-- [ ] T5: Add the NEWS entry. Run `devtools::document()`,
+- [x] T5: Add the NEWS entry. Run `devtools::document()`,
   `devtools::test()`, and `devtools::check()` with the API token (see the
   M009 lesson on the vignette build). Give a reason for each NOTE in the
   work log.
@@ -158,6 +158,7 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: T1 done. `empty_rows()` reads a `dim` column through `apply()` when its first extent is the row count. With the old `empty_rows()` swapped in, cases 1 and 2, the 4-D list probe, and the nested one-`NA` probe gave the empty-row detail. The three all-empty probes and the controls gave the same result before and after, so they cannot go red on revert. `devtools::test()`: 0 failures.
 - 2026-09-27: T2 done. `empty_rows()` treats a column that is neither atomic nor a list as never empty. Before the branch change, all eight non-function probes went red on the `is.na()` warning, and the function probe stayed green. `devtools::test()`: 0 failures.
 - 2026-09-27: T3 done. The help's list-matrix text and example were written from a jsonlite run of the same rows. A new test sends the help example and a second row with `unbox()`, a nested list, and a data frame in cells, and compares each `messages` element with JSON text stated in the test. `devtools::test()`: 0 failures.
+- 2026-09-27: T5 done. NEWS.md has one entry for the AC1 and AC2 changes. `devtools::document()` changed nothing, `devtools::test()` gave 0 failures, and `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes, so no NOTE needs a reason.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
