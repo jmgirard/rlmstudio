@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M042: The OpenAI chat function reads each row of an array or non-vector messages column on its own
 
-- **Status:** blocked   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -96,11 +96,11 @@ choice to send it as jsonlite writes it.
 <!-- owner: plan · create/amend-via-gate -->
 
 - AC1 → T1
-- AC2 → T2, T6, T7
+- AC2 → T2, T6, T7, T8
 - AC3 → T3
 - AC4 → T3
 - AC5 → T4
-- AC6 → T5, T7
+- AC6 → T5, T7, T8
 
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
@@ -141,6 +141,10 @@ choice to send it as jsonlite writes it.
 - [x] T7: Pass-2 review items. Qualify the NEWS sentence on a 3-D `NA`, and
   quote the empty-row error there. Add a sent-form test for that `NA`, a
   whole-call reference-class probe, and the O3 and O4 candidate rows.
+- [ ] T8: Apply RR01 recommendation 1. Replace the NEWS.md sub-item with
+  the RR01 section 4 text. In the `empty_rows()` comment, change "refuses
+  it later" to "judges it later". Run `devtools::test()` and
+  `devtools::check()`.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -177,9 +181,12 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: implement resumed after defect return 2. The question gate chose a review brief for the AC2 repair and chose to do the pass-2 review items now.
 - 2026-09-27: T7 done. NEWS qualifies the 3-D `NA` sentence and quotes the empty-row error. A new test pins the sent form of an `NA` in a 3-D numeric, logical, and character column. The AC2 whole-call test has a reference-class probe. The O3 and O4 candidate rows are in ROADMAP, with P2 in the O4 row. `devtools::test()`: 11745 expectations, 0 failures.
 - 2026-09-27: blocked on RB01. The brief is committed on the milestone branch, not on main, because the branch holds the current M042 tracking and main's copy is behind it.
+- 2026-09-27: RR01 ingested from a Fable subagent. Triage: recommendation 1 apply (AC2 through the amendment gate, plus T8), 2 apply (the class-definition test and its row stay), 3 scheduled by merging into the class-definition candidate row, 4 scheduled as a candidate row, 5 to 7 rejected for the reasons RR01 gives. RB01 and RR01 moved to the archive. Status back to in-progress.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
+
+- 2026-09-27 (RR01): AC2 is repaired by narrowing it. Its abort clause names only the kinds that two tests build, and a last paragraph says AC2 promises nothing more for another non-vector column. jsonlite judges a non-vector value by its class attribute alone, so only a kind with no class set by hand has a fixed outcome. A code refusal for data-frame columns alone was rejected, because the same classed value in a list message is still sent. A refusal over both forms is a candidate row. Dropping the abort clause was rejected, because it loses the record of what the user now sees.
 
 ## Review
 <!-- owner: review · exclusive -->
