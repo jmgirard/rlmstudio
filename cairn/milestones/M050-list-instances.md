@@ -113,7 +113,7 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - [x] T5: Write the help page, with each `@inheritSection` on one line. Update `pkgdown/_pkgdown.yml`, `NEWS.md`,
       the DESIGN function families, and the model-list paragraph and item 6 of
       `cairn/references/lmstudio-api-surface.md`. Run `devtools::document()` and `pkgdown::check_pkgdown()`.
-- [ ] T6: Run `devtools::test()`, then `devtools::check()` with `RLMSTUDIO_API_TOKEN` set, and fix what they report.
+- [x] T6: Run `devtools::test()`, then `devtools::check()` with `RLMSTUDIO_API_TOKEN` set, and fix what they report.
 
 ## Work log
 
@@ -130,3 +130,4 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: minor amendment to T4: the recording comes from a new generator, `data-raw/record-list-instances-cassette.R`, because the profile test doctrine requires a committed generator for each fixture.
 - 2026-09-28: T4 done. The cassette holds one instance each of google/gemma-3-1b and the nomic embedding model, and no token or request header. The live test passed with the token set. If the server refuses the request, the live test also skips. This third skip is beside the two of AC6, and it keeps a run with no token clean, as in the live embedding tests.
 - 2026-09-28: T5 done. The help page, `pkgdown/_pkgdown.yml`, `NEWS.md`, DESIGN, and the API reference page name the function. Minor amendment: the "Malformed response" section of `rlmstudio-conditions` now counts eleven raisers and states the two new rules, because the new help page inherits that section. A second `devtools::document()` run left no diff, and `pkgdown::check_pkgdown()` found no problems.
+- 2026-09-28: T6 done. With `RLMSTUDIO_API_TOKEN` set, `devtools::test()` gave 0 failures, 0 warnings, and 0 skips. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Nothing needed a fix.
