@@ -43,7 +43,7 @@ the numeric matrix `NA` closes with this milestone.
 - A number with a class other than `"AsIs"`, such as `as.Date(Inf)`,
   which jsonlite writes as `"Inf"`. It is written by its class, as
   today. The plan gate chose this bound. No candidate row.
-- Array rows with no cells are M044.
+- Array rows with no cells are M046 (corrected in the M044 re-cut).
 
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
@@ -127,6 +127,7 @@ the numeric matrix `NA` closes with this milestone.
 - 2026-09-28: plan gate chose to refuse `Inf` in a plain data-frame column over leaving it out like `NA`, because jsonlite drops it with no message; falsified by a user who relies on an `Inf` cell being left out of the message.
 - 2026-09-28: plan gate chose a rule over unclassed and `I()` numbers over a rule that refuses `Inf` of any class, because a class test and a type test in one rule make the promise inexact; falsified by a classed number other than `AsIs` that a user sends and that jsonlite writes as `"Inf"` or `"NA"`.
 - 2026-09-28: plan gate chose to refuse such numbers over sending `null` in their place, because `na = "null"` also turns every left-out `NA` cell of a data frame into a `null` field; falsified by a jsonlite option that writes a non-finite number as `null` and leaves data-frame cells alone.
+- 2026-09-28: the M044 re-cut kept the dependency on M044. M044 now makes the request send what jsonlite writes, and the numbers this milestone refuses are written the same way before and after. The dependency stays because both edit `rlm_check_messages()` and its help. The Out pointer to array rows moved to M046.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
