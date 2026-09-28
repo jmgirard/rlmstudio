@@ -400,9 +400,10 @@ reply. The message names both. A condition from \code{\link[=lms_chat_openai]{lm
 carries the \code{content} and \code{finish_reason} fields, both \code{NULL}.
 
 The check runs before the reply is read, so it also runs with
-\code{logprobs = TRUE}, with a \code{schema}, and for a reply with no answer text. A
-reply is not checked if its body is not a JSON object, if it has no \code{model}
-field, or if its \code{model} is not one string or holds only whitespace. A body
+\code{logprobs = TRUE}, with a \code{schema} on \code{\link[=lms_chat_openai]{lms_chat_openai()}}, and for a reply
+with no answer text. A reply is not checked if its body is not a JSON
+object, if it has no \code{model} field, or if its \code{model} is not one string or
+holds only whitespace. A body
 that is not a JSON object is returned with \code{simplify = FALSE}, and with
 \code{simplify = TRUE} it raises the error that the "Malformed response" section
 describes. If the instance that answered is
@@ -415,7 +416,9 @@ by "because the model-list lookup failed". A status other than 200 raises
 \code{rlmstudio_api_error}. A body that does not parse as JSON, or that breaks a
 rule of a model list in the "Malformed response" section, raises
 \code{rlmstudio_bad_response}. A server that the port check before the request
-cannot reach raises \code{rlmstudio_no_server}.
+cannot reach raises \code{rlmstudio_no_server}. A condition from the lookup does
+not carry the \code{content} and \code{finish_reason} fields, also when
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} raises it.
 
 \code{\link[=lms_chat]{lms_chat()}} runs the check through \code{\link[=lms_chat_openai]{lms_chat_openai()}} and
 \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}. \code{\link[=lms_chat_native]{lms_chat_native()}} does not check the reply.

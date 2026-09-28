@@ -707,7 +707,8 @@ check_body_object <- function(resp, resp_data, label, ...) {
 #' @param host,token The host and token of the call, for the model list.
 #' @param label Character. The calling wrapper's label.
 #' @param ... Extra condition fields, such as the `content` and
-#'   `finish_reason` fields that every OpenAI condition carries.
+#'   `finish_reason` fields that `lms_chat_openai()` gives each
+#'   `rlmstudio_bad_response` about its reply.
 #'
 #' @noRd
 check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
@@ -1427,8 +1428,9 @@ reply_columns$openai <- reply_columns$openresponses
 #'
 #' The batch aborts in the same way at an `rlmstudio_api_error` with `status`
 #' 400 and the `code` `"model_not_found"`, and at an
-#' `rlmstudio_model_mismatch`. The chat routes give these for a model name
-#' that the server cannot find, so every later input fails in the same way.
+#' `rlmstudio_model_mismatch`. The `"openai"` and `"openresponses"` routes
+#' give these for a model name that the server cannot find, so every later
+#' input fails in the same way.
 #' See the "Reply from another model" section below.
 #'
 #' An `rlmstudio_no_server` from [lms_chat()] also aborts the batch. Its
@@ -1524,10 +1526,10 @@ lms_chat_batch <- function(
   }
   # A refused token or a model the server cannot find fails every input the
   # same way, whatever the prompt, so these statuses abort like a lost server
-  # (D-019). The chat routes answered a model they could not find with status
-  # 400 and the code "model_not_found" when two chat models were loaded
-  # (D-025). Any other status can come from one prompt, so it fails that input
-  # alone.
+  # (D-019). The OpenAI and OpenResponses routes answered a model they could
+  # not find with status 400 and the code "model_not_found" when two chat
+  # models were loaded (D-025). Any other status can come from one prompt, so
+  # it fails that input alone.
   keep_or_abort_api <- function(cnd) {
     if (
       isTRUE(cnd[["status"]] %in% c(401L, 403L, 404L)) ||

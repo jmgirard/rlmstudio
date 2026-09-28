@@ -309,9 +309,10 @@
 #' carries the `content` and `finish_reason` fields, both `NULL`.
 #'
 #' The check runs before the reply is read, so it also runs with
-#' `logprobs = TRUE`, with a `schema`, and for a reply with no answer text. A
-#' reply is not checked if its body is not a JSON object, if it has no `model`
-#' field, or if its `model` is not one string or holds only whitespace. A body
+#' `logprobs = TRUE`, with a `schema` on [lms_chat_openai()], and for a reply
+#' with no answer text. A reply is not checked if its body is not a JSON
+#' object, if it has no `model` field, or if its `model` is not one string or
+#' holds only whitespace. A body
 #' that is not a JSON object is returned with `simplify = FALSE`, and with
 #' `simplify = TRUE` it raises the error that the "Malformed response" section
 #' describes. If the instance that answered is
@@ -324,7 +325,9 @@
 #' `rlmstudio_api_error`. A body that does not parse as JSON, or that breaks a
 #' rule of a model list in the "Malformed response" section, raises
 #' `rlmstudio_bad_response`. A server that the port check before the request
-#' cannot reach raises `rlmstudio_no_server`.
+#' cannot reach raises `rlmstudio_no_server`. A condition from the lookup does
+#' not carry the `content` and `finish_reason` fields, also when
+#' [lms_chat_openai()] raises it.
 #'
 #' [lms_chat()] runs the check through [lms_chat_openai()] and
 #' [lms_chat_openresponses()]. [lms_chat_native()] does not check the reply.

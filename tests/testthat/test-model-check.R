@@ -476,6 +476,10 @@ test_that("a lookup body that does not parse raises a bad response", {
     expect_false(inherits(err, "rlmstudio_model_mismatch"), info = route)
     expect_lookup_message(err, route)
     expect_true(grepl("did not parse as JSON", conditionMessage(err)), info = route)
+    expect_false(
+      any(c("content", "finish_reason") %in% names(err)),
+      info = route
+    )
   }
 })
 
@@ -541,8 +545,9 @@ test_that("the lookup sends the call's token to the same host and prints nothing
   }
 })
 
-# `list_models()` prints a message only for an empty list, so this case would
-# catch a lookup that went through it with `quiet = FALSE`.
+# `list_models()` prints a message only when it has no model to return, as
+# for an empty list, so this case would catch a lookup that went through it
+# with `quiet = FALSE`.
 test_that("a lookup that gets an empty model list prints nothing", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   for (route in chat_routes) {
