@@ -57,20 +57,51 @@ choice to send it as jsonlite writes it.
   column of row 2 is `NA`. The call passes every `messages` rule and
   reaches the server probe. In case 3, the same frame has `NA` in every cell of row 2.
   The call aborts with the empty-row detail.
-- [ ] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
-  atomic vector nor a list counts as not empty in each row. Examples are an
-  environment, a formula, a symbol, a call, an S4 object whose `typeof()` is
-  `"S4"` (such as a reference-class object), an external pointer, an
-  expression vector, and a function (any value for which `is.function()` is
-  TRUE). This holds for a column of `messages` and for a column of a
-  data-frame column. `empty_rows()` gives no R warning for such a column. In
-  a frame that passes the shape, column-name, empty-row, list-`dim`,
-  nested-name and function rules, every such column aborts with the
-  value-fault header and the jsonlite-write detail. The one exception is an
-  S4 class definition with at least one slot
-  (`methods::is(x, "classRepresentation")` and `length(x@slots) > 0`), which
-  jsonlite writes as an object mapping slot names to class names. A function
-  column in a row that is otherwise `NA` aborts with the function detail.
+- [ ] AC2: A data-frame column for which `is.atomic()` and `is.list()` are
+  both FALSE counts as not empty in each row of `empty_rows()`, and
+  `empty_rows()` gives no R warning for it. This holds at the top level
+  of `messages` and inside a data-frame column. The domain is the twelve
+  column kinds that the test "empty_rows() finds no empty row in a column
+  that is not a vector" builds:
+
+  - an environment
+  - a formula
+  - a symbol
+  - a call
+  - an S4 object of a class with one numeric slot
+  - a reference-class object
+  - an external pointer
+  - an expression vector
+  - a function
+  - a class generator
+  - a class definition with a slot
+  - a class definition with no slot
+
+  Each kind sits at both depths in a one-row frame whose other column is
+  `NA`. A three-row formula column is the thirteenth case. For each,
+  `empty_rows()` returns all `FALSE` with no warning.
+
+  In `lms_chat_openai()`, for each column kind that the test "a column
+  that is not a vector is not empty and gives no warning" builds, in a
+  frame whose other cells are `NA`, the call aborts before the server
+  probe. The abort carries the value-fault header and the jsonlite-write
+  detail, with no R warning. The kinds are:
+
+  - an environment, a symbol, a call, and an expression vector, each with
+    no `class` attribute
+  - a formula made with `~`
+  - an object of an S4 class that `methods::setClass()` defines with one
+    numeric slot
+  - a reference-class object
+  - an external pointer
+  - a symbol inside a data-frame column
+
+  A function column in such a frame, at the top level or inside a
+  data-frame column, aborts with the function detail, with no R warning.
+
+  For any other column that is neither an atomic vector nor a list, this
+  criterion promises only the first paragraph. The later rules and the
+  trial write decide the call. AC2 does not state their result.
 - [x] AC3: The `messages` help of `lms_chat_openai()` says that jsonlite
   does not unbox a value inside a list-matrix cell, at any depth in a list,
   unless `jsonlite::unbox()` wraps it. A data frame in a cell is sent as an
@@ -105,46 +136,15 @@ choice to send it as jsonlite writes it.
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
 
-- [x] T1: In `empty_rows()` (`R/utils-args.R:718`), read a column with a
-  `dim` attribute row by row, through the cells whose first index is the
-  row. Add probes to `tests/testthat/test-arg-guards.R`, built with `$<-`,
-  for the AC1 cases, 4-D and nested columns, and 1-D and 2-D controls.
-  Revert the fix in a scratch copy and make sure that the new probes go
-  red. Run `devtools::test()`.
-- [x] T2: In `empty_rows()`, replace the function branch with one branch
-  for a column that is neither an atomic vector nor a list. Add probes for
-  each AC2 kind in an otherwise-`NA` row, one nested, and a function
-  probe. Revert the branch in a scratch copy and make sure that each probe
-  other than the function probe goes red. Run `devtools::test()`.
-- [x] T3: Edit the `messages` help in `R/chat.R`. Replace the empty-row
-  sentence at lines 290-291 for AC4. Replace the list-matrix sentence at
-  lines 300-301 for AC3. Add a test that sends the AC3 example row and
-  compares the request body with the sent form in the help. Run
-  `devtools::document()` and `devtools::test()`.
-- [x] T4: Join the `@aliases` tag at `R/conditions.R:257` onto one line.
-  Run `devtools::document()` and make sure that it prints no warning.
-- [x] T5: Add the NEWS entry. Run `devtools::document()`,
-  `devtools::test()`, and `devtools::check()` with the API token (see the
-  M009 lesson on the vignette build). Give a reason for each NOTE in the
-  work log.
-- [x] T6: Review return work. Add a test that calls `empty_rows()` on each
-  AC2 kind, at top level and inside a data-frame column, with a slotted
-  and a slotless class definition, a function, and a class generator. It
-  expects no warning and all `FALSE`. Add a probe for a slotted
-  class-definition column that expects the jsonlite warning and one server
-  probe, and one for a slotless column that expects the jsonlite-write
-  abort. Add a nested function-column probe and a no-warning check on the
-  function probe. Narrow NEWS.md to match AC2, and fix its sentence on list
-  arrays of three or more dimensions, which the empty-row error beats. Add
-  a candidate row for a slotted class-definition column. Run
-  `devtools::test()` and `devtools::check()`.
-- [x] T7: Pass-2 review items. Qualify the NEWS sentence on a 3-D `NA`, and
-  quote the empty-row error there. Add a sent-form test for that `NA`, a
-  whole-call reference-class probe, and the O3 and O4 candidate rows.
-- [ ] T8: Apply RR01 recommendation 1. Replace the NEWS.md sub-item with
-  the RR01 section 4 text. In the `empty_rows()` comment, change "refuses
-  it later" to "judges it later". Run `devtools::test()` and
-  `devtools::check()`.
+- [x] T1: `empty_rows()` reads a `dim` column row by row, with probes for AC1 (revert results in the work log).
+- [x] T2: `empty_rows()` treats a non-atomic, non-list column as never empty, with a probe per AC2 kind.
+- [x] T3: The `messages` help sentences for AC3 and AC4, and a test that sends the AC3 example row.
+- [x] T4: The `@aliases` tag at `R/conditions.R:257` on one line.
+- [x] T5: The NEWS entry, then `document()`, `test()`, and `check()`.
+- [x] T6: Return-1 work: an `empty_rows()` test, class-definition probes, NEWS narrowed, one candidate row.
+- [x] T7: Pass-2 items: NEWS on a 3-D `NA`, a sent-form test, a reference-class probe, two candidate rows.
+- [x] T8: Replace the NEWS.md sub-item with the RR01 section 4 text, and change "refuses it later" to
+  "judges it later" in the `empty_rows()` comment. Run `devtools::test()` and `devtools::check()`.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -182,6 +182,8 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: T7 done. NEWS qualifies the 3-D `NA` sentence and quotes the empty-row error. A new test pins the sent form of an `NA` in a 3-D numeric, logical, and character column. The AC2 whole-call test has a reference-class probe. The O3 and O4 candidate rows are in ROADMAP, with P2 in the O4 row. `devtools::test()`: 11745 expectations, 0 failures.
 - 2026-09-27: blocked on RB01. The brief is committed on the milestone branch, not on main, because the branch holds the current M042 tracking and main's copy is behind it.
 - 2026-09-27: RR01 ingested from a Fable subagent. Triage: recommendation 1 apply (AC2 through the amendment gate, plus T8), 2 apply (the class-definition test and its row stay), 3 scheduled by merging into the class-definition candidate row, 4 scheduled as a candidate row, 5 to 7 rejected for the reasons RR01 gives. RB01 and RR01 moved to the archive. Status back to in-progress.
+- 2026-09-27: the AC2 amendment gate adopted the RR01 section 3 text verbatim. It narrows the criteria set. No re-audit reader ran, because AC2 already has two re-audit lines, so the user decided the wording. The Tasks section was compressed to keep the plan-owned body under 150 lines.
+- 2026-09-27: T8 done. The NEWS sub-item now carries the RR01 text, with its one trailing condition moved to the front, and the `empty_rows()` comment says "judges". `devtools::document()` changed no file. `devtools::test()`: 11745 expectations, 0 failures. `devtools::check()` with the API token: 0 errors, 0 warnings, 0 notes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
