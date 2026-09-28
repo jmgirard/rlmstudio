@@ -137,7 +137,7 @@ candidate row on such values closes with this milestone.
   (line 1614), because AC1 covers both class definitions. Keep the
   `empty_rows()` test and the test "each rule-order probe also fails the
   jsonlite write".
-- [ ] T4: Update the `messages` help in `R/chat.R` (lines 322 to 345) and
+- [x] T4: Update the `messages` help in `R/chat.R` (lines 322 to 345) and
   NEWS.md as AC4 states. Run `devtools::document()`.
 - [ ] T5: Run `devtools::test()` and `devtools::check()`. Before the
   check, run `lms server start` and set `RLMSTUDIO_API_TOKEN` (LESSONS,
@@ -159,6 +159,7 @@ candidate row on such values closes with this milestone.
 - 2026-09-28: T1 done. The AC1 grid, the AC2 pass list, and the AC3 order test are in `test-arg-guards.R`, and `rule13` is in the detail table. The two probes with an environment or `quote()` field now expect `rule13`. `sent_messages()` moved up the file so that the pass test can use it. On main code, the grid, order, and probe tests fail with the jsonlite-write detail (red for the right reason), and the pass test passes.
 - 2026-09-28: T2 done. `non_vector_type()` in `R/utils-args.R` walks as `has_function()` does and returns the `typeof()` of the first value that is not atomic, a list, `NULL`, or a function. `rlm_check_messages()` calls it between the function rule and the trial write. The three stale comments name the new rule. `test-arg-guards.R` passes except the two M042 tests that T3 changes, which now get the new detail.
 - 2026-09-28: T3 done. The M042 test on a column that is not a vector expects `rule13`. The test that sent an S4 class definition with a slot is deleted, because the AC1 grid covers both class definitions. `devtools::test()` gives 426 tests, 0 failed, 0 skipped.
+- 2026-09-28: T4 done. The `messages` help in `R/chat.R` lists the new rule between the function rule and the trial write, says that a `NULL` field passes, and names the new kind in its closing paragraph. NEWS has a new entry. The M042 sub-bullet no longer names the jsonlite error for these kinds, and it no longer says that a slotted class definition is sent. The M040 example "or an environment" is gone. `devtools::document()` rewrote `man/lms_chat_openai.Rd` alone.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

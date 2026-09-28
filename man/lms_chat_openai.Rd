@@ -78,14 +78,22 @@ not checked, because jsonlite sends those values as arrays.
 
 The error for each rule above opens with "\code{messages} must be a data
 frame or an unnamed list of messages." and shows the form of a message.
-Two more rules are checked after them. Their error opens with
+Three more rules are checked after them. Their error opens with
 "\code{messages} holds a field value that cannot be sent as JSON." and shows
 no form:
 \itemize{
 \item No function sits inside \code{messages}: not as a field, in a list below a
 field, as a column of a data frame, or in a cell of a list column.
 jsonlite would send a function as its source text. A function with a
-class gets the error of this rule, not the error of the next one.
+class gets the error of this rule, not the error of a later one.
+\item Each value inside \code{messages}, in the places the rule above reads, is
+an atomic vector, a list, or \code{NULL}. An environment, a symbol, a
+call, a formula, an expression vector, an external pointer, or an S4
+object breaks this rule, and the error names its type. A class set
+by hand does not change the result. jsonlite would send such a value
+as printed text or \code{null}, or fail. A \code{NULL} field passes and is sent
+as \code{null}. An S4 object whose class contains an atomic type, such as
+\code{"numeric"}, passes this rule.
 \item jsonlite can write the value, with the options that the request uses.
 If it cannot, the error gives the jsonlite message. This rule is
 checked last.
@@ -99,7 +107,8 @@ jsonlite has no method for, such as a field with the class \code{"foo"} alone,
 breaks the last rule.
 
 The package checks the shape of \code{messages}. Of the field values, it
-refuses a function and a value that jsonlite cannot write. It does not
+refuses a function, a value that is not an atomic vector, a list, or
+\code{NULL}, and a value that jsonlite cannot write. It does not
 check any other value of a role, the content, or another field of a
 message. The server checks them.}
 
