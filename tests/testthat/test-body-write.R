@@ -31,3 +31,16 @@ test_that("a POSIXlt value in the dots reaches each request", {
     expect_match(sent, '"when":"2020-01-01 10:00:00"', fixed = TRUE, info = name)
   }
 })
+
+# httr2 revealed an obfuscated value when it rebuilt the body. jsonlite has
+# no method for its class, so the write now fails, and no request is sent.
+test_that("an obfuscated value in the dots aborts with the jsonlite error", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(mock_response(200L, "{}"))
+  expect_error(
+    lms_unload("a-model", k = httr2::obfuscated("ZlWnhbI6ADhSZmQTw4PEnw")),
+    "No method asJSON S3 class: httr2_obfuscated",
+    fixed = TRUE
+  )
+  expect_identical(length(recorder$requests), 0L)
+})
