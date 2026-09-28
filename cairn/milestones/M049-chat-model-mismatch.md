@@ -1,6 +1,6 @@
 # M049: A chat call aborts on a reply from a different model
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -136,6 +136,8 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: T4 done. `keep_or_abort_bad()` aborts at a mismatch, and `keep_or_abort_api()` aborts at a 400 whose `code` is `"model_not_found"`. Both stop tests failed before the change, and the keep-going control passed before and after it. Suite passes.
 - 2026-09-28: T5 done. A new "Reply from another model" section on `rlmstudio-conditions`, inherited by the four chat pages, plus the `code` field, the batch stops, the alias, and two NEWS entries. `devtools::document()` rewrote every page that inherits the changed sections. Suite passes.
 - 2026-09-28: T6 done. The first `devtools::check()` gave a NOTE for four recorded paths over 100 bytes, so the cassette directory is now `tests/testthat/mismatch_live/` (longest path 98 bytes). The second check gave 0 errors, 0 warnings, 0 notes. `devtools::test()` passes, and `devtools::document()` leaves no diff. The check left the server off, and it was started again.
+- 2026-09-28: claim audit: 68 claims read, 4 corrected — NEWS.md, R/chat.R, data-raw/record-model-mismatch-cassette.R
+- 2026-09-28: the claim audit narrowed "two or more chat models" to the two that the probe loaded, in NEWS and a code comment. D-025 keeps "two or more", because DECISIONS is history.
 
 ## Decisions
 

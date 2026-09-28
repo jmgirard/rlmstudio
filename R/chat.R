@@ -1521,8 +1521,8 @@ lms_chat_batch <- function(
   }
   # A refused token or a model the server cannot find fails every input the
   # same way, whatever the prompt, so these statuses abort like a lost server
-  # (D-019). The chat routes answer a model they cannot find with status 400
-  # and the code "model_not_found" when two or more chat models are loaded
+  # (D-019). The chat routes answered a model they could not find with status
+  # 400 and the code "model_not_found" when two chat models were loaded
   # (D-025). Any other status can come from one prompt, so it fails that input
   # alone.
   keep_or_abort_api <- function(cnd) {

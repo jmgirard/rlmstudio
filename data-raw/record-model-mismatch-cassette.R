@@ -12,7 +12,9 @@
 #              error code of each reply, not the answer text.
 #
 # The script records four cases, each into its own directory, because the
-# model list differs between them and httptest2 names a GET by its path alone:
+# model list differs between the one-model and two-model cases, unknown/ and
+# not_found/ send the same requests, and httptest2 names a GET by its path
+# alone:
 #
 #   unknown/    one chat model loaded, asked for "not-a-model"
 #   case/       one chat model loaded, asked for "Google/Gemma-3-1B"
@@ -34,7 +36,8 @@
 # httptest2 records only when the target directory is absent, so the script
 # records into a fresh directory beside it. The old cassettes are replaced only
 # after every recording and check succeeds. Only the response bodies, and for a
-# status other than 200 the response status and headers, are written to disk.
+# status other than 200 the request method and URL and the response status,
+# headers, and timing, are written to disk.
 # No request header, and therefore no API token, reaches the recorded files.
 # The script loads google/gemma-3-1b if it is not loaded and unloads it at the
 # end. It loads qwen/qwen3-4b-2507 as "my-qwen" with `lms load --identifier`,
