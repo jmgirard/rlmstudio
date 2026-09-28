@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M042: The OpenAI chat function reads each row of an array or non-vector messages column on its own
 
-- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -57,7 +57,7 @@ choice to send it as jsonlite writes it.
   column of row 2 is `NA`. The call passes every `messages` rule and
   reaches the server probe. In case 3, the same frame has `NA` in every cell of row 2.
   The call aborts with the empty-row detail.
-- [x] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
+- [ ] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
   atomic vector nor a list counts as not empty in each row. Examples are an
   environment, a formula, a symbol, a call, an S4 object, an external
   pointer, an expression vector, and a function. This holds for a column of
@@ -161,6 +161,7 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: T5 done. NEWS.md has one entry for the AC1 and AC2 changes. `devtools::document()` changed nothing, `devtools::test()` gave 0 failures, and `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes, so no NOTE needs a reason.
 - claim audit: 31 claims read, 5 corrected — tests/testthat/test-arg-guards.R, R/utils-args.R, R/chat.R, man/lms_chat_openai.Rd
 - 2026-09-27: the claim reader re-read the five corrections and found each correct. `devtools::test()` after them: 0 failures. Status set to review.
+- 2026-09-27: review returned the milestone to in-progress (defect return 1). AC2 fails: an S4 class-definition column warns from jsonlite and reaches the server probe. Proposed fix-now items O2 and O5 are in the Review section.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -177,3 +178,16 @@ Sync: the branch contains `origin/main` (b828540), so no merge was needed. The r
 - AC5 evidence: `R/conditions.R:257` holds the `@aliases` tag on one line. `devtools::document()` printed only its two info lines and no warning. `git status` showed no change under `man/`.
 - AC6 evidence: NEWS.md has one new entry, with a sub-item, for the AC1 and AC2 changes. The added lines hold no milestone number. `devtools::test()` gave 11678 expectations, 0 failures, 0 errors, and 0 skips. `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes.
 - Consistency gate: `cairn_validate.py` exited 0. No DESIGN principle changed, so `cairn_impact` was skipped. `devtools::document()` gave no diff. The diff does not touch README.Rmd, and the repo has no pkgdown site. No new top-level file.
+- AC2 failed at independent review, so its tick is withdrawn. A column that holds an S4 class definition (`methods::getClass()`) is neither an atomic vector nor a list. The call gives the jsonlite warning "collapse=FALSE called for named list." and reaches the server probe. AC2 promises no warning and a value-fault abort for an S4 object. Confirmed by a rerun of the reviewer's input.
+
+Independent review (three fresh readers). The [S] history reader found no regression and no contradicted decision. The [S] prior-review reader found that the diff closes M041 findings O1, O2, and O4 and the M036 `@aliases` row as triaged, with no regression. GitHub has no PR review comments. The [O] diff reader reported nine findings, ranked. Each disposition is proposed and goes to the maintainer at the next gate.
+
+- O1 (AC2 fails for an S4 class definition, and NEWS.md:4 says the same false thing): return to implement.
+- O2 (NEWS.md:3 says a list column of three or more dimensions aborts with the list-`dim` error, but a row empty in every column gets the empty-row error first): fix now.
+- O3 (a numeric array or matrix column sends `NA` as the string `"NA"`, and the branch lets more such values through): follow-up candidate, because the 2-D case predates the branch.
+- O4 (an n-by-0 matrix column counts as empty in each row, though jsonlite writes `[]`): follow-up candidate, pre-existing on main.
+- O5 (no probe for a function column inside a data-frame column, which AC2 covers): fix now.
+- O6 (the AC3 test states the help example as a literal, so help and test can drift): reject, a known limit of a stated-form test.
+- O7 (no one-row or mixed-row-count nested probe; the reviewer checked both by hand): reject, coverage only.
+- O8 (a first extent that differs from the row count mis-recycles): reject, Scope Out.
+- O9 (the non-vector change is a sub-bullet of the array bullet): reject, AC6 asks for one entry.
