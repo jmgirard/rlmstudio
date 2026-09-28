@@ -41,8 +41,8 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - [ ] AC2: After the four columns, the frame has one column for each field name in the `config` object of a returned
       instance. The columns follow the order of first appearance. In one `config`, the first of two equal keys
       counts. A column takes the field name with no change and no R name repair. A field name that is empty, or
-      equal to a name in AC1 or to an earlier column name, takes the prefix `config.`. It takes the prefix again
-      while the name still equals an earlier column name. A row whose `config` lacks the field holds `NA` there.
+      equal to a name in AC1 or to the column name of an earlier, different field, takes the prefix `config.`. It
+      takes the prefix again while the name still equals such a name. A row whose `config` lacks the field holds `NA` there.
       The column type follows the values of the field that are present and not `null`. All strings give a
       character column. All numbers give a double column, whole numbers included. All booleans give a logical
       column. No such values give a logical column of `NA`. In these four kinds, a `null` value is `NA`. Any other
@@ -51,8 +51,9 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
       criterion. The cases are the four atomic kinds, with `typeof` double for whole numbers, and a `null` in an
       atomic column. Other cases are a field in one instance only, a `config` of `{}`, and an object value. Also
       tested are an array value, and a number and a string in one field. Further cases are `NULL` cells for an
-      absent value and for a `null` value. The last cases are a field named `id`, a field named `a-b`, and two
-      equal keys in one `config`.
+      absent value and for a `null` value. Name cases are a field named `id`, a field named `a-b`, and two
+      equal keys in one `config`. The last cases are a field with an empty name, and a field named `config.id`
+      beside one named `id`.
 - [ ] AC3: The function can have no instance to return. There are three cases: the reply has no models, no model has
       an instance, or no model with an instance has a type in `type`. In each case, the function returns a data
       frame with zero rows and the four character columns of AC1, invisibly. It also prints a message through
@@ -63,7 +64,7 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
       on each body that `model_list_fault()` rejects. It also aborts with that class on two faults in a model entry
       whose `type` is in `type` and that has at least one instance. One fault is a `display_name` that is present,
       not `null`, and not a string. The other is an instance `config` that is present, not `null`, and not a JSON
-      object. An absent or `null` `display_name` gives `NA`. An absent or `null` `config` gives `NA` in every config
+      object. An absent or `null` `display_name` gives `NA`. An absent or `null` `config` gives `NA` in every
       configuration column. The message names the field and its entry. Tests fire each of the two new faults and one fault of
       `model_list_fault()`. They assert the class and the field that the message names. The two new checks live in
       `list_instances()` alone. `model_list_fault()` and `request_model_list()` do not change, so `list_models()`
@@ -102,8 +103,8 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
       `list_instances()` in `R/list.R` after `list_models()`: `request_model_list()`, the type filter, the four
       columns, and the empty result. Guard the message with `if (!quiet)`, as `list_models()` does at
       `R/list.R:66-71`. `rlm_inform(quiet = FALSE)` ignores the option. Export it through roxygen.
-- [ ] T2: Write the tests of AC2, then the configuration columns. Read fields with `[[`, which matches exact names only.
-      Build the frame with `check.names = FALSE`.
+- [ ] T2: Write the tests of AC2, then the configuration columns. Read each field by position, at the first index where
+      `names(cfg)` equals the name. `[[` does not match an empty name. Build the frame with `check.names = FALSE`.
 - [ ] T3: Write the tests of AC4 and AC5, then the two new shape checks in a helper local to `list_instances()`.
       Add the function to the token-wrapper table and update its count. In a scratch copy, delete each new check and
       see its test go red. Check that `git diff` leaves `model_list_fault()` and `request_model_list()` unchanged.
@@ -122,3 +123,4 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: plan gate chose configuration columns under their own names, with a `config.` prefix on a clash, over a prefix on every column and over one list-column; falsified by a live configuration field whose name clashes with a fixed column.
 - 2026-09-28: plan gate chose a zero-row frame with four columns for the empty case over the `data.frame()` of `list_models()`; falsified by user code that relies on the two functions returning the same empty value.
 - 2026-09-28: plan criteria audit (full mode, fresh [O] reader) returned 21 findings on the draft. The clear ones are fixed above, and three judgment calls went to the plan gate. A re-audit of the criteria that the gate changed is running at the plan commit.
+- 2026-09-28: re-audit of the criteria that the gate changed (full mode, same fresh [O] reader) found every earlier finding resolved and returned four clear fixes. The fixes are an empty-name read in T2, two AC2 naming test cases, the "earlier, different field" wording, and an AC4 typo, all applied.
