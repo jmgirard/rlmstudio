@@ -32,7 +32,7 @@ list message stay unchecked, because no finding reported them.
 
 ## Acceptance criteria
 
-- [ ] AC1: When `messages` is a list that is not a data frame, the check
+- [x] AC1: When `messages` is a list that is not a data frame, the check
       reads the value as passed, so a data frame or a `POSIXlt` value as a
       message still aborts with the rule-4 text. After the check, the call
       removes the class attribute of the outer list and of each of its
@@ -45,12 +45,12 @@ list message stay unchecked, because no finding reported them.
       field wrapped in `I()`, such as `role = I("user")`, is sent as the
       array `["user"]`, as before. A `content` list with an S3 class still
       fails in jsonlite, as before, because its class reaches jsonlite.
-- [ ] AC2: The call keeps the class vector of a data frame `messages`
+- [x] AC2: The call keeps the class vector of a data frame `messages`
       value. Probes built with `structure()` for the class vectors
       `c("tbl_df", "tbl", "data.frame")` and `c("foo", "data.frame")` are
       sent as one message per row, and they meet the AC3 rules. The call
       does not remove the class of a data-frame column. jsonlite handles it.
-- [ ] AC3: If a data frame `messages` value breaks one of two rules, the
+- [x] AC3: If a data frame `messages` value breaks one of two rules, the
       call aborts before the server probe, with no condition class. The column
       rule: it has no columns, or a column name that is `NA`, empty, or
       repeated. Its detail text is "You gave a data frame that has no
@@ -68,7 +68,7 @@ list message stay unchecked, because no finding reported them.
       a data frame of one row. A data frame that keeps both rules still
       reaches the request. Two such probes are near the line. One has an
       `NA` cell in every row. One has a row with one cell that is not `NA`.
-- [ ] AC4: The help of `lms_chat_openai()` at `messages` and NEWS.md state
+- [x] AC4: The help of `lms_chat_openai()` at `messages` and NEWS.md state
       the class removal at the two levels, that a class below them is not
       removed, that a data frame and its columns keep their classes, and the
       two data-frame rules.
@@ -112,3 +112,14 @@ list message stay unchecked, because no finding reported them.
 - 2026-09-27: T4 done. The `messages` help and NEWS state the class removal, the kept classes, and the two data-frame rules. `devtools::document()` warns only on the known `@aliases` line (candidate row). `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
 - 2026-09-27: claim audit: 32 claims read, 3 corrected — R/utils-args.R, R/chat.R, man/lms_chat_openai.Rd, NEWS.md. The corrections cover the list-column NA row, which jsonlite writes as a `null` field, and a kept class, which fails only when no entry of its class vector has a jsonlite method. The re-read of the three is pending.
 - 2026-09-27: the claim re-read found two of the three corrections right. The `data_frame_messages_fault()` doc now says that the message has a `null` field for each list column, and one long comment line was rewrapped. The stopping rule ends the audit here. Status set to review.
+
+## Review
+
+Run on 2026-09-27 at branch head 1cba64d, level with `origin/main` (24b1308), so no merge was needed.
+
+- AC1: `test_file("tests/testthat/test-arg-guards.R")` passed with 0 failures. The pass test (60 expectations) sends the four class forms on the outer list and on a later message. It also sends an S3 class on the first message and on both levels. It sends `role = I("user")` as `["user"]`. The rule test sends a `POSIXlt` message and a classed data-frame message to the rule-4 text. The below-level test gets "No method asJSON S3 class: foo" for a classed `content` list. A direct probe gave identical JSON for a list with and without the class `c("foo", "bar")`, and with and without `I()` on a message.
+- AC2: in the same run, the pass test sends the `c("tbl_df", "tbl", "data.frame")` and `c("foo", "data.frame")` probes as one message per row. The rule test sends both class vectors to the AC3 texts: a tibble-classed frame with no columns to the column text, and a foo-classed frame with an NA row to the empty-row text. `unclass_messages()` returns a data frame unchanged. The below-level test gets the jsonlite error for a column with the class `"foo"`, so the column class reaches jsonlite.
+- AC3: in the same run, the rule test (265 expectations) sends the four column-rule probes and the seven empty-row probes. Each abort holds its own text, the `messages` name, and no other rule's text. Its class is `c("rlang_error", "error", "condition")`, and the server probe count stays 0. The no-column probe gets the column text alone. The two near-line frames reach the request in the pass test. An oracle probe compared `all(is.na(value)[i, ])` over each row with `data_frame_messages_fault()` on the six empty-row frames and the two near-line frames. The two agreed on all eight.
+- AC4: a read of `R/chat.R:283-292`, `man/lms_chat_openai.Rd`, and the first `NEWS.md` item found each of the five points. The class goes from the outer list and each message. A class on a field inside a message is kept. A data frame and its columns keep their classes. The column rule and the empty-row rule are each stated. `devtools::document()` left no diff.
+
+Consistency gate: `cairn_validate.py` exit 0, all checks passed. No DESIGN principle changed, so `cairn_impact` was skipped. `devtools::document()` left no diff. `devtools::check()` with the API token gave 0 errors, 0 warnings, 0 notes. README.Rmd and README.md were not touched and share their last commit. The repo has no pkgdown site. NEWS.md has an entry with no milestone number. The branch adds no top-level file.
