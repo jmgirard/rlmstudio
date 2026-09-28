@@ -328,12 +328,15 @@ schema_fault <- function(value) {
 #' Reject a messages value that cannot be sent as a list of messages
 #'
 #' `messages` is a named argument of `lms_chat_openai()`, so GP4 puts the check
-#' on the package, and it runs before the server probe (D-008). The rules read
-#' the shape of the value and the names at each level, and a trial write then
-#' asks jsonlite to write it. The package does not judge a role, a content
-#' value, or any other field value. The server does, as D-003 states for API
-#' fields. A data frame passes, because jsonlite
-#' writes it as one JSON object per row.
+#' on the package, and it runs before the server probe (D-008). The shape
+#' rules read the shape of the value and the names at each level, and their
+#' abort carries the named-list hint. Two value rules follow, under a header of
+#' their own and with no hint: a function anywhere inside the value, and a
+#' trial write that asks jsonlite to write it. A function and a value that
+#' jsonlite cannot write are the only field values the package judges. The
+#' server judges a role, a content value, and any other field value, as D-003
+#' states for API fields. A data frame passes, because jsonlite writes it as
+#' one JSON object per row.
 #'
 #' @param value The value the caller passed as `messages`.
 #' @return `value`, invisibly.
@@ -341,21 +344,29 @@ schema_fault <- function(value) {
 #' @noRd
 rlm_check_messages <- function(value) {
   fault <- messages_fault(value)
-  if (is.null(fault) && has_function(value)) {
-    fault <- paste(
-      "You gave a field value that is a function, which jsonlite would send",
-      "as its source text."
-    )
-  }
-  if (is.null(fault)) {
-    fault <- messages_write_fault(value)
-  }
   if (!is.null(fault)) {
     cli::cli_abort(
       c(
         "{.arg messages} must be a data frame or an unnamed list of messages.",
         "x" = "{fault}",
         "i" = "Each message is a named list, such as {.code list(role = \"user\", content = \"Hi\")}."
+      ),
+      call = NULL
+    )
+  }
+  if (has_function(value)) {
+    fault <- paste(
+      "You gave a field value that is a function, which jsonlite would send",
+      "as its source text."
+    )
+  } else {
+    fault <- messages_write_fault(value)
+  }
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "{.arg messages} holds a field value that cannot be sent as JSON.",
+        "x" = "{fault}"
       ),
       call = NULL
     )
@@ -373,7 +384,8 @@ rlm_check_messages <- function(value) {
 #' message is returned as a value, and the abort splices it in, so cli does
 #' not read its braces.
 #'
-#' @param value A `messages` value that passed `messages_fault()`.
+#' @param value A `messages` value that passed `messages_fault()` and holds
+#'   no function.
 #' @return A detail that holds the jsonlite message, or `NULL` when the write
 #'   works.
 #'

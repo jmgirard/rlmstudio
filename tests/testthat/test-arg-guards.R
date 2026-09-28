@@ -859,6 +859,15 @@ messages_rule_details <- c(
   rule12 = "You gave a field value that is a function, which jsonlite would send as its source text."
 )
 
+# The function rule and the trial-write rule report a value fault under their
+# own header, with no hint. Every other rule reports a shape fault.
+messages_value_rules <- c("rule10", "rule12")
+messages_headers <- c(
+  shape = "`messages` must be a data frame or an unnamed list of messages.",
+  value = "`messages` holds a field value that cannot be sent as JSON."
+)
+messages_shape_hint <- "Each message is a named list"
+
 good_message <- list(role = "user", content = "hi")
 
 messages_probes <- list(
@@ -1382,6 +1391,34 @@ test_that("a messages value that breaks a rule aborts before the server probe", 
       info = p$label
     )
     expect_match(conditionMessage(err), "`messages`", fixed = TRUE, info = p$label)
+    # The header of the rule's kind opens the message, and the other kind's
+    # header is absent. Only a shape fault carries the named-list hint.
+    kind <- if (p$rule %in% messages_value_rules) "value" else "shape"
+    expect_true(
+      startsWith(conditionMessage(err), messages_headers[[kind]]),
+      info = p$label
+    )
+    expect_no_match(
+      conditionMessage(err),
+      messages_headers[[setdiff(names(messages_headers), kind)]],
+      fixed = TRUE,
+      info = p$label
+    )
+    if (kind == "shape") {
+      expect_match(
+        conditionMessage(err),
+        messages_shape_hint,
+        fixed = TRUE,
+        info = p$label
+      )
+    } else {
+      expect_no_match(
+        conditionMessage(err),
+        messages_shape_hint,
+        fixed = TRUE,
+        info = p$label
+      )
+    }
     # No package class on an argument fault (D-008).
     expect_identical(
       class(err),

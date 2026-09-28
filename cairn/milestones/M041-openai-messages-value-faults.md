@@ -100,7 +100,7 @@ functions take no `messages` argument.
   data-frame columns included. Make `empty_rows()` read a function column
   with no `is.na()` warning. One detail text that names the source-text
   write.
-- [ ] T3: Split the header in `rlm_check_messages()`: the function and
+- [x] T3: Split the header in `rlm_check_messages()`: the function and
   trial-write details take "`messages` holds a field value that cannot be
   sent as JSON." with no hint. Update the roxygen of `rlm_check_messages()`
   and `messages_write_fault()` so they no longer say the write rule is last
@@ -139,6 +139,7 @@ functions take no `messages` argument.
 - 2026-09-27: implement started on branch m041-openai-messages-value-faults. Question gate skipped, because the plan left no choice open.
 - 2026-09-27: T1 done. `has_inner_list_array()` walks with `for` loops, because `as.list()` on a `POSIXlt` returns a `POSIXlt`. Nine rule11 probes added. With the rule returning FALSE in place, the probe loop went red. `devtools::test()` passed.
 - 2026-09-27: T2 done. `has_function()` runs in `rlm_check_messages()` after `messages_fault()` and before the trial write. `empty_rows()` treats a function column as not empty. Eight rule12 probes, two order probes, and a no-warning test added. With the rule off, and apart from that with the `empty_rows()` change undone, the tests went red. `devtools::test()` passed.
+- 2026-09-27: T3 done. `rlm_check_messages()` aborts shape faults with the old header and hint, then value faults with the new header and no hint. The probe loop now asserts the header, the other header's absence, and the hint per kind. With the old header on value faults, 26 checks went red. `devtools::test()` passed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
