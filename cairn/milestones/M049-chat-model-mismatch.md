@@ -34,7 +34,7 @@ before each request was rejected at the gate (work log).
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_chat_openai()` and `lms_chat_openresponses()` read the `model` field of each status-200 reply.
+- [x] AC1: `lms_chat_openai()` and `lms_chat_openresponses()` read the `model` field of each status-200 reply.
       For a reply from a model other than the one asked for, they abort with the condition class
       `rlmstudio_model_mismatch`. The rule in AC2 decides which names match. The condition also has the class
       `rlmstudio_bad_response`. It carries the asked name in a `model` field and the reply's name in a
@@ -47,7 +47,7 @@ before each request was rejected at the gate (work log).
       answers. Further tests fire the abort on both functions with `logprobs = TRUE`, and on `lms_chat_openai()`
       with a `schema`. One test fires it on a mismatched reply that holds no answer text. Two tests fire it
       through `lms_chat()`, on the default route and on `api_type = "openai"`.
-- [ ] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
+- [x] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
       functions with both settings of `simplify`.
       (a) The reply's `model` equals the asked name. The call sends no request after the chat request.
       (b) The asked name differs in letter case only from the key of the model whose loaded instance answered.
@@ -56,7 +56,7 @@ before each request was rejected at the gate (work log).
       model-list request after the chat request.
       (d) The reply has no `model` field, or its `model` is not one string, or is a blank string. The call sends
       no request after the chat request.
-- [ ] AC3: If the model-list lookup fails, the chat call raises the condition of that failure with the label of
+- [x] AC3: If the model-list lookup fails, the chat call raises the condition of that failure with the label of
       the chat function. The message says that the model-list lookup failed. A list reply with a status other
       than 200 raises `rlmstudio_api_error` with that status and the `code` field of AC5. A list body that does
       not parse, or that fails the checks of `list_models()`, raises `rlmstudio_bad_response`. A lookup that
@@ -64,25 +64,25 @@ before each request was rejected at the gate (work log).
       `api/v1/models` on the same host and prints no message. Tests cover a 401 list reply, a list body that
       does not parse, a list body that fails a `list_models()` check, and a lost server. A test asserts the
       host, path, and `Authorization` header of the lookup, and that it prints nothing.
-- [ ] AC4: `lms_chat_batch()` aborts at the first input that raises `rlmstudio_model_mismatch`, on the
+- [x] AC4: `lms_chat_batch()` aborts at the first input that raises `rlmstudio_model_mismatch`, on the
       `"openai"` and `"openresponses"` routes. The condition carries a `results` field by the rule that status
       404 follows. The call sends no request after the model-list request of the failed input. Mocked tests
       cover each route in each of the three formats. Each runs a good input, then a mismatched one, then a
       third. It asserts the class, that the first slot of `results` holds the good reply, and the request count.
-- [ ] AC5: An `rlmstudio_api_error` from `lms_chat_openai()` or `lms_chat_openresponses()` carries a `code`
+- [x] AC5: An `rlmstudio_api_error` from `lms_chat_openai()` or `lms_chat_openresponses()` carries a `code`
       field. The field holds the string at `error.code` of the reply body. For a body with no such string, the
       field is `NULL`. `lms_chat_batch()` aborts with the `results` field at such a condition of status 400 whose
       `code` is `"model_not_found"`. A 400 whose `code` is another string or `NULL` still fails its own input
       alone. On both routes, a recorded `model_not_found` reply is tested as a single call, for the `code`, and
       as a batch, for the abort. Mocked tests on both routes cover three other 400 bodies. One has another code,
       one has an `error` object with no code, and one has an `error` that is a string.
-- [ ] AC6: The help pages of `lms_chat_openai()`, `lms_chat_openresponses()`, `lms_chat()`, and
+- [x] AC6: The help pages of `lms_chat_openai()`, `lms_chat_openresponses()`, `lms_chat()`, and
       `lms_chat_batch()` state the model check, its model-list lookup, and the two batch stops. The
       `rlmstudio-conditions` page documents the class `rlmstudio_model_mismatch` with its `model` and
       `reply_model` fields. It also documents the `code` field of `rlmstudio_api_error`. The pages say that
       `lms_chat_native()` is not checked. They also say that a model unloaded between the reply and the lookup
       makes the call abort. `NEWS.md` has an entry for the change.
-- [ ] AC7: `devtools::test()` and `devtools::check()` pass with 0 errors and 0 warnings, and
+- [x] AC7: `devtools::test()` and `devtools::check()` pass with 0 errors and 0 warnings, and
       `devtools::document()` leaves no diff.
 
 ## Coverage
@@ -138,7 +138,49 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: T6 done. The first `devtools::check()` gave a NOTE for four recorded paths over 100 bytes, so the cassette directory is now `tests/testthat/mismatch_live/` (longest path 98 bytes). The second check gave 0 errors, 0 warnings, 0 notes. `devtools::test()` passes, and `devtools::document()` leaves no diff. The check left the server off, and it was started again.
 - 2026-09-28: claim audit: 68 claims read, 4 corrected — NEWS.md, R/chat.R, data-raw/record-model-mismatch-cassette.R
 - 2026-09-28: the claim audit narrowed "two or more chat models" to the two that the probe loaded, in NEWS and a code comment. D-025 keeps "two or more", because DECISIONS is history.
+- 2026-09-28: review checkpoint: evidence recorded and AC1 to AC7 ticked, consistency gate passed. Three fresh reviewers are running, and triage is still owed.
 
 ## Decisions
 
 ## Review
+
+Evidence run 2026-09-28 on branch head 1691e51, which contains `origin/main`. `test-model-check.R` passed with 0
+failures. The full `devtools::test()` ran 485 tests with 0 failed, 0 errors, 0 skipped.
+
+- AC1: `test-model-check.R` lines 176 to 305 pass. Three cases abort on both routes with both settings of
+  `simplify`. They are the recorded unknown name, a mocked key in other letter case, and a mocked instance id.
+  `expect_mismatch()` asserts both classes, the `model` and `reply_model` fields, and status 200. It also asserts
+  both names in the message and no "simplify" in it. Other tests fire the abort with `logprobs = TRUE` on both
+  routes and with a `schema` on the OpenAI route. One fires it on a reply with no answer text on both routes. Two
+  fire it through `lms_chat()`, on the default route and on `api_type = "openai"`.
+- AC2: `test-model-check.R` lines 307 to 384 pass on both routes with both settings of `simplify`. In case (a) the
+  mocked recorder holds 1 request. Cases (b) and (c) play the recorded `case` and `alias` replies. A log around
+  `httr2::req_perform()` holds 2 URLs, and the second is `http://localhost:1234/api/v1/models`. Case (d) covers a
+  missing `model`, JSON `null`, a number, an array, an empty string, and a whitespace string. Each sends 1 request.
+- AC3: `test-model-check.R` lines 402 to 496 pass on both routes. A 401 list reply raises `rlmstudio_api_error`
+  with status 401 and `code` `"bad_token"`. A body that does not parse and a body with `"models": 5` raise
+  `rlmstudio_bad_response` without the mismatch class. A second server probe that fails raises
+  `rlmstudio_no_server`. Each message holds "<label>, because the model-list lookup failed:". A lookup to
+  `http://example.com:9999` is a GET of `/api/v1/models` on that host with `Bearer lookup-token`, under
+  `expect_silent()`.
+- AC4: `test-model-check.R` lines 505 to 531 pass on both routes in the formats `vector`, `list`, and
+  `data.frame`. Each batch runs a good input, a mismatched input, and a third. It aborts with
+  `rlmstudio_model_mismatch` and `rlmstudio_bad_response`, `results` is `list("reply", NULL, NULL)`, and the
+  recorder holds 3 requests. In `R/chat.R` the mismatch and a 404 both go through `abort_with_results()`.
+- AC5: `test-model-check.R` lines 57 to 87 and 533 to 587 pass on both routes. The recorded `not_found` reply gives
+  status 400 and `code` `"model_not_found"` as a single call. As a batch it aborts with `results` `list(NULL, NULL)`
+  after 1 request. Three mocked 400 bodies hold the code `"E42"`, an `error` object with no code, and a string
+  `error`. They give `code` `"E42"`, `NULL`, and `NULL`. In a batch each of them fails its own input alone. The batch sends 3
+  requests and warns "1 input failed".
+- AC6: `man/rlmstudio-conditions.Rd` has a "Reply from another model" section. It states the model check, the
+  model-list lookup, the `model` and `reply_model` fields, and the two batch stops. It says that `lms_chat_native()`
+  does not check the reply and that an instance unloaded before the lookup makes the call abort. The "API failure"
+  section documents the `code` field. The four chat pages inherit these sections. A grep finds
+  `rlmstudio_model_mismatch`, `reply_model`, `model_not_found`, and the unload sentence in each of them.
+- AC7: `devtools::test()` ran 485 tests with 0 failed and 0 errors. `devtools::check()` with the API token set gave
+  0 errors, 0 warnings, and 0 notes. `devtools::document()` left `git status` clean. The check left the server off,
+  and `lms server start` started it again.
+
+Consistency gate: `cairn_validate.py` passed. No DESIGN.md principle changed, so `cairn_impact` did not run.
+`devtools::document()` left no diff, and `pkgdown::check_pkgdown()` found no problems. `NEWS.md` has entries. The
+branch adds no top-level file, and `data-raw/` is in `.Rbuildignore`. README is not touched. `NEWS.md` has two entries under the development version.
