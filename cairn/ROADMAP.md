@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-28 (M048 done, M045 row pruned)_
+_Last hygiene check: 2026-09-28 (M049 done, M046 row pruned, two M001 lessons pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-28 (M048 done, M045 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M049 | A chat call aborts on a reply from a different model | review | none | normal | milestones/M049-chat-model-mismatch.md |
+| M049 | A chat call aborts on a reply from a different model | done | none | normal | milestones/archive/M049-chat-model-mismatch.md |
 | M048 | The embedding help page describes the cut of a text longer than the context | done | none | normal | milestones/archive/M048-embed-context-cut.md |
 | M047 | The embedding function sends a long input in batches | done | none | normal | milestones/archive/M047-embed-batches.md |
-| M046 | The OpenAI chat function counts an array row with no cells as a field value | done | M044 | normal | milestones/archive/M046-openai-messages-cell-free-rows.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
