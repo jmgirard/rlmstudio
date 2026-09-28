@@ -695,8 +695,9 @@ check_body_object <- function(resp, resp_data, label, ...) {
 #' any letter case (D-025). A reply with no `model` string is not checked.
 #' Fields are read with `[[`, because `$` would read a field whose name only
 #' starts with the one asked for. The asked name is compared as a plain
-#' string, because `identical()` also compares names and class, and a named
-#' or classed string passes `rlm_check_id()`.
+#' string, because `identical()` also compares names, class, and the S4 bit,
+#' and a named, classed, or S4 string passes `rlm_check_id()`. `unclass()`
+#' keeps the S4 bit, and `[[` drops it.
 #'
 #' Runs before the caller's `simplify` branch, so `simplify = FALSE` cannot
 #' return a reply from the wrong model.
@@ -716,7 +717,7 @@ check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
   if (!is_one_string(reply_model) || !grepl("[^[:space:]]", reply_model)) {
     return(invisible())
   }
-  model <- as.vector(unclass(model), "character")
+  model <- unclass(model)[[1]]
   if (identical(reply_model, model)) {
     return(invisible())
   }

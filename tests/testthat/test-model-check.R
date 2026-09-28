@@ -338,6 +338,28 @@ test_that("a named or classed model string that the same model answers sends no 
   }
 })
 
+test_that("an S4 model string that the same model answers sends no other request", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  s4_env <- new.env()
+  s4_string <- methods::setClass(
+    "rlmstudioM049String",
+    contains = "character",
+    where = s4_env
+  )
+  asked <- s4_string("org/model-x")
+  expect_true(isS4(asked))
+  for (route in chat_routes) {
+    for (simplify in c(TRUE, FALSE)) {
+      info <- paste(route, simplify)
+      recorder <- local_request_sequence(list(
+        reply_with_model(route, quoted("org/model-x"))
+      ))
+      expect_no_error(mocked_call(route, asked, simplify))
+      expect_identical(length(recorder$requests), 1L, info = info)
+    }
+  }
+})
+
 test_that("a recorded reply to a key in other letter case is accepted after one lookup", {
   for (route in chat_routes) {
     for (simplify in c(TRUE, FALSE)) {

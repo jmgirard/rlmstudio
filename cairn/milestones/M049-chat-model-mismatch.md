@@ -126,7 +126,7 @@ before each request was rejected at the gate (work log).
       `keep_or_abort_api()`. Add a lookup test with an empty model list that prints nothing. State on
       `rlmstudio-conditions` that a status-200 body that is not a JSON object skips the check. Rewrap the two long
       roxygen lines in `R/conditions.R`. Then run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
-- [ ] T9: Review findings R1 and R2. In `check_reply_model()` in `R/chat.R`, make the asked name a plain string
+- [x] T9: Review findings R1 and R2. In `check_reply_model()` in `R/chat.R`, make the asked name a plain string
       that also drops the S4 bit, such as with `as.character()`. Tests first on both routes with both settings of
       `simplify`: an S4 subclass of `character` answered by the same model sends 1 request. Move the `class` option
       of `rlm_abort_bad_response()` after `...`.
@@ -167,6 +167,8 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: review pass 2 started on head a812ed4, which already contains `origin/main`. No PR exists. Fresh evidence for AC1 to AC7 is recorded under "Pass 2", AC2 is ticked, and the consistency gate passed. Three fresh reviewers are running.
 - 2026-09-28: review pass 2: 9 findings logged with proposed dispositions. R1 shows AC2(a) failing for an S4 model string. The step-7 gate decides.
 - 2026-09-28: review return 2 (defect): AC2(a) fails, because an S4 model string that the same model answers aborts as a mismatch. The user chose to send it back at the gate. Status in-progress, AC2 unticked, with T9 and T10 added. R9 joined the candidate row.
+- 2026-09-28: implement resumed on the branch, which already contains `origin/main`. Question gate skipped, because T9 and T10 leave no choice open.
+- 2026-09-28: T9 done. The new S4 test failed on all 4 route and `simplify` cases with a second request, the lookup. `check_reply_model()` now reads the asked name as `unclass(model)[[1]]`. In a scratch run it gave the plain string for an S4, named, `glue`, and plain name, and for an S3 class with its own `as.character()` method, where `as.character()` did not. The `class` option of `rlm_abort_bad_response()` now follows `...`, and its one caller names it in full. Suite: 489 tests, 0 failed, 0 skipped.
 
 ## Decisions
 
