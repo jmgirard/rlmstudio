@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M042: The OpenAI chat function reads each row of an array or non-vector messages column on its own
 
-- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -57,7 +57,7 @@ choice to send it as jsonlite writes it.
   column of row 2 is `NA`. The call passes every `messages` rule and
   reaches the server probe. In case 3, the same frame has `NA` in every cell of row 2.
   The call aborts with the empty-row detail.
-- [x] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
+- [ ] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
   atomic vector nor a list counts as not empty in each row. Examples are an
   environment, a formula, a symbol, a call, an S4 object whose `typeof()` is
   `"S4"` (such as a reference-class object), an external pointer, an
@@ -170,6 +170,7 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: T6 done. A direct `empty_rows()` test covers twelve kinds at top level and nested, and it gave 26 failures with the old function branch swapped in. A probe pins the slotted and slotless class-definition columns. The function probe now checks for no warning and has a nested case. NEWS narrowed, and a candidate row added. `devtools::test()`: 11736 expectations, 0 failures. `devtools::check()`: 0 errors, 0 warnings, 0 notes.
 - claim audit: 18 claims read, 0 corrected — NEWS.md, tests/testthat/test-arg-guards.R
 - 2026-09-27: the claim reader noted that `empty_rows()` returns `logical(0)` for a zero-length column in a one-row frame built by hand. The call still aborts at the trial write, and hand-built frames are Scope Out. Status set to review.
+- 2026-09-27: review pass 2 returned the milestone to in-progress (defect return 2). AC2 fails again: a classed non-vector column that jsonlite can write is sent, where AC2 says it aborts. This is AC2's second failure by the same kind of cause, a jsonlite write the text did not foresee, so the thrash rule's wrong-approach trigger fires. The alternative on record is the one the implement gate set aside: refuse such columns in code.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
@@ -207,3 +208,16 @@ Second pass, 2026-09-27, after the AC2 amendment and T6. The branch still contai
 - AC3 to AC5 evidence (pass 2): the jsonlite write of the help row again matched the help, and the boxed-cells test passed 4 expectations. `devtools::document()` printed no warning and changed no file. `R/conditions.R:257` holds the `@aliases` tag on one line.
 - AC6 evidence (pass 2): NEWS.md keeps one entry for AC1 and AC2, now with the class-definition exception and the empty-row order. The added lines hold no milestone number. `devtools::test()` gave 11736 expectations, 0 failures, 0 errors, and 0 skips. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - Consistency gate (pass 2): `cairn_validate.py` exited 0, and `devtools::document()` gave no diff. The other profile checks are unchanged from pass 1.
+- AC2 failed at the pass-2 review, so its tick is withdrawn. A column that is neither an atomic vector nor a list but carries an S3 class jsonlite can write passes the trial write. Three inputs reached the server probe: an environment with class `"POSIXt"`, a call with class `"function"`, and an expression vector with class `"NULL"`. AC2 says every such column aborts, with a slotted class definition as the one exception. Confirmed by a rerun.
+
+Pass-2 independent review. The [S] history reader and the [S] prior-review reader found nothing. The [O] diff reader reported nine findings, ranked. Proposed dispositions go to the maintainer at the next gate.
+
+- P1 (AC2, NEWS.md:4, and the `empty_rows()` comment claim that every classed non-vector column aborts): return to implement.
+- P2 (an array with a zero extent and three or more dimensions now refuses a row, where main passed the frame, so O4 is partly new on this branch): fold into the O4 candidate row.
+- P3 (NEWS.md:3 announces a 3-D numeric column with one `NA` as sent, but jsonlite sends that `NA` as `"NA"`): qualify the NEWS sentence, with O3 as its candidate row.
+- P4 (a sparse `Matrix` column now skips the empty-row rule and gets the jsonlite-write error first): reject, it matches "never counts as empty".
+- P5 (the class-definition test asserts jsonlite's warning text): reject, the test pins current jsonlite behavior on purpose.
+- P6 (no whole-call probe for a reference-class object): fix now.
+- P7 (some probes stay green on revert): reject, the work log records which ones go red.
+- P8 (the O3 and O4 candidate rows are not written yet): fix at the gate once O3 and O4 are accepted.
+- P9 (NEWS.md:3 paraphrases the empty-row error text): fix now.
