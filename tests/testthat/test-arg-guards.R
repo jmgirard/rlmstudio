@@ -1823,9 +1823,9 @@ number_positions <- list(
 )
 
 # In an atomic data-frame column with no dim attribute, jsonlite leaves an
-# NA, NaN, Inf, or -Inf cell out of the row. These are the four places such a
-# column can sit. The column is `x`, beside a column `k` that keeps the row
-# of a nested data frame from being empty.
+# NA, NaN, Inf, or -Inf cell out of the row. These are four of the places
+# such a column can sit. The column is `x`, beside a column `k` that keeps
+# the row of a nested data frame from being empty.
 plain_column_places <- list(
   "the top level" = function(v) {
     data.frame(role = "user", x = v)

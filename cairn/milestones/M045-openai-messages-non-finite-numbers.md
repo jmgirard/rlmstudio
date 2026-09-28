@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M045: The OpenAI chat function refuses a number that jsonlite writes as a string or drops
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** M044   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -115,7 +115,7 @@ the numeric matrix `NA` closes with this milestone.
       case.
 - [x] T3: Update the help and roxygen that AC4 names, and NEWS.md. Run
       the AC4 grep. Run `devtools::document()`.
-- [ ] T4: Run `devtools::test()` and `devtools::check()`. The check needs
+- [x] T4: Run `devtools::test()` and `devtools::check()`. The check needs
       `RLMSTUDIO_API_TOKEN` and a started server (LESSONS, M009).
 
 ## Work log
@@ -134,6 +134,10 @@ the numeric matrix `NA` closes with this milestone.
 - 2026-09-28: T2 done. `has_unsendable_number()` runs between the non-vector rule and the trial write. Each planted defect turned a test red.
 - 2026-09-28: the AC2 test gained a named-zone `POSIXlt` field. Its `gmtoff` part is an integer `NA`, and a first walk refused it.
 - 2026-09-28: T3 done. The help, the roxygen, and NEWS state the rule. The AC4 grep finds three lines, and each states what jsonlite writes or wrote before. `document()` rewrote `man/lms_chat_openai.Rd`.
+- 2026-09-28: T4 done. `devtools::test()` passed. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, with the token set, before and after the claim-audit fixes.
+- 2026-09-28: claim audit: 51 claims read, 4 corrected — NEWS.md, R/chat.R, man/lms_chat_openai.Rd, R/utils-args.R, tests/testthat/test-arg-guards.R
+- 2026-09-28: the claim-audit re-read found one gap left in the closing help summary, which now names the class limit. There was no second pass.
+- 2026-09-28: status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

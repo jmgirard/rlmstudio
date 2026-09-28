@@ -100,11 +100,11 @@ contains \code{"list"} passes, and the rule reads its elements. The rule
 does not read the class of a vector or a list. A vector with a class
 set by hand, such as \code{structure(1L, class = "NULL")}, passes, and
 jsonlite writes it by that class.
-\item No number inside \code{messages}, in the places the rules above read, is
-\code{NA}, \code{NaN}, \code{Inf}, or \code{-Inf}. The rule reads a double or integer
-vector with no class or with the class \code{"AsIs"} alone, such as a
-field wrapped in \code{\link[=I]{I()}}. jsonlite would send such a number as the
-string \code{"NA"}, \code{"NaN"}, \code{"Inf"}, or \code{"-Inf"}. The rule reads a field,
+\item No number inside \code{messages} is \code{NA}, \code{NaN}, \code{Inf}, or \code{-Inf}. The
+rule reads a double or integer vector with no class or with the class
+\code{"AsIs"} alone, such as a field wrapped in \code{\link[=I]{I()}}. jsonlite would send
+such a number as the string \code{"NA"}, \code{"NaN"}, \code{"Inf"}, or \code{"-Inf"}.
+The rule reads a field,
 an element of a field, a list at any depth below a field, a cell of a
 list column or a list-matrix column, and a matrix or array column. An
 atomic column with no \code{dim} attribute, of a data frame at any depth,
@@ -113,8 +113,9 @@ cell of such a column out of its message. There the rule refuses
 \code{Inf} and \code{-Inf} alone, and an \code{NA} or \code{NaN} cell is left out as a
 missing field. A number with another class, such as a \code{Date}, is
 written by its class, so \code{as.Date(NA)} is sent as \code{null} and
-\code{as.Date(Inf)} as \code{"Inf"}. The rule does not read the parts of a
-list with a class other than \code{"AsIs"}, such as a \code{POSIXlt} value.
+\code{as.Date(Inf)} as \code{"Inf"}. Below a message, the rule does not read
+the parts of a list whose class is neither \code{"AsIs"} nor a data frame,
+such as a \code{POSIXlt} value.
 \item jsonlite can write the value, with the options that the request uses.
 If it cannot, the error gives the jsonlite message. This rule is
 checked last.
@@ -129,10 +130,11 @@ breaks the last rule.
 
 The package checks the shape of \code{messages}. Of the field values, it
 refuses a function, a value that is not an atomic vector, a list, or
-\code{NULL}, a number that jsonlite would send as a string or leave out, and a
-value that jsonlite cannot write. It does not
-check any other value of a role, the content, or another field of a
-message. The server checks them.}
+\code{NULL}, a number with no class or with the class \code{"AsIs"} alone that
+jsonlite would send as a string or, in a data-frame column, would leave
+out because it is infinite, and a value that jsonlite cannot write. It
+does not check any other value of a role, the content, or another field
+of a message. The server checks them.}
 
 \item{host}{Character. Server URL.}
 

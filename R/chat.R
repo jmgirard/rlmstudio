@@ -342,11 +342,11 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     does not read the class of a vector or a list. A vector with a class
 #'     set by hand, such as `structure(1L, class = "NULL")`, passes, and
 #'     jsonlite writes it by that class.
-#'   * No number inside `messages`, in the places the rules above read, is
-#'     `NA`, `NaN`, `Inf`, or `-Inf`. The rule reads a double or integer
-#'     vector with no class or with the class `"AsIs"` alone, such as a
-#'     field wrapped in [I()]. jsonlite would send such a number as the
-#'     string `"NA"`, `"NaN"`, `"Inf"`, or `"-Inf"`. The rule reads a field,
+#'   * No number inside `messages` is `NA`, `NaN`, `Inf`, or `-Inf`. The
+#'     rule reads a double or integer vector with no class or with the class
+#'     `"AsIs"` alone, such as a field wrapped in [I()]. jsonlite would send
+#'     such a number as the string `"NA"`, `"NaN"`, `"Inf"`, or `"-Inf"`.
+#'     The rule reads a field,
 #'     an element of a field, a list at any depth below a field, a cell of a
 #'     list column or a list-matrix column, and a matrix or array column. An
 #'     atomic column with no `dim` attribute, of a data frame at any depth,
@@ -355,8 +355,9 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     `Inf` and `-Inf` alone, and an `NA` or `NaN` cell is left out as a
 #'     missing field. A number with another class, such as a `Date`, is
 #'     written by its class, so `as.Date(NA)` is sent as `null` and
-#'     `as.Date(Inf)` as `"Inf"`. The rule does not read the parts of a
-#'     list with a class other than `"AsIs"`, such as a `POSIXlt` value.
+#'     `as.Date(Inf)` as `"Inf"`. Below a message, the rule does not read
+#'     the parts of a list whose class is neither `"AsIs"` nor a data frame,
+#'     such as a `POSIXlt` value.
 #'   * jsonlite can write the value, with the options that the request uses.
 #'     If it cannot, the error gives the jsonlite message. This rule is
 #'     checked last.
@@ -370,10 +371,11 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'
 #'   The package checks the shape of `messages`. Of the field values, it
 #'   refuses a function, a value that is not an atomic vector, a list, or
-#'   `NULL`, a number that jsonlite would send as a string or leave out, and a
-#'   value that jsonlite cannot write. It does not
-#'   check any other value of a role, the content, or another field of a
-#'   message. The server checks them.
+#'   `NULL`, a number with no class or with the class `"AsIs"` alone that
+#'   jsonlite would send as a string or, in a data-frame column, would leave
+#'   out because it is infinite, and a value that jsonlite cannot write. It
+#'   does not check any other value of a role, the content, or another field
+#'   of a message. The server checks them.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
