@@ -1,6 +1,6 @@
 # M049: A chat call aborts on a reply from a different model
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -170,6 +170,8 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: implement resumed on the branch, which already contains `origin/main`. Question gate skipped, because T9 and T10 leave no choice open.
 - 2026-09-28: T9 done. The new S4 test failed on all 4 route and `simplify` cases with a second request, the lookup. `check_reply_model()` now reads the asked name as `unclass(model)[[1]]`. In a scratch run it gave the plain string for an S4, named, `glue`, and plain name, and for an S3 class with its own `as.character()` method, where `as.character()` did not. The `class` option of `rlm_abort_bad_response()` now follows `...`, and its one caller names it in full. Suite: 489 tests, 0 failed, 0 skipped.
 - 2026-09-28: T10 done. DESIGN.md names the `code` field, and D-026 records the fourth batch difference, after `R/embed.R` showed that the embedding batch stops only at 401, 403, and 404. The comment, the helper doc, and the "Malformed response" text now except a lookup condition, and the T8 help text is rewrapped. Each recorder unload runs alone, and a scratch run showed a failed unload warn while the other ran and the first error surfaced. `air format` rewrote the two new files, and two branch hunks in `R/chat.R` were fixed by hand. Three older hits stay, and no `air.toml` exists. Suite: 489 tests, 0 failed. `devtools::check()` gave 0 errors, 0 warnings, 0 notes, a second `devtools::document()` changed nothing, and the server was started again.
+- 2026-09-28: claim audit: 162 claims read, 0 corrected — NEWS.md, R/chat.R, R/conditions.R, R/list.R, R/utils-api-error.R, data-raw/record-model-mismatch-cassette.R, tests/testthat/test-model-check.R
+- 2026-09-28: status review. T9 and T10 are done, and AC2 waits for fresh evidence at review.
 
 ## Decisions
 
