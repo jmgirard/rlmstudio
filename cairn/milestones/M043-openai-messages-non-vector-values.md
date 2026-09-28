@@ -52,7 +52,7 @@ candidate row on such values closes with this milestone.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: In `lms_chat_openai()`, each kind below at each position below
+- [x] AC1: In `lms_chat_openai()`, each kind below at each position below
   aborts before the server probe. The abort carries the value-fault
   header, "`messages` holds a field value that cannot be sent as JSON."
   Its detail is `You gave a field value of type "<type>", which is not an
@@ -75,7 +75,7 @@ candidate row on such values closes with this milestone.
   - a column of a data-frame column, and a cell of a list column
   - a cell of a list-matrix column, and a column of a data-frame field of
     a list message
-- [ ] AC2: In `lms_chat_openai()`, each value below passes every
+- [x] AC2: In `lms_chat_openai()`, each value below passes every
   `messages` rule and reaches the request. The recorded body equals the
   sent form that the test states for it. The values:
   - a `NULL` field, and a `NULL` cell of a list column
@@ -83,7 +83,7 @@ candidate row on such values closes with this milestone.
   - a field wrapped in `I()`, and an atomic matrix field
   - a list-matrix column, and a data-frame column
   - a field that is an object of an S4 class that contains `"numeric"`
-- [ ] AC3: In `lms_chat_openai()`, the new rule runs after the shape rules
+- [x] AC3: In `lms_chat_openai()`, the new rule runs after the shape rules
   and the function rule and before the trial write. Tests show four cases.
   - A message that holds a function field and an environment field, in
     either field order, aborts with the function detail.
@@ -94,7 +94,7 @@ candidate row on such values closes with this milestone.
   - Each probe in `messages_probes` that holds an environment field and
     breaks a shape rule aborts with the shape header and the detail of
     that shape rule.
-- [ ] AC4: The `messages` help of `lms_chat_openai()` lists the new rule
+- [x] AC4: The `messages` help of `lms_chat_openai()` lists the new rule
   between the function rule and the jsonlite-write rule. It says that a
   `NULL` value passes. Its closing paragraph names the new kind among the
   field values that the package refuses. NEWS.md has an entry for the new
@@ -104,7 +104,7 @@ candidate row on such values closes with this milestone.
   says that an S4 class definition with a slot is sent. The M040 NEWS
   example "or an environment" goes too. `man/lms_chat_openai.Rd` matches
   the roxygen after `devtools::document()`.
-- [ ] AC5: `devtools::test()` passes, and `devtools::check()` gives 0
+- [x] AC5: `devtools::test()` passes, and `devtools::check()` gives 0
   errors, 0 warnings, and 0 notes.
 
 ## Coverage
@@ -169,3 +169,12 @@ candidate row on such values closes with this milestone.
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Evidence gathered 2026-09-28 at 57c267a, which contains origin/main (bb00074).
+
+- AC1: The test "a value that is not a vector, a list, or NULL aborts with its own detail" passes. It builds the fifteen kinds at the seven positions and asserts 105 cases. Each case gets the rule13 detail with the `typeof()` type and opens with the value header. No case gives the jsonlite-write detail or a warning. The server probe runs zero times.
+- AC2: The test "values the non-vector rule passes reach the request" passes. It sends the ten listed values through a request recorder. For each, the parsed body equals the sent form that the test states by hand.
+- AC3: The test "the non-vector rule sits between the function rule and the trial write" passes. A function field and an environment field give the function detail in both orders. An environment field beside a `"foo"` field gives the rule13 detail and not the jsonlite detail. A row that is `NA` apart from an environment column gives rule13 and not the empty-row detail. The probe test "a messages value that breaks a rule aborts before the server probe" passes. Its three probes with an environment field and a shape fault (rule7, rule8, rule9) open with the shape header and give their own detail.
+- AC4: The `messages` help in `R/chat.R` lists the new rule between the function rule and the jsonlite-write rule. It says that a `NULL` field passes, and its closing paragraph names the new kind. NEWS.md has a new entry that covers the list form and the data-frame form. The M042 sub-bullet now gives the new error, not the jsonlite-write error, and no longer says that a class definition with a slot is sent. The M040 example "or an environment" is gone (grep finds no match). `devtools::document()` left the tree clean.
+- AC5: `devtools::test()` gave 426 tests, 0 failed, 0 skipped, 0 warnings. After `lms server start` with the token set, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- Gate: `cairn_validate.py` passed (exit 0). No DESIGN principle changed, so the impact report was skipped. `devtools::document()` gave no diff. README.Rmd and README.md are unchanged. The repo has no pkgdown site and the branch adds no top-level file. NEWS.md has the entry. The check is clean.
