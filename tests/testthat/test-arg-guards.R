@@ -1756,7 +1756,8 @@ test_that("the non-vector rule sits between the function rule and the trial writ
 # A column that is neither an atomic vector nor a list is never empty, and
 # is.na() is not called on it, so it gives no warning. Each column sits in
 # rows that are otherwise NA, so the empty-row rule would win if the column
-# counted as empty. `$<-` builds the frame where it accepts the value. It
+# counted as empty. The non-vector rule refuses each such column that is not
+# a function. `$<-` builds the frame where it accepts the value. It
 # refuses an environment in a frame with one or more rows, so that frame
 # uses structure().
 test_that("a column that is not a vector is not empty and gives no warning", {
@@ -1807,7 +1808,7 @@ test_that("a column that is not a vector is not empty and gives no warning", {
     err <- expect_no_warning(
       expect_error(
         lms_chat_openai("a-model", cases[[label]]),
-        messages_rule_details[["rule10"]],
+        messages_rule_details[["rule13"]],
         fixed = TRUE,
         info = label
       )
@@ -1900,48 +1901,6 @@ test_that("empty_rows() finds no empty row in a column that is not a vector", {
   }
   expect_no_warning(formula_result <- empty_rows(na_frame(3L, y ~ x)))
   expect_identical(formula_result, rep(FALSE, 3L))
-})
-
-# jsonlite writes an S4 class definition with a slot as an object that maps
-# each slot name to its class, with a warning, so such a column is sent. A
-# class definition with no slot fails the trial write.
-test_that("an S4 class-definition column is sent only when it has a slot", {
-  class_env <- new.env()
-  methods::setClass(
-    "rlmstudioM042Sent",
-    representation(v = "numeric"),
-    where = class_env
-  )
-  class_frame <- function(definition) {
-    structure(
-      list(role = NA_character_, x = definition),
-      class = "data.frame",
-      row.names = 1L
-    )
-  }
-
-  probe <- local_counting_probe()
-  expect_warning(
-    expect_error(
-      lms_chat_openai(
-        "a-model",
-        class_frame(methods::getClass("rlmstudioM042Sent", where = class_env))
-      ),
-      class = "rlmstudio_no_server"
-    ),
-    "collapse=FALSE called for named list.",
-    fixed = TRUE
-  )
-  expect_identical(probe$calls, 1L)
-
-  probe <- local_counting_probe()
-  err <- expect_error(
-    lms_chat_openai("a-model", class_frame(methods::getClass("numeric"))),
-    messages_rule_details[["rule10"]],
-    fixed = TRUE
-  )
-  expect_true(startsWith(conditionMessage(err), messages_headers[["value"]]))
-  expect_identical(probe$calls, 0L)
 })
 
 # A column with a dim attribute is read row by row, through the cells whose
