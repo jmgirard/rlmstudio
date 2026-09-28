@@ -1135,6 +1135,47 @@ test_that("live: batches of two give the vectors of one request", {
   expect_lt(max(abs(batched - one)), 1e-6)
 })
 
+test_that("live: the server embeds only the first context-length tokens", {
+  testthat::skip_on_cran()
+  skip_if_no_server()
+
+  # The help page says that the server cuts a text at the context length of
+  # the loaded instance and says nothing about it. This pins what it says.
+  model <- "text-embedding-nomic-embed-text-v1.5"
+  models <- tryCatch(
+    list_models(loaded = TRUE, type = "embedding", detailed = TRUE, quiet = TRUE),
+    error = function(e) data.frame()
+  )
+  if (!model %in% models$key) {
+    testthat::skip(paste(model, "is not loaded."))
+  }
+
+  # Each word below is at least one token, so a start of `n` words, where `n`
+  # is the largest context of any loaded instance, reaches past the cut
+  # whichever instance serves the request.
+  instances <- models$loaded_instances[[match(model, models$key)]]
+  n <- max(instances$config$context_length)
+  words <- c("river", "stone", "cloud", "market", "green", "table", "music")
+  start <- rep_len(words, n)
+  tail_one <- rep_len(c("apple", "house"), 200)
+  tail_two <- rep_len(c("ocean", "piano"), 200)
+  texts <- c(
+    paste(c(start, tail_one), collapse = " "),
+    paste(c(start, tail_two), collapse = " "),
+    paste(c("window", start[-1], tail_one), collapse = " ")
+  )
+
+  out <- expect_no_warning(lms_embed(model, texts))
+  # Texts that differ only past the cut get the same vector.
+  expect_lt(max(abs(out[1, ] - out[2, ])), 1e-6)
+  # A text that differs inside the cut gets another vector, so the match
+  # above comes from the cut and not from a server that ignores the text.
+  expect_gt(max(abs(out[1, ] - out[3, ])), 1e-6)
+
+  bodies <- lms_embed(model, texts, simplify = FALSE)
+  expect_identical(bodies[[1]][["usage"]][["prompt_tokens"]], 0L)
+})
+
 
 # simplify = FALSE: the aborts that apply and the one that does not -------------
 

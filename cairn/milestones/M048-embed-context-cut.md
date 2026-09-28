@@ -55,7 +55,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
 
 - [x] T1: Record the probe facts from Scope in `cairn/references/lmstudio-api-surface.md` as a dated
       observation with the LM Studio version. Put it under the features of endpoints the package calls.
-- [ ] T2: Add a live test after the existing live test in `tests/testthat/test-embed.R` (near line 1110). It skips
+- [x] T2: Add a live test after the existing live test in `tests/testthat/test-embed.R` (near line 1110). It skips
       as that test does and never loads a model. It reads N from the `loaded_instances` config of
       `list_models(detailed = TRUE)`. It builds the three texts from ordinary words, each at least one token.
       Assert the AC2 cases, with `expect_no_warning()` around the call. Run it live and record that it ran and did
@@ -75,6 +75,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - 2026-09-28: plan gate chose documenting the cut over splitting a long text and averaging the vectors. That changes what a vector means and needs a token count that the package cannot get. Falsified by a user who needs one vector for a whole long document.
 - 2026-09-28: implement started on branch m048-embed-context-cut. The question gate was skipped, because the plan left no choice open.
 - 2026-09-28: T1 done. The probe facts are an "Embedding context cut" entry in `cairn/references/lmstudio-api-surface.md`, dated and with the LM Studio version.
+- 2026-09-28: T2 done. The live test ran against LM Studio 0.4.25+1 with nomic loaded at 2048 tokens. It did not skip and passed 4 expectations. With a planted shared start of 10 words, the same-vector check failed with a difference of 0.090. The session loaded nomic and started the server for the run.
 
 ## Decisions
 
