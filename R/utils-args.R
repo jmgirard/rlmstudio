@@ -330,10 +330,11 @@ schema_fault <- function(value) {
 #' `messages` is a named argument of `lms_chat_openai()`, so GP4 puts the check
 #' on the package, and it runs before the server probe (D-008). The shape
 #' rules read the shape of the value and the names at each level, and their
-#' abort carries the named-list hint. Two value rules follow, under a header of
-#' their own and with no hint: a function anywhere inside the value, and a
-#' trial write that asks jsonlite to write it. A function and a value that
-#' jsonlite cannot write are the only field values the package judges. The
+#' abort carries the named-list hint. Three value rules follow, under a header
+#' of their own and with no hint: a function anywhere inside the value, a
+#' value anywhere inside it that is not an atomic vector, a list, or `NULL`,
+#' and a trial write that asks jsonlite to write it. Those three kinds are the
+#' only field values the package judges. The
 #' server judges a role, a content value, and any other field value, as D-003
 #' states for API fields. A data frame passes, because jsonlite writes it as
 #' one JSON object per row.
@@ -360,7 +361,16 @@ rlm_check_messages <- function(value) {
       "as its source text."
     )
   } else {
-    fault <- messages_write_fault(value)
+    type <- non_vector_type(value)
+    fault <- if (is.null(type)) {
+      messages_write_fault(value)
+    } else {
+      paste0(
+        "You gave a field value of type \"",
+        type,
+        "\", which is not an atomic vector, a list, or NULL."
+      )
+    }
   }
   if (!is.null(fault)) {
     cli::cli_abort(
@@ -433,6 +443,39 @@ has_function <- function(value) {
     }
   }
   FALSE
+}
+
+#' Which value inside this messages value is not a vector, a list, or NULL?
+#'
+#' jsonlite has a method for a vector, a list, or a data frame alone. It
+#' writes any other value by its class attribute: as printed text, as `null`,
+#' as an object or array of other data, such as the slots of a class
+#' definition, or not at all. So a class set by hand on an environment or a call can make
+#' the trial write pass and send junk. The rule reads the storage type, which
+#' a class does not change. `is.null()` is read on its own, because
+#' `is.atomic(NULL)` is `FALSE` from R 4.4.0. The walk is the walk of
+#' `has_function()`, which runs first, so a function never reaches this rule.
+#'
+#' @param value A `messages` value that passed `messages_fault()` and holds
+#'   no function.
+#' @return The `typeof()` of the first such value the walk reaches, or `NULL`
+#'   when there is none.
+#'
+#' @noRd
+non_vector_type <- function(value) {
+  if (is.list(value)) {
+    for (element in value) {
+      type <- non_vector_type(element)
+      if (!is.null(type)) {
+        return(type)
+      }
+    }
+    return(NULL)
+  }
+  if (is.atomic(value) || is.null(value) || is.function(value)) {
+    return(NULL)
+  }
+  typeof(value)
 }
 
 #' Remove the class of a messages list and of each of its messages
@@ -604,7 +647,7 @@ is_or_holds_list_array <- function(value) {
 #' attribute is `NULL` is written as an array and has no names to read. A
 #' list column of a data frame is written one cell per row, and its own names
 #' are not written, so the walk reads its cells and not its names. Any other
-#' value, such as an environment, ends the walk there. The trial write in
+#' value, such as an environment, ends the walk there. A value rule in
 #' `rlm_check_messages()` reports such a value.
 #'
 #' @param value A list of messages, one message, or a data frame.
@@ -712,7 +755,7 @@ data_frame_messages_fault <- function(value) {
 #' atomic vector nor a list, such as a function, an environment, or a symbol,
 #' is never empty and is not passed to `is.na()`, which warns on most such
 #' columns. The
-#' function rule or the trial write judges it later. The columns are read
+#' function rule or the non-vector rule refuses it later. The columns are read
 #' one at a time, because `is.na()` on the whole data frame spreads a matrix
 #' column over several.
 #'

@@ -321,13 +321,27 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'
 #'   The error for each rule above opens with "`messages` must be a data
 #'   frame or an unnamed list of messages." and shows the form of a message.
-#'   Two more rules are checked after them. Their error opens with
+#'   Three more rules are checked after them. Their error opens with
 #'   "`messages` holds a field value that cannot be sent as JSON." and shows
 #'   no form:
 #'   * No function sits inside `messages`: not as a field, in a list below a
 #'     field, as a column of a data frame, or in a cell of a list column.
 #'     jsonlite would send a function as its source text. A function with a
-#'     class gets the error of this rule, not the error of the next one.
+#'     class gets the error of this rule, not the error of a later one.
+#'   * Each value inside `messages`, in the places the rule above reads, is
+#'     an atomic vector, a list, or `NULL`. An environment, a symbol, a
+#'     call, a formula, an expression vector, an external pointer, or an S4
+#'     object breaks this rule, and the error names its type. The rule reads
+#'     the storage type, so a class set by hand on such a value does not
+#'     hide it. jsonlite would send such a value as printed text, as `null`,
+#'     or as an object or array of other data, or it would fail. A `NULL`
+#'     field passes and is sent as `null`. An S4 object whose class contains
+#'     an atomic type, such as `"numeric"`, passes this rule, and jsonlite
+#'     sends its data part without its other slots. An S4 object whose class
+#'     contains `"list"` passes, and the rule reads its elements. The rule
+#'     does not read the class of a vector or a list. A vector with a class
+#'     set by hand, such as `structure(1L, class = "NULL")`, passes, and
+#'     jsonlite writes it by that class.
 #'   * jsonlite can write the value, with the options that the request uses.
 #'     If it cannot, the error gives the jsonlite message. This rule is
 #'     checked last.
@@ -340,7 +354,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   breaks the last rule.
 #'
 #'   The package checks the shape of `messages`. Of the field values, it
-#'   refuses a function and a value that jsonlite cannot write. It does not
+#'   refuses a function, a value that is not an atomic vector, a list, or
+#'   `NULL`, and a value that jsonlite cannot write. It does not
 #'   check any other value of a role, the content, or another field of a
 #'   message. The server checks them.
 #' @param host Character. Server URL.
