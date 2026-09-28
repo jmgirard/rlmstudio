@@ -35,28 +35,28 @@ requests: none were asked for, so nothing records them.
 
 ## Acceptance criteria
 
-- [ ] AC1: With `batch_size = 100`, a call with 250 named inputs sends three requests in order. They carry inputs
+- [x] AC1: With `batch_size = 100`, a call with 250 named inputs sends three requests in order. They carry inputs
       1 to 100, 101 to 200, and 201 to 250. Each body carries `model`, `ttl`, a field from `...`, and `input` as a
       JSON array. Row `i` of the returned matrix holds the vector served for input `i`. A test through
       `local_request_sequence()` in `tests/testthat/helper-mock-http.R` asserts the three bodies and every row,
       and serves the second batch out of index order. A live test that skips without LM Studio finds the matrix
       from `batch_size = 2` for five texts equal to the one-request matrix within 1e-6.
-- [ ] AC2: A bad `batch_size` aborts before the server probe, with a message naming `batch_size` and no condition
+- [x] AC2: A bad `batch_size` aborts before the server probe, with a message naming `batch_size` and no condition
       class. A good value is one whole number from 1 to `.Machine$integer.max`. A test fires `NULL`, `NA`,
       `NA_real_`, `TRUE`, `"10"`, `c(1, 2)`, `0`, `-1`, `1.5`, `Inf`, and `2^31`. It asserts the message for each
       and asserts that the probe was not called.
-- [ ] AC3: Some failed requests leave the rows of their inputs `NA`, and the call goes on. These are an
+- [x] AC3: Some failed requests leave the rows of their inputs `NA`, and the call goes on. These are an
       `rlmstudio_bad_response` and an `rlmstudio_api_error` at a status other than 401, 403, or 404. The call then warns once
       and names the failed input positions. With `quiet = TRUE`, the warning still shows. When every request
       fails, the call aborts with the first failed condition, gives no warning, and adds no `results` field. A
       test covers each class, the positions in the warning, the `quiet = TRUE` warning, and the all-failed abort.
-- [ ] AC4: With `simplify = TRUE`, three aborts after a successful request carry a `results` field. The first is a
+- [x] AC4: With `simplify = TRUE`, three aborts after a successful request carry a `results` field. The first is a
       lost server found by the probe before a later request. The second is a 401, 403, or 404. The third is a later
       request whose vectors differ in width from earlier ones, which aborts with `rlmstudio_bad_response`.
       `results` holds the matrix so far, with `NA` rows for the inputs not embedded. After one successful request,
       a test fires the lost server, each of 401, 403, and 404, and the width abort, and asserts the class and every
       row of `results`.
-- [ ] AC5: With `simplify = FALSE`, the call returns a list of parsed bodies, one per request, in request order.
+- [x] AC5: With `simplify = FALSE`, the call returns a list of parsed bodies, one per request, in request order.
       The slot of a failed request holds its condition. The warning and the all-failed abort of AC3 apply. So do
       the lost-server abort and the 401, 403, or 404 abort of AC4. Their `results` holds a list with one slot per
       batch, with `NULL` in the slot of the request that ended the call and in every later slot. The width abort
@@ -64,11 +64,11 @@ requests: none were asked for, so nothing records them.
       inputs at `batch_size = 100`, a list of one for three inputs, the condition in a failed slot, the warning,
       the all-failed abort, the lost-server and 404 aborts with their `results`, and three bodies of two widths
       returned with no abort.
-- [ ] AC6: `quiet = NULL` reads the option `rlmstudio.quiet`. When more than one request goes out and the call is
+- [x] AC6: `quiet = NULL` reads the option `rlmstudio.quiet`. When more than one request goes out and the call is
       not quiet, the call shows a progress bar. Its total is the number of inputs, and it moves once per request. A test mocks `cli::cli_progress_bar()` and `cli::cli_progress_update()`. It asserts one bar with
       a total of 250 and three updates for 250 inputs. It asserts no bar with `quiet = TRUE`, with the option set,
       or with one request.
-- [ ] AC7: The `lms_embed()` help page no longer says the whole input travels in one request. It documents
+- [x] AC7: The `lms_embed()` help page no longer says the whole input travels in one request. It documents
       `batch_size`, `quiet`, the `NA` rows, the warning, the aborts, and the `simplify = FALSE` list. The
       conditions help page names `lms_embed()` among the functions whose abort carries `results`, and says that
       its `results` is a matrix or a list. NEWS.md has an entry that names the new `simplify = FALSE` shape.
@@ -128,3 +128,39 @@ requests: none were asked for, so nothing records them.
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-09-28 on m047-embed-batches at c9dcda8, which contains origin/main (b77103b).
+
+- AC1: `devtools::test()` passed "250 inputs at batch_size 100 go out as three ordered requests". It asserts 3
+  requests and, in each body, `model`, `ttl` 60L, `dimensions` from `...`, and `input` as an unnamed list. It
+  asserts all 250 rows, and the second batch is served in reverse. The live test "live: batches of two give the
+  vectors of one request" ran with LM Studio up and nomic-embed-text-v1.5 loaded. It gave 2 expectations, 0
+  failures, and no skip. The session then unloaded that model and stopped the server, as found.
+- AC2: "a bad batch_size aborts, named, before the server probe" passed. It fires all 11 values, matches the
+  `batch_size` message for each, and counts 0 probe calls and 0 requests. A direct call with `batch_size = 0` gave
+  the classes `rlang_error`, `error`, and `condition` alone.
+- AC3: four tests passed. A short reply (`rlmstudio_bad_response`) left rows 3 and 4 `NA`, and statuses 400 and
+  500 (`rlmstudio_api_error`) left rows 1, 2, and 5 `NA`. In both, the other rows held their vectors, and the warning
+  named the positions. The warning showed with `quiet = TRUE` and with the option set. With every batch failed, the
+  call raised the first condition (status 400) with no warning and no `results` field.
+- AC4: three tests passed, each after one good batch of two in a five-input call. A lost server raised
+  `rlmstudio_no_server`, and 401, 403, and 404 each raised `rlmstudio_api_error` with that status. A batch of width
+  4 after width 3 raised `rlmstudio_bad_response`. Each test compares the whole `results` matrix by
+  `expect_identical()`: rows 1 and 2 hold their vectors and rows 3 to 5 are `NA`.
+- AC5: seven `simplify = FALSE` tests passed. They show a list of three bodies for 250 inputs at `batch_size = 100`
+  and a list of one for three inputs. A failed slot holds its `rlmstudio_api_error` (status 500), with the warning
+  for positions 3 and 4. With every batch failed, the call raised the first condition with no `results`. A lost
+  server and a 404 each carried `results` as the list (first body, `NULL`, `NULL`). Three bodies of widths 3, 4, and
+  3 came back with no error.
+- AC6: two tests with mocked `cli` progress functions passed. A 250-input call at `batch_size = 100` made one bar
+  with `total` 250L and three updates of 100, 100, and 50. No bar was made with `quiet = TRUE`, with
+  `rlmstudio.quiet` set to `TRUE` and `quiet` left `NULL`, or for a call of one request.
+- AC7: `man/lms_embed.Rd` has no "single request" text and has `\item` entries for `batch_size` and `quiet`. Its
+  details and return sections cover the `NA` rows, the warning, the aborts, and the list. `man/rlmstudio-conditions.Rd`
+  has `lms_embed()` paragraphs in two sections and says "a matrix or a list". The NEWS.md entry names the list
+  return for `simplify = FALSE`. `devtools::document()` left `git status` empty. Full `devtools::test()`: 33 files,
+  12854 expectations, 0 failed, 0 errors, 1 skip. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes.
+
+Consistency gate: `cairn_validate.py` passed every check. No DESIGN.md principle changed, so `cairn_impact` did not
+run. `devtools::document()` gave no diff. README.Rmd is untouched and evaluates no code. The repo has no pkgdown
+site. NEWS.md has the entry and no milestone ids. The branch adds no files, and the check gave 0 notes.
