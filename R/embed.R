@@ -71,6 +71,19 @@
 #' element after it. An abort before any
 #' request succeeded carries no `results` field. An error of any other class
 #' aborts the call unchanged.
+#'
+#' On LM Studio 0.4.25+1, the server embeds only the first tokens of each
+#' text, up to the context length of the loaded model instance. For a text
+#' longer than that, it still returns a vector, with no error or warning, and
+#' the vector covers only the start of the text. The `usage` field of the
+#' reply reported 0 tokens on that version, so the count does not show the
+#' cut. The `loaded_instances` column of `list_models(detailed = TRUE)` gives
+#' the `context_length` of each loaded instance. To embed all of a long text,
+#' split it into pieces before the call. Or unload the model with
+#' [lms_unload()] and load it again with a larger `context_length` through
+#' [lms_load()], up to the `max_context_length` column of
+#' `list_models(detailed = TRUE)`. For a model that is already loaded,
+#' [lms_load()] does not load it again.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response

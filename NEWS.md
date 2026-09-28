@@ -1,5 +1,7 @@
 # rlmstudio (development version)
 
+* The `lms_embed()` help page now describes a limit of LM Studio 0.4.25+1. The server embeds only the first tokens of each text, up to the context length of the loaded model instance. A longer text returns a vector for its start, with no error or warning, and the reply reported 0 tokens on that version. The page names two ways to avoid the cut. One is to split a long text before the call. The other is to unload the model and load it again with a larger `context_length`.
+
 * `lms_embed()` now sends its input in batches, one request for each run of at most `batch_size` texts. The default `batch_size` is 100. A new `quiet` argument controls a progress bar, which shows when a call sends more than one request.
   * A request that fails with `rlmstudio_bad_response`, or with `rlmstudio_api_error` at a status other than 401, 403, or 404, leaves the rows of its inputs `NA`. The call goes on and warns once, even when quiet. If every request fails, the call aborts with the first failure.
   * A 401, 403, or 404 and a server lost between requests abort the call. With `simplify = TRUE`, so does a batch whose embeddings have another width. After a request that succeeded, the condition carries a `results` field. It holds the matrix so far, with `NA` rows. With `simplify = FALSE`, it holds the list of bodies so far.

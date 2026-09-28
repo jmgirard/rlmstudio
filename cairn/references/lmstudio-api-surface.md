@@ -79,6 +79,21 @@ all.
   `eval_batch_size`, `flash_attention`, `num_experts`,
   `offload_kv_cache_to_gpu`, and `echo_load_config`. `lms_load()` names all
   six already. The endpoint rejects `ttl` (corrected M034).
+- **Embedding context cut** (M048). `/v1/embeddings` embeds only the first
+  `context_length` tokens of each text, where `context_length` is that of the
+  loaded instance. It answers status 200 with a vector and no error, warning,
+  or header for the cut. The `usage` field reports 0 prompt tokens for every
+  text, short or long. The server has no tokenize endpoint:
+  `POST /v1/tokenize` and `/api/v0/tokenize` answer "Unexpected endpoint or
+  method". Probe with text-embedding-nomic-embed-text-v1.5 on LM Studio
+  0.4.25+1. At the default 2048-token context, a 5000-word text gave the same
+  vector as its first 2500 words. Loaded at `context_length` 512, it gave the
+  same vector as its first 520 words. Its first 510 words gave a different
+  vector — observed 2026-09-28. A second probe at the default 2048-token
+  context used a text of seven one-word tokens repeated. Its first 2100 words
+  gave the same vector as 5000 words, and its first 2040 words did not. So the
+  cut follows `context_length` and does not sit at a fixed 512 tokens —
+  observed 2026-09-28 (M048 review).
 - **Reasoning control.** `/api/v1/chat` accepts a `reasoning` field with the
   values off, on, low, medium, and high. `/v1/responses` accepts
   `reasoning.effort`. A model states its allowed values in the
