@@ -173,7 +173,11 @@ api_error_callers <- list(
   lms_chat_openai = list(
     label = "OpenAI API Failed",
     call = function(host = api_error_default_host) {
-      lms_chat_openai("m", "hi", host = host)
+      lms_chat_openai(
+        "m",
+        list(list(role = "user", content = "hi")),
+        host = host
+      )
     }
   ),
   lms_chat_native = list(
