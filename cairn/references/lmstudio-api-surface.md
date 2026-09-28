@@ -89,7 +89,11 @@ all.
   0.4.25+1. At the default 2048-token context, a 5000-word text gave the same
   vector as its first 2500 words. Loaded at `context_length` 512, it gave the
   same vector as its first 520 words. Its first 510 words gave a different
-  vector — observed 2026-09-28.
+  vector — observed 2026-09-28. A second probe at the default 2048-token
+  context used a text of seven one-word tokens repeated. Its first 2100 words
+  gave the same vector as 5000 words, and its first 2040 words did not. So the
+  cut follows `context_length` and does not sit at a fixed 512 tokens —
+  observed 2026-09-28 (M048 review).
 - **Reasoning control.** `/api/v1/chat` accepts a `reasoning` field with the
   values off, on, low, medium, and high. `/v1/responses` accepts
   `reasoning.effort`. A model states its allowed values in the

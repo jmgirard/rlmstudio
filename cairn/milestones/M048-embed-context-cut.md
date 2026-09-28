@@ -84,6 +84,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - 2026-09-28: the corrected claim is the NEWS bullet, which said "loaded model" where the help page says "loaded model instance". The reader did not reach the server. The T2 live run already read `context_length` from the embedding instance, which settles its one open doubt.
 - 2026-09-28: all tasks done, status set to review.
 - 2026-09-28: review started. AC1 and AC2 have evidence. The AC3 check and the three reviewers are still running (checkpoint).
+- 2026-09-28: gate fixes for review findings O1, O3, O5, O6, O7, S1, and S2 are on the branch. Tests and check are rerunning before the merge chip.
 
 ## Decisions
 
@@ -127,3 +128,8 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - O9: the milestone file had uncommitted changes. Reject: stale, committed at c5d8c4d and 0ab29f5.
 - S1: the NEWS bullet sits below the batching bullet. M046 and M047 put the newest bullet first. Proposed fix now.
 - S2: the new live test lacks the neighbor's comment that it never loads a model. Proposed fix now.
+- Gate triage 2026-09-28: the maintainer chose to fix, then re-ask. Fixed now: O1, O3, O5 and S3, O6, O7, S1,
+  S2. Rejected as proposed: O2, O8, O9. Follow-up: O4, as a candidate row. The probe points of O2 went to the
+  references page.
+- Fix evidence: the live test passed 5 of 5 expectations with nomic at 2048 and did not skip. A copy with the
+  word moved past the cut (`mid <- n + 50L`) failed at the new check alone, with a difference of 0.

@@ -106,9 +106,13 @@ text, up to the context length of the loaded model instance. For a text
 longer than that, it still returns a vector, with no error or warning, and
 the vector covers only the start of the text. The \code{usage} field of the
 reply reported 0 tokens on that version, so the count does not show the
-cut. To embed all of a long text, split it into pieces before the call. Or
-load the model with a larger \code{context_length} through \code{\link[=lms_load]{lms_load()}}, up to
-the \code{max_context_length} column of \code{list_models(detailed = TRUE)}.
+cut. The \code{loaded_instances} column of \code{list_models(detailed = TRUE)} gives
+the \code{context_length} of each loaded instance. To embed all of a long text,
+split it into pieces before the call. Or unload the model with
+\code{\link[=lms_unload]{lms_unload()}} and load it again with a larger \code{context_length} through
+\code{\link[=lms_load]{lms_load()}}, up to the \code{max_context_length} column of
+\code{list_models(detailed = TRUE)}. For a model that is already loaded,
+\code{\link[=lms_load]{lms_load()}} does not load it again.
 }
 \section{Server not running}{
 
