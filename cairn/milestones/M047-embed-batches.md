@@ -1,6 +1,6 @@
 # M047: The embedding function sends a long input in batches
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -50,15 +50,20 @@ requests: none were asked for, so nothing records them.
       and names the failed input positions. With `quiet = TRUE`, the warning still shows. When every request
       fails, the call aborts with the first failed condition, gives no warning, and adds no `results` field. A
       test covers each class, the positions in the warning, the `quiet = TRUE` warning, and the all-failed abort.
-- [ ] AC4: Three aborts after a successful request carry a `results` field. The first is a lost server found by the
-      probe before a later request. The second is a 401, 403, or 404. The third is a later request whose vectors
-      differ in width from earlier ones, which aborts with `rlmstudio_bad_response`. `results` holds the matrix so far, with `NA` rows
-      for the inputs not embedded. A test fires each of the three after one successful request and asserts the
-      class and every row of `results`.
+- [ ] AC4: With `simplify = TRUE`, three aborts after a successful request carry a `results` field. The first is a
+      lost server found by the probe before a later request. The second is a 401, 403, or 404. The third is a later
+      request whose vectors differ in width from earlier ones, which aborts with `rlmstudio_bad_response`.
+      `results` holds the matrix so far, with `NA` rows for the inputs not embedded. After one successful request,
+      a test fires the lost server, each of 401, 403, and 404, and the width abort, and asserts the class and every
+      row of `results`.
 - [ ] AC5: With `simplify = FALSE`, the call returns a list of parsed bodies, one per request, in request order.
-      The slot of a failed request holds its condition. The warning and the aborts of AC3 and AC4 apply, and an
-      abort's `results` holds the list so far. A test asserts a list of three for 250 inputs at `batch_size = 100`,
-      a list of one for three inputs, and the condition in a failed slot.
+      The slot of a failed request holds its condition. The warning and the all-failed abort of AC3 apply. So do
+      the lost-server abort and the 401, 403, or 404 abort of AC4. Their `results` holds a list with one slot per
+      batch, with `NULL` in the slot of the request that ended the call and in every later slot. The width abort
+      of AC4 does not apply, because this form skips the matrix checks. A test asserts a list of three for 250
+      inputs at `batch_size = 100`, a list of one for three inputs, the condition in a failed slot, the warning,
+      the all-failed abort, the lost-server and 404 aborts with their `results`, and three bodies of two widths
+      returned with no abort.
 - [ ] AC6: `quiet = NULL` reads the option `rlmstudio.quiet`. When more than one request goes out and the call is
       not quiet, the call shows a progress bar. Its total is the number of inputs, and it moves once per request. A test mocks `cli::cli_progress_bar()` and `cli::cli_progress_update()`. It asserts one bar with
       a total of 250 and three updates for 250 inputs. It asserts no bar with `quiet = TRUE`, with the option set,
@@ -113,6 +118,12 @@ requests: none were asked for, so nothing records them.
 - 2026-09-28: T4 done. Tests cover the list of three bodies, a failed slot, an abort's list, and the bar through mocked `cli` functions. Four planted defects each turned the file red.
 - 2026-09-28: T5 done. The live test skips unless nomic-embed-text-v1.5 is already loaded, so it never loads a model. Run live with `NOT_CRAN=true`, it passed with 2 expectations and failed on a planted row reversal. A `lms load` here made a second instance, `text-embedding-nomic-embed-text-v1.5:2`, which the session unloaded along with the server it started.
 - 2026-09-28: T6 done. The `lms_embed()` help gains a details section, the conditions page gains an `lms_embed()` paragraph in two sections and names `batch_size` among the pre-probe arguments, and NEWS has the entry. `devtools::test()` clean, and `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes.
+- 2026-09-28: claim audit: 60 claims read, 5 corrected — R/embed.R, R/conditions.R, NEWS.md, tests/testthat/test-embed.R. The width abort was documented for `simplify = FALSE`, where the code skips it. The re-read found all corrections true.
+- 2026-09-28: amendment (user gate): AC5 narrowed so the width abort of AC4 does not apply with `simplify = FALSE`, and AC4 opens with "With `simplify = TRUE`". The code was kept, and three `simplify = FALSE` tests were added: the all-failed abort, a lost server, and two widths with no abort.
+- 2026-09-28: re-audit: AC5 (full) — 6 findings, all clear fixes: full-length `results` list, untested lost-server and all-failed cases, "unchecked" overstated, AC4 needed a `simplify = TRUE` scope, help text, and the missing two-width test.
+- 2026-09-28: re-audit: AC4 (full) — probe wording read as one status for the family, fixed to name each of 401, 403, and 404. Two judgments not taken: a no-`results` clause before any success, and an AC3 note on the width abort.
+- 2026-09-28: re-audit: AC5 (full) — "as long as the requests" fixed to one slot per batch, and the warning added to the test list. This second line is the stop for AC5, so the final wording went to the user, who accepted it.
+- 2026-09-28: implement complete, status review. `devtools::test()` clean, `devtools::document()` no diff, and `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes. LM Studio was left as found, with the server stopped and gemma-3-1b loaded.
 
 ## Decisions
 

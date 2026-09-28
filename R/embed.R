@@ -55,11 +55,14 @@
 #' `quiet = TRUE`. If every request fails, the call aborts with the condition
 #' of the first failed request, and no warning is given.
 #'
-#' Three faults end the call at once, and no request goes out after them:
-#' a server that the check before a request finds gone, an
-#' `rlmstudio_api_error` with `status` 401, 403, or 404, and a request whose
-#' embeddings have another number of dimensions than those of an earlier
-#' request. The last one aborts with `rlmstudio_bad_response`. Each abort
+#' Two faults end the call at once, and no request goes out after them: a
+#' server that the check before a request finds gone, and an
+#' `rlmstudio_api_error` with `status` 401, 403, or 404. With
+#' `simplify = TRUE`, a third fault does the same: a request whose embeddings
+#' have another number of dimensions than those of an earlier request. It
+#' aborts with `rlmstudio_bad_response`. With `simplify = FALSE`, the bodies
+#' do not go through the matrix checks, so bodies of two widths are returned
+#' with no abort. Each abort
 #' after a request that succeeded carries a `results` field. With
 #' `simplify = TRUE`, it is the matrix so far, with `NA` in each row whose
 #' embedding did not arrive. With `simplify = FALSE`, it is the list so far,
@@ -108,8 +111,8 @@ lms_embed <- function(
   has_token <- !is.null(rlm_token(token))
 
   # Consecutive runs of at most `batch_size` inputs, in input order. The size
-  # can be larger than any R integer range the input reaches, so the ends are
-  # computed as doubles and cut back to the input length.
+  # can be as large as `.Machine$integer.max`, where integer sums overflow, so
+  # the ends are computed as doubles and cut back to the input length.
   n <- length(input)
   starts <- seq(1, n, by = batch_size)
   batches <- lapply(starts, function(s) seq.int(s, min(s + batch_size - 1, n)))
@@ -137,7 +140,7 @@ lms_embed <- function(
   # A lost server or a fault that holds for every request ends the call, as
   # in `lms_chat_batch()` (D-011, D-019). Once a request has succeeded, the
   # condition carries what the call has so far, so a long run does not lose
-  # it. Before that there is nothing to keep, and the condition is unchanged.
+  # it. Before that no vectors have arrived, and the condition is unchanged.
   abort_with_results <- function(cnd) {
     if (any_ok) {
       cnd$results <- if (isTRUE(simplify)) out else bodies
@@ -165,8 +168,9 @@ lms_embed <- function(
 
   for (b in seq_along(batches)) {
     rows <- batches[[b]]
-    # The probe before the first request ran above. A server that stops
-    # between two requests would otherwise fail every later request in turn.
+    # The probe before the first request ran above. Without this one, a
+    # server that stops between two requests makes the next request abort
+    # with an `httr2_failure` that carries no `results`.
     if (b > 1L) {
       tryCatch(
         stop_if_no_server(host),

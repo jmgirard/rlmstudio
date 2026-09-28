@@ -56,8 +56,9 @@
 #' server gone, the call aborts with `rlmstudio_no_server`. Once a request has
 #' succeeded, the condition carries a `results` field. With `simplify = TRUE`,
 #' `results` is a matrix with `NA` in each row whose embedding did not arrive.
-#' With `simplify = FALSE`, it is a list with one element per request and
-#' `NULL` from the request not sent on.
+#' With `simplify = FALSE`, it is a list with one element per batch, with
+#' `NULL` in the element of the request that ended the call and in every
+#' element after it.
 #'
 #' @section API failure:
 #' A condition of class `rlmstudio_api_error` is raised when a REST call

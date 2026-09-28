@@ -593,7 +593,7 @@ test_that("lms_embed sends no Authorization header without a token", {
 # The batch size ------------------------------------------------------------
 
 # Each value is a fault of a different kind: no value, a missing value of two
-# types, a value of the wrong type, two values, and five numbers out of range
+# types, two values of the wrong type, two values, and five numbers out of range
 # or not whole.
 batch_size_bad_values <- list(
   NULL,
@@ -1036,4 +1036,65 @@ test_that("live: batches of two give the vectors of one request", {
 
   expect_identical(dim(batched), c(5L, ncol(one)))
   expect_lt(max(abs(batched - one)), 1e-6)
+})
+
+
+# simplify = FALSE: the aborts that apply and the one that does not -------------
+
+test_that("with simplify = FALSE, every batch failing aborts with the first", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  # A reply with too few vectors is not a failure here, because this form
+  # skips the matrix checks, so both requests fail on status.
+  local_request_sequence(list(error_reply(500L), error_reply(400L)))
+
+  err <- expect_no_warning(
+    tryCatch(
+      lms_embed(
+        "test-embed",
+        paste("text", 1:4),
+        simplify = FALSE,
+        batch_size = 2
+      ),
+      error = identity
+    )
+  )
+  expect_s3_class(err, "rlmstudio_api_error")
+  expect_identical(err$status, 500L)
+  expect_false("results" %in% names(err))
+})
+
+test_that("with simplify = FALSE, a lost server carries the list so far", {
+  probe <- new.env(parent = emptyenv())
+  probe$calls <- 0L
+  local_mocked_bindings(
+    is_server_running = function(...) {
+      probe$calls <- probe$calls + 1L
+      probe$calls < 2L
+    }
+  )
+  local_request_sequence(list(batch_reply(1:2)))
+
+  err <- expect_error(
+    lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(
+    err$results,
+    list(httr2::resp_body_json(batch_reply(1:2)), NULL, NULL)
+  )
+})
+
+test_that("with simplify = FALSE, bodies of two widths come back with no abort", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  replies <- list(
+    batch_reply(1:2),
+    batch_reply(3:4, width = 4L),
+    batch_reply(5)
+  )
+  local_request_sequence(replies)
+
+  out <- expect_no_error(
+    lms_embed("test-embed", five_inputs, simplify = FALSE, batch_size = 2)
+  )
+  expect_identical(out, lapply(replies, httr2::resp_body_json))
 })

@@ -86,8 +86,9 @@ at most \code{batch_size} inputs. If a check after the first request finds the
 server gone, the call aborts with \code{rlmstudio_no_server}. Once a request has
 succeeded, the condition carries a \code{results} field. With \code{simplify = TRUE},
 \code{results} is a matrix with \code{NA} in each row whose embedding did not arrive.
-With \code{simplify = FALSE}, it is a list with one element per request and
-\code{NULL} from the request not sent on.
+With \code{simplify = FALSE}, it is a list with one element per batch, with
+\code{NULL} in the element of the request that ended the call and in every
+element after it.
 }
 
 \section{API failure}{

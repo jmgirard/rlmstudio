@@ -84,11 +84,14 @@ count and the positions of the failed inputs. That warning shows even with
 \code{quiet = TRUE}. If every request fails, the call aborts with the condition
 of the first failed request, and no warning is given.
 
-Three faults end the call at once, and no request goes out after them:
-a server that the check before a request finds gone, an
-\code{rlmstudio_api_error} with \code{status} 401, 403, or 404, and a request whose
-embeddings have another number of dimensions than those of an earlier
-request. The last one aborts with \code{rlmstudio_bad_response}. Each abort
+Two faults end the call at once, and no request goes out after them: a
+server that the check before a request finds gone, and an
+\code{rlmstudio_api_error} with \code{status} 401, 403, or 404. With
+\code{simplify = TRUE}, a third fault does the same: a request whose embeddings
+have another number of dimensions than those of an earlier request. It
+aborts with \code{rlmstudio_bad_response}. With \code{simplify = FALSE}, the bodies
+do not go through the matrix checks, so bodies of two widths are returned
+with no abort. Each abort
 after a request that succeeded carries a \code{results} field. With
 \code{simplify = TRUE}, it is the matrix so far, with \code{NA} in each row whose
 embedding did not arrive. With \code{simplify = FALSE}, it is the list so far,
@@ -148,8 +151,9 @@ at most \code{batch_size} inputs. If a check after the first request finds the
 server gone, the call aborts with \code{rlmstudio_no_server}. Once a request has
 succeeded, the condition carries a \code{results} field. With \code{simplify = TRUE},
 \code{results} is a matrix with \code{NA} in each row whose embedding did not arrive.
-With \code{simplify = FALSE}, it is a list with one element per request and
-\code{NULL} from the request not sent on.
+With \code{simplify = FALSE}, it is a list with one element per batch, with
+\code{NULL} in the element of the request that ended the call and in every
+element after it.
 }
 
 \section{API failure}{
