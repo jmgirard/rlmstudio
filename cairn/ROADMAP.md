@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-27 (M037 done and archived, M034 row pruned)_
+_Last hygiene check: 2026-09-27 (M038 done and archived, M035 row pruned, one candidate row added)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-27 (M037 done and archived, M034 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M038 | The OpenAI chat function refuses a messages value it cannot send as a list of messages | review | none | normal | milestones/M038-openai-messages-guard.md |
+| M038 | The OpenAI chat function refuses a messages value it cannot send as a list of messages | done | none | normal | milestones/archive/M038-openai-messages-guard.md |
 | M037 | The chat functions refuse a stream field before any request | done | none | normal | milestones/archive/M037-chat-stream-guard.md |
 | M036 | The chat completions help says that a reply is read from its first choice | done | none | normal | milestones/archive/M036-openai-first-choice.md |
-| M035 | A chat completions reply that the token limit cut off no longer passes as complete | done | none | normal | milestones/archive/M035-openai-cut-off-reply.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
