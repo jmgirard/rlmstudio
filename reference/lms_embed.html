@@ -163,6 +163,18 @@ with <code>NULL</code> in the element of the request that ended the call and in 
 element after it. An abort before any
 request succeeded carries no <code>results</code> field. An error of any other class
 aborts the call unchanged.</p>
+<p>On LM Studio 0.4.25+1, the server embeds only the first tokens of each
+text, up to the context length of the loaded model instance. For a text
+longer than that, it still returns a vector, with no error or warning, and
+the vector covers only the start of the text. The <code>usage</code> field of the
+reply reported 0 tokens on that version, so the count does not show the
+cut. The <code>loaded_instances</code> column of <code>list_models(detailed = TRUE)</code> gives
+the <code>context_length</code> of each loaded instance. To embed all of a long text,
+split it into pieces before the call. Or unload the model with
+<code><a href="lms_unload.html">lms_unload()</a></code> and load it again with a larger <code>context_length</code> through
+<code><a href="lms_load.html">lms_load()</a></code>, up to the <code>max_context_length</code> column of
+<code>list_models(detailed = TRUE)</code>. For a model that is already loaded,
+<code><a href="lms_load.html">lms_load()</a></code> does not load it again.</p>
     </div>
     <div class="section level2">
     <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>

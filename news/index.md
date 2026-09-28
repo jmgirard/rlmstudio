@@ -2,6 +2,16 @@
 
 ## rlmstudio (development version)
 
+- The
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  help page now describes a limit of LM Studio 0.4.25+1. The server
+  embeds only the first tokens of each text, up to the context length of
+  the loaded model instance. A longer text returns a vector for its
+  start, with no error or warning, and the reply reported 0 tokens on
+  that version. The page names two ways to avoid the cut. One is to
+  split a long text before the call. The other is to unload the model
+  and load it again with a larger `context_length`.
+
 - [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
   now sends its input in batches, one request for each run of at most
   `batch_size` texts. The default `batch_size` is 100. A new `quiet`
