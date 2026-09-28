@@ -5,6 +5,8 @@
   * A 401, 403, or 404 and a server lost between requests abort the call. With `simplify = TRUE`, so does a batch whose embeddings have another width. After a request that succeeded, the condition carries a `results` field. It holds the matrix so far, with `NA` rows. With `simplify = FALSE`, it holds the list of bodies so far.
   * With `simplify = FALSE`, `lms_embed()` now returns a list of parsed bodies, one per request. A call with one request returns a list of one. Before, it returned the body itself.
 
+* The `lms_embed()` help page now describes a limit of LM Studio 0.4.25+1. The server embeds only the first tokens of each text, up to the context length of the loaded model. A longer text returns a vector for its start, with no error or warning, and the reply reports 0 tokens. The page names two ways to avoid the cut. You can split a long text before the call. You can also load the model with a larger `context_length`.
+
 * `lms_chat_openai()` no longer counts a matrix or array column of a `messages` data frame as empty in a row that holds no cells of it. An example is a row of a 2-by-0 matrix. jsonlite writes that row of the column as `[]`, or as nested empty arrays such as `[[],[],[]]`. Before, a row in which every other cell was `NA` aborted with "You gave a data frame with a row in which every cell is NA or a NULL list cell."
   * If the column is an atomic matrix or array with no class attribute, or a list matrix, such a row is now sent. If a data-frame column holds such a matrix, the row is also sent, as `{"m":[]}`.
   * A list array of three or more dimensions now aborts with the error for a list with a `dim` attribute.
