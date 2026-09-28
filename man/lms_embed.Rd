@@ -100,6 +100,15 @@ with \code{NULL} in the element of the request that ended the call and in every
 element after it. An abort before any
 request succeeded carries no \code{results} field. An error of any other class
 aborts the call unchanged.
+
+On LM Studio 0.4.25+1, the server embeds only the first tokens of each
+text, up to the context length of the loaded model instance. For a text
+longer than that, it still returns a vector, with no error or warning, and
+the vector covers only the start of the text. The \code{usage} field of the
+reply reported 0 tokens on that version, so the count does not show the
+cut. To embed all of a long text, split it into pieces before the call. Or
+load the model with a larger \code{context_length} through \code{\link[=lms_load]{lms_load()}}, up to
+the \code{max_context_length} column of \code{list_models(detailed = TRUE)}.
 }
 \section{Server not running}{
 

@@ -61,7 +61,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
       Assert the AC2 cases, with `expect_no_warning()` around the call. Run it live and record that it ran and did
       not skip, which is the review evidence for AC2. Plant a defect, such as a shared start of 10 words, and see
       it fail.
-- [ ] T3: Add the AC1 paragraph to the `@details` of `R/embed.R`, written against the probe record from T1. Run
+- [x] T3: Add the AC1 paragraph to the `@details` of `R/embed.R`, written against the probe record from T1. Run
       `devtools::document()`.
 - [ ] T4: Add a NEWS.md bullet under the development version that says what the help page now documents.
 - [ ] T5: Run `devtools::test()`. Then run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server
@@ -76,6 +76,8 @@ package cannot count tokens, so both go to one candidate row that names the evid
 - 2026-09-28: implement started on branch m048-embed-context-cut. The question gate was skipped, because the plan left no choice open.
 - 2026-09-28: T1 done. The probe facts are an "Embedding context cut" entry in `cairn/references/lmstudio-api-surface.md`, dated and with the LM Studio version.
 - 2026-09-28: T2 done. The live test ran against LM Studio 0.4.25+1 with nomic loaded at 2048 tokens. It did not skip and passed 4 expectations. With a planted shared start of 10 words, the same-vector check failed with a difference of 0.090. The session loaded nomic and started the server for the run.
+- 2026-09-28: `devtools::test()` passed 464 tests with 0 failures and 0 skips. The Full Integration test unloaded `google/gemma-3-1b`, as the candidate row says. The session reloads it at the end.
+- 2026-09-28: T3 done. The `@details` of `R/embed.R` has the AC1 paragraph, and `devtools::document()` rewrote `man/lms_embed.Rd`.
 
 ## Decisions
 
