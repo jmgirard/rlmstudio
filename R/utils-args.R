@@ -905,7 +905,11 @@ empty_rows <- function(value) {
       column_empty <- if (
         !is.null(column_dim) && column_dim[[1L]] == nrow(value)
       ) {
-        apply(cell_empty, 1L, all)
+        if (prod(column_dim[-1L]) == 0) {
+          rep(FALSE, nrow(value))
+        } else {
+          apply(cell_empty, 1L, all)
+        }
       } else {
         cell_empty
       }

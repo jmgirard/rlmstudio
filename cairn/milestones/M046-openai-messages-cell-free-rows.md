@@ -90,7 +90,7 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
       Commit `a1fb74e` of the deleted first M044 branch holds a draft of
       both, if git still keeps it. Confirm that the AC1 test is red and the
       AC2 test is green before T2.
-- [ ] T2: In `empty_rows()`, return `FALSE` for each row of a `dim` column
+- [x] T2: In `empty_rows()`, return `FALSE` for each row of a `dim` column
       whose extents after the first multiply to zero. Plant the old
       `apply()` path back in a scratch copy and see the AC1 test go red.
 - [ ] T3: Update the `messages` help in `R/chat.R` (about line 288), the
@@ -105,6 +105,7 @@ first M044 plan gate, and M040's recursion stays. RR01 finding B2 and the
 - 2026-09-28: criteria audit (full mode, fresh [O] reader) passed AC1 and AC4. AC2 now says that the cell in row 2, not the row, is written `{}`, and it gained a nested data frame with no columns, written `{"m":{}}`, which the recursion also counts as empty. Test names moved to T1.
 - 2026-09-28: implement started on branch m046-openai-messages-cell-free-rows. The plan left no choice open, so no question gate ran.
 - 2026-09-28: T1 done. The tests come from draft `a1fb74e`. They add the nested data frame with no columns and check that jsonlite writes each row-2 cell as AC2 states. The AC1 test is red with the empty-row detail. The AC2 test is green.
+- 2026-09-28: T2 done. `empty_rows()` returns `FALSE` for each row of a `dim` column whose extents after the first multiply to zero. With the old `empty_rows()` put back through `assignInNamespace()`, the AC1 test was red with the empty-row detail. With the fix, its 12 expectations passed, and `devtools::test()` passed with no failure or skip.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
