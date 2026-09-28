@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M043: The OpenAI chat function refuses a messages value that holds a value that is not an atomic vector, a list, or NULL
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP3, GP4   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it adds a refusal to an exported function and changes its help and error text   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m043-openai-messages-non-vector-values   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -45,6 +45,9 @@ candidate row on such values closes with this milestone.
   not tested. No candidate row, because neither is a realistic field.
 - A list-of-fields S3 class with no `as.list()` method (RR01 B2). RR01
   rejects work on it.
+- A `POSIXlt` field passes every `messages` rule, but httr2 recurses
+  without end when it builds the body. It is a candidate row for
+  `/hotfix` (amended 2026-09-28).
 
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
@@ -76,8 +79,7 @@ candidate row on such values closes with this milestone.
   `messages` rule and reaches the request. The recorded body equals the
   sent form that the test states for it. The values:
   - a `NULL` field, and a `NULL` cell of a list column
-  - a factor field, a `Date` field, a `POSIXct` column, and a `POSIXlt`
-    field
+  - a factor field, a `Date` field, and a `POSIXct` column
   - a field wrapped in `I()`, and an atomic matrix field
   - a list-matrix column, and a data-frame column
   - a field that is an object of an S4 class that contains `"numeric"`
@@ -117,7 +119,7 @@ candidate row on such values closes with this milestone.
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Write the tests first in `tests/testthat/test-arg-guards.R`. Add
+- [x] T1: Write the tests first in `tests/testthat/test-arg-guards.R`. Add
   the new detail as `rule13` in `messages_rule_details` (line 847) and to
   `messages_value_rules`. Add the AC1 grid, the AC2 pass list, and the
   AC3 order cases. Build frame positions with `structure()`, because
@@ -151,6 +153,10 @@ candidate row on such values closes with this milestone.
 - 2026-09-28: The plan gate chose a detail that names `typeof()` over fixed text, because it tells the user which value is wrong. Falsified by a user report that the type name misleads, such as "S4" for a reference-class object.
 - 2026-09-28: The plan gate kept the function rule and its detail ahead of the new rule over one merged rule. The function detail says that jsonlite sends source text. Falsified by a user who reads the two details as one fault.
 - 2026-09-28: The same [O] reader re-audited the changed criteria in full mode and returned no findings. Its probes built the 30 new-position cases and the 11 AC2 pass values with no error or warning.
+- 2026-09-28: set in-progress on branch m043-openai-messages-non-vector-values. No implementation choice was open, so the question gate was skipped.
+- 2026-09-28: T1 found that `httr2::req_dry_run()` on a body with a `POSIXlt` field fails with "evaluation nested too deeply: infinite recursion", on main too. The mini gate chose to drop that value from AC2, so AC2 now lists 10 pass values. The crash became a candidate row for `/hotfix`. The rejected option was a fix inside M043, which widens the milestone.
+- 2026-09-28: re-audit: AC2 (full) — two findings. The gate accepted the Out bullet for the dropped `POSIXlt` field. It rejected a sent form derived from `jsonlite::toJSON()`, because such a form is derived from the artifact under test and cannot fail. The clause is unchanged by the amendment.
+- 2026-09-28: T1 done. The AC1 grid, the AC2 pass list, and the AC3 order test are in `test-arg-guards.R`, and `rule13` is in the detail table. The two probes with an environment or `quote()` field now expect `rule13`. `sent_messages()` moved up the file so that the pass test can use it. On main code, the grid, order, and probe tests fail with the jsonlite-write detail (red for the right reason), and the pass test passes.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

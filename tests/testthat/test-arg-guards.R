@@ -856,12 +856,23 @@ messages_rule_details <- c(
   rule9 = "You gave a message, or a list or data frame inside one, with a name that is NA, empty, or repeated.",
   rule10 = "You gave a value that jsonlite cannot write:",
   rule11 = "You gave a list with a dim attribute inside a message, such as a list-matrix field.",
-  rule12 = "You gave a field value that is a function, which jsonlite would send as its source text."
+  rule12 = "You gave a field value that is a function, which jsonlite would send as its source text.",
+  rule13 = "You gave a field value of type \""
 )
 
-# The function rule and the trial-write rule report a value fault under their
-# own header, with no hint. Every other rule reports a shape fault.
-messages_value_rules <- c("rule10", "rule12")
+# The detail of rule13 in full, for a value of the given type.
+non_vector_detail <- function(type) {
+  paste0(
+    "You gave a field value of type \"",
+    type,
+    "\", which is not an atomic vector, a list, or NULL."
+  )
+}
+
+# The function rule, the non-vector rule, and the trial-write rule report a
+# value fault under their own header, with no hint. Every other rule reports
+# a shape fault.
+messages_value_rules <- c("rule10", "rule12", "rule13")
 messages_headers <- c(
   shape = "`messages` must be a data frame or an unnamed list of messages.",
   value = "`messages` holds a field value that cannot be sent as JSON."
@@ -1157,12 +1168,12 @@ messages_probes <- list(
   list(
     label = "an environment field",
     value = list(list(role = "user", content = new.env())),
-    rule = "rule10"
+    rule = "rule13"
   ),
   list(
     label = "a quote() field",
     value = list(list(role = "user", content = quote(x))),
-    rule = "rule10"
+    rule = "rule13"
   ),
   # A NULL list cell is written as null, the same as an NA cell.
   list(
@@ -1456,6 +1467,289 @@ test_that("a function column aborts with no warning on the way", {
       )
     )
   }
+  expect_identical(probe$calls, 0L)
+})
+
+# Each kind below is neither an atomic vector, a list, nor NULL. The last
+# five carry a class set by hand. jsonlite writes each of those five as
+# printed text or null, so the trial write alone does not refuse them. The
+# kinds are built fresh for each case, because a class set on an environment
+# or an external pointer changes the object in place.
+non_vector_kinds <- function() {
+  class_env <- new.env()
+  generator <- methods::setClass(
+    "rlmstudioM043Probe",
+    representation(v = "numeric"),
+    where = class_env
+  )
+  ref_generator <- methods::setRefClass(
+    "rlmstudioM043RefProbe",
+    fields = list(v = "numeric"),
+    where = class_env
+  )
+  methods::setClass(
+    "rlmstudioM043Slotted",
+    representation(v = "numeric"),
+    where = class_env
+  )
+  list(
+    "an environment" = function() new.env(),
+    "a symbol" = function() quote(x),
+    "a call" = function() quote(f(x)),
+    "a formula" = function() y ~ x,
+    "an expression vector" = function() expression(1),
+    "an external pointer" = function() methods::new("externalptr"),
+    "an S4 object" = function() generator(v = 1),
+    "a reference-class object" = function() ref_generator(v = 1),
+    "a class definition with a slot" = function() {
+      methods::getClass("rlmstudioM043Slotted", where = class_env)
+    },
+    "a class definition with no slot" = function() methods::getClass("numeric"),
+    "an environment with class POSIXt" = function() {
+      structure(new.env(), class = "POSIXt")
+    },
+    "an environment with class classRepresentation" = function() {
+      structure(new.env(), class = "classRepresentation")
+    },
+    "a call with class function" = function() {
+      structure(quote(f(x)), class = "function")
+    },
+    "an expression vector with class json" = function() {
+      structure(expression(1), class = "json")
+    },
+    "an external pointer with class NULL" = function() {
+      structure(methods::new("externalptr"), class = "NULL")
+    }
+  )
+}
+
+# Each position puts a value somewhere the walk must reach. `$<-` refuses
+# an environment in a frame with rows, so a frame that holds the value as a
+# column is built with structure().
+one_row_frame <- function(first, value) {
+  structure(
+    list(first, value),
+    names = c("role", "x"),
+    class = "data.frame",
+    row.names = 1L
+  )
+}
+non_vector_positions <- list(
+  "a field of a list message" = function(v) {
+    list(list(role = "user", content = v))
+  },
+  "an element of a list below a field" = function(v) {
+    list(list(role = "user", content = list(list(type = "text", data = v))))
+  },
+  "a column of a data-frame messages whose other cell is NA" = function(v) {
+    one_row_frame(NA_character_, v)
+  },
+  "a column of a data-frame column" = function(v) {
+    df <- data.frame(role = "user")
+    df$sub <- one_row_frame("a", v)
+    df
+  },
+  "a cell of a list column" = function(v) {
+    df <- data.frame(role = "user")
+    df$x <- list(v)
+    df
+  },
+  "a cell of a list-matrix column" = function(v) {
+    df <- data.frame(role = "user")
+    df$m <- matrix(list(v, "a"), 1)
+    df
+  },
+  "a column of a data-frame field of a list message" = function(v) {
+    list(list(role = "user", content = one_row_frame("a", v)))
+  }
+)
+
+test_that("a value that is not a vector, a list, or NULL aborts with its own detail", {
+  probe <- local_counting_probe()
+  kinds <- non_vector_kinds()
+  n_cases <- 0L
+
+  for (kind in names(kinds)) {
+    for (position in names(non_vector_positions)) {
+      value <- kinds[[kind]]()
+      type <- typeof(value)
+      label <- paste(kind, "as", position)
+      messages <- non_vector_positions[[position]](value)
+      err <- expect_no_warning(
+        expect_error(
+          lms_chat_openai("a-model", messages),
+          non_vector_detail(type),
+          fixed = TRUE,
+          info = label
+        )
+      )
+      expect_true(
+        startsWith(conditionMessage(err), messages_headers[["value"]]),
+        info = label
+      )
+      expect_no_match(
+        conditionMessage(err),
+        messages_rule_details[["rule10"]],
+        fixed = TRUE,
+        info = label
+      )
+      n_cases <- n_cases + 1L
+    }
+  }
+  expect_identical(n_cases, 105L)
+  expect_identical(probe$calls, 0L)
+})
+
+# The messages field of the body a captured request sends, parsed back with no
+# simplification, so a list of objects stays a list of lists.
+sent_messages <- function(req) {
+  require_httpuv()
+  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  jsonlite::parse_json(rawToChar(out$body), simplifyVector = FALSE)$messages
+}
+
+# The rule reads the storage type, so each value below passes it. The sent
+# form of each is stated here, as jsonlite writes it with the request's
+# options. An S4 object whose class contains "numeric" is atomic, and
+# jsonlite writes its data part.
+test_that("values the non-vector rule passes reach the request", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  class_env <- new.env()
+  numeric_generator <- methods::setClass(
+    "rlmstudioM043Numeric",
+    contains = "numeric",
+    where = class_env
+  )
+  field <- function(v) list(list(role = "user", content = v))
+  column <- function(name, v) {
+    df <- data.frame(role = "user")
+    df[[name]] <- v
+    df
+  }
+
+  cases <- list(
+    list(
+      label = "a NULL field",
+      value = field(NULL),
+      sent = list(list(role = "user", content = NULL))
+    ),
+    list(
+      label = "a NULL cell of a list column",
+      value = local({
+        df <- data.frame(role = "user")
+        df$c <- I(list(NULL))
+        df
+      }),
+      sent = list(list(role = "user", c = NULL))
+    ),
+    list(
+      label = "a factor field",
+      value = field(factor("a")),
+      sent = list(list(role = "user", content = "a"))
+    ),
+    list(
+      label = "a Date field",
+      value = field(as.Date("2026-01-01")),
+      sent = list(list(role = "user", content = "2026-01-01"))
+    ),
+    list(
+      label = "a POSIXct column",
+      value = column("t", as.POSIXct("2026-01-01", tz = "UTC")),
+      sent = list(list(role = "user", t = "2026-01-01"))
+    ),
+    list(
+      label = "a field wrapped in I()",
+      value = field(I("x")),
+      sent = list(list(role = "user", content = list("x")))
+    ),
+    list(
+      label = "an atomic matrix field",
+      value = field(matrix(1:4, 2)),
+      sent = list(list(
+        role = "user",
+        content = list(list(1L, 3L), list(2L, 4L))
+      ))
+    ),
+    list(
+      label = "a list-matrix column",
+      value = column("m", matrix(list(1, "a"), 1)),
+      sent = list(list(role = "user", m = list(list(1L), list("a"))))
+    ),
+    list(
+      label = "a data-frame column",
+      value = column("sub", data.frame(a = 1)),
+      sent = list(list(role = "user", sub = list(a = 1L)))
+    ),
+    list(
+      label = "an S4 object whose class contains numeric",
+      value = field(numeric_generator(1)),
+      sent = list(list(role = "user", content = 1L))
+    )
+  )
+
+  for (case in cases) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", case$value), message = NULL)
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      case$sent,
+      info = case$label
+    )
+  }
+})
+
+# The non-vector rule runs after the function rule and before the trial
+# write, and a value with no shape fault reaches it past the empty-row rule.
+test_that("the non-vector rule sits between the function rule and the trial write", {
+  probe <- local_counting_probe()
+  expect_value_fault <- function(messages, detail, label) {
+    err <- expect_error(
+      lms_chat_openai("a-model", messages),
+      detail,
+      fixed = TRUE,
+      info = label
+    )
+    expect_true(
+      startsWith(conditionMessage(err), messages_headers[["value"]]),
+      info = label
+    )
+    err
+  }
+
+  expect_value_fault(
+    list(list(role = "user", f = function() "x", e = new.env())),
+    messages_rule_details[["rule12"]],
+    "a function field before an environment field"
+  )
+  expect_value_fault(
+    list(list(role = "user", e = new.env(), f = function() "x")),
+    messages_rule_details[["rule12"]],
+    "an environment field before a function field"
+  )
+  err <- expect_value_fault(
+    list(list(
+      role = "user",
+      content = structure("x", class = "foo"),
+      e = new.env()
+    )),
+    non_vector_detail("environment"),
+    "a foo-classed field and an environment field"
+  )
+  expect_no_match(
+    conditionMessage(err),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  err <- expect_value_fault(
+    one_row_frame(NA_character_, new.env()),
+    non_vector_detail("environment"),
+    "a row that is NA apart from an environment column"
+  )
+  expect_no_match(
+    conditionMessage(err),
+    messages_rule_details[["rule6"]],
+    fixed = TRUE
+  )
   expect_identical(probe$calls, 0L)
 })
 
@@ -1771,14 +2065,6 @@ test_that("a column with a dim attribute is read row by row", {
     }
   }
 })
-
-# The messages field of the body a captured request sends, parsed back with no
-# simplification, so a list of objects stays a list of lists.
-sent_messages <- function(req) {
-  require_httpuv()
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
-  jsonlite::parse_json(rawToChar(out$body), simplifyVector = FALSE)$messages
-}
 
 first_msg <- list(role = "system", content = "Be brief.")
 later_msg <- list(role = "user", content = "hi")
