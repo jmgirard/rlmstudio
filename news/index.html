@@ -40,6 +40,12 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rlmstudio-development-version">rlmstudio (development version)<a class="anchor" aria-label="anchor" href="#rlmstudio-development-version"></a></h2>
 <ul><li>
+<p><code><a href="../reference/lms_chat_openai.html">lms_chat_openai()</a></code> now refuses two more kinds of <code>messages</code> value before the check for a running server. The errors have no condition class.</p>
+<ul><li>A list with a <code>dim</code> attribute inside a message aborts, such as a list-matrix as a field or in a list-column cell. So does a list column of a data frame with one, three, or more dimensions. Before, jsonlite sent such a list as nested arrays with each cell in an array of its own. A one-dimensional list column with more than one row was refused before too, with a jsonlite error. An atomic matrix field and a list-matrix column are still sent.</li>
+<li>A function anywhere inside <code>messages</code> aborts, such as a field, a data-frame column, or a list-column cell. Before, jsonlite sent the function’s source text.</li>
+<li>Two errors get a new header, “<code>messages</code> holds a field value that cannot be sent as JSON.” They are the error for a function and the error for a value that jsonlite cannot write. They no longer show the form of a message. Before, it opened with “<code>messages</code> must be a data frame or an unnamed list of messages.” The other <code>messages</code> errors keep that header.</li>
+</ul></li>
+<li>
 <p><code><a href="../reference/lms_chat_openai.html">lms_chat_openai()</a></code> now refuses more <code>messages</code> values before the check for a running server. The errors have no condition class.</p>
 <ul><li>A data frame row whose cells are all <code>NA</code> or <code>NULL</code> list cells aborts. Before, it was sent as a message with <code>null</code> fields. A row with a <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> or <code>list(NA)</code> cell is still sent.</li>
 <li>A list of messages with a <code>dim</code> attribute, such as a matrix of messages, aborts. So does a message that is a list with a <code>dim</code> attribute. Before, a matrix was sent flat in column order, and such a message was sent with each field in an array.</li>

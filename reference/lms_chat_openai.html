@@ -94,9 +94,15 @@ cell is sent as <code>[]</code> and a <code>list(NA)</code> cell as <code>[null]
 such a cell is sent. A matrix or data-frame column counts as empty in
 a row when each of its cells in that row is empty.</p></li>
 <li><p><code>messages</code>, when it is a list and not a data frame, has no <code>dim</code>
-attribute, such as a matrix or an array of messages. A list with a
-<code>dim</code> inside a message is not checked.</p></li>
+attribute, such as a matrix or an array of messages.</p></li>
 <li><p>A message that is a list has no <code>dim</code> attribute.</p></li>
+<li><p>No list inside a message has a <code>dim</code> attribute. The rule reads each
+field, each list at any depth below a field, and each cell of a list
+column. jsonlite would send such a list as nested arrays with each
+cell in an array of its own. A list column of a data frame with one,
+three, or more dimensions also breaks this rule. An atomic matrix
+field is sent as an array of arrays. A list-matrix column of any data
+frame is sent, one row of cells for each message.</p></li>
 <li><p>No message, and no list or data frame inside a message or inside a
 cell or column of a data frame, has a name that is <code>NA</code>, empty, or
 repeated. jsonlite would send an <code>NA</code> or empty name as a number and
@@ -104,6 +110,14 @@ rename a repeated name <code>a</code> to <code>a.1</code>. A list with no names 
 names of a list column are not checked, because they are not sent.
 The names of an atomic vector and the column names of a matrix are
 not checked, because jsonlite sends those values as arrays.</p></li>
+</ul><p>The error for each rule above opens with "<code>messages</code> must be a data
+frame or an unnamed list of messages." and shows the form of a message.
+Two more rules are checked after them. Their error opens with
+"<code>messages</code> holds a field value that cannot be sent as JSON." and shows
+no form:</p><ul><li><p>No function sits inside <code>messages</code>: not as a field, in a list below a
+field, as a column of a data frame, or in a cell of a list column.
+jsonlite would send a function as its source text. A function with a
+class gets the error of this rule, not the error of the next one.</p></li>
 <li><p>jsonlite can write the value, with the options that the request uses.
 If it cannot, the error gives the jsonlite message. This rule is
 checked last.</p></li>
@@ -113,9 +127,10 @@ field inside a message is kept, so a field wrapped in <code><a href="https://rdr
 array. A data frame and its columns keep their classes. A kept class that
 jsonlite has no method for, such as a field with the class <code>"foo"</code> alone,
 breaks the last rule.</p>
-<p>The package checks the shape of <code>messages</code> and whether jsonlite can
-write it. It does not check the values of the roles, the content, or any
-other field of a message. The server checks them.</p></dd>
+<p>The package checks the shape of <code>messages</code>. Of the field values, it
+refuses a function and a value that jsonlite cannot write. It does not
+check any other value of a role, the content, or another field of a
+message. The server checks them.</p></dd>
 
 
 <dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
