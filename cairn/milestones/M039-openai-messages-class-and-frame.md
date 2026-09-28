@@ -92,7 +92,7 @@ list message stay unchecked, because no finding reported them.
       value with its class removed at the two levels. Leave a data frame
       alone. Plant a regression: remove the class removal, and make sure
       that the AC1 tests go red.
-- [ ] T3: Add the two data-frame rules to `messages_fault()`
+- [x] T3: Add the two data-frame rules to `messages_fault()`
       (`R/utils-args.R:366`), ahead of the `nrow()` return. Plant a wrong
       detail text and make sure that the rule test goes red.
 - [ ] T4: Update the `messages` help at `R/chat.R:268-282` and add a NEWS
@@ -108,3 +108,4 @@ list message stay unchecked, because no finding reported them.
 - 2026-09-27: plan gate chose to refuse repeated column names over leaving them to jsonlite, because jsonlite renames them without a message; falsified by a user who relies on the `.1` rename.
 - 2026-09-27: T1 done. The new probes and pass cases are in `tests/testthat/test-arg-guards.R`. On main, the rule test fails at the first data-frame probe, which reaches the server probe, and the pass test fails in jsonlite at the first classed list. The below-level test passes on main, as it must. The test-first red is expected until T2 and T3.
 - 2026-09-27: T2 done. `unclass_messages()` in `R/utils-args.R` removes the class of the outer list and of each message, and `lms_chat_openai()` builds the body from it after the check. Two plants went red: with no removal, the pass test failed in jsonlite, and with a removal one level deeper, the `I()` field case and the below-level test failed. The rule test stays red until T3.
+- 2026-09-27: T3 done. `data_frame_messages_fault()` in `R/utils-args.R` applies the column rule, then the empty-row rule, which counts the cells that are not `NA` per row. Two plants went red: a wrong detail text, and the empty-row rule placed first, which gave the zero-column probe the wrong text. `devtools::test()` passes.

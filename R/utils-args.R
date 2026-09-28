@@ -391,7 +391,7 @@ messages_fault <- function(value) {
     if (nrow(value) == 0L) {
       return("You gave no messages.")
     }
-    return(NULL)
+    return(data_frame_messages_fault(value))
   }
   if (length(value) == 0L) {
     return("You gave no messages.")
@@ -405,6 +405,33 @@ messages_fault <- function(value) {
         "You gave a message that is not a list with a name on each field."
       )
     }
+  }
+  NULL
+}
+
+#' Which data-frame rule did this messages value break?
+#'
+#' jsonlite writes a data frame with no columns, or a row whose cells are all
+#' `NA`, as an empty message. It writes a column named `NA` or `""` under a
+#' number, and it renames a repeated column name with a suffix. The column rule
+#' runs first, because a data frame with no columns also has rows in which
+#' every cell is `NA`.
+#'
+#' @param value A data frame with at least one row.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+data_frame_messages_fault <- function(value) {
+  nms <- names(value)
+  if (
+    length(nms) == 0L || anyNA(nms) || !all(nzchar(nms)) || anyDuplicated(nms)
+  ) {
+    return(
+      "You gave a data frame that has no columns or a column name that is missing or repeated."
+    )
+  }
+  if (any(rowSums(!is.na(value)) == 0L)) {
+    return("You gave a data frame with a row in which every cell is NA.")
   }
   NULL
 }
