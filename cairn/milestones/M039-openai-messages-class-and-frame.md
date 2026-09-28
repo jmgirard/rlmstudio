@@ -123,3 +123,14 @@ Run on 2026-09-27 at branch head 1cba64d, level with `origin/main` (24b1308), so
 - AC4: a read of `R/chat.R:283-292`, `man/lms_chat_openai.Rd`, and the first `NEWS.md` item found each of the five points. The class goes from the outer list and each message. A class on a field inside a message is kept. A data frame and its columns keep their classes. The column rule and the empty-row rule are each stated. `devtools::document()` left no diff.
 
 Consistency gate: `cairn_validate.py` exit 0, all checks passed. No DESIGN principle changed, so `cairn_impact` was skipped. `devtools::document()` left no diff. `devtools::check()` with the API token gave 0 errors, 0 warnings, 0 notes. README.Rmd and README.md were not touched and share their last commit. The repo has no pkgdown site. NEWS.md has an entry with no milestone number. The branch adds no top-level file.
+
+Independent review: three fresh reviewers. The prior-review lens found no archived finding on these files that the diff regresses, and the PR-comment probe returned no comments. The blame-history lens found no undone fix and no contradicted decision. It raised one style point, which is S1 below. The diff-bug lens raised eight findings, O1 to O8. The session reproduced O1 and O2 with its own probes. Proposed dispositions, most severe first, go to the merge gate:
+
+- O1: a row that is empty apart from a `NULL` or length-0 list cell passes the empty-row rule. The reason is that `is.na()` is `FALSE` for those cells. The probe sent `{"content":{}}`. AC3 defines the rule by `is.na()`, so the criterion holds. Proposed: follow-up candidate row.
+- O2: `unclass_messages()` also drops a `dim` attribute, so a list-matrix of messages is now sent flat. Before, it was sent nested with each field boxed. The help and NEWS name the class alone, and no test covers it. Proposed: follow-up candidate row.
+- O3: the `"list"` and `I()` forms on the outer list or a message give the same JSON with or without the class removal. So four of the eight form cases cannot detect a missing removal. AC1 names these forms, and the two S3 forms detect it. Proposed: reject.
+- O4: a data-frame column with an inner name of `""` passes and is sent under a number. Proposed: follow-up, absorbed into the existing candidate row on values below the message level.
+- O5: the internal doc of `data_frame_messages_fault()` says an all-NA row is written as an empty message, which is not exact for a matrix column. Proposed: fix now, comment only.
+- O6: a row of empty strings passes. The server checks content, as D-003 states. Proposed: reject.
+- O7 and S1: three roxygen comment lines in `R/utils-args.R` run past 80 characters. Proposed: fix now, comment only.
+- O8: the help sentence on a kept class is true, but for `c("foo", "bar")` jsonlite names `bar`, and the test covers a single class alone. Proposed: reject.
