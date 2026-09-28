@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M044: The functions that send a JSON body send the text that jsonlite writes
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP4   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes the request body that seven exported functions send   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m044-json-body-as-written   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -50,7 +50,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `lms_chat_openai()` sends each `messages` value below as the
+- [x] AC1: `lms_chat_openai()` sends each `messages` value below as the
       text that `jsonlite::toJSON()` writes from
       `list(model = "a-model", messages = value)`. The options are
       `auto_unbox = TRUE`, `digits = 22`, and `null = "null"`. A test
@@ -68,12 +68,12 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
       - a `POSIXlt` value
       - a data frame whose one column is a 2-by-0 numeric matrix
       - a list whose first element is a `POSIXlt` value
-- [ ] AC2: `lms_chat_native()`, `lms_chat_openresponses()`, `lms_embed()`,
+- [x] AC2: `lms_chat_native()`, `lms_chat_openresponses()`, `lms_embed()`,
       `lms_load()`, `lms_download()`, and `lms_unload()` each send a
       `POSIXlt` value given in `...` as the text that jsonlite writes from
       it. A test reads the field in the raw text of each recorded body.
       After the change, `grep -rn 'req_body_json' R/` finds no line.
-- [ ] AC3: The roxygen of `messages_write_fault()` and of the new helper
+- [x] AC3: The roxygen of `messages_write_fault()` and of the new helper
       states this. The trial write and the sent body go through one helper
       with the same options. So a `messages` value that passes the trial
       write is sent as jsonlite writes it. NEWS.md has one entry for the
@@ -81,7 +81,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
       of a `messages` data frame is now sent. A `POSIXlt` value no longer
       fails with infinite recursion. An `httr2::obfuscated()` value in
       `...` now aborts. No milestone numbers appear.
-- [ ] AC4: `devtools::document()` leaves the tree clean, and
+- [x] AC4: `devtools::document()` leaves the tree clean, and
       `devtools::test()` passes. `devtools::check()` gives 0 errors and 0
       warnings, and each note has a reason.
 
@@ -97,7 +97,7 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate. -->
 
-- [ ] T1: Write the AC1 test "messages reach the request as jsonlite
+- [x] T1: Write the AC1 test "messages reach the request as jsonlite
       writes them" in `tests/testthat/test-arg-guards.R` and the AC2 test
       "a POSIXlt value in the dots reaches each request" beside the
       wrapper tests. Read the raw body from `httr2::req_dry_run()`, because
@@ -106,13 +106,13 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
       that can recurse on main in `setTimeLimit()` or a subprocess, so the
       red run ends. Confirm that each AC1 value but the 2-by-2 matrix and
       each AC2 function is red on main.
-- [ ] T2: Add the helper, use it at the seven sites, and route
+- [x] T2: Add the helper, use it at the seven sites, and route
       `messages_write_fault()` through it. Put one site back to
       `req_body_json()` in a scratch copy and see its AC2 case go red.
-- [ ] T3: Update the roxygen that AC3 names, including the
+- [x] T3: Update the roxygen that AC3 names, including the
       `req_body_json()` mention at `R/utils-args.R:389`, and NEWS.md. Run
       `devtools::document()`.
-- [ ] T4: Run `devtools::test()` and `devtools::check()`. The check needs
+- [x] T4: Run `devtools::test()` and `devtools::check()`. The check needs
       `RLMSTUDIO_API_TOKEN` and a started server (LESSONS, M009).
 
 ## Work log
@@ -128,9 +128,44 @@ candidate row on the `POSIXlt` recursion closes with this milestone.
 - 2026-09-28: plan gate chose to write the body with jsonlite and send it raw over running httr2's walk in the trial write, because the walk is httr2 internals and drops zero-width columns with no message. Falsified by an httr2 release that exports a body writer with no walk, or by a user who needs an `obfuscated()` value in a body.
 - 2026-09-28: plan gate chose all seven body sites over `lms_chat_openai()` alone, because a `POSIXlt` value in `...` recurses at each site. Falsified by a site whose server rejects the text that jsonlite writes but accepts httr2's form.
 - 2026-09-28: plan gate deleted the unpushed branch `m044-openai-messages-cell-free-rows`. Its tests are at `a1fb74e` and `e3b521b` while git keeps the objects.
+- 2026-09-28: /milestone-implement started on branch `m044-json-body-as-written`. No implementation question was open, so the gate was skipped.
+- 2026-09-28: T1 done. The AC2 test went to a new file, `tests/testthat/test-body-write.R`, and `request_body_text()` joined `helper-mock-http.R` with a dry-run time limit. On main, eight AC1 values fail and the 2-by-2 control passes. All six AC2 functions fail at the time limit in the dry run.
+- 2026-09-28: T2 done. `rlm_json_text()` and `rlm_req_body()` sit after `lms_client()` in `R/chat.R`. The seven sites and `messages_write_fault()` use them, and the `messages_write_fault()` roxygen was rewritten here as well. `lms_unload()` put back on httr2's writer failed the AC2 case for `lms_unload` alone. `grep -rn 'req_body_json' R/` finds no line. `devtools::test()` gave 0 failed, 0 errors, 12303 passed.
+- 2026-09-28: T3 done. NEWS.md has one entry with three sub-points. On main, httr2's walk over a `POSIXlt` value did not return in 100 seconds at the default `expressions` limit, and failed with "evaluation nested too deeply" at `expressions = 500`, so the entry names both. The obfuscated-value abort gained a test in `test-body-write.R`, which fails with `lms_unload()` on httr2's writer. `devtools::document()` changed no file.
+- 2026-09-28: T4 done. With the server started and the token set, `devtools::test()` gave 0 failed, 0 errors, 12305 passed. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+- claim audit: 37 claims read, 2 corrected — R/chat.R, tests/testthat/test-body-write.R
+- 2026-09-28: the two corrections are comment-only. The `rlm_req_body()` roxygen now says a 2-by-0 list matrix column becomes `NULL` cells sent as `null`. The test-body-write.R header no longer says D-003 covers dot values. `devtools::document()` then changed no file. Status set to review.
+- 2026-09-28: review gate fixed four NEWS and comment findings and rejected three. The Review section has each disposition.
+- step-7 approval: m044-json-body-as-written approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+Evidence gathered 2026-09-28 on `m044-json-body-as-written` at `f9986e6`; main had not moved since the branch was cut (`401c62a`).
+
+- AC1: the test "messages reach the request as jsonlite writes them" in `test-arg-guards.R` ran alone with 20 expectations, 0 failed. It compares the raw dry-run body with the jsonlite write for all nine values, and it checks two sent forms stated by hand. The [O] reviewer confirmed by probe that each value but the 2-by-2 control has another form on main.
+- AC2: `test-body-write.R` ran with 14 expectations, 0 failed. For each of the six functions, one request is recorded, and its raw body holds `"when":"2020-01-01 10:00:00"`. `grep -rn 'req_body_json' R/` found no line (exit 1).
+- AC3: a read of the branch shows the roxygen of `messages_write_fault()` (`R/utils-args.R`) and of `rlm_json_text()` (`R/chat.R`). Each says that the trial write and the sent body use one helper with the same options. So a value that passes the trial write is sent as jsonlite writes it. The diff adds one top-level NEWS.md entry. Its three sub-points name the zero-width column, the `POSIXlt` recursion, and the `obfuscated()` abort. A grep for milestone ids in that entry found 0.
+- AC4: `devtools::document()` left `git status --porcelain` empty. With the server started and the token set, `devtools::test()` gave 429 tests, 12305 expectations passed, 0 failed, 0 errors, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+- Consistency gate: `cairn_validate.py` passed (exit 0). No principle changed, so `cairn_impact` was skipped. README.Rmd is not in the diff, no `_pkgdown.yml` exists, no new top-level file was added, and NEWS.md has the entry.
+
+Independent review, three fresh reviewers. The [S] blame-history and [S] prior-review lenses found nothing. The prior-review probe of GitHub PR comments returned none. The [O] diff reviewer ranked seven findings, none a criterion failure. Dispositions below are the gate's.
+
+1. The NEWS "Before" sentence names only numeric zero-width columns. Character and logical 2-by-0 matrix columns were also dropped on main. A probe of httr2's walk on 2026-09-28 confirmed it.
+2. NEWS does not describe the nested data-frame column holding a zero-width matrix, sent as `"x":{}` on main and `"x":{"m":[]}` now.
+3. NEWS names only `POSIXlt` among values that recursed on main. `packageVersion()` and `person()` values also recursed there (probe confirmed for `packageVersion()`), and now they abort with the jsonlite "No method asJSON" error.
+4. `request_body_text()` resets any outer elapsed time limit to `Inf` on exit.
+5. The comment above `request_body_text()` reads as if the package still calls `req_body_json()`.
+6. The shared helpers live in `R/chat.R`, not an `R/utils-*.R` file.
+7. The obfuscated-value test matches message text only.
+
+Gate dispositions, 2026-09-28:
+- Findings 1, 2, 3: fixed in NEWS.md. Probes on 2026-09-28 showed the nested column sent as `{}` on main and `{"m":[]}` now. They also showed that `person()` recursed on main, and that `packageVersion()` and `person()` values now abort with "No method asJSON S3 class". The AC1 test gained a 2-by-0 character matrix column, and `test-body-write.R` gained a `packageVersion()` abort test. With `rlm_req_body()` put back on httr2's writer in memory, each new case failed.
+- Finding 5: fixed. The helper comment now names the old writer.
+- Finding 4: rejected. A transient limit lasts until the top-level run ends, so the reset keeps a 30-second limit off later tests.
+- Finding 6: rejected. It follows the `lms_client()` precedent in `R/chat.R`, with no runtime effect.
+- Finding 7: rejected. The jsonlite error has no condition class, and the test fails on main.
+- After the fixes: `devtools::document()` changed no file. `devtools::test()` gave 430 tests, 12309 expectations passed, 0 failed, 0 errors.

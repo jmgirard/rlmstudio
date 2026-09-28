@@ -2465,3 +2465,78 @@ test_that("a Date, a factor, and an I() field reach the request", {
     list(list(role = list("user"), content = "hi", date = "2026-01-01"))
   )
 })
+
+# The request sends the text that jsonlite writes from the body, with the
+# options of the trial write. httr2 1.3.0 req_body_json() rebuilt each list
+# first: it dropped a zero-width matrix or array column, sent a 2-by-0 list
+# matrix as null, and recursed with no end on a POSIXlt value. The 2-by-2
+# matrix was sent this way before the change and stays a control.
+test_that("messages reach the request as jsonlite writes them", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  lt <- as.POSIXlt("2020-01-01 10:00:00", tz = "UTC")
+  frame <- function(column) {
+    df <- data.frame(role = c("user", "user"), content = c("Hi", "Yo"))
+    df$x <- column
+    df
+  }
+  field <- function(value) list(list(role = "user", content = "Hi", x = value))
+  zero_width_frame <- function() {
+    inner <- data.frame(a = 1:2)
+    inner$a <- NULL
+    inner$m <- matrix(numeric(), 2L, 0L)
+    inner
+  }
+
+  cases <- list(
+    "a 2-by-0 numeric matrix column" = frame(matrix(numeric(), 2L, 0L)),
+    "a 2-by-0 character matrix column" = frame(matrix(character(), 2L, 0L)),
+    "a 2-by-0 list matrix column" = frame(matrix(list(), 2L, 0L)),
+    "a 2-by-3-by-0 array column" = frame(array(numeric(), c(2L, 3L, 0L))),
+    "a data-frame column holding a 2-by-0 matrix" = frame(zero_width_frame()),
+    "a POSIXlt column" = frame(as.POSIXlt(
+      c("2020-01-01 10:00:00", "2020-01-02 10:00:00"),
+      tz = "UTC"
+    )),
+    "a 2-by-2 numeric matrix column" = frame(matrix(c(1, 2, 3, 4), 2L)),
+    "a POSIXlt field" = field(lt),
+    "a data-frame field holding a 2-by-0 matrix" = field(zero_width_frame()),
+    "a list field whose first element is POSIXlt" = field(list(lt, 1))
+  )
+
+  for (label in names(cases)) {
+    value <- cases[[label]]
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(lms_chat_openai("a-model", value), message = NULL)
+    expected <- as.character(jsonlite::toJSON(
+      list(model = "a-model", messages = value),
+      auto_unbox = TRUE,
+      digits = 22,
+      null = "null"
+    ))
+    sent <- tryCatch(
+      request_body_text(recorder$requests[[1]], seconds = 10),
+      error = function(e) paste("no body:", conditionMessage(e))
+    )
+    expect_identical(sent, expected, info = label)
+  }
+
+  # Two sent forms stated by hand, so the check does not rest on jsonlite
+  # alone.
+  recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+  lms_chat_openai("a-model", cases[["a 2-by-0 list matrix column"]])
+  expect_match(
+    request_body_text(recorder$requests[[1]]),
+    '{"role":"user","content":"Hi","x":[]}',
+    fixed = TRUE
+  )
+  recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+  lms_chat_openai("a-model", cases[["a POSIXlt field"]])
+  expect_match(
+    tryCatch(
+      request_body_text(recorder$requests[[1]], seconds = 10),
+      error = function(e) conditionMessage(e)
+    ),
+    '"x":"2020-01-01 10:00:00"',
+    fixed = TRUE
+  )
+})

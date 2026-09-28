@@ -157,6 +157,19 @@ request_target <- function(req) {
   )
 }
 
+# The body text a captured request sends, unparsed, so a test can compare it
+# byte for byte with a jsonlite write. The old httr2 1.3.0 writer,
+# req_body_json(), rebuilt the body when the request was dry-run, and a
+# POSIXlt value there recursed with no end. So the dry run gets `seconds` and
+# then fails, and a red run on the old writer ends.
+request_body_text <- function(req, seconds = 30) {
+  require_httpuv()
+  setTimeLimit(elapsed = seconds, transient = TRUE)
+  on.exit(setTimeLimit(elapsed = Inf), add = TRUE)
+  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  rawToChar(out$body)
+}
+
 # Mock httr2::req_perform() for the calling test so that any request at all
 # raises. A guard that runs before the request is what these tests are about,
 # so a request reaching this mock is the failure they exist to catch.
