@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-28 (M044 done, M041 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M045 | The OpenAI chat function refuses a number that jsonlite writes as a string or drops | planned | M044 | normal | milestones/M045-openai-messages-non-finite-numbers.md |
+| M045 | The OpenAI chat function refuses a number that jsonlite writes as a string or drops | review | M044 | normal | milestones/M045-openai-messages-non-finite-numbers.md |
 | M046 | The OpenAI chat function counts an array row with no cells as a field value | planned | M044 | normal | milestones/M046-openai-messages-cell-free-rows.md |
 | M044 | The functions that send a JSON body send the text that jsonlite writes | done | none | normal | milestones/archive/M044-json-body-as-written.md |
 | M043 | The OpenAI chat function refuses a messages value that holds a value that is not an atomic vector, a list, or NULL | done | none | normal | milestones/archive/M043-openai-messages-non-vector-values.md |
@@ -21,6 +21,9 @@ _Last hygiene check: 2026-09-28 (M044 done, M041 row pruned)_
      - idea, added YYYY-MM-DD, links
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
+- `lms_chat_openai()` passes a `messages` field that is a list with the class `"json"` or `"scalar"` and holds `NA_real_`. jsonlite writes that number as `"NA"`. The number rule skips a classed list that jsonlite does not write as a plain list, added 2026-09-28, M045 claim-audit re-read and review finding O4
+- `lms_chat_openai()` passes a classed number that jsonlite writes as a string. Examples are `jsonlite::unbox(NA_real_)` and an S4 number, sent as `"NA"`, and `as.POSIXct(Inf)`, sent as `"Inf"`. M045 reads numbers with no class or the class `"AsIs"` alone. Promote on a user who sends such a number, added 2026-09-28, M045 review findings O2 and O3
+- The number rule in `lms_chat_openai()` writes a classed list twice at each level, so a deep stack is slow. 100 nested `c("foo", "list")` levels took 2.1 s, against 0.03 s for the write. Promote on a real `messages` value that the check makes slow, added 2026-09-28, M045 review findings O1 and O8
 - `lms_server_start()` with `host = NULL` does not check the host it builds from `port` before the CLI runs. A `port` of `"abc"` or `99999` makes the probe abort. If the CLI accepts such a port, the call warns after the start rather than aborting before it, added 2026-09-20, M015 review finding 4
 - The argument-guard loops in `tests/testthat/test-arg-guards.R` report one failure for ten functions. A non-matching error aborts the whole `test_that()` block. The first broken function then hides the other nine. The file still turns red. The diagnostics alone are coarse, added 2026-09-20, M013 review finding 7
 - Run `lms daemon up` then `lms daemon status --json` on a headless llmster install, as on Linux. On macOS with the desktop app installed, `up` returned only once the daemon ran, so M016 dropped its wait. If `up` returns early there, a wait on `lms_daemon_start()` has a reason, added 2026-09-20, milestones/archive/M016-daemon-start-wait.md

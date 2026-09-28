@@ -1774,6 +1774,308 @@ test_that("the non-vector rule sits between the function rule and the trial writ
   expect_identical(probe$calls, 0L)
 })
 
+# The detail of the number rule, stated here rather than read from the
+# package.
+number_detail <- paste(
+  "You gave a number that is NA, NaN, or infinite, which jsonlite would",
+  "send as a string or leave out."
+)
+
+# jsonlite writes an NA, NaN, Inf, or -Inf in a plain number as the string
+# "NA", "NaN", "Inf", or "-Inf" in each of these positions.
+number_positions <- list(
+  "a field of a list message" = function(v) {
+    list(list(role = "user", content = v))
+  },
+  "one element of a longer field vector" = function(v) {
+    list(list(role = "user", content = c(1L, v)))
+  },
+  "a field of a list nested in a field" = function(v) {
+    list(list(role = "user", content = list(list(type = "text", data = v))))
+  },
+  "a cell of a list column" = function(v) {
+    df <- data.frame(role = "user")
+    df$x <- list(v)
+    df
+  },
+  "a cell of a list-matrix column" = function(v) {
+    df <- data.frame(role = "user")
+    df$m <- matrix(list(v, "a"), 1)
+    df
+  },
+  "a matrix column" = function(v) {
+    df <- data.frame(role = "user")
+    df$m <- matrix(c(1L, v), 1)
+    df
+  },
+  "a three-dimensional array column" = function(v) {
+    df <- data.frame(role = "user")
+    df$a <- array(c(1L, v), c(1L, 2L, 1L))
+    df
+  },
+  "a matrix column of a data-frame column" = function(v) {
+    sub <- data.frame(k = "a")
+    sub$m <- matrix(c(1L, v), 1)
+    df <- data.frame(role = "user")
+    df$sub <- sub
+    df
+  }
+)
+
+# In an atomic data-frame column with no dim attribute, jsonlite leaves an
+# NA, NaN, Inf, or -Inf cell out of the row. These are four of the places
+# such a column can sit. The column is `x`, beside a column `k` that keeps
+# the row of a nested data frame from being empty.
+plain_column_places <- list(
+  "the top level" = function(v) {
+    data.frame(role = "user", x = v)
+  },
+  "a data-frame column" = function(v) {
+    df <- data.frame(role = "user")
+    df$sub <- data.frame(k = "a", x = v)
+    df
+  },
+  "a data frame as a list field" = function(v) {
+    list(list(role = "user", content = data.frame(k = "a", x = v)))
+  },
+  "a data frame in a list-column cell" = function(v) {
+    df <- data.frame(role = "user")
+    df$c <- list(data.frame(k = "a", x = v))
+    df
+  }
+)
+
+test_that("a number jsonlite cannot send as a number aborts", {
+  probe <- local_counting_probe()
+  expect_number_fault <- function(messages, label) {
+    err <- expect_error(
+      lms_chat_openai("a-model", messages),
+      number_detail,
+      fixed = TRUE,
+      info = label
+    )
+    expect_true(
+      startsWith(conditionMessage(err), messages_headers[["value"]]),
+      info = label
+    )
+  }
+  n_cases <- 0L
+
+  numbers <- list(
+    "a double NA" = NA_real_,
+    "NaN" = NaN,
+    "Inf" = Inf,
+    "-Inf" = -Inf,
+    "an integer NA" = NA_integer_
+  )
+  for (number in names(numbers)) {
+    for (position in names(number_positions)) {
+      expect_number_fault(
+        number_positions[[position]](numbers[[number]]),
+        paste(number, "as", position)
+      )
+      n_cases <- n_cases + 1L
+    }
+  }
+
+  expect_number_fault(
+    list(list(role = "user", content = I(NA_real_))),
+    "a double NA in I() as a field"
+  )
+  n_cases <- n_cases + 1L
+
+  for (number in c(Inf, -Inf)) {
+    for (place in names(plain_column_places)) {
+      expect_number_fault(
+        plain_column_places[[place]](number),
+        paste(number, "in a plain column at", place)
+      )
+      n_cases <- n_cases + 1L
+    }
+  }
+
+  expect_identical(n_cases, 49L)
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("numbers jsonlite leaves out, and classed values, still reach the request", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+
+  # The body each place sends once jsonlite leaves `x` out of its row.
+  left_out <- list(
+    "the top level" = list(list(role = "user")),
+    "a data-frame column" = list(list(role = "user", sub = list(k = "a"))),
+    "a data frame as a list field" = list(
+      list(role = "user", content = list(list(k = "a")))
+    ),
+    "a data frame in a list-column cell" = list(
+      list(role = "user", c = list(list(k = "a")))
+    )
+  )
+  expect_setequal(names(left_out), names(plain_column_places))
+  missing_numbers <- list(
+    "a double NA" = NA_real_,
+    "NaN" = NaN,
+    "an integer NA" = NA_integer_
+  )
+  for (number in names(missing_numbers)) {
+    for (place in names(plain_column_places)) {
+      label <- paste(number, "in a plain column at", place)
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(
+        lms_chat_openai(
+          "a-model",
+          plain_column_places[[place]](missing_numbers[[number]])
+        ),
+        message = NULL
+      )
+      expect_identical(
+        sent_messages(recorder$requests[[1]]),
+        left_out[[place]],
+        info = label
+      )
+    }
+  }
+
+  classed <- list(
+    list(label = "a Date NA", value = as.Date(NA), sent = NULL),
+    list(label = "a POSIXct NA", value = as.POSIXct(NA), sent = NULL),
+    list(label = "a factor NA", value = factor(NA), sent = NULL),
+    list(label = "a character NA", value = NA_character_, sent = NULL),
+    list(label = "a logical NA", value = NA, sent = NULL),
+    list(label = "as.Date(Inf)", value = as.Date(Inf), sent = "Inf"),
+    # Its gmtoff part is an integer NA, which the rule must not read.
+    list(
+      label = "a POSIXlt in a named zone",
+      value = local({
+        x <- as.POSIXlt("2026-01-01 10:00:00", tz = "America/Chicago")
+        stopifnot(is.na(unclass(x)$gmtoff))
+        x
+      }),
+      sent = "2026-01-01 10:00:00"
+    )
+  )
+  for (case in classed) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    expect_no_error(
+      lms_chat_openai(
+        "a-model",
+        list(list(role = "user", content = case$value))
+      ),
+      message = NULL
+    )
+    expect_identical(
+      sent_messages(recorder$requests[[1]]),
+      list(list(role = "user", content = case$sent)),
+      info = case$label
+    )
+  }
+})
+
+# jsonlite writes a list whose class vector ends in "list" as a plain list,
+# so a number inside it is written as a string. The POSIXlt case of the test
+# above is the classed list that the rule must not enter.
+test_that("a number in a classed list that jsonlite writes as a list aborts", {
+  probe <- local_counting_probe()
+  classed_list <- function(v) structure(list(a = v), class = c("foo", "list"))
+  df <- data.frame(role = "user")
+  df$c <- list(classed_list(Inf))
+  cases <- list(
+    "a double NA in a classed list field" = list(
+      list(role = "user", content = classed_list(NA_real_))
+    ),
+    "Inf in a classed list in a list-column cell" = df
+  )
+  for (label in names(cases)) {
+    err <- expect_error(
+      lms_chat_openai("a-model", cases[[label]]),
+      number_detail,
+      fixed = TRUE,
+      info = label
+    )
+    expect_true(
+      startsWith(conditionMessage(err), messages_headers[["value"]]),
+      info = label
+    )
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+test_that("the number rule reads I() columns, 1-D arrays, and unwritable classed lists", {
+  # An I() atomic column has no dim, so jsonlite leaves an NA cell out and
+  # the rule refuses an Inf cell alone.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+  expect_no_error(
+    lms_chat_openai("a-model", data.frame(role = "user", x = I(NA_real_))),
+    message = NULL
+  )
+  expect_identical(
+    sent_messages(recorder$requests[[1]]),
+    list(list(role = "user"))
+  )
+  expect_error(
+    lms_chat_openai("a-model", data.frame(role = "user", x = I(Inf))),
+    number_detail,
+    fixed = TRUE
+  )
+
+  # A 1-D array column has a dim, so jsonlite writes an NA cell as "NA".
+  df <- data.frame(role = "user")
+  df$a <- array(NA_real_, 1L)
+  expect_error(lms_chat_openai("a-model", df), number_detail, fixed = TRUE)
+
+  # jsonlite cannot write this list, so the number rule does not read it and
+  # the trial write refuses it.
+  err <- expect_error(
+    lms_chat_openai(
+      "a-model",
+      list(list(
+        role = "user",
+        content = structure(list(NA_real_), class = c("AsIs", "foo"))
+      ))
+    ),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_no_match(conditionMessage(err), number_detail, fixed = TRUE)
+})
+
+# The number rule runs after the non-vector rule and before the trial write.
+test_that("the number rule sits between the non-vector rule and the trial write", {
+  probe <- local_counting_probe()
+
+  err <- expect_error(
+    lms_chat_openai(
+      "a-model",
+      list(list(role = "user", n = NA_real_, e = new.env()))
+    ),
+    non_vector_detail("environment"),
+    fixed = TRUE
+  )
+  expect_no_match(conditionMessage(err), number_detail, fixed = TRUE)
+
+  err <- expect_error(
+    lms_chat_openai(
+      "a-model",
+      list(list(
+        role = "user",
+        content = structure("x", class = "foo"),
+        n = NA_real_
+      ))
+    ),
+    number_detail,
+    fixed = TRUE
+  )
+  expect_true(startsWith(conditionMessage(err), messages_headers[["value"]]))
+  expect_no_match(
+    conditionMessage(err),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_identical(probe$calls, 0L)
+})
+
 # A column that is neither an atomic vector nor a list is never empty, and
 # is.na() is not called on it, so it gives no warning. Each column sits in
 # rows that are otherwise NA, so the empty-row rule would win if the column
@@ -1944,8 +2246,9 @@ test_that("a column with a dim attribute is read row by row", {
   one_null_list3[2L] <- list(NULL)
   all_null_list3 <- as.list(1:8)
   all_null_list3[row2_cells] <- list(NULL)
-  one_na_atomic3 <- replace(1:8, 2L, NA)
-  all_na_atomic3 <- replace(1:8, row2_cells, NA)
+  # Character, because the number rule refuses a numeric NA in an array.
+  one_na_atomic3 <- replace(letters[1:8], 2L, NA)
+  all_na_atomic3 <- replace(letters[1:8], row2_cells, NA)
   one_null_list4 <- as.list(1:16)
   one_null_list4[4L] <- list(NULL)
 
@@ -2003,7 +2306,7 @@ test_that("a column with a dim attribute is read row by row", {
     # Controls whose result the change leaves as it was.
     list(
       label = "a 2-D atomic column with one NA cell in row 2",
-      value = dim_column_frame(matrix(c(1, 2, 3, NA), 2)),
+      value = dim_column_frame(matrix(c("a", "b", "c", NA), 2)),
       outcome = "server"
     ),
     list(
@@ -2161,14 +2464,14 @@ test_that("a messages value that keeps every rule reaches the request", {
       label = "a NULL list cell after a matrix column, and a later value",
       value = local({
         df <- data.frame(role = c("user", NA))
-        df$m <- matrix(c(1, NA, 2, NA), 2)
+        df$m <- matrix(c("x", NA, "y", NA), 2)
         df$content <- list("hi", NULL)
         df$name <- c("a", "b")
         df
       }),
       sent = list(
-        list(role = "user", m = list(1L, 2L), content = "hi", name = "a"),
-        list(m = list("NA", "NA"), content = NULL, name = "b")
+        list(role = "user", m = list("x", "y"), content = "hi", name = "a"),
+        list(m = list(NULL, NULL), content = NULL, name = "b")
       )
     ),
     list(
@@ -2410,9 +2713,10 @@ test_that("a list-matrix column is sent with its cells boxed", {
 })
 
 # A three-dimensional atomic column with one NA in a row passes the empty-row
-# rule. jsonlite sends that NA as null in a character or logical column and
-# as the string "NA" in a numeric column.
-test_that("an NA in a three-dimensional atomic column is sent as jsonlite writes it", {
+# rule. jsonlite sends that NA as null in a character or logical column. A
+# numeric one aborts under the number rule, which the test "a number jsonlite
+# cannot send as a number aborts" covers.
+test_that("an NA in a three-dimensional logical or character column is sent as null", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
   array_row <- function(values) {
@@ -2421,11 +2725,6 @@ test_that("an NA in a three-dimensional atomic column is sent as jsonlite writes
     df
   }
   cases <- list(
-    list(
-      label = "numeric",
-      value = array_row(c(1, NA, 3, 4, 5, 6, 7, 8)),
-      form = '[{"role":"user","x":[[1,5],[3,7]]},{"role":"user","x":[["NA",6],[4,8]]}]'
-    ),
     list(
       label = "logical",
       value = array_row(c(TRUE, NA, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE)),
