@@ -57,8 +57,11 @@ lms_chat_openai(
     row holds no field value. A
     [`list()`](https://rdrr.io/r/base/list.html) cell is sent as `[]`
     and a `list(NA)` cell as `[null]`, so a row with such a cell is
-    sent. A matrix or data-frame column counts as empty in a row when
-    each of its cells in that row is empty.
+    sent. A column with a `dim` attribute of any length whose first
+    extent is the row count, such as a matrix or an array, or a
+    data-frame column, counts as empty in a row when each of its cells
+    in that row is empty. A column that is neither an atomic vector nor
+    a list, such as an environment, never counts as empty.
 
   - `messages`, when it is a list and not a data frame, has no `dim`
     attribute, such as a matrix or an array of messages.
@@ -71,7 +74,17 @@ lms_chat_openai(
     cell in an array of its own. A list column of a data frame with one,
     three, or more dimensions also breaks this rule. An atomic matrix
     field is sent as an array of arrays. A list-matrix column of any
-    data frame is sent, one row of cells for each message.
+    data frame is sent, one row of cells for each message. jsonlite does
+    not unbox a value inside a list-matrix cell, at any depth in a list,
+    unless
+    [`jsonlite::unbox()`](https://jeroen.r-universe.dev/jsonlite/reference/unbox.html)
+    wraps it. A data frame in a cell is sent as an array of objects
+    whose values are not boxed. So a length-one atomic cell is sent as a
+    one-element array, such as `["a"]`, and a `NULL` cell is sent as
+    `null`. For example, a row with `role` `"user"`, `content` `"hi"`,
+    and the cells `"a"`, `NULL`, and `list(k = "v")` in a list-matrix
+    column `tags` is sent as
+    `{"role":"user","content":"hi","tags":[["a"],null,{"k":["v"]}]}`.
 
   - No message, and no list or data frame inside a message or inside a
     cell or column of a data frame, has a name that is `NA`, empty, or

@@ -2,6 +2,32 @@
 
 ## rlmstudio (development version)
 
+- If the first extent of an array column of a `messages` data frame is
+  the row count,
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now reads that column one row at a time. Such a column counts as empty
+  in a row only if each of its cells in that row is `NA` or a `NULL`
+  list cell. Before, a row with one empty cell in an array of three or
+  more dimensions sometimes aborted as a row in which every cell is
+  `NA`. Now a three-dimensional atomic column with one `NA` in a row is
+  sent. jsonlite writes that `NA` as `null` in a character or logical
+  column and as the string `"NA"` in a numeric column. A list column of
+  three or more dimensions aborts with the error for a list with a `dim`
+  attribute. If a row is empty in every column, the error “You gave a
+  data frame with a row in which every cell is NA or a NULL list cell.”
+  comes first.
+
+  - A data-frame column that is neither an atomic vector nor a list,
+    such as an environment, a symbol, or an expression vector, no longer
+    gives an R warning from the empty-row check. It never counts as
+    empty, so the later rules decide the call. A function aborts with
+    the error for a function. An environment, a symbol, a call, an
+    expression vector, a formula, an external pointer, an S4 object that
+    `new()` makes, or a reference-class object, with no class attribute
+    added by hand, aborts with the error for a value that jsonlite
+    cannot write. An S4 class definition with a slot is not refused.
+    jsonlite writes it with a warning, and the call sends it.
+
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   now refuses two more kinds of `messages` value before the check for a
   running server. The errors have no condition class.

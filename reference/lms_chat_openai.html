@@ -91,8 +91,12 @@ cell of a list column. jsonlite leaves out an <code>NA</code> cell of another
 column and writes an <code>NA</code> or <code>NULL</code> list cell as <code>null</code>, so such a row
 holds no field value. A <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>
 cell is sent as <code>[]</code> and a <code>list(NA)</code> cell as <code>[null]</code>, so a row with
-such a cell is sent. A matrix or data-frame column counts as empty in
-a row when each of its cells in that row is empty.</p></li>
+such a cell is sent. A column with a <code>dim</code> attribute of any length
+whose first extent is the row count, such as a matrix or an array, or
+a data-frame column, counts as empty in a row when each of its cells
+in that row is empty. A column that
+is neither an atomic vector nor a list, such as an environment, never
+counts as empty.</p></li>
 <li><p><code>messages</code>, when it is a list and not a data frame, has no <code>dim</code>
 attribute, such as a matrix or an array of messages.</p></li>
 <li><p>A message that is a list has no <code>dim</code> attribute.</p></li>
@@ -102,7 +106,15 @@ column. jsonlite would send such a list as nested arrays with each
 cell in an array of its own. A list column of a data frame with one,
 three, or more dimensions also breaks this rule. An atomic matrix
 field is sent as an array of arrays. A list-matrix column of any data
-frame is sent, one row of cells for each message.</p></li>
+frame is sent, one row of cells for each message. jsonlite does not
+unbox a value inside a list-matrix cell, at any depth in a list,
+unless <code><a href="https://jeroen.r-universe.dev/jsonlite/reference/unbox.html" class="external-link">jsonlite::unbox()</a></code> wraps it. A data frame in a cell is sent as
+an array of objects whose values are not boxed. So a length-one
+atomic cell is sent as a one-element array, such as <code>["a"]</code>, and a
+<code>NULL</code> cell is sent as <code>null</code>. For example, a row with <code>role</code>
+<code>"user"</code>, <code>content</code> <code>"hi"</code>, and the cells <code>"a"</code>, <code>NULL</code>, and
+<code>list(k = "v")</code> in a list-matrix column <code>tags</code> is sent as
+<code>{"role":"user","content":"hi","tags":[["a"],null,{"k":["v"]}]}</code>.</p></li>
 <li><p>No message, and no list or data frame inside a message or inside a
 cell or column of a data frame, has a name that is <code>NA</code>, empty, or
 repeated. jsonlite would send an <code>NA</code> or empty name as a number and
