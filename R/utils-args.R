@@ -331,8 +331,8 @@ schema_fault <- function(value) {
 #' on the package, and it runs before the server probe (D-008). The rules read
 #' the shape of the value and the names at each level, and a trial write then
 #' asks jsonlite to write it. The package does not judge a role, a content
-#' value, or any other field value. The server does (D-003 for the fields in
-#' `...`, D-020 for a named argument). A data frame passes, because jsonlite
+#' value, or any other field value. The server does, as D-003 states for API
+#' fields. A data frame passes, because jsonlite
 #' writes it as one JSON object per row.
 #'
 #' @param value The value the caller passed as `messages`.
@@ -551,7 +551,9 @@ data_frame_messages_fault <- function(value) {
     )
   }
   if (any(empty_rows(value))) {
-    return("You gave a data frame with a row in which every cell is NA.")
+    return(
+      "You gave a data frame with a row in which every cell is NA or a NULL list cell."
+    )
   }
   nested_names_fault(value)
 }
@@ -562,11 +564,13 @@ data_frame_messages_fault <- function(value) {
 #' list column. jsonlite leaves out an atomic `NA` cell and writes an `NA` or
 #' `NULL` list cell as `null`. A `list()` cell is written as `[]` and a
 #' `list(NA)` cell as `[null]`, which are field values, so neither is empty.
-#' A matrix or data-frame column counts as empty in a row when each of its
-#' cells there is `NA`. jsonlite writes such a matrix row as `"NA"` strings,
-#' but the rule refuses the row, as it did before `NULL` cells counted. The
-#' columns are read one at a time, because
-#' `is.na()` on the whole data frame spreads such a column over several.
+#' A matrix column, a list-matrix column included, counts as empty in a row
+#' when each of its cells there is empty. jsonlite writes an atomic matrix row
+#' of `NA` as `"NA"` strings, but the rule refuses the row, as it did before
+#' `NULL` cells counted. A data-frame column counts as empty in a row when
+#' this rule finds that row of it empty. The columns are read one at a time,
+#' because `is.na()` on the whole data frame spreads a matrix column over
+#' several.
 #'
 #' @param value A data frame.
 #' @return A logical vector with one element per row of `value`.
@@ -575,12 +579,18 @@ data_frame_messages_fault <- function(value) {
 empty_rows <- function(value) {
   empty <- rep(TRUE, nrow(value))
   for (column in value) {
-    if (is.list(column) && !is.data.frame(column)) {
-      column_empty <- is.na(column) | vapply(column, is.null, logical(1))
-    } else if (length(dim(column)) == 2L) {
-      column_empty <- rowSums(!is.na(column)) == 0L
+    if (is.data.frame(column)) {
+      column_empty <- empty_rows(column)
     } else {
-      column_empty <- is.na(column)
+      cell_empty <- is.na(column)
+      if (is.list(column)) {
+        cell_empty <- cell_empty | vapply(column, is.null, logical(1))
+      }
+      column_empty <- if (length(dim(column)) == 2L) {
+        rowSums(!cell_empty) == 0L
+      } else {
+        cell_empty
+      }
     }
     empty <- empty & column_empty
   }

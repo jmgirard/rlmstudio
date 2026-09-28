@@ -287,15 +287,19 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     column and writes an `NA` or `NULL` list cell as `null`, so such a row
 #'     holds no field value. A `list()`
 #'     cell is sent as `[]` and a `list(NA)` cell as `[null]`, so a row with
-#'     such a cell is sent.
-#'   * A list that is not a data frame has no `dim` attribute, such as a
-#'     matrix or an array of messages.
+#'     such a cell is sent. A matrix or data-frame column counts as empty in
+#'     a row when each of its cells in that row is empty.
+#'   * `messages`, when it is a list and not a data frame, has no `dim`
+#'     attribute, such as a matrix or an array of messages. A list with a
+#'     `dim` inside a message is not checked.
 #'   * A message that is a list has no `dim` attribute.
 #'   * No message, and no list or data frame inside a message or inside a
 #'     cell or column of a data frame, has a name that is `NA`, empty, or
 #'     repeated. jsonlite would send an `NA` or empty name as a number and
 #'     rename a repeated name `a` to `a.1`. A list with no names passes. The
 #'     names of a list column are not checked, because they are not sent.
+#'     The names of an atomic vector and the column names of a matrix are
+#'     not checked, because jsonlite sends those values as arrays.
 #'   * jsonlite can write the value, with the options that the request uses.
 #'     If it cannot, the error gives the jsonlite message. This rule is
 #'     checked last.

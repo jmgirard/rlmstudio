@@ -151,3 +151,13 @@ Findings from three fresh reviewers, ranked. Disposition is set at the merge gat
 - S1: the M039 test "a class below the message level still reaches jsonlite" was removed. T4 planned this, and the rule10 probes cover the same values.
 - S2: the internal roxygen of `rlm_check_messages()` cites D-020 for leaving field values to the server. D-020 is about the package checking a named argument.
 - P: prior-review lens found no regression of an archived review finding. No inline PR review comments exist on GitHub.
+
+Dispositions, chosen by the maintainer at the gate on 2026-09-27:
+
+- O1, O2: fixed now. `empty_rows()` recurses into a data-frame column and reads a list-matrix column per row. A passing list-matrix probe and two aborting probes were added. Before the fix, both new abort-side and pass-side probes turned the tests red.
+- O4, O6, O7, S2: fixed now. The empty-row detail names `NULL` list cells. The help narrows the `dim` rule to `messages` itself and says that names of atomic vectors and matrix columns are not checked. A hand run showed that jsonlite writes both as arrays. The internal comment cites D-003 alone.
+- O5: follow-up, a candidate row in ROADMAP.
+- O3: rejected, because no real message nests 3000 levels deep, and the call still stops before the server probe.
+- O8: rejected, because the Out list and an existing candidate row hold it.
+- S1: rejected, because T4 planned the change and the rule10 probes cover the same values.
+- After the fixes: `devtools::test()` 0 failed, 10993 expectations. `devtools::document()` rewrote only `man/lms_chat_openai.Rd`. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.

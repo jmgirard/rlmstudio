@@ -850,7 +850,7 @@ messages_rule_details <- c(
   rule3 = "You gave a list with names, which is sent as one JSON object.",
   rule4 = "You gave a message that is not a list with a name on each field.",
   rule5 = "You gave a data frame that has no columns or a column name that is missing or repeated.",
-  rule6 = "You gave a data frame with a row in which every cell is NA.",
+  rule6 = "You gave a data frame with a row in which every cell is NA or a NULL list cell.",
   rule7 = "You gave a list with a dim attribute, such as a matrix of messages.",
   rule8 = "You gave a message with a dim attribute, such as a list array.",
   rule9 = "You gave a message, or a list or data frame inside one, with a name that is NA, empty, or repeated.",
@@ -1183,6 +1183,26 @@ messages_probes <- list(
     rule = "rule6"
   ),
   list(
+    label = "a row of NA and a list-matrix row of NULL cells",
+    value = local({
+      df <- data.frame(role = c("user", NA))
+      df$m <- matrix(list(1, NULL, 2, NULL), 2)
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
+    label = "a row of NA and a NULL list cell in a nested data frame",
+    value = local({
+      inner <- data.frame(a = c(1, NA))
+      inner$b <- list(1, NULL)
+      df <- data.frame(role = c("user", NA))
+      df$sub <- inner
+      df
+    }),
+    rule = "rule6"
+  ),
+  list(
     label = "a data frame of one NA row",
     value = data.frame(role = NA_character_, content = NA_character_),
     rule = "rule6"
@@ -1370,6 +1390,20 @@ test_that("a messages value that keeps every rule reaches the request", {
       sent = list(
         list(role = "user", content = "hi"),
         list(content = list(NULL))
+      )
+    ),
+    # A list-matrix column is read per row, so a NULL cell beside a value in
+    # the same row leaves the row with a field value.
+    list(
+      label = "a row of NA and a list-matrix row with one value",
+      value = local({
+        df <- data.frame(role = c("user", NA))
+        df$m <- matrix(list(1, NULL, NULL, 2), 2)
+        df
+      }),
+      sent = list(
+        list(role = "user", m = list(list(1L), NULL)),
+        list(m = list(NULL, list(2L)))
       )
     ),
     list(
