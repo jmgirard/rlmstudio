@@ -40,6 +40,12 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rlmstudio-development-version">rlmstudio (development version)<a class="anchor" aria-label="anchor" href="#rlmstudio-development-version"></a></h2>
 <ul><li>
+<p><code><a href="../reference/lms_embed.html">lms_embed()</a></code> now sends its input in batches, one request for each run of at most <code>batch_size</code> texts. The default <code>batch_size</code> is 100. A new <code>quiet</code> argument controls a progress bar, which shows when a call sends more than one request.</p>
+<ul><li>A request that fails with <code>rlmstudio_bad_response</code>, or with <code>rlmstudio_api_error</code> at a status other than 401, 403, or 404, leaves the rows of its inputs <code>NA</code>. The call goes on and warns once, even when quiet. If every request fails, the call aborts with the first failure.</li>
+<li>A 401, 403, or 404 and a server lost between requests abort the call. With <code>simplify = TRUE</code>, so does a batch whose embeddings have another width. After a request that succeeded, the condition carries a <code>results</code> field. It holds the matrix so far, with <code>NA</code> rows. With <code>simplify = FALSE</code>, it holds the list of bodies so far.</li>
+<li>With <code>simplify = FALSE</code>, <code><a href="../reference/lms_embed.html">lms_embed()</a></code> now returns a list of parsed bodies, one per request. A call with one request returns a list of one. Before, it returned the body itself.</li>
+</ul></li>
+<li>
 <p><code><a href="../reference/lms_chat_openai.html">lms_chat_openai()</a></code> no longer counts a matrix or array column of a <code>messages</code> data frame as empty in a row that holds no cells of it. An example is a row of a 2-by-0 matrix. jsonlite writes that row of the column as <code>[]</code>, or as nested empty arrays such as <code>[[],[],[]]</code>. Before, a row in which every other cell was <code>NA</code> aborted with “You gave a data frame with a row in which every cell is NA or a NULL list cell.”</p>
 <ul><li>If the column is an atomic matrix or array with no class attribute, or a list matrix, such a row is now sent. If a data-frame column holds such a matrix, the row is also sent, as <code>{"m":[]}</code>.</li>
 <li>A list array of three or more dimensions now aborts with the error for a list with a <code>dim</code> attribute.</li>

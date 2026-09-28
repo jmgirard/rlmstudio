@@ -1,8 +1,8 @@
 # Turn Text into Embedding Vectors
 
 Sends one or more texts to an embedding model and returns the vector
-that the model produced for each one. The whole input vector travels in
-a single request.
+that the model produced for each one. The texts go out in batches of at
+most `batch_size`, one request per batch, in the order given.
 
 ## Usage
 
@@ -14,7 +14,9 @@ lms_embed(
   simplify = TRUE,
   ...,
   ttl = NULL,
-  token = NULL
+  token = NULL,
+  batch_size = 100,
+  quiet = NULL
 )
 ```
 
@@ -38,7 +40,9 @@ lms_embed(
 - simplify:
 
   Logical. If `TRUE`, the default, returns a numeric matrix with one row
-  per input. Any other value returns the parsed response body unchanged.
+  per input. Any other value returns a list with one element per
+  request: the parsed response body, unchanged, or the condition of a
+  request that failed.
 
 - ...:
 
@@ -65,28 +69,74 @@ lms_embed(
   `RLMSTUDIO_API_TOKEN` environment variable. See
   [rlmstudio_token](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md).
 
+- batch_size:
+
+  A whole number from 1 to `.Machine$integer.max`. The most texts that
+  one request carries. The default is 100. A value at least as large as
+  `length(input)` sends every text in one request.
+
+- quiet:
+
+  Logical or `NULL`. Whether to suppress the progress bar. `NULL` reads
+  the `rlmstudio.quiet` option. The bar shows only when the call sends
+  more than one request. `quiet` does not suppress the warning about
+  failed inputs.
+
 ## Value
 
-If `simplify = FALSE`, a list representing the raw JSON response.
-Otherwise, a double matrix with one row per input text and one column
-per embedding dimension. The row at position `i` holds the embedding
-that the response reported for the input at position `i`. The matrix
-carries no row or column names.
+If `simplify = FALSE`, a list with one element per request, in request
+order. Each element is the parsed JSON body of that request, or the
+condition of a request that failed. A call with one request returns a
+list of one. Otherwise, a double matrix with one row per input text and
+one column per embedding dimension. The row at position `i` holds the
+embedding that the response reported for the input at position `i`, or
+`NA` for an input whose request failed. The matrix carries no row or
+column names.
+
+## Details
+
+Before each request after the first, the function checks again that the
+server is running.
+
+A request that fails with an `rlmstudio_bad_response`, or with an
+`rlmstudio_api_error` whose `status` is not 401, 403, or 404, fails the
+inputs it carried alone. Their rows hold `NA`, or their element of the
+`simplify = FALSE` list holds the condition without its backtrace. The
+call goes on to the next request and then gives one warning that names
+the count and the positions of the failed inputs. That warning shows
+even with `quiet = TRUE`. If every request fails, the call aborts with
+the condition of the first failed request, and no warning is given.
+
+Two faults end the call at once, and no request goes out after them: a
+server that the check before a request finds gone, and an
+`rlmstudio_api_error` with `status` 401, 403, or 404. With
+`simplify = TRUE`, a third fault does the same: a request whose
+embeddings have another number of dimensions than those of an earlier
+request. It aborts with `rlmstudio_bad_response`. With
+`simplify = FALSE`, the bodies do not go through the matrix checks, so
+bodies of two widths are returned with no abort. Each abort after a
+request that succeeded carries a `results` field. With
+`simplify = TRUE`, it is the matrix so far, with `NA` in each row whose
+embedding did not arrive. With `simplify = FALSE`, it is the list so
+far, with `NULL` in the element of the request that ended the call and
+in every element after it. An abort before any request succeeded carries
+no `results` field. An error of any other class aborts the call
+unchanged.
 
 ## Server not running
 
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
-`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, or `ttl`, or
-a `stream` in the `...` of a chat function, aborts with an argument
-message and no condition class even when the server is down. A condition
-of class `rlmstudio_no_server` is raised when that connection cannot be
-opened. A refused connection raises it. So do an address the package
-cannot parse and a hostname that does not resolve. An address that
-neither accepts nor refuses the connection also raises it. That case
-waits for the operating system to give up, which can take a minute.
-Start the server with
+`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`, or
+`batch_size`, or a `stream` in the `...` of a chat function, aborts with
+an argument message and no condition class even when the server is down.
+A condition of class `rlmstudio_no_server` is raised when that
+connection cannot be opened. A refused connection raises it. So do an
+address the package cannot parse and a hostname that does not resolve.
+An address that neither accepts nor refuses the connection also raises
+it. That case waits for the operating system to give up, which can take
+a minute. Start the server with
 [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
 or give `host` the address that your server listens on.
 
@@ -141,6 +191,15 @@ fails after the check passes, such as a server that stops during a
 request, raises an `httr2_failure` error instead. That error aborts the
 batch and carries no `results` field.
 
+`lms_embed()` checks the server before each request, and a request
+carries at most `batch_size` inputs. If a check after the first request
+finds the server gone, the call aborts with `rlmstudio_no_server`. Once
+a request has succeeded, the condition carries a `results` field. With
+`simplify = TRUE`, `results` is a matrix with `NA` in each row whose
+embedding did not arrive. With `simplify = FALSE`, it is a list with one
+element per batch, with `NULL` in the element of the request that ended
+the call and in every element after it.
+
 ## API failure
 
 A condition of class `rlmstudio_api_error` is raised when a REST call
@@ -159,6 +218,13 @@ status, the element of the failed input holds the condition, or `NA`
 where the result is text, and the batch warns once and goes on. See the
 details of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
+
+`lms_embed()` follows the same rule for each request. A 401, 403, or 404
+aborts the call, and once a request has succeeded the condition carries
+a `results` field, a matrix or a list as the "Server not running"
+section describes. Any other status fails the inputs of that request
+alone, and the call warns once and goes on. If every request fails, the
+call aborts with the first condition. See the details of `lms_embed()`.
 
 ## Malformed response
 
@@ -267,6 +333,16 @@ vectors it returns are placed by the index that the response reports, so
 a block with a missing, repeated, or out-of-range index would otherwise
 pair a vector with the wrong text and give back a matrix that is
 silently wrong.
+
+`lms_embed()` reads each request on its own. A bad body, of either kind
+above, fails the inputs of that request alone, and the call warns once
+and goes on. The call aborts with the condition only if every request
+fails, and then with the condition of the first. With `simplify = TRUE`,
+it also aborts with `rlmstudio_bad_response` for a request whose
+embeddings have another number of dimensions than those of an earlier
+request. That condition carries a `results` field, a matrix as the
+"Server not running" section describes. See the details of
+`lms_embed()`.
 
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
 and
