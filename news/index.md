@@ -2,6 +2,39 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+  and
+  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
+  now send the request body as the text that
+  [`jsonlite::toJSON()`](https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html)
+  writes from it. Before, httr2 rebuilt each list in the body before it
+  wrote it. This changes three things.
+
+  - A zero-width matrix or array column of a `messages` data frame is
+    now sent. Before, an atomic matrix or array column with no cells in
+    a row was left out of the message. A 2-by-0 list matrix column was
+    sent as `null`. A data-frame column that holds such a matrix is now
+    sent as `{"m":[]}`, and before it was sent as
+    [`{}`](https://rdrr.io/r/base/Paren.html).
+  - A `POSIXlt` value in `messages` or in `...` is now sent as jsonlite
+    writes it, such as `"2020-01-01 10:00:00"`. Before, httr2 recursed
+    with no end on it. The call did not return, or it failed with
+    “evaluation nested too deeply: infinite recursion”. A
+    [`packageVersion()`](https://rdrr.io/r/utils/packageDescription.html)
+    or [`person()`](https://rdrr.io/r/utils/person.html) value in `...`
+    also recursed. Now it aborts with the jsonlite error “No method
+    asJSON S3 class: numeric_version” or “No method asJSON S3 class:
+    person”.
+  - An
+    [`httr2::obfuscated()`](https://httr2.r-lib.org/reference/obfuscate.html)
+    value in `...` now aborts with the jsonlite error “No method asJSON
+    S3 class: httr2_obfuscated”. Before, httr2 sent the value it hides.
+
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   now refuses a value inside `messages` that is not an atomic vector, a
   list, or `NULL`, before the check for a running server. The rule reads
