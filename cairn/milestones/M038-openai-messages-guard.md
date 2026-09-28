@@ -112,6 +112,8 @@ own candidate row.
 - 2026-09-27: T3 done. `messages` help, conditions page, and NEWS bullet written, docs regenerated. With the server on and the token set: devtools::test() 10328 passed, 0 failed. devtools::check() 0 errors, 0 warnings, 0 notes.
 - 2026-09-27: claim audit: 22 claims read, 2 corrected — NEWS.md, R/chat.R, man/lms_chat_openai.Rd. An empty message aborts although the NEWS wording let it pass, and an NA cell of a data frame is left out of its message. The reader re-read both corrections once and found that both hold. devtools::test() after the fix: 10328 passed, 0 failed.
 - 2026-09-27: status set to review.
+- 2026-09-27: review gate. Findings 1, 6, and 7 fixed on the branch, 2 and 3 moved to one candidate row, and 4, 5, and 8 rejected.
+- 2026-09-27: step-7 approval: m038-openai-messages-guard approved for merge
 
 ## Decisions
 
@@ -127,3 +129,14 @@ Evidence gathered 2026-09-27 on the branch head 28a95ee, which contains `origin/
 Consistency gate: `cairn_validate.py` exited 0. `devtools::document()` gave no diff, and its `@aliases` message at `R/conditions.R:258` is the same on `main`. README.Rmd and README.md are unchanged on the branch. The repo has no pkgdown site. The branch adds no top-level file. `NEWS.md` has the entry, with no milestone number. No principle text in DESIGN.md changed, so the impact report was skipped.
 
 Independent review: three fresh reviewers ran. The diff reviewer reported 8 findings. The history reviewer and the prior-review reviewer reported none, and GitHub holds no review threads.
+
+Findings and dispositions (diff reviewer, ranked):
+
+- 1: a data frame as one message passed rule 4 and was sent as an array inside `messages`. A run showed it. Fix now: `is_named_message()` refuses a data frame, the rule 4 help and NEWS say so, and the AC1 test has a data frame element. With the fix removed in a scratch copy, that test value reached the server check and failed.
+- 2: a list with a class attribute passes and then fails in jsonlite after the server check. Follow-up: new candidate row, shared with 3.
+- 3: a data frame with no columns or with an all-`NA` row sends empty messages. Follow-up: the same candidate row.
+- 4: a pairlist and an S4 object that contains "list" pass. Rejected: unlikely inputs, and the S4 object is sent correctly.
+- 5: a POSIXlt gets the rule 4 detail. Rejected: the abort still comes before the probe, and only the wording is off for an input that nobody passes.
+- 6: the test comment at `tests/testthat/test-arg-guards.R:317` said that `lms_chat_openai()` checks `model` alone. Fix now: the comment now says that it does not check `input`.
+- 7: an odd line break in the argument list at `R/conditions.R:13-14`, copied into 13 help files. Fix now: reflowed, and the docs regenerated.
+- 8: no decision entry for the new check. Rejected: D-020 already states that D-003 does not cover a named argument.

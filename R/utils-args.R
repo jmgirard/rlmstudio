@@ -391,12 +391,17 @@ messages_fault <- function(value) {
 
 #' Is this one message a list with a usable name on each field?
 #'
+#' A data frame is refused, because jsonlite writes it as an array of objects,
+#' which nests an array inside `messages`.
+#'
 #' @param message One element of `messages`.
 #' @return `TRUE` or `FALSE`.
 #'
 #' @noRd
 is_named_message <- function(message) {
-  if (!is.list(message) || length(message) == 0L) {
+  if (
+    !is.list(message) || is.data.frame(message) || length(message) == 0L
+  ) {
     return(FALSE)
   }
   nms <- names(message)

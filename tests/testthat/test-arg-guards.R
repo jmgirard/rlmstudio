@@ -314,8 +314,8 @@ test_that("an NA anywhere in a text vector argument aborts", {
 # `lms_chat()` delegates to `lms_chat_openresponses()` and to
 # `lms_chat_native()`, and both re-check what it checked, so the probes above
 # stay green with the guards in `lms_chat()` itself deleted. The `openai` route
-# is the exception: `lms_chat_openai()` guards `model` alone, so the check in
-# `lms_chat()` is the only one on that path. These probes are what make it
+# is the exception: `lms_chat_openai()` does not check `input`, which
+# it never takes, so the check in `lms_chat()` is the only one on that path. These probes are what make it
 # load-bearing.
 test_that("the openai route of lms_chat() carries its own guards", {
   local_guard_only()
@@ -899,6 +899,11 @@ messages_probes <- list(
     rule = "rule4"
   ),
   list(label = "an empty list element", value = list(list()), rule = "rule4"),
+  list(
+    label = "a data frame element",
+    value = list(data.frame(role = "user", content = "hi")),
+    rule = "rule4"
+  ),
   list(
     label = "a bad element after a good one",
     value = list(good_message, "hi"),

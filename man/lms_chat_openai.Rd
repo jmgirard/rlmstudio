@@ -34,7 +34,8 @@ element.
 wrapped in a list, such as \code{list(role = "user", content = "Hi")},
 breaks this rule.
 \item Each element of such a list is a list of length one or more, and each
-of its fields has a name that is not \code{NA} and not empty.
+of its fields has a name that is not \code{NA} and not empty. A data frame
+as an element breaks this rule.
 }
 
 The package does not check the roles, the content, or any other field of
@@ -112,9 +113,8 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, or \code{ttl}, or a \code{stream} in the
-\code{...} of a chat
-function, aborts with an argument message and no condition class even when
-the server is down. A condition of class
+\code{...} of a chat function, aborts with an argument message and no condition
+class even when the server is down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor

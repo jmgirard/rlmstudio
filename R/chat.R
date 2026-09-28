@@ -278,7 +278,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     wrapped in a list, such as `list(role = "user", content = "Hi")`,
 #'     breaks this rule.
 #'   * Each element of such a list is a list of length one or more, and each
-#'     of its fields has a name that is not `NA` and not empty.
+#'     of its fields has a name that is not `NA` and not empty. A data frame
+#'     as an element breaks this rule.
 #'
 #'   The package does not check the roles, the content, or any other field of
 #'   a message. The server checks them.
