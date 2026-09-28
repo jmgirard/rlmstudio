@@ -47,7 +47,7 @@ before each request was rejected at the gate (work log).
       answers. Further tests fire the abort on both functions with `logprobs = TRUE`, and on `lms_chat_openai()`
       with a `schema`. One test fires it on a mismatched reply that holds no answer text. Two tests fire it
       through `lms_chat()`, on the default route and on `api_type = "openai"`.
-- [ ] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
+- [x] AC2: The two functions accept a reply with no abort in each of four cases. A test covers each case on both
       functions with both settings of `simplify`.
       (a) The reply's `model` equals the asked name. The call sends no request after the chat request.
       (b) The asked name differs in letter case only from the key of the model whose loaded instance answered.
@@ -172,6 +172,7 @@ before each request was rejected at the gate (work log).
 - 2026-09-28: T10 done. DESIGN.md names the `code` field, and D-026 records the fourth batch difference, after `R/embed.R` showed that the embedding batch stops only at 401, 403, and 404. The comment, the helper doc, and the "Malformed response" text now except a lookup condition, and the T8 help text is rewrapped. Each recorder unload runs alone, and a scratch run showed a failed unload warn while the other ran and the first error surfaced. `air format` rewrote the two new files, and two branch hunks in `R/chat.R` were fixed by hand. Three older hits stay, and no `air.toml` exists. Suite: 489 tests, 0 failed. `devtools::check()` gave 0 errors, 0 warnings, 0 notes, a second `devtools::document()` changed nothing, and the server was started again.
 - 2026-09-28: claim audit: 162 claims read, 0 corrected — NEWS.md, R/chat.R, R/conditions.R, R/list.R, R/utils-api-error.R, data-raw/record-model-mismatch-cassette.R, tests/testthat/test-model-check.R
 - 2026-09-28: status review. T9 and T10 are done, and AC2 waits for fresh evidence at review.
+- 2026-09-28: review pass 3 started on head da340ad, which contains `origin/main`. No PR exists. Evidence for AC1 to AC7 is under "Pass 3", AC2 is ticked, and the consistency gate passed. The blame and prior-review lenses found nothing, and the [O] lens is still running.
 
 ## Decisions
 
@@ -325,3 +326,44 @@ read again, and each finding holds. Each has a proposed disposition, which the s
 Gate 2026-09-28, pass 2: the user accepted the dispositions above and sent the milestone back. R1 fails AC2(a),
 so the AC2 box is unticked. T9 carries R1 and R2, and T10 carries R3 to R8. R9 joined the candidate row, which is
 now "Five model-name cases outside M049".
+
+### Pass 3
+
+Evidence run 2026-09-28 on branch head da340ad, which contains `origin/main` (dc91202), after T9 and T10. The full
+`devtools::test()` ran 489 tests with 0 failed, 0 errors, 0 skipped. `test-model-check.R` ran 25 tests with 0
+failed.
+
+- AC1: `test-model-check.R` lines 179 to 308 pass. Three cases abort on both routes with both settings of
+  `simplify`. They are the recorded unknown name, the mocked key in other letter case, and the mocked instance id.
+  `expect_mismatch()` asserts both classes, both fields, and both names in the message. It also asserts no
+  "simplify" in the message. The `logprobs`, `schema`, no-answer-text, and two `lms_chat()` tests pass.
+- AC2: `test-model-check.R` lines 310 to 429 pass on both routes with both settings of `simplify`. Case (a) has
+  three tests, at lines 310, 324, and 344. They ask with a plain name, a named or `glue` string, and an S4
+  subclass of `character`. Each sends 1 request, which covers findings O1 and R1. Cases (b) and (c), at lines 366
+  and 390, play the recorded `case` and `alias` replies. The request log holds 2 URLs, and the second is
+  `http://localhost:1234/api/v1/models`. Case (d), at line 414, covers six replies with no model string. They
+  have a missing `model`, JSON `null`, a number, an array, an empty string, and a whitespace string. Each sends 1
+  request.
+- AC3: `test-model-check.R` lines 473 to 600 pass on both routes. A 401 list reply gives status 401 and `code`
+  `"bad_token"`. The unparsed body and `"models": 5` raise a bad response that is not a mismatch. A lost server
+  raises `rlmstudio_no_server` after 2 probes and 1 request. Each message holds the lookup text. The host, path,
+  and header test at line 554 passes under `expect_silent()`. The empty-list test at line 582 also passes under
+  `expect_silent()`.
+- AC4: `test-model-check.R` lines 607 to 633 pass on both routes in the formats `vector`, `list`, and
+  `data.frame`, with both classes, `results` `list(good_value, NULL, NULL)`, and 3 requests.
+- AC5: `test-model-check.R` lines 57 to 87 and 635 to 690 pass on both routes. The recorded `not_found` reply gives
+  `code` `"model_not_found"`. As a batch it aborts with `results` `list(NULL, NULL)` after 1 request. Three
+  mocked 400 bodies hold `"E42"`, no code, and a string `error`. In a batch each fails its own input alone, and
+  the batch sends 3 requests.
+- AC6: a grep finds `rlmstudio_model_mismatch`, `reply_model`, or `model_not_found` 9 times in the pages of
+  `lms_chat_openai()`, `lms_chat_openresponses()`, and `lms_chat()`, 12 times in `lms_chat_batch()`, and 10 times
+  in `rlmstudio-conditions`. Each of the five pages holds "does not check" for `lms_chat_native()` and "unloaded
+  before the model-list" for the unload case. The "API failure" section documents `code`. `NEWS.md` has the two
+  entries.
+- AC7: `devtools::test()` ran 489 tests with 0 failed and 0 errors. `devtools::check()` with the API token set
+  gave 0 errors, 0 warnings, and 0 notes. `git status` stayed clean after the check, which runs
+  `devtools::document()`. The check left the server off, and `lms server start` started it again.
+
+Consistency gate, pass 3: `cairn_validate.py` passed with exit 0. The DESIGN.md change is a conventions line, not
+a principle, so `cairn_impact` did not run. `pkgdown::check_pkgdown()` found no problems. `NEWS.md` has entries
+with no milestone numbers. The branch adds no top-level file, and README is not touched.
