@@ -60,15 +60,21 @@ choice to send it as jsonlite writes it.
 - [ ] AC2: In `lms_chat_openai()`, a data-frame column that is neither an
   atomic vector nor a list counts as not empty in each row. Examples are an
   environment, a formula, a symbol, a call, an S4 object, an external
-  pointer, and a function. The call gives no R warning for such a column.
-  A column of this kind other than a function aborts with the value-fault
-  header and the jsonlite-write detail. A function column in a row that is
-  otherwise `NA` aborts with the function detail.
+  pointer, an expression vector, and a function. This holds for a column of
+  `messages` and for a column of a data-frame column. The call gives no R
+  warning for a column of these kinds. In a frame that breaks no other
+  `messages` rule and holds no function, a column of each of these kinds
+  other than a function aborts with the value-fault header and the
+  jsonlite-write detail. A function column in a row that is otherwise `NA`
+  aborts with the function detail.
 - [ ] AC3: The `messages` help of `lms_chat_openai()` says that jsonlite
-  does not unbox a list-matrix cell. So a length-one atomic cell is sent as
-  a one-element array, such as `["a"]`, and a `NULL` cell is sent as
-  `null`. It gives the sent form of one example row. The request body of
-  that example has that form. `man/lms_chat_openai.Rd` matches after
+  does not unbox a value inside a list-matrix cell, at any depth in a list,
+  unless `jsonlite::unbox()` wraps it. A data frame in a cell is sent as an
+  array of objects whose values are not boxed. So a length-one atomic cell
+  is sent as a one-element array, such as `["a"]`, and a `NULL` cell is
+  sent as `null`. It gives the sent form of one example row. The
+  `messages` element of the request body for that example is an array that
+  holds that form alone. `man/lms_chat_openai.Rd` matches after
   `devtools::document()`.
 - [ ] AC4: The `messages` help replaces its sentence on matrix and
   data-frame columns in empty rows. The new text says two things. If each
@@ -77,11 +83,10 @@ choice to send it as jsonlite writes it.
   column that is neither an atomic vector nor a list, such as an
   environment, never counts as empty.
 - [ ] AC5: The `@aliases` tag at `R/conditions.R:257` sits on one line.
-  `devtools::document()` prints no warning and leaves `git status` clean.
+  `devtools::document()` prints no warning and changes no file under `man/`.
 - [ ] AC6: NEWS.md has one entry for the changes in AC1 and AC2, with no
   milestone number. `devtools::test()` gives 0 failures. `devtools::check()`
-  gives 0 errors and 0 warnings. The Review section gives a reason for each
-  NOTE.
+  gives 0 errors and 0 warnings.
 
 ## Coverage
 <!-- owner: plan · create/amend-via-gate -->
@@ -99,9 +104,13 @@ choice to send it as jsonlite writes it.
 - [ ] T1: In `empty_rows()` (`R/utils-args.R:718`), read a column with a
   `dim` attribute row by row, through the cells whose first index is the
   row. Keep the result one value per row. Add probes to
-  `tests/testthat/test-arg-guards.R` for the three AC1 cases. Add probes for
-  a four-dimensional atomic column with one `NA` in a row, and for a
-  three-dimensional column inside a data-frame column. Add a
+  `tests/testthat/test-arg-guards.R` for the three AC1 cases, built with
+  `$<-`, because `data.frame()` recycles an array to its length. Add a
+  probe for a four-dimensional list column with one `NULL` in a row. Add a
+  probe for a three-dimensional list column with `NULL` in each cell of
+  row 2. Every other column of that row is `NA`, and the probe expects the
+  empty-row detail. Add a probe for a three-dimensional column inside a
+  data-frame column. Add a
   two-dimensional matrix column as a control that keeps its result. Add a
   one-dimensional atomic column and a one-dimensional list column as
   controls whose result does not change. Revert the fix in a scratch copy
@@ -109,11 +118,14 @@ choice to send it as jsonlite writes it.
 - [ ] T2: In `empty_rows()`, replace the function branch with one branch
   for a column that is neither an atomic vector nor a list. Update the
   comment above the function. Add probes for an environment, a formula, a
-  symbol, a call, an S4 object, and an external pointer column. Each probe
+  symbol, a call, an S4 object, an external pointer, and an expression
+  vector column. Put each one in a row that is otherwise `NA`. Add one such
+  column inside a data-frame column. Build each probe with `$<-` where it
+  accepts the value, else with `structure()`. Each probe
   asserts the value-fault header, the jsonlite-write detail, and no
   warning. Add a probe for a function column in a row that is otherwise
   `NA`, which asserts the function detail. Revert the branch in a scratch
-  copy and make sure that the probes go red. Run `devtools::test()`.
+  copy and make sure that each probe other than the function probe goes red. Run `devtools::test()`.
 - [ ] T3: Edit the `messages` help in `R/chat.R`. Replace the empty-row
   sentence at lines 290-291 for AC4. Replace the list-matrix sentence at
   lines 300-301 for AC3. Add a test that sends the AC3 example row and
@@ -123,7 +135,8 @@ choice to send it as jsonlite writes it.
   Run `devtools::document()` and make sure that it prints no warning.
 - [ ] T5: Add the NEWS entry. Run `devtools::document()`,
   `devtools::test()`, and `devtools::check()` with the API token (see the
-  M009 lesson on the vignette build).
+  M009 lesson on the vignette build). Give a reason for each NOTE in the
+  work log.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -135,6 +148,13 @@ choice to send it as jsonlite writes it.
 - 2026-09-27: plan committed while the second audit of the revised criteria (full mode, same [O] reader) still runs. Its findings land as a gated amendment before implement starts.
 - 2026-09-27: implement started on branch m042-openai-messages-odd-columns. The second audit's findings never reached the file, so a fresh [O] reader re-runs it before T1.
 - 2026-09-27: T4 done. The `@aliases` tag is on one line, and `devtools::document()` printed no warning and changed no file under `man/`.
+- 2026-09-27: second criteria audit (full mode, fresh [O] reader) returned 11 items. Minor task edits applied: T1 builds its frames with `$<-` and adds a four-dimensional list probe and an all-`NULL` list-array row. T2 adds an expression vector, rows that are otherwise `NA`, a nested column, and a constructor for each probe.
+- 2026-09-27: implement gate amended AC2 (expression vector, nested columns), AC3 (unbox and nested values, the `messages` element compared), AC5 (`man/` in place of `git status`), and AC6 (the NOTE reason moves to T5, as a record act).
+- re-audit: AC2 (full) — the claim was false for an S4 class definition, which jsonlite writes with a warning, and it ignored rules that win first. The user adopted a narrowed text.
+- re-audit: AC3 (full) — "at any depth" was false for a data frame in a cell, and the `messages` element is an array of rows. The user adopted an amended text.
+- re-audit: AC5 (full) — nothing
+- re-audit: AC6 (full) — nothing
+- 2026-09-27: T2's revert step now expects each probe other than the function probe to go red, because a revert to the old function branch keeps that probe green.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
