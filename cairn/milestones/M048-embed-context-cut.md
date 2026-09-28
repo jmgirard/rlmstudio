@@ -133,7 +133,7 @@ package cannot count tokens, so both go to one candidate row that names the evid
   references page.
 - Fix evidence: the live test passed 5 of 5 expectations with nomic at 2048 and did not skip. A copy with the
   word moved past the cut (`mid <- n + 50L`) failed at the new check alone, with a difference of 0.
-- Re-verify after the fixes: the rendered help keeps every AC1 clause and adds the unload step. `devtools::test()`
+- Evidence after the fixes: the rendered help keeps every AC1 clause and adds the unload step. `devtools::test()`
   passed 464 tests, 12877 expectations, 0 failures, 0 skips. `devtools::document()` left no diff. The first
   `devtools::check()` failed once at test-arg-guards.R:799, where `req_dry_run()` got "Empty reply from server".
   That file is not in the diff. The rerun at 53bff7b gave 0 errors, 0 warnings, 0 notes. `cairn_validate` failed
