@@ -183,3 +183,41 @@ Consistency gate: `cairn_validate.py` passed with exit 0. No DESIGN principle ch
 `devtools::document()` gave no diff, and `pkgdown::check_pkgdown()` passed. The branch does not touch `README.Rmd` or
 `README.md`. `NEWS.md` has the entry and no milestone number. The branch adds no top-level file. The check gave 0
 notes.
+
+Independent review: three fresh reviewers ran on 2026-09-28. The [O] reviewer read the diff, the [S] history reviewer
+read `git blame`, and the [S] prior-review reviewer read the archives. The `gh` comment probe returned `[]`. Each
+finding below is ranked by its own reviewer. I read the code for the findings marked "seen in code". Dispositions
+are set at the merge gate.
+
+- O1 `R/list.R:277-283`: the column of a `config` field depends on the fields before it in all rows. With `{"id":1}`
+  and `{"config.id":2}`, the server field `config.id` lands in `config.config.id`. With only the second instance, it
+  lands in `config.id`. AC2 asks for this behavior.
+- O2 `R/list.R:216-257`: `type` and `quiet` get no argument guard. `quiet = NA` fails with a base error after the request.
+  An empty `type` prints a message with no type. `type = 1` returns an empty frame. `list_models()` does the same.
+- O3 `test-list-instances.R:253-292`: the two new fault tests do not assert the fault text ("is not a string", "is
+  not a JSON object"), which the M026 lesson asks for.
+- O4 `test-list-instances.R:200-215`: no test mixes only a number and a string, and no test covers `type = NA`, an
+  empty `type`, or `display_name = ""`. The reviewer ran each case and found correct results.
+- O5 `NEWS.md`: the entry leaves out "of a listed type" and the `quiet` rule for the empty result. The help page
+  has both.
+- O6 `R/list.R:374-381`: atomic number columns are doubles, but a list-column keeps `1L` as an integer. The help page
+  says so.
+- O7 AC4 text: it says an absent or `null` `config` gives `NA` in every configuration column. A list-column holds
+  `NULL` there, as AC2 and the help page say. Seen in code: the AC4 clause as written fails for a list-column.
+- O8 the fixture holds the full local model catalog, not only the two loaded models. Nothing secret is in it.
+- S1 `R/conditions.R:30-43`: the "Server not running" section lists the raisers of `rlmstudio_bad_response` for a
+  non-JSON body and for a wrong model list. It names `list_models()` and omits `list_instances()` in both. Seen in code.
+- S2 `R/conditions.R:96-105`: the new `lms_chat_batch()` sentence repairs an M049 omission, beyond this scope. It is
+  accurate. Line 97 is wider than the wrapping around it.
+- S3 `R/list.R:246-256`: the empty message is an `"i"` bullet, and `list_models()` uses `"!"` for a filter that
+  matches nothing.
+- S4 D-017: `list_instances()` now rejects bodies that `lms_server_ready()` accepts. The help page states it, and no
+  D-entry records it.
+- S5 `R/list.R`: the `list_models()` help page has no `@seealso` link to `list_instances()`.
+- S6 `R/utils-api-error.R:177`: an internal comment lists four callers of `rlm_abort_bad_reply()`, and
+  `list_instances()` is a fifth.
+- P1 `tests/testthat/test-api-error.R:139`: `list_instances` is not in `api_error_callers`. So it gets neither the
+  400 and 503 rows nor the host-forwarding test. If the call drops `host`, no test turns red. Seen in code.
+- P2 `test-list-instances.R:343`: no 401 or 403 token-hint test. The hint goes through `request_model_list()`, which
+  `test-token-rejected.R` covers through `list_models()`.
+- Flaky test: the first `devtools::check()` failed once in `test-ttl.R`, which this branch does not touch.
