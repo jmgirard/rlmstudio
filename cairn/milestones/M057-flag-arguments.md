@@ -77,7 +77,7 @@ rows.
       default of `list_models()`, `list_instances()`, and `lms_chat_batch()`. It says that
       `quiet = FALSE` now shows their output when the option is `TRUE`. `devtools::document()`
       leaves no diff.
-- [ ] AC7: `devtools::test()` reports no failure. `devtools::check()` gives 0 errors and 0 warnings.
+- [x] AC7: `devtools::test()` reports no failure. `devtools::check()` gives 0 errors and 0 warnings.
       It gives no note that main at cd90e63 does not give.
 
 ## Coverage
@@ -152,6 +152,7 @@ rows.
 - claim audit: 63 claims read, 2 corrected — R/load.R, R/rlmstudio-package.R (man/rlmstudio-package.Rd regenerated). The re-read found both corrected claims true. A third finding, on the older "across the package" phrase of the option entry, was left because the branch did not add it.
 - 2026-09-29: implement done, status set to review.
 - 2026-09-29: review started. No PR yet, main not moved. AC1 to AC6 evidence recorded and ticked. AC7 check and two reviewers still running.
+- 2026-09-29: AC7 evidence recorded and ticked, consistency gate passed. The diff-bug reviewer is still running.
 
 ## Decisions
 
@@ -165,3 +166,5 @@ Evidence, 2026-09-29, on branch head de5feba (main at cd90e63 had not moved):
 - AC4: the two load-setting blocks pass. A fresh probe of `lms_load("m", flash_attention = "true")` aborted unclassed with "a character value". The body block matches `true` or `false` ended by a comma or brace, and no field for `NULL`.
 - AC5: the batch block covers the 8 prefixes `l` to `logprobs`, `NULL` included. The two native blocks cover the aborts and a second `logprobs` element. They show the warning for `isTRUE()` values and no `logprobs` in the body, with `temperature` as the control.
 - AC6: a read of `R/` found that each flag `@param` names its values. Each says "aborts before the check for a running server" or "before the `lms` CLI runs". NEWS names each function with the old rule, the new `quiet` default, and `quiet = FALSE` under the option. The `?rlmstudio` entry states the rule and the `lms_server_status()` exception. `devtools::document()` left no diff.
+- AC7: `devtools::test()` gave 0 failures, 0 warnings, 3 skips for the live server, and 16907 passes. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes, so no note needs the cd90e63 baseline.
+- Consistency gate: `cairn_validate.py` exited 0. `devtools::document()` left no diff. README.Rmd is unchanged, there is no pkgdown site, and DESIGN.md is unchanged. NEWS has the entries, and no new top-level file was added.
