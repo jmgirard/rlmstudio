@@ -32,13 +32,13 @@ rows.
 
 ## Acceptance criteria
 
-- [ ] AC1: Scan `formals()` of each function that `getNamespaceExports("rlmstudio")` lists on the
+- [x] AC1: Scan `formals()` of each function that `getNamespaceExports("rlmstudio")` lists on the
       branch. Take each formal whose default is the constant `TRUE` or `FALSE`. Each such argument
       aborts on each of these values: `NA`, `"yes"`, `1`, `c(TRUE, FALSE)`, `logical(0)`,
       `list(TRUE)`, and `NULL`. The abort has no condition class, and its message names the
       argument. It comes before the check for a running server, before any HTTP request, and before
       any `lms` CLI run. `TRUE`, `FALSE`, `c(a = TRUE)`, and `matrix(FALSE)` pass the check.
-- [ ] AC2: A scan of `formals()` over the same exports, with no default filter, finds `quiet` in
+- [x] AC2: A scan of `formals()` over the same exports, with no default filter, finds `quiet` in
       five functions. They are `lms_server_status()` and four others: `list_models()`,
       `list_instances()`, `lms_chat_batch()`, and `lms_embed()`. In the four, `quiet` defaults to
       `NULL`. It aborts as AC1 states on each AC1 value other than `NULL`. With `quiet = NULL`, the
@@ -51,22 +51,22 @@ rows.
       `TRUE`, `FALSE`, or unset. With `quiet = TRUE` and the option `TRUE`, these warnings still
       show: the failed-inputs, cut-off, and list-fallback warnings of `lms_chat_batch()`, and the
       failed-inputs warning of `lms_embed()`.
-- [ ] AC3: `lms_server_status()` keeps `quiet = FALSE`. `quiet = TRUE` adds `--quiet` to the CLI
+- [x] AC3: `lms_server_status()` keeps `quiet = FALSE`. `quiet = TRUE` adds `--quiet` to the CLI
       arguments, and `quiet = FALSE` does not. The `rlmstudio.quiet` option does not change them.
       This holds for `quiet = FALSE` with the option `TRUE`, and for `quiet = TRUE` with the option
       `FALSE`.
-- [ ] AC4: The `flash_attention` and `offload_kv_cache_to_gpu` arguments of `lms_load()` abort as
+- [x] AC4: The `flash_attention` and `offload_kv_cache_to_gpu` arguments of `lms_load()` abort as
       AC1 states on each AC1 value other than `NULL`, and on `"true"`. `NULL`, `TRUE`, and `FALSE`
       pass. `TRUE`, `c(x = TRUE)`, and `matrix(TRUE)` reach the load request body as JSON `true`.
       `FALSE` and `matrix(FALSE)` reach it as `false`. `NULL` leaves the field out of the body.
-- [ ] AC5: In `lms_chat_batch()`, a `logprobs` in `...` aborts as AC1 states on each AC1 value,
+- [x] AC5: In `lms_chat_batch()`, a `logprobs` in `...` aborts as AC1 states on each AC1 value,
       `NULL` included. That holds for each name that `lms_chat()` matches to `logprobs`, from `l` to
       `logprobs`, and the message names `logprobs`. In `lms_chat_native()`, each element of `...`
       named exactly `logprobs` aborts as AC1 states on each AC1 value other than `NULL`. There,
       `NULL`, `TRUE`, `FALSE`, `c(a = TRUE)`, and `matrix(FALSE)` pass. A value that `isTRUE()`
       accepts warns. For each passing value, and for two elements named `logprobs`, no `logprobs`
       field reaches the request body.
-- [ ] AC6: The help text of each argument in AC1 to AC5 names the values it accepts. It says that
+- [x] AC6: The help text of each argument in AC1 to AC5 names the values it accepts. It says that
       any other value aborts before the check for a running server. Where a function makes no such
       check, it says before the `lms` CLI runs. The `rlmstudio.quiet` entry of `?rlmstudio` states
       the AC2 rule, and says that the option does not change `lms_server_status(quiet)`. Take each
@@ -151,7 +151,17 @@ rows.
 - 2026-09-29: T6 done. `devtools::test()` gave 0 failures and 3 skips for the live server. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes, so the cd90e63 baseline run was not needed.
 - claim audit: 63 claims read, 2 corrected — R/load.R, R/rlmstudio-package.R (man/rlmstudio-package.Rd regenerated). The re-read found both corrected claims true. A third finding, on the older "across the package" phrase of the option entry, was left because the branch did not add it.
 - 2026-09-29: implement done, status set to review.
+- 2026-09-29: review started. No PR yet, main not moved. AC1 to AC6 evidence recorded and ticked. AC7 check and two reviewers still running.
 
 ## Decisions
 
 ## Review
+
+Evidence, 2026-09-29, on branch head de5feba (main at cd90e63 had not moved):
+
+- AC1: `test-flag-args.R` ran 27 blocks, 1994 expectations, 0 failed. Its scan block pins 11 functions. A separate scan in a fresh `Rscript` found the same 11 functions and 19 flag arguments. Each bad value aborts unclassed with the argument named, and the stubs count 0 probes, requests, CLI runs, and delegate calls. The 4 good values reach the stubbed step.
+- AC2: the same file finds `quiet` in the 5 named functions, 4 with default `NULL`. It runs all 9 pairs for the 2 `list_models()` messages, the `list_instances()` message, and both progress bars. `test-chat-batch-cut-off.R` (6 blocks, 0 failed) and `test-embed.R` (67 blocks, 0 failed, 2 live skips) show the 4 warnings with `quiet = TRUE` and the option `TRUE`.
+- AC3: the `lms_server_status()` block passes all 4 quiet/option cases and compares the args sent to `processx::run()`. A fresh probe gave `--quiet` for `quiet = TRUE` only.
+- AC4: the two load-setting blocks pass. A fresh probe of `lms_load("m", flash_attention = "true")` aborted unclassed with "a character value". The body block matches `true` or `false` ended by a comma or brace, and no field for `NULL`.
+- AC5: the batch block covers the 8 prefixes `l` to `logprobs`, `NULL` included. The two native blocks cover the aborts and a second `logprobs` element. They show the warning for `isTRUE()` values and no `logprobs` in the body, with `temperature` as the control.
+- AC6: a read of `R/` found that each flag `@param` names its values. Each says "aborts before the check for a running server" or "before the `lms` CLI runs". NEWS names each function with the old rule, the new `quiet` default, and `quiet = FALSE` under the option. The `?rlmstudio` entry states the rule and the `lms_server_status()` exception. `devtools::document()` left no diff.
