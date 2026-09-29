@@ -153,6 +153,7 @@ rows.
 - 2026-09-29: implement done, status set to review.
 - 2026-09-29: review started. No PR yet, main not moved. AC1 to AC6 evidence recorded and ticked. AC7 check and two reviewers still running.
 - 2026-09-29: AC7 evidence recorded and ticked, consistency gate passed. The diff-bug reviewer is still running.
+- 2026-09-29: three-lens review done, 9 findings logged with proposed dispositions, none a criterion failure. Pre-gate checkpoint.
 
 ## Decisions
 
@@ -168,3 +169,15 @@ Evidence, 2026-09-29, on branch head de5feba (main at cd90e63 had not moved):
 - AC6: a read of `R/` found that each flag `@param` names its values. Each says "aborts before the check for a running server" or "before the `lms` CLI runs". NEWS names each function with the old rule, the new `quiet` default, and `quiet = FALSE` under the option. The `?rlmstudio` entry states the rule and the `lms_server_status()` exception. `devtools::document()` left no diff.
 - AC7: `devtools::test()` gave 0 failures, 0 warnings, 3 skips for the live server, and 16907 passes. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes, so no note needs the cd90e63 baseline.
 - Consistency gate: `cairn_validate.py` exited 0. `devtools::document()` left no diff. README.Rmd is unchanged, there is no pkgdown site, and DESIGN.md is unchanged. NEWS has the entries, and no new top-level file was added.
+
+Independent review, three fresh lenses. The prior-review lens found no finding, and the GitHub probe was empty. No finding shows a criterion failing. Proposed dispositions, pending the gate:
+
+- O1 (fix now): the `@return` of `list_instances()` at `R/list.R:214-218` still says the message prints "unless `quiet = TRUE` or the `rlmstudio.quiet` option is `TRUE`". With the option `TRUE`, `quiet = FALSE` prints it. The reviewer ran this case.
+- O2 (fix now): the `quiet` help of `lms_chat_batch()` and `lms_embed()` says `FALSE` "shows" the bar. It only starts one, and cli draws it only in a dynamic terminal after a delay.
+- O3 (fix now): the NEWS load-settings bullet gives only the `as.logical()` rule. `NA` and `"yes"` were sent as JSON `null`, and `c(TRUE, FALSE)` as an array, and they now abort too.
+- O4 (fix now): the internal doc of `rlm_check_flag()` says `null_ok` exists because `NULL` reads the option. The load settings and the native `logprobs` now use it with other meanings of `NULL`.
+- O5 (fix now): `test-flag-args.R` does not show that `c(a = TRUE)` and `matrix(FALSE)` pass for `quiet`. It tries batch `logprobs` pass values under the full name only. Three pass expectations carry no `info` label.
+- S1 (fix now): the comment in `test-chat-schema.R:648-649` says the test leaves `quiet` at its default. It passes `quiet = FALSE`. No test covers the batch warnings with `quiet = NULL` and the option `TRUE`.
+- O6 (follow-up): two dots that match `logprobs` in `lms_chat_batch()` fail in `match.call()` with a base R error. The fault is on main, and `lms_chat_native()` now checks each copy.
+- O7 (follow-up): the batch sets `has_logprobs` on the native route, where replies are plain text. The vector format then returns a list and warns about logprobs data frames. The fault is on main.
+- S2 (reject): a NEWS sub-bullet now points to the entry above it. The reviewer called it a note, and the "before" claims hold on main.
