@@ -1,13 +1,13 @@
 # M052: The two list functions check their arguments before any request
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes which calls of the exported `list_models()` and `list_instances()` abort
-- **Branch/PR:** —
+- **Branch/PR:** m052-list-arg-checks
 
 ## Goal
 
@@ -39,7 +39,7 @@
 
 ## Tasks
 
-- [ ] T1: Write the fault tests of AC1 to AC3 first, in a new `tests/testthat/test-list-args.R`. Each guard test mocks `is_server_running` to `TRUE` and runs under `local_no_request_allowed()`. A request then fails the test. Each stopped-server test mocks the probe to `FALSE` and asserts the argument message, not `rlmstudio_no_server`. Make sure that the tests fail against the current code.
+- [x] T1: Write the fault tests of AC1 to AC3 first, in a new `tests/testthat/test-list-args.R`. Each guard test mocks `is_server_running` to `TRUE` and runs under `local_no_request_allowed()`. A request then fails the test. Each stopped-server test mocks the probe to `FALSE` and asserts the argument message, not `rlmstudio_no_server`. Make sure that the tests fail against the current code.
 - [ ] T2: Add `type_fault()` with `rlm_check_type()`, and `flag_fault()` with `rlm_check_flag(value, arg, null_ok)`, to `R/utils-args.R`. Follow the `id_fault()` style: a plain-text detail with no cli braces. Call the checks at the top of `list_models()` (`R/list.R:52`) and `list_instances()` (`R/list.R:217`), above `stop_if_no_server()`. Read `quiet` through `is_quiet()`, so that `NULL` reads the option. Make the T1 tests pass.
 - [ ] T3: Add the AC2 `quiet = NULL` tests, the AC1 passing-value tests, and the AC4 unknown-type tests. Run `devtools::test()`. Make sure that no test file at the plan commit needed an edit.
 - [ ] T4: Update the `@param` text of the four arguments, the "Server not running" section in `R/conditions.R:14-17`, and `NEWS.md`. Run `devtools::document()`, then a clean `devtools::check()`.
@@ -52,6 +52,8 @@
 - 2026-09-28: plan gate chose to accept `quiet = NULL` as "read the option" over a rejection of it. `lms_embed()` already gives `NULL` that meaning. Falsified by a user who reads `NULL` on these two functions as `TRUE`.
 - 2026-09-28: plan gate chose to check `loaded` and `detailed` here over a separate candidate row. They take the same rule and test pattern as `quiet`. Falsified by a check of those two that needs a rule of its own.
 - 2026-09-28: plan chose a new `type_fault()` over a reuse of `rlm_check_text()`. `rlm_check_text()` accepts `""` and gives no detail per rule. Falsified by a later merge of the two rules into one helper with details.
+- 2026-09-28: implement started on branch `m052-list-arg-checks`. No question gate, because the plan left nothing open.
+- 2026-09-28: T1 done. `tests/testthat/test-list-args.R` holds the AC1 to AC3 fault tests. On main, the three guard tests fail with "a request left the process", and the stopped-server test fails with `rlmstudio_no_server`.
 
 ## Decisions
 
