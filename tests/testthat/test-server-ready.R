@@ -121,8 +121,8 @@ test_that("each token source reaches the Authorization header", {
   # its argument sends a string that names the source it leaked from. The last
   # two cases clear the sources that would otherwise win instead, because for
   # the environment variable and for no token there is no decoy that a correct
-  # result could be told apart from. request_target() reads headers with
-  # redaction off, so a failure prints the literal value.
+  # result could be told apart from. The header read passes
+  # redact_headers = FALSE, so a failure prints the literal value.
   cases <- list(
     list(
       source = "argument",
@@ -168,7 +168,7 @@ test_that("each token source reaches the Authorization header", {
 
     expect_length(recorder$requests, 1L)
     expect_identical(
-      request_target(recorder$requests[[1]])$headers$authorization,
+      request_target(recorder$requests[[1]], redact_headers = FALSE)$headers$authorization,
       case$expected,
       info = case$source
     )

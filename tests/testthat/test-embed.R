@@ -575,7 +575,7 @@ test_that("lms_embed sends the token as a bearer header", {
     token = "embed-token"
   )
 
-  headers <- request_target(run$requests[[1]])$headers
+  headers <- request_target(run$requests[[1]], redact_headers = FALSE)$headers
   expect_equal(headers$authorization, "Bearer embed-token")
 })
 
@@ -585,7 +585,7 @@ test_that("lms_embed sends no Authorization header without a token", {
 
   run <- drive_embed(embed_body(embed_element(0, row_one)), input = "text")
 
-  headers <- request_target(run$requests[[1]])$headers
+  headers <- request_target(run$requests[[1]], redact_headers = FALSE)$headers
   expect_null(headers$authorization)
 })
 

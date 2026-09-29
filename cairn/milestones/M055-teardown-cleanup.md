@@ -101,7 +101,7 @@ stay candidates in the ROADMAP.
       at `tests/testthat/test-embed.R:1116` and `:1146`. Write the AC3
       test. It catches a skip with a `skip` handler, because `expect_error()`
       lets a skip through (M019 lesson).
-- [ ] T5: In `request_target()` (`tests/testthat/helper-mock-http.R:144`),
+- [x] T5: In `request_target()` (`tests/testthat/helper-mock-http.R:144`),
       catch the JSON parse and return the body text as a character string.
       Add an opt-in argument for headers that are not redacted, and pass
       it at each caller that reads `authorization`. Test a JSON body, a
@@ -131,6 +131,7 @@ stay candidates in the ROADMAP.
 - 2026-09-29: T2 done. After `devtools::install()` of b14cffd, the eight renders all exited 0, and each left `running` and the `lms ps` listing of `google/gemma-3-1b` as they were before it. Control: the main vignette `getting-started.Rmd`, rendered from running with the model loaded, left the server stopped and the model unloaded. A kept render of `headless-config.Rmd` from stopped with no model showed `lms_ready` TRUE and the load, unload, and stop output, so the chunks ran live.
 - 2026-09-29: T3 done. The AC2 sweep over four files lists five calls, all inside `with_mock_dir()` blocks. With the token set, the server running, and `google/gemma-3-1b` loaded, `devtools::test(filter = "^(chat|integration)$")` passed 1584 and left the model loaded. Control: main's `test-integration.R`, run live the same way, unloaded it. Full `devtools::test()` with T3 to T5 in the tree: 0 failures, 0 skips, 14646 passes, and the model stayed loaded.
 - 2026-09-29: T4 done. `loaded_embedding_models()` in `helper-skips.R` serves both live tests, and `test-skip-helpers.R` holds the AC3 test plus a skip and a return control. Planted defect: the old `tryCatch()` put back in the helper turned the AC3 assertions red.
+- 2026-09-29: T5 done. `request_target()` takes `redact_headers = TRUE`, httr2's own name, and returns a body that fails `jsonlite::validate()` as its text, so a URL-like text is never fetched. Twelve header reads in five files pass `redact_headers = FALSE`. A redacted header is an httr2 `httr2_redacted_sentinel` object, not a string. Against main's helper, the new tests in `test-mock-http-helper.R` gave 5 failures.
 
 ## Decisions
 

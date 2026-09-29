@@ -23,21 +23,50 @@ test_that("require_httpuv() returns on the run branch", {
   expect_true(require_httpuv("run"))
 })
 
-test_that("request_target() reports the Authorization header unredacted", {
+test_that("request_target() reports the Authorization header unredacted on opt-in", {
   req <- lms_client("http://localhost:1234", token = "helper-token")
 
-  target <- request_target(req)
+  target <- request_target(req, redact_headers = FALSE)
 
   expect_identical(target$headers$authorization, "Bearer helper-token")
+})
+
+test_that("request_target() redacts the Authorization header by default", {
+  req <- lms_client("http://localhost:1234", token = "helper-token")
+
+  value <- request_target(req)$headers$authorization
+
+  expect_s3_class(value, "httr2_redacted_sentinel")
+  expect_false(any(grepl("helper-token", format(value), fixed = TRUE)))
 })
 
 test_that("request_target() reports no Authorization header when none is set", {
   withr::local_envvar(RLMSTUDIO_API_TOKEN = "")
   withr::local_options(rlmstudio.token = NULL)
 
-  target <- request_target(lms_client("http://localhost:1234"))
+  target <- request_target(
+    lms_client("http://localhost:1234"),
+    redact_headers = FALSE
+  )
 
   expect_null(target$headers$authorization)
+})
+
+test_that("request_target() parses a JSON body", {
+  req <- httr2::request("http://localhost:1234") |>
+    httr2::req_body_raw('{"model": "m", "n": 2}', type = "application/json")
+
+  expect_identical(request_target(req)$body, list(model = "m", n = 2L))
+})
+
+test_that("request_target() returns a body that is not JSON as its text", {
+  # A text that names a URL is the case jsonlite::fromJSON() would fetch.
+  for (text in c("not json {", "http://localhost:1/never")) {
+    req <- httr2::request("http://localhost:1234") |>
+      httr2::req_body_raw(text, type = "text/plain")
+
+    expect_identical(request_target(req)$body, text, info = text)
+  }
 })
 
 test_that("local_request_sequence() serves its responses in order", {

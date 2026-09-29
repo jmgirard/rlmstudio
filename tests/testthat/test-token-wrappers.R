@@ -4,8 +4,8 @@
 # count it must issue, so a dropped forwarding line shows up as a missing
 # header rather than as a missing request.
 #
-# The token string is a dummy. request_target() reads headers with redaction
-# off, so a failure prints the literal value.
+# The token string is a dummy. Each header read passes redact_headers = FALSE
+# to request_target(), so a failure prints the literal value.
 
 wrapper_token <- "wrapper-token"
 
@@ -216,7 +216,7 @@ test_that("every request a wrapper issues carries the token it was given", {
     headers <- vapply(
       requests,
       function(req) {
-        value <- request_target(req)$headers$authorization
+        value <- request_target(req, redact_headers = FALSE)$headers$authorization
         if (is.null(value)) NA_character_ else value
       },
       character(1)
@@ -251,7 +251,7 @@ test_that("lms_chat forwards the token on each of its three routes", {
 
     expect_length(requests, 1L)
     expect_identical(
-      request_target(requests[[1]])$headers$authorization,
+      request_target(requests[[1]], redact_headers = FALSE)$headers$authorization,
       paste("Bearer", wrapper_token),
       info = route
     )
@@ -269,7 +269,9 @@ test_that("no request a wrapper issues carries a header when no token resolves",
 
     present <- vapply(
       requests,
-      function(req) !is.null(request_target(req)$headers$authorization),
+      function(req) {
+        !is.null(request_target(req, redact_headers = FALSE)$headers$authorization)
+      },
       logical(1)
     )
 
@@ -290,7 +292,7 @@ test_that("lms_server_start sends its token, or the option, on the readiness req
   suppressMessages(lms_server_start(port = 8080, token = "t"))
   expect_length(recorder$requests, 1L)
   expect_identical(
-    request_target(recorder$requests[[1]])$headers$authorization,
+    request_target(recorder$requests[[1]], redact_headers = FALSE)$headers$authorization,
     "Bearer t"
   )
 
@@ -299,7 +301,7 @@ test_that("lms_server_start sends its token, or the option, on the readiness req
   suppressMessages(lms_server_start(port = 8080, token = NULL))
   expect_length(recorder$requests, 1L)
   expect_identical(
-    request_target(recorder$requests[[1]])$headers$authorization,
+    request_target(recorder$requests[[1]], redact_headers = FALSE)$headers$authorization,
     "Bearer option-token"
   )
 })
