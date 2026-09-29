@@ -75,11 +75,11 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' If the CLI refuses the start and exits with a status other than 0, the
 #' function aborts. The message gives the exit code and quotes what the CLI
 #' wrote, after "The CLI said:". The quoted text is the stderr text, or the
-#' stdout text if stderr holds only whitespace. A byte that is not valid
-#' UTF-8 shows as `<xx>`, its hex value. ANSI escape codes, such as color
-#' codes, cursor codes, and terminal links, are removed, and each run of
-#' whitespace becomes one space. A text longer than 1000 characters keeps at
-#' most its last 1000 characters, after "…".
+#' stdout text if stderr holds only whitespace and escape codes. A byte that
+#' is not valid UTF-8 shows as `<xx>`, its hex value. ANSI escape codes,
+#' such as color codes, cursor codes, and terminal links, are removed, and
+#' each run of whitespace becomes one space. A text longer than 1000
+#' characters keeps at most its last 1000 characters, after "…".
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -204,7 +204,7 @@ rlm_abort_cli_run <- function(
 #'
 #' The CLI writes its reason to stderr, so stderr is read first and stdout
 #' only when stderr holds nothing. A field that is absent, `NULL`, `NA`, or
-#' only whitespace holds nothing. A byte that is not valid UTF-8 is written
+#' only whitespace and escape codes holds nothing. A byte that is not valid UTF-8 is written
 #' as `<xx>`, its hex value. ANSI escape codes are removed by
 #' `cli::ansi_strip()` and then `strip_escapes()`. Each whitespace run becomes one space, so a text of
 #' several lines fits on one bullet.
@@ -220,8 +220,8 @@ cli_output_clean <- function(res) {
       # A byte that is not valid UTF-8 makes gsub() fail, which would hide
       # the exit code. sub = "byte" writes such a byte as "<ff>".
       text <- iconv(text, "UTF-8", "UTF-8", sub = "byte")
-      # Color codes, other cursor codes, and terminal links. The default
-      # arguments strip all three, and an older cli has no `link` argument.
+      # Color codes, other cursor codes, and terminal links. The call names
+      # no arguments, so it does not depend on which ones a cli version has.
       text <- cli::ansi_strip(text)
       text <- strip_escapes(text)
       # Collapse first. trimws() alone keeps a form feed or a vertical tab,
@@ -238,7 +238,8 @@ cli_output_clean <- function(res) {
 #' Remove the escape sequences that cli::ansi_strip() leaves
 #'
 #' Removes, in this order: a string sequence (ESC followed by `]`, `P`,
-#' `X`, `^`, or `_`) up to BEL or ESC \, such as a window title; a
+#' `X`, `^`, or `_`) up to BEL or ESC \, such as a window title, or up to
+#' the next ESC or the end of the text when it has no terminator; a
 #' two-character code with any intermediate bytes, such as the cursor save
 #' and restore codes ESC 7 and ESC 8 or the character set code ESC ( B; and
 #' a lone ESC.
@@ -257,8 +258,9 @@ strip_escapes <- function(text) {
 #'
 #' A text of more than `max` characters keeps its last `max`, after a
 #' leading "\u2026" that is not counted. The end of a log usually holds the
-#' reason for a failure. If the cut splits a `<xx>` token of
-#' `cli_output_clean()`, the part of the token is dropped.
+#' reason for a failure. If the cut splits any `<xx>` text (`<`, two
+#' lowercase hex digits, `>`), such as a token of `cli_output_clean()`, the
+#' part is dropped. The CLI's own text of that shape is dropped the same way.
 #'
 #' @param text One string, or `NULL`.
 #' @param max The number of characters to keep.
@@ -413,19 +415,19 @@ build_args_server_stop <- function() {
 #'
 #' Stops the currently running LM Studio local server via the CLI.
 #'
-#' If no server is running, the CLI exits with status 1 and says so. The
-#' function then prints an info message and returns that exit code
-#' invisibly, with no abort. [lms_daemon_stop()] with `force = TRUE` shows
-#' the same message.
+#' If the CLI exits with a status other than 0, the function reads what the
+#' CLI wrote. If the text says "not running", the function prints an info
+#' message and returns the exit code invisibly, with no abort. Letter case
+#' does not matter. With no server running, the CLI exits with status 1 and
+#' says so. [lms_daemon_stop()] with `force = TRUE` shows the same message.
 #'
-#' If the CLI exits with a status other than 0 for another reason, the
-#' function aborts. The message gives the exit code and quotes what the CLI
-#' wrote, after "The CLI said:". The quoted text is the stderr text, or the
-#' stdout text if stderr holds only whitespace. A byte that is not valid
-#' UTF-8 shows as `<xx>`, its hex value. ANSI escape codes, such as color
-#' codes, cursor codes, and terminal links, are removed, and each run of
-#' whitespace becomes one space. A text longer than 1000 characters keeps at
-#' most its last 1000 characters, after "…".
+#' Any other failure aborts. The message gives the exit code and quotes what
+#' the CLI wrote, after "The CLI said:". The quoted text is the stderr text,
+#' or the stdout text if stderr holds only whitespace and escape codes. A
+#' byte that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI escape
+#' codes, such as color codes, cursor codes, and terminal links, are
+#' removed, and each run of whitespace becomes one space. A text longer than
+#' 1000 characters keeps at most its last 1000 characters, after "…".
 #'
 #' @seealso [LM Studio CLI Server Stop
 #'   Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)

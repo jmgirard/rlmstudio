@@ -1,6 +1,6 @@
 # M054: A failed CLI or installer run quotes what it wrote
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -154,7 +154,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       installer test text that the cut keeps. State the escape removal
       the same way in the five pages and NEWS. Cut the M053 NEWS
       sub-bullet that the new entry replaces. Remove `cli_output_text()`.
-- [ ] T9: Run `devtools::document()`, `devtools::test()`, and
+- [x] T9: Run `devtools::document()`, `devtools::test()`, and
       `devtools::check()` again, as in T6.
 
 ## Work log
@@ -181,6 +181,9 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: correction to review return 1. The whitespace test text already held two non-breaking spaces as literal characters, so AC2 fail 1 was a misread. cli prints a run of spaces as one, so the rule shows only in a field that holds nothing else. A planted defect turned the blank-stderr case red for all four functions.
 - 2026-09-29: T7 done. New `strip_escapes()` in `R/serve.R` runs after `cli::ansi_strip()`. The five new escape texts went red first. The literal non-breaking spaces in the test file are now ` ` escapes. `devtools::test()`: 0 failed.
 - 2026-09-29: T8 done. The `lms_daemon_stop()` failure paragraph now renders in Details (`man/lms_daemon_stop.Rd:23`). The five pages and NEWS say "ANSI escape codes, such as color codes, cursor codes, and terminal links, are removed". The installer test puts a color code, ESC 7, and a window title in the kept tail. With the second strip pass planted out, it went red, and with both passes out, it went red. The M053 NEWS sub-bullet is cut, and the new entry names `lms_server_start()` among the functions that gave the exit code alone in v0.2.2. `cli_output_text()` is removed. `devtools::test()`: 0 failed.
+- 2026-09-29: claim audit: 60 claims read, 5 corrected — R/serve.R, R/daemon.R, NEWS.md, man/*.Rd
+- 2026-09-29: the corrections. The stdout fallback now reads "holds only whitespace and escape codes" on four pages and in NEWS. The `lms_server_stop()` page names the "not running" match. The `strip_escapes()` and `cli_output_cut()` notes and one code comment now match the code. The same reader re-read them once, and all held. It also flagged the `cli_output_clean()` note, now fixed. The claims about what the real `lms` CLI prints stay as recorded on 2026-09-29.
+- 2026-09-29: T9 done. A second `document()` wrote nothing. The server was started and the token set. `devtools::test()` gave 558 tests, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
 
 ## Decisions
 

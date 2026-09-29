@@ -14,19 +14,19 @@ Invisibly returns an integer representing the system exit code
 Stops the currently running LM Studio local server via the CLI.
 }
 \details{
-If no server is running, the CLI exits with status 1 and says so. The
-function then prints an info message and returns that exit code
-invisibly, with no abort. \code{\link[=lms_daemon_stop]{lms_daemon_stop()}} with \code{force = TRUE} shows
-the same message.
+If the CLI exits with a status other than 0, the function reads what the
+CLI wrote. If the text says "not running", the function prints an info
+message and returns the exit code invisibly, with no abort. Letter case
+does not matter. With no server running, the CLI exits with status 1 and
+says so. \code{\link[=lms_daemon_stop]{lms_daemon_stop()}} with \code{force = TRUE} shows the same message.
 
-If the CLI exits with a status other than 0 for another reason, the
-function aborts. The message gives the exit code and quotes what the CLI
-wrote, after "The CLI said:". The quoted text is the stderr text, or the
-stdout text if stderr holds only whitespace. A byte that is not valid
-UTF-8 shows as \verb{<xx>}, its hex value. ANSI escape codes, such as color
-codes, cursor codes, and terminal links, are removed, and each run of
-whitespace becomes one space. A text longer than 1000 characters keeps at
-most its last 1000 characters, after "…".
+Any other failure aborts. The message gives the exit code and quotes what
+the CLI wrote, after "The CLI said:". The quoted text is the stderr text,
+or the stdout text if stderr holds only whitespace and escape codes. A
+byte that is not valid UTF-8 shows as \verb{<xx>}, its hex value. ANSI escape
+codes, such as color codes, cursor codes, and terminal links, are
+removed, and each run of whitespace becomes one space. A text longer than
+1000 characters keeps at most its last 1000 characters, after "…".
 }
 \examples{
 \dontrun{

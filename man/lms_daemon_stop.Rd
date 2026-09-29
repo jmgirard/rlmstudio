@@ -28,7 +28,8 @@ that the daemon is not running, it prints an info message and returns
 \code{TRUE}. Letter case does not matter. Any other failure aborts. The
 message gives the exit code, quotes what the CLI wrote after "The CLI
 said:", and gives a hint about \code{force = TRUE}. The quoted text is the
-stderr text, or the stdout text if stderr holds only whitespace. A byte
+stderr text, or the stdout text if stderr holds only whitespace and
+escape codes. A byte
 that is not valid UTF-8 shows as \verb{<xx>}, its hex value. ANSI escape
 codes, such as color codes, cursor codes, and terminal links, are
 removed, and each run of whitespace becomes one space. A text longer than
