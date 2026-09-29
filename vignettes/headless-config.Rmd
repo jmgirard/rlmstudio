@@ -157,8 +157,8 @@ lms_unload(model)
 ```
 
 Stopping the server and the daemon does not go through the REST API, so it
-runs whenever the CLI is here. That way a stack this vignette started is torn
-down even if the readiness check said no.
+does not wait on the readiness check. A stack that this vignette started is
+torn down even if the readiness check said no.
 
 ```{r stop-stack, eval=lms_installed && !server_was_running}
 # 2. Stop the API server

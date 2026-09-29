@@ -154,7 +154,8 @@ To free up memory and system resources when you are finished, it is best practic
 
 When this vignette is built, it unloads the model only if the model was not
 loaded before the build. It stops the server only if the server was not
-running before the build. The build then leaves LM Studio as it found it.
+running before the build. The build then leaves the server state, and
+whether the model is loaded, as it found them.
 
 ```{r unload, eval=lms_ready && !model_was_loaded}
 # Unload the model
@@ -162,9 +163,9 @@ lms_unload(model)
 #> ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]
 ```
 
-Stopping the server does not go through the REST API, so it runs whenever the
-CLI is here. That way a server this vignette started is stopped even if the
-readiness check said no.
+Stopping the server does not go through the REST API, so it does not wait on
+the readiness check. A server that this vignette started is stopped even if
+the readiness check said no.
 
 ```{r stop-server, eval=lms_installed && !server_was_running}
 # Stop the server

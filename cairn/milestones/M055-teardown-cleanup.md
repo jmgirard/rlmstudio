@@ -1,6 +1,6 @@
 # M055: Cleanup of vignette teardown, test helpers, and the token hint
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -135,6 +135,8 @@ stay candidates in the ROADMAP.
 - 2026-09-29: correction to the T5 line: eleven header reads pass `redact_headers = FALSE`, not twelve. Ten are single-line calls, and one call spans lines.
 - 2026-09-29: T6 done. `request_sends_token()` in `R/utils-token.R` reads the header name off the built request. The eight sites and the embed flag use it. `grep -n 'rlm_token(' R/*.R` lists `R/chat.R:2013` (`lms_client()`) and `R/serve.R:136`. `test-token-hint.R` drives each of the nine `rlm_abort_api()` sites to 401 twice and checks the table against the grep. Control: against main's `R/`, 32 assertions failed, 2 per run at each of the eight non-embed sites. The embed site passed before the change, because it read its flag at request build. The Review section is review's to write, so review carries that fact. Full `devtools::test()`: 0 failures, 0 skips, 14777 passes. `document()` changed nothing.
 - 2026-09-29: T7 done. NEWS.md has one entry for the hint and one for the vignettes. With the token set, `devtools::document()` then `devtools::check()`: 0 errors, 0 warnings, 0 notes. Before and after the check, the server was running and `google/gemma-3-1b` was loaded.
+- 2026-09-29: claim audit: 68 claims read, 4 corrected — NEWS.md, vignettes/getting-started.Rmd, vignettes/headless-config.Rmd. The NEWS vignette entry overstated what a build restores, named one vignette where both unloaded, and said the daemon stops where the call can leave it running. One vignette sentence overstated the same restore. The reader also flagged two unchanged sentences, one per vignette, that the new gates made false, and they were rewritten. Its one re-read found the corrected text true. The edits are prose only, so the T2 renders and the T7 check still apply.
+- 2026-09-29: implement done, status review.
 
 ## Decisions
 
