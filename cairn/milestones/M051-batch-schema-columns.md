@@ -65,6 +65,8 @@ With an object `schema` and `format = "data.frame"`, `lms_chat_batch()` returns 
 - 2026-09-28: T6 done. The help page and NEWS state the column, type, `NA` and `NULL`, and abort rules. Each claim maps to a T1, T4, or T5 test in `test-chat-schema.R` or `test-arg-guards.R`. With the server running and the token set, `devtools::document()`, `devtools::test()` (no skips), and `devtools::check()` (0 errors, 0 warnings, 0 notes) are clean.
 - 2026-09-28: claim audit: 41 claims read, 1 corrected — R/chat.R, man/lms_chat_batch.Rd, NEWS.md, R/utils-args.R, tests/testthat/test-arg-guards.R, test-chat-batch.R, test-chat-batch-usage.R, test-chat-schema.R. The corrected claim says that a data frame with `logprobs = TRUE` also skips the name check. A new test case covers it, and the reader's re-read found that it holds.
 - 2026-09-28: `devtools::test()` and `devtools::check()` (0 errors, 0 warnings, 0 notes) are clean after the fix. Status set to review.
+- 2026-09-28: review: 7 of 7 criteria verified, gate clean, 3 reviewers. Fix-now O5 and S1 in `NEWS.md`.
+- 2026-09-28: step-7 approval: m051-batch-schema-columns approved for merge
 
 ## Decisions
 
@@ -96,3 +98,5 @@ Independent review: three fresh reviewers, [O] diff-bug, [S] blame-history, and 
 - S3 to S9: no consequence found. They cover the check order, the skipped formats, the silent `NA`, the test updates, the helper defaults, the failed-input cells, and the reserved-name list. Proposed: noted.
 - P1: The prior-review lens found no regression of an earlier review. It noted that a name made only of spaces passes the check. Proposed: noted.
 - R1: The first `devtools::test()` run failed once at `test-server-ready.R:170`, a file the branch does not touch. Three reruns of the file and a second full run passed. Proposed: follow-up candidate row.
+
+Gate triage, 2026-09-28: the maintainer accepted every proposed disposition. O5 and S1 are fixed in `NEWS.md`. O1, O3, and R1 become candidate rows at the hygiene pass.
