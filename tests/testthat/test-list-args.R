@@ -158,3 +158,76 @@ test_that("an argument abort comes before the probe of a stopped server", {
     expect_identical(probe$calls, 0L, info = info)
   }
 })
+
+# One llm model with one loaded instance. A `type` of "vlm" matches no model
+# in it, and "llm" matches the one model.
+one_loaded_llm <- paste0(
+  '{"models": [{"type": "llm", "key": "m1", "display_name": "M1", ',
+  '"size_bytes": 1073741824, "loaded_instances": [{"id": "i1"}]}]}'
+)
+
+local_one_loaded_llm <- function(.env = parent.frame()) {
+  local_mocked_bindings(is_server_running = function(...) TRUE, .env = .env)
+  local_request_recorder(mock_response(200L, one_loaded_llm), .env = .env)
+}
+
+test_that("a named type and a 1-by-1 character matrix pass", {
+  withr::local_options(rlmstudio.quiet = NULL)
+  for (name in names(list_calls)) {
+    for (value in list(c(a = "llm"), matrix("llm"))) {
+      local_one_loaded_llm()
+      info <- paste(name, "with", class(value)[[1]])
+      res <- list_calls[[name]](type = value)
+      expect_identical(nrow(res), 1L, info = info)
+      expect_identical(res$key, "m1", info = info)
+    }
+  }
+})
+
+no_match_messages <- c(
+  list_models = "No models found matching criteria",
+  list_instances = "No loaded model instances"
+)
+
+test_that("quiet = NULL prints the no-match message unless the option is TRUE", {
+  for (name in names(list_calls)) {
+    local_one_loaded_llm()
+    withr::with_options(list(rlmstudio.quiet = NULL), {
+      expect_message(
+        list_calls[[name]](type = "vlm", quiet = NULL),
+        no_match_messages[[name]],
+        info = name
+      )
+    })
+    withr::with_options(list(rlmstudio.quiet = TRUE), {
+      expect_no_message(list_calls[[name]](type = "vlm", quiet = NULL))
+    })
+  }
+})
+
+test_that("an unknown type returns the empty frame and a message, with no abort", {
+  withr::local_options(rlmstudio.quiet = NULL)
+  local_one_loaded_llm()
+
+  expect_message(
+    out <- withVisible(list_models(type = "vlm")),
+    no_match_messages[["list_models"]]
+  )
+  expect_false(out$visible)
+  expect_identical(out$value, data.frame())
+
+  expect_message(
+    out <- withVisible(list_instances(type = "vlm")),
+    no_match_messages[["list_instances"]]
+  )
+  expect_false(out$visible)
+  expect_identical(
+    out$value,
+    data.frame(
+      id = character(),
+      key = character(),
+      type = character(),
+      display_name = character()
+    )
+  )
+})
