@@ -89,9 +89,9 @@ wait_fault <- function(value) {
 #' Reject a port that is not one whole number from 1 to 65535
 #'
 #' `lms_server_start(port =)` names a TCP port, so the check runs before the
-#' CLI runs, for the reasons `rlm_check_wait()` states. It also names the
-#' argument, which the CLI's own reason does not. `NULL` passes, because it
-#' leaves the port to LM Studio.
+#' CLI runs, for the reasons `rlm_check_wait()` states. It also names the R
+#' argument and states the valid range. `NULL` passes, because it leaves the
+#' port to LM Studio.
 #'
 #' @param value The value the caller passed.
 #' @param arg Character. The argument name to report.

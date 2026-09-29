@@ -606,7 +606,9 @@ test_that("a failed start with no CLI output gives the exit code alone", {
     list(status = 1),
     list(status = 1, stdout = NULL, stderr = NULL),
     list(status = 1, stdout = NA_character_, stderr = NA_character_),
-    list(status = 1, stdout = " \n", stderr = "\t")
+    list(status = 1, stdout = " \n", stderr = "\t"),
+    # trimws() alone keeps these two.
+    list(status = 1, stdout = "\f", stderr = "\v\n")
   )
   for (res in empties) {
     msg <- start_failure_message(res)
@@ -624,10 +626,12 @@ test_that("stderr wins over stdout when both hold text", {
 })
 
 test_that("a stderr of only whitespace falls through to stdout", {
-  msg <- start_failure_message(
-    list(status = 1, stdout = "from stdout\n", stderr = "  \n ")
-  )
-  expect_quotes(msg, "from stdout")
+  for (stderr in c("  \n ", "\f")) {
+    msg <- start_failure_message(
+      list(status = 1, stdout = "from stdout\n", stderr = stderr)
+    )
+    expect_quotes(msg, "from stdout")
+  }
 })
 
 test_that("none of the three warnings is silenced by the quiet option", {

@@ -1,6 +1,6 @@
 # M053: The server start call says why a start was refused
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -59,6 +59,9 @@ If its own checks or the LM Studio CLI refuse a start, `lms_server_start()` says
 - 2026-09-28: T2 done. Six AC3 cases failed before the fix, and the no-output case passed, as it must. The `processx::run()` call is unchanged, so the token-wrapper mocks needed no edit. `devtools::test()` clean.
 - 2026-09-28: T3 done. The `warn_unless_ready()` comment now says each input of the target is checked before the probe, since `server_status_port()` already drops a port outside 1 to 65535. `devtools::document()` and `devtools::test()` clean.
 - 2026-09-28: T4 done. With the server started and `RLMSTUDIO_API_TOKEN` set, `devtools::test()` had no failures and no skips, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-28: claim audit: 46 claims read, 6 corrected — R/serve.R, R/utils-args.R, NEWS.md, man/lms_server_start.Rd, tests/testthat/test-serve.R
+- 2026-09-28: the claim audit found that `cli_output_text()` trimmed before it collapsed, so a stderr of only a form feed skipped the stdout fallback. The code now collapses first, and a test covers `"\f"` and `"\v\n"`. The other five fixes were wording: the `port` integer-step comment, the `rlm_check_port()` roxygen, the NEWS `port` and `cors` bullets, and how the quoted CLI text is reshaped. The same reader re-read all six once and found them true.
+- 2026-09-28: after the fixes, `devtools::test()` had no failures and no skips, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
 
 ## Decisions
 

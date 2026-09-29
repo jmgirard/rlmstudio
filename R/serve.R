@@ -7,8 +7,9 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
   args <- c("server", "start")
 
   if (!is.null(port)) {
-    # Through an integer, so the string never takes the "1e+05" form that
-    # as.character() gives a large double. as.integer() also drops names.
+    # rlm_check_port() limits port to whole numbers from 1 to 65535, which
+    # as.character() prints as plain digits. The integer step guards a direct
+    # call with a large double, such as 1e5, which would go out as "1e+05".
     args <- c(args, "--port", as.character(as.integer(port)))
   }
 
@@ -74,6 +75,8 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' If the CLI refuses the start and exits with a status other than 0, the
 #' function aborts. The message gives the exit code and quotes the text the
 #' CLI wrote to stderr. If stderr holds nothing, it quotes the stdout text.
+#' Whitespace at the ends of the quoted text is dropped, and each run of
+#' whitespace inside it becomes one space.
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -173,7 +176,8 @@ cli_output_text <- function(res) {
   for (field in c("stderr", "stdout")) {
     text <- res[[field]]
     if (is.character(text) && length(text) == 1L && !is.na(text)) {
-      text <- gsub("\\s+", " ", trimws(text))
+      # Collapse first. trimws() alone keeps a form feed or a vertical tab.
+      text <- trimws(gsub("\\s+", " ", text))
       if (nzchar(text)) {
         return(text)
       }
