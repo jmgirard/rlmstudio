@@ -1,13 +1,13 @@
 # M053: The server start call says why a start was refused
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes which calls of the exported `lms_server_start()` abort, and what the abort says
-- **Branch/PR:** —
+- **Branch/PR:** m053-server-start-reasons
 
 ## Goal
 
@@ -39,7 +39,7 @@ If its own checks or the LM Studio CLI refuse a start, `lms_server_start()` says
 
 ## Tasks
 
-- [ ] T1: Write the AC1 and AC2 tests first in `tests/testthat/test-serve.R`, and make sure that they fail against the current code. Add `port_fault()` and `rlm_check_port()` to `R/utils-args.R`, next to `rlm_check_wait()`. Follow the `wait_fault()` style: a plain-text detail with no cli braces. Call `rlm_check_port(port)` and `rlm_check_flag(cors, "cors")` beside `rlm_check_wait(wait)` at `R/serve.R:109`. Make `build_args_server_start()` send `as.character(as.integer(port))` with names dropped. In a scratch copy, delete each new call and make sure that its test goes red.
+- [x] T1: Write the AC1 and AC2 tests first in `tests/testthat/test-serve.R`, and make sure that they fail against the current code. Add `port_fault()` and `rlm_check_port()` to `R/utils-args.R`, next to `rlm_check_wait()`. Follow the `wait_fault()` style: a plain-text detail with no cli braces. Call `rlm_check_port(port)` and `rlm_check_flag(cors, "cors")` beside `rlm_check_wait(wait)` at `R/serve.R:109`. Make `build_args_server_start()` send `as.character(as.integer(port))` with names dropped. In a scratch copy, delete each new call and make sure that its test goes red.
 - [ ] T2: Write the AC3 tests first. Then make the failed-start abort at `R/serve.R:133-137` add a CLI-output line. Splice the CLI text in as a value, so cli does not run its braces (LESSONS, M012). Treat a `stderr` or `stdout` field that is absent, `NULL`, or `NA` as empty, as the mock at `tests/testthat/test-serve.R:26` returns neither. Keep the `processx::run()` call to `command`, `args`, and `error_on_status`. Otherwise, update the mocks at `tests/testthat/test-token-wrappers.R:141-146` and `283-299` too.
 - [ ] T3: Update the `@param port` and `@param cors` text, the fault-count paragraph at `R/serve.R:63`, and a sentence on the failed-start abort. Rewrite the comment at `R/serve.R:225-231`. Run `devtools::document()`. Add the `NEWS.md` entry.
 - [ ] T4: Run `devtools::test()`. Run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server started, because the vignettes make live calls (LESSONS, M009).
@@ -54,6 +54,8 @@ If its own checks or the LM Studio CLI refuse a start, `lms_server_start()` says
 - 2026-09-28: plan gate chose numbers only for `port` over also accepting strings of digits. It matches the help page and the `ttl` and `wait` checks. Falsified by a user whose port arrives as a string from a configuration file or an environment variable.
 - 2026-09-28: plan gate chose to check `cors` here over leaving it to the flags candidate row. The helper exists and the call is the same. Falsified by a user who relies on `cors = NULL` acting as `FALSE`.
 - 2026-09-28: plan chose to accept names on `port` and reject an array. `rlm_check_flag()` lets names pass, and `wait_fault()` rejects an array. Falsified by a user who passes a port read from a one-cell matrix.
+- 2026-09-28: implement started on branch m053-server-start-reasons. Question gate skipped, as the plan left no implementation choice open.
+- 2026-09-28: T1 done. The AC1 and AC2 tests failed 81 times before the fix. In a scratch copy, removing `rlm_check_port(port)` or the `cors` flag check turned only its own test red. `devtools::test()` clean.
 
 ## Decisions
 

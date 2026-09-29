@@ -7,7 +7,9 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
   args <- c("server", "start")
 
   if (!is.null(port)) {
-    args <- c(args, "--port", as.character(port))
+    # Through an integer, so the string never takes the "1e+05" form that
+    # as.character() gives a large double. as.integer() also drops names.
+    args <- c(args, "--port", as.character(as.integer(port)))
   }
 
   if (isTRUE(cors)) {
@@ -107,6 +109,8 @@ lms_server_start <- function(
   token = NULL
 ) {
   rlm_check_wait(wait)
+  rlm_check_port(port)
+  rlm_check_flag(cors, "cors")
   # Faults in host and token are knowable without a server, and a start that
   # has already run cannot be undone, so both are checked before the CLI runs.
   # The host check builds its request with token = NULL, so it never sees the

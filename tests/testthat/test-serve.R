@@ -445,6 +445,108 @@ test_that("a bad wait aborts before the CLI runs", {
   expect_false(any(grepl("^rlmstudio", class(err))))
 })
 
+# The port and cors checks. The stub counts its calls and keeps the args of
+# the last one, so a test can say both whether the CLI ran and what it got.
+local_counting_run <- function(env = parent.frame()) {
+  state <- new.env()
+  state$calls <- 0L
+  state$args <- NULL
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) {
+      state$calls <- state$calls + 1L
+      state$args <- args
+      list(status = 0)
+    },
+    .package = "processx",
+    .env = env
+  )
+  # A value that slips past the checks would otherwise start a real wait.
+  local_mocked_bindings(lms_server_ready = function(...) TRUE, .env = env)
+  state
+}
+
+# Each rejected value runs once with wait = 0 and once with a host, so the
+# check cannot hide behind a branch on either.
+expect_start_rejects <- function(arg, value, rule) {
+  runs <- local_counting_run()
+  extras <- list(list(wait = 0), list(host = "http://localhost:1234"))
+  for (extra in extras) {
+    call_args <- c(stats::setNames(list(value), arg), extra)
+    label <- paste0(arg, " = ", deparse(value), ", ", names(extra))
+    err <- tryCatch(
+      suppressMessages(do.call(lms_server_start, call_args)),
+      error = function(e) e
+    )
+    if (!inherits(err, "error")) {
+      fail(paste0(label, " did not abort."))
+      next
+    }
+    expect_false(any(grepl("^rlmstudio_", class(err))), label = label)
+    msg <- conditionMessage(err)
+    expect_match(msg, paste0("`", arg, "`"), fixed = TRUE, label = label)
+    if (!is.null(rule)) {
+      expect_match(msg, rule, fixed = TRUE, label = label)
+    }
+  }
+  expect_identical(runs$calls, 0L)
+}
+
+test_that("a port that is not one whole number from 1 to 65535 aborts first", {
+  rejected <- list(
+    # Not one plain number.
+    "8080", "abc", TRUE, NA, list(8080), factor("8080"), c(8080, 8081),
+    numeric(0), matrix(8080),
+    # Missing or not finite.
+    NA_real_, NA_integer_, NaN, Inf, -Inf,
+    # Out of range or not whole.
+    -1, 0, 0L, 8080.5, 65536, 99999, 1e10
+  )
+  expect_length(rejected, 21L)
+  for (value in rejected) {
+    expect_start_rejects("port", value, "one whole number from 1 to 65535")
+  }
+})
+
+test_that("an accepted port reaches the CLI as a whole-number string", {
+  accepted <- list(1, 65535, 8080L, 8080, c(p = 8080))
+  sent <- c("1", "65535", "8080", "8080", "8080")
+  for (i in seq_along(accepted)) {
+    runs <- local_counting_run()
+    suppressMessages(lms_server_start(port = accepted[[i]], wait = 0))
+    expect_identical(runs$calls, 1L)
+    at <- match("--port", runs$args)
+    expect_false(is.na(at))
+    expect_identical(runs$args[[at + 1L]], sent[[i]])
+    expect_null(names(runs$args))
+  }
+
+  runs <- local_counting_run()
+  suppressMessages(lms_server_start(port = NULL, wait = 0))
+  expect_identical(runs$calls, 1L)
+  expect_false("--port" %in% runs$args)
+})
+
+test_that("a cors that is not TRUE or FALSE aborts first", {
+  rejected <- list("yes", 1, NA, NULL, logical(0), c(TRUE, FALSE))
+  for (value in rejected) {
+    expect_start_rejects("cors", value, NULL)
+  }
+})
+
+test_that("cors = TRUE sends --cors and cors = FALSE does not", {
+  for (value in list(TRUE, c(x = TRUE), matrix(TRUE))) {
+    runs <- local_counting_run()
+    suppressMessages(lms_server_start(cors = value, wait = 0))
+    expect_identical(runs$calls, 1L)
+    expect_true("--cors" %in% runs$args)
+  }
+
+  runs <- local_counting_run()
+  suppressMessages(lms_server_start(cors = FALSE, wait = 0))
+  expect_identical(runs$calls, 1L)
+  expect_false("--cors" %in% runs$args)
+})
+
 test_that("none of the three warnings is silenced by the quiet option", {
   # GP6 is traded here. All three warnings go through cli_warn(), not through
   # the helpers in R/utils-msg.R that read the option.
