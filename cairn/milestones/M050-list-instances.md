@@ -65,7 +65,7 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
       whose `type` is in `type` and that has at least one instance. One fault is a `display_name` that is present,
       not `null`, and not a string. The other is an instance `config` that is present, not `null`, and not a JSON
       object. An absent or `null` `display_name` gives `NA`. An absent or `null` `config` gives `NA` in every
-      configuration column. The message names the field and its entry. Tests fire each of the two new faults and one fault of
+      configuration column, or `NULL` in a list-column. The message names the field and its entry. Tests fire each of the two new faults and one fault of
       `model_list_fault()`. They assert the class and the field that the message names. The two new checks live in
       `list_instances()` alone. `model_list_fault()` and `request_model_list()` do not change, so `list_models()`
       and `lms_server_ready()` accept the same bodies as before. The files `tests/testthat/test-list.R`,
@@ -136,6 +136,11 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: review evidence recorded for AC1 to AC7 and the consistency gate passed. The three fresh reviewers are running, so their findings are not triaged yet.
 - 2026-09-28: gate fix-now work landed for S1, P1, O3, O5, S5, S6. `devtools::test()` gave 0 failures and 0 warnings, with 3 live skips because the server had stopped. The full check was not rerun, and the re-review owes it.
 - 2026-09-28: amendment return: AC4 — "An absent or `null` `config` gives `NA` in every configuration column, or `NULL` in a list-column."
+- 2026-09-28: re-audit: AC4 (full) — one judgment call. The "or" carves list-columns out of "every configuration column", and a tighter form exists. The code meets the clause, the clause is bounded, and it corrects AC4 and does not widen it.
+- 2026-09-28: mini gate kept review's AC4 clause over the reader's tighter wording, because the meaning is the same and it is already audited. AC4 now carries the amended sentence.
+- 2026-09-28: the absent-config test in `test-list-instances.R` now also asserts `NULL` cells in a list-column. A planted defect that gave `NA` there turned only that assertion red.
+- 2026-09-28: claim audit: 12 claims read, 0 corrected — NEWS.md, R/conditions.R, R/list.R, R/utils-api-error.R, tests/testthat/test-api-error.R, tests/testthat/test-list-instances.R (the lines added since 909b7fd, which the first audit did not read)
+- 2026-09-28: the claim audit also found that the chat model lookup is missing from two help notes, which is older than this branch. It went into the M049 model-name candidate row as a seventh case.
 
 ## Review
 

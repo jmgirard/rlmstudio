@@ -313,12 +313,12 @@ test_that("the two new checks skip a model outside `type` or with no instance", 
   expect_identical(res$id, "i0")
 })
 
-test_that("an absent or null display_name or config gives NA", {
+test_that("an absent or null display_name or config gives NA, or NULL in a list-column", {
   body <- instances_body(c(
     instances_model(
       "llm", "m1", "null",
       instances = c(
-        instance_json("i1", '{"a": 1, "b": "x"}'),
+        instance_json("i1", '{"a": 1, "b": "x", "o": {"k": 1}}'),
         instance_json("i2", "null")
       )
     ),
@@ -332,6 +332,7 @@ test_that("an absent or null display_name or config gives NA", {
   expect_identical(res$display_name, c(NA_character_, NA_character_, NA_character_))
   expect_identical(res$a, c(1, NA, NA))
   expect_identical(res$b, c("x", NA, NA))
+  expect_identical(res$o, list(list(k = 1L), NULL, NULL))
 })
 
 test_that("a fault of the model list rules aborts with rlmstudio_bad_response", {
