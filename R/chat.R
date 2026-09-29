@@ -79,6 +79,8 @@ lms_chat <- function(
   rlm_check_schema_route(schema, api_type)
   rlm_check_ttl(ttl)
   rlm_check_ttl_route(ttl, api_type)
+  rlm_check_flag(logprobs, "logprobs")
+  rlm_check_flag(simplify, "simplify")
 
   if (api_type == "openresponses") {
     return(lms_chat_openresponses(
@@ -198,6 +200,8 @@ lms_chat_openresponses <- function(
 ) {
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_flag(logprobs, "logprobs")
+  rlm_check_flag(simplify, "simplify")
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
@@ -491,6 +495,8 @@ lms_chat_openai <- function(
   rlm_check_messages(messages)
   rlm_check_schema(schema, ...names())
   rlm_check_ttl(ttl)
+  rlm_check_flag(logprobs, "logprobs")
+  rlm_check_flag(simplify, "simplify")
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
@@ -1180,22 +1186,32 @@ lms_chat_native <- function(
 ) {
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
-  rlm_check_stream(list(...))
+  rlm_check_flag(simplify, "simplify")
+  dots <- list(...)
+  rlm_check_stream(dots)
+  # The endpoint has no logprobs, so each element named exactly `logprobs` is
+  # checked as a flag and then dropped (D-029).
+  # `%in%` over `names()` would give a length-0 result for unnamed dots.
+  is_logprobs <- vapply(
+    seq_along(dots),
+    function(i) identical(names(dots)[i], "logprobs"),
+    logical(1)
+  )
+  for (value in dots[is_logprobs]) {
+    rlm_check_flag(value, "logprobs", null_ok = TRUE)
+  }
 
   stop_if_no_server(host)
 
   body <- list(model = model, input = input, system_prompt = system_prompt)
   body <- Filter(Negate(is.null), body)
 
-  # Check if user tried to pass logprobs in dots and warn them
-  dots <- list(...)
-  if (isTRUE(dots$logprobs)) {
+  if (any(vapply(dots[is_logprobs], isTRUE, logical(1)))) {
     cli::cli_warn(
       "The native API does not support logprobs. Ignoring argument."
     )
-    dots$logprobs <- NULL
   }
-  body <- utils::modifyList(body, dots)
+  body <- utils::modifyList(body, dots[!is_logprobs])
 
   req <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/chat") |>
@@ -1644,6 +1660,12 @@ lms_chat_batch <- function(
   # The raw dots, because `args` keeps only the first of two same-named
   # values. No `lms_chat()` argument starts with `stream`, so the names match.
   rlm_check_stream(list(...))
+  rlm_check_flag(simplify, "simplify")
+  # A name test, not `args[["logprobs"]]`, which is `NULL` for an absent name
+  # and for a `logprobs = NULL` alike. `lms_chat()` refuses `NULL` there.
+  if ("logprobs" %in% names(args)) {
+    rlm_check_flag(args[["logprobs"]], "logprobs")
+  }
 
   # An argument fault, so it aborts before the server probe (D-008) and before
   # any request is sent.

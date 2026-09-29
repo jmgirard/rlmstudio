@@ -1,13 +1,13 @@
 # M057: One meaning for each flag argument
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes which values exported functions accept and what `quiet` does
-- **Branch/PR:** —
+- **Branch/PR:** m057-flag-arguments
 
 ## Goal
 
@@ -92,7 +92,7 @@ rows.
 
 ## Tasks
 
-- [ ] T1: Chat functions. Add `rlm_check_flag()` for `logprobs` and
+- [x] T1: Chat functions. Add `rlm_check_flag()` for `logprobs` and
       `simplify` of `lms_chat()`, `lms_chat_openai()`, and
       `lms_chat_openresponses()`, and for `simplify` of `lms_chat_native()`
       and `lms_chat_batch()`, above `stop_if_no_server()`. In the batch,
@@ -142,6 +142,8 @@ rows.
 - 2026-09-29: plan gate chose a check of `logprobs` in the `...` of `lms_chat_native()` over leaving it to the server because the function already reads it as a flag; falsified by a `/api/v1/chat` request that honors `logprobs`.
 - 2026-09-29: plan gate chose `TRUE`, `FALSE`, or `NULL` alone for the two `lms_load()` load settings over keeping `as.logical()` because every other flag follows that rule; falsified by a user whose script passes `"true"` or `1` there and cannot change it.
 - 2026-09-29: plan chose a scan of exported formals as the test domain over a hand list of functions because a new flag argument then falls under the test; falsified by a flag argument whose default is not a constant `TRUE` or `FALSE` that the scan misses.
+- 2026-09-29: implement started on branch m057-flag-arguments. Question gate skipped, because the plan left nothing open. The export scan found that `lms_embed()` takes `quiet = NULL` with no check, so T3 adds one for AC2.
+- 2026-09-29: T1 done. The five chat functions check `logprobs` and `simplify` above the server probe. The batch checks a `logprobs` name in `rlm_chat_dots()` output, and the native function checks and drops each exact `logprobs`. `test-flag-args.R` covers the chat functions only until T2 and leaves `quiet` to T3. `devtools::test()` gave 0 failures.
 
 ## Decisions
 
