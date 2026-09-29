@@ -275,3 +275,26 @@ box stays ticked, and it now rests on the line below.
 Consistency gate: `cairn_validate.py` passed with exit 0. No DESIGN principle changed. `devtools::document()` gave
 no diff, and `pkgdown::check_pkgdown()` passed. The branch does not touch the README. `NEWS.md` has the entry and no
 milestone number. The branch adds no top-level file, and the check gave 0 notes.
+
+Independent re-review: three fresh reviewers ran on 2026-09-28 at caafc79. The [O] reviewer read the whole diff, the
+[S] history reviewer read `git blame`, and the [S] prior-review reviewer read the archives and LESSONS. The `gh`
+comment probe returned `[]`. All three confirmed that S1, P1, O3, O5, S5, S6, and O7 are fixed as disposed. The new
+findings follow, each ranked by its own reviewer. Findings with the same subject are merged.
+
+- W1 `R/conditions.R:39` (all three reviewers): the S1 rewrap left one line of 109 characters in a paragraph wrapped
+  at 80. The Rd output does not change. The M031 gate fixed a help rewrap like it. Line 97, at 84 characters, is the
+  line S2 noted.
+- H1 `tests/testthat/test-body-parse.R:56` and `:170`: the header comment says the table holds every function that
+  parses a status-200 body through `parse_ok_body()`, but `list_instances()` is not in `model_sites`. Seen in code.
+- H2 `R/conditions.R:141-142`: the help says `list_models()` and `lms_server_ready()` do not apply the two new rules.
+  If the two checks move into `model_list_fault()`, no test fails. Seen in code.
+- A2 `R/list.R:163`: the help says "an earlier field", and AC2 says "an earlier, different field". `unique()` drops
+  repeated names first, so the behavior is the same.
+- A3 `NEWS.md:3-4`: the first bullet says "of a type in `type`", and the sub-bullet says "of a listed type".
+- A4 `cairn/ROADMAP.md:23`: the gate commit 8046afe merged three M045 candidate rows into one. That made room under
+  the line cap for the two M050 follow-up rows.
+- A5 `test-list-instances.R:316-336`: the amended AC4 test checks `NULL` cells in an object list-column only. The AC2
+  tests cover `NULL` cells in a mixed list-column.
+- P3 `R/list.R:257`: `{.val {type}}` shortens a vector past 20 items, as the M018 lesson says.
+- Known and unchanged: O2 (no argument guard, a candidate row), S3, and S4, from the first round. The first round's
+  "0 removed" count for `R/list.R` is now 1, the `@seealso` line, as the re-review evidence says.
