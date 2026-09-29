@@ -34,10 +34,11 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' which port the server uses, and that read runs before the `wait` seconds
 #' start to count.
 #'
-#' @param port Integer. Port to run the server on. If not provided, LM Studio
-#'   uses the last used port.
+#' @param port Numeric or `NULL`. Port to run the server on. It must be one
+#'   whole number from 1 to 65535, given as a number and not as an array or a
+#'   string. `NULL`, the default, lets LM Studio use the last used port.
 #' @param cors Logical. Enable CORS support for web application development.
-#'   Defaults to FALSE.
+#'   Must be `TRUE` or `FALSE`. Defaults to `FALSE`.
 #' @param wait Numeric. How many seconds to keep asking the REST API whether
 #'   it is ready. Defaults to 10. With `wait = 0` the function sends no
 #'   readiness request and returns as soon as the CLI does. A `wait` that is
@@ -62,12 +63,17 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' The request carries `token`, read as described under that argument.
 #'
-#' Beside a bad `wait`, two faults in the call abort before the CLI runs,
-#' with any `wait`. One is a `host` that is not `NULL` and that the readiness
-#' request cannot be built from, such as a vector of two strings, `NA`, an
-#' empty string, or `"localhost:1234"`, which lacks `http://`. That message
-#' names `host` and quotes the reason httr2 or curl gave. The other is a
-#' `token` that is not one character string and not `NULL`.
+#' Five faults in the call abort before the CLI runs, with any `wait`: a bad
+#' `wait`, `port`, `cors`, `host`, or `token`. A bad `host` is one that is
+#' not `NULL` and that the readiness request cannot be built from, such as a
+#' vector of two strings, `NA`, an empty string, or `"localhost:1234"`, which
+#' lacks `http://`. That message names `host` and quotes the reason httr2 or
+#' curl gave. A bad `token` is one that is not one character string and not
+#' `NULL`.
+#'
+#' If the CLI refuses the start and exits with a status other than 0, the
+#' function aborts. The message gives the exit code and quotes the text the
+#' CLI wrote to stderr. If stderr holds nothing, it quotes the stdout text.
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -255,10 +261,11 @@ warn_unless_ready <- function(host = NULL, port = NULL, wait = 10,
     return(invisible(FALSE))
   }
 
-  # The pre-start checks cover a host the caller gave, but not one built from
-  # a malformed port, which is left to the CLI. Such a host can still make
-  # lms_server_ready() abort here if the CLI accepted the port. The start
-  # already ran and cannot be undone, so the abort becomes one warning.
+  # Each input the target is built from is checked before this point. The
+  # caller's host and port are checked before the CLI runs, and
+  # server_status_port() drops a port it cannot use. The tryCatch() stays as
+  # a guard. The start already ran and cannot be undone, so an abort from the
+  # probe becomes one warning.
   # suppressWarnings() sits inside the tryCatch() so that a warning the probe
   # raises before it aborts does not reach the user as a second warning for
   # the same fault.

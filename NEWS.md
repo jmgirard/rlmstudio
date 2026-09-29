@@ -1,5 +1,10 @@
 # rlmstudio (development version)
 
+* `lms_server_start()` now checks `port` and `cors` before the CLI runs. A bad value aborts with a message that names the argument, and no server starts.
+  * `port` must be `NULL` or one whole number from 1 to 65535, given as a number. `port = "8080"` now aborts, as do a missing value, an array, and a vector of two ports.
+  * `cors` must be `TRUE` or `FALSE`. `cors = NULL` now aborts.
+  * If the CLI refuses a start, the abort message now quotes the CLI output beside the exit code. The output is the stderr text. If stderr holds nothing, it is the stdout text.
+
 * `list_models()` and `list_instances()` now check `type` and `quiet`, and `list_models()` also checks `loaded` and `detailed`. A bad value aborts with a message that names the argument. It aborts before the check for a running server and sends no request. Before, `quiet = NA` failed with a base R error after the request, on a call that matched no model. `type = 1` returned an empty data frame, and `loaded = "yes"` acted as `FALSE`. `quiet = 1` acted as `TRUE`, and it now aborts too.
   * `type` must be a character vector of one or more elements, and no element can be `NA`, empty, or whitespace only. A factor aborts. A type that no model has, such as `"vlm"`, still returns an empty data frame and a message.
   * `quiet` must be `TRUE`, `FALSE`, or `NULL`. `NULL` is new. If the `rlmstudio.quiet` option is not `TRUE`, `NULL` prints the message, as `FALSE` does.

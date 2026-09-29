@@ -13,11 +13,12 @@ lms_server_start(
 )
 }
 \arguments{
-\item{port}{Integer. Port to run the server on. If not provided, LM Studio
-uses the last used port.}
+\item{port}{Numeric or \code{NULL}. Port to run the server on. It must be one
+whole number from 1 to 65535, given as a number and not as an array or a
+string. \code{NULL}, the default, lets LM Studio use the last used port.}
 
 \item{cors}{Logical. Enable CORS support for web application development.
-Defaults to FALSE.}
+Must be \code{TRUE} or \code{FALSE}. Defaults to \code{FALSE}.}
 
 \item{wait}{Numeric. How many seconds to keep asking the REST API whether
 it is ready. Defaults to 10. With \code{wait = 0} the function sends no
@@ -66,12 +67,17 @@ read, and the host is \verb{http://localhost:} plus that port.
 
 The request carries \code{token}, read as described under that argument.
 
-Beside a bad \code{wait}, two faults in the call abort before the CLI runs,
-with any \code{wait}. One is a \code{host} that is not \code{NULL} and that the readiness
-request cannot be built from, such as a vector of two strings, \code{NA}, an
-empty string, or \code{"localhost:1234"}, which lacks \verb{http://}. That message
-names \code{host} and quotes the reason httr2 or curl gave. The other is a
-\code{token} that is not one character string and not \code{NULL}.
+Five faults in the call abort before the CLI runs, with any \code{wait}: a bad
+\code{wait}, \code{port}, \code{cors}, \code{host}, or \code{token}. A bad \code{host} is one that is
+not \code{NULL} and that the readiness request cannot be built from, such as a
+vector of two strings, \code{NA}, an empty string, or \code{"localhost:1234"}, which
+lacks \verb{http://}. That message names \code{host} and quotes the reason httr2 or
+curl gave. A bad \code{token} is one that is not one character string and not
+\code{NULL}.
+
+If the CLI refuses the start and exits with a status other than 0, the
+function aborts. The message gives the exit code and quotes the text the
+CLI wrote to stderr. If stderr holds nothing, it quotes the stdout text.
 
 A wait that runs out does not abort. The server was already started and
 that cannot be undone, so the function raises a warning and returns the
