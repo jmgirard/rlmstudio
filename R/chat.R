@@ -1479,7 +1479,7 @@ integer_or_na <- function(x) {
 #' \itemize{
 #'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
 #'   \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow, as described below.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 #' }
 #'
 #' With `api_type = "native"` and `format = "data.frame"`, the data frame ends
@@ -1496,8 +1496,9 @@ integer_or_na <- function(x) {
 #' the input and gives no warning.
 #'
 #' With `api_type = "openresponses"` or `api_type = "openai"` and
-#' `format = "data.frame"`, the data frame ends with four columns read from
-#' each reply: `response_id`, `input_tokens`, `total_output_tokens`, and
+#' `format = "data.frame"`, the data frame has four columns read from each
+#' reply after `output`, or after `logprobs` when it is there. They are
+#' `response_id`, `input_tokens`, `total_output_tokens`, and
 #' `reasoning_output_tokens`. These are the first four native column names,
 #' but the servers send the values under other names:
 #' \itemize{
@@ -1525,6 +1526,40 @@ integer_or_na <- function(x) {
 #' read from the reply. If every input failed, those columns are still there,
 #' `response_id` as character and the others as double. The vector and list
 #' formats add no such column.
+#'
+#' With `api_type = "openai"`, `format = "data.frame"`, `logprobs = FALSE`,
+#' and an object `schema`, the data frame ends with one column per top-level
+#' property of the schema, after the four reply columns. An object schema has
+#' a `type` of `"object"`, written as a string or as a list that holds that
+#' one string. Its `properties` is a list of one or more named entries. Each
+#' column has the property name, in the order of `properties`. The columns
+#' come from the schema and not from the replies, so they are there even when
+#' every input failed. The properties of a nested object get no columns of
+#' their own. Any other schema adds no column.
+#'
+#' The type of a property column follows the `type` of the property.
+#' `"string"` gives character, `"integer"` gives integer, `"number"` gives
+#' double, and `"boolean"` gives logical. Each type can be a string or a list
+#' that holds that one string. A pair of one of these types and `"null"`,
+#' such as `c("integer", "null")`, gives the same column type. Any other
+#' `type`, no `type`, or a property that is not a list gives a list-column.
+#'
+#' A cell of a character, integer, double, or logical property column holds
+#' the field of the parsed reply when the field is one value of the column
+#' type. A one-item JSON array counts as one value, and an empty string is
+#' kept. A double column takes any number. An integer column takes an integer,
+#' or a whole number from -2147483647 to 2147483647. Otherwise the cell is
+#' `NA`, and the call gives no warning. The `output` column keeps the parsed
+#' reply, with the value that did not fit. A cell of a list-column holds the
+#' field as parsed, or `NULL` when the field is absent or `null`. A reply that
+#' is not a JSON object, such as an array or a number, gives `NA` and `NULL`
+#' cells. So does the row of an input that failed.
+#'
+#' A property name that is empty, `NA`, repeated, or equal to another column
+#' name aborts before the call checks for a running server. The other column
+#' names are `input`, `output`, `response_id`, `input_tokens`,
+#' `total_output_tokens`, and `reasoning_output_tokens`. The list and vector
+#' formats do not check the names.
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call.

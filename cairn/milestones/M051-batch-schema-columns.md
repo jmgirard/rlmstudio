@@ -46,7 +46,7 @@ With an object `schema` and `format = "data.frame"`, `lms_chat_batch()` returns 
 - [x] T3: Update the `names()` assertion near line 135 of `tests/testthat/test-chat-batch-usage.R`. `score_schema` now adds a `score` column there. Update the two other `names()` assertions in that file too. In `tests/testthat/test-chat-batch.R`, update the schema case of "the other routes add the usage columns and no stats column".
 - [x] T4: Add the AC6 name check to the argument checks of `lms_chat_batch()`. It goes after `format` is matched and before `stop_if_no_server()`, near line 1504. Test it in the pattern of `tests/testthat/test-arg-guards.R`, which follows D-008.
 - [x] T5: Write the AC5 tests in `tests/testthat/test-chat-schema.R`.
-- [ ] T6: Rewrite the `@return` passages of `lms_chat_batch()` that say that the reply columns follow `output` and end the frame. They are near lines 1363 and 1395. Add a NEWS entry that names the new columns and the abort on a property named `output`, under the D-001 waiver. Tie each added claim to a test from T1 to T5. Start the server and set `RLMSTUDIO_API_TOKEN`. Then run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
+- [x] T6: Rewrite the `@return` passages of `lms_chat_batch()` that say that the reply columns follow `output` and end the frame. They are near lines 1363 and 1395. Add a NEWS entry that names the new columns and the abort on a property named `output`, under the D-001 waiver. Tie each added claim to a test from T1 to T5. Start the server and set `RLMSTUDIO_API_TOKEN`. Then run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
 
 ## Work log
 
@@ -62,6 +62,7 @@ With an object `schema` and `format = "data.frame"`, `lms_chat_batch()` returns 
 - 2026-09-28: minor amendment to T3. Two more `names()` assertions in `test-chat-batch-usage.R` and one in `test-chat-batch.R` also expect the `score` column. T3 done, and `devtools::test()` is clean.
 - 2026-09-28: T4 done. `rlm_check_property_names()` runs before `stop_if_no_server()`. The test went red with the check replaced by a no-op, and `devtools::test()` is clean.
 - 2026-09-28: T5 done. The six-schema test went red with a planted check that reads `c("object", "null")` as an object type, and `devtools::test()` is clean.
+- 2026-09-28: T6 done. The help page and NEWS state the column, type, `NA` and `NULL`, and abort rules. Each claim maps to a T1, T4, or T5 test in `test-chat-schema.R` or `test-arg-guards.R`. With the server running and the token set, `devtools::document()`, `devtools::test()` (no skips), and `devtools::check()` (0 errors, 0 warnings, 0 notes) are clean.
 
 ## Decisions
 
