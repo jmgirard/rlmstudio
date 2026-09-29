@@ -93,9 +93,12 @@ use <code><a href="lms_unload_all.html">lms_unload_all()</a></code> to clear eve
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, or a <code>stream</code> in the
-<code>...</code> of a chat function, aborts with an argument message and no condition
-class even when the server is down. A condition of class
+<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
+<code>type</code> or <code>quiet</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>loaded</code>
+or <code>detailed</code> of <code><a href="list_models.html">list_models()</a></code>, or a <code>stream</code> in the <code>...</code> of a chat
+function, aborts
+with an argument message and no condition class even when the server is
+down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor

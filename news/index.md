@@ -2,6 +2,27 @@
 
 ## rlmstudio (development version)
 
+- [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  and
+  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+  now check `type` and `quiet`, and
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  also checks `loaded` and `detailed`. A bad value aborts with a message
+  that names the argument. It aborts before the check for a running
+  server and sends no request. Before, `quiet = NA` failed with a base R
+  error after the request, on a call that matched no model. `type = 1`
+  returned an empty data frame, and `loaded = "yes"` acted as `FALSE`.
+  `quiet = 1` acted as `TRUE`, and it now aborts too.
+
+  - `type` must be a character vector of one or more elements, and no
+    element can be `NA`, empty, or whitespace only. A factor aborts. A
+    type that no model has, such as `"vlm"`, still returns an empty data
+    frame and a message.
+  - `quiet` must be `TRUE`, `FALSE`, or `NULL`. `NULL` is new. If the
+    `rlmstudio.quiet` option is not `TRUE`, `NULL` prints the message,
+    as `FALSE` does.
+  - `loaded` and `detailed` must be `TRUE` or `FALSE`.
+
 - With `api_type = "openai"`, an object `schema`,
   `format = "data.frame"`, and `logprobs = FALSE`,
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)

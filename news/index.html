@@ -40,6 +40,15 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rlmstudio-development-version">rlmstudio (development version)<a class="anchor" aria-label="anchor" href="#rlmstudio-development-version"></a></h2>
 <ul><li>
+<p><code><a href="../reference/list_models.html">list_models()</a></code> and <code><a href="../reference/list_instances.html">list_instances()</a></code> now check <code>type</code> and <code>quiet</code>, and <code><a href="../reference/list_models.html">list_models()</a></code> also checks <code>loaded</code> and <code>detailed</code>. A bad value aborts with a message that names the argument. It aborts before the check for a running server and sends no request. Before, <code>quiet = NA</code> failed with a base R error after the request, on a call that matched no model. <code>type = 1</code> returned an empty data frame, and <code>loaded = "yes"</code> acted as <code>FALSE</code>. <code>quiet = 1</code> acted as <code>TRUE</code>, and it now aborts too.</p>
+<ul><li>
+<code>type</code> must be a character vector of one or more elements, and no element can be <code>NA</code>, empty, or whitespace only. A factor aborts. A type that no model has, such as <code>"vlm"</code>, still returns an empty data frame and a message.</li>
+<li>
+<code>quiet</code> must be <code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>. <code>NULL</code> is new. If the <code>rlmstudio.quiet</code> option is not <code>TRUE</code>, <code>NULL</code> prints the message, as <code>FALSE</code> does.</li>
+<li>
+<code>loaded</code> and <code>detailed</code> must be <code>TRUE</code> or <code>FALSE</code>.</li>
+</ul></li>
+<li>
 <p>With <code>api_type = "openai"</code>, an object <code>schema</code>, <code>format = "data.frame"</code>, and <code>logprobs = FALSE</code>, <code><a href="../reference/lms_chat_batch.html">lms_chat_batch()</a></code> now adds one column per top-level property of the schema. The columns come after the four reply columns, in the order of <code>properties</code>, and have the property names. The <code>output</code> list-column stays. The columns come from the schema and not from the replies. If every input failed, they are still there.</p>
 <ul><li>A <code>"string"</code>, <code>"integer"</code>, <code>"number"</code>, or <code>"boolean"</code> property gives a character, integer, double, or logical column. A pair of such a type and <code>"null"</code> gives the same column type. Any other property gives a list-column, and a nested object gets no columns of its own.</li>
 <li>A field that is not one value of the column type gives <code>NA</code> with no warning, and <code>output</code> keeps the value. A list-column cell is <code>NULL</code> for an absent or <code>null</code> field. A reply that is not a JSON object and the row of a failed input give <code>NA</code> and <code>NULL</code> cells.</li>

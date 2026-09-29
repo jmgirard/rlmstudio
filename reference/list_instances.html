@@ -67,13 +67,19 @@ that <code><a href="list_models.html">list_models()</a></code> reads, so it hono
 
 <dl><dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>Character vector. The types of models to include. Defaults to
-<code>c("llm", "embedding")</code>.</p></dd>
+<code>c("llm", "embedding")</code>. It must hold one or more elements, and no
+element can be <code>NA</code>, empty, or whitespace only. Any other value, <code>NULL</code>
+and a factor included, aborts before the check for a running server. A
+type that no model has, such as <code>"vlm"</code>, matches nothing.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, suppresses the message printed when
-no instance is found. Defaults to <code>FALSE</code>. Does not suppress the
-abort raised when the server is not running.</p></dd>
+<dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>. If <code>TRUE</code>, suppresses the
+message printed when no instance is found. <code>FALSE</code> and <code>NULL</code> print it
+unless the <code>rlmstudio.quiet</code> option is <code>TRUE</code>. Defaults to <code>FALSE</code>.
+Any other value, <code>NA</code> included, aborts before the check for a running
+server. Does not suppress the abort raised when the server is not
+running.</p></dd>
 
 
 <dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
@@ -138,9 +144,12 @@ object or array, gives a list-column. It holds each value as
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, or a <code>stream</code> in the
-<code>...</code> of a chat function, aborts with an argument message and no condition
-class even when the server is down. A condition of class
+<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
+<code>type</code> or <code>quiet</code> of <code><a href="list_models.html">list_models()</a></code> or <code>list_instances()</code>, a bad <code>loaded</code>
+or <code>detailed</code> of <code><a href="list_models.html">list_models()</a></code>, or a <code>stream</code> in the <code>...</code> of a chat
+function, aborts
+with an argument message and no condition class even when the server is
+down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor
