@@ -13,6 +13,14 @@ build_args_daemon_up <- function() {
 #' in headless environments (such as Linux servers) before loading models or
 #' starting the local server.
 #'
+#' If the CLI exits with a status other than 0, the function aborts. The
+#' message gives the exit code and quotes what the CLI wrote, after "The CLI
+#' said:". The quoted text is the stderr text, or the stdout text if stderr
+#' holds only whitespace. A byte that is not valid UTF-8 shows as `<xx>`,
+#' its hex value. ANSI escape codes are removed, and each run of whitespace
+#' becomes one space. A text longer than 1000 characters keeps its last 1000
+#' characters, after "…".
+#'
 #' @section Desktop Users: On desktop operating systems (macOS and Windows),
 #'   running this command may actually launch the LM Studio desktop application
 #'   to act as the backend engine. If the GUI is already open, this function
@@ -23,7 +31,7 @@ build_args_daemon_up <- function() {
 #' @seealso [LM Studio Headless Daemon
 #'   (llmster)](https://lmstudio.ai/docs/developer/core/headless_llmster)
 #'
-#' @return Invisibly returns the process object (or 0 if already running).
+#' @return Invisibly returns the CLI exit code, \code{0}.
 #'
 #' @export
 #'
@@ -84,15 +92,30 @@ build_args_daemon_down <- function() {
 #'
 #' @section Desktop Users:
 #' If the daemon is currently being managed by the LM Studio desktop
-#' application, this function will fail. The CLI intentionally prevents
+#' application, the CLI does not stop it. The CLI intentionally prevents
 #' programmatic shutdowns of the GUI to avoid disrupting visual sessions.
-#' In this scenario, you must close the desktop application manually.
+#' This function then returns `FALSE`, and the daemon keeps running. In this
+#' scenario, you must close the desktop application manually.
+#'
+#' If the CLI exits with a status other than 0, the function reads what the
+#' CLI wrote. If the text says that the daemon is part of LM Studio, the
+#' function prints an info message and returns `FALSE`. If the text says
+#' that the daemon is not running, it prints an info message and returns
+#' `TRUE`. Letter case does not matter. Any other failure aborts. The
+#' message gives the exit code, quotes what the CLI wrote after "The CLI
+#' said:", and gives a hint about `force = TRUE`. The quoted text is the
+#' stderr text, or the stdout text if stderr holds only whitespace. A byte
+#' that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI escape codes
+#' are removed, and each run of whitespace becomes one space. A text longer
+#' than 1000 characters keeps its last 1000 characters, after "…".
 #'
 #' @param force Logical. If `TRUE`, attempts to stop the local server before
 #'   shutting down the daemon. The daemon cannot be stopped while the server
-#'   is actively running. Defaults to `FALSE`.
+#'   is actively running. Defaults to `FALSE`. If no server is running, the
+#'   message of [lms_server_stop()] says so.
 #'
-#' @return Invisibly returns the system exit code (0 for success).
+#' @return Invisibly returns `TRUE` if the daemon stopped or was not
+#'   running, and `FALSE` if the LM Studio GUI manages it.
 #' @export
 #'
 #' @examples

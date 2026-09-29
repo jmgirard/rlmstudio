@@ -102,6 +102,15 @@ check_lms_version <- function(min_version = "0.4.0") {
 #' installation script to install the \code{llmster} daemon and CLI, which is
 #' suitable for servers, containers, or users who prefer a GUI-less environment.
 #'
+#' If the headless installer exits with a status other than 0, the function
+#' aborts. The message gives the exit code and quotes the installer output,
+#' after "The installer said:". A byte that is not valid UTF-8 shows as
+#' `<xx>`, its hex value. ANSI escape codes are removed, and each run of
+#' whitespace becomes one space. A text longer than 1000 characters keeps
+#' its last 1000 characters, after "…". Any other error of the install step,
+#' such as a missing `curl`, aborts with "Headless installation failed." and
+#' the error message.
+#'
 #' @param method Character. Either "browser" (opens the GUI download page) or
 #'   "headless" (installs the \code{llmster} daemon via script).
 #'

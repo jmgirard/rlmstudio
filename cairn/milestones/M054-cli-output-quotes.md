@@ -138,7 +138,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       `The installer said:` and the helper. Rewrite the M028 test in
       `test-setup.R` to assert the message the user gets. Add the three
       tests of the wrapped message.
-- [ ] T5: Update the five help pages and add the NEWS.md entry. Write each
+- [x] T5: Update the five help pages and add the NEWS.md entry. Write each
       stated behavior from a test run of T1 to T4. Run
       `devtools::document()`.
 - [ ] T6: Run `devtools::test()` and `devtools::check()`. Set
@@ -159,6 +159,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: T2 done. New `rlm_abort_cli_run()` in `R/serve.R` builds the abort for server start, server stop, and daemon start. `lms_server_stop()` has the not-running exit. The code came before its tests, so the new tests ran against the T1 code: every case but "no text" went red. `devtools::test()`: 550 tests, 0 failed, 3 skipped.
 - 2026-09-29: T3 done. `lms_daemon_stop()` matches its phrases in `cli_output_clean()` text and aborts through `rlm_abort_cli_run()` with its hint. Its new tests went red first, the invalid UTF-8 and no-text cases included. The `force = TRUE` test passed before T3, because T2 added the server exit. `devtools::test()`: 554 tests, 0 failed, 3 skipped.
 - 2026-09-29: T4 done. The install `tryCatch()` now returns the run, and the exit-code check follows it through `rlm_abort_cli_run()` with "The installer said". The M028 test is rewritten. On the old code the two output tests went red, and the three wrapped-message tests passed, as they pin unchanged text. `devtools::test()`: 558 tests, 0 failed, 3 skipped.
+- 2026-09-29: T5 done. Five help pages and one NEWS entry with two parts. Minor amendment: the pages of `lms_daemon_start()` and `lms_daemon_stop()` also get a corrected `@return`, and the GUI section of `lms_daemon_stop()` no longer says the call fails. The code returns 0, or `TRUE` and `FALSE`, and tests assert both. A second `document()` wrote nothing, and `devtools::test()` gave 558 tests, 0 failed.
 
 ## Decisions
 
