@@ -3,15 +3,22 @@
 #' Retrieves a list of models available on your system via the LM Studio REST
 #' API.
 #'
-#' @param loaded Logical. If \code{TRUE}, returns only currently loaded models.
-#'   Defaults to \code{FALSE}.
+#' @param loaded `TRUE` or `FALSE`. If \code{TRUE}, returns only currently
+#'   loaded models. Defaults to \code{FALSE}. Any other value, `NULL` and `NA`
+#'   included, aborts before the check for a running server.
 #' @param type Character vector. The types of models to include. Defaults to
-#'   \code{c("llm", "embedding")}.
-#' @param detailed Logical. Show all information about each model. Defaults to
-#'   \code{FALSE}.
-#' @param quiet Logical. If \code{TRUE}, suppresses informative console
-#'   messages. Defaults to \code{FALSE}. Does not suppress the abort raised
-#'   when the server is not running.
+#'   \code{c("llm", "embedding")}. It must hold one or more elements, and no
+#'   element can be `NA`, empty, or whitespace only. Any other value, `NULL`
+#'   and a factor included, aborts before the check for a running server. A
+#'   type that no model has, such as `"vlm"`, matches nothing.
+#' @param detailed `TRUE` or `FALSE`. Show all information about each model.
+#'   Defaults to \code{FALSE}. Any other value, `NULL` and `NA` included,
+#'   aborts before the check for a running server.
+#' @param quiet `TRUE`, `FALSE`, or `NULL`. If \code{TRUE}, suppresses
+#'   informative console messages. `FALSE` and `NULL` print them unless the
+#'   `rlmstudio.quiet` option is `TRUE`. Defaults to \code{FALSE}. Any other
+#'   value, `NA` included, aborts before the check for a running server. Does
+#'   not suppress the abort raised when the server is not running.
 #' @param host Character. The host address of the local server.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
@@ -182,10 +189,16 @@ list_models <- function(
 #' `null`.
 #'
 #' @param type Character vector. The types of models to include. Defaults to
-#'   \code{c("llm", "embedding")}.
-#' @param quiet Logical. If \code{TRUE}, suppresses the message printed when
-#'   no instance is found. Defaults to \code{FALSE}. Does not suppress the
-#'   abort raised when the server is not running.
+#'   \code{c("llm", "embedding")}. It must hold one or more elements, and no
+#'   element can be `NA`, empty, or whitespace only. Any other value, `NULL`
+#'   and a factor included, aborts before the check for a running server. A
+#'   type that no model has, such as `"vlm"`, matches nothing.
+#' @param quiet `TRUE`, `FALSE`, or `NULL`. If \code{TRUE}, suppresses the
+#'   message printed when no instance is found. `FALSE` and `NULL` print it
+#'   unless the `rlmstudio.quiet` option is `TRUE`. Defaults to \code{FALSE}.
+#'   Any other value, `NA` included, aborts before the check for a running
+#'   server. Does not suppress the abort raised when the server is not
+#'   running.
 #' @param host Character. The host address of the local server.
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the

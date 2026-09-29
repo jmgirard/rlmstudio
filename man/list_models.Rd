@@ -14,18 +14,25 @@ list_models(
 )
 }
 \arguments{
-\item{loaded}{Logical. If \code{TRUE}, returns only currently loaded models.
-Defaults to \code{FALSE}.}
+\item{loaded}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, returns only currently
+loaded models. Defaults to \code{FALSE}. Any other value, \code{NULL} and \code{NA}
+included, aborts before the check for a running server.}
 
 \item{type}{Character vector. The types of models to include. Defaults to
-\code{c("llm", "embedding")}.}
+\code{c("llm", "embedding")}. It must hold one or more elements, and no
+element can be \code{NA}, empty, or whitespace only. Any other value, \code{NULL}
+and a factor included, aborts before the check for a running server. A
+type that no model has, such as \code{"vlm"}, matches nothing.}
 
-\item{detailed}{Logical. Show all information about each model. Defaults to
-\code{FALSE}.}
+\item{detailed}{\code{TRUE} or \code{FALSE}. Show all information about each model.
+Defaults to \code{FALSE}. Any other value, \code{NULL} and \code{NA} included,
+aborts before the check for a running server.}
 
-\item{quiet}{Logical. If \code{TRUE}, suppresses informative console
-messages. Defaults to \code{FALSE}. Does not suppress the abort raised
-when the server is not running.}
+\item{quiet}{\code{TRUE}, \code{FALSE}, or \code{NULL}. If \code{TRUE}, suppresses
+informative console messages. \code{FALSE} and \code{NULL} print them unless the
+\code{rlmstudio.quiet} option is \code{TRUE}. Defaults to \code{FALSE}. Any other
+value, \code{NA} included, aborts before the check for a running server. Does
+not suppress the abort raised when the server is not running.}
 
 \item{host}{Character. The host address of the local server.}
 
@@ -50,9 +57,11 @@ API.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, or a \code{stream} in the
-\code{...} of a chat function, aborts with an argument message and no condition
-class even when the server is down. A condition of class
+\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
+\code{type}, \code{quiet}, \code{loaded}, or \code{detailed} of \code{\link[=list_models]{list_models()}} or
+\code{\link[=list_instances]{list_instances()}}, or a \code{stream} in the \code{...} of a chat function, aborts
+with an argument message and no condition class even when the server is
+down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor
