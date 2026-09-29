@@ -88,10 +88,13 @@ quotes the reason httr2 or curl gave. A bad `token` is one that is not
 one character string and not `NULL`.
 
 If the CLI refuses the start and exits with a status other than 0, the
-function aborts. The message gives the exit code and quotes the text the
-CLI wrote to stderr. If stderr holds nothing, it quotes the stdout text.
-Whitespace at the ends of the quoted text is dropped, and each run of
-whitespace inside it becomes one space.
+function aborts. The message gives the exit code and quotes what the CLI
+wrote, after "The CLI said:". The quoted text is the stderr text, or the
+stdout text if stderr holds only whitespace and escape codes. A byte
+that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI escape
+codes, such as color codes, cursor codes, and terminal links, are
+removed, and each run of whitespace becomes one space. A text longer
+than 1000 characters keeps at most its last 1000 characters, after "…".
 
 A wait that runs out does not abort. The server was already started and
 that cannot be undone, so the function raises a warning and returns the

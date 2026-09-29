@@ -53,6 +53,21 @@
 (<code>0</code> for success).</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>If the CLI exits with a status other than 0, the function reads what the
+CLI wrote. If the text says "not running", the function prints an info
+message and returns the exit code invisibly, with no abort. Letter case
+does not matter. With no server running, the CLI exits with status 1 and
+says so. <code><a href="lms_daemon_stop.html">lms_daemon_stop()</a></code> with <code>force = TRUE</code> shows the same message.</p>
+<p>Any other failure aborts. The message gives the exit code and quotes what
+the CLI wrote, after "The CLI said:". The quoted text is the stderr text,
+or the stdout text if stderr holds only whitespace and escape codes. A
+byte that is not valid UTF-8 shows as <code>&lt;xx&gt;</code>, its hex value. ANSI escape
+codes, such as color codes, cursor codes, and terminal links, are
+removed, and each run of whitespace becomes one space. A text longer than
+1000 characters keeps at most its last 1000 characters, after "…".</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><a href="https://lmstudio.ai/docs/cli/serve/server-stop" class="external-link">LM Studio CLI Server Stop Documentation</a></p></div>
     </div>

@@ -57,21 +57,40 @@ you are completely finished using LM Studio in headless mode.</p>
 <dl><dt id="arg-force">force<a class="anchor" aria-label="anchor" href="#arg-force"></a></dt>
 <dd><p>Logical. If <code>TRUE</code>, attempts to stop the local server before
 shutting down the daemon. The daemon cannot be stopped while the server
-is actively running. Defaults to <code>FALSE</code>.</p></dd>
+is actively running. Defaults to <code>FALSE</code>. If no server is running, the
+message of <code><a href="lms_server_stop.html">lms_server_stop()</a></code> says so.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisibly returns the system exit code (0 for success).</p>
+    <p>Invisibly returns <code>TRUE</code> if the daemon stopped or was not
+running, and <code>FALSE</code> if the LM Studio GUI manages it.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>If the CLI exits with a status other than 0, the function reads what the
+CLI wrote. If the text says that the daemon is part of LM Studio, the
+function prints an info message and returns <code>FALSE</code>. If the text says
+that the daemon is not running, it prints an info message and returns
+<code>TRUE</code>. Letter case does not matter. Any other failure aborts. The
+message gives the exit code, quotes what the CLI wrote after "The CLI
+said:", and gives a hint about <code>force = TRUE</code>. The quoted text is the
+stderr text, or the stdout text if stderr holds only whitespace and
+escape codes. A byte
+that is not valid UTF-8 shows as <code>&lt;xx&gt;</code>, its hex value. ANSI escape
+codes, such as color codes, cursor codes, and terminal links, are
+removed, and each run of whitespace becomes one space. A text longer than
+1000 characters keeps at most its last 1000 characters, after "…".</p>
     </div>
     <div class="section level2">
     <h2 id="desktop-users">Desktop Users<a class="anchor" aria-label="anchor" href="#desktop-users"></a></h2>
 
 
 <p>If the daemon is currently being managed by the LM Studio desktop
-application, this function will fail. The CLI intentionally prevents
+application, the CLI does not stop it. The CLI intentionally prevents
 programmatic shutdowns of the GUI to avoid disrupting visual sessions.
-In this scenario, you must close the desktop application manually.</p>
+This function then returns <code>FALSE</code>, and the daemon keeps running. In this
+scenario, you must close the desktop application manually.</p>
     </div>
 
     <div class="section level2">

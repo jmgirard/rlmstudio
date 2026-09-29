@@ -2,6 +2,42 @@
 
 ## rlmstudio (development version)
 
+- If a run of the LM Studio CLI or the headless installer fails, the
+  abort message now quotes what the run wrote, beside the exit code.
+
+  - [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
+    [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md),
+    [`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_start.md),
+    and
+    [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
+    quote it after “The CLI said:”. Before,
+    [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
+    [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md),
+    and
+    [`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_start.md)
+    gave the exit code alone.
+    [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
+    wrote “CLI output:” with the text in quotes. The quoted text is the
+    stderr text. If stderr holds only whitespace and escape codes, it is
+    the stdout text.
+  - `install_lmstudio(method = "headless")` quotes the installer output
+    after “The installer said:”. Before, the message the user saw
+    dropped that output. Any other error of the install step still
+    aborts with “Headless installation failed.” and the error message.
+  - In the quoted text, a byte that is not valid UTF-8 shows as `<xx>`,
+    its hex value. ANSI escape codes, such as color codes, cursor codes,
+    and terminal links, are removed, and each run of whitespace becomes
+    one space. A text longer than 1000 characters keeps at most its last
+    1000 characters, after “…”.
+  - If the CLI text holds a byte that is not valid UTF-8,
+    [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
+    no longer fails with a base R error.
+
+- [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md)
+  with no server running now prints an info message and returns the CLI
+  exit code invisibly. Before, it aborted. If no server is running,
+  `lms_daemon_stop(force = TRUE)` shows the same message.
+
 - [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
   now checks `port` and `cors` before the CLI runs. A bad value aborts
   with a message that names the argument, and no server starts.
@@ -13,11 +49,6 @@
     abort before the CLI runs.
   - `cors` must be `TRUE` or `FALSE`. `cors = NULL`, `NA`, `1`, and
     `"yes"` now abort. Before, each acted as `FALSE`.
-  - If the CLI refuses a start, the abort message now quotes the CLI
-    output beside the exit code. The output is the stderr text. If
-    stderr holds nothing, it is the stdout text. Whitespace at the ends
-    of the text is dropped, and each run of whitespace inside it becomes
-    one space.
 
 - [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
   and

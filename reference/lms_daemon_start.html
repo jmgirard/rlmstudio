@@ -55,7 +55,18 @@ starting the local server.</p>
 
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisibly returns the process object (or 0 if already running).</p>
+    <p>Invisibly returns the CLI exit code, <code>0</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>If the CLI exits with a status other than 0, the function aborts. The
+message gives the exit code and quotes what the CLI wrote, after "The CLI
+said:". The quoted text is the stderr text, or the stdout text if stderr
+holds only whitespace and escape codes. A byte that is not valid UTF-8 shows as <code>&lt;xx&gt;</code>,
+its hex value. ANSI escape codes, such as color codes, cursor codes, and
+terminal links, are removed, and each run of whitespace becomes one space.
+A text longer than 1000 characters keeps at most its last 1000
+characters, after "…".</p>
     </div>
     <div class="section level2">
     <h2 id="desktop-users">Desktop Users<a class="anchor" aria-label="anchor" href="#desktop-users"></a></h2>

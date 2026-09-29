@@ -12,7 +12,18 @@ lms_daemon_start()
 
 ## Value
 
-Invisibly returns the process object (or 0 if already running).
+Invisibly returns the CLI exit code, `0`.
+
+## Details
+
+If the CLI exits with a status other than 0, the function aborts. The
+message gives the exit code and quotes what the CLI wrote, after "The
+CLI said:". The quoted text is the stderr text, or the stdout text if
+stderr holds only whitespace and escape codes. A byte that is not valid
+UTF-8 shows as `<xx>`, its hex value. ANSI escape codes, such as color
+codes, cursor codes, and terminal links, are removed, and each run of
+whitespace becomes one space. A text longer than 1000 characters keeps
+at most its last 1000 characters, after "…".
 
 ## Desktop Users
 

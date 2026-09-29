@@ -71,9 +71,10 @@ down. This is ideal for automated scripts and pipelines.</p>
 
 <p>Be cautious using this wrapper if you already have the LM Studio GUI open.
 While the setup phase (<code>lms_daemon_start</code>) will succeed, the teardown phase
-(<code>lms_daemon_stop</code>) will fail because the CLI prevents programmatic shutdowns
-of the graphical interface. This wrapper is best reserved for strictly
-headless environments or fully automated scripts.</p>
+(<code>lms_daemon_stop</code>) does not stop the daemon, because the CLI prevents
+programmatic shutdowns of the graphical interface. The teardown prints an
+info message, and the daemon keeps running. This wrapper is best reserved
+for strictly headless environments or fully automated scripts.</p>
     </div>
 
     <div class="section level2">
