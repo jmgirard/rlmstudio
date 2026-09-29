@@ -130,7 +130,7 @@ rows.
 - [x] T5: Planted defect. In a scratch copy, delete the check of one
       argument in `lms_chat()` and one in `lms_server_status()`. Check
       that only the blocks of those functions go red in `test-flag-args.R`.
-- [ ] T6: Run `devtools::test()` and `devtools::check()`. The check needs
+- [x] T6: Run `devtools::test()` and `devtools::check()`. The check needs
       `RLMSTUDIO_API_TOKEN` where the server asks for a token (M009 lesson).
 
 ## Work log
@@ -148,6 +148,7 @@ rows.
 - 2026-09-29: T3 done. `quiet` defaults to `NULL` in three functions, `lms_embed()` and `lms_chat_batch()` check it, and `R/list.R` passes it into `rlm_inform()`. The nine pairs and the `lms_server_status()` cases are in `test-flag-args.R`. The four warnings are tested in `test-chat-batch-cut-off.R` and `test-embed.R`, beside their fixtures. A stale comment on the old batch default in `test-chat-batch-cut-off.R` is fixed. `devtools::test()` gave 0 failures.
 - 2026-09-29: T4 done. Help text names the accepted values of each flag, the conditions page names the flag checks, and NEWS has two new entries. Two unreleased NEWS bullets that stated the old `quiet` rule are fixed. The `rlmstudio.quiet` entry sat on a `NULL` block that roxygen skips, so it never reached `?rlmstudio`. It now sits on the package block, and NEWS says so. A second `devtools::document()` run wrote nothing.
 - 2026-09-29: T5 done. In a scratch copy, the `simplify` check of `lms_chat()` and the `json` check of `lms_server_status()` were deleted. Of 27 blocks in `test-flag-args.R`, only the blocks of those two functions went red, with "a delegate was reached" and "the lms CLI ran".
+- 2026-09-29: T6 done. `devtools::test()` gave 0 failures and 3 skips for the live server. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes, so the cd90e63 baseline run was not needed.
 
 ## Decisions
 
