@@ -7,7 +7,7 @@
 - **Principles touched:** GP5
 - **Resolves:** —
 - **Surface tier:** user-facing — the vignettes ship, and the 401 and 403 hint is part of exported abort messages
-- **Branch/PR:** m055-teardown-cleanup
+- **Branch/PR:** m055-teardown-cleanup, https://github.com/jmgirard/rlmstudio/pull/55
 
 ## Goal
 
