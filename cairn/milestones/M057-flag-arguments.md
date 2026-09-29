@@ -183,3 +183,5 @@ Independent review, three fresh lenses. The prior-review lens found no finding, 
 - O6 (follow-up): two dots that match `logprobs` in `lms_chat_batch()` fail in `match.call()` with a base R error. The fault is on main, and `lms_chat_native()` now checks each copy.
 - O7 (follow-up): the batch sets `has_logprobs` on the native route, where replies are plain text. The vector format then returns a list and warns about logprobs data frames. The fault is on main.
 - S2 (reject): a NEWS sub-bullet now points to the entry above it. The reviewer called it a note, and the "before" claims hold on main.
+
+After the fix-now work (5aff52f): `devtools::test()` gave 0 failures, 3 live skips, and 16996 passes. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. A second `devtools::document()` left no diff. The NEWS old rule for the load settings was observed with `rlm_json_text()`, which the branch did not change. `NA` and `"yes"` gave `null`, and `c(TRUE, FALSE)` gave `[true,false]`. The cli delay claim was read in the `cli_progress_bar()` help.
