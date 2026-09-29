@@ -154,6 +154,8 @@ stay candidates in the ROADMAP.
 - 2026-09-29: claim audit: 11 claims read, 0 corrected — R/utils-token.R, tests/testthat/test-token-hint.R, vignettes/getting-started.Rmd. The reader covered the 32 lines that the review fixes added after the first audit (`git diff 9a88b28..HEAD`).
 - 2026-09-29: with the token set, full `devtools::test()` at 35aec07 plus this record: 0 failures, 0 errors, 0 warnings, 0 skips, 14777 passes. No R code changed in this session.
 - 2026-09-29: implement done after the amendment, status review.
+- 2026-09-29: second review pass: fresh evidence for AC1 to AC5, three fresh reviewers, and five fix-now findings fixed in 76cb2fd at the user's choice.
+- 2026-09-29: step-7 approval: m055-teardown-cleanup approved for merge
 
 ## Decisions
 
