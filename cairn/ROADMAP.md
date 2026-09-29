@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-29 (M052 done, M049 row pruned, one candidate row added and one extended, no lesson added)_
+_Last hygiene check: 2026-09-29 (M053 done, M050 row pruned, one candidate row extended, one lesson extended)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-29 (M052 done, M049 row pruned, one candidate row a
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M053 | The server start call says why a start was refused | review | none | normal | milestones/M053-server-start-reasons.md |
+| M053 | The server start call says why a start was refused | done | none | normal | milestones/archive/M053-server-start-reasons.md |
 | M052 | The two list functions check their arguments before any request | done | none | normal | milestones/archive/M052-list-arg-checks.md |
 | M051 | A schema data-frame batch returns one column per schema property | done | none | normal | milestones/archive/M051-batch-schema-columns.md |
-| M050 | A table of loaded model instances | done | none | normal | milestones/archive/M050-list-instances.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -21,7 +20,7 @@ _Last hygiene check: 2026-09-29 (M052 done, M049 row pruned, one candidate row a
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
 - Three gaps in the number rule of `lms_chat_openai()`. First, it passes a `messages` field that is a list with the class `"json"` or `"scalar"` and holds `NA_real_`. jsonlite writes that number as `"NA"`. The rule skips a classed list that jsonlite does not write as a plain list. Second, it passes a classed number that jsonlite writes as a string. Examples are `jsonlite::unbox(NA_real_)` and an S4 number, sent as `"NA"`, and `as.POSIXct(Inf)`, sent as `"Inf"`. M045 reads numbers with no class or the class `"AsIs"` alone. Promote on a user who sends such a number. Third, the rule writes a classed list twice at each level, so a deep stack is slow. 100 nested `c("foo", "list")` levels took 2.1 s, against 0.03 s for the write. Promote on a real `messages` value that the check makes slow, added 2026-09-28, M045 claim-audit re-read and review findings O1 to O4 and O8 (rows merged M050)
-- `lms_server_stop()` and `lms_daemon_start()` abort on a failed CLI run with the exit code alone. They drop what the CLI wrote to stderr. `lms_daemon_stop()` already quotes it, and M053 makes `lms_server_start()` quote it. Quote it in the two, added 2026-09-28, M053 plan gate
+- `lms_server_stop()` and `lms_daemon_start()` abort on a failed CLI run with the exit code alone. They drop what the CLI wrote to stderr. `lms_daemon_stop()` already quotes it, and `lms_server_start()` quotes it since M053. Quote it in the two. Give all four one label and one shape. `lms_daemon_stop()` writes "CLI output:" with `.val` and keeps newlines, and `lms_server_start()` writes "The CLI said:" and collapses whitespace. Only `cli_output_text()` in `R/serve.R` handles bytes that are not valid UTF-8. Also decide whether to strip ANSI color codes and cap the quoted length, added 2026-09-28, M053 plan gate and review findings S1 and O4
 - The argument-guard loops in `tests/testthat/test-arg-guards.R` report one failure for ten functions. A non-matching error aborts the whole `test_that()` block. The first broken function then hides the other nine. The file still turns red. The diagnostics alone are coarse, added 2026-09-20, M013 review finding 7
 - Run `lms daemon up` then `lms daemon status --json` on a headless llmster install, as on Linux. On macOS with the desktop app installed, `up` returned only once the daemon ran, so M016 dropped its wait. If `up` returns early there, a wait on `lms_daemon_start()` has a reason, added 2026-09-20, milestones/archive/M016-daemon-start-wait.md
 - `lms_embed()` warns for a text longer than the loaded context, or splits the text and combines the piece vectors. M048 documents the cut instead, because LM Studio 0.4.25+1 has no tokenize endpoint and reports 0 tokens. Promote on an LM Studio reply or endpoint that gives a token count. A user who needs one vector for a long document is the other trigger, added 2026-09-28, M047 and M048 plan gates
