@@ -110,17 +110,15 @@ lms_daemon_stop <- function(force = FALSE) {
   if (res$status == 0) {
     rlm_alert_success("LM Studio daemon stopped successfully.")
     return(invisible(TRUE))
-  } else {
-    err_msg <- trimws(res$stderr)
-    if (err_msg == "") {
-      err_msg <- trimws(res$stdout)
-    }
-    if (err_msg == "") {
-      err_msg <- "Unknown CLI error."
-    }
+  }
 
+  # The phrases are read before the cut, so a long text still matches.
+  # cli_output_clean() also makes a byte that is not valid UTF-8 safe for
+  # grepl().
+  text <- cli_output_clean(res)
+  if (!is.null(text)) {
     # Catch the GUI conflict and exit gracefully
-    if (grepl("part of LM Studio", err_msg, ignore.case = TRUE)) {
+    if (grepl("part of LM Studio", text, ignore.case = TRUE)) {
       rlm_alert_info(
         "The daemon is managed by the LM Studio GUI and will remain running."
       )
@@ -128,18 +126,21 @@ lms_daemon_stop <- function(force = FALSE) {
     }
 
     # Catch the "already stopped" scenario and exit gracefully
-    if (grepl("not running", err_msg, ignore.case = TRUE)) {
+    if (grepl("not running", text, ignore.case = TRUE)) {
       rlm_alert_info("The LM Studio daemon is already stopped.")
       return(invisible(TRUE))
     }
-
-    # For all other errors, abort as usual
-    cli::cli_abort(c(
-      "Failed to stop the LM Studio daemon. Exit code: {.val {res$status}}.",
-      "x" = "CLI output: {.val {err_msg}}",
-      "i" = "Hint: If the server is still running, try `lms_daemon_stop(force = TRUE)` or run `lms_server_stop()` first."
-    ))
   }
+
+  # For all other errors, abort as usual
+  rlm_abort_cli_run(
+    "Failed to stop the LM Studio daemon.",
+    res,
+    text = text,
+    hint = c(
+      "i" = "Hint: If the server is still running, try `lms_daemon_stop(force = TRUE)` or run `lms_server_stop()` first."
+    )
+  )
 }
 
 #' Run code with the LM Studio daemon active

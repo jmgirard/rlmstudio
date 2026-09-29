@@ -125,7 +125,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       tests of the `lms_server_stop()` exit: plain text, invalid UTF-8
       text, and a phrase more than 1000 characters before the end. Mock
       `lms_path()` and `processx::run`, so no CLI runs (LESSONS, M003).
-- [ ] T3: Rewrite the failure branch of `lms_daemon_stop()` in
+- [x] T3: Rewrite the failure branch of `lms_daemon_stop()` in
       `R/daemon.R` to use the helper. Match the two phrases in the cleaned
       text before the cut, "part of LM Studio" first. Change the label to
       `The CLI said:` and keep the hint. Update the brace test in
@@ -157,6 +157,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: implement started. No question gate, because the plan left no open choice.
 - 2026-09-29: T1 done. `cli_output_clean()` and `cli_output_cut()` split out of `cli_output_text()` in `R/serve.R`. New `test-cli-output.R` ran red on the escape and cut rules before the change. A cut with no token step turned the three token cases red. `devtools::test()`: 547 tests, 0 failed, 3 skipped.
 - 2026-09-29: T2 done. New `rlm_abort_cli_run()` in `R/serve.R` builds the abort for server start, server stop, and daemon start. `lms_server_stop()` has the not-running exit. The code came before its tests, so the new tests ran against the T1 code: every case but "no text" went red. `devtools::test()`: 550 tests, 0 failed, 3 skipped.
+- 2026-09-29: T3 done. `lms_daemon_stop()` matches its phrases in `cli_output_clean()` text and aborts through `rlm_abort_cli_run()` with its hint. Its new tests went red first, the invalid UTF-8 and no-text cases included. The `force = TRUE` test passed before T3, because T2 added the server exit. `devtools::test()`: 554 tests, 0 failed, 3 skipped.
 
 ## Decisions
 

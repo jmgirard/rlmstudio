@@ -9,7 +9,8 @@ cli_squish <- function(x) gsub("\\s+", " ", trimws(x))
 cli_callers <- list(
   lms_server_start = function() lms_server_start(wait = 0),
   lms_server_stop = function() lms_server_stop(),
-  lms_daemon_start = function() lms_daemon_start()
+  lms_daemon_start = function() lms_daemon_start(),
+  lms_daemon_stop = function() lms_daemon_stop()
 )
 
 # The first sentence of each abort.
@@ -225,4 +226,74 @@ test_that("lms_server_stop is a no-op when no server runs", {
     expect_match(got$messages, "server is already stopped", fixed = TRUE, info = name)
     expect_identical(got$value, list(value = 1L, visible = FALSE), info = name)
   }
+})
+
+test_that("lms_daemon_stop keeps running when the GUI manages the daemon", {
+  texts <- c(
+    plain = "Error: this daemon is part of LM Studio.",
+    upper = "PART OF LM STUDIO",
+    bad_byte = paste0("part of LM Studio ", bytes(0xff)),
+    far = paste0("part of LM Studio ", strrep("6", 1500)),
+    # With both phrases, the GUI phrase wins.
+    both = "not running, and part of LM Studio"
+  )
+  for (name in names(texts)) {
+    got <- stop_exit(
+      lms_daemon_stop(),
+      list(status = 1L, stdout = "", stderr = texts[[name]])
+    )
+    expect_null(got$error)
+    expect_match(got$messages, "managed by the LM Studio GUI", fixed = TRUE, info = name)
+    expect_identical(got$value, list(value = FALSE, visible = FALSE), info = name)
+  }
+})
+
+test_that("lms_daemon_stop is a no-op when no daemon runs", {
+  texts <- c(
+    plain = "The daemon is not running.",
+    mixed = "The daemon is Not Running.",
+    bad_byte = paste0("not running ", bytes(0xff)),
+    far = paste0("not running ", strrep("7", 1500)),
+    stdout_only = NA_character_
+  )
+  for (name in names(texts)) {
+    res <- list(status = 1L, stdout = "", stderr = texts[[name]])
+    if (name == "stdout_only") {
+      res <- list(status = 1L, stdout = "not running\n", stderr = "")
+    }
+    got <- stop_exit(lms_daemon_stop(), res)
+    expect_null(got$error)
+    expect_match(got$messages, "daemon is already stopped", fixed = TRUE, info = name)
+    expect_identical(got$value, list(value = TRUE, visible = FALSE), info = name)
+  }
+})
+
+test_that("the lms_daemon_stop abort keeps its hint about force", {
+  got <- cli_failure(
+    function() lms_daemon_stop(),
+    list(status = 1L, stdout = "", stderr = "some other fault")
+  )
+  expect_cli_said(got$message, "some other fault", "lms_daemon_stop")
+  expect_match(got$message, "lms_daemon_stop(force = TRUE)", fixed = TRUE)
+  expect_match(got$message, "lms_server_stop()", fixed = TRUE)
+})
+
+test_that("lms_daemon_stop(force = TRUE) says when no server runs", {
+  withr::local_options(rlmstudio.quiet = FALSE)
+  local_mocked_bindings(lms_path = function() "lms")
+  local_mocked_bindings(
+    run = function(command, args, ...) {
+      if (identical(args, c("server", "stop"))) {
+        list(status = 1L, stdout = "", stderr = server_not_running)
+      } else {
+        list(status = 0L, stdout = "", stderr = "")
+      }
+    },
+    .package = "processx"
+  )
+  shown <- capture_shown(value <- lms_daemon_stop(force = TRUE))
+  expect_null(shown$error)
+  expect_true(value)
+  expect_match(shown$messages, "server is already stopped", fixed = TRUE)
+  expect_match(shown$messages, "daemon stopped successfully", fixed = TRUE)
 })
