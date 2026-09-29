@@ -476,18 +476,23 @@ test_that("lms_chat() forwards a schema on the openai route", {
   expect_identical(sent$response_format$json_schema$schema, score_schema)
 })
 
-# Run lms_chat_batch() over two inputs against a mocked server that answers
+# Run lms_chat_batch() over `inputs` against a mocked server that answers
 # every request with a reply whose content is `reply_text`.
-batch_with_reply <- function(reply_text, format) {
+batch_with_reply <- function(
+  reply_text,
+  format,
+  schema = score_schema,
+  inputs = c("first", "second")
+) {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(200L, completion_body(quoted(reply_text))))
   lms_chat_batch(
     "a-model",
-    c("first", "second"),
+    inputs,
     format = format,
     quiet = TRUE,
     api_type = "openai",
-    schema = score_schema
+    schema = schema
   )
 }
 
@@ -549,18 +554,24 @@ test_that("batch reads shortened argument names as lms_chat() does", {
   )
 })
 
-# Run lms_chat_batch() over three inputs against a mocked server that answers
+# Run lms_chat_batch() over `inputs` against a mocked server that answers
 # them with `responses`, in order.
-batch_with_sequence <- function(responses, format = "list", quiet = TRUE) {
+batch_with_sequence <- function(
+  responses,
+  format = "list",
+  quiet = TRUE,
+  schema = score_schema,
+  inputs = c("first", "second", "third")
+) {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_sequence(responses)
   lms_chat_batch(
     "a-model",
-    c("first", "second", "third"),
+    inputs,
     format = format,
     quiet = quiet,
     api_type = "openai",
-    schema = score_schema
+    schema = schema
   )
 }
 
@@ -783,6 +794,379 @@ test_that("a server that stops during a batch still aborts", {
   )
   expect_identical(probes, 3L)
   expect_length(recorder$requests, 1L)
+})
+
+# The columns of an OpenAI data-frame batch before the property columns.
+frame_columns <- c(
+  "input",
+  "output",
+  "response_id",
+  "input_tokens",
+  "total_output_tokens",
+  "reasoning_output_tokens"
+)
+
+# An object schema whose properties are the arguments.
+object_schema <- function(...) {
+  list(type = "object", properties = list(...))
+}
+
+# One response per reply text, in order, each holding that text as content.
+reply_sequence <- function(reply_texts) {
+  lapply(reply_texts, function(text) {
+    mock_response(200L, completion_body(quoted(text)))
+  })
+}
+
+test_that("a schema data frame adds one column per property after the reply columns", {
+  out <- batch_with_reply('{"score": 3}', "data.frame")
+  expect_identical(names(out), c(frame_columns, "score"))
+  expect_identical(out$score, c(3L, 3L))
+
+  # Three properties out of alphabetical order, and reply fields in yet
+  # another order. The columns follow `properties`.
+  schema <- object_schema(
+    zeta = list(type = "string"),
+    alpha = list(type = "integer"),
+    mid = list(type = "boolean")
+  )
+  responses <- list(
+    mock_response(200L, openai_reply(
+      quoted('{"mid": true, "alpha": 1, "zeta": "a"}'),
+      usage = openai_usage("10", "5", json_object(reasoning_tokens = "2")),
+      id = quoted("id_a")
+    )),
+    mock_response(200L, openai_reply(
+      quoted('{"alpha": 2, "zeta": "b", "mid": false}'),
+      usage = openai_usage("20", "6", json_object(reasoning_tokens = "3")),
+      id = quoted("id_b")
+    ))
+  )
+  out <- batch_with_sequence(
+    responses,
+    "data.frame",
+    schema = schema,
+    inputs = c("first", "second")
+  )
+  expect_identical(names(out), c(frame_columns, "zeta", "alpha", "mid"))
+  expect_identical(out$input, c("first", "second"))
+  expect_identical(
+    out$output,
+    list(
+      list(mid = TRUE, alpha = 1L, zeta = "a"),
+      list(alpha = 2L, zeta = "b", mid = FALSE)
+    )
+  )
+  expect_identical(out$response_id, c("id_a", "id_b"))
+  expect_identical(out$input_tokens, c(10, 20))
+  expect_identical(out$total_output_tokens, c(5, 6))
+  expect_identical(out$reasoning_output_tokens, c(2, 3))
+  expect_identical(out$zeta, c("a", "b"))
+  expect_identical(out$alpha, c(1L, 2L))
+  expect_identical(out$mid, c(TRUE, FALSE))
+})
+
+test_that("a schema type written as a one-string list adds the columns too", {
+  schema <- list(
+    type = list("object"),
+    properties = list(score = list(type = "integer"))
+  )
+  out <- batch_with_reply('{"score": 3}', "data.frame", schema = schema)
+  expect_identical(names(out), c(frame_columns, "score"))
+  expect_identical(out$score, c(3L, 3L))
+})
+
+# Each form of a property `type` that gives the column type of `type`: the
+# string, a one-string list, and the pair with "null" in both orders, as a
+# character vector and as a list.
+type_forms <- function(type) {
+  list(
+    string = type,
+    list = list(type),
+    null_after = c(type, "null"),
+    null_before = c("null", type),
+    list_null_after = list(type, "null"),
+    list_null_before = list("null", type)
+  )
+}
+
+test_that("a property column's type follows the property type", {
+  # A JSON value of each type, and the R value it gives.
+  types <- list(
+    string = list(column = "character", json = '"s"', value = "s"),
+    integer = list(column = "integer", json = "2", value = 2L),
+    number = list(column = "double", json = "1.5", value = 1.5),
+    boolean = list(column = "logical", json = "true", value = TRUE)
+  )
+  properties <- list()
+  fields <- character()
+  for (type in names(types)) {
+    forms <- type_forms(type)
+    for (form in names(forms)) {
+      name <- paste(type, form, sep = "_")
+      properties[[name]] <- list(type = forms[[form]])
+      fields[[name]] <- types[[type]]$json
+    }
+  }
+  # Every other type, no type, and a property that is not a list give a
+  # list-column. A nested object's own properties get no columns.
+  properties$nested <- list(
+    type = "object",
+    properties = list(inner = list(type = "integer"))
+  )
+  properties$array <- list(type = "array")
+  properties$mixed <- list(type = c("string", "integer"))
+  properties$untyped <- list(description = "no type")
+  properties$bare <- "integer"
+  fields[["nested"]] <- '{"inner": 1}'
+  fields[["array"]] <- "[1, 2]"
+  fields[["mixed"]] <- '"m"'
+  fields[["untyped"]] <- '"x"'
+  fields[["bare"]] <- "5"
+  reply <- sprintf(
+    "{%s}",
+    paste(sprintf('"%s": %s', names(fields), fields), collapse = ", ")
+  )
+
+  out <- batch_with_reply(
+    reply,
+    "data.frame",
+    schema = list(type = "object", properties = properties)
+  )
+  expect_identical(names(out), c(frame_columns, names(properties)))
+  for (type in names(types)) {
+    for (form in names(type_forms(type))) {
+      name <- paste(type, form, sep = "_")
+      expect_identical(typeof(out[[name]]), types[[type]]$column, info = name)
+      expect_identical(out[[name]], rep(types[[type]]$value, 2L), info = name)
+    }
+  }
+  for (name in c("nested", "array", "mixed", "untyped", "bare")) {
+    expect_identical(typeof(out[[name]]), "list", info = name)
+  }
+  expect_identical(out$nested, list(list(inner = 1L), list(inner = 1L)))
+  expect_false("inner" %in% names(out))
+  expect_identical(out$array, list(c(1L, 2L), c(1L, 2L)))
+  expect_identical(out$mixed, list("m", "m"))
+  expect_identical(out$untyped, list("x", "x"))
+  expect_identical(out$bare, list(5L, 5L))
+})
+
+# Run a data-frame batch over one input per case, with the one property `v`
+# of `type`. A case is the JSON text of the `v` field, or NULL to leave the
+# field out. Returns the value, the warnings, and the reply texts.
+cell_batch <- function(type, cases) {
+  replies <- vapply(
+    cases,
+    function(json) if (is.null(json)) "{}" else sprintf('{"v": %s}', json),
+    character(1)
+  )
+  res <- collect_warnings(batch_with_sequence(
+    reply_sequence(replies),
+    "data.frame",
+    schema = object_schema(v = list(type = type)),
+    inputs = paste("input", seq_along(cases))
+  ))
+  c(res, list(replies = replies))
+}
+
+test_that("a property cell holds one value of its column type, and NA otherwise", {
+  big <- .Machine$integer.max
+  # Each case is the JSON text of the field, or NULL for an absent field, and
+  # the cell it gives.
+  cases <- list(
+    string = list(
+      list(NULL, NA_character_),
+      list("null", NA_character_),
+      list("1", NA_character_),
+      list("true", NA_character_),
+      list('["a", "b"]', NA_character_),
+      list('{"w": "a"}', NA_character_),
+      list('"a"', "a"),
+      list('["x"]', "x"),
+      list('""', "")
+    ),
+    integer = list(
+      list(NULL, NA_integer_),
+      list("null", NA_integer_),
+      list('"1"', NA_integer_),
+      list("true", NA_integer_),
+      list("[1, 2]", NA_integer_),
+      list('{"w": 1}', NA_integer_),
+      list("3", 3L),
+      list("[3]", 3L),
+      list("3.0", 3L),
+      list("3.5", NA_integer_),
+      list("2147483647", big),
+      list("-2147483647", -big),
+      list("2147483648", NA_integer_),
+      list("-2147483648", NA_integer_)
+    ),
+    number = list(
+      list(NULL, NA_real_),
+      list("null", NA_real_),
+      list('"1"', NA_real_),
+      list("true", NA_real_),
+      list("[1.5, 2.5]", NA_real_),
+      list('{"w": 1.5}', NA_real_),
+      list("1.5", 1.5),
+      list("3", 3),
+      list("[1.5]", 1.5)
+    ),
+    boolean = list(
+      list(NULL, NA),
+      list("null", NA),
+      list("1", NA),
+      list('"true"', NA),
+      list("[true, false]", NA),
+      list('{"w": true}', NA),
+      list("true", TRUE),
+      list("false", FALSE),
+      list("[true]", TRUE)
+    )
+  )
+  for (type in names(cases)) {
+    json <- lapply(cases[[type]], `[[`, 1L)
+    expected <- do.call(c, lapply(cases[[type]], `[[`, 2L))
+    res <- cell_batch(type, json)
+    expect_identical(res$value$v, expected, info = type)
+    expect_identical(length(res$warnings), 0L, info = type)
+    # A value that does not fit stays in `output`.
+    expect_identical(
+      res$value$output,
+      lapply(unname(res$replies), jsonlite::parse_json, simplifyVector = TRUE),
+      info = type
+    )
+  }
+  # Stated apart from the parser.
+  res <- cell_batch("integer", list("3.5"))
+  expect_identical(res$value$output, list(list(v = 3.5)))
+  expect_identical(res$value$v, NA_integer_)
+})
+
+test_that("a list property cell holds the parsed field, and NULL when it is absent or null", {
+  schema <- object_schema(
+    n = list(type = "integer"),
+    tags = list(type = "array"),
+    meta = list(type = "object")
+  )
+  # An array of one object, a number, and null are not JSON objects. The
+  # fourth reply fails its input.
+  replies <- c(
+    '{"n": 1, "tags": ["a", "b"], "meta": {"k": 1}}',
+    '{"n": 2}',
+    '{"n": 3, "tags": null, "meta": null}',
+    "not json",
+    '[{"n": 4}]',
+    "4",
+    "null"
+  )
+  res <- collect_warnings(batch_with_sequence(
+    reply_sequence(replies),
+    "data.frame",
+    schema = schema,
+    inputs = paste("input", seq_along(replies))
+  ))
+  out <- res$value
+  expect_identical(names(out), c(frame_columns, "n", "tags", "meta"))
+  expect_identical(out$n, c(1L, 2L, 3L, NA, NA, NA, NA))
+  expect_identical(out$tags, c(list(c("a", "b")), rep(list(NULL), 6L)))
+  expect_identical(out$meta, c(list(list(k = 1L)), rep(list(NULL), 6L)))
+  expect_s3_class(out$output[[4]], "rlmstudio_bad_response")
+  expect_s3_class(out$output[[5]], "data.frame")
+  expect_identical(out$output[[6]], 4L)
+  expect_null(out$output[[7]])
+  expect_identical(length(res$warnings), 1L)
+  expect_match(
+    conditionMessage(res$warnings[[1]]),
+    "1 input failed, at position 4\\."
+  )
+})
+
+test_that("a schema that is not an object schema adds no column", {
+  schemas <- list(
+    "the empty list" = list(),
+    "an array type" = list(type = "array", items = list(type = "integer")),
+    "an object or null type" = list(
+      type = c("object", "null"),
+      properties = list(score = list(type = "integer"))
+    ),
+    "no properties" = list(type = "object"),
+    "empty properties" = list(
+      type = "object",
+      properties = structure(list(), names = character())
+    ),
+    "properties with no names" = list(
+      type = "object",
+      properties = list(list(type = "integer"))
+    )
+  )
+  for (label in names(schemas)) {
+    out <- batch_with_reply('{"score": 3}', "data.frame", schema = schemas[[label]])
+    expect_identical(names(out), frame_columns, info = label)
+    expect_identical(out$output, list(list(score = 3L), list(score = 3L)), info = label)
+  }
+})
+
+test_that("an object schema adds no column with logprobs or outside a data frame", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, completion_body(quoted('{"score": 3}'))))
+  out <- lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = "data.frame",
+    quiet = TRUE,
+    api_type = "openai",
+    logprobs = TRUE,
+    schema = score_schema
+  )
+  expect_identical(
+    names(out),
+    c("input", "output", "logprobs", frame_columns[-(1:2)])
+  )
+  # The reply is text with logprobs, so it is not parsed.
+  expect_identical(out$output, c('{"score": 3}', '{"score": 3}'))
+
+  schema <- object_schema(
+    zeta = list(type = "string"),
+    alpha = list(type = "integer")
+  )
+  reply <- '{"zeta": "a", "alpha": 1}'
+  parsed <- list(zeta = "a", alpha = 1L)
+  out <- batch_with_reply(reply, "list", schema = schema)
+  expect_identical(out, list(parsed, parsed))
+  expect_warning(
+    out <- batch_with_reply(reply, "vector", schema = schema),
+    "cannot store replies parsed"
+  )
+  expect_identical(out, list(parsed, parsed))
+})
+
+test_that("the property columns keep their types when every input failed", {
+  schema <- object_schema(
+    s = list(type = "string"),
+    i = list(type = "integer"),
+    d = list(type = "number"),
+    b = list(type = "boolean"),
+    l = list(type = "array")
+  )
+  for (n in c(1L, 3L)) {
+    info <- paste(n, "inputs")
+    res <- collect_warnings(batch_with_reply(
+      "not json",
+      "data.frame",
+      schema = schema,
+      inputs = paste("input", seq_len(n))
+    ))
+    out <- res$value
+    expect_identical(names(out), c(frame_columns, "s", "i", "d", "b", "l"), info = info)
+    expect_identical(out$s, rep(NA_character_, n), info = info)
+    expect_identical(out$i, rep(NA_integer_, n), info = info)
+    expect_identical(out$d, rep(NA_real_, n), info = info)
+    expect_identical(out$b, rep(NA, n), info = info)
+    expect_identical(out$l, rep(list(NULL), n), info = info)
+    expect_identical(length(res$warnings), 1L, info = info)
+  }
 })
 
 test_that("a reply that does not parse is returned as text without a schema", {

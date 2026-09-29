@@ -991,6 +991,48 @@ rlm_check_schema_route <- function(schema, api_type) {
   invisible(schema)
 }
 
+#' Reject schema property names that cannot name a data-frame column
+#'
+#' A data-frame batch with an object schema adds one column per top-level
+#' property (D-027). A name that is empty, `NA`, repeated, or equal to a
+#' column the batch returns already cannot name its own column. The batch
+#' aborts rather than rename or skip the column, because a renamed or missing
+#' column gives no sign of the change.
+#'
+#' @param property_names Character or `NULL`. The property names from
+#'   `schema_property_columns()`, or `NULL` when the batch adds no columns.
+#' @return `property_names`, invisibly.
+#'
+#' @noRd
+rlm_check_property_names <- function(property_names) {
+  if (is.null(property_names)) {
+    return(invisible(property_names))
+  }
+  taken <- c("input", "output", reply_columns$openai)
+  repeated <- property_names[duplicated(property_names)]
+  clashing <- intersect(property_names, taken)
+  fault <- if (anyNA(property_names)) {
+    "A property name is {.code NA}."
+  } else if (any(property_names == "")) {
+    "A property name is empty."
+  } else if (length(repeated) > 0L) {
+    "The property name {.val {repeated[[1]]}} is there more than once."
+  } else if (length(clashing) > 0L) {
+    "The property {.val {clashing[[1]]}} has the name of a column that the batch returns already."
+  }
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "Each top-level property of {.arg schema} must have a name that can name its own data-frame column.",
+        "x" = fault,
+        "i" = "Rename the property, or use {.code format = \"list\"}."
+      ),
+      call = NULL
+    )
+  }
+  invisible(property_names)
+}
+
 #' Reject a text argument that is not a usable character vector
 #'
 #' The strict rule, for the arguments that are genuinely vectors of text:

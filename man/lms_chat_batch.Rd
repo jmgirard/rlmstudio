@@ -49,7 +49,7 @@ The return type depends on the \code{format} argument:
 \itemize{
 \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
 \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow, as described below.
+\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 }
 
 With \code{api_type = "native"} and \code{format = "data.frame"}, the data frame ends
@@ -66,8 +66,9 @@ a field out, such as \code{model_load_time_seconds}. Such a cell does not fail
 the input and gives no warning.
 
 With \code{api_type = "openresponses"} or \code{api_type = "openai"} and
-\code{format = "data.frame"}, the data frame ends with four columns read from
-each reply: \code{response_id}, \code{input_tokens}, \code{total_output_tokens}, and
+\code{format = "data.frame"}, the data frame has four columns read from each
+reply after \code{output}, or after \code{logprobs} when it is there. They are
+\code{response_id}, \code{input_tokens}, \code{total_output_tokens}, and
 \code{reasoning_output_tokens}. These are the first four native column names,
 but the servers send the values under other names:
 \itemize{
@@ -95,6 +96,40 @@ fields hold. The row of an input that failed holds \code{NA} in every column
 read from the reply. If every input failed, those columns are still there,
 \code{response_id} as character and the others as double. The vector and list
 formats add no such column.
+
+With \code{api_type = "openai"}, \code{format = "data.frame"}, \code{logprobs = FALSE},
+and an object \code{schema}, the data frame ends with one column per top-level
+property of the schema, after the four reply columns. An object schema has
+a \code{type} of \code{"object"}, written as a string or as a list that holds that
+one string. Its \code{properties} is a list of one or more named entries. Each
+column has the property name, in the order of \code{properties}. The columns
+come from the schema and not from the replies, so they are there even when
+every input failed. The properties of a nested object get no columns of
+their own. Any other schema adds no column.
+
+The type of a property column follows the \code{type} of the property.
+\code{"string"} gives character, \code{"integer"} gives integer, \code{"number"} gives
+double, and \code{"boolean"} gives logical. Each type can be a string or a list
+that holds that one string. A pair of one of these types and \code{"null"},
+such as \code{c("integer", "null")}, gives the same column type. Any other
+\code{type}, no \code{type}, or a property that is not a list gives a list-column.
+
+A cell of a character, integer, double, or logical property column holds
+the field of the parsed reply when the field is one value of the column
+type. A one-item JSON array counts as one value, and an empty string is
+kept. A double column takes any number. An integer column takes an integer,
+or a whole number from -2147483647 to 2147483647. Otherwise the cell is
+\code{NA}, and the call gives no warning. The \code{output} column keeps the parsed
+reply, with the value that did not fit. A cell of a list-column holds the
+field as parsed, or \code{NULL} when the field is absent or \code{null}. A reply that
+is not a JSON object, such as an array or a number, gives \code{NA} and \code{NULL}
+cells. So does the row of an input that failed.
+
+A property name that is empty, \code{NA}, repeated, or equal to another column
+name aborts before the call checks for a running server. The other column
+names are \code{input}, \code{output}, \code{response_id}, \code{input_tokens},
+\code{total_output_tokens}, and \code{reasoning_output_tokens}. A data frame with
+\code{logprobs = TRUE}, and the list and vector formats, do not check the names.
 }
 \description{
 Process a vector of inputs sequentially through LM Studio.

@@ -100,6 +100,11 @@ leading_columns <- function(s) {
   if (s$logprobs) c("input", "output", "logprobs") else c("input", "output")
 }
 
+# The columns after the new ones: `score_schema` adds a `score` column.
+trailing_columns <- function(s) {
+  if (s$schema) "score" else character()
+}
+
 # The answer text of reply i, or its score for a schema batch.
 answer_text <- function(s, i) {
   if (s$schema) sprintf('{"score": %d}', i) else sprintf("reply %d", i)
@@ -132,12 +137,17 @@ test_that("a data-frame batch adds the id and token counts of each reply", {
       )
     })
     res <- run_usage_batch(replies, s$api_type, s$logprobs, s$schema)
-    expect_identical(names(res$out), c(leading_columns(s), usage_columns), info = info)
+    expect_identical(
+      names(res$out),
+      c(leading_columns(s), usage_columns, trailing_columns(s)),
+      info = info
+    )
     for (col in usage_columns) {
       expect_identical(res$out[[col]], expected[[col]], info = paste(info, col))
     }
     if (s$schema) {
       expect_identical(res$out$output, list(list(score = 1L), list(score = 2L)), info = info)
+      expect_identical(res$out$score, c(1L, 2L), info = info)
     } else {
       expect_identical(res$out$output, c("reply 1", "reply 2"), info = info)
     }
@@ -310,7 +320,11 @@ test_that("a failed input holds NA in all four columns", {
       info <- paste(setting_info(s), cls)
       ok <- usage_reply(s$api_type, answer_text(s, 1L), lp = s$logprobs)
       res <- run_usage_batch(list(ok, failing_usage(s, cls)), s$api_type, s$logprobs, s$schema)
-      expect_identical(names(res$out), c(leading_columns(s), usage_columns), info = info)
+      expect_identical(
+        names(res$out),
+        c(leading_columns(s), usage_columns, trailing_columns(s)),
+        info = info
+      )
       expect_usage_column_types(res$out, info)
       expect_identical(res$out$response_id, c("id_1", NA), info = info)
       first <- if (s$api_type == "openai") c(29, 4, 0) else c(32, 2, 0)
@@ -334,7 +348,11 @@ test_that("the four columns are there when every input failed", {
         s$logprobs,
         s$schema
       )
-      expect_identical(names(res$out), c(leading_columns(s), usage_columns), info = info)
+      expect_identical(
+        names(res$out),
+        c(leading_columns(s), usage_columns, trailing_columns(s)),
+        info = info
+      )
       expect_usage_column_types(res$out, info)
       for (col in usage_columns) {
         expect_true(all(is.na(res$out[[col]])), info = paste(info, col))

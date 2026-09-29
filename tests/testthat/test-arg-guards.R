@@ -542,6 +542,102 @@ test_that("a batch format that simplify = FALSE cannot fill aborts before the se
   expect_identical(probe$calls, 1L)
 })
 
+test_that("a schema property name that cannot name a column aborts before the server probe", {
+  # The probe finds a server and the recorder answers every request, so a
+  # batch that got past the name check would send a request.
+  probes <- 0L
+  local_mocked_bindings(is_server_running = function(...) {
+    probes <<- probes + 1L
+    TRUE
+  })
+  recorder <- local_request_recorder(
+    mock_response(200L, completion_body(quoted('{"a": "x"}')))
+  )
+  batch <- function(properties, format = "data.frame") {
+    lms_chat_batch(
+      "a-model",
+      "hi",
+      format = format,
+      quiet = TRUE,
+      api_type = "openai",
+      schema = list(type = "object", properties = properties)
+    )
+  }
+  one <- list(type = "string")
+  taken <- c(
+    "input",
+    "output",
+    "response_id",
+    "input_tokens",
+    "total_output_tokens",
+    "reasoning_output_tokens"
+  )
+  cases <- c(
+    lapply(taken, function(name) {
+      list(
+        label = name,
+        properties = stats::setNames(list(one, one), c("a", name)),
+        match = sprintf('"%s" has the name of a column', name)
+      )
+    }),
+    list(
+      list(
+        label = "an empty name",
+        properties = stats::setNames(list(one, one), c("a", "")),
+        match = "A property name is empty."
+      ),
+      list(
+        label = "an NA name",
+        properties = stats::setNames(list(one, one), c("a", NA)),
+        match = "A property name is `NA`."
+      ),
+      list(
+        label = "a repeated name",
+        properties = stats::setNames(list(one, one), c("a", "a")),
+        match = '"a" is there more than once'
+      )
+    )
+  )
+  for (case in cases) {
+    err <- expect_error(batch(case$properties), class = "rlang_error", info = case$label)
+    message <- gsub("\\s+", " ", conditionMessage(err))
+    expect_match(message, case$match, fixed = TRUE, info = case$label)
+    # No package class on an argument fault (D-008).
+    expect_false(any(grepl("^rlmstudio_", class(err))), info = case$label)
+  }
+  expect_identical(probes, 0L)
+  expect_length(recorder$requests, 0L)
+
+  # The list and vector formats keep the replies as parsed, so the same
+  # schemas send their requests.
+  for (case in cases) {
+    out <- batch(case$properties, "list")
+    expect_identical(out, list(list(a = "x")), info = case$label)
+    expect_warning(
+      out <- batch(case$properties, "vector"),
+      "cannot store replies parsed",
+      info = case$label
+    )
+    expect_identical(out, list(list(a = "x")), info = case$label)
+  }
+  expect_length(recorder$requests, 2L * length(cases))
+
+  # A data frame with logprobs holds text replies and adds no property
+  # column, so it does not check the names either.
+  out <- lms_chat_batch(
+    "a-model",
+    "hi",
+    format = "data.frame",
+    quiet = TRUE,
+    api_type = "openai",
+    logprobs = TRUE,
+    schema = list(type = "object", properties = list(output = one))
+  )
+  expect_identical(names(out)[1:3], c("input", "output", "logprobs"))
+  expect_identical(out$output, '{"a": "x"}')
+  expect_length(recorder$requests, 2L * length(cases) + 1L)
+})
+
 # A call to each function that takes `ttl`, valid apart from `ttl`, keyed by
 # function name. `lms_chat_batch()` takes it through `...`, so the NAMESPACE
 # enumeration below cannot find it, and it is added by hand. The two routing
