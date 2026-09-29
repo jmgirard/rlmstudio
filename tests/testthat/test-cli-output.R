@@ -65,7 +65,7 @@ test_that("a failed run gives the exit code and quotes stderr first", {
       said = "from stderr"
     ),
     blank_stderr = list(
-      res = list(stdout = "from stdout", stderr = " \n "),
+      res = list(stdout = "from stdout", stderr = " \n\u00a0"),
       said = "from stdout"
     )
   )
@@ -98,7 +98,7 @@ test_that("a failed run with no text gives the exit code alone", {
     list(status = 1L),
     list(status = 1L, stdout = NULL, stderr = NULL),
     list(status = 1L, stdout = NA_character_, stderr = NA_character_),
-    list(status = 1L, stdout = "\f ", stderr = " \n\t")
+    list(status = 1L, stdout = "\f\u00a0", stderr = " \n\t")
   )
   for (name in names(cli_callers)) {
     for (res in empties) {
@@ -137,18 +137,30 @@ test_that("the quoted text shows a byte that is not valid UTF-8 as <xx>", {
 
 test_that("the quoted text has no ANSI escape sequences", {
   # One text for each form: a color code, other cursor codes, and a terminal
-  # link closed by ESC \ or by BEL.
+  # link closed by ESC \ or by BEL. Then the forms that cli::ansi_strip()
+  # leaves: the cursor save and restore codes ESC 7 and ESC 8, a character
+  # set code, a window title closed by BEL or by ESC \, and a lone ESC.
   texts <- c(
     color = "\033[31mred\033[39m done",
     cursor = "\033[?25lhide\033[2K\033[1Gline done",
     link_st = "\033]8;;https://lmstudio.ai\033\\link\033]8;;\033\\ done",
-    link_bel = "\033]8;;https://lmstudio.ai\alink\033]8;;\a done"
+    link_bel = "\033]8;;https://lmstudio.ai\alink\033]8;;\a done",
+    save_restore = "\0337saved\0338 done",
+    charset = "\033(Bplain done",
+    title_bel = "\033]0;lmstudio.ai\anamed done",
+    title_st = "\033]0;lmstudio.ai\033\\named done",
+    lone = "lone done\033"
   )
   expected <- c(
     color = "red done",
     cursor = "hideline done",
     link_st = "link done",
-    link_bel = "link done"
+    link_bel = "link done",
+    save_restore = "saved done",
+    charset = "plain done",
+    title_bel = "named done",
+    title_st = "named done",
+    lone = "lone done"
   )
   for (name in names(cli_callers)) {
     for (form in names(texts)) {
@@ -167,7 +179,11 @@ test_that("the quoted text has no ANSI escape sequences", {
 })
 
 test_that("each whitespace run in the quoted text becomes one space", {
-  stderr <- "line one\n\tline two  end\r\n  "
+  # cli prints a run of spaces inside a bullet as one space, so this test
+  # cannot see how a non-breaking space inside a text is read. The blank
+  # stderr case and the no-text cases above hold one, and they fail if it
+  # does not count as whitespace.
+  stderr <- "line one\n\tline two\u00a0\u00a0end\r\n  "
   for (name in names(cli_callers)) {
     got <- cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr))
     expect_cli_said(got$message, "line one line two end", name)

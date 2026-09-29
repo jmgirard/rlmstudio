@@ -232,8 +232,10 @@ cli_output_clean <- function(res) {
       # A byte that is not valid UTF-8 makes gsub() fail, which would hide
       # the exit code. sub = "byte" writes such a byte as "<ff>".
       text <- iconv(text, "UTF-8", "UTF-8", sub = "byte")
-      # Color codes, other cursor codes, and terminal links.
-      text <- cli::ansi_strip(text, sgr = TRUE, csi = TRUE, link = TRUE)
+      # Color codes, other cursor codes, and terminal links. The default
+      # arguments strip all three, and an older cli has no `link` argument.
+      text <- cli::ansi_strip(text)
+      text <- strip_escapes(text)
       # Collapse first. trimws() alone keeps a form feed or a vertical tab,
       # and [:space:] does not match a non-breaking space (LESSONS, M013).
       text <- trimws(gsub("[[:space:]\u00a0]+", " ", text))
@@ -243,6 +245,24 @@ cli_output_clean <- function(res) {
     }
   }
   NULL
+}
+
+#' Remove the escape sequences that cli::ansi_strip() leaves
+#'
+#' Removes, in this order: a string sequence (ESC followed by `]`, `P`,
+#' `X`, `^`, or `_`) up to BEL or ESC \, such as a window title; a
+#' two-character code with any intermediate bytes, such as the cursor save
+#' and restore codes ESC 7 and ESC 8 or the character set code ESC ( B; and
+#' a lone ESC.
+#'
+#' @param text One string.
+#' @return One string.
+#'
+#' @noRd
+strip_escapes <- function(text) {
+  text <- gsub("\033[]PX^_][^\a\033]*(\a|\033\\\\)?", "", text, perl = TRUE)
+  text <- gsub("\033[ -/]*[0-~]", "", text, perl = TRUE)
+  gsub("\033", "", text, fixed = TRUE)
 }
 
 #' Cut a long CLI text to its end

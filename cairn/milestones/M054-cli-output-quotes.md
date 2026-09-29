@@ -103,11 +103,11 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 ## Coverage
 
 - AC1 → T1, T2, T3
-- AC2 → T1, T2, T3
+- AC2 → T1, T2, T3, T7
 - AC3 → T2, T3
-- AC4 → T4
-- AC5 → T5
-- AC6 → T6
+- AC4 → T4, T7, T8
+- AC5 → T5, T8
+- AC6 → T6, T9
 
 ## Tasks
 
@@ -143,6 +143,19 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       `devtools::document()`.
 - [x] T6: Run `devtools::test()` and `devtools::check()`. Set
       `RLMSTUDIO_API_TOKEN` and start the server first (LESSONS, M009).
+- [x] T7: In `cli_output_clean()`, call `cli::ansi_strip()` with its
+      default arguments. Then remove every escape sequence that is left:
+      strings to BEL or ESC \, two-character codes such as ESC 7, and a
+      lone ESC. Add a non-breaking space to the whitespace test text. Add
+      one escape text per form to the escape test. See each new test red
+      first.
+- [ ] T8: Move the failure paragraph of `lms_daemon_stop()` out of the
+      "Desktop Users" section. Put an escape code in the part of the
+      installer test text that the cut keeps. State the escape removal
+      the same way in the five pages and NEWS. Cut the M053 NEWS
+      sub-bullet that the new entry replaces. Remove `cli_output_text()`.
+- [ ] T9: Run `devtools::document()`, `devtools::test()`, and
+      `devtools::check()` again, as in T6.
 
 ## Work log
 
@@ -164,6 +177,9 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: claim audit: 95 claims read, 3 corrected — R/serve.R, R/daemon.R, R/setup.R, NEWS.md, man/*.Rd
 - 2026-09-29: the three claim-audit fixes. "ANSI escape codes" now names color codes, cursor codes, and terminal links. "keeps its last 1000" became "keeps at most". The `R/setup.R` handler comment names all three errors. The same reader re-read them once, and all held. Air formatted `test-cli-output.R` and `test-setup.R`. `devtools::test()`: 558 tests, 0 failed. Status set to review.
 - 2026-09-29: review return 1 (defect). AC2 failed: the whitespace test has no non-breaking space, and `cli_output_clean()` keeps ESC 7, ESC 8, ESC ( B, and OSC 0 sequences. AC4 inherits the escape defect. AC5 failed three ways. Pages and NEWS claim that cursor codes are removed. The `lms_daemon_stop()` failure paragraph renders under "Desktop Users". No installer test tells ANSI removal apart from the cut. AC1, AC3, and AC6 passed. Status set to in-progress.
+- 2026-09-29: implement resumed. The question gate added three fixes from review findings: `cli::ansi_strip()` with default arguments, the stale M053 NEWS sub-bullet, and the unused `cli_output_text()`. Minor amendment: T7 to T9 added, and the Coverage lines name them.
+- 2026-09-29: correction to review return 1. The whitespace test text already held two non-breaking spaces as literal characters, so AC2 fail 1 was a misread. cli prints a run of spaces as one, so the rule shows only when a field holds nothing else. A planted defect turned the blank-stderr case red for all four functions.
+- 2026-09-29: T7 done. New `strip_escapes()` in `R/serve.R` runs after `cli::ansi_strip()`. The five new escape texts went red first. The literal non-breaking spaces in the test file are now ` ` escapes. `devtools::test()`: 0 failed.
 
 ## Decisions
 
