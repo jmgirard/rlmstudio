@@ -45,7 +45,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       and no text. It compares after it collapses each whitespace run. It
       asserts the exit code and which text is quoted. For no text, it
       asserts that no "The CLI said" bullet shows.
-- [ ] AC2: The quoted text of each of the four is cleaned in this order. A
+- [x] AC2: The quoted text of each of the four is cleaned in this order. A
       byte that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI
       escape sequences are removed: color codes, other cursor codes, and
       terminal links. Each whitespace run becomes one space, and a
@@ -79,7 +79,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       and with invalid UTF-8 text. Tests also cover a phrase that sits more
       than 1000 characters before the end, a text with both phrases, and
       the hint.
-- [ ] AC4: If the headless installer exits with a status other than 0,
+- [x] AC4: If the headless installer exits with a status other than 0,
       `install_lmstudio()` aborts. The error message holds the exit code
       and one bullet `The installer said: <text>`. The installer runs with
       stderr sent to stdout, so `<text>` is the stdout text, cleaned by the
@@ -90,7 +90,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       installation failed." with an "Error message:" bullet. Tests assert
       that message for a missing `curl`, an unsupported system, and a shell
       that fails to start.
-- [ ] AC5: The help pages of `lms_server_start()`, `lms_server_stop()`,
+- [x] AC5: The help pages of `lms_server_start()`, `lms_server_stop()`,
       `lms_daemon_start()`, `lms_daemon_stop()`, and `install_lmstudio()`
       state what the message of a failed run quotes. The
       `lms_server_stop()` page states the not-running exit. NEWS.md has one
@@ -202,3 +202,13 @@ Findings came from three fresh reviewers: [O] diff, [S] blame history, and [S] p
 - S6: `cli::ansi_strip(sgr =, csi =, link =)` needs a cli version with those arguments. DESCRIPTION sets no minimum version.
 - S7: the 1000-character cap drops an early cause. The plan recorded this as its falsifier.
 - S8: the rewritten M028 installer test keeps its brace guard. Noted, it requests nothing.
+
+Pass 2, 2026-09-29. The branch was level with `origin/main`, so no merge was needed. No PR exists for the branch. With the server started and the token set, `devtools::test()` gave 0 failed, 0 warnings, 0 skipped.
+
+Evidence per criterion:
+
+- AC1 pass. The grep lists six call sites. `R/daemon.R:45` is daemon start, `:70` daemon status, and `:134` daemon stop. `R/serve.R:143` is server start, `:448` server stop, and `:547` server status. The two status functions never abort. `test-cli-output.R` runs the four other functions over stderr text, stdout text alone, both, a blank stderr, and four no-text forms. It asserts the exit code and which text is quoted. For no text, it asserts that no bullet shows.
+- AC2 pass. A probe of `cli_output_clean()` removed ESC 7, ESC 8, ESC ( B, a color code, and an OSC 8 link. It also removed OSC 0 closed by BEL and by ESC \, and it left no ESC byte. It gave `g h i` for two non-breaking spaces, a line break, and a tab. It gave `j<ff>` for byte 0xff. `test-cli-output.R` runs all four functions over byte 0xff and nine escape texts. Five of those texts hold forms that `cli::ansi_strip()` leaves. It also runs them over a text with lines, tabs, and two non-breaking spaces, over `brace_probe`, and over the three cut texts. Two defects were planted in a scratch copy. With the non-breaking space out of the whitespace pattern, the stderr-first and no-text tests went red. With `strip_escapes()` out, the escape test and the installer log test went red.
+- AC3 pass. Tests cover the server no-op, the daemon GUI exit, and the daemon not-running exit. Each runs with plain text, invalid UTF-8 text, and a phrase more than 1000 characters before the end. They also cover letter case, both phrases (GUI wins), stdout-only text, the hint, and the `force = TRUE` message.
+- AC4 pass. `test-setup.R` asserts the exit code, one "The installer said:" bullet, and one "Headless installation failed". It also asserts no "Error message:" and braces that do not run. The long-log test puts a color code, ESC 7, a window title, and byte 0xff in the kept tail. It compares the message against a cleaned text written by hand, and it went red with `strip_escapes()` planted out. Three tests assert the wrapped message for a missing `curl`, an unsupported system, and a shell that fails to start.
+- AC5 pass. The five pages state the exit code, the quote label, the stderr-then-stdout rule, `<xx>`, escape removal, whitespace, and the cut. The `lms_server_stop()` page states the not-running exit. The `lms_daemon_stop()` failure paragraph renders in `\details` (`man/lms_daemon_stop.Rd:23`). NEWS.md has one entry with parts, and the stale M053 sub-bullet is gone. Each stated behavior maps to a test named under AC1 to AC4.
