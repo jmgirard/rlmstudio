@@ -1084,3 +1084,118 @@ rlm_check_no_na <- function(value, arg) {
   }
   invisible(value)
 }
+
+#' Reject a model type filter that is not one or more usable names
+#'
+#' `list_models()` and `list_instances()` keep the models whose `type` is in
+#' this vector. The package keeps no list of the types LM Studio knows, so an
+#' unknown name passes and matches nothing. A value that can match nothing
+#' whatever the server holds, such as a number or an empty string, aborts.
+#'
+#' @param value The value the caller passed as `type`.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_type <- function(value) {
+  fault <- type_fault(value)
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "{.arg type} must be one or more model types, given as a character vector.",
+        "x" = "{fault}"
+      ),
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
+#' Which rule did this model type filter break?
+#'
+#' Returns plain text rather than a cli string, for the reason `id_fault()`
+#' states. `is.character()` decides the type, so names, dims, and classes on
+#' a character vector do not matter, and a factor is rejected.
+#'
+#' @param value The value the caller passed as `type`.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+type_fault <- function(value) {
+  if (is.null(value)) {
+    return("You gave NULL.")
+  }
+  if (!is.character(value)) {
+    cls <- class(value)[[1]]
+    return(paste0("You gave ", article_for(cls), " ", cls, " value."))
+  }
+  if (length(value) == 0L) {
+    return("You gave an empty character vector.")
+  }
+  missing <- which(is.na(value))
+  if (length(missing) > 0L) {
+    return(paste0("Element ", missing[[1]], " is NA."))
+  }
+  # The same `[[:space:]]` rule as `id_fault()`, for the reason stated there.
+  blank <- which(!grepl("[^[:space:]]", value))
+  if (length(blank) > 0L) {
+    i <- blank[[1]]
+    what <- if (nzchar(value[[i]])) "holds only whitespace" else "is an empty string"
+    return(paste0("Element ", i, " ", what, "."))
+  }
+  NULL
+}
+
+#' Reject a flag that is not one TRUE or FALSE
+#'
+#' `isTRUE()` and `isFALSE()` decide, as in D-023, so names, dims, and
+#' attributes on a logical of length one pass. With `null_ok = TRUE`, `NULL`
+#' passes too. `quiet` takes that form, because `NULL` there reads the
+#' `rlmstudio.quiet` option through `is_quiet()`.
+#'
+#' @param value The value the caller passed.
+#' @param arg Character. The argument name to report.
+#' @param null_ok Logical. Whether `NULL` is a usable value.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_flag <- function(value, arg, null_ok = FALSE) {
+  if (null_ok && is.null(value)) {
+    return(invisible(value))
+  }
+  fault <- flag_fault(value)
+  if (!is.null(fault)) {
+    rule <- if (null_ok) {
+      "{.arg {arg}} must be TRUE, FALSE, or NULL."
+    } else {
+      "{.arg {arg}} must be TRUE or FALSE."
+    }
+    cli::cli_abort(c(rule, "x" = "{fault}"), call = NULL)
+  }
+  invisible(value)
+}
+
+#' Which rule did this flag break?
+#'
+#' Returns plain text rather than a cli string, for the reason `id_fault()`
+#' states.
+#'
+#' @param value The value the caller passed.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+flag_fault <- function(value) {
+  if (isTRUE(value) || isFALSE(value)) {
+    return(NULL)
+  }
+  if (is.null(value)) {
+    return("You gave NULL.")
+  }
+  if (!is.logical(value)) {
+    cls <- class(value)[[1]]
+    return(paste0("You gave ", article_for(cls), " ", cls, " value."))
+  }
+  if (length(value) != 1L) {
+    return(paste0("You gave ", length(value), " values rather than one."))
+  }
+  "You gave NA."
+}

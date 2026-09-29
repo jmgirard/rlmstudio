@@ -57,6 +57,10 @@ list_models <- function(
   host = "http://localhost:1234",
   token = NULL
 ) {
+  rlm_check_flag(loaded, "loaded")
+  rlm_check_type(type)
+  rlm_check_flag(detailed, "detailed")
+  rlm_check_flag(quiet, "quiet", null_ok = TRUE)
   stop_if_no_server(host)
 
   got <- request_model_list(host, token, "API List Failed")
@@ -64,7 +68,7 @@ list_models <- function(
   body <- got$body
 
   if (length(body[["models"]]) == 0) {
-    if (!quiet) {
+    if (!is_quiet(quiet)) {
       rlm_inform(c("i" = "No models found on host {.url {host}}."))
     }
     return(invisible(data.frame()))
@@ -99,7 +103,7 @@ list_models <- function(
   }
 
   if (nrow(df) == 0) {
-    if (!quiet) {
+    if (!is_quiet(quiet)) {
       rlm_inform(c(
         "!" = "No models found matching criteria: loaded = {.val {loaded}}, type = {.val {type}}."
       ))
@@ -220,6 +224,8 @@ list_instances <- function(
   host = "http://localhost:1234",
   token = NULL
 ) {
+  rlm_check_type(type)
+  rlm_check_flag(quiet, "quiet", null_ok = TRUE)
   stop_if_no_server(host)
 
   label <- "API List Failed"
@@ -252,7 +258,7 @@ list_instances <- function(
   }
 
   if (length(rows) == 0) {
-    if (!quiet) {
+    if (!is_quiet(quiet)) {
       rlm_inform(c(
         "i" = "No loaded model instances of type {.val {type}} found on host {.url {host}}."
       ))
