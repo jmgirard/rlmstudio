@@ -1,6 +1,6 @@
 # M056: Test failures that name each broken function and reply check
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -93,7 +93,7 @@ outside this milestone.
       each on the shape that pins it, and log the detail each raises. The
       batch tests at `test-chat-batch.R:608` and `test-chat-batch-usage.R:450`
       reuse these shapes, so run them too.
-- [ ] T5: Run `devtools::test()` and `devtools::check()`. If `check()` gives a
+- [x] T5: Run `devtools::test()` and `devtools::check()`. If `check()` gives a
       note, run it on 65d6bd4 to compare.
 
 ## Work log
@@ -105,6 +105,9 @@ outside this milestone.
 - 2026-09-29: T2 done. In a scratch copy, `stop("planted")` replaced `rlm_check_id(job_id, "job_id")` in `lms_download_status()`. `test_file()` ran 117 blocks, and 3 failed: the bad-id, omitted-id, and server-down blocks of `lms_download_status`, each naming it as a whole word. The other 9 functions of the domain passed all their blocks, from 4 (`lms_download`, `lms_load`, `lms_unload`) to 16 (`lms_chat`).
 - 2026-09-29: T3 done. With the server started and no token, the live id-column test errored with `rlmstudio_api_error` "API List Failed" where it skipped before. With the token and `google/gemma-3-1b` loaded, it passed. The session started the server after an app restart and left no model loaded. `devtools::test()` with the token: 635 blocks, 0 failed, 0 errored, 3 skipped, each skip for a model that was not loaded.
 - 2026-09-29: T4 done. Added "an item that is null" and "a part that is null" with their check-map entries. In a scratch copy, each swap raised `rlmstudio_bad_response` with the detail of the check that then ran first. The output/item swap on "an output string" gave item. The item/message swap on "an item that is null" gave message. The content/part swap on "a message content that is a string" gave part. The part/output_text swap on "a part that is null" gave output_text. Under the item/message and part/output_text swaps, the string item and string part crashed with "subscript out of bounds". `test-chat.R`, `test-chat-batch.R`, and `test-chat-batch-usage.R` passed (25, 37, 10 blocks). `devtools::test()` with the token: 635 blocks, 0 failed, 0 errored, 3 skipped for unloaded models.
+- 2026-09-29: T5 done. `devtools::check()` with the token on 6ab7f53: 0 errors, 0 warnings, 0 notes, so no run on 65d6bd4 was needed. `devtools::test()` is the T4 run above.
+- claim audit: not owed — internal tier
+- 2026-09-29: status set to review. The session stopped the LM Studio server it started for T3, and left no model loaded.
 
 ## Decisions
 
