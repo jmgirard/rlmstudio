@@ -186,11 +186,18 @@ environment.</p>
 <p>In a headless environment, managing your system resources is
 critical. When your script finishes, you should explicitly tear down the
 entire stack to free up memory and stop background processes.</p>
+<p>When this vignette is built, it unloads the model only if the model
+was not loaded before the build. It stops the server and the daemon only
+if the server was not running before the build. If the LM Studio desktop
+app runs the daemon, <code><a href="../reference/lms_daemon_stop.html">lms_daemon_stop()</a></code> leaves the daemon
+running, and the build leaves the server and the model as it found them.
+On a host without the desktop app, the daemon stops, and a model that
+was loaded before the build can be unloaded with it.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 1. Unload the model from memory</span></span>
 <span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <p>Stopping the server and the daemon does not go through the REST API,
-so it runs whenever the CLI is here. That way a stack this vignette
+so it does not wait on the readiness check. A stack that this vignette
 started is torn down even if the readiness check said no.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 2. Stop the API server</span></span>
@@ -209,7 +216,11 @@ exit, managing the daemon state manually can be tedious. The
 teardown of the background engine automatically.</p>
 <p>This block starts its own server, so it asks again whether that
 server answers. The value measured earlier belongs to the server the
-teardown above has already stopped.</p>
+teardown above has already stopped. The block calls
+<code><a href="../reference/lms_unload.html">lms_unload()</a></code> only if the block loaded the model. On a host
+without the desktop app, the daemon stop on exit can also unload a model
+that was loaded before the block. When this vignette is built, the block
+runs only if the server was not running before the build.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The daemon will start, the code will run, and the daemon will stop on exit.</span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/with_lms_daemon.html">with_lms_daemon</a></span><span class="op">(</span><span class="op">{</span></span>
@@ -217,8 +228,12 @@ teardown above has already stopped.</p>
 <span></span>
 <span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="../reference/lms_server_ready.html">lms_server_ready</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">loaded_here</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="va">model</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="../reference/list_models.html">list_models</a></span><span class="op">(</span>loaded <span class="op">=</span> <span class="cn">TRUE</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">key</span></span>
 <span>    <span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span>    <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span><span class="va">model</span>, <span class="st">"Is the daemon running?"</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">loaded_here</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
 <span>  <span class="op">}</span></span>
 <span></span>
 <span>  <span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>

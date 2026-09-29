@@ -154,6 +154,12 @@ To free up memory and system resources when you are finished, it is best
 practice to unload your models and stop the local server. Closing the LM
 Studio GUI will also perform this cleanup if you forget.
 
+When this vignette is built, it unloads the model only if the model was
+not loaded before the build. It stops the server only if the server was
+not running before the build. On a host where the LM Studio desktop app
+runs the daemon, a build that finishes then leaves the server state, and
+whether the model is loaded, as it found them.
+
 ``` r
 
 # Unload the model
@@ -161,8 +167,8 @@ lms_unload(model)
 #> ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]
 ```
 
-Stopping the server does not go through the REST API, so it runs
-whenever the CLI is here. That way a server this vignette started is
+Stopping the server does not go through the REST API, so it does not
+wait on the readiness check. A server that this vignette started is
 stopped even if the readiness check said no.
 
 ``` r

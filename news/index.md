@@ -2,6 +2,31 @@
 
 ## rlmstudio (development version)
 
+- The hint in a 401 or 403 abort message now matches the request that
+  was sent. If the request carried a token, the hint says that the
+  server rejected it. If not, the hint names `RLMSTUDIO_API_TOKEN`.
+  Before, each REST function except
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  read the token sources again after the reply. A token source that
+  changed in that time, such as the `rlmstudio.token` option, gave the
+  hint for the other case.
+
+- The teardown of both vignettes now depends on the state before the
+  build. If the server was not running before a build of either
+  vignette, the build stops it. If the `google/gemma-3-1b` model was not
+  loaded before the build, the build unloads it. Before, a build stopped
+  a server that was running before it, and each vignette unloaded a
+  model that was loaded before it. `headless-config.Rmd` does not
+  restore the daemon state. It calls
+  [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
+  whenever it stops the server. If its
+  [`with_lms_daemon()`](https://jmgirard.github.io/rlmstudio/reference/with_lms_daemon.md)
+  example loads the model, the example now unloads it. These rules keep
+  the server and model state where the LM Studio desktop app runs the
+  daemon, because the app then keeps the daemon running. On a host
+  without the desktop app, the daemon stop in `headless-config.Rmd` can
+  also unload a model that was loaded before the build.
+
 - If a run of the LM Studio CLI or the headless installer fails, the
   abort message now quotes what the run wrote, beside the exit code.
 

@@ -141,6 +141,15 @@ In a headless environment, managing your system resources is critical.
 When your script finishes, you should explicitly tear down the entire
 stack to free up memory and stop background processes.
 
+When this vignette is built, it unloads the model only if the model was
+not loaded before the build. It stops the server and the daemon only if
+the server was not running before the build. If the LM Studio desktop
+app runs the daemon,
+[`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
+leaves the daemon running, and the build leaves the server and the model
+as it found them. On a host without the desktop app, the daemon stops,
+and a model that was loaded before the build can be unloaded with it.
+
 ``` r
 
 # 1. Unload the model from memory
@@ -148,8 +157,8 @@ lms_unload(model)
 ```
 
 Stopping the server and the daemon does not go through the REST API, so
-it runs whenever the CLI is here. That way a stack this vignette started
-is torn down even if the readiness check said no.
+it does not wait on the readiness check. A stack that this vignette
+started is torn down even if the readiness check said no.
 
 ``` r
 
@@ -170,7 +179,12 @@ engine automatically.
 
 This block starts its own server, so it asks again whether that server
 answers. The value measured earlier belongs to the server the teardown
-above has already stopped.
+above has already stopped. The block calls
+[`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
+only if the block loaded the model. On a host without the desktop app,
+the daemon stop on exit can also unload a model that was loaded before
+the block. When this vignette is built, the block runs only if the
+server was not running before the build.
 
 ``` r
 
@@ -180,8 +194,12 @@ results <- with_lms_daemon({
 
   res <- NULL
   if (lms_server_ready()) {
+    loaded_here <- !model %in% list_models(loaded = TRUE, quiet = TRUE)$key
     lms_load(model)
     res <- lms_chat(model, "Is the daemon running?")
+    if (loaded_here) {
+      lms_unload(model)
+    }
   }
 
   lms_server_stop()
