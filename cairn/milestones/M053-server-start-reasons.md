@@ -77,3 +77,22 @@ Evidence gathered 2026-09-28 on head 2672b2b. The branch had 0 commits behind `o
 - AC6: with the LM Studio server started and `RLMSTUDIO_API_TOKEN` set, `devtools::test()` ran 538 tests and 14164 expectations. It had 0 failures, 0 errors, 0 skips, and 0 warnings. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The vignette build stopped the server again, which matches an existing candidate row.
 
 Consistency gate: `cairn_validate.py` passed, exit 0, coverage complete included. `DESIGN.md` is not in the diff, so no principle changed and `cairn_impact.py` was skipped. `devtools::document()` left no diff. The diff does not touch `README.Rmd` or `README.md`. `pkgdown::check_pkgdown()` found no problems. `NEWS.md` has the entry, with no milestone numbers. The diff adds no top-level files. `devtools::check()` is clean, as AC6 records.
+
+Independent review, 2026-09-28: three fresh reviewers ran, [O] diff, [S] history, and [S] prior review. The prior-review `gh` probe returned `[]`, so only archived records were read. Findings, most severe first, with the disposition proposed at the gate:
+
+- O1 = P1 (`R/serve.R`, `gsub()` in `cli_output_text()`): CLI text with bytes that are not valid UTF-8 makes `gsub()` fail. The abort becomes "input string 1 is invalid", and the exit code and CLI text are lost. The review session reproduced it with a stderr of `"\xff b"`. Proposed: fix now.
+- O2 (`R/serve.R`, `wait_host()` and the success message): the caller's `port` is pasted as a double. Under `options(scipen = -5)`, the readiness host is `http://localhost:8.08e+03` and the message says "port 8.08e+03". The `--port` argument is right. The comment above `as.integer()` says every accepted port prints as plain digits, which is false under that option. Proposed: fix now, with O8 and O9.
+- O3 (`R/serve.R`, `cli_output_text()`): `\s` does not match a non-breaking space, so a stderr of only U+00A0 counts as text and hides stdout. LESSONS (M013) warns about this character. Proposed: fix now.
+- P2 and O7 (`tests/testthat/test-serve.R`): the `cors` rejection test checks only the name `cors`, and the `port` test checks only the shared rule line. A wrong detail line passes both. Proposed: fix now, tests only.
+- O6 (`R/utils-args.R`): the `port` rule line leaves out `NULL`, where the `ttl` rule says "or `NULL`". Proposed: fix now.
+- S1 (`R/serve.R` against `R/daemon.R`): `lms_daemon_stop()` labels CLI text "CLI output:" with `.val` and keeps newlines. The new abort says "The CLI said:". Proposed: follow-up, into the existing candidate row for `lms_server_stop()` and `lms_daemon_start()`.
+- O4 (`R/serve.R`): ANSI color codes pass through, and the quoted text has no length cap. It is not known whether `lms` writes color to a pipe. Proposed: follow-up, into the same row.
+- O5: if stderr holds any text, stderr wins. Progress lines on stderr can then hide a reason on stdout. Proposed: reject, because AC3 fixes the stderr-first order and the plan probe found reasons on stderr.
+- O8 (`test-serve.R`): no accepted port tells `as.character(port)` from `as.character(as.integer(port))`. Proposed: fix now, with O2.
+- O9 (`R/serve.R` comment): its example `1e5` is itself an invalid port. Proposed: fix now, with O2.
+- S2 (`R/utils-args.R`): `port` rejects a one-cell matrix, `ttl` and `cors` accept one. Proposed: reject, because the plan chose this and the work log records it.
+- S3 (milestone file): no D-entry for the new value checks. Proposed: reject, because D-020 already limits D-003 to fields in `...`, and `port` and `cors` are named arguments.
+- O10 (`NEWS.md`): the failed-start sub-bullet sits under the `port` and `cors` bullet. Proposed: reject, because AC5 asks for one entry.
+- O11 (`R/serve.R`, `res$status == 0`): an `NA` status gives a base R error. Proposed: reject, because the line is not in the diff.
+- O12: the name `cli_output_text()` reads like a cli function. Proposed: reject, a naming nit.
+- S4 to S7, and the note that `cors = matrix(TRUE)` passes: no conflict found, noted.
