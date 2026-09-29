@@ -269,6 +269,10 @@ shared_unreadable <- function(message) {
     "an output string" = '{"output": "a"}',
     "an item that is a string" = output_body('"a"'),
     "an item that is a number" = output_body("5"),
+    # A null item fails the item check and the message check, and neither
+    # crashes on it, since `NULL[["type"]]` is NULL. A string item crashes the
+    # message check, so this is the shape that pins the order of the two.
+    "an item that is null" = output_body("null"),
     "no message item" = output_body(reasoning_item, tool_call_item)
   )
   for (kind in names(not_a_string)) {
@@ -300,6 +304,9 @@ responses_unreadable <- function() {
     output_body(sprintf('{"type": "message", "content": %s}', output_text(quoted("a"))))
   shapes[["a part that is a string"]] <- output_body(responses_message('"a"'))
   shapes[["a part that is a number"]] <- output_body(responses_message("5"))
+  # The part check and the output_text check both fail on a null part, as on
+  # a null item above, so this shape pins the order of those two checks.
+  shapes[["a part that is null"]] <- output_body(responses_message("null"))
   shapes[["an empty content array"]] <- output_body(responses_message())
   shapes[["no output_text part"]] <- output_body(responses_message(refusal_part))
   shapes[["an output_text part with no text field"]] <-
@@ -331,6 +338,7 @@ shared_unreadable_checks <- c(
   "an output string" = "output",
   "an item that is a string" = "item",
   "an item that is a number" = "item",
+  "an item that is null" = "item",
   "no message item" = "message"
 )
 
@@ -364,6 +372,7 @@ responses_unreadable_details <- function() {
     "a message content that is an object" = "content",
     "a part that is a string" = "part",
     "a part that is a number" = "part",
+    "a part that is null" = "part",
     "an empty content array" = "output_text",
     "no output_text part" = "output_text"
   )
