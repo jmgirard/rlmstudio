@@ -224,3 +224,13 @@ Independent review (second pass): three fresh reviewers ran on the full diff at 
 - S-O6 (cosmetic): the `with-daemon` example carries build bookkeeping. Proposed: reject, T1 called for it.
 - S-P1 (low): the M009 lesson in `LESSONS.md` is stale. Proposed: fix at hygiene, as the first-pass B8.
 - S-P4 (low): `request_target()` now redacts by default. Proposed: reject, the first-pass B4 reason.
+
+Gate outcome (second pass), 2026-09-29: the user chose to fix first and be asked again. Every proposed disposition above stands. The fix-now edits:
+
+- S-O1: the NEWS vignette entry now says that the rules keep the state where the desktop app runs the daemon. On a host without it, the daemon stop in `headless-config.Rmd` can also unload a model that was loaded before the build.
+- S-O2: `headless-config.Rmd` says the same in its teardown section. The `with-daemon` text now says that the block calls `lms_unload()` only if it loaded the model, and that the daemon stop on exit can unload a model loaded before it.
+- S-O3: the `getting-started.Rmd` sentence now opens with the desktop-app host condition.
+- S-O4: the header reads moved out of the two hint loops into their own block. Control: with `require_httpuv()` replaced by a skip, the new file still ran 54 hint checks in each hint block, and only the header block skipped. The old file stopped each hint block after the first site, with 3 passes.
+- S-P2: `count_abort_calls()` leaves out every comment line and counts each call on a line. A new block checks a code line (1), a roxygen line (0), a plain comment (0), and a line with two calls (2). The site count on `R/` is still 9.
+
+After the fixes, `devtools::test()` gave 0 failures, 0 skips, and 14781 passes, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The server and model state was the same before the test run and after the check. `devtools::document()` gave no diff. The vignette edits are prose only, so the AC1 renders still apply.

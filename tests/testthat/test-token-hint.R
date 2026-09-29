@@ -75,6 +75,24 @@ hint_run <- function(site, at_reply) {
   )
 }
 
+# Count the calls of rlm_abort_api() in source lines. A comment line, roxygen
+# or plain, holds no call. A line with two calls counts twice.
+count_abort_calls <- function(lines) {
+  code <- lines[!grepl("^\\s*#", lines)]
+  hits <- gregexpr("rlm_abort_api(", code, fixed = TRUE)
+  sum(vapply(hits, function(m) sum(m > 0L), integer(1)))
+}
+
+test_that("count_abort_calls() counts calls and skips comment lines", {
+  expect_identical(count_abort_calls("  rlm_abort_api(resp, \"A\", TRUE)"), 1L)
+  expect_identical(count_abort_calls("#' rlm_abort_api(resp)"), 0L)
+  expect_identical(count_abort_calls("  # see rlm_abort_api(resp)"), 0L)
+  expect_identical(
+    count_abort_calls("if (a) rlm_abort_api(r, \"A\", x) else rlm_abort_api(r, \"B\", x)"),
+    2L
+  )
+})
+
 test_that("the site table covers every rlm_abort_api() call in R/", {
   # test_path() finds R/ under devtools::test() only, so this check skips
   # under R CMD check (LESSONS, M005).
@@ -83,10 +101,7 @@ test_that("the site table covers every rlm_abort_api() call in R/", {
 
   hits <- 0L
   for (file in list.files(r_dir, pattern = "[.]R$", full.names = TRUE)) {
-    lines <- readLines(file)
-    hits <- hits + sum(
-      grepl("rlm_abort_api(", lines, fixed = TRUE) & !grepl("^\\s*#'", lines)
-    )
+    hits <- hits + count_abort_calls(readLines(file))
   }
 
   expect_gt(hits, 0L)
@@ -106,11 +121,6 @@ test_that("a token sent and then cleared gives the rejected-token hint", {
     )
     expect_identical(out$condition$status, 401L, info = site$label)
     expect_identical(length(out$requests), 1L, info = site$label)
-    expect_identical(
-      request_target(out$requests[[1]], redact_headers = FALSE)$headers$authorization,
-      "Bearer hint-token",
-      info = site$label
-    )
     expect_match(out$message, site$label, fixed = TRUE, info = site$label)
     expect_match(
       out$message,
@@ -140,10 +150,6 @@ test_that("no token sent and then one set gives the hint that names the variable
     )
     expect_identical(out$condition$status, 401L, info = site$label)
     expect_identical(length(out$requests), 1L, info = site$label)
-    expect_null(
-      request_target(out$requests[[1]], redact_headers = FALSE)$headers$authorization,
-      info = site$label
-    )
     expect_match(out$message, site$label, fixed = TRUE, info = site$label)
     expect_match(
       out$message,
@@ -155,6 +161,29 @@ test_that("no token sent and then one set gives the hint that names the variable
       out$message,
       "The server rejected",
       fixed = TRUE,
+      info = site$label
+    )
+  }
+})
+
+# The header reads need httpuv, and request_target() skips without it. They sit
+# in their own blocks, so a skip here leaves the hint checks above running.
+test_that("the request sent in each hint run carries the header it should", {
+  withr::local_envvar(RLMSTUDIO_API_TOKEN = "")
+
+  for (site in hint_sites) {
+    withr::local_options(rlmstudio.token = "hint-token")
+    sent <- hint_run(site, at_reply = NULL)$requests[[1]]
+    expect_identical(
+      request_target(sent, redact_headers = FALSE)$headers$authorization,
+      "Bearer hint-token",
+      info = site$label
+    )
+
+    withr::local_options(rlmstudio.token = NULL)
+    sent <- hint_run(site, at_reply = "late-token")$requests[[1]]
+    expect_null(
+      request_target(sent, redact_headers = FALSE)$headers$authorization,
       info = site$label
     )
   }

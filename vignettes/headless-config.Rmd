@@ -149,7 +149,11 @@ In a headless environment, managing your system resources is critical. When your
 
 When this vignette is built, it unloads the model only if the model was not
 loaded before the build. It stops the server and the daemon only if the
-server was not running before the build.
+server was not running before the build. If the LM Studio desktop app runs
+the daemon, `lms_daemon_stop()` leaves the daemon running, and the build
+leaves the server and the model as it found them. On a host without the
+desktop app, the daemon stops, and a model that was loaded before the build
+can be unloaded with it.
 
 ```{r unload, eval=lms_ready && !model_was_loaded}
 # 1. Unload the model from memory
@@ -174,7 +178,9 @@ If you are writing a script that just needs to run a quick job and exit, managin
 
 This block starts its own server, so it asks again whether that server answers.
 The value measured earlier belongs to the server the teardown above has already
-stopped. The block unloads the model only if the block loaded it. When this
+stopped. The block calls `lms_unload()` only if the block loaded the model.
+On a host without the desktop app, the daemon stop on exit can also unload a
+model that was loaded before the block. When this
 vignette is built, the block runs only if the server was not running before
 the build.
 
