@@ -94,13 +94,15 @@ test_that("count_abort_calls() counts calls and skips comment lines", {
 })
 
 test_that("the site table covers every rlm_abort_api() call in R/", {
-  # test_path() finds R/ under devtools::test() only, so this check skips
-  # under R CMD check (LESSONS, M005).
+  # test_path() finds R/ sources under devtools::test() only, so this check
+  # skips under R CMD check (LESSONS, M005). Under covr, R/ is the installed
+  # package's R/ folder, which holds no .R file.
   r_dir <- testthat::test_path("..", "..", "R")
-  skip_if_not(dir.exists(r_dir), "package sources are not here")
+  files <- list.files(r_dir, pattern = "[.]R$", full.names = TRUE)
+  skip_if(length(files) == 0L, "package sources are not here")
 
   hits <- 0L
-  for (file in list.files(r_dir, pattern = "[.]R$", full.names = TRUE)) {
+  for (file in files) {
     hits <- hits + count_abort_calls(readLines(file))
   }
 

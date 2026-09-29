@@ -156,6 +156,7 @@ stay candidates in the ROADMAP.
 - 2026-09-29: implement done after the amendment, status review.
 - 2026-09-29: second review pass: fresh evidence for AC1 to AC5, three fresh reviewers, and five fix-now findings fixed in 76cb2fd at the user's choice.
 - 2026-09-29: step-7 approval: m055-teardown-cleanup approved for merge
+- 2026-09-29: resume at step 8: the PR #55 `test-coverage` job failed in the site-count test of `test-token-hint.R`, and one `test-headless` job failed on an r2u mirror timeout and was rerun. The count fix is test-only, so the approval stands.
 
 ## Decisions
 
@@ -236,3 +237,5 @@ Gate outcome (second pass), 2026-09-29: the user chose to fix first and be asked
 - S-P2: `count_abort_calls()` leaves out every comment line and counts each call on a line. A new block checks a code line (1), a roxygen line (0), a plain comment (0), and a line with two calls (2). The site count on `R/` is still 9.
 
 After the fixes, `devtools::test()` gave 0 failures, 0 skips, and 14781 passes, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The server and model state was the same before the test run and after the check. `devtools::document()` gave no diff. The vignette edits are prose only, so the AC1 renders still apply.
+
+CI fix after approval, 2026-09-29: on PR #55, `test-coverage` failed twice at `test-token-hint.R:107-108` with a site count of 0. Under covr, `test_path("..", "..", "R")` is the installed package's `R/` folder, which exists but holds no `.R` file, so the `dir.exists()` guard let the count run over nothing. The test now skips when that folder lists no `.R` file and keeps the `hits > 0` check. In a copy of the tests under a folder whose `R/` held only `rlmstudio`, `.rdb`, and `.rdx` files, the old file gave the same 2 failures and the new file skipped. From sources, the test counts 9 sites and passes. With the token set, `devtools::test()` gave 0 failures, 0 skips, and 14781 passes. A `test-headless` job failed at `apt-get` when the r2u mirror timed out. The push run of the same commit passed, so the job was rerun.
