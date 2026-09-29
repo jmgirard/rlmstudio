@@ -142,6 +142,8 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: claim audit: 12 claims read, 0 corrected — NEWS.md, R/conditions.R, R/list.R, R/utils-api-error.R, tests/testthat/test-api-error.R, tests/testthat/test-list-instances.R (the lines added since 909b7fd, which the first audit did not read)
 - 2026-09-28: the claim audit also found that the chat model lookup is missing from two help notes, which is older than this branch. It went into the M049 model-name candidate row as a seventh case.
 - 2026-09-28: amendment complete, status review. With the token set and the server stopped, `devtools::test()` gave 0 failures, 0 warnings, and 3 live skips. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-28: re-review ran at caafc79. The fresh evidence for AC1 to AC7 passed, and the consistency gate passed. The three reviewers found no failing criterion. The gate fixed W1, H1, and H2 and rejected five findings.
+- 2026-09-28: step-7 approval: m050-list-instances approved for merge
 
 ## Review
 
@@ -298,3 +300,17 @@ findings follow, each ranked by its own reviewer. Findings with the same subject
 - P3 `R/list.R:257`: `{.val {type}}` shortens a vector past 20 items, as the M018 lesson says.
 - Known and unchanged: O2 (no argument guard, a candidate row), S3, and S4, from the first round. The first round's
   "0 removed" count for `R/list.R` is now 1, the `@seealso` line, as the re-review evidence says.
+
+Dispositions, chosen by the maintainer at the gate on 2026-09-28:
+
+- Fix now: W1, H1, H2. W1 rewraps the two paragraphs of `R/conditions.R` at 80 characters, and a word diff shows
+  that no word changed. H1 adds `list_instances` to `model_sites` in `test-body-parse.R`, with a reply that
+  `list_instances()` reads as one row. The entry adds 21 expectations, from 135 to 156. H2 adds a test in
+  `test-list-instances.R`. `list_instances()` rejects a numeric `display_name` and an array `config`, and
+  `list_models()` and `lms_server_ready()` accept them. In a scratch copy, a `display_name` check planted in
+  `model_list_fault()` turned that test red. After the fixes, `devtools::test()` gave 13561 expectations, 0
+  failures, 0 warnings, and 3 live skips.
+- Rejected: A2 and A3, because each text is accurate as written. A4, because the row merge made room under the line
+  cap for the two follow-up rows. A5, because the AC2 tests cover `NULL` cells in a mixed list-column. P3, because
+  the message shortens only a `type` of more than 20 values.
+- Noted: O2, S3, and S4 stand as the first round disposed them.

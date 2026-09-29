@@ -61,6 +61,14 @@ model_sites <- list(
       '"loaded_instances": []}]}'
     )
   ),
+  list_instances = list(
+    call = function() list_instances(quiet = TRUE),
+    reply = paste0(
+      '{"models": [{"type": "llm", "key": "a", "display_name": "A", ',
+      '"architecture": "x", "size_bytes": 1073741824, ',
+      '"loaded_instances": [{"id": "a", "config": {"parallel": 4}}]}]}'
+    )
+  ),
   lms_load = list(
     call = function() lms_load("a-model", force = TRUE),
     reply = '{"status": "loaded"}'

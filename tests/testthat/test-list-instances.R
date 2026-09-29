@@ -313,6 +313,30 @@ test_that("the two new checks skip a model outside `type` or with no instance", 
   expect_identical(res$id, "i0")
 })
 
+test_that("list_models and lms_server_ready accept the bodies the two checks reject", {
+  bodies <- list(
+    display_name = instances_body(instances_model(
+      "llm", "m1", json_forms[["number"]],
+      instances = instance_json("i1")
+    )),
+    config = instances_body(instances_model(
+      "llm", "m1",
+      instances = instance_json("i1", json_forms[["array"]])
+    ))
+  )
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (name in names(bodies)) {
+    cnd <- instances_raised_by(bodies[[name]])
+    expect_true(inherits(cnd, "rlmstudio_bad_response"), info = name)
+
+    local_request_recorder(mock_response(200L, bodies[[name]]))
+    expect_no_error(list_models(quiet = TRUE), message = name)
+
+    local_request_recorder(mock_response(200L, bodies[[name]]))
+    expect_identical(lms_server_ready(), TRUE, info = name)
+  }
+})
+
 test_that("an absent or null display_name or config gives NA, or NULL in a list-column", {
   body <- instances_body(c(
     instances_model(

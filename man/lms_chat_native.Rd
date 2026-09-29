@@ -83,11 +83,12 @@ come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, t
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it.
 \code{\link[=list_models]{list_models()}} and \code{\link[=list_instances]{list_instances()}} raise it for a model list with
 another shape, and so do \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without
-\code{force = TRUE}, which read that list. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it
-for a reply of their own with another shape, such as \code{{}}. A process that
-does not answer in HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for
-the stronger test: it asks the host for a model list and reports \code{TRUE}
-only for a model list that \code{\link[=list_models]{list_models()}} can read.
+\code{force = TRUE}, which read that list. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
+\code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their own with another
+shape, such as \code{{}}. A process that does not answer in HTTP gives an
+\code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+asks the host for a model list and reports \code{TRUE} only for a model list
+that \code{\link[=list_models]{list_models()}} can read.
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} checks the server once before its first input, and
 \code{\link[=lms_chat]{lms_chat()}} checks it again for each input. If that check finds the server
@@ -145,14 +146,14 @@ A condition of class \code{rlmstudio_bad_response} is raised when the server
 answers with a status the wrapper accepts and a body the wrapper cannot
 read. It is raised where a wrapper checks the body before it reshapes it,
 rather than indexing straight into whatever arrived. Eleven functions raise
-it for a body they cannot read: \code{\link[=lms_embed]{lms_embed()}}, \code{\link[=lms_chat]{lms_chat()}}, \code{\link[=lms_chat_native]{lms_chat_native()}},
-\code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, \code{\link[=list_models]{list_models()}},
-\code{\link[=list_instances]{list_instances()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}},
-and \code{\link[=lms_unload_all]{lms_unload_all()}}. \code{\link[=lms_chat]{lms_chat()}} raises it through the chat function it
-calls. \code{\link[=lms_unload_all]{lms_unload_all()}} raises it through \code{\link[=list_models]{list_models()}}, and so does
-\code{\link[=lms_load]{lms_load()}} unless \code{force = TRUE}. \code{\link[=lms_chat_batch]{lms_chat_batch()}} raises it only as
-\code{rlmstudio_model_mismatch}, which the "Reply from another model" section
-describes.
+it for a body they cannot read: \code{\link[=lms_embed]{lms_embed()}}, \code{\link[=lms_chat]{lms_chat()}},
+\code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}},
+\code{\link[=list_models]{list_models()}}, \code{\link[=list_instances]{list_instances()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}},
+\code{\link[=lms_download_status]{lms_download_status()}}, and \code{\link[=lms_unload_all]{lms_unload_all()}}. \code{\link[=lms_chat]{lms_chat()}} raises it
+through the chat function it calls. \code{\link[=lms_unload_all]{lms_unload_all()}} raises it through
+\code{\link[=list_models]{list_models()}}, and so does \code{\link[=lms_load]{lms_load()}} unless \code{force = TRUE}.
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} raises it only as \code{rlmstudio_model_mismatch}, which the
+"Reply from another model" section describes.
 
 All eleven raise it for a status-200 body that does not parse as JSON, such
 as an HTML page from a proxy, JSON text that stops part way, or an empty
