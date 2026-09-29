@@ -1,13 +1,13 @@
 # M056: Test failures that name each broken function and reply check
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — the deliverable is test code, which no user of the package runs
-- **Branch/PR:** —
+- **Branch/PR:** m056-test-failure-isolation
 
 ## Goal
 
@@ -76,7 +76,7 @@ outside this milestone.
 
 ## Tasks
 
-- [ ] T1: In `test-arg-guards.R`, move each of the 16 loops outside its
+- [x] T1: In `test-arg-guards.R`, move each of the 16 loops outside its
       `test_that()`, so that it defines one block per function name with the
       name in the description. Setup calls such as `local_guard_only()` move
       into each block. Rewrite comments that describe a block as covering
@@ -101,6 +101,7 @@ outside this milestone.
 - 2026-09-29: created by /milestone-plan. It merges three candidate rows: M013 review finding 7, M021 review finding O6, and M055 review finding O9.
 - 2026-09-29: criteria audit, reduced mode (internal tier), by a fresh [O] reader. Two findings, both fixed before the gate. AC2 moved its plant from `lms_chat`, which `lms_chat_batch` calls, to `lms_download_status`, and asks for a whole-word name. AC4 became a property of one shape per check pair. The reason is that the string shapes crash under a swap and end the shape loop before later shapes run.
 - 2026-09-29: plan gate chose one `test_that()` block per function over a wrapper helper. The helper turns an unexpected error into a failure that names the function. It must tell an expectation failure from an error, and both have class `error`, so it needs its own test. Falsified by a run where per-function blocks hide a failure that the helper shows.
+- 2026-09-29: T1 done. The 16 loops now sit at top level and define 117 blocks in the file. `ttl_domain()` no longer calls `fail()`, because a `fail()` outside a block ends the file. Its missing-call check moved into the ttl domain test. A plant that removes `lms_embed` from `ttl_calls` failed that test and the two `lms_embed` ttl blocks. `devtools::test()` with the token: 635 blocks, 0 failed, 0 errored, 0 skipped.
 
 ## Decisions
 

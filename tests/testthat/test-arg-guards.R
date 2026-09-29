@@ -131,11 +131,13 @@ test_that("the guarded domains are read from NAMESPACE and are not empty", {
   )
 })
 
-test_that("every enumerated function has a placeholder for each required argument", {
-  for (name in guarded_exports(c("model", "job_id", "input", "inputs"))) {
+# Each loop below defines one block per function, so an error in one function
+# fails that block alone and the blocks for the other functions still run.
+for (name in guarded_exports(c("model", "job_id", "input", "inputs"))) {
+  test_that(paste0(name, "() has a placeholder for each required argument"), {
     expect_type(baseline_args(name), "list")
-  }
-})
+  })
+}
 
 test_that("a missing placeholder fails the test rather than skipping it", {
   expect_failure(
@@ -145,10 +147,10 @@ test_that("a missing placeholder fails the test rather than skipping it", {
   expect_failure(baseline_args("lms_embed", table = list()))
 })
 
-test_that("a bad model or job id aborts, named, before any request", {
-  local_guard_only()
+for (name in guarded_exports(c("model", "job_id"))) {
+  test_that(paste0("a bad model or job id aborts ", name, "(), named, before any request"), {
+    local_guard_only()
 
-  for (name in guarded_exports(c("model", "job_id"))) {
     fn <- get(name, envir = asNamespace("rlmstudio"))
     args <- baseline_args(name)
     target <- intersect(c("model", "job_id"), names(args))[[1]]
@@ -177,18 +179,18 @@ test_that("a bad model or job id aborts, named, before any request", {
         info = paste(name, "with", probe$label, "positionally")
       )
     }
-  }
-})
+  })
+}
 
-# This one is not a test of the guards. R raises its own missing-argument
+# These blocks do not test the guards. R raises its own missing-argument
 # error when the guard forces the promise, and that error already names the
-# argument, so the guard could be deleted and this would still pass. It is
-# kept because it pins the weaker fact the guards rely on: omitting the
+# argument, so the guard could be deleted and they would still pass. They are
+# kept because they pin the weaker fact the guards rely on: omitting the
 # argument never reaches the request.
-test_that("omitting the guarded identifier reaches no request, whoever aborts", {
-  local_guard_only()
+for (name in guarded_exports(c("model", "job_id"))) {
+  test_that(paste0("omitting the guarded identifier of ", name, "() reaches no request, whoever aborts"), {
+    local_guard_only()
 
-  for (name in guarded_exports(c("model", "job_id"))) {
     fn <- get(name, envir = asNamespace("rlmstudio"))
     args <- baseline_args(name)
     target <- intersect(c("model", "job_id"), names(args))[[1]]
@@ -202,19 +204,19 @@ test_that("omitting the guarded identifier reaches no request, whoever aborts", 
       "a request left the process",
       info = paste(name, "without", target, "reached a request")
     )
-  }
-})
+  })
+}
 
-test_that("an argument fault aborts even when the server is down", {
-  # `local_guard_only()` forces the server probe to succeed, so it cannot see
-  # this. The guards now run above `stop_if_no_server()`, which means a bad
-  # argument beats the server-down abort. Nothing else pins that order.
-  local_no_request_allowed()
-  testthat::local_mocked_bindings(
-    is_server_running = function(...) FALSE
-  )
+# `local_guard_only()` forces the server probe to succeed, so it cannot see
+# this. The guards now run above `stop_if_no_server()`, which means a bad
+# argument beats the server-down abort. Nothing else pins that order.
+for (name in guarded_exports(c("model", "job_id"))) {
+  test_that(paste0("an argument fault aborts ", name, "() even when the server is down"), {
+    local_no_request_allowed()
+    testthat::local_mocked_bindings(
+      is_server_running = function(...) FALSE
+    )
 
-  for (name in guarded_exports(c("model", "job_id"))) {
     fn <- get(name, envir = asNamespace("rlmstudio"))
     args <- baseline_args(name)
     target <- intersect(c("model", "job_id"), names(args))[[1]]
@@ -229,8 +231,8 @@ test_that("an argument fault aborts even when the server is down", {
       inherits(err, "rlmstudio_no_server"),
       info = paste(name, "raised the server condition rather than the guard")
     )
-  }
-})
+  })
+}
 
 # The split between the two text rules is what the plan gate settled, so it is
 # written out here. The enumeration above is what catches a sixth function
@@ -252,10 +254,10 @@ test_that("the two text rules together cover the whole text domain", {
   )
 })
 
-test_that("a text vector argument must be a non-empty character vector", {
-  local_guard_only()
+for (name in names(strict_text)) {
+  test_that(paste0("the text vector argument of ", name, "() must be a non-empty character vector"), {
+    local_guard_only()
 
-  for (name in names(strict_text)) {
     fn <- get(name, envir = asNamespace("rlmstudio"))
     target <- strict_text[[name]]
     args <- baseline_args(name)
@@ -271,25 +273,25 @@ test_that("a text vector argument must be a non-empty character vector", {
       )
       expect_error(do.call(fn, bad), target, info = name)
     }
-  }
-})
+  })
+}
 
-test_that("an NA anywhere in a text vector argument aborts", {
-  local_guard_only()
-
-  na_probes <- list(
-    list(label = "alone", value = NA_character_, match = "1 NA value\\."),
-    list(label = "first", value = c(NA, "b", "c"), match = "1 NA value\\."),
-    list(label = "middle", value = c("a", NA, "c"), match = "1 NA value\\."),
-    list(label = "last", value = c("a", "b", NA), match = "1 NA value\\."),
-    list(
-      label = "all",
-      value = c(NA_character_, NA_character_),
-      match = "2 NA values\\."
-    )
+na_probes <- list(
+  list(label = "alone", value = NA_character_, match = "1 NA value\\."),
+  list(label = "first", value = c(NA, "b", "c"), match = "1 NA value\\."),
+  list(label = "middle", value = c("a", NA, "c"), match = "1 NA value\\."),
+  list(label = "last", value = c("a", "b", NA), match = "1 NA value\\."),
+  list(
+    label = "all",
+    value = c(NA_character_, NA_character_),
+    match = "2 NA values\\."
   )
+)
 
-  for (name in c(names(strict_text), names(loose_text))) {
+for (name in c(names(strict_text), names(loose_text))) {
+  test_that(paste0("an NA anywhere in the text argument of ", name, "() aborts"), {
+    local_guard_only()
+
     fn <- get(name, envir = asNamespace("rlmstudio"))
     target <- c(strict_text, loose_text)[[name]]
     args <- baseline_args(name)
@@ -308,8 +310,8 @@ test_that("an NA anywhere in a text vector argument aborts", {
         info = paste(name, "with NA", probe$label, "names the argument")
       )
     }
-  }
-})
+  })
+}
 
 # `lms_chat()` delegates to `lms_chat_openresponses()` and to
 # `lms_chat_native()`, and both re-check what it checked, so the probes above
@@ -340,12 +342,11 @@ test_that("the openai route of lms_chat() carries its own guards", {
   )
 })
 
-test_that("the chat wrappers pass a non-character input through to the server", {
-  local_guard_only()
+for (name in names(loose_text)) {
+  test_that(paste0(name, "() passes a non-character input through to the server"), {
+    local_guard_only()
 
-  structured <- list(list(role = "user", content = "a prompt"))
-
-  for (name in names(loose_text)) {
+    structured <- list(list(role = "user", content = "a prompt"))
     fn <- get(name, envir = asNamespace("rlmstudio"))
     args <- baseline_args(name)
     args["input"] <- list(structured)
@@ -355,8 +356,8 @@ test_that("the chat wrappers pass a non-character input through to the server", 
       "a request left the process",
       info = paste(name, "with a structured input")
     )
-  }
-})
+  })
+}
 
 # The functions that take `schema`, directly or through `...`, and a call to
 # each that is valid apart from `schema`. `api_type = "openai"` keeps the route
@@ -407,10 +408,10 @@ schema_probes <- list(
   list(label = "a data frame", value = data.frame(a = 1), match = "a data frame")
 )
 
-test_that("a schema in the wrong form aborts before the server probe", {
-  probe <- local_counting_probe()
+for (name in names(schema_calls)) {
+  test_that(paste0("a schema in the wrong form aborts ", name, "() before the server probe"), {
+    probe <- local_counting_probe()
 
-  for (name in names(schema_calls)) {
     call <- schema_calls[[name]]
     for (p in schema_probes) {
       err <- expect_error(
@@ -429,14 +430,14 @@ test_that("a schema in the wrong form aborts before the server probe", {
         info = paste(name, "with", p$label)
       )
     }
-  }
-  expect_identical(probe$calls, 0L)
-})
+    expect_identical(probe$calls, 0L)
+  })
+}
 
-test_that("a schema with a response_format in the dots aborts before the probe", {
-  probe <- local_counting_probe()
+for (name in names(schema_calls)) {
+  test_that(paste0("a schema with a response_format in the dots aborts ", name, "() before the probe"), {
+    probe <- local_counting_probe()
 
-  for (name in names(schema_calls)) {
     err <- expect_error(
       schema_calls[[name]](
         schema = list(type = "object"),
@@ -446,19 +447,19 @@ test_that("a schema with a response_format in the dots aborts before the probe",
       info = name
     )
     expect_false(any(grepl("^rlmstudio_", class(err))), info = name)
-  }
-  expect_identical(probe$calls, 0L)
-})
+    expect_identical(probe$calls, 0L)
+  })
+}
 
-test_that("a valid schema passes the form check and reaches the server probe", {
-  probe <- local_counting_probe()
+for (name in names(schema_calls)) {
+  test_that(paste0("a valid schema passes the form check of ", name, "() and reaches the server probe"), {
+    probe <- local_counting_probe()
 
-  valid <- list(
-    list(type = "object", properties = list(score = list(type = "integer"))),
-    list(),
-    NULL
-  )
-  for (name in names(schema_calls)) {
+    valid <- list(
+      list(type = "object", properties = list(score = list(type = "integer"))),
+      list(),
+      NULL
+    )
     for (value in valid) {
       expect_error(
         schema_calls[[name]](schema = value),
@@ -466,9 +467,9 @@ test_that("a valid schema passes the form check and reaches the server probe", {
         info = name
       )
     }
-  }
-  expect_identical(probe$calls, length(schema_calls) * length(valid))
-})
+    expect_identical(probe$calls, length(valid))
+  })
+}
 
 # The two functions that route, each called with a valid schema. `api_type` is
 # left out when `route` is NULL, so the default route is probed as the caller
@@ -486,10 +487,10 @@ route_calls <- list(
   }
 )
 
-test_that("a schema on a route other than openai aborts before the probe", {
-  probe <- local_counting_probe()
+for (name in names(route_calls)) {
+  test_that(paste0("a schema on a route other than openai aborts ", name, "() before the probe"), {
+    probe <- local_counting_probe()
 
-  for (name in names(route_calls)) {
     for (route in list("openresponses", "native", NULL)) {
       label <- paste(name, "with", if (is.null(route)) "the default" else route)
       err <- expect_error(
@@ -500,9 +501,9 @@ test_that("a schema on a route other than openai aborts before the probe", {
       )
       expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
     }
-  }
-  expect_identical(probe$calls, 0L)
-})
+    expect_identical(probe$calls, 0L)
+  })
+}
 
 test_that("the form check runs before the route check", {
   probe <- local_counting_probe()
@@ -658,19 +659,11 @@ ttl_calls <- list(
 )
 
 # The functions whose `ttl` is checked: every export with a `ttl` formal, read
-# from NAMESPACE, and `lms_chat_batch()`. An export with no call above fails
-# the test rather than leaving the domain.
+# from NAMESPACE, and `lms_chat_batch()`. The loops below call this outside any
+# block, where a `fail()` would end the file, so the domain test holds the check
+# for an export with no call above. Such an export also errors in its own block.
 ttl_domain <- function() {
-  exports <- guarded_exports("ttl")
-  missing_call <- setdiff(exports, names(ttl_calls))
-  if (length(missing_call) > 0) {
-    testthat::fail(paste0(
-      "No call in ttl_calls for ",
-      paste(missing_call, collapse = ", "),
-      "()."
-    ))
-  }
-  c(exports, "lms_chat_batch")
+  c(guarded_exports("ttl"), "lms_chat_batch")
 }
 
 ttl_bad_values <- list(
@@ -702,12 +695,18 @@ test_that("the ttl domain is read from NAMESPACE and is not empty", {
     domain,
     c("lms_chat", "lms_chat_batch", "lms_chat_openai", "lms_embed")
   )
+  # An export with no call fails here rather than leaving the domain.
+  missing_call <- setdiff(domain, names(ttl_calls))
+  expect(
+    length(missing_call) == 0,
+    paste0("No call in ttl_calls for ", paste(missing_call, collapse = ", "), "().")
+  )
 })
 
-test_that("a ttl that is not one whole number in range aborts before the probe", {
-  probe <- local_counting_probe()
+for (name in ttl_domain()) {
+  test_that(paste0("a ttl that is not one whole number in range aborts ", name, "() before the probe"), {
+    probe <- local_counting_probe()
 
-  for (name in ttl_domain()) {
     for (value in ttl_bad_values) {
       label <- paste(name, "with", deparse(value))
       err <- expect_error(
@@ -719,16 +718,15 @@ test_that("a ttl that is not one whole number in range aborts before the probe",
       # No package class on an argument fault (D-008).
       expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
     }
-  }
-  expect_identical(probe$calls, 0L)
-})
+    expect_identical(probe$calls, 0L)
+  })
+}
 
-test_that("a valid ttl passes the value check and reaches the server probe", {
-  probe <- local_counting_probe()
+for (name in ttl_domain()) {
+  test_that(paste0("a valid ttl passes the value check of ", name, "() and reaches the server probe"), {
+    probe <- local_counting_probe()
 
-  valid <- list(NULL, 1, 300L, .Machine$integer.max)
-  domain <- ttl_domain()
-  for (name in domain) {
+    valid <- list(NULL, 1, 300L, .Machine$integer.max)
     for (value in valid) {
       expect_error(
         ttl_calls[[name]](ttl = value),
@@ -736,9 +734,9 @@ test_that("a valid ttl passes the value check and reaches the server probe", {
         info = paste(name, "with", deparse(value))
       )
     }
-  }
-  expect_identical(probe$calls, length(domain) * length(valid))
-})
+    expect_identical(probe$calls, length(valid))
+  })
+}
 
 # The two functions that route, each called with a valid ttl. `api_type` is
 # left out when `route` is NULL, so the default route is probed as the caller
@@ -756,10 +754,10 @@ ttl_route_calls <- list(
   }
 )
 
-test_that("a ttl on a route other than openai aborts before the probe", {
-  probe <- local_counting_probe()
+for (name in names(ttl_route_calls)) {
+  test_that(paste0("a ttl on a route other than openai aborts ", name, "() before the probe"), {
+    probe <- local_counting_probe()
 
-  for (name in names(ttl_route_calls)) {
     for (route in list("openresponses", "native", NULL)) {
       label <- paste(name, "with", if (is.null(route)) "the default" else route)
       err <- expect_error(
@@ -771,9 +769,9 @@ test_that("a ttl on a route other than openai aborts before the probe", {
       expect_match(conditionMessage(err), "ttl", info = label)
       expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
     }
-  }
-  expect_identical(probe$calls, 0L)
-})
+    expect_identical(probe$calls, 0L)
+  })
+}
 
 test_that("the ttl value check runs before the route check", {
   probe <- local_counting_probe()
@@ -843,10 +841,10 @@ test_that("the stream domain is read from NAMESPACE and is not empty", {
   )
 })
 
-test_that("a stream other than FALSE or NULL aborts before the server probe", {
-  probe <- local_counting_probe()
+for (name in stream_domain()) {
+  test_that(paste0("a stream other than FALSE or NULL aborts ", name, "() before the server probe"), {
+    probe <- local_counting_probe()
 
-  for (name in stream_domain()) {
     for (route in stream_routes(name)) {
       for (dots in stream_bad_dots) {
         label <- stream_label(name, route, dots)
@@ -860,9 +858,9 @@ test_that("a stream other than FALSE or NULL aborts before the server probe", {
         expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
       }
     }
-  }
-  expect_identical(probe$calls, 0L)
-})
+    expect_identical(probe$calls, 0L)
+  })
+}
 
 # A reply that the route of `name` reads as text.
 stream_reply <- function(name, route) {
@@ -877,10 +875,10 @@ stream_reply <- function(name, route) {
   )
 }
 
-test_that("stream = FALSE is sent and stream = NULL is left out", {
-  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+for (name in stream_domain()) {
+  test_that(paste0("stream = FALSE is sent and stream = NULL is left out by ", name, "()"), {
+    testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
-  for (name in stream_domain()) {
     for (route in stream_routes(name)) {
       for (value in list(FALSE, NULL)) {
         dots <- list(stream = value)
@@ -901,8 +899,8 @@ test_that("stream = FALSE is sent and stream = NULL is left out", {
         }
       }
     }
-  }
-})
+  })
+}
 
 test_that("a FALSE with names or attributes passes, as isFALSE() reads it", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
