@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-29 (M050 done, M047 row pruned, no lesson added)_
+_Last hygiene check: 2026-09-29 (M051 done, M048 row pruned, one candidate row added, no lesson added)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-29 (M050 done, M047 row pruned, no lesson added)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M051 | A schema data-frame batch returns one column per schema property | review | none | normal | milestones/M051-batch-schema-columns.md |
+| M051 | A schema data-frame batch returns one column per schema property | done | none | normal | milestones/archive/M051-batch-schema-columns.md |
 | M050 | A table of loaded model instances | done | none | normal | milestones/archive/M050-list-instances.md |
 | M049 | A chat call aborts on a reply from a different model | done | none | normal | milestones/archive/M049-chat-model-mismatch.md |
-| M048 | The embedding help page describes the cut of a text longer than the context | done | none | normal | milestones/archive/M048-embed-context-cut.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -26,6 +25,7 @@ _Last hygiene check: 2026-09-29 (M050 done, M047 row pruned, no lesson added)_
 - Run `lms daemon up` then `lms daemon status --json` on a headless llmster install, as on Linux. On macOS with the desktop app installed, `up` returned only once the daemon ran, so M016 dropped its wait. If `up` returns early there, a wait on `lms_daemon_start()` has a reason, added 2026-09-20, milestones/archive/M016-daemon-start-wait.md
 - `lms_embed()` warns for a text longer than the loaded context, or splits the text and combines the piece vectors. M048 documents the cut instead, because LM Studio 0.4.25+1 has no tokenize endpoint and reports 0 tokens. Promote on an LM Studio reply or endpoint that gives a token count. A user who needs one vector for a long document is the other trigger, added 2026-09-28, M047 and M048 plan gates
 - The failed-inputs warning of `lms_embed()` names each failed position. A failed batch fails a run of consecutive positions, so 400 failures give a warning of 400 numbers. Give runs as ranges, such as "1 to 100". Promote on a user who finds the warning too long to read, added 2026-09-28, M047 review finding O11
+- Three follow-ups to the schema property columns of `lms_chat_batch()`. First, a property named `logprobs` is not reserved. With `logprobs = FALSE`, it gives a `logprobs` column that holds the model field, the name of the list-column of a `logprobs = TRUE` frame. Second, a nullable property written as `anyOf` or `oneOf`, or an `enum` with no `type`, gives a list-column. Promote on a user whose generated schema needs a typed column there. Third, `test-server-ready.R:170` failed once in a full `devtools::test()` run, in the option case, and 4 later runs passed. If it fails again, promote it, added 2026-09-29, M051 review findings O1, O3, and R1
 - The chat wrappers send an `input` of length two as a JSON array rather than one prompt. M013 leaves the length alone, because narrowing a named formal is a permanent API restriction. Decide whether a length rule belongs there, added 2026-09-20, M013 plan gate
 - A `ttl` argument on `lms_load()`. On 2026-09-27, `/api/v1/models/load` answered 400 "Unrecognized key(s) in object: 'ttl'", and only `lms load --ttl` sets it. Promote once the load endpoint accepts `ttl`. A user who needs a `ttl` on an explicit load is the other trigger, through the command-line route. M034 took the chat and embedding part of this row, added 2026-09-19, cairn/references/lmstudio-api-surface.md, M034 plan gate
 - Structured output on `/v1/responses` and `/api/v1/chat`. M017 covers `/v1/chat/completions` only, the one endpoint the LM Studio docs describe for it. Promote once the docs or a live request show that another endpoint honors a schema, added 2026-09-21, M017 scope
