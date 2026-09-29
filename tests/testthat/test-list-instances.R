@@ -406,14 +406,10 @@ test_that("live: the id column holds the instance ids of the model list", {
   testthat::skip_on_cran()
   skip_if_no_server()
 
-  # The test loads and unloads nothing. A server that refuses the request, as
-  # one that requires a token does when none is set, skips it as well.
-  models <- tryCatch(
-    list_models(detailed = TRUE, quiet = TRUE),
-    rlmstudio_api_error = function(cnd) {
-      testthat::skip("the server refused the model list request.")
-    }
-  )
+  # The test loads and unloads nothing. An error from list_models() is not
+  # caught, so a server that answers but refuses the list, as one that requires
+  # a token does when none is set, fails the test rather than skipping it.
+  models <- list_models(detailed = TRUE, quiet = TRUE)
   ids <- unlist(lapply(models$loaded_instances, function(x) {
     if (is.data.frame(x)) x$id else character()
   }))
