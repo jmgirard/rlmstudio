@@ -1626,6 +1626,7 @@ lms_chat_batch <- function(
   property_columns <- if (format == "data.frame" && !has_logprobs) {
     schema_property_columns(schema)
   }
+  rlm_check_property_names(names(property_columns))
 
   stop_if_no_server(host)
 
