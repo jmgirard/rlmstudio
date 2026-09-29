@@ -40,6 +40,14 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rlmstudio-development-version">rlmstudio (development version)<a class="anchor" aria-label="anchor" href="#rlmstudio-development-version"></a></h2>
 <ul><li>
+<p><code><a href="../reference/lms_server_start.html">lms_server_start()</a></code> now checks <code>port</code> and <code>cors</code> before the CLI runs. A bad value aborts with a message that names the argument, and no server starts.</p>
+<ul><li>
+<code>port</code> must be <code>NULL</code> or one whole number from 1 to 65535, given as a number. <code>port = "8080"</code> and a one-cell matrix now abort. Before, each reached the CLI as <code>"8080"</code> and started a server. A missing value, a number outside the range, and a vector of two ports now abort before the CLI runs.</li>
+<li>
+<code>cors</code> must be <code>TRUE</code> or <code>FALSE</code>. <code>cors = NULL</code>, <code>NA</code>, <code>1</code>, and <code>"yes"</code> now abort. Before, each acted as <code>FALSE</code>.</li>
+<li>If the CLI refuses a start, the abort message now quotes the CLI output beside the exit code. The output is the stderr text. If stderr holds nothing, it is the stdout text. Whitespace at the ends of the text is dropped, and each run of whitespace inside it becomes one space.</li>
+</ul></li>
+<li>
 <p><code><a href="../reference/list_models.html">list_models()</a></code> and <code><a href="../reference/list_instances.html">list_instances()</a></code> now check <code>type</code> and <code>quiet</code>, and <code><a href="../reference/list_models.html">list_models()</a></code> also checks <code>loaded</code> and <code>detailed</code>. A bad value aborts with a message that names the argument. It aborts before the check for a running server and sends no request. Before, <code>quiet = NA</code> failed with a base R error after the request, on a call that matched no model. <code>type = 1</code> returned an empty data frame, and <code>loaded = "yes"</code> acted as <code>FALSE</code>. <code>quiet = 1</code> acted as <code>TRUE</code>, and it now aborts too.</p>
 <ul><li>
 <code>type</code> must be a character vector of one or more elements, and no element can be <code>NA</code>, empty, or whitespace only. A factor aborts. A type that no model has, such as <code>"vlm"</code>, still returns an empty data frame and a message.</li>

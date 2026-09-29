@@ -19,13 +19,14 @@ lms_server_start(
 
 - port:
 
-  Integer. Port to run the server on. If not provided, LM Studio uses
-  the last used port.
+  Numeric or `NULL`. Port to run the server on. It must be one whole
+  number from 1 to 65535, given as a number and not as an array or a
+  string. `NULL`, the default, lets LM Studio use the last used port.
 
 - cors:
 
-  Logical. Enable CORS support for web application development. Defaults
-  to FALSE.
+  Logical. Enable CORS support for web application development. Must be
+  `TRUE` or `FALSE`. Defaults to `FALSE`.
 
 - wait:
 
@@ -78,12 +79,19 @@ The host is picked in this order.
 
 The request carries `token`, read as described under that argument.
 
-Beside a bad `wait`, two faults in the call abort before the CLI runs,
-with any `wait`. One is a `host` that is not `NULL` and that the
-readiness request cannot be built from, such as a vector of two strings,
-`NA`, an empty string, or `"localhost:1234"`, which lacks `http://`.
-That message names `host` and quotes the reason httr2 or curl gave. The
-other is a `token` that is not one character string and not `NULL`.
+Five faults in the call abort before the CLI runs, with any `wait`: a
+bad `wait`, `port`, `cors`, `host`, or `token`. A bad `host` is one that
+is not `NULL` and that the readiness request cannot be built from, such
+as a vector of two strings, `NA`, an empty string, or
+`"localhost:1234"`, which lacks `http://`. That message names `host` and
+quotes the reason httr2 or curl gave. A bad `token` is one that is not
+one character string and not `NULL`.
+
+If the CLI refuses the start and exits with a status other than 0, the
+function aborts. The message gives the exit code and quotes the text the
+CLI wrote to stderr. If stderr holds nothing, it quotes the stdout text.
+Whitespace at the ends of the quoted text is dropped, and each run of
+whitespace inside it becomes one space.
 
 A wait that runs out does not abort. The server was already started and
 that cannot be undone, so the function raises a warning and returns the

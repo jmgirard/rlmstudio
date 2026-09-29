@@ -61,13 +61,14 @@ with loaded models via HTTP API calls.</p>
 
 
 <dl><dt id="arg-port">port<a class="anchor" aria-label="anchor" href="#arg-port"></a></dt>
-<dd><p>Integer. Port to run the server on. If not provided, LM Studio
-uses the last used port.</p></dd>
+<dd><p>Numeric or <code>NULL</code>. Port to run the server on. It must be one
+whole number from 1 to 65535, given as a number and not as an array or a
+string. <code>NULL</code>, the default, lets LM Studio use the last used port.</p></dd>
 
 
 <dt id="arg-cors">cors<a class="anchor" aria-label="anchor" href="#arg-cors"></a></dt>
 <dd><p>Logical. Enable CORS support for web application development.
-Defaults to FALSE.</p></dd>
+Must be <code>TRUE</code> or <code>FALSE</code>. Defaults to <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-wait">wait<a class="anchor" aria-label="anchor" href="#arg-wait"></a></dt>
@@ -118,12 +119,18 @@ start to count.</p>
 <li><p>With neither, the port that <code>lms_server_status(json = TRUE)</code> reports is
 read, and the host is <code>http://localhost:</code> plus that port.</p></li>
 </ul><p>The request carries <code>token</code>, read as described under that argument.</p>
-<p>Beside a bad <code>wait</code>, two faults in the call abort before the CLI runs,
-with any <code>wait</code>. One is a <code>host</code> that is not <code>NULL</code> and that the readiness
-request cannot be built from, such as a vector of two strings, <code>NA</code>, an
-empty string, or <code>"localhost:1234"</code>, which lacks <code>http://</code>. That message
-names <code>host</code> and quotes the reason httr2 or curl gave. The other is a
-<code>token</code> that is not one character string and not <code>NULL</code>.</p>
+<p>Five faults in the call abort before the CLI runs, with any <code>wait</code>: a bad
+<code>wait</code>, <code>port</code>, <code>cors</code>, <code>host</code>, or <code>token</code>. A bad <code>host</code> is one that is
+not <code>NULL</code> and that the readiness request cannot be built from, such as a
+vector of two strings, <code>NA</code>, an empty string, or <code>"localhost:1234"</code>, which
+lacks <code>http://</code>. That message names <code>host</code> and quotes the reason httr2 or
+curl gave. A bad <code>token</code> is one that is not one character string and not
+<code>NULL</code>.</p>
+<p>If the CLI refuses the start and exits with a status other than 0, the
+function aborts. The message gives the exit code and quotes the text the
+CLI wrote to stderr. If stderr holds nothing, it quotes the stdout text.
+Whitespace at the ends of the quoted text is dropped, and each run of
+whitespace inside it becomes one space.</p>
 <p>A wait that runs out does not abort. The server was already started and
 that cannot be undone, so the function raises a warning and returns the
 CLI exit code. A call with no <code>host</code> and no <code>port</code> whose port read yields
