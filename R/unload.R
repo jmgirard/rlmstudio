@@ -55,17 +55,17 @@ lms_unload <- function(
     msg_done = "Model {.val {model}} unloaded successfully."
   )
 
-  resp <- lms_client(host, token = token) |>
+  req <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/models/unload") |>
     rlm_req_body(body) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+    httr2::req_error(is_error = \(resp) FALSE)
+  resp <- httr2::req_perform(req)
 
   if (httr2::resp_status(resp) == 200) {
     return(invisible(model))
   }
 
-  rlm_abort_api(resp, "API Unload Failed", !is.null(rlm_token(token)))
+  rlm_abort_api(resp, "API Unload Failed", request_sends_token(req))
 }
 
 #' Unload all models from memory

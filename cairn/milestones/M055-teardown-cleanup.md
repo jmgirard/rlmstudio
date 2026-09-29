@@ -107,7 +107,7 @@ stay candidates in the ROADMAP.
       it at each caller that reads `authorization`. Test a JSON body, a
       non-JSON body, and the header read with and without the opt-in in
       `tests/testthat/test-mock-http-helper.R`.
-- [ ] T6: Add one internal helper that reports whether a built request
+- [x] T6: Add one internal helper that reports whether a built request
       carries an `Authorization` header. Each wrapper passes its result to
       `rlm_abort_api()` in place of `!is.null(rlm_token(token))`, at the
       eight sites and at `has_token` in `R/embed.R:125`. Do not read the
@@ -132,6 +132,8 @@ stay candidates in the ROADMAP.
 - 2026-09-29: T3 done. The AC2 sweep over four files lists five calls, all inside `with_mock_dir()` blocks. With the token set, the server running, and `google/gemma-3-1b` loaded, `devtools::test(filter = "^(chat|integration)$")` passed 1584 and left the model loaded. Control: main's `test-integration.R`, run live the same way, unloaded it. Full `devtools::test()` with T3 to T5 in the tree: 0 failures, 0 skips, 14646 passes, and the model stayed loaded.
 - 2026-09-29: T4 done. `loaded_embedding_models()` in `helper-skips.R` serves both live tests, and `test-skip-helpers.R` holds the AC3 test plus a skip and a return control. Planted defect: the old `tryCatch()` put back in the helper turned the AC3 assertions red.
 - 2026-09-29: T5 done. `request_target()` takes `redact_headers = TRUE`, httr2's own name, and returns a body that fails `jsonlite::validate()` as its text, so a URL-like text is never fetched. Twelve header reads in five files pass `redact_headers = FALSE`. A redacted header is an httr2 `httr2_redacted_sentinel` object, not a string. Against main's helper, the new tests in `test-mock-http-helper.R` gave 5 failures.
+- 2026-09-29: correction to the T5 line: eleven header reads pass `redact_headers = FALSE`, not twelve. Ten are single-line calls, and one call spans lines.
+- 2026-09-29: T6 done. `request_sends_token()` in `R/utils-token.R` reads the header name off the built request. The eight sites and the embed flag use it. `grep -n 'rlm_token(' R/*.R` lists `R/chat.R:2013` (`lms_client()`) and `R/serve.R:136`. `test-token-hint.R` drives each of the nine `rlm_abort_api()` sites to 401 twice and checks the table against the grep. Control: against main's `R/`, 32 assertions failed, 2 per run at each of the eight non-embed sites. The embed site passed before the change, because it read its flag at request build. The Review section is review's to write, so review carries that fact. Full `devtools::test()`: 0 failures, 0 skips, 14777 passes. `document()` changed nothing.
 
 ## Decisions
 

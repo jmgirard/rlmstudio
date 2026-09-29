@@ -64,11 +64,11 @@ lms_download <- function(
     "Initiating download for model: {.val {model}}..."
   )
 
-  resp <- lms_client(host, token = token) |>
+  req <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/models/download") |>
     rlm_req_body(body) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+    httr2::req_error(is_error = \(resp) FALSE)
+  resp <- httr2::req_perform(req)
 
   # Explicitly complete the progress step before printing subsequent alerts
   rlm_progress_done(step_id)
@@ -96,7 +96,7 @@ lms_download <- function(
     return(job_id)
   }
 
-  rlm_abort_api(resp, "API Download Failed", !is.null(rlm_token(token)))
+  rlm_abort_api(resp, "API Download Failed", request_sends_token(req))
 }
 
 #' Find the first way a download reply breaks its shape rules
@@ -208,10 +208,10 @@ lms_download_status <- function(
     return(out)
   }
 
-  resp <- lms_client(host, token = token) |>
+  req <- lms_client(host, token = token) |>
     httr2::req_url_path(paste0("api/v1/models/download/status/", job_id)) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+    httr2::req_error(is_error = \(resp) FALSE)
+  resp <- httr2::req_perform(req)
 
   if (httr2::resp_status(resp) == 200) {
     out <- parse_ok_body(resp, "API Status Request Failed")
@@ -228,7 +228,7 @@ lms_download_status <- function(
     return(out)
   }
 
-  rlm_abort_api(resp, "API Status Request Failed", !is.null(rlm_token(token)))
+  rlm_abort_api(resp, "API Status Request Failed", request_sends_token(req))
 }
 
 #' Find the first way a download status breaks its shape rules

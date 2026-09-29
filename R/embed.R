@@ -122,7 +122,7 @@ lms_embed <- function(
   }
   dots <- list(...)
   client <- lms_client(host, token = token)
-  has_token <- !is.null(rlm_token(token))
+  has_token <- request_sends_token(client)
 
   # Consecutive runs of at most `batch_size` inputs, in input order. The size
   # can be as large as `.Machine$integer.max`, where integer sums overflow, so

@@ -42,3 +42,19 @@ rlm_token <- function(token = NULL) {
 
   NULL
 }
+
+#' Report whether a built request carries an API token
+#'
+#' `lms_client()` adds an `Authorization` header when a token source holds a
+#' token. Each REST wrapper reads the flag for the 401 and 403 hint off the
+#' request it built, not from a second read of the token sources. A token
+#' source that changes between the build and the reply then cannot change the
+#' hint. Only the header name is read, never its value.
+#'
+#' @param req An httr2 request.
+#' @return `TRUE` or `FALSE`.
+#'
+#' @noRd
+request_sends_token <- function(req) {
+  "authorization" %in% tolower(names(req$headers))
+}
