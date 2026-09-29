@@ -60,7 +60,7 @@ list_models <- function(
   loaded = FALSE,
   type = c("llm", "embedding"),
   detailed = FALSE,
-  quiet = FALSE,
+  quiet = NULL,
   host = "http://localhost:1234",
   token = NULL
 ) {
@@ -75,9 +75,11 @@ list_models <- function(
   body <- got$body
 
   if (length(body[["models"]]) == 0) {
-    if (!is_quiet(quiet)) {
-      rlm_inform(c("i" = "No models found on host {.url {host}}."))
-    }
+    # `quiet` goes in, so that `FALSE` overrides the option (D-028).
+    rlm_inform(
+      c("i" = "No models found on host {.url {host}}."),
+      quiet = quiet
+    )
     return(invisible(data.frame()))
   }
 
@@ -110,11 +112,12 @@ list_models <- function(
   }
 
   if (nrow(df) == 0) {
-    if (!is_quiet(quiet)) {
-      rlm_inform(c(
+    rlm_inform(
+      c(
         "!" = "No models found matching criteria: loaded = {.val {loaded}}, type = {.val {type}}."
-      ))
-    }
+      ),
+      quiet = quiet
+    )
     return(invisible(data.frame()))
   }
 
@@ -233,7 +236,7 @@ list_models <- function(
 #' }
 list_instances <- function(
   type = c("llm", "embedding"),
-  quiet = FALSE,
+  quiet = NULL,
   host = "http://localhost:1234",
   token = NULL
 ) {
@@ -271,11 +274,13 @@ list_instances <- function(
   }
 
   if (length(rows) == 0) {
-    if (!is_quiet(quiet)) {
-      rlm_inform(c(
+    # `quiet` goes in, so that `FALSE` overrides the option (D-028).
+    rlm_inform(
+      c(
         "i" = "No loaded model instances of type {.val {type}} found on host {.url {host}}."
-      ))
-    }
+      ),
+      quiet = quiet
+    )
     return(invisible(data.frame(
       id = character(),
       key = character(),

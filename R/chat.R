@@ -1633,7 +1633,7 @@ lms_chat_batch <- function(
   format = c("vector", "list", "data.frame"),
   host = "http://localhost:1234",
   simplify = TRUE,
-  quiet = FALSE,
+  quiet = NULL,
   ...,
   token = NULL
 ) {
@@ -1661,6 +1661,7 @@ lms_chat_batch <- function(
   # values. No `lms_chat()` argument starts with `stream`, so the names match.
   rlm_check_stream(list(...))
   rlm_check_flag(simplify, "simplify")
+  rlm_check_flag(quiet, "quiet", null_ok = TRUE)
   # A name test, not `args[["logprobs"]]`, which is `NULL` for an absent name
   # and for a `logprobs = NULL` alike. `lms_chat()` refuses `NULL` there.
   if ("logprobs" %in% names(args)) {

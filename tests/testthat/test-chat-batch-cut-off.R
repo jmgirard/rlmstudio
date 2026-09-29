@@ -70,11 +70,36 @@ test_that("a text batch gives one cut-off warning and keeps every reply", {
 })
 
 test_that("the batch cut-off warning shows with quiet off", {
-  # The runs above cover `quiet = TRUE`. `lms_chat_batch()` defaults to
-  # `quiet = FALSE`, so it never reads the `rlmstudio.quiet` option.
+  # The runs above cover `quiet = TRUE`. `quiet = FALSE` decides over the
+  # `rlmstudio.quiet` option, so the option value here does not matter.
   withr::local_options(rlmstudio.quiet = FALSE)
   res <- run_cut_off_batch(cut_off_replies(), format = "vector", quiet = FALSE)
   expect_one_cut_off_warning(res$warnings, "quiet = FALSE")
+})
+
+test_that("quiet = TRUE and the option TRUE still show the three batch warnings", {
+  withr::local_options(rlmstudio.quiet = TRUE)
+
+  res <- run_cut_off_batch(cut_off_replies(fail = 3L), format = "vector", quiet = TRUE)
+  expect_identical(length(res$warnings), 2L)
+  expect_match(conditionMessage(res$warnings[[1]]), "1 input failed, at position 3\\.")
+  expect_one_cut_off_warning(res$warnings, "quiet and the option on")
+
+  # With `simplify = FALSE`, the vector format falls back to a list, and no
+  # input failed, so the fallback warning stands alone.
+  res <- run_cut_off_batch(
+    cut_off_replies(),
+    format = "vector",
+    simplify = FALSE,
+    quiet = TRUE
+  )
+  expect_identical(length(res$warnings), 1L)
+  expect_match(
+    conditionMessage(res$warnings[[1]]),
+    "not compatible with simplify = FALSE. Returning list.",
+    fixed = TRUE
+  )
+  expect_type(res$value, "list")
 })
 
 test_that("a failed input and a cut-off reply give one warning each", {

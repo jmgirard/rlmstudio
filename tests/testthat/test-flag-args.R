@@ -158,11 +158,7 @@ expect_flag_abort <- function(call, arg, probe, calls, info) {
   expect_identical(calls$delegate, 0L, info = paste(info, "reached a delegate"))
 }
 
-# The `quiet` of these three gets its own rule later.
 flag_domain <- flag_formals()
-quiet_later <- c("list_instances", "list_models", "lms_chat_batch")
-flag_domain[quiet_later] <- lapply(flag_domain[quiet_later], setdiff, "quiet")
-flag_domain <- Filter(length, flag_domain)
 
 test_that("the flag scan finds functions and arguments", {
   expect_gt(length(flag_domain), 0)
@@ -330,6 +326,225 @@ test_that("no logprobs field of lms_chat_native() reaches the request body", {
   lms_chat_native("a-model", "a prompt", logprobs_x = "yes")
   sent <- request_target(recorder$requests[[length(recorder$requests)]])$body
   expect_identical(sent$logprobs_x, "yes")
+})
+
+# quiet ------------------------------------------------------------------------
+
+quiet_exports <- function() {
+  Filter(
+    function(name) {
+      obj <- get(name, envir = asNamespace("rlmstudio"))
+      is.function(obj) && "quiet" %in% names(formals(obj))
+    },
+    sort(getNamespaceExports("rlmstudio"))
+  )
+}
+
+# The four whose `quiet` hides package output. `lms_server_status()` passes
+# its `quiet` to the lms CLI instead, and it is in the flag scan above.
+output_quiet <- c("list_instances", "list_models", "lms_chat_batch", "lms_embed")
+
+test_that("quiet is in five functions, and four default to NULL", {
+  expect_setequal(quiet_exports(), c(output_quiet, "lms_server_status"))
+  for (name in output_quiet) {
+    fn <- get(name, envir = asNamespace("rlmstudio"))
+    expect_true("quiet" %in% names(formals(fn)), info = name)
+    expect_null(formals(fn)$quiet)
+  }
+  expect_false(formals(lms_server_status)$quiet)
+})
+
+for (name in output_quiet) {
+  test_that(paste0("quiet of ", name, "() is TRUE, FALSE, or NULL"), {
+    fn <- get(name, envir = asNamespace("rlmstudio"))
+    args <- flag_baseline_args(name)
+    for (probe in flag_bad_values) {
+      if (is.null(probe$value)) {
+        next
+      }
+      calls <- local_flag_stubs(name)
+      bad <- args
+      bad["quiet"] <- list(probe$value)
+      expect_flag_abort(
+        do.call(fn, bad),
+        "quiet",
+        probe,
+        calls,
+        info = paste0(name, "(quiet) with ", probe$label)
+      )
+    }
+  })
+}
+
+# The nine pairs of a `quiet` value and an option value. With `quiet = NULL`
+# the option decides, and `TRUE` or `FALSE` decides over it (D-028).
+quiet_pairs <- expand.grid(
+  quiet = c("TRUE", "FALSE", "NULL"),
+  option = c("TRUE", "FALSE", "unset"),
+  stringsAsFactors = FALSE
+)
+
+quiet_value <- function(text) switch(text, "TRUE" = TRUE, "FALSE" = FALSE, NULL)
+option_value <- function(text) switch(text, "TRUE" = TRUE, "FALSE" = FALSE, NULL)
+
+output_expected <- function(quiet, option) {
+  if (quiet == "NULL") {
+    return(option != "TRUE")
+  }
+  quiet == "FALSE"
+}
+
+# Run `code` under each of the nine pairs, with `quiet` bound to its value.
+# `check` gets the expected show or hide and a label.
+for_each_quiet_pair <- function(run, check) {
+  expect_identical(nrow(quiet_pairs), 9L)
+  for (i in seq_len(nrow(quiet_pairs))) {
+    pair <- quiet_pairs[i, ]
+    label <- paste0("quiet = ", pair$quiet, ", option = ", pair$option)
+    withr::with_options(
+      list(rlmstudio.quiet = option_value(pair$option)),
+      check(run(quiet_value(pair$quiet)), output_expected(pair$quiet, pair$option), label)
+    )
+  }
+}
+
+expect_shown <- function(shown, expected, label) {
+  expect_identical(shown, expected, info = label)
+}
+
+# The messages that `run` gives, as text.
+messages_of <- function(run) {
+  shown <- character()
+  withCallingHandlers(
+    run,
+    message = function(m) {
+      shown <<- c(shown, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+  shown
+}
+
+one_llm <- paste0(
+  '{"models": [{"type": "llm", "key": "m1", "display_name": "M1", ',
+  '"size_bytes": 1073741824, "loaded_instances": [{"id": "i1"}]}]}'
+)
+
+test_that("quiet of list_models() hides or shows its two messages", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(body = '{"models": []}'))
+  for_each_quiet_pair(
+    function(quiet) messages_of(list_models(quiet = quiet)),
+    function(shown, expected, label) {
+      expect_shown(any(grepl("No models found on host", shown)), expected, label)
+    }
+  )
+
+  local_request_recorder(mock_response(body = one_llm))
+  for_each_quiet_pair(
+    function(quiet) messages_of(list_models(type = "embedding", quiet = quiet)),
+    function(shown, expected, label) {
+      expect_shown(
+        any(grepl("No models found matching criteria", shown)),
+        expected,
+        label
+      )
+    }
+  )
+})
+
+test_that("quiet of list_instances() hides or shows its message", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(body = '{"models": []}'))
+  for_each_quiet_pair(
+    function(quiet) messages_of(list_instances(quiet = quiet)),
+    function(shown, expected, label) {
+      expect_shown(any(grepl("No loaded model instances", shown)), expected, label)
+    }
+  )
+})
+
+# Count the progress bars started, without drawing any.
+local_bar_count <- function(.env = parent.frame()) {
+  count <- new.env(parent = emptyenv())
+  count$bars <- 0L
+  testthat::local_mocked_bindings(
+    cli_progress_bar = function(...) {
+      count$bars <- count$bars + 1L
+      "bar-id"
+    },
+    cli_progress_update = function(...) invisible(),
+    cli_progress_done = function(...) invisible(),
+    .package = "cli",
+    .env = .env
+  )
+  count
+}
+
+test_that("quiet of lms_chat_batch() starts or skips its progress bar", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(body = completion_body(quoted("a reply"))))
+  count <- local_bar_count()
+  for_each_quiet_pair(
+    function(quiet) {
+      before <- count$bars
+      lms_chat_batch("a-model", c("a", "b"), api_type = "openai", quiet = quiet)
+      count$bars - before
+    },
+    function(started, expected, label) {
+      expect_identical(started, if (expected) 1L else 0L, info = label)
+    }
+  )
+})
+
+test_that("quiet of lms_embed() starts or skips the bar of a call of two requests", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  reply <- paste0(
+    '{"object": "list", "model": "test-embed", "data": ',
+    '[{"object": "embedding", "index": 0, "embedding": [0.1, 0.2]}]}'
+  )
+  recorder <- local_request_recorder(mock_response(body = reply))
+  count <- local_bar_count()
+  for_each_quiet_pair(
+    function(quiet) {
+      before <- c(count$bars, length(recorder$requests))
+      lms_embed("test-embed", c("a", "b"), batch_size = 1, quiet = quiet)
+      # Two requests, so the call is one that can show a bar.
+      expect_identical(length(recorder$requests) - before[[2]], 2L)
+      count$bars - before[[1]]
+    },
+    function(started, expected, label) {
+      expect_identical(started, if (expected) 1L else 0L, info = label)
+    }
+  )
+})
+
+test_that("quiet of lms_server_status() sets --quiet whatever the option says", {
+  sent <- NULL
+  testthat::local_mocked_bindings(
+    run = function(command, args, ...) {
+      sent <<- args
+      list(status = 0L, stdout = "running", stderr = "")
+    },
+    .package = "processx"
+  )
+  cases <- list(
+    list(quiet = TRUE, option = FALSE, flag = TRUE),
+    list(quiet = TRUE, option = TRUE, flag = TRUE),
+    list(quiet = FALSE, option = TRUE, flag = FALSE),
+    list(quiet = FALSE, option = FALSE, flag = FALSE)
+  )
+  for (case in cases) {
+    label <- paste0("quiet = ", case$quiet, ", option = ", case$option)
+    withr::with_options(list(rlmstudio.quiet = case$option), {
+      built <- build_args_server_status(quiet = case$quiet)
+      expect_identical("--quiet" %in% built, case$flag, info = label)
+      sent <- NULL
+      lms_server_status(quiet = case$quiet)
+      expect_identical(sent, built, info = label)
+      expect_identical("--quiet" %in% sent, case$flag, info = label)
+    })
+  }
 })
 
 load_settings <- c("flash_attention", "offload_kv_cache_to_gpu")
