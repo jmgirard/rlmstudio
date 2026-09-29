@@ -575,7 +575,7 @@ test_that("lms_embed sends the token as a bearer header", {
     token = "embed-token"
   )
 
-  headers <- request_target(run$requests[[1]])$headers
+  headers <- request_target(run$requests[[1]], redact_headers = FALSE)$headers
   expect_equal(headers$authorization, "Bearer embed-token")
 })
 
@@ -585,7 +585,7 @@ test_that("lms_embed sends no Authorization header without a token", {
 
   run <- drive_embed(embed_body(embed_element(0, row_one)), input = "text")
 
-  headers <- request_target(run$requests[[1]])$headers
+  headers <- request_target(run$requests[[1]], redact_headers = FALSE)$headers
   expect_null(headers$authorization)
 })
 
@@ -1113,13 +1113,7 @@ test_that("live: batches of two give the vectors of one request", {
 
   # The test never loads a model, so a run leaves the server as it found it.
   model <- "text-embedding-nomic-embed-text-v1.5"
-  loaded <- tryCatch(
-    list_models(loaded = TRUE, type = "embedding", quiet = TRUE)$key,
-    error = function(e) character()
-  )
-  if (!model %in% loaded) {
-    testthat::skip(paste(model, "is not loaded."))
-  }
+  loaded_embedding_models(model)
 
   texts <- c(
     "a cat sat on the mat",
@@ -1143,13 +1137,7 @@ test_that("live: the server embeds only the first context-length tokens", {
   # the loaded instance and says nothing about it. This pins what it says.
   # The test never loads a model, so a run leaves the server as it found it.
   model <- "text-embedding-nomic-embed-text-v1.5"
-  models <- tryCatch(
-    list_models(loaded = TRUE, type = "embedding", detailed = TRUE, quiet = TRUE),
-    error = function(e) data.frame()
-  )
-  if (!model %in% models$key) {
-    testthat::skip(paste(model, "is not loaded."))
-  }
+  models <- loaded_embedding_models(model, detailed = TRUE)
 
   # With one instance, the request goes to it, so `n` is its context length.
   instances <- models$loaded_instances[[match(model, models$key)]]

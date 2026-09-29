@@ -564,7 +564,7 @@ test_that("the lookup sends the call's token to the same host and prints nothing
       host = "http://example.com:9999",
       token = "lookup-token"
     ))
-    target <- request_target(recorder$requests[[2]])
+    target <- request_target(recorder$requests[[2]], redact_headers = FALSE)
     expect_identical(target$method, "GET", info = route)
     expect_identical(target$path, "/api/v1/models", info = route)
     expect_identical(target$host, "example.com:9999", info = route)

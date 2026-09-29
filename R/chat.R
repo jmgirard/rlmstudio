@@ -210,11 +210,11 @@ lms_chat_openresponses <- function(
   body <- Filter(Negate(is.null), body)
   body <- utils::modifyList(body, list(...))
 
-  resp <- lms_client(host, token = token) |>
+  req <- lms_client(host, token = token) |>
     httr2::req_url_path("v1/responses") |>
     rlm_req_body(body) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+    httr2::req_error(is_error = \(resp) FALSE)
+  resp <- httr2::req_perform(req)
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "OpenResponses Failed")
@@ -232,7 +232,7 @@ lms_chat_openresponses <- function(
     return(responses_reply_value(resp, resp_data, logprobs))
   }
 
-  rlm_abort_api(resp, "OpenResponses Failed", !is.null(rlm_token(token)))
+  rlm_abort_api(resp, "OpenResponses Failed", request_sends_token(req))
 }
 
 #' Read the answer of an OpenResponses reply
@@ -511,11 +511,11 @@ lms_chat_openai <- function(
   }
   body <- utils::modifyList(body, list(...))
 
-  resp <- lms_client(host, token = token) |>
+  req <- lms_client(host, token = token) |>
     httr2::req_url_path("v1/chat/completions") |>
     rlm_req_body(body) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+    httr2::req_error(is_error = \(resp) FALSE)
+  resp <- httr2::req_perform(req)
 
   if (httr2::resp_status(resp) == 200) {
     # Every OpenAI condition about the reply carries these two fields, so a
@@ -543,7 +543,7 @@ lms_chat_openai <- function(
     return(openai_reply_value(resp, resp_data, logprobs, schema))
   }
 
-  rlm_abort_api(resp, "OpenAI API Failed", !is.null(rlm_token(token)))
+  rlm_abort_api(resp, "OpenAI API Failed", request_sends_token(req))
 }
 
 #' Read the answer of a chat completions reply
@@ -1197,11 +1197,11 @@ lms_chat_native <- function(
   }
   body <- utils::modifyList(body, dots)
 
-  resp <- lms_client(host, token = token) |>
+  req <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/chat") |>
     rlm_req_body(body) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+    httr2::req_error(is_error = \(resp) FALSE)
+  resp <- httr2::req_perform(req)
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "Native API Failed")
@@ -1211,7 +1211,7 @@ lms_chat_native <- function(
     return(native_reply_text(resp, resp_data))
   }
 
-  rlm_abort_api(resp, "Native API Failed", !is.null(rlm_token(token)))
+  rlm_abort_api(resp, "Native API Failed", request_sends_token(req))
 }
 
 #' Read the answer text of a native reply

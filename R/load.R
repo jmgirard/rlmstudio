@@ -124,11 +124,11 @@ lms_load <- function(
     msg_done = "Model {.val {model}} loaded and verified."
   )
 
-  resp <- lms_client(host, token = token) |>
+  req <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/models/load") |>
     rlm_req_body(body) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+    httr2::req_error(is_error = \(resp) FALSE)
+  resp <- httr2::req_perform(req)
 
   if (httr2::resp_status(resp) == 200) {
     resp_data <- parse_ok_body(resp, "API Load Failed")
@@ -142,7 +142,7 @@ lms_load <- function(
     return(invisible(model))
   }
 
-  rlm_abort_api(resp, "API Load Failed", !is.null(rlm_token(token)))
+  rlm_abort_api(resp, "API Load Failed", request_sends_token(req))
 }
 
 #' Find the first way a load reply breaks its shape rules

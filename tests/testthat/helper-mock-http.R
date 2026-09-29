@@ -94,8 +94,10 @@ local_mock_perform <- function(respond, .env) {
 # a request built for "http://example.com:9999" reports "example.com:9999".
 #
 # `body` is the serialized body parsed back from JSON, or NULL when the request
-# carries no body. Every request this package sends has a JSON body, so the
-# parse is safe here; a request whose body is not JSON would fail the parse.
+# carries no body. A body that is not valid JSON comes back as its text, one
+# character string. jsonlite::validate() decides which, so a text that is not
+# JSON never reaches jsonlite::fromJSON(), which reads a URL or a file name as
+# a place to fetch.
 #
 # Decide what a test should do when httpuv is missing. req_dry_run() needs
 # httpuv, which is a suggested package, so a bare machine skips the calling
@@ -137,23 +139,26 @@ require_httpuv <- function(action = httpuv_absence_action()) {
   testthat::skip("httpuv is not installed")
 }
 
-# `headers` is the request's headers as they go over the wire, read with
-# redaction turned off so an assertion can see an Authorization value. Names
-# arrive lowercased, so read `headers$authorization` rather than the sent
-# spelling.
-request_target <- function(req) {
+# `headers` is the request's headers as they go over the wire. A secret header,
+# such as Authorization, holds an httr2 object of class
+# "httr2_redacted_sentinel" in place of its value, unless the caller passes
+# `redact_headers = FALSE`. A failure then prints a token only in a test that
+# asks for it. Names arrive lowercased, so read `headers$authorization` rather
+# than the sent spelling.
+request_target <- function(req, redact_headers = TRUE) {
   require_httpuv()
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = redact_headers)
+  body <- NULL
+  if (length(out$body) > 0L) {
+    text <- rawToChar(out$body)
+    body <- if (jsonlite::validate(text)) jsonlite::fromJSON(text) else text
+  }
   list(
     method = out$method,
     path = out$path,
     host = out$headers$host,
     headers = out$headers,
-    body = if (length(out$body) == 0L) {
-      NULL
-    } else {
-      jsonlite::fromJSON(rawToChar(out$body))
-    }
+    body = body
   )
 }
 

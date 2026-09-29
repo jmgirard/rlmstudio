@@ -416,13 +416,13 @@ config_column <- function(configs, field) {
 #'
 #' @noRd
 request_model_list <- function(host, token, label) {
-  resp <- lms_client(host, token = token) |>
+  req <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/models") |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+    httr2::req_error(is_error = \(resp) FALSE)
+  resp <- httr2::req_perform(req)
 
   if (httr2::resp_status(resp) != 200) {
-    rlm_abort_api(resp, label, !is.null(rlm_token(token)))
+    rlm_abort_api(resp, label, request_sends_token(req))
   }
 
   body <- parse_ok_body(resp, label)

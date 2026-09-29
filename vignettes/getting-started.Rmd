@@ -45,6 +45,16 @@ has_lms()
 
 You have two options for starting the local server. You can open the LM Studio desktop application, navigate to the Developer or Local Server tab, and click "Start". Alternatively, you can start it directly from R. The CLI returns before the REST API answers, so `lms_server_start()` keeps asking the REST API whether it is ready and returns once it answers. The `wait` argument sets how many seconds it keeps asking, and defaults to 10.
 
+```{r server-before, include=FALSE}
+# Whether the server ran before this vignette. The teardown stops only a
+# server that this vignette started.
+server_was_running <- FALSE
+if (lms_installed) {
+  status <- suppressWarnings(lms_server_status(json = TRUE))
+  server_was_running <- is.list(status) && isTRUE(status[["running"]])
+}
+```
+
 ```{r start-server, eval=lms_installed}
 # Start the local server on the default port, and allow 30 seconds for it
 lms_server_start(wait = 30)
@@ -61,6 +71,13 @@ token away.
 ```{r check-ready, eval=lms_installed}
 lms_ready <- lms_server_ready()
 lms_ready
+```
+
+```{r model-before, include=FALSE}
+# Whether the model was loaded before this vignette. The teardown unloads
+# only a model that this vignette loaded.
+model_was_loaded <- lms_ready &&
+  model %in% list_models(loaded = TRUE, quiet = TRUE)$key
 ```
 
 ### 2. Finding and Managing Models
@@ -135,17 +152,23 @@ cat(response)
 
 To free up memory and system resources when you are finished, it is best practice to unload your models and stop the local server. Closing the LM Studio GUI will also perform this cleanup if you forget.
 
-```{r unload, eval=lms_ready}
+When this vignette is built, it unloads the model only if the model was not
+loaded before the build. It stops the server only if the server was not
+running before the build. On a host where the LM Studio desktop app runs
+the daemon, a build that finishes then leaves the server state, and whether
+the model is loaded, as it found them.
+
+```{r unload, eval=lms_ready && !model_was_loaded}
 # Unload the model
 lms_unload(model)
 #> ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]
 ```
 
-Stopping the server does not go through the REST API, so it runs whenever the
-CLI is here. That way a server this vignette started is stopped even if the
-readiness check said no.
+Stopping the server does not go through the REST API, so it does not wait on
+the readiness check. A server that this vignette started is stopped even if
+the readiness check said no.
 
-```{r stop-server, eval=lms_installed}
+```{r stop-server, eval=lms_installed && !server_was_running}
 # Stop the server
 lms_server_stop()
 #> ✔ LM Studio server stopped successfully.
