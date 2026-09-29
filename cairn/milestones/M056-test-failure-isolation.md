@@ -122,3 +122,15 @@ Evidence gathered 2026-09-29 on e959045, which is up to date with origin/main (5
 - AC4: Four shapes pin the four pairs. "An output string" pins output/item, and "an item that is null" pins item/message. "A message content that is a string" pins content/part, and "a part that is null" pins part/output_text. `test-chat.R` asserts the detail of each through `native_unreadable_details()` and `responses_unreadable_details()`, and the suite passes. A scratch copy swapped each pair of `if` blocks in `R/chat.R` in turn, one swap at a time. Each pinning shape then raised `rlmstudio_bad_response` with the detail of the check that ran first: item, message, part, and output_text. The second check of each pair did not crash on its shape.
 - AC5: `devtools::test()` with the token: 635 blocks, 0 failed, 0 errored, 3 skipped. The two live embedding tests and the live id-column test skipped because no model was loaded. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes, so no note is new against 65d6bd4.
 - Gate: `cairn_validate.py` passed (exit 0). `devtools::document()` left no diff. `pkgdown::check_pkgdown()` found no problems. The diff does not touch README.Rmd, NEWS.md, DESCRIPTION, or any top-level file. No NEWS entry is owed, because only test files changed. No DESIGN principle changed, so `cairn_impact.py` was not run.
+
+Independent review: three fresh reviewers, diff-bug (O), blame-history (R), and prior reviews (P). None found a correctness bug or a failing criterion. Proposed dispositions go to the merge gate.
+
+- O1: The new one-line `test_that(paste0(...), {` calls in `test-arg-guards.R` break the Air convention in DESIGN.md. A run of `air format` changes 706 lines of the branch file, against 102 on main. Proposed: fix now.
+- O2: After the loops, `name` keeps the last function name in the file environment. A later block that reads it by mistake runs against that function and does not error. Proposed: reject, because no block reads it and the risk is speculative.
+- O3: If `lms_chat_batch()` gains a `ttl` argument, `ttl_domain()` lists it twice, and `expect_setequal` does not catch it. Proposed: reject, because it predates the branch and needs an API change to occur.
+- R1 and P1: `ttl_domain()` no longer calls `fail()`, and the missing-call check lives in the domain test. The T1 plant and the O reviewer's plant show that a missing call fails. Proposed: noted.
+- R2: The removed `tryCatch()` makes a missing token an error where it skipped before. This is AC3 and matches the M055 rule. Proposed: noted.
+- R3: The domain lists now build at file load, so an error there fails the whole file. Proposed: reject, low.
+- R4: The probe counts are now per function. The domain tests still catch a dropped function. Proposed: noted.
+- R5: Some lines run past 80 columns. Proposed: merged into O1.
+- P2: The inner loops over probe values stay unsplit. The candidate row added at the plan gate already holds this. Proposed: noted.
