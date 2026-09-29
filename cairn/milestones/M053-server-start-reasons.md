@@ -63,6 +63,7 @@ If its own checks or the LM Studio CLI refuse a start, `lms_server_start()` says
 - 2026-09-28: the claim audit found that `cli_output_text()` trimmed before it collapsed, so a stderr of only a form feed skipped the stdout fallback. The code now collapses first, and a test covers `"\f"` and `"\v\n"`. The other five fixes were wording: the `port` integer-step comment, the `rlm_check_port()` roxygen, the NEWS `port` and `cors` bullets, and how the quoted CLI text is reshaped. The same reader re-read all six once and found them true.
 - 2026-09-28: after the fixes, `devtools::test()` had no failures and no skips, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
 - 2026-09-28: review gate triage accepted all proposed dispositions: fix now O1, O2 with O8 and O9, O3, P2 with O7, and O6. S1 and O4 go to a candidate row, and the rest are rejected. The maintainer allowed the NEWS "Before" sentences under AC5.
+- 2026-09-29: step-7 approval: m053-server-start-reasons approved for merge
 
 ## Decisions
 
