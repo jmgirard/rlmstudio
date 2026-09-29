@@ -28,19 +28,20 @@
 #' Studio server is there. The call then does not raise
 #' `rlmstudio_no_server`, and what it does depends on what answers. On a
 #' status-200 body that does not parse as JSON, the chat functions,
-#' [lms_embed()], [list_models()], [lms_load()], [lms_download()],
-#' [lms_download_status()], and [lms_unload_all()] raise
+#' [lms_embed()], [list_models()], [list_instances()], [lms_load()],
+#' [lms_download()], [lms_download_status()], and [lms_unload_all()] raise
 #' `rlmstudio_bad_response`. [lms_unload()] does not read the body, so it can
 #' report success. A body that parses as JSON but has another shape can
 #' come back unchanged with `simplify = FALSE`. With `simplify = TRUE`, the
 #' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it.
-#' [list_models()] raises it for a model list with another shape, and so do
-#' [lms_unload_all()] and [lms_load()] without `force = TRUE`, which read that
-#' list. [lms_load()], [lms_download()], and [lms_download_status()] raise it
-#' for a reply of their own with another shape, such as `{}`. A process that
-#' does not answer in HTTP gives an `httr2_failure` error. Use [lms_server_ready()] for
-#' the stronger test: it asks the host for a model list and reports `TRUE`
-#' only for a model list that [list_models()] can read.
+#' [list_models()] and [list_instances()] raise it for a model list with
+#' another shape, and so do [lms_unload_all()] and [lms_load()] without
+#' `force = TRUE`, which read that list. [lms_load()], [lms_download()], and
+#' [lms_download_status()] raise it for a reply of their own with another
+#' shape, such as `{}`. A process that does not answer in HTTP gives an
+#' `httr2_failure` error. Use [lms_server_ready()] for the stronger test: it
+#' asks the host for a model list and reports `TRUE` only for a model list
+#' that [list_models()] can read.
 #'
 #' [lms_chat_batch()] checks the server once before its first input, and
 #' [lms_chat()] checks it again for each input. If that check finds the server
@@ -93,15 +94,17 @@
 #' A condition of class `rlmstudio_bad_response` is raised when the server
 #' answers with a status the wrapper accepts and a body the wrapper cannot
 #' read. It is raised where a wrapper checks the body before it reshapes it,
-#' rather than indexing straight into whatever arrived. Ten functions raise
-#' it: [lms_embed()], [lms_chat()], [lms_chat_native()],
-#' [lms_chat_openresponses()], [lms_chat_openai()], [list_models()],
-#' [lms_load()], [lms_download()], [lms_download_status()], and
-#' [lms_unload_all()]. [lms_chat()] raises it through the chat function it
-#' calls. [lms_unload_all()] raises it through [list_models()], and so does
-#' [lms_load()] unless `force = TRUE`.
+#' rather than indexing straight into whatever arrived. Eleven functions raise
+#' it for a body they cannot read: [lms_embed()], [lms_chat()],
+#' [lms_chat_native()], [lms_chat_openresponses()], [lms_chat_openai()],
+#' [list_models()], [list_instances()], [lms_load()], [lms_download()],
+#' [lms_download_status()], and [lms_unload_all()]. [lms_chat()] raises it
+#' through the chat function it calls. [lms_unload_all()] raises it through
+#' [list_models()], and so does [lms_load()] unless `force = TRUE`.
+#' [lms_chat_batch()] raises it only as `rlmstudio_model_mismatch`, which the
+#' "Reply from another model" section describes.
 #'
-#' All ten raise it for a status-200 body that does not parse as JSON, such
+#' All eleven raise it for a status-200 body that does not parse as JSON, such
 #' as an HTML page from a proxy, JSON text that stops part way, or an empty
 #' body. In the functions that take `simplify`, the body is parsed before
 #' `simplify` is read, so the condition is raised whatever `simplify` is. The
@@ -131,6 +134,13 @@
 #' that the filters drop can still raise the condition. The message names the
 #' field or entry that broke a rule. [lms_server_ready()] applies the same
 #' rules and returns `FALSE` for a body that breaks one.
+#'
+#' [list_instances()] applies the four rules too, and two more. They cover
+#' only an entry whose `type` is in its `type` argument and that has at least
+#' one loaded instance. The `display_name` of such an entry is a string, or
+#' absent, or `null`. The `config` of each of its instances is a JSON object,
+#' or absent, or `null`. [list_models()] and [lms_server_ready()] do not apply
+#' these two rules.
 #'
 #' [lms_load()], [lms_download()], and [lms_download_status()] also raise it
 #' for a status-200 reply of their own with the wrong shape. Each reply must

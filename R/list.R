@@ -18,7 +18,8 @@
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #'
 #' @seealso [LM Studio List Models
-#'   API](https://lmstudio.ai/docs/developer/rest/list)
+#'   API](https://lmstudio.ai/docs/developer/rest/list), and
+#'   [list_instances()] for one row per loaded instance.
 #'
 #' @return A \code{data.frame} containing information about the available
 #' models. By default, it includes columns for \code{state}, \code{type},
@@ -126,6 +127,259 @@ list_models <- function(
   }
 
   return(df)
+}
+
+#' List loaded model instances
+#'
+#' Retrieves the loaded model instances on the server via the LM Studio REST
+#' API, one row per instance, with the load configuration of each instance in
+#' columns. It is the view that `lms ps` prints, read from the same model list
+#' that [list_models()] reads, so it honors `host` and `token`.
+#'
+#' The model list does not carry four fields that `lms ps --json` reports: the
+#' generation status, the queued requests, the ttl, and the last-used time.
+#'
+#' @section Columns:
+#' The first four columns are character columns:
+#'
+#' - `id`: the id of the instance.
+#' - `key`: the key of its model.
+#' - `type`: the type of its model, such as `"llm"` or `"embedding"`.
+#' - `display_name`: the display name of its model, or `NA` when the model
+#'   list gives none.
+#'
+#' Rows follow the order of the models in the model list, then the order of
+#' the instances of a model. Two instances with the same id, or two models
+#' with the same key, give separate rows.
+#'
+#' After the four columns, the frame has one column for each field name in the
+#' `config` object of an instance, in order of first appearance. When one
+#' `config` holds a name twice, the first value counts. A row whose `config`
+#' lacks the field, or has no `config`, holds `NA` there, or `NULL` in a
+#' list-column.
+#'
+#' A column takes the field name as it is, with no name repair, so a name such
+#' as `a-b` needs backticks or `[[`. A field name that is empty, or that equals
+#' one of the four column names or the column name of an earlier field, takes
+#' the prefix `config.`, again and again while the name still clashes. A field
+#' named `id` so gives the column `config.id`.
+#'
+#' The column type follows the values of the field that are present and not
+#' `null`:
+#'
+#' - All strings give a character column.
+#' - All numbers give a double column, whole numbers included.
+#' - All booleans give a logical column.
+#' - No such values give a logical column of `NA`.
+#'
+#' In these four kinds, a `null` value is `NA`. Any other mix, or any JSON
+#' object or array, gives a list-column. It holds each value as
+#' [jsonlite::parse_json()] returns it, and `NULL` where the field is absent or
+#' `null`.
+#'
+#' @param type Character vector. The types of models to include. Defaults to
+#'   \code{c("llm", "embedding")}.
+#' @param quiet Logical. If \code{TRUE}, suppresses the message printed when
+#'   no instance is found. Defaults to \code{FALSE}. Does not suppress the
+#'   abort raised when the server is not running.
+#' @param host Character. The host address of the local server.
+#' @param token Character or `NULL`. An API token for a server that requires
+#'   authentication. `NULL` reads the `rlmstudio.token` option and then the
+#'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
+#'
+#' @seealso [LM Studio List Models
+#'   API](https://lmstudio.ai/docs/developer/rest/list), and [list_models()]
+#'   for one row per model.
+#'
+#' @return A \code{data.frame} with one row per loaded instance of a model
+#'   whose type is in `type`, with the columns that the "Columns" section
+#'   describes. If there is no such instance, it returns a \code{data.frame}
+#'   with zero rows and the four character columns, invisibly, and prints a
+#'   message unless `quiet = TRUE` or the `rlmstudio.quiet` option is `TRUE`.
+#'
+#' @inheritSection rlmstudio-conditions Server not running
+#' @inheritSection rlmstudio-conditions API failure
+#' @inheritSection rlmstudio-conditions Malformed response
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' lms_server_start()
+#' lms_load("google/gemma-3-1b")
+#'
+#' # One row per loaded instance, with its load configuration
+#' list_instances()
+#'
+#' # Only the loaded embedding models
+#' list_instances(type = "embedding")
+#' }
+list_instances <- function(
+  type = c("llm", "embedding"),
+  quiet = FALSE,
+  host = "http://localhost:1234",
+  token = NULL
+) {
+  stop_if_no_server(host)
+
+  label <- "API List Failed"
+  got <- request_model_list(host, token, label)
+  models <- got$body[["models"]]
+
+  fault <- instance_list_fault(models, type)
+  if (!is.null(fault)) {
+    rlm_abort_bad_reply(got$resp, label, fault, "a model list")
+  }
+
+  rows <- list()
+  for (model in models) {
+    if (!model[["type"]] %in% type) {
+      next
+    }
+    display_name <- model[["display_name"]]
+    if (is.null(display_name)) {
+      display_name <- NA_character_
+    }
+    for (instance in model[["loaded_instances"]]) {
+      rows[[length(rows) + 1L]] <- list(
+        id = instance[["id"]],
+        key = model[["key"]],
+        type = model[["type"]],
+        display_name = display_name,
+        config = instance[["config"]]
+      )
+    }
+  }
+
+  if (length(rows) == 0) {
+    if (!quiet) {
+      rlm_inform(c(
+        "i" = "No loaded model instances of type {.val {type}} found on host {.url {host}}."
+      ))
+    }
+    return(invisible(data.frame(
+      id = character(),
+      key = character(),
+      type = character(),
+      display_name = character()
+    )))
+  }
+
+  column <- function(name) vapply(rows, function(row) row[[name]], character(1))
+  df <- data.frame(
+    id = column("id"),
+    key = column("key"),
+    type = column("type"),
+    display_name = column("display_name")
+  )
+
+  configs <- lapply(rows, function(row) row[["config"]])
+  fields <- unique(unlist(lapply(configs, names)))
+  for (field in fields) {
+    name <- field
+    while (name == "" || name %in% names(df)) {
+      name <- paste0("config.", name)
+    }
+    df[[name]] <- config_column(configs, field)
+  }
+
+  df
+}
+
+#' Find the first way a model list breaks the rules of the instance table
+#'
+#' The checks that `list_instances()` adds to `model_list_fault()`, which it
+#' runs first through `request_model_list()`. They cover the fields that only
+#' the instance table reads, and only in a model whose `type` is in `type` and
+#' that has at least one instance:
+#'
+#' 1. The `display_name` of the model is a string, or absent, or `null`.
+#' 2. The `config` of each instance is a JSON object, or absent, or `null`.
+#'
+#' The checks live here and not in `model_list_fault()`, so `list_models()`
+#' and `lms_server_ready()` accept the same bodies as before.
+#'
+#' @param models The `models` array of a body that `model_list_fault()`
+#'   passed, as `parse_json_body()` returns it with `simplifyVector = FALSE`.
+#' @param type Character vector. The model types that the table keeps.
+#' @return `NULL` when the list passes, or one character string that names
+#'   the first field that breaks a rule.
+#'
+#' @noRd
+instance_list_fault <- function(models, type) {
+  for (i in seq_along(models)) {
+    entry <- models[[i]]
+    instances <- entry[["loaded_instances"]]
+    if (!entry[["type"]] %in% type || length(instances) == 0) {
+      next
+    }
+    where <- paste("entry", i, "of `models`")
+    display_name <- entry[["display_name"]]
+    if (!is.null(display_name) && !is_json_string(display_name)) {
+      return(paste0("`display_name` of ", where, " is not a string."))
+    }
+    for (j in seq_along(instances)) {
+      config <- instances[[j]][["config"]]
+      if (!is.null(config) && !is_json_object(config)) {
+        return(paste0(
+          "`config` of entry ", j, " of `loaded_instances` in ", where,
+          " is not a JSON object."
+        ))
+      }
+    }
+  }
+  NULL
+}
+
+#' Build one configuration column of the instance table
+#'
+#' Reads one field out of each instance configuration and picks the column
+#' type from the values that are present and not `null`. Strings give a
+#' character column, numbers a double column, and booleans a logical column,
+#' with `NA` where the field is absent or `null`. No such values give a
+#' logical column of `NA`. Any other mix, or any JSON object or array, gives a
+#' list-column that holds each value as `jsonlite::parse_json()` returns it,
+#' with `NULL` where the field is absent or `null`.
+#'
+#' @param configs A list with one element per row: the `config` object of the
+#'   instance as a named list, or `NULL` where the instance has none.
+#' @param field Character. The field name. The first entry of a configuration
+#'   with that exact name is read, and an empty name is matched too, which
+#'   `[[` does not do.
+#' @return A vector or list with one element per row.
+#'
+#' @noRd
+config_column <- function(configs, field) {
+  values <- lapply(configs, function(cfg) {
+    at <- match(field, names(cfg))
+    if (is.na(at)) NULL else cfg[[at]]
+  })
+  present <- Filter(Negate(is.null), values)
+
+  kind <- function(x) {
+    if (is_json_string(x)) {
+      "character"
+    } else if (is_json_number(x)) {
+      "double"
+    } else if (is.logical(x) && length(x) == 1L) {
+      "logical"
+    } else {
+      "other"
+    }
+  }
+  kinds <- unique(vapply(present, kind, character(1)))
+
+  if (length(kinds) == 0) {
+    return(rep(NA, length(values)))
+  }
+  if (length(kinds) > 1 || kinds == "other") {
+    return(values)
+  }
+  vapply(
+    values,
+    function(x) as.vector(if (is.null(x)) NA else x, kinds),
+    vector(kinds, 1)
+  )
 }
 
 #' Request the model list and check its body

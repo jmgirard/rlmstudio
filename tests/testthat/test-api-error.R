@@ -142,6 +142,10 @@ api_error_callers <- list(
     label = "API List Failed",
     call = function(host = api_error_default_host) list_models(host = host)
   ),
+  list_instances = list(
+    label = "API List Failed",
+    call = function(host = api_error_default_host) list_instances(host = host)
+  ),
   lms_load = list(
     label = "API Load Failed",
     call = function(host = api_error_default_host) {

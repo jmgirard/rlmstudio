@@ -165,19 +165,20 @@ accepts the connection, so the condition is not raised even though no LM
 Studio server is there. The call then does not raise
 \code{rlmstudio_no_server}, and what it does depends on what answers. On a
 status-200 body that does not parse as JSON, the chat functions,
-\code{\link[=lms_embed]{lms_embed()}}, \code{\link[=list_models]{list_models()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}},
-\code{\link[=lms_download_status]{lms_download_status()}}, and \code{\link[=lms_unload_all]{lms_unload_all()}} raise
+\code{\link[=lms_embed]{lms_embed()}}, \code{\link[=list_models]{list_models()}}, \code{\link[=list_instances]{list_instances()}}, \code{\link[=lms_load]{lms_load()}},
+\code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}}, and \code{\link[=lms_unload_all]{lms_unload_all()}} raise
 \code{rlmstudio_bad_response}. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it can
 report success. A body that parses as JSON but has another shape can
 come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, the
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it.
-\code{\link[=list_models]{list_models()}} raises it for a model list with another shape, and so do
-\code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE}, which read that
-list. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it
-for a reply of their own with another shape, such as \code{{}}. A process that
-does not answer in HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for
-the stronger test: it asks the host for a model list and reports \code{TRUE}
-only for a model list that \code{\link[=list_models]{list_models()}} can read.
+\code{\link[=list_models]{list_models()}} and \code{\link[=list_instances]{list_instances()}} raise it for a model list with
+another shape, and so do \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without
+\code{force = TRUE}, which read that list. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
+\code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their own with another
+shape, such as \code{{}}. A process that does not answer in HTTP gives an
+\code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+asks the host for a model list and reports \code{TRUE} only for a model list
+that \code{\link[=list_models]{list_models()}} can read.
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} checks the server once before its first input, and
 \code{\link[=lms_chat]{lms_chat()}} checks it again for each input. If that check finds the server
@@ -234,15 +235,17 @@ with the first condition. See the details of \code{\link[=lms_embed]{lms_embed()
 A condition of class \code{rlmstudio_bad_response} is raised when the server
 answers with a status the wrapper accepts and a body the wrapper cannot
 read. It is raised where a wrapper checks the body before it reshapes it,
-rather than indexing straight into whatever arrived. Ten functions raise
-it: \code{\link[=lms_embed]{lms_embed()}}, \code{\link[=lms_chat]{lms_chat()}}, \code{\link[=lms_chat_native]{lms_chat_native()}},
-\code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}}, \code{\link[=list_models]{list_models()}},
-\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}}, and
-\code{\link[=lms_unload_all]{lms_unload_all()}}. \code{\link[=lms_chat]{lms_chat()}} raises it through the chat function it
-calls. \code{\link[=lms_unload_all]{lms_unload_all()}} raises it through \code{\link[=list_models]{list_models()}}, and so does
-\code{\link[=lms_load]{lms_load()}} unless \code{force = TRUE}.
+rather than indexing straight into whatever arrived. Eleven functions raise
+it for a body they cannot read: \code{\link[=lms_embed]{lms_embed()}}, \code{\link[=lms_chat]{lms_chat()}},
+\code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, \code{\link[=lms_chat_openai]{lms_chat_openai()}},
+\code{\link[=list_models]{list_models()}}, \code{\link[=list_instances]{list_instances()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}},
+\code{\link[=lms_download_status]{lms_download_status()}}, and \code{\link[=lms_unload_all]{lms_unload_all()}}. \code{\link[=lms_chat]{lms_chat()}} raises it
+through the chat function it calls. \code{\link[=lms_unload_all]{lms_unload_all()}} raises it through
+\code{\link[=list_models]{list_models()}}, and so does \code{\link[=lms_load]{lms_load()}} unless \code{force = TRUE}.
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} raises it only as \code{rlmstudio_model_mismatch}, which the
+"Reply from another model" section describes.
 
-All ten raise it for a status-200 body that does not parse as JSON, such
+All eleven raise it for a status-200 body that does not parse as JSON, such
 as an HTML page from a proxy, JSON text that stops part way, or an empty
 body. In the functions that take \code{simplify}, the body is parsed before
 \code{simplify} is read, so the condition is raised whatever \code{simplify} is. The
@@ -273,6 +276,13 @@ The rules are checked before the \code{type} and \code{loaded} filters, so an en
 that the filters drop can still raise the condition. The message names the
 field or entry that broke a rule. \code{\link[=lms_server_ready]{lms_server_ready()}} applies the same
 rules and returns \code{FALSE} for a body that breaks one.
+
+\code{\link[=list_instances]{list_instances()}} applies the four rules too, and two more. They cover
+only an entry whose \code{type} is in its \code{type} argument and that has at least
+one loaded instance. The \code{display_name} of such an entry is a string, or
+absent, or \code{null}. The \code{config} of each of its instances is a JSON object,
+or absent, or \code{null}. \code{\link[=list_models]{list_models()}} and \code{\link[=lms_server_ready]{lms_server_ready()}} do not apply
+these two rules.
 
 \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} also raise it
 for a status-200 reply of their own with the wrong shape. Each reply must
