@@ -160,7 +160,10 @@ install_lmstudio <- function(method = c("browser", "headless")) {
     os <- Sys.info()[["sysname"]]
     rlm_progress_step("Downloading and installing LM Studio CLI...")
 
-    tryCatch(
+    # The handler wraps an error of the run itself, such as a missing curl
+    # or a shell that fails to start. A run that exits with a status other
+    # than 0 is checked after it, so its abort reaches the user whole.
+    res <- tryCatch(
       {
         if (os %in% c("Darwin", "Linux")) {
           if (Sys.which("curl") == "") {
@@ -192,21 +195,7 @@ install_lmstudio <- function(method = c("browser", "headless")) {
             "Automatic installation is not supported for this operating system: {.val {os}}."
           )
         }
-
-        if (res$status == 0) {
-          rlm_progress_done()
-          rlm_alert_success("LM Studio CLI installed successfully.")
-        } else {
-          cli::cli_progress_cleanup()
-          cli::cli_abort(c(
-            "x" = "Headless installation failed. Exit code: {.val {res$status}}.",
-            "i" = "CLI output: {.val {trimws(res$stdout)}}"
-          ))
-        }
-
-        rlm_alert_info(
-          "In a headless environment, remember to start the daemon using {.fn lms_daemon_start} and the server using {.fn lms_server_start} before loading models."
-        )
+        res
       },
       error = function(e) {
         cli::cli_progress_cleanup()
@@ -215,6 +204,23 @@ install_lmstudio <- function(method = c("browser", "headless")) {
           "i" = "Error message: {.val {e$message}}"
         ))
       }
+    )
+
+    if (res$status != 0) {
+      cli::cli_progress_cleanup()
+      # stderr_to_stdout = TRUE leaves stderr NULL, so the stdout text is
+      # quoted.
+      rlm_abort_cli_run(
+        "Headless installation failed.",
+        res,
+        label = "The installer said"
+      )
+    }
+
+    rlm_progress_done()
+    rlm_alert_success("LM Studio CLI installed successfully.")
+    rlm_alert_info(
+      "In a headless environment, remember to start the daemon using {.fn lms_daemon_start} and the server using {.fn lms_server_start} before loading models."
     )
   }
 

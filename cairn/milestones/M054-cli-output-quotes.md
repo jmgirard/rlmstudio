@@ -133,7 +133,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       the T2 test file. Add its AC3 tests, including the invalid UTF-8
       regression, which must fail before the fix, and the `force = TRUE`
       message.
-- [ ] T4: In `R/setup.R`, raise the non-zero-exit abort of
+- [x] T4: In `R/setup.R`, raise the non-zero-exit abort of
       `install_lmstudio()` so that its outer handler does not wrap it, with
       `The installer said:` and the helper. Rewrite the M028 test in
       `test-setup.R` to assert the message the user gets. Add the three
@@ -158,6 +158,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: T1 done. `cli_output_clean()` and `cli_output_cut()` split out of `cli_output_text()` in `R/serve.R`. New `test-cli-output.R` ran red on the escape and cut rules before the change. A cut with no token step turned the three token cases red. `devtools::test()`: 547 tests, 0 failed, 3 skipped.
 - 2026-09-29: T2 done. New `rlm_abort_cli_run()` in `R/serve.R` builds the abort for server start, server stop, and daemon start. `lms_server_stop()` has the not-running exit. The code came before its tests, so the new tests ran against the T1 code: every case but "no text" went red. `devtools::test()`: 550 tests, 0 failed, 3 skipped.
 - 2026-09-29: T3 done. `lms_daemon_stop()` matches its phrases in `cli_output_clean()` text and aborts through `rlm_abort_cli_run()` with its hint. Its new tests went red first, the invalid UTF-8 and no-text cases included. The `force = TRUE` test passed before T3, because T2 added the server exit. `devtools::test()`: 554 tests, 0 failed, 3 skipped.
+- 2026-09-29: T4 done. The install `tryCatch()` now returns the run, and the exit-code check follows it through `rlm_abort_cli_run()` with "The installer said". The M028 test is rewritten. On the old code the two output tests went red, and the three wrapped-message tests passed, as they pin unchanged text. `devtools::test()`: 558 tests, 0 failed, 3 skipped.
 
 ## Decisions
 
