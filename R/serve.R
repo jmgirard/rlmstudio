@@ -135,9 +135,14 @@ lms_server_start <- function(
       )
     }
   } else {
-    cli::cli_abort(
-      "Failed to start the LM Studio server. Exit code: {.val {res$status}}."
-    )
+    # The CLI text is spliced in as a value, so cli does not run its braces
+    # (LESSONS, M012).
+    output <- cli_output_text(res)
+    msg <- "Failed to start the LM Studio server. Exit code: {.val {res$status}}."
+    if (!is.null(output)) {
+      msg <- c(msg, "x" = "The CLI said: {output}")
+    }
+    cli::cli_abort(msg)
   }
 
   if (wait > 0) {
@@ -145,6 +150,30 @@ lms_server_start <- function(
   }
 
   invisible(res$status)
+}
+
+#' Read the text a failed CLI run gave
+#'
+#' The CLI writes its reason to stderr, so stderr is read first and stdout
+#' only when stderr holds nothing. A field that is absent, `NULL`, `NA`, or
+#' only whitespace holds nothing. Each whitespace run becomes one space, so
+#' a text of several lines fits on one bullet.
+#'
+#' @param res The list `processx::run()` returned.
+#' @return One string, or `NULL` when neither field holds text.
+#'
+#' @noRd
+cli_output_text <- function(res) {
+  for (field in c("stderr", "stdout")) {
+    text <- res[[field]]
+    if (is.character(text) && length(text) == 1L && !is.na(text)) {
+      text <- gsub("\\s+", " ", trimws(text))
+      if (nzchar(text)) {
+        return(text)
+      }
+    }
+  }
+  NULL
 }
 
 #' Reject a host the readiness request cannot be built from

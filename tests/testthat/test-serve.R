@@ -547,6 +547,89 @@ test_that("cors = TRUE sends --cors and cors = FALSE does not", {
   expect_false("--cors" %in% runs$args)
 })
 
+# The failed-start abort. cli wraps long bullets, so texts are compared after
+# each whitespace run is collapsed to one space.
+squish <- function(x) gsub("\\s+", " ", trimws(x))
+
+start_failure_message <- function(res) {
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) res,
+    .package = "processx"
+  )
+  err <- tryCatch(lms_server_start(wait = 0), error = function(e) e)
+  expect_s3_class(err, "error")
+  squish(conditionMessage(err))
+}
+
+expect_quotes <- function(msg, text) {
+  expect_true(grepl(squish(text), msg, fixed = TRUE), label = msg)
+}
+
+test_that("a failed start quotes the stderr text the CLI gave", {
+  # Recorded from `lms server start --port abc` on 2026-09-28.
+  stderr <- paste0(
+    "error: option '-p, --port <port>' argument 'abc' is invalid. ",
+    "Not a number\n"
+  )
+  msg <- start_failure_message(list(status = 1, stdout = "", stderr = stderr))
+  expect_quotes(msg, "Exit code: 1")
+  expect_quotes(msg, stderr)
+})
+
+test_that("a failed start quotes stdout when stderr holds nothing", {
+  msg <- start_failure_message(
+    list(status = 2, stdout = "Port is in use.\n", stderr = "")
+  )
+  expect_quotes(msg, "Exit code: 2")
+  expect_quotes(msg, "Port is in use.")
+})
+
+test_that("braces in the CLI text reach the message as text", {
+  msg <- start_failure_message(
+    list(status = 1, stdout = "", stderr = "bad value {port} here")
+  )
+  expect_quotes(msg, "bad value {port} here")
+})
+
+test_that("a long stderr of two lines reaches the message whole", {
+  stderr <- paste0(
+    "error: the server could not start on the port that was asked for.\n",
+    "  Another program may hold it; pick a different port and try again.\n"
+  )
+  expect_gt(nchar(stderr), 80)
+  msg <- start_failure_message(list(status = 1, stdout = "", stderr = stderr))
+  expect_quotes(msg, stderr)
+})
+
+test_that("a failed start with no CLI output gives the exit code alone", {
+  empties <- list(
+    list(status = 1),
+    list(status = 1, stdout = NULL, stderr = NULL),
+    list(status = 1, stdout = NA_character_, stderr = NA_character_),
+    list(status = 1, stdout = " \n", stderr = "\t")
+  )
+  for (res in empties) {
+    msg <- start_failure_message(res)
+    expect_quotes(msg, "Failed to start the LM Studio server. Exit code: 1.")
+    expect_false(grepl("The CLI said", msg, fixed = TRUE), label = msg)
+  }
+})
+
+test_that("stderr wins over stdout when both hold text", {
+  msg <- start_failure_message(
+    list(status = 1, stdout = "from stdout", stderr = "from stderr")
+  )
+  expect_quotes(msg, "from stderr")
+  expect_false(grepl("from stdout", msg, fixed = TRUE), label = msg)
+})
+
+test_that("a stderr of only whitespace falls through to stdout", {
+  msg <- start_failure_message(
+    list(status = 1, stdout = "from stdout\n", stderr = "  \n ")
+  )
+  expect_quotes(msg, "from stdout")
+})
+
 test_that("none of the three warnings is silenced by the quiet option", {
   # GP6 is traded here. All three warnings go through cli_warn(), not through
   # the helpers in R/utils-msg.R that read the option.
