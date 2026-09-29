@@ -111,51 +111,28 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 
 ## Tasks
 
-- [x] T1: In `R/serve.R`, give `cli_output_text()` the AC2 order: the
-      `<xx>` step, then `cli::ansi_strip()`, then the whitespace collapse,
-      then the cut. Keep the cut a separate step, so a phrase match can
-      read the cleaned text before the cut. Test every AC2 rule through
-      `lms_server_start()` first, and see each new test red before the
-      code changes.
-- [x] T2: Route the failed runs of `lms_server_stop()` and
-      `lms_daemon_start()` through the helper with `The CLI said:`. Add the
-      not-running exit to `lms_server_stop()` through `rlm_alert_info()`.
-      Add one table-driven test file that runs three functions over the
-      AC1 and AC2 texts. T3 adds the `lms_daemon_stop()` rows. Add the AC3
-      tests of the `lms_server_stop()` exit: plain text, invalid UTF-8
-      text, and a phrase more than 1000 characters before the end. Mock
-      `lms_path()` and `processx::run`, so no CLI runs (LESSONS, M003).
-- [x] T3: Rewrite the failure branch of `lms_daemon_stop()` in
-      `R/daemon.R` to use the helper. Match the two phrases in the cleaned
-      text before the cut, "part of LM Studio" first. Change the label to
-      `The CLI said:` and keep the hint. Update the brace test in
-      `test-daemon.R` to the new label. Add the `lms_daemon_stop()` rows to
-      the T2 test file. Add its AC3 tests, including the invalid UTF-8
-      regression, which must fail before the fix, and the `force = TRUE`
-      message.
-- [x] T4: In `R/setup.R`, raise the non-zero-exit abort of
-      `install_lmstudio()` so that its outer handler does not wrap it, with
-      `The installer said:` and the helper. Rewrite the M028 test in
-      `test-setup.R` to assert the message the user gets. Add the three
-      tests of the wrapped message.
-- [x] T5: Update the five help pages and add the NEWS.md entry. Write each
-      stated behavior from a test run of T1 to T4. Run
-      `devtools::document()`.
-- [x] T6: Run `devtools::test()` and `devtools::check()`. Set
-      `RLMSTUDIO_API_TOKEN` and start the server first (LESSONS, M009).
-- [x] T7: In `cli_output_clean()`, call `cli::ansi_strip()` with its
-      default arguments. Then remove every escape sequence that is left:
-      strings to BEL or ESC \, two-character codes such as ESC 7, and a
-      lone ESC. Add a non-breaking space to the whitespace test text. Add
-      one escape text per form to the escape test. See each new test red
-      first.
-- [x] T8: Move the failure paragraph of `lms_daemon_stop()` out of the
-      "Desktop Users" section. Put an escape code in the part of the
-      installer test text that the cut keeps. State the escape removal
-      the same way in the five pages and NEWS. Cut the M053 NEWS
-      sub-bullet that the new entry replaces. Remove `cli_output_text()`.
-- [x] T9: Run `devtools::document()`, `devtools::test()`, and
-      `devtools::check()` again, as in T6.
+Each done task's detail is in its work-log line.
+
+- [x] T1: Clean the CLI text in the AC2 order in `R/serve.R`, with the cut
+      a separate step. Test each AC2 rule red first.
+- [x] T2: Route server stop and daemon start through the helper. Add the
+      server not-running exit. Add the table-driven test file, with mocked
+      `lms_path()` and `processx::run` (LESSONS, M003).
+- [x] T3: Route the `lms_daemon_stop()` failure through the helper, with
+      the phrases matched before the cut and the hint kept. Add its rows
+      and its AC3 tests, the invalid UTF-8 regression red first.
+- [x] T4: Raise the installer abort outside its outer handler in
+      `R/setup.R`. Rewrite the M028 test and add the wrapped-message tests.
+- [x] T5: Update the five help pages and NEWS from test runs.
+- [x] T6: Run `test()` and `check()` with the server and token (LESSONS,
+      M009).
+- [x] T7: Remove the escape codes that `cli::ansi_strip()` leaves. Add
+      one escape text per form, red first.
+- [x] T8: Move the `lms_daemon_stop()` failure text out of "Desktop
+      Users". Make the installer test see escape removal. Align the escape
+      wording, cut the stale M053 NEWS sub-bullet, and remove
+      `cli_output_text()`.
+- [x] T9: Run `document()`, `test()`, and `check()` again, as in T6.
 
 ## Work log
 
@@ -184,6 +161,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: claim audit: 60 claims read, 5 corrected — R/serve.R, R/daemon.R, NEWS.md, man/*.Rd
 - 2026-09-29: the corrections. The stdout fallback now reads "holds only whitespace and escape codes" on four pages and in NEWS. The `lms_server_stop()` page names the "not running" match. The `strip_escapes()` and `cli_output_cut()` notes and one code comment now match the code. The same reader re-read them once, and all held. It also flagged the `cli_output_clean()` note, now fixed. The claims about what the real `lms` CLI prints stay as recorded on 2026-09-29.
 - 2026-09-29: T9 done. A second `document()` wrote nothing. The server was started and the token set. `devtools::test()` gave 558 tests, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
+- 2026-09-29: minor amendment. The file was over the 150-line cap after T7 to T9, so the Tasks section was compressed in one rewrite. The task texts before it are in git.
 
 ## Decisions
 
