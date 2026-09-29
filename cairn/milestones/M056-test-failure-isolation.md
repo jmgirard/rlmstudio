@@ -109,6 +109,8 @@ outside this milestone.
 - claim audit: not owed — internal tier
 - 2026-09-29: status set to review. The session stopped the LM Studio server it started for T3, and left no model loaded.
 - 2026-09-29: review evidence recorded for AC1 to AC5, and the consistency gate passed. The three independent reviewers are still running. The review session started and then stopped the LM Studio server.
+- 2026-09-29: merge gate chose to format `test-arg-guards.R` with Air before the merge (finding O1).
+- step-7 approval: m056-test-failure-isolation approved for merge
 
 ## Decisions
 
@@ -123,7 +125,7 @@ Evidence gathered 2026-09-29 on e959045, which is up to date with origin/main (5
 - AC5: `devtools::test()` with the token: 635 blocks, 0 failed, 0 errored, 3 skipped. The two live embedding tests and the live id-column test skipped because no model was loaded. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes, so no note is new against 65d6bd4.
 - Gate: `cairn_validate.py` passed (exit 0). `devtools::document()` left no diff. `pkgdown::check_pkgdown()` found no problems. The diff does not touch README.Rmd, NEWS.md, DESCRIPTION, or any top-level file. No NEWS entry is owed, because only test files changed. No DESIGN principle changed, so `cairn_impact.py` was not run.
 
-Independent review: three fresh reviewers, diff-bug (O), blame-history (R), and prior reviews (P). None found a correctness bug or a failing criterion. Proposed dispositions go to the merge gate.
+Independent review: three fresh reviewers, diff-bug (O), blame-history (R), and prior reviews (P). None found a correctness bug or a failing criterion. The merge gate accepted each proposed disposition below.
 
 - O1: The new one-line `test_that(paste0(...), {` calls in `test-arg-guards.R` break the Air convention in DESIGN.md. A run of `air format` changes 706 lines of the branch file, against 102 on main. Proposed: fix now.
 - O2: After the loops, `name` keeps the last function name in the file environment. A later block that reads it by mistake runs against that function and does not error. Proposed: reject, because no block reads it and the risk is speculative.
@@ -133,4 +135,5 @@ Independent review: three fresh reviewers, diff-bug (O), blame-history (R), and 
 - R3: The domain lists now build at file load, so an error there fails the whole file. Proposed: reject, low.
 - R4: The probe counts are now per function. The domain tests still catch a dropped function. Proposed: noted.
 - R5: Some lines run past 80 columns. Proposed: merged into O1.
+- O1 fix: `air format` on `test-arg-guards.R` changed 716 lines. The parsed code differs only in braces around three one-line `if` bodies. `air format --check` passes on the file. `devtools::test()` with no server running: 635 blocks, 0 failed, 0 errored, 3 skipped.
 - P2: The inner loops over probe values stay unsplit. The candidate row added at the plan gate already holds this. Proposed: noted.
