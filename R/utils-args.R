@@ -1165,9 +1165,9 @@ rlm_check_flag <- function(value, arg, null_ok = FALSE) {
   fault <- flag_fault(value)
   if (!is.null(fault)) {
     rule <- if (null_ok) {
-      "{.arg {arg}} must be TRUE, FALSE, or NULL."
+      "{.arg {arg}} must be {.code TRUE}, {.code FALSE}, or {.code NULL}."
     } else {
-      "{.arg {arg}} must be TRUE or FALSE."
+      "{.arg {arg}} must be {.code TRUE} or {.code FALSE}."
     }
     cli::cli_abort(c(rule, "x" = "{fault}"), call = NULL)
   }

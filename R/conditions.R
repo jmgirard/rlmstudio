@@ -13,8 +13,9 @@
 #' hostname and port named in `host` before they send the request. A function
 #' that checks its own arguments does that first, so a bad `model`, `job_id`,
 #' `input`, `inputs`, `messages`, `schema`, `ttl`, or `batch_size`, a bad
-#' `type`, `quiet`, `loaded`, or `detailed` of [list_models()] or
-#' [list_instances()], or a `stream` in the `...` of a chat function, aborts
+#' `type` or `quiet` of [list_models()] or [list_instances()], a bad `loaded`
+#' or `detailed` of [list_models()], or a `stream` in the `...` of a chat
+#' function, aborts
 #' with an argument message and no condition class even when the server is
 #' down. A condition of class
 #' `rlmstudio_no_server` is raised when that connection cannot be opened. A

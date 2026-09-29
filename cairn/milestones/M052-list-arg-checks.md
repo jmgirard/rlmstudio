@@ -59,6 +59,8 @@
 - 2026-09-28: T4 done. The `@param` text of the four arguments, the "Server not running" section, and a NEWS entry are updated. `devtools::document()` regenerated 13 pages that inherit that section. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. T2 reads `quiet` through `is_quiet()` as planned. `rlm_inform()` reads the option again, so `FALSE` still defers to the option.
 - 2026-09-28: claim audit: 32 claims read, 2 corrected — NEWS.md, R/utils-args.R
 - 2026-09-28: the two corrections were the NEWS claim that `quiet = NA` always failed, which held only on a call that matched no model, and a `rlm_check_type()` comment that a number or an empty string can match nothing. The reader re-read both once and found them correct. Status set to review.
+- 2026-09-28: review found all six criteria met, with evidence in the Review section. Four gate fixes landed: a NEWS sentence, a `quiet = TRUE` test, code style in the flag messages, and a split conditions sentence.
+- 2026-09-28: step-7 approval: m052-list-arg-checks approved for merge
 
 ## Decisions
 
@@ -89,5 +91,7 @@ Independent review: three fresh reviewers ran. They were a diff reviewer (O), a 
 - O10: the `list_models()` `@return` text does not say the empty frame is invisible. Proposed: reject. The text predates this milestone.
 - S3: `rlm_check_type()` takes no `arg` argument, and `type_fault()` accepts a `dim`, unlike `id_fault()`. Proposed: reject. AC1 asks for the `dim` rule, and the helper serves one argument.
 - P1: the help text says `FALSE` defers to the option, and the reviewer said it does not. Proposed: reject. A direct run with the option `TRUE` and `quiet = FALSE` printed nothing, so the help text is correct.
+
+Gate decision 2026-09-28: the maintainer accepted every proposed disposition. The four fixes landed after the checkpoint. The NEWS sentence rests on a run of the `main` code, where `quiet = 1` gave 0 messages on each function. After the fixes, `devtools::test()` gave 13,918 expectations, 0 failed, 0 errors, 3 skipped. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. O1 and O3 become candidate rows at the hygiene pass.
 
 Mutation runs by O: the tests fail with `rlm_check_type()` removed, with the probe above the checks, and with the `null_ok` return removed. The P reviewer did not run the GitHub comment probe. Archived Review sections were its evidence.

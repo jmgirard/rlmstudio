@@ -118,7 +118,7 @@ test_that("a bad quiet aborts, named, before any request", {
       name,
       "quiet",
       flag_probes,
-      "`quiet` must be TRUE, FALSE, or NULL."
+      "`quiet` must be `TRUE`, `FALSE`, or `NULL`."
     )
   }
 })
@@ -131,7 +131,7 @@ test_that("a bad loaded or detailed aborts list_models, NULL included", {
       "list_models",
       arg,
       c(flag_probes, list(null_probe)),
-      paste0("`", arg, "` must be TRUE or FALSE.")
+      paste0("`", arg, "` must be `TRUE` or `FALSE`.")
     )
   }
 })
@@ -202,6 +202,20 @@ test_that("quiet = NULL prints the no-match message unless the option is TRUE", 
     withr::with_options(list(rlmstudio.quiet = TRUE), {
       expect_no_message(list_calls[[name]](type = "vlm", quiet = NULL))
     })
+  }
+})
+
+test_that("quiet = TRUE prints no no-match message with the option unset", {
+  withr::local_options(rlmstudio.quiet = NULL)
+  for (name in names(list_calls)) {
+    local_one_loaded_llm()
+    expect_no_message(list_calls[[name]](type = "vlm", quiet = TRUE))
+    local_one_loaded_llm()
+    expect_message(
+      list_calls[[name]](type = "vlm", quiet = FALSE),
+      no_match_messages[[name]],
+      info = name
+    )
   }
 })
 
