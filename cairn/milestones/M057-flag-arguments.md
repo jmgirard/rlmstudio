@@ -127,7 +127,7 @@ rows.
       `rlmstudio-conditions` page names these checks, update it. In NEWS, rewrite the unreleased `quiet`
       bullet of `list_models()` (`NEWS.md:21`), and add one entry for the
       rest. Run `devtools::document()`.
-- [ ] T5: Planted defect. In a scratch copy, delete the check of one
+- [x] T5: Planted defect. In a scratch copy, delete the check of one
       argument in `lms_chat()` and one in `lms_server_status()`. Check
       that only the blocks of those functions go red in `test-flag-args.R`.
 - [ ] T6: Run `devtools::test()` and `devtools::check()`. The check needs
@@ -147,6 +147,7 @@ rows.
 - 2026-09-29: T2 done. `lms_embed()`, `lms_load()`, `lms_daemon_stop()`, and `lms_server_status()` check their flags, and the load body sends `isTRUE()`. `as.logical()` also dropped names and dims, so the body test does not tell the two apart. Its matrix cases fail on a value sent with no conversion, which sends `[[true]]`. `test-load.R` passed `flash_attention = 1` and now passes `TRUE`. `devtools::test()` gave 0 failures.
 - 2026-09-29: T3 done. `quiet` defaults to `NULL` in three functions, `lms_embed()` and `lms_chat_batch()` check it, and `R/list.R` passes it into `rlm_inform()`. The nine pairs and the `lms_server_status()` cases are in `test-flag-args.R`. The four warnings are tested in `test-chat-batch-cut-off.R` and `test-embed.R`, beside their fixtures. A stale comment on the old batch default in `test-chat-batch-cut-off.R` is fixed. `devtools::test()` gave 0 failures.
 - 2026-09-29: T4 done. Help text names the accepted values of each flag, the conditions page names the flag checks, and NEWS has two new entries. Two unreleased NEWS bullets that stated the old `quiet` rule are fixed. The `rlmstudio.quiet` entry sat on a `NULL` block that roxygen skips, so it never reached `?rlmstudio`. It now sits on the package block, and NEWS says so. A second `devtools::document()` run wrote nothing.
+- 2026-09-29: T5 done. In a scratch copy, the `simplify` check of `lms_chat()` and the `json` check of `lms_server_status()` were deleted. Of 27 blocks in `test-flag-args.R`, only the blocks of those two functions went red, with "a delegate was reached" and "the lms CLI ran".
 
 ## Decisions
 
