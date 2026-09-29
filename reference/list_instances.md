@@ -1,63 +1,39 @@
-# Batch Chat Completion with LM Studio
+# List loaded model instances
 
-Process a vector of inputs sequentially through LM Studio.
+Retrieves the loaded model instances on the server via the LM Studio
+REST API, one row per instance, with the load configuration of each
+instance in columns. It is the view that `lms ps` prints, read from the
+same model list that
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+reads, so it honors `host` and `token`.
 
 ## Usage
 
 ``` r
-lms_chat_batch(
-  model,
-  inputs,
-  system_prompt = NULL,
-  format = c("vector", "list", "data.frame"),
-  host = "http://localhost:1234",
-  simplify = TRUE,
+list_instances(
+  type = c("llm", "embedding"),
   quiet = FALSE,
-  ...,
+  host = "http://localhost:1234",
   token = NULL
 )
 ```
 
 ## Arguments
 
-- model:
+- type:
 
-  Character. The loaded model name. Must be one name, given as a single
-  string.
-
-- inputs:
-
-  Character vector. The prompts to process. Must hold at least one value
-  and no missing values.
-
-- system_prompt:
-
-  Character. Optional system prompt.
-
-- format:
-
-  Character. Output format: "vector", "list", or "data.frame".
-
-- host:
-
-  Character. Server URL.
-
-- simplify:
-
-  Logical. If TRUE, parses outputs.
+  Character vector. The types of models to include. Defaults to
+  `c("llm", "embedding")`.
 
 - quiet:
 
-  Logical. Whether to suppress the progress bar.
+  Logical. If `TRUE`, suppresses the message printed when no instance is
+  found. Defaults to `FALSE`. Does not suppress the abort raised when
+  the server is not running.
 
-- ...:
+- host:
 
-  Additional arguments passed to `lms_chat`, such as `api_type`,
-  `logprobs`, `schema`, or `ttl`. A `schema`, a `ttl`, and the
-  `api_type` that each needs are checked before the first call. The
-  package checks a `stream` here. A `stream` other than `FALSE` or
-  `NULL` aborts before the call checks for a running server, because the
-  package reads a whole reply and not a streamed one.
+  Character. The host address of the local server.
 
 - token:
 
@@ -68,123 +44,62 @@ lms_chat_batch(
 
 ## Value
 
-The return type depends on the `format` argument:
-
-- `"vector"`: A character vector of responses, with `NA` for an input
-  that failed. This format is only supported if `simplify = TRUE` and
-  `logprobs = FALSE`. With a `schema`, it warns and returns the list
-  instead.
-
-- `"list"`: A list where each element is the response corresponding to
-  the provided input, or the condition for an input that failed. With a
-  `schema`, `simplify = TRUE`, and `logprobs = FALSE`, each element that
-  did not fail is the parsed reply.
-
-- `"data.frame"`: A data.frame containing `input` and `output` columns,
-  with `NA` in `output` for an input that failed. If `logprobs = TRUE`,
-  an additional list-column named `logprobs` is included, with `NULL`
-  for an input that failed. With a `schema` and `logprobs = FALSE`,
-  `output` is a list-column of parsed replies, with the condition in
-  place of an input that failed. Columns read from each reply follow, as
-  described below.
-
-With `api_type = "native"` and `format = "data.frame"`, the data frame
-ends with seven columns read from each reply: `response_id`,
-`input_tokens`, `total_output_tokens`, `reasoning_output_tokens`,
-`tokens_per_second`, `time_to_first_token_seconds`, and
-`model_load_time_seconds`. `response_id` is character, and it identifies
-the reply on the server. The other six are double, and they come from
-the `stats` object of the reply. A cell is `NA` when its field is absent
-or is not one value of the column type, a string for `response_id` and a
-number for the others. An empty string is a string, so an empty
-`response_id` is kept. If `stats` is absent or is not a JSON object, all
-six stats cells are `NA`. The server can leave a field out, such as
-`model_load_time_seconds`. Such a cell does not fail the input and gives
-no warning.
-
-With `api_type = "openresponses"` or `api_type = "openai"` and
-`format = "data.frame"`, the data frame ends with four columns read from
-each reply: `response_id`, `input_tokens`, `total_output_tokens`, and
-`reasoning_output_tokens`. These are the first four native column names,
-but the servers send the values under other names:
-
-- `response_id` is the reply's `id` on both routes.
-
-- `input_tokens` is `usage.input_tokens` on the OpenResponses route and
-  `usage.prompt_tokens` on the OpenAI route.
-
-- `total_output_tokens` is `usage.output_tokens` on the OpenResponses
-  route and `usage.completion_tokens` on the OpenAI route.
-
-- `reasoning_output_tokens` is
-  `usage.output_tokens_details.reasoning_tokens` on the OpenResponses
-  route and `usage.completion_tokens_details.reasoning_tokens` on the
-  OpenAI route.
-
-The columns are there for every setting of `logprobs` and `schema`.
-`response_id` is character, and the three counts are double. The `NA`
-rule is the one for the native columns: a cell is `NA` when its field is
-absent or is not one value of the column type, and an empty string is
-kept. If `usage` is absent or is not a JSON object, all three count
-cells are `NA`. If the details object is absent or is not a JSON object,
-only `reasoning_output_tokens` is `NA`. Such a cell does not fail the
-input and gives no warning.
-
-A reply with no readable answer text fails its input, whatever its other
-fields hold. The row of an input that failed holds `NA` in every column
-read from the reply. If every input failed, those columns are still
-there, `response_id` as character and the others as double. The vector
-and list formats add no such column.
+A `data.frame` with one row per loaded instance of a model whose type is
+in `type`, with the columns that the "Columns" section describes. If
+there is no such instance, it returns a `data.frame` with zero rows and
+the four character columns, invisibly, and prints a message unless
+`quiet = TRUE` or the `rlmstudio.quiet` option is `TRUE`.
 
 ## Details
 
-This function calls
-[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-once for each element of `inputs`. It raises `rlmstudio_no_server`
-itself, before the first call.
+The model list does not carry four fields that `lms ps --json` reports:
+the generation status, the queued requests, the ttl, and the last-used
+time.
 
-An `rlmstudio_bad_response` that
-[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-raises for one input fails that input alone, unless it is an
-`rlmstudio_model_mismatch`. So does an `rlmstudio_api_error` with any
-`status` other than 401, 403, or 404, unless its `status` is 400 and its
-`code` is `"model_not_found"`. The batch goes on to the next input.
-Where the result is a list, or the `output` list-column that a `schema`
-gives, the element for that input holds the condition without its
-backtrace. An `rlmstudio_bad_response` for reply content that does not
-parse keeps that content in its `content` field. Where the result is
-text, the element holds `NA`. The result is text with
-`format = "vector"` when it returns a vector (`simplify = TRUE`, no
-`schema`, `logprobs = FALSE`), and with a data frame whose replies are
-not parsed (no `schema`, or `logprobs = TRUE`). The `logprobs` column
-holds `NULL` for a failed input. A reply with no readable answer text,
-such as one whose content is `null`, fails as an
-`rlmstudio_bad_response` in the same way. So does a status-200 body that
-does not parse as JSON, such as an HTML page from a proxy or an empty
-body. That input fails alone, and the other elements keep their replies.
-Use `format = "list"` to keep the conditions. The call gives one warning
-that names the count and the positions of the failed inputs. That
-warning shows even with `quiet = TRUE`.
+## Columns
 
-An `rlmstudio_api_error` with `status` 401, 403, or 404 aborts the batch
-with that condition, and no request goes out after that input. Such a
-status comes from a fault that does not depend on the prompt, such as a
-token that the server refuses, so every later input fails in the same
-way. The condition carries a `results` field, as described in the "API
-failure" section below. No warning about failed inputs is given.
+The first four columns are character columns:
 
-The batch aborts in the same way at an `rlmstudio_api_error` with
-`status` 400 and the `code` `"model_not_found"`, and at an
-`rlmstudio_model_mismatch`. The `"openai"` and `"openresponses"` routes
-give these for a model name that the server cannot find, so every later
-input fails in the same way. See the "Reply from another model" section
-below.
+- `id`: the id of the instance.
 
-An `rlmstudio_no_server` from
-[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-also aborts the batch. Its `results` field holds the results so far, as
-described in the "Server not running" section below. An error of any
-other class aborts the batch unchanged.
+- `key`: the key of its model.
+
+- `type`: the type of its model, such as `"llm"` or `"embedding"`.
+
+- `display_name`: the display name of its model, or `NA` when the model
+  list gives none.
+
+Rows follow the order of the models in the model list, then the order of
+the instances of a model. Two instances with the same id, or two models
+with the same key, give separate rows.
+
+After the four columns, the frame has one column for each field name in
+the `config` object of an instance, in order of first appearance. When
+one `config` holds a name twice, the first value counts. A row whose
+`config` lacks the field, or has no `config`, holds `NA` there, or
+`NULL` in a list-column.
+
+A column takes the field name as it is, with no name repair, so a name
+such as `a-b` needs backticks or `[[`. A field name that is empty, or
+that equals one of the four column names or the column name of an
+earlier field, takes the prefix `config.`, again and again while the
+name still clashes. A field named `id` so gives the column `config.id`.
+
+The column type follows the values of the field that are present and not
+`null`:
+
+- All strings give a character column.
+
+- All numbers give a double column, whole numbers included.
+
+- All booleans give a logical column.
+
+- No such values give a logical column of `NA`.
+
+In these four kinds, a `null` value is `NA`. Any other mix, or any JSON
+object or array, gives a list-column. It holds each value as
+[`jsonlite::parse_json()`](https://jeroen.r-universe.dev/jsonlite/reference/read_json.html)
+returns it, and `NULL` where the field is absent or `null`.
 
 ## Server not running
 
@@ -210,7 +125,7 @@ Studio server is there. The call then does not raise
 status-200 body that does not parse as JSON, the chat functions,
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
+`list_instances()`,
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
@@ -224,9 +139,8 @@ JSON but has another shape can come back unchanged with
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 raise `rlmstudio_bad_response` for it.
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-and
-[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
-raise it for a model list with another shape, and so do
+and `list_instances()` raise it for a model list with another shape, and
+so do
 [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
 and
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
@@ -244,7 +158,8 @@ for the stronger test: it asks the host for a model list and reports
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 can read.
 
-`lms_chat_batch()` checks the server once before its first input, and
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+checks the server once before its first input, and
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 checks it again for each input. If that check finds the server gone
 during the batch, the batch aborts with `rlmstudio_no_server`, and no
@@ -277,16 +192,18 @@ integer. It also carries a `code` field. The field holds the string at
 `NULL` when the body does not parse, when `error` is not a JSON object,
 or when its `code` is not one string.
 
-`lms_chat_batch()` aborts on it when its `status` is 401, 403, or 404,
-and when its `status` is 400 and its `code` is `"model_not_found"`. No
-request goes out after that input. The condition then carries a
-`results` field that follows the rule for a lost server in the "Server
-not running" section: its elements before the failed input hold the
-values that `format = "list"` returns for those inputs, and the element
-of the failed input and every element after it are `NULL`. For any other
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+aborts on it when its `status` is 401, 403, or 404, and when its
+`status` is 400 and its `code` is `"model_not_found"`. No request goes
+out after that input. The condition then carries a `results` field that
+follows the rule for a lost server in the "Server not running" section:
+its elements before the failed input hold the values that
+`format = "list"` returns for those inputs, and the element of the
+failed input and every element after it are `NULL`. For any other
 status, the element of the failed input holds the condition, or `NA`
 where the result is text, and the batch warns once and goes on. See the
-details of `lms_chat_batch()`.
+details of
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
 
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 follows the same rule for each request. A 401, 403, or 404 aborts the
@@ -310,7 +227,7 @@ functions raise it for a body they cannot read:
 [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
+`list_instances()`,
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
@@ -323,9 +240,10 @@ raises it through
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
 and so does
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-unless `force = TRUE`. `lms_chat_batch()` raises it only as
-`rlmstudio_model_mismatch`, which the "Reply from another model" section
-describes.
+unless `force = TRUE`.
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+raises it only as `rlmstudio_model_mismatch`, which the "Reply from
+another model" section describes.
 
 All eleven raise it for a status-200 body that does not parse as JSON,
 such as an HTML page from a proxy, JSON text that stops part way, or an
@@ -366,12 +284,11 @@ names the field or entry that broke a rule.
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 applies the same rules and returns `FALSE` for a body that breaks one.
 
-[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
-applies the four rules too, and two more. They cover only an entry whose
-`type` is in its `type` argument and that has at least one loaded
-instance. The `display_name` of such an entry is a string, or absent, or
-`null`. The `config` of each of its instances is a JSON object, or
-absent, or `null`.
+`list_instances()` applies the four rules too, and two more. They cover
+only an entry whose `type` is in its `type` argument and that has at
+least one loaded instance. The `display_name` of such an entry is a
+string, or absent, or `null`. The `config` of each of its instances is a
+JSON object, or absent, or `null`.
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 and
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
@@ -517,12 +434,14 @@ A body of `null` gets the message about its missing `output` or
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 can raise the condition through all three chat functions.
 
-`lms_chat_batch()` does not abort on it, except on the subclass
-`rlmstudio_model_mismatch`, as the "Reply from another model" section of
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+does not abort on it, except on the subclass `rlmstudio_model_mismatch`,
+as the "Reply from another model" section of
 [rlmstudio-conditions](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
 says. The element of the failed input holds the condition, or `NA` where
 the result is text, and the batch warns once and goes on. See the
-details of `lms_chat_batch()`.
+details of
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
 
 The condition carries a `status` field, which holds the HTTP response
 status as an integer. Today the status is always 200: each of these
@@ -546,101 +465,24 @@ body, the `content` and `finish_reason` fields of a condition from
 [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
 are `NULL`.
 
-## Cut-off reply
+## See also
 
-A warning of class `rlmstudio_reply_cut_off` is given when a length
-limit ended a reply that
-[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-returns as text. The server reports this with the finish reason
-`"length"`. The limit is `max_tokens` or the context length of the
-model, and the reply does not say which one. The message names both. The
-warning is given with `simplify = TRUE` for reply content that is one
-string, in three settings: no `schema`, `logprobs = TRUE`, and a
-`schema` with `logprobs = TRUE`. The call returns what the same reply
-returns without the cut-off. A `schema` reply with `logprobs = FALSE`
-raises `rlmstudio_bad_response` instead, as the "Malformed response"
-section says. The warning and that abort read the finish reason of the
-first choice, which is the choice that the call reads. No other element
-of `choices` is read. With `simplify = FALSE`, the call returns the body
-with every choice and no warning.
+[LM Studio List Models
+API](https://lmstudio.ai/docs/developer/rest/list), and
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+for one row per model.
 
-[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-gives the warning through
-[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-with `api_type = "openai"`. `lms_chat_batch()` gives one warning of this
-class for the whole batch in place of one for each input. It names the
-count and the positions of the cut-off inputs, and each of those
-elements keeps its reply. It comes after the warning about failed
-inputs. A batch that aborts with a `results` field gives this warning
-before the abort. It names the cut-off inputs whose replies the
-`results` field of the abort holds. The native and OpenResponses routes
-give no such warning.
+## Examples
 
-The warning shows whatever `quiet` and the `rlmstudio.quiet` option say,
-because it is the only sign that an answer is not complete.
+``` r
+if (FALSE) { # \dontrun{
+lms_server_start()
+lms_load("google/gemma-3-1b")
 
-## Reply from another model
+# One row per loaded instance, with its load configuration
+list_instances()
 
-[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-and
-[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-read the `model` field of each status-200 reply, with either setting of
-`simplify`. On LM Studio 0.4.25+1 with one chat model loaded, both
-routes answered a model name that the server could not find with status
-200 and a reply from the loaded model. With two chat models loaded, they
-answered with status 400 and the `code` `"model_not_found"`, as the "API
-failure" section describes. The `model` field names the loaded instance
-that answered. Its id can differ from the key that the call asked for.
-
-If the `model` field equals the name that the call sent, the reply is
-accepted. If it differs, the call sends one request for the model list
-to `api/v1/models` on the same host, with the token of the call, and
-prints no message. The reply is accepted if a model whose key equals the
-asked name in any letter case has a loaded instance whose id is the
-`model` field. Otherwise the call aborts with a condition of class
-`rlmstudio_model_mismatch`. That condition is also an
-`rlmstudio_bad_response`, and its `status` is 200. Its `model` field
-holds the asked name, and its `reply_model` field holds the `model`
-field of the reply. The message names both. A condition from
-[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-also carries the `content` and `finish_reason` fields, both `NULL`.
-
-The check runs before the reply is read, so it also runs with
-`logprobs = TRUE`, with a `schema` on
-[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-and for a reply with no answer text. A reply is not checked if its body
-is not a JSON object, if it has no `model` field, or if its `model` is
-not one string or holds only whitespace. A body that is not a JSON
-object is returned with `simplify = FALSE`, and with `simplify = TRUE`
-it raises the error that the "Malformed response" section describes. If
-the instance that answered is unloaded before the model-list request,
-the call aborts, also when that instance belongs to the asked model.
-
-If the model-list request fails, the call raises the condition of that
-failure. The message opens with the label of the chat function, followed
-by "because the model-list lookup failed". A status other than 200
-raises `rlmstudio_api_error`. A body that does not parse as JSON, or
-that breaks a rule of a model list in the "Malformed response" section,
-raises `rlmstudio_bad_response`. A server that the port check before the
-request cannot reach raises `rlmstudio_no_server`. A condition from the
-lookup does not carry the `content` and `finish_reason` fields, also
-when
-[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-raises it.
-
-[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-runs the check through
-[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-and
-[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md).
-[`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
-does not check the reply. On LM Studio 0.4.25+1, `/api/v1/chat` answered
-a name that it could not find with status 404, which raises
-`rlmstudio_api_error`.
-
-`lms_chat_batch()` aborts at the first input that raises
-`rlmstudio_model_mismatch`, on the `"openai"` and `"openresponses"`
-routes. It also aborts at an `rlmstudio_api_error` with status 400 whose
-`code` is `"model_not_found"`. No request goes out after that input. In
-both cases, the condition carries a `results` field that follows the
-rule for a lost server in the "Server not running" section.
+# Only the loaded embedding models
+list_instances(type = "embedding")
+} # }
+```

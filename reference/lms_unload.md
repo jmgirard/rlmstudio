@@ -73,6 +73,7 @@ Studio server is there. The call then does not raise
 status-200 body that does not parse as JSON, the chat functions,
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
@@ -85,7 +86,9 @@ shape can come back unchanged with `simplify = FALSE`. With
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 raise `rlmstudio_bad_response` for it.
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-raises it for a model list with another shape, and so do
+and
+[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+raise it for a model list with another shape, and so do
 [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
 and
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)

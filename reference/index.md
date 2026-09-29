@@ -31,6 +31,8 @@ Discover, download, load, and manage local models.
 
 - [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
   : List available models
+- [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+  : List loaded model instances
 - [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
   : Download a model via REST API
 - [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)

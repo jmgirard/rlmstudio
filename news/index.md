@@ -2,6 +2,27 @@
 
 ## rlmstudio (development version)
 
+- New
+  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+  returns one row per loaded model instance, the view that `lms ps`
+  prints. It reads the REST model list, as
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  does, so it honors `host` and `token`. The first four columns are
+  `id`, `key`, `type`, and `display_name`. Each field of the load
+  configuration of an instance, such as `context_length`, gets a column
+  of its own. With no loaded instance of a type in `type`, it returns a
+  zero-row data frame with the four columns. Unless `quiet = TRUE` or
+  the `rlmstudio.quiet` option is `TRUE`, it also prints a message. It
+  does not include four fields that `lms ps --json` reports. They are
+  the generation status, the queued requests, the ttl, and the last-used
+  time.
+
+  - It aborts with `rlmstudio_bad_response` on a model list that
+    [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+    rejects. In a model of a listed type with a loaded instance, it also
+    aborts on two more faults. One is a `display_name` that is not a
+    string. The other is an instance `config` that is not a JSON object.
+
 - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   and
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)

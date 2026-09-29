@@ -272,6 +272,7 @@ Studio server is there. The call then does not raise
 status-200 body that does not parse as JSON, the chat functions,
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
@@ -285,7 +286,9 @@ JSON but has another shape can come back unchanged with
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 raise `rlmstudio_bad_response` for it.
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-raises it for a model list with another shape, and so do
+and
+[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+raise it for a model list with another shape, and so do
 [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
 and
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
@@ -364,14 +367,15 @@ first condition. See the details of
 A condition of class `rlmstudio_bad_response` is raised when the server
 answers with a status the wrapper accepts and a body the wrapper cannot
 read. It is raised where a wrapper checks the body before it reshapes
-it, rather than indexing straight into whatever arrived. Ten functions
-raise it:
+it, rather than indexing straight into whatever arrived. Eleven
+functions raise it for a body they cannot read:
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
 [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
 `lms_chat_openai()`,
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
@@ -385,18 +389,21 @@ raises it through
 and so does
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
 unless `force = TRUE`.
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+raises it only as `rlmstudio_model_mismatch`, which the "Reply from
+another model" section describes.
 
-All ten raise it for a status-200 body that does not parse as JSON, such
-as an HTML page from a proxy, JSON text that stops part way, or an empty
-body. In the functions that take `simplify`, the body is parsed before
-`simplify` is read, so the condition is raised whatever `simplify` is.
-The body is parsed by its content and not by its `Content-Type` header,
-so valid JSON under `text/plain` is read as JSON. The body is read as
-JSON text and nothing else. A body whose text is a URL or the path of a
-file does not parse, and the package does not fetch the URL or read the
-file. The message says that the body did not parse as JSON and that
-something other than LM Studio may be answering on the host. It does not
-hold the body text.
+All eleven raise it for a status-200 body that does not parse as JSON,
+such as an HTML page from a proxy, JSON text that stops part way, or an
+empty body. In the functions that take `simplify`, the body is parsed
+before `simplify` is read, so the condition is raised whatever
+`simplify` is. The body is parsed by its content and not by its
+`Content-Type` header, so valid JSON under `text/plain` is read as JSON.
+The body is read as JSON text and nothing else. A body whose text is a
+URL or the path of a file does not parse, and the package does not fetch
+the URL or read the file. The message says that the body did not parse
+as JSON and that something other than LM Studio may be answering on the
+host. It does not hold the body text.
 
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 also raises it for a status-200 model list with the wrong shape.
@@ -424,6 +431,17 @@ entry that the filters drop can still raise the condition. The message
 names the field or entry that broke a rule.
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 applies the same rules and returns `FALSE` for a body that breaks one.
+
+[`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+applies the four rules too, and two more. They cover only an entry whose
+`type` is in its `type` argument and that has at least one loaded
+instance. The `display_name` of such an entry is a string, or absent, or
+`null`. The `config` of each of its instances is a JSON object, or
+absent, or `null`.
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+and
+[`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+do not apply these two rules.
 
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
