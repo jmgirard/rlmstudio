@@ -47,9 +47,11 @@ rlm_token <- function(token = NULL) {
 #'
 #' `lms_client()` adds an `Authorization` header when a token source holds a
 #' token. Each REST wrapper reads the flag for the 401 and 403 hint off the
-#' request it built, not from a second read of the token sources. A token
-#' source that changes between the build and the reply then cannot change the
-#' hint. Only the header name is read, never its value.
+#' request it built, not from a second read of the token sources.
+#' `lms_embed()` reads it off the client that each of its requests starts
+#' from, and no later step changes the `Authorization` header of those
+#' requests. A token source that changes between the build and the reply then
+#' cannot change the hint. Only the header name is read, never its value.
 #'
 #' @param req An httr2 request.
 #' @return `TRUE` or `FALSE`.

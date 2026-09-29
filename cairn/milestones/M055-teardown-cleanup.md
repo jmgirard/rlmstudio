@@ -1,6 +1,6 @@
 # M055: Cleanup of vignette teardown, test helpers, and the token hint
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -34,7 +34,7 @@ stay candidates in the ROADMAP.
 
 ## Acceptance criteria
 
-- [x] AC1: A render of either vignette leaves two facts as they were before
+- [ ] AC1: A render of either vignette leaves two facts as they were before
       it. The first fact is the `running` field of `lms server status
       --json`. The second fact is whether `lms ps --json` lists
       `google/gemma-3-1b`. This holds from four starting states: the server
@@ -137,6 +137,8 @@ stay candidates in the ROADMAP.
 - 2026-09-29: T7 done. NEWS.md has one entry for the hint and one for the vignettes. With the token set, `devtools::document()` then `devtools::check()`: 0 errors, 0 warnings, 0 notes. Before and after the check, the server was running and `google/gemma-3-1b` was loaded.
 - 2026-09-29: claim audit: 68 claims read, 4 corrected — NEWS.md, vignettes/getting-started.Rmd, vignettes/headless-config.Rmd. The NEWS vignette entry overstated what a build restores, named one vignette where both unloaded, and said the daemon stops where the call can leave it running. One vignette sentence overstated the same restore. The reader also flagged two unchanged sentences, one per vignette, that the new gates made false, and they were rewritten. Its one re-read found the corrected text true. The edits are prose only, so the T2 renders and the T7 check still apply.
 - 2026-09-29: implement done, status review.
+- 2026-09-29: review gate: the user chose to narrow AC1 and re-review. Fix-now findings O5, O7, O10, and O11 landed on the branch. O1 and O3 extend the headless-daemon candidate row, and O2, O4 with O8, and O9 are new candidate rows.
+- 2026-09-29: amendment return: AC1 — "If the LM Studio desktop app keeps the daemon running, a render of either vignette leaves two facts as they were."
 
 ## Decisions
 
@@ -152,26 +154,28 @@ Branch head 9a88b28, synced with main (main had not moved). Evidence gathered 20
 
 Consistency gate: `cairn_validate.py` exited 0 with all checks passed. `devtools::document()` left `NAMESPACE` and `man/` unchanged. The branch does not touch `README.Rmd`, and the repo has no `_pkgdown.yml`. The branch adds no top-level file. NEWS.md has both entries, with no milestone numbers. The branch changes no DESIGN principle, so `cairn_impact` did not run.
 
-Independent review: three fresh reviewers ran. [O] is the diff reviewer, [B] the blame-history reviewer, and [P] the prior-review reviewer. The PR-comment probe found no review comments. Findings, most severe first, with the disposition proposed at the gate:
+Independent review: three fresh reviewers ran. [O] is the diff reviewer, [B] the blame-history reviewer, and [P] the prior-review reviewer. The PR-comment probe found no review comments. Findings, most severe first, with the disposition the user accepted at the gate:
 
-- O1 (medium): On a real headless host, the `stop-stack` chunk of `headless-config.Rmd` stops the daemon, and the models go with it. A model loaded before the build is then gone after it, so AC1 fails there. The AC1 procedure ran on macOS, where the desktop app keeps the daemon running. Proposed: amendment return on AC1, and the case joins the headless-daemon candidate row.
-- O2 (low-medium): `lms_server_status(json = TRUE)` parses stdout joined with stderr. If stderr holds a notice, the parse fails, the vignette reads the server as stopped, and the build stops a server that ran before it. Proposed: follow-up, a new candidate row.
-- O3 (low): `headless-config.Rmd` reads the server state after `lms_daemon_start()`. If a daemon start also starts the server, the build leaves both running. Not confirmed. Proposed: follow-up, into the headless-daemon row.
-- O4 (low), with B3: `request_sends_token()` reads the httr2 field `req$headers`, and DESCRIPTION has no httr2 floor. httr2 exports `req_get_headers()`. Proposed: follow-up, a new candidate row, because a version floor is a dependency change.
-- O5 (low): `test-token-hint.R` asserts the header with `request_sends_token()`, the function under test. Proposed: fix now, with an independent read through `request_target(redact_headers = FALSE)`.
-- O6 (low): the site-table test compares counts only. Proposed: reject. A removed site fails its own table entry, because its call no longer raises its label.
-- O7 (low): the `request_sends_token()` comment says each wrapper reads the request it built, but `lms_embed()` reads the client. Proposed: fix now, a comment edit.
-- O8 (low): `test-mock-http-helper.R` expects the httr2 1.3 class `httr2_redacted_sentinel`, with no version pin. Proposed: follow-up, in the O4 row.
-- O9 (low): the live test at `test-list-instances.R:410` still turns a refused model list into a skip, the pattern this milestone removed from the embedding tests. Proposed: follow-up, a new candidate row.
-- O10 (low): `getting-started.Rmd:157` says the build leaves the state as it found it. That holds only for a build that finishes. Proposed: fix now, a prose edit.
-- O11 (cosmetic): four assertions in `test-token-hint.R` have no `info = site$label`. Proposed: fix now.
-- O12 (process): the Review section was empty and the criteria unticked at handoff. Proposed: noted, this section closes it.
-- B1 (low): the live embedding tests now fail where they skipped before, with no D-entry. Proposed: noted, the plan-gate work-log line records the choice.
-- B2 (low): a failed re-record of a fixture no longer unloads the model. Proposed: reject. A re-record is a manual step, and the unload inside the mock block remains.
-- B4, with P1 (low): `request_target()` now redacts by default, which reverses the M009 default. Proposed: reject, T5 called for it.
-- B6 (low): if the server ran before the build, the `with-daemon` chunk does not run. Proposed: reject, T1 called for it.
-- B7 (low): `headless-config.Rmd` still stops a daemon that ran before the build. Proposed: reject, pre-existing and already in the headless-daemon row.
-- B8 (low): the M009 lesson in `LESSONS.md` says a check can leave the server off, which this milestone makes false. Proposed: fix at hygiene.
-- P2 (low): `request_body_text()` dry-runs with `redact_headers = FALSE`. Proposed: reject. The dry run is quiet and returns only the body.
-- P3 (low): the `model-before` chunk calls `list_models()` and can fail on a server that rejects the token. Proposed: reject. If `lms_ready` is FALSE, the chunk does not run, and `lms_server_ready()` reports FALSE for a rejected token.
+- O1 (medium): On a real headless host, the `stop-stack` chunk of `headless-config.Rmd` stops the daemon, and the models go with it. A model loaded before the build is then gone after it, so AC1 fails there. The AC1 procedure ran on macOS, where the desktop app keeps the daemon running. Disposition: amendment return on AC1, and the case joins the headless-daemon candidate row.
+- O2 (low-medium): `lms_server_status(json = TRUE)` parses stdout joined with stderr. If stderr holds a notice, the parse fails, the vignette reads the server as stopped, and the build stops a server that ran before it. Disposition: follow-up, a new candidate row.
+- O3 (low): `headless-config.Rmd` reads the server state after `lms_daemon_start()`. If a daemon start also starts the server, the build leaves both running. Not confirmed. Disposition: follow-up, into the headless-daemon row.
+- O4 (low), with B3: `request_sends_token()` reads the httr2 field `req$headers`, and DESCRIPTION has no httr2 floor. httr2 exports `req_get_headers()`. Disposition: follow-up, a new candidate row, because a version floor is a dependency change.
+- O5 (low): `test-token-hint.R` asserts the header with `request_sends_token()`, the function under test. Disposition: fix now, with an independent read through `request_target(redact_headers = FALSE)`.
+- O6 (low): the site-table test compares counts only. Disposition: reject. A removed site fails its own table entry, because its call no longer raises its label.
+- O7 (low): the `request_sends_token()` comment says each wrapper reads the request it built, but `lms_embed()` reads the client. Disposition: fix now, a comment edit.
+- O8 (low): `test-mock-http-helper.R` expects the httr2 1.3 class `httr2_redacted_sentinel`, with no version pin. Disposition: follow-up, in the O4 row.
+- O9 (low): the live test at `test-list-instances.R:410` still turns a refused model list into a skip, the pattern this milestone removed from the embedding tests. Disposition: follow-up, a new candidate row.
+- O10 (low): `getting-started.Rmd:157` says the build leaves the state as it found it. That holds only for a build that finishes. Disposition: fix now, a prose edit.
+- O11 (cosmetic): four assertions in `test-token-hint.R` have no `info = site$label`. Disposition: fix now.
+- O12 (process): the Review section was empty and the criteria unticked at handoff. Disposition: noted, this section closes it.
+- B1 (low): the live embedding tests now fail where they skipped before, with no D-entry. Disposition: noted, the plan-gate work-log line records the choice.
+- B2 (low): a failed re-record of a fixture no longer unloads the model. Disposition: reject. A re-record is a manual step, and the unload inside the mock block remains.
+- B4, with P1 (low): `request_target()` now redacts by default, which reverses the M009 default. Disposition: reject, T5 called for it.
+- B6 (low): if the server ran before the build, the `with-daemon` chunk does not run. Disposition: reject, T1 called for it.
+- B7 (low): `headless-config.Rmd` still stops a daemon that ran before the build. Disposition: reject, pre-existing and already in the headless-daemon row.
+- B8 (low): the M009 lesson in `LESSONS.md` says a check can leave the server off, which this milestone makes false. Disposition: fix at hygiene.
+- P2 (low): `request_body_text()` dry-runs with `redact_headers = FALSE`. Disposition: reject. The dry run is quiet and returns only the body.
+- P3 (low): the `model-before` chunk calls `list_models()` and can fail on a server that rejects the token. Disposition: reject. If `lms_ready` is FALSE, the chunk does not run, and `lms_server_ready()` reports FALSE for a rejected token.
 - B5, B9, P4: no finding.
+
+Gate outcome, 2026-09-29: the user chose to narrow AC1 and re-review, not to merge. The four fix-now items landed on the branch. For O5, each run now reads the `authorization` header through `request_target(redact_headers = FALSE)`. For O11, `expect_s3_class()` takes no `info` argument, so those two assertions became `expect_true(inherits(...), info = site$label)`. For O7, the new comment says that no later step in `lms_embed()` changes the `Authorization` header. A read of `embed_request()` backs that: its one later header write is the content type from `rlm_req_body()`. After the fixes, `devtools::test()` gave 0 failures, 0 skips, and 14777 passes, and `devtools::document()` gave no diff. The AC1 box is cleared again, because its text changes before the next review.

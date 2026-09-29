@@ -154,8 +154,8 @@ To free up memory and system resources when you are finished, it is best practic
 
 When this vignette is built, it unloads the model only if the model was not
 loaded before the build. It stops the server only if the server was not
-running before the build. The build then leaves the server state, and
-whether the model is loaded, as it found them.
+running before the build. A build that finishes then leaves the server
+state, and whether the model is loaded, as it found them.
 
 ```{r unload, eval=lms_ready && !model_was_loaded}
 # Unload the model

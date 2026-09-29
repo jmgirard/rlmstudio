@@ -100,11 +100,15 @@ test_that("a token sent and then cleared gives the rejected-token hint", {
     withr::local_options(rlmstudio.token = "hint-token")
     out <- hint_run(site, at_reply = NULL)
 
-    expect_s3_class(out$condition, "rlmstudio_api_error")
+    expect_true(
+      inherits(out$condition, "rlmstudio_api_error"),
+      info = site$label
+    )
     expect_identical(out$condition$status, 401L, info = site$label)
     expect_identical(length(out$requests), 1L, info = site$label)
-    expect_true(
-      request_sends_token(out$requests[[1]]),
+    expect_identical(
+      request_target(out$requests[[1]], redact_headers = FALSE)$headers$authorization,
+      "Bearer hint-token",
       info = site$label
     )
     expect_match(out$message, site$label, fixed = TRUE, info = site$label)
@@ -114,7 +118,12 @@ test_that("a token sent and then cleared gives the rejected-token hint", {
       fixed = TRUE,
       info = site$label
     )
-    expect_no_match(out$message, "RLMSTUDIO_API_TOKEN", fixed = TRUE)
+    expect_no_match(
+      out$message,
+      "RLMSTUDIO_API_TOKEN",
+      fixed = TRUE,
+      info = site$label
+    )
   }
 })
 
@@ -125,11 +134,14 @@ test_that("no token sent and then one set gives the hint that names the variable
     withr::local_options(rlmstudio.token = NULL)
     out <- hint_run(site, at_reply = "late-token")
 
-    expect_s3_class(out$condition, "rlmstudio_api_error")
+    expect_true(
+      inherits(out$condition, "rlmstudio_api_error"),
+      info = site$label
+    )
     expect_identical(out$condition$status, 401L, info = site$label)
     expect_identical(length(out$requests), 1L, info = site$label)
-    expect_false(
-      request_sends_token(out$requests[[1]]),
+    expect_null(
+      request_target(out$requests[[1]], redact_headers = FALSE)$headers$authorization,
       info = site$label
     )
     expect_match(out$message, site$label, fixed = TRUE, info = site$label)
@@ -139,7 +151,12 @@ test_that("no token sent and then one set gives the hint that names the variable
       fixed = TRUE,
       info = site$label
     )
-    expect_no_match(out$message, "The server rejected", fixed = TRUE)
+    expect_no_match(
+      out$message,
+      "The server rejected",
+      fixed = TRUE,
+      info = site$label
+    )
   }
 })
 
