@@ -1,13 +1,13 @@
 # M051: A schema data-frame batch returns one column per schema property
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes the data frame that the exported `lms_chat_batch()` returns
-- **Branch/PR:** —
+- **Branch/PR:** m051-batch-schema-columns
 
 ## Goal
 
