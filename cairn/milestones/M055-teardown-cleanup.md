@@ -28,21 +28,26 @@ not from a second read of the token sources. NEWS.
 
 **Out:** The daemon state in `headless-config.Rmd`. On this Mac, the desktop
 app keeps the daemon running, so no render here can show a fix. It joins the
-headless-daemon candidate row. The model download in both vignettes stays,
+headless-daemon candidate row. The same row holds the server and model state
+after a render on a host where the desktop app is not the daemon. The model download in both vignettes stays,
 because the download is part of what the vignettes teach. The other rows
 stay candidates in the ROADMAP.
 
 ## Acceptance criteria
 
-- [ ] AC1: A render of either vignette leaves two facts as they were before
-      it. The first fact is the `running` field of `lms server status
+- [ ] AC1: On a host where the LM Studio desktop app process is the
+      daemon, a render of either vignette leaves two facts as they were
+      before it. The first fact is the `running` field of `lms server status
       --json`. The second fact is whether `lms ps --json` lists
       `google/gemma-3-1b`. This holds from four starting states: the server
       stopped or running, crossed with the model loaded or not. The
-      procedure is eight live renders, one per vignette and state. Each
-      render runs `rmarkdown::render(output_dir = tempdir())` after
-      `devtools::install()` of the branch. Each reads both facts before and
-      after the render.
+      procedure is eight live renders on one such host, one per vignette and
+      state. A render counts toward AC1 only if, before and after it, `lms
+      daemon status --json` reports `"status": "running"` with the same
+      `pid`, and `ps -p` of that pid names the LM Studio desktop app
+      executable. Each render runs `rmarkdown::render(output_dir =
+      tempdir())` after `devtools::install()` of the branch. Each reads both
+      facts before and after the render.
 - [x] AC2: The sweep `grep -nE
       'lms_(load|unload|unload_all|download|server_start|server_stop|daemon_start|daemon_stop)\('
       $(grep -l 'skip_if_no_server()' tests/testthat/*.R)` lists no call
@@ -89,8 +94,9 @@ stay candidates in the ROADMAP.
       unload chunks run. In `headless-config.Rmd`, if the server was
       stopped before, the `with-daemon` chunk runs. If that chunk loaded
       the model, it unloads it.
-- [x] T2: Install the branch with `devtools::install()`. Run the eight
-      renders of AC1, and read both facts before and after each render.
+- [ ] T2: Install the branch with `devtools::install()`. Run the eight
+      renders of AC1. Before and after each render, read both facts, the
+      daemon status, and the `ps -p` name of the daemon pid.
 - [x] T3: Delete the `on.exit()` unload fallbacks at
       `tests/testthat/test-chat.R:13-18` and
       `tests/testthat/test-integration.R:15-20`. Run the AC2 sweep and the
@@ -139,6 +145,11 @@ stay candidates in the ROADMAP.
 - 2026-09-29: implement done, status review.
 - 2026-09-29: review gate: the user chose to narrow AC1 and re-review. Fix-now findings O5, O7, O10, and O11 landed on the branch. O1 and O3 extend the headless-daemon candidate row, and O2, O4 with O8, and O9 are new candidate rows.
 - 2026-09-29: amendment return: AC1 — "If the LM Studio desktop app keeps the daemon running, a render of either vignette leaves two facts as they were."
+- 2026-09-29: implement resumed for the AC1 amendment alone. Branch synced, main had not moved.
+- 2026-09-29: re-audit: AC1 (full) — one clear fix: `"isDaemon": false` was an unproven proxy for the desktop app, so the host check became the same `pid` before and after plus a `ps -p` name. One open point: the Goal promises more than AC1, disposed at the mini gate by a Scope Out sentence. Also noted: D-002 makes all three platforms release commitments, so a confirmed headless defect still bears on a release.
+- 2026-09-29: mini gate: the user accepted the fixed AC1 and the Scope Out sentence.
+- 2026-09-29: re-audit: AC1 (full) — two narrowing fixes: the daemon check decides which renders count instead of reading as a third fact to keep, and the procedure names one such host. The Scope sentence also covers `getting-started.Rmd`, kept to match the AC1 condition. The user accepted both fixes at a second gate, so AC1 wording is now closed to further readers.
+- 2026-09-29: T2 reopened, because its procedure gains the daemon read.
 
 ## Decisions
 
