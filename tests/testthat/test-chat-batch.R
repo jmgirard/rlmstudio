@@ -961,8 +961,10 @@ test_that("the other routes add the usage columns and no stats column", {
     api_type = "openai",
     schema = score_schema
   )
-  expect_identical(names(res$out), c("input", "output", usage_columns))
+  # The schema's one property adds a column after the usage columns.
+  expect_identical(names(res$out), c("input", "output", usage_columns, "score"))
   expect_identical(res$out$output, list(list(score = 1L), list(score = 2L)))
+  expect_identical(res$out$score, c(1L, 2L))
   expect_identical(res$warnings, character())
 })
 

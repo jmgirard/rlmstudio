@@ -41,9 +41,9 @@ With an object `schema` and `format = "data.frame"`, `lms_chat_batch()` returns 
 
 ## Tasks
 
-- [ ] T1: Give `batch_with_reply()` and `batch_with_sequence()` a `schema` argument and an input count. They are in `tests/testthat/test-chat-schema.R` near lines 481 and 554. The defaults are `score_schema` and today's inputs. Write the AC1 to AC4 tests there first, and see them fail.
-- [ ] T2: In `R/chat.R`, add a helper that reads the column names and types from the schema by the AC1 and AC2 rules. Add a second helper that reads one cell by the AC3 and AC4 rules. A reply that is a named list and not a data frame counts as a JSON object. Read fields with `[[`, never with `$`. Add the columns after `add_reply_columns()` in the data-frame branch, near line 1740.
-- [ ] T3: Update the `names()` assertion near line 135 of `tests/testthat/test-chat-batch-usage.R`. `score_schema` now adds a `score` column there.
+- [x] T1: Give `batch_with_reply()` and `batch_with_sequence()` a `schema` argument and an input count. They are in `tests/testthat/test-chat-schema.R` near lines 481 and 554. The defaults are `score_schema` and today's inputs. Write the AC1 to AC4 tests there first, and see them fail.
+- [x] T2: In `R/chat.R`, add a helper that reads the column names and types from the schema by the AC1 and AC2 rules. Add a second helper that reads one cell by the AC3 and AC4 rules. A reply that is a named list and not a data frame counts as a JSON object. Read fields with `[[`, never with `$`. Add the columns after `add_reply_columns()` in the data-frame branch, near line 1740.
+- [x] T3: Update the `names()` assertion near line 135 of `tests/testthat/test-chat-batch-usage.R`. `score_schema` now adds a `score` column there. The same holds for the two other `names()` assertions in that file and for the schema case of "the other routes add the usage columns and no stats column" in `tests/testthat/test-chat-batch.R`.
 - [ ] T4: Add the AC6 name check to the argument checks of `lms_chat_batch()`. It goes after `format` is matched and before `stop_if_no_server()`, near line 1504. Test it in the pattern of `tests/testthat/test-arg-guards.R`, which follows D-008.
 - [ ] T5: Write the AC5 tests in `tests/testthat/test-chat-schema.R`.
 - [ ] T6: Rewrite the `@return` passages of `lms_chat_batch()` that say that the reply columns follow `output` and end the frame. They are near lines 1363 and 1395. Add a NEWS entry that names the new columns and the abort on a property named `output`, under the D-001 waiver. Tie each added claim to a test from T1 to T5. Start the server and set `RLMSTUDIO_API_TOKEN`. Then run `devtools::document()`, `devtools::test()`, and `devtools::check()`.
@@ -57,6 +57,9 @@ With an object `schema` and `format = "data.frame"`, `lms_chat_batch()` returns 
 - 2026-09-28: plan gate chose an abort on a bad or clashing property name over a prefix on every column or a skipped column. A prefix lengthens every name, and a skipped column gives no sign. Falsified by a user whose schema needs a clashing name in a data frame.
 - 2026-09-28: plan chose columns from the schema over columns from the reply fields, so the shape does not depend on the model's answers. Falsified by users whose schemas do not list their properties.
 - 2026-09-28: plan chose an integer column for `"integer"` over a double column, because the schema states whole numbers. Falsified by real replies whose integer fields fall outside the integer range.
+- 2026-09-28: implement started on branch m051-batch-schema-columns. No question gate, because the plan left no choice open.
+- 2026-09-28: T1 and T2 done. The helpers take `schema` and `inputs`, the AC1 to AC4 tests failed first, and `schema_property_columns()` and `schema_property_cell()` make them pass.
+- 2026-09-28: minor amendment to T3. Two more `names()` assertions in `test-chat-batch-usage.R` and one in `test-chat-batch.R` also expect the `score` column. T3 done, and `devtools::test()` is clean.
 
 ## Decisions
 

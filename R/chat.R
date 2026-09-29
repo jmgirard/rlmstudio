@@ -1334,6 +1334,125 @@ reply_columns <- list(
 )
 reply_columns$openai <- reply_columns$openresponses
 
+# The column type that each JSON Schema `type` gives a property column of a
+# data-frame batch. Any other `type` gives a list-column.
+schema_column_types <- c(
+  string = "character",
+  integer = "integer",
+  number = "double",
+  boolean = "logical"
+)
+
+#' Read the property columns that a schema adds to a data-frame batch
+#'
+#' An object schema has a `type` of `"object"`, as a string or as a list that
+#' holds that one string, and a `properties` list of one or more entries with
+#' a names attribute. Only the top-level properties get columns. The columns
+#' come from the schema and not from the replies, so they are there even when
+#' every input failed (D-027).
+#'
+#' @param schema The value the caller passed as `schema`, already checked by
+#'   `rlm_check_schema()`.
+#' @return `NULL` for a schema that is not an object schema. Otherwise a
+#'   character vector named by the properties, in their order, that holds
+#'   each column type: `"character"`, `"integer"`, `"double"`, `"logical"`,
+#'   or `"list"`. A name can be empty or `NA`, which the caller checks.
+#'
+#' @noRd
+schema_property_columns <- function(schema) {
+  if (!is.list(schema) || !identical(one_schema_type(schema[["type"]]), "object")) {
+    return(NULL)
+  }
+  properties <- schema[["properties"]]
+  if (!is.list(properties) || length(properties) == 0L || is.null(names(properties))) {
+    return(NULL)
+  }
+  types <- vapply(properties, property_column_type, character(1), USE.NAMES = FALSE)
+  names(types) <- names(properties)
+  types
+}
+
+# One type name, written as a string or as a list that holds that one string,
+# or NULL for any other value.
+one_schema_type <- function(x) {
+  if (is.list(x) && length(x) == 1L) {
+    x <- x[[1L]]
+  }
+  if (is_one_string(x)) x else NULL
+}
+
+# The column type of one schema property. A type paired with "null" gives the
+# column type of that type, because the cell of a null field is NA anyway.
+property_column_type <- function(property) {
+  if (!is.list(property)) {
+    return("list")
+  }
+  type <- property[["type"]]
+  one <- one_schema_type(type)
+  is_pair <- (is.character(type) || is.list(type)) &&
+    length(type) == 2L &&
+    all(vapply(type, is_one_string, logical(1)))
+  if (is.null(one) && is_pair) {
+    parts <- unlist(type, use.names = FALSE)
+    if (sum(parts == "null") == 1L) {
+      one <- parts[parts != "null"]
+    }
+  }
+  if (!is.null(one) && one %in% names(schema_column_types)) {
+    schema_column_types[[one]]
+  } else {
+    "list"
+  }
+}
+
+#' Read one property cell of a data-frame batch
+#'
+#' A cell of an atomic column holds the field when it is one value of the
+#' column type, and `NA` otherwise. The `output` column keeps the parsed
+#' reply, so a value that does not fit is not lost and gives no warning, as
+#' for the reply columns (D-013). A cell of a list-column holds the field as
+#' parsed, or `NULL` when the field is absent or `null`. The field is read
+#' with `[[`, because `$` would read a field whose name only starts with the
+#' one asked for.
+#'
+#' @param result One element of the batch results: a parsed reply, or the
+#'   condition of a failed input.
+#' @param name Character. The property name.
+#' @param type Character. The column type from `schema_property_columns()`.
+#' @return One value of the column type, or any value for a list-column.
+#'
+#' @noRd
+schema_property_cell <- function(result, name, type) {
+  # A JSON array of objects parses to a data frame, and a failed input holds
+  # a condition. Both are named lists with a class, and neither is a reply
+  # object. A parsed JSON object has no class.
+  field <- if (is_json_object(result) && !is.object(result)) {
+    result[[name]]
+  }
+  switch(
+    type,
+    character = string_or_na(field),
+    integer = integer_or_na(field),
+    double = number_or_na(field),
+    logical = if (is.logical(field) && length(field) == 1L) field else NA,
+    list = field
+  )
+}
+
+# One integer, or a whole double in the integer range, else NA. The range
+# leaves out -2147483648, which R uses for NA_integer_.
+integer_or_na <- function(x) {
+  if (is.integer(x) && length(x) == 1L) {
+    return(x)
+  }
+  whole <- is.double(x) &&
+    length(x) == 1L &&
+    is.finite(x) &&
+    x == trunc(x) &&
+    abs(x) <= .Machine$integer.max
+  if (whole) as.integer(x) else NA_integer_
+}
+
 #' Batch Chat Completion with LM Studio
 #'
 #' Process a vector of inputs sequentially through LM Studio.
@@ -1501,9 +1620,15 @@ lms_chat_batch <- function(
     )
   }
 
+  has_logprobs <- isTRUE(args[["logprobs"]])
+  # A data frame of parsed replies adds one column per schema property
+  # (D-027). A data frame with logprobs holds text replies, so it adds none.
+  property_columns <- if (format == "data.frame" && !has_logprobs) {
+    schema_property_columns(schema)
+  }
+
   stop_if_no_server(host)
 
-  has_logprobs <- isTRUE(args[["logprobs"]])
   # Each result is a parsed reply of any shape, not one string.
   has_parsed <- !is.null(schema) && isTRUE(simplify) && !has_logprobs
   should_be_quiet <- is_quiet(quiet)
@@ -1737,11 +1862,32 @@ lms_chat_batch <- function(
     df
   }
 
+  # Keyed on the schema, not on the replies, so the columns and their types
+  # are there even when every input failed (D-027).
+  add_property_columns <- function(df) {
+    for (name in names(property_columns)) {
+      type <- property_columns[[name]]
+      df[[name]] <- if (type == "list") {
+        lapply(results, schema_property_cell, name = name, type = type)
+      } else {
+        vapply(
+          results,
+          schema_property_cell,
+          vector(type, 1L),
+          name = name,
+          type = type,
+          USE.NAMES = FALSE
+        )
+      }
+    }
+    df
+  }
+
   if (format == "data.frame") {
     if (has_parsed) {
       df <- data.frame(input = inputs, stringsAsFactors = FALSE)
       df$output <- results
-      return(add_reply_columns(df))
+      return(add_property_columns(add_reply_columns(df)))
     }
 
     # Keyed on the argument, not on the results, so the column is there even
