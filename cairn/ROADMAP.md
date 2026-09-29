@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-29 (M051 done, M048 row pruned, one candidate row a
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M052 | The two list functions check their arguments before any request | planned | none | normal | milestones/M052-list-arg-checks.md |
+| M052 | The two list functions check their arguments before any request | review | none | normal | milestones/M052-list-arg-checks.md |
 | M051 | A schema data-frame batch returns one column per schema property | done | none | normal | milestones/archive/M051-batch-schema-columns.md |
 | M050 | A table of loaded model instances | done | none | normal | milestones/archive/M050-list-instances.md |
 | M049 | A chat call aborts on a reply from a different model | done | none | normal | milestones/archive/M049-chat-model-mismatch.md |

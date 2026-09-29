@@ -1,5 +1,10 @@
 # rlmstudio (development version)
 
+* `list_models()` and `list_instances()` now check `type` and `quiet`, and `list_models()` also checks `loaded` and `detailed`. A bad value aborts with a message that names the argument. It aborts before the check for a running server and sends no request. Before, `quiet = NA` failed with a base R error after the request, on a call that matched no model. `type = 1` returned an empty data frame, and `loaded = "yes"` acted as `FALSE`. `quiet = 1` acted as `TRUE`, and it now aborts too.
+  * `type` must be a character vector of one or more elements, and no element can be `NA`, empty, or whitespace only. A factor aborts. A type that no model has, such as `"vlm"`, still returns an empty data frame and a message.
+  * `quiet` must be `TRUE`, `FALSE`, or `NULL`. `NULL` is new. If the `rlmstudio.quiet` option is not `TRUE`, `NULL` prints the message, as `FALSE` does.
+  * `loaded` and `detailed` must be `TRUE` or `FALSE`.
+
 * With `api_type = "openai"`, an object `schema`, `format = "data.frame"`, and `logprobs = FALSE`, `lms_chat_batch()` now adds one column per top-level property of the schema. The columns come after the four reply columns, in the order of `properties`, and have the property names. The `output` list-column stays. The columns come from the schema and not from the replies. If every input failed, they are still there.
   * A `"string"`, `"integer"`, `"number"`, or `"boolean"` property gives a character, integer, double, or logical column. A pair of such a type and `"null"` gives the same column type. Any other property gives a list-column, and a nested object gets no columns of its own.
   * A field that is not one value of the column type gives `NA` with no warning, and `output` keeps the value. A list-column cell is `NULL` for an absent or `null` field. A reply that is not a JSON object and the row of a failed input give `NA` and `NULL` cells.
