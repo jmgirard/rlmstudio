@@ -117,7 +117,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       read the cleaned text before the cut. Test every AC2 rule through
       `lms_server_start()` first, and see each new test red before the
       code changes.
-- [ ] T2: Route the failed runs of `lms_server_stop()` and
+- [x] T2: Route the failed runs of `lms_server_stop()` and
       `lms_daemon_start()` through the helper with `The CLI said:`. Add the
       not-running exit to `lms_server_stop()` through `rlm_alert_info()`.
       Add one table-driven test file that runs three functions over the
@@ -156,6 +156,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: plan chose to strip ANSI codes over leaving them. `lms` wrote none into a pipe on 2026-09-29, but `lms_daemon_status()` strips them and a forced-color setting passes them. Falsified by a CLI message whose meaning depends on an escape sequence.
 - 2026-09-29: implement started. No question gate, because the plan left no open choice.
 - 2026-09-29: T1 done. `cli_output_clean()` and `cli_output_cut()` split out of `cli_output_text()` in `R/serve.R`. New `test-cli-output.R` ran red on the escape and cut rules before the change. A cut with no token step turned the three token cases red. `devtools::test()`: 547 tests, 0 failed, 3 skipped.
+- 2026-09-29: T2 done. New `rlm_abort_cli_run()` in `R/serve.R` builds the abort for server start, server stop, and daemon start. `lms_server_stop()` has the not-running exit. The code came before its tests, so the new tests ran against the T1 code: every case but "no text" went red. `devtools::test()`: 550 tests, 0 failed, 3 skipped.
 
 ## Decisions
 

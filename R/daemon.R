@@ -38,9 +38,7 @@ lms_daemon_start <- function() {
   if (res$status == 0) {
     rlm_alert_success("LM Studio daemon started in the background.")
   } else {
-    cli::cli_abort(
-      "Failed to start the LM Studio daemon. Exit code: {.val {res$status}}."
-    )
+    rlm_abort_cli_run("Failed to start the LM Studio daemon.", res)
   }
 
   invisible(res$status)

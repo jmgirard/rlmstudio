@@ -150,14 +150,7 @@ lms_server_start <- function(
       )
     }
   } else {
-    # The CLI text is spliced in as a value, so cli does not run its braces
-    # (LESSONS, M012).
-    output <- cli_output_text(res)
-    msg <- "Failed to start the LM Studio server. Exit code: {.val {res$status}}."
-    if (!is.null(output)) {
-      msg <- c(msg, "x" = "The CLI said: {output}")
-    }
-    cli::cli_abort(msg)
+    rlm_abort_cli_run("Failed to start the LM Studio server.", res)
   }
 
   if (wait > 0) {
@@ -165,6 +158,40 @@ lms_server_start <- function(
   }
 
   invisible(res$status)
+}
+
+#' Abort for a failed CLI run
+#'
+#' The message gives the exit code. If the run wrote any text, a bullet
+#' quotes it after `label`, as `cli_output_text()` gives it.
+#'
+#' @param what The first sentence of the message. It is a cli format string,
+#'   so it never holds text from the CLI.
+#' @param res The list `processx::run()` returned.
+#' @param text The text of `cli_output_clean(res)`, for a caller that has
+#'   already read it.
+#' @param label The words before the quoted text.
+#' @param hint Further bullets, as cli format strings.
+#' @param call The call the error names.
+#'
+#' @noRd
+rlm_abort_cli_run <- function(
+  what,
+  res,
+  text = cli_output_clean(res),
+  label = "The CLI said",
+  hint = NULL,
+  call = parent.frame()
+) {
+  status <- res$status
+  output <- cli_output_cut(text)
+  msg <- paste(what, "Exit code: {.val {status}}.")
+  # The CLI text is spliced in as a value, so cli does not run its braces
+  # (LESSONS, M012).
+  if (!is.null(output)) {
+    msg <- c(msg, "x" = paste0(label, ": {output}"))
+  }
+  cli::cli_abort(c(msg, hint), call = call)
 }
 
 #' Read the text a failed CLI run gave
@@ -393,13 +420,19 @@ lms_server_stop <- function() {
 
   if (res$status == 0) {
     rlm_alert_success("LM Studio server stopped successfully.")
-  } else {
-    cli::cli_abort(
-      "Failed to stop the LM Studio server. Exit code: {.val {res$status}}."
-    )
+    return(invisible(res$status))
   }
 
-  invisible(res$status)
+  # With no server running, the CLI exits 1 and writes "Error: The server is
+  # not running." to stderr (lms, 2026-09-29). A second stop is then a
+  # no-op. The phrase is read before the cut, so a long text still matches.
+  text <- cli_output_clean(res)
+  if (!is.null(text) && grepl("not running", text, ignore.case = TRUE)) {
+    rlm_alert_info("The LM Studio server is already stopped.")
+    return(invisible(res$status))
+  }
+
+  rlm_abort_cli_run("Failed to stop the LM Studio server.", res, text = text)
 }
 
 #' Build arguments for lms_server_status

@@ -7,7 +7,17 @@ cli_squish <- function(x) gsub("\\s+", " ", trimws(x))
 
 # Each entry runs one function so that it reaches its failure branch.
 cli_callers <- list(
-  lms_server_start = function() lms_server_start(wait = 0)
+  lms_server_start = function() lms_server_start(wait = 0),
+  lms_server_stop = function() lms_server_stop(),
+  lms_daemon_start = function() lms_daemon_start()
+)
+
+# The first sentence of each abort.
+cli_whats <- c(
+  lms_server_start = "Failed to start the LM Studio server.",
+  lms_server_stop = "Failed to stop the LM Studio server.",
+  lms_daemon_start = "Failed to start the LM Studio daemon.",
+  lms_daemon_stop = "Failed to stop the LM Studio daemon."
 )
 
 # Run `caller` against a CLI that returns `res`, and return the squished
@@ -38,6 +48,49 @@ expect_cli_said <- function(message, text, name) {
 }
 
 bytes <- function(...) rawToChar(as.raw(c(...)))
+
+test_that("a failed run gives the exit code and quotes stderr first", {
+  cases <- list(
+    stderr = list(res = list(stdout = "", stderr = "from stderr\n"), said = "from stderr"),
+    stdout = list(res = list(stdout = "from stdout\n", stderr = ""), said = "from stdout"),
+    both = list(res = list(stdout = "from stdout", stderr = "from stderr"), said = "from stderr"),
+    blank_stderr = list(res = list(stdout = "from stdout", stderr = " \n "), said = "from stdout")
+  )
+  for (name in names(cli_callers)) {
+    for (case in names(cases)) {
+      res <- c(list(status = 2L), cases[[case]]$res)
+      got <- cli_failure(cli_callers[[name]], res)
+      label <- paste(name, case)
+      expect_true(
+        grepl(paste(cli_whats[[name]], "Exit code: 2."), got$message, fixed = TRUE),
+        label = label
+      )
+      expect_cli_said(got$message, cases[[case]]$said, label)
+      if (case == "both") {
+        expect_false(grepl("from stdout", got$message, fixed = TRUE), label = label)
+      }
+    }
+  }
+})
+
+test_that("a failed run with no text gives the exit code alone", {
+  empties <- list(
+    list(status = 1L),
+    list(status = 1L, stdout = NULL, stderr = NULL),
+    list(status = 1L, stdout = NA_character_, stderr = NA_character_),
+    list(status = 1L, stdout = "\f ", stderr = " \n\t")
+  )
+  for (name in names(cli_callers)) {
+    for (res in empties) {
+      got <- cli_failure(cli_callers[[name]], res)
+      expect_true(
+        grepl(paste(cli_whats[[name]], "Exit code: 1."), got$message, fixed = TRUE),
+        label = name
+      )
+      expect_false(grepl("The CLI said", got$message, fixed = TRUE), label = name)
+    }
+  }
+})
 
 test_that("the quoted text shows a byte that is not valid UTF-8 as <xx>", {
   stderr <- paste0("bad ", bytes(0xff), " here\n")
@@ -137,5 +190,39 @@ test_that("a cut inside a <xx> token drops the part of the token", {
         info = paste(name, n)
       )
     }
+  }
+})
+
+# The stop exits. A stop whose CLI text says that nothing runs is a no-op
+# with an info message, not an abort.
+
+# Run `code` against a CLI that returns `res`, with the quiet option off.
+stop_exit <- function(code, res) {
+  withr::local_options(rlmstudio.quiet = FALSE)
+  local_mocked_bindings(lms_path = function() "lms")
+  local_mocked_bindings(run = function(...) res, .package = "processx")
+  value <- NULL
+  shown <- capture_shown(value <- withVisible(code))
+  c(shown, list(value = value))
+}
+
+# Recorded from `lms server stop` with no server running, on 2026-09-29. It
+# exited 1.
+server_not_running <- "Error: The server is not running.\n"
+
+test_that("lms_server_stop is a no-op when no server runs", {
+  texts <- c(
+    recorded = server_not_running,
+    bad_byte = paste0("Error: The server is not running. ", bytes(0xff), "\n"),
+    far = paste0("Error: The server is NOT RUNNING. ", strrep("5", 1500))
+  )
+  for (name in names(texts)) {
+    got <- stop_exit(
+      lms_server_stop(),
+      list(status = 1L, stdout = "", stderr = texts[[name]])
+    )
+    expect_null(got$error)
+    expect_match(got$messages, "server is already stopped", fixed = TRUE, info = name)
+    expect_identical(got$value, list(value = 1L, visible = FALSE), info = name)
   }
 })
