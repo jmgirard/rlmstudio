@@ -34,7 +34,7 @@ stay candidates in the ROADMAP.
 
 ## Acceptance criteria
 
-- [ ] AC1: A render of either vignette leaves two facts as they were before
+- [x] AC1: A render of either vignette leaves two facts as they were before
       it. The first fact is the `running` field of `lms server status
       --json`. The second fact is whether `lms ps --json` lists
       `google/gemma-3-1b`. This holds from four starting states: the server
@@ -43,21 +43,21 @@ stay candidates in the ROADMAP.
       render runs `rmarkdown::render(output_dir = tempdir())` after
       `devtools::install()` of the branch. Each reads both facts before and
       after the render.
-- [ ] AC2: The sweep `grep -nE
+- [x] AC2: The sweep `grep -nE
       'lms_(load|unload|unload_all|download|server_start|server_stop|daemon_start|daemon_stop)\('
       $(grep -l 'skip_if_no_server()' tests/testthat/*.R)` lists no call
       that runs outside an `httptest2::with_mock_dir()` block. With the
       server running and `google/gemma-3-1b` loaded before it, a
       `devtools::test(filter = "^(chat|integration)$")` run leaves the model
       loaded. `lms ps --json` is read before and after the run.
-- [ ] AC3: The two live tests in `tests/testthat/test-embed.R` that ask
+- [x] AC3: The two live tests in `tests/testthat/test-embed.R` that ask
       `list_models()` for the loaded embedding models take the list from a
       test helper that does not catch errors. A test mocks `list_models()`
       to raise three conditions in turn: `rlmstudio_api_error` at status
       401, `rlmstudio_bad_response`, and a plain `stop()` error. For each,
       it asserts that the helper raises that same condition class and
       signals no skip condition.
-- [ ] AC4: `grep -n 'rlm_token(' R/*.R` lists two call sites: the body of
+- [x] AC4: `grep -n 'rlm_token(' R/*.R` lists two call sites: the body of
       `lms_client()` and the argument check in `lms_server_start()`. For each
       hit of `grep -n 'rlm_abort_api(' R/*.R` outside a roxygen comment
       line, a test drives the wrapper that reaches it to a 401 reply twice.
@@ -67,7 +67,7 @@ stay candidates in the ROADMAP.
       second run, no token source holds a token at request build, and the
       option is set before the reply. That run asserts the hint that names
       `RLMSTUDIO_API_TOKEN`.
-- [ ] AC5: `devtools::test()` and `devtools::check()` run with 0 errors and
+- [x] AC5: `devtools::test()` and `devtools::check()` run with 0 errors and
       0 warnings. NEWS.md has an entry for the hint change and one for the
       vignette change.
 
@@ -141,3 +141,37 @@ stay candidates in the ROADMAP.
 ## Decisions
 
 ## Review
+
+Branch head 9a88b28, synced with main (main had not moved). Evidence gathered 2026-09-29.
+
+- AC1: After `devtools::install()` of 9a88b28, the eight renders (two vignettes, four starting states) all exited 0. Each left `running` and the count of `google/gemma-3-1b` instances in `lms ps --json` as they were before it (1 or 0 each time). A first harness run was void. Its `lms load` added a second instance, so no "not loaded" state existed. The rerun unloaded every instance first. Liveness control: I rendered both vignettes from a stopped server with no model and kept the HTML. Both files show the unload and stop output, so the live chunks ran.
+- AC2: The sweep reads four files and lists five calls: `test-integration.R:15` and `:25`, `test-chat.R:13`, `:14`, and `:35`. All five sit inside `httptest2::with_mock_dir()` blocks. With the token set, the server running, and `google/gemma-3-1b` loaded, `devtools::test(filter = "^(chat|integration)$")` gave 0 failures, 0 skips, and 1584 passes. `lms ps --json` listed the model before and after the run. The one "unloaded" line in the output took 4 ms, which is a replayed mock reply.
+- AC3: `test-embed.R:1116` and `:1140` take the list from `loaded_embedding_models()` in `helper-skips.R`, which has no `tryCatch()`. `test-skip-helpers.R` mocks `list_models()` to raise `rlmstudio_api_error` at 401, `rlmstudio_bad_response`, and a `stop()` error. For each, it asserts the same class and no skip. With the real helper, the file gave 10 passes and 0 failures. Planted defect: a helper with the old `tryCatch()` fallback, run with helper loading off, gave 7 failures.
+- AC4: `grep -n 'rlm_token(' R/*.R` lists two sites, `R/chat.R:2013` in `lms_client()` and `R/serve.R:136` in `lms_server_start()`. The `rlm_abort_api(` grep lists nine sites outside roxygen lines, in `chat.R` (3), `download.R` (2), `load.R`, `list.R`, `embed.R`, and `unload.R`. `test-token-hint.R` holds one table entry per site and asserts that the table size equals the grep count. It drives each site to a 401 twice, once per AC4 run, and asserts the matching hint. On the branch, the file gave 131 passes and 0 failures. Control: the same tests against main's `R/` plus the new helper gave 32 failures, 16 per run. That is two per run at each of the eight non-embed sites. The embed site passes against main too, because main already computed its flag at request build and not after the reply.
+- AC5: With the token set, `devtools::test()` gave 0 failures, 0 errors, 0 warnings, 0 skips, and 14777 passes. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and the server and model state was the same before and after it. NEWS.md has one entry for the hint change and one for the vignette teardown.
+
+Consistency gate: `cairn_validate.py` exited 0 with all checks passed. `devtools::document()` left `NAMESPACE` and `man/` unchanged. The branch does not touch `README.Rmd`, and the repo has no `_pkgdown.yml`. The branch adds no top-level file. NEWS.md has both entries, with no milestone numbers. The branch changes no DESIGN principle, so `cairn_impact` did not run.
+
+Independent review: three fresh reviewers ran. [O] is the diff reviewer, [B] the blame-history reviewer, and [P] the prior-review reviewer. The PR-comment probe found no review comments. Findings, most severe first, with the disposition proposed at the gate:
+
+- O1 (medium): On a real headless host, the `stop-stack` chunk of `headless-config.Rmd` stops the daemon, and the models go with it. A model loaded before the build is then gone after it, so AC1 fails there. The AC1 procedure ran on macOS, where the desktop app keeps the daemon running. Proposed: amendment return on AC1, and the case joins the headless-daemon candidate row.
+- O2 (low-medium): `lms_server_status(json = TRUE)` parses stdout joined with stderr. If stderr holds a notice, the parse fails, the vignette reads the server as stopped, and the build stops a server that ran before it. Proposed: follow-up, a new candidate row.
+- O3 (low): `headless-config.Rmd` reads the server state after `lms_daemon_start()`. If a daemon start also starts the server, the build leaves both running. Not confirmed. Proposed: follow-up, into the headless-daemon row.
+- O4 (low), with B3: `request_sends_token()` reads the httr2 field `req$headers`, and DESCRIPTION has no httr2 floor. httr2 exports `req_get_headers()`. Proposed: follow-up, a new candidate row, because a version floor is a dependency change.
+- O5 (low): `test-token-hint.R` asserts the header with `request_sends_token()`, the function under test. Proposed: fix now, with an independent read through `request_target(redact_headers = FALSE)`.
+- O6 (low): the site-table test compares counts only. Proposed: reject. A removed site fails its own table entry, because its call no longer raises its label.
+- O7 (low): the `request_sends_token()` comment says each wrapper reads the request it built, but `lms_embed()` reads the client. Proposed: fix now, a comment edit.
+- O8 (low): `test-mock-http-helper.R` expects the httr2 1.3 class `httr2_redacted_sentinel`, with no version pin. Proposed: follow-up, in the O4 row.
+- O9 (low): the live test at `test-list-instances.R:410` still turns a refused model list into a skip, the pattern this milestone removed from the embedding tests. Proposed: follow-up, a new candidate row.
+- O10 (low): `getting-started.Rmd:157` says the build leaves the state as it found it. That holds only for a build that finishes. Proposed: fix now, a prose edit.
+- O11 (cosmetic): four assertions in `test-token-hint.R` have no `info = site$label`. Proposed: fix now.
+- O12 (process): the Review section was empty and the criteria unticked at handoff. Proposed: noted, this section closes it.
+- B1 (low): the live embedding tests now fail where they skipped before, with no D-entry. Proposed: noted, the plan-gate work-log line records the choice.
+- B2 (low): a failed re-record of a fixture no longer unloads the model. Proposed: reject. A re-record is a manual step, and the unload inside the mock block remains.
+- B4, with P1 (low): `request_target()` now redacts by default, which reverses the M009 default. Proposed: reject, T5 called for it.
+- B6 (low): if the server ran before the build, the `with-daemon` chunk does not run. Proposed: reject, T1 called for it.
+- B7 (low): `headless-config.Rmd` still stops a daemon that ran before the build. Proposed: reject, pre-existing and already in the headless-daemon row.
+- B8 (low): the M009 lesson in `LESSONS.md` says a check can leave the server off, which this milestone makes false. Proposed: fix at hygiene.
+- P2 (low): `request_body_text()` dry-runs with `redact_headers = FALSE`. Proposed: reject. The dry run is quiet and returns only the body.
+- P3 (low): the `model-before` chunk calls `list_models()` and can fail on a server that rejects the token. Proposed: reject. If `lms_ready` is FALSE, the chunk does not run, and `lms_server_ready()` reports FALSE for a rejected token.
+- B5, B9, P4: no finding.
