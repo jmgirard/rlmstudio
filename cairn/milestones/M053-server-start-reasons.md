@@ -42,7 +42,7 @@ If its own checks or the LM Studio CLI refuse a start, `lms_server_start()` says
 - [x] T1: Write the AC1 and AC2 tests first in `tests/testthat/test-serve.R`, and make sure that they fail against the current code. Add `port_fault()` and `rlm_check_port()` to `R/utils-args.R`, next to `rlm_check_wait()`. Follow the `wait_fault()` style: a plain-text detail with no cli braces. Call `rlm_check_port(port)` and `rlm_check_flag(cors, "cors")` beside `rlm_check_wait(wait)` at `R/serve.R:109`. Make `build_args_server_start()` send `as.character(as.integer(port))` with names dropped. In a scratch copy, delete each new call and make sure that its test goes red.
 - [x] T2: Write the AC3 tests first. Then make the failed-start abort at `R/serve.R:133-137` add a CLI-output line. Splice the CLI text in as a value, so cli does not run its braces (LESSONS, M012). Treat a `stderr` or `stdout` field that is absent, `NULL`, or `NA` as empty, as the mock at `tests/testthat/test-serve.R:26` returns neither. Keep the `processx::run()` call to `command`, `args`, and `error_on_status`. Otherwise, update the mocks at `tests/testthat/test-token-wrappers.R:141-146` and `283-299` too.
 - [x] T3: Update the `@param port` and `@param cors` text, the fault-count paragraph at `R/serve.R:63`, and a sentence on the failed-start abort. Rewrite the comment at `R/serve.R:225-231`. Run `devtools::document()`. Add the `NEWS.md` entry.
-- [ ] T4: Run `devtools::test()`. Run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server started, because the vignettes make live calls (LESSONS, M009).
+- [x] T4: Run `devtools::test()`. Run `devtools::check()` with `RLMSTUDIO_API_TOKEN` set and the server started, because the vignettes make live calls (LESSONS, M009).
 
 ## Work log
 
@@ -58,6 +58,7 @@ If its own checks or the LM Studio CLI refuse a start, `lms_server_start()` says
 - 2026-09-28: T1 done. The AC1 and AC2 tests failed 81 times before the fix. In a scratch copy, removing `rlm_check_port(port)` or the `cors` flag check turned only its own test red. `devtools::test()` clean.
 - 2026-09-28: T2 done. Six AC3 cases failed before the fix, and the no-output case passed, as it must. The `processx::run()` call is unchanged, so the token-wrapper mocks needed no edit. `devtools::test()` clean.
 - 2026-09-28: T3 done. The `warn_unless_ready()` comment now says each input of the target is checked before the probe, since `server_status_port()` already drops a port outside 1 to 65535. `devtools::document()` and `devtools::test()` clean.
+- 2026-09-28: T4 done. With the server started and `RLMSTUDIO_API_TOKEN` set, `devtools::test()` had no failures and no skips, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 
