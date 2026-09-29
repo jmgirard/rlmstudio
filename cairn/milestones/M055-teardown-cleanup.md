@@ -206,3 +206,21 @@ Branch head 7206ce5, after the AC1 amendment. Main had not moved. Evidence gathe
 - AC5: With the token set, `devtools::test()` gave 0 failures, 0 errors, 0 warnings, 0 skips, and 14777 passes. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The server ran and `google/gemma-3-1b` was loaded before the test run, between the runs, and after the check. NEWS.md has one entry for the hint change and one for the vignette teardown.
 
 Consistency gate (second pass): `cairn_validate.py` passed every check. `devtools::document()` left `NAMESPACE` and `man/` unchanged. The branch does not touch `README.Rmd` or `DESIGN.md`, and the repo has no `_pkgdown.yml`. The branch adds no top-level file, and NEWS.md names no milestone.
+
+Independent review (second pass): three fresh reviewers ran on the full diff at 7206ce5. The ids take an `S-` prefix to keep them apart from the first pass. The PR-comment probe returned no comments. No finding shows an acceptance criterion failing. Findings, most severe first, with the proposed disposition:
+
+- S-O1, with S-B5 (medium-low): the NEWS vignette entry has no host condition. On a headless host with the server stopped and the model loaded, `stop-stack` runs `lms_daemon_stop()`, and the model goes with the daemon. The entry implies that the build now keeps the model. Proposed: fix now, a NEWS prose edit.
+- S-O2 (medium-low): `headless-config.Rmd:150-152` and `:177` say that the build unloads the model only if it was not loaded before, and only if the block loaded it. That is true of the `lms_unload()` calls. On a headless host, the `lms_daemon_stop()` in `stop-stack` and the `on.exit()` stop in `with_lms_daemon()` (`R/daemon.R:201`) also unload the models. Proposed: fix now, a vignette prose edit.
+- S-O3 (low): `getting-started.Rmd:157` says that a finished build leaves the server and model state as it found them, with no host condition. No render on a headless host backs that. Proposed: fix now, a vignette prose edit.
+- S-O4 (low): the O5 fix calls `request_target()` inside the site loops of `test-token-hint.R`. `request_target()` calls `require_httpuv()`, which skips when httpuv is absent and CI is unset. The skip then ends the whole block, so no site's hint check runs. Proposed: fix now, with the header reads in their own blocks.
+- S-P2 (low): the site-count test in `test-token-hint.R` leaves out roxygen lines but counts a plain `#` comment that names `rlm_abort_api(`, and it counts two calls on one line as one. Proposed: fix now, with comment lines left out and every call on a line counted.
+- S-O5 (process): the Goal has no host condition. The mini gate settled that with the Scope Out sentence. Proposed: noted, because the S-O1 to S-O3 fixes close what users read.
+- S-B1 (low): `request_target()` now returns a body that is not JSON as text, where the parse error once caught a malformed body. Proposed: reject, because T5 called for it, and a test that reads a body field still errors on text.
+- S-B2 (low): the removed `on.exit()` unload leaves a model loaded after a failed live re-record. Proposed: reject, the first-pass B2 reason.
+- S-B3 (low): the "When this vignette is built" paragraphs put build text in user docs. Proposed: reject, because T1 called for the gates and the paragraphs explain them.
+- S-B4, with S-P3 (low): the embed site in the hint table cannot fail against a revert. Proposed: noted, T6 and the AC4 control already record it.
+- S-B6 (low): the `model-before` chunks call `list_models()` after the readiness check. Proposed: reject, the first-pass P3 reason.
+- S-B7 (low): `request_sends_token()` reads `req$headers`, and DESCRIPTION has no httr2 floor. Proposed: noted, the O4 candidate row holds it.
+- S-O6 (cosmetic): the `with-daemon` example carries build bookkeeping. Proposed: reject, T1 called for it.
+- S-P1 (low): the M009 lesson in `LESSONS.md` is stale. Proposed: fix at hygiene, as the first-pass B8.
+- S-P4 (low): `request_target()` now redacts by default. Proposed: reject, the first-pass B4 reason.
