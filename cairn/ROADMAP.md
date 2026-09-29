@@ -9,6 +9,7 @@ _Last hygiene check: 2026-09-29 (M050 done, M047 row pruned, no lesson added)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M051 | A schema data-frame batch returns one column per schema property | planned | none | normal | milestones/M051-batch-schema-columns.md |
 | M050 | A table of loaded model instances | done | none | normal | milestones/archive/M050-list-instances.md |
 | M049 | A chat call aborts on a reply from a different model | done | none | normal | milestones/archive/M049-chat-model-mismatch.md |
 | M048 | The embedding help page describes the cut of a text longer than the context | done | none | normal | milestones/archive/M048-embed-context-cut.md |
@@ -28,7 +29,6 @@ _Last hygiene check: 2026-09-29 (M050 done, M047 row pruned, no lesson added)_
 - The chat wrappers send an `input` of length two as a JSON array rather than one prompt. M013 leaves the length alone, because narrowing a named formal is a permanent API restriction. Decide whether a length rule belongs there, added 2026-09-20, M013 plan gate
 - A `ttl` argument on `lms_load()`. On 2026-09-27, `/api/v1/models/load` answered 400 "Unrecognized key(s) in object: 'ttl'", and only `lms load --ttl` sets it. Promote once the load endpoint accepts `ttl`. A user who needs a `ttl` on an explicit load is the other trigger, through the command-line route. M034 took the chat and embedding part of this row, added 2026-09-19, cairn/references/lmstudio-api-surface.md, M034 plan gate
 - Structured output on `/v1/responses` and `/api/v1/chat`. M017 covers `/v1/chat/completions` only, the one endpoint the LM Studio docs describe for it. Promote once the docs or a live request show that another endpoint honors a schema, added 2026-09-21, M017 scope
-- Bind parsed batch replies into data-frame columns. With `schema`, `lms_chat_batch(format = "data.frame")` returns an `output` list-column after M017, added 2026-09-21, M017 scope
 - `list_instances()` does not report four fields that only `lms ps --json` gives: the generation status, the queued requests, the ttl, and the last-used time. The REST model list does not carry them. Promote on a user who needs one of them, or once the REST list carries them, added 2026-09-28, M050 plan gate
 - Stateful chat on `/api/v1/chat`. The endpoint returns a `response_id` and continues a thread from `previous_response_id`. With `simplify = FALSE`, the body carries the id, and `...` passes `previous_response_id` through. No named argument or help text covers a thread, so GP4 asks for a named argument (corrected M022). M022 puts the id in a native data-frame batch, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - A shipped guard that keeps every raiser of `rlmstudio_no_server` and `rlmstudio_api_error` documented at the exported function that raises it. M007 bounds its promise to the call sites two named greps sweep, so a fresh `cli_abort(class = ...)` elsewhere escapes. A test that greps `R/` gates `devtools::test()` only, added 2026-09-18, M007 scope
