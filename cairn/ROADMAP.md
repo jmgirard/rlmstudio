@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-29 (M052 done, M049 row pruned, one candidate row a
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M053 | The server start call says why a start was refused | planned | none | normal | milestones/M053-server-start-reasons.md |
+| M053 | The server start call says why a start was refused | review | none | normal | milestones/M053-server-start-reasons.md |
 | M052 | The two list functions check their arguments before any request | done | none | normal | milestones/archive/M052-list-arg-checks.md |
 | M051 | A schema data-frame batch returns one column per schema property | done | none | normal | milestones/archive/M051-batch-schema-columns.md |
 | M050 | A table of loaded model instances | done | none | normal | milestones/archive/M050-list-instances.md |

@@ -86,6 +86,71 @@ wait_fault <- function(value) {
   NULL
 }
 
+#' Reject a port that is not one whole number from 1 to 65535
+#'
+#' `lms_server_start(port =)` names a TCP port, so the check runs before the
+#' CLI runs, for the reasons `rlm_check_wait()` states. It also names the R
+#' argument and states the valid range. `NULL` passes, because it leaves the
+#' port to LM Studio.
+#'
+#' @param value The value the caller passed.
+#' @param arg Character. The argument name to report.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_port <- function(value, arg = "port") {
+  if (is.null(value)) {
+    return(invisible(value))
+  }
+  fault <- port_fault(value)
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "{.arg {arg}} must be {.code NULL} or one whole number from 1 to 65535.",
+        "x" = "{fault}"
+      ),
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
+#' Which rule did this port break?
+#'
+#' Returns plain text rather than a cli string, for the reason `id_fault()`
+#' states. The first checks follow `wait_fault()`, so `NaN` is again a
+#' missing value.
+#'
+#' @param value The value the caller passed. Not `NULL`.
+#' @return A one-sentence detail, or `NULL` when the value is usable.
+#'
+#' @noRd
+port_fault <- function(value) {
+  if (is.atomic(value) && length(value) == 1L && is.na(value)) {
+    return("You gave a missing value.")
+  }
+  if (!is.numeric(value)) {
+    cls <- class(value)[[1]]
+    return(paste0("You gave ", article_for(cls), " ", cls, " value."))
+  }
+  if (!is.null(dim(value))) {
+    return("You gave an array rather than a single number.")
+  }
+  if (length(value) != 1L) {
+    return(paste0("You gave ", length(value), " values rather than one."))
+  }
+  if (!is.finite(value)) {
+    return("You gave a value that is not finite.")
+  }
+  if (value != trunc(value)) {
+    return("You gave a number that is not whole.")
+  }
+  if (value < 1 || value > 65535) {
+    return("You gave a number outside that range.")
+  }
+  NULL
+}
+
 #' Which rule did this model or job name break?
 #'
 #' Returns plain text rather than a cli string. The caller interpolates the

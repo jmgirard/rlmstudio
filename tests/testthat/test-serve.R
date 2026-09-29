@@ -395,6 +395,19 @@ test_that("lms_server_start warns when it cannot tell which host to ask", {
   expect_match(conditionMessage(warning), "port")
 })
 
+test_that("the success message and the readiness host print the port as digits", {
+  start_success()
+  fake_clock()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+  # Under this option a double 8080 prints as "8.08e+03".
+  withr::local_options(scipen = -5, rlmstudio.quiet = FALSE)
+
+  msgs <- testthat::capture_messages(lms_server_start(port = 8080))
+  expect_match(paste(msgs, collapse = ""), "on port 8080", fixed = TRUE)
+  expect_identical(stub$calls()[[1]]$host, "http://localhost:8080")
+})
+
 test_that("lms_server_start asks the host the caller gave", {
   start_success()
   fake_clock()
@@ -443,6 +456,250 @@ test_that("a bad wait aborts before the CLI runs", {
   err <- tryCatch(lms_server_start(wait = -1), condition = function(e) e)
   expect_s3_class(err, "rlang_error")
   expect_false(any(grepl("^rlmstudio", class(err))))
+})
+
+# The port and cors checks. The stub counts its calls and keeps the args of
+# the last one, so a test can say both whether the CLI ran and what it got.
+local_counting_run <- function(env = parent.frame()) {
+  state <- new.env()
+  state$calls <- 0L
+  state$args <- NULL
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) {
+      state$calls <- state$calls + 1L
+      state$args <- args
+      list(status = 0)
+    },
+    .package = "processx",
+    .env = env
+  )
+  # A value that slips past the checks would otherwise start a real wait.
+  local_mocked_bindings(lms_server_ready = function(...) TRUE, .env = env)
+  state
+}
+
+# Each rejected value runs once with wait = 0 and once with a host, so the
+# check cannot hide behind a branch on either.
+expect_start_rejects <- function(arg, value, rule, detail) {
+  runs <- local_counting_run()
+  extras <- list(list(wait = 0), list(host = "http://localhost:1234"))
+  for (extra in extras) {
+    call_args <- c(stats::setNames(list(value), arg), extra)
+    label <- paste0(arg, " = ", deparse(value), ", ", names(extra))
+    err <- tryCatch(
+      suppressMessages(do.call(lms_server_start, call_args)),
+      error = function(e) e
+    )
+    if (!inherits(err, "error")) {
+      fail(paste0(label, " did not abort."))
+      next
+    }
+    expect_false(any(grepl("^rlmstudio_", class(err))), label = label)
+    msg <- conditionMessage(err)
+    expect_match(msg, paste0("`", arg, "`"), fixed = TRUE, label = label)
+    expect_match(msg, rule, fixed = TRUE, label = label)
+    # The detail line names which fault this value has, so a swapped or
+    # dropped detail turns the test red.
+    expect_match(msg, detail, fixed = TRUE, label = label)
+  }
+  expect_identical(runs$calls, 0L)
+}
+
+test_that("a port that is not one whole number from 1 to 65535 aborts first", {
+  missing <- "You gave a missing value."
+  range <- "You gave a number outside that range."
+  # Each value comes with the detail its fault must give.
+  rejected <- list(
+    # Not one plain number.
+    list("8080", "You gave a character value."),
+    list("abc", "You gave a character value."),
+    list(TRUE, "You gave a logical value."),
+    list(NA, missing),
+    list(list(8080), "You gave a list value."),
+    list(factor("8080"), "You gave a factor value."),
+    list(c(8080, 8081), "You gave 2 values rather than one."),
+    list(numeric(0), "You gave 0 values rather than one."),
+    list(matrix(8080), "You gave an array rather than a single number."),
+    # Missing or not finite.
+    list(NA_real_, missing),
+    list(NA_integer_, missing),
+    list(NaN, missing),
+    list(Inf, "You gave a value that is not finite."),
+    list(-Inf, "You gave a value that is not finite."),
+    # Out of range or not whole.
+    list(-1, range),
+    list(0, range),
+    list(0L, range),
+    list(8080.5, "You gave a number that is not whole."),
+    list(65536, range),
+    list(99999, range),
+    list(1e10, range)
+  )
+  expect_length(rejected, 21L)
+  for (case in rejected) {
+    expect_start_rejects(
+      "port", case[[1]],
+      "must be `NULL` or one whole number from 1 to 65535", case[[2]]
+    )
+  }
+})
+
+test_that("an accepted port reaches the CLI as a whole-number string", {
+  # A negative scipen prints the double 8080 as "8.08e+03", so this option
+  # makes the integer step load-bearing.
+  withr::local_options(scipen = -5)
+  accepted <- list(1, 65535, 8080L, 8080, c(p = 8080))
+  sent <- c("1", "65535", "8080", "8080", "8080")
+  for (i in seq_along(accepted)) {
+    runs <- local_counting_run()
+    suppressMessages(lms_server_start(port = accepted[[i]], wait = 0))
+    expect_identical(runs$calls, 1L)
+    at <- match("--port", runs$args)
+    expect_false(is.na(at))
+    expect_identical(runs$args[[at + 1L]], sent[[i]])
+    expect_null(names(runs$args))
+  }
+
+  runs <- local_counting_run()
+  suppressMessages(lms_server_start(port = NULL, wait = 0))
+  expect_identical(runs$calls, 1L)
+  expect_false("--port" %in% runs$args)
+})
+
+test_that("a cors that is not TRUE or FALSE aborts first", {
+  rejected <- list(
+    list("yes", "You gave a character value."),
+    list(1, "You gave a numeric value."),
+    list(NA, "You gave NA."),
+    list(NULL, "You gave NULL."),
+    list(logical(0), "You gave 0 values rather than one."),
+    list(c(TRUE, FALSE), "You gave 2 values rather than one.")
+  )
+  for (case in rejected) {
+    expect_start_rejects(
+      "cors", case[[1]], "must be `TRUE` or `FALSE`", case[[2]]
+    )
+  }
+})
+
+test_that("cors = TRUE sends --cors and cors = FALSE does not", {
+  for (value in list(TRUE, c(x = TRUE), matrix(TRUE))) {
+    runs <- local_counting_run()
+    suppressMessages(lms_server_start(cors = value, wait = 0))
+    expect_identical(runs$calls, 1L)
+    expect_true("--cors" %in% runs$args)
+  }
+
+  runs <- local_counting_run()
+  suppressMessages(lms_server_start(cors = FALSE, wait = 0))
+  expect_identical(runs$calls, 1L)
+  expect_false("--cors" %in% runs$args)
+})
+
+# The failed-start abort. cli wraps long bullets, so texts are compared after
+# each whitespace run is collapsed to one space.
+squish <- function(x) gsub("\\s+", " ", trimws(x))
+
+start_failure_message <- function(res) {
+  local_mocked_bindings(
+    run = function(command, args, error_on_status) res,
+    .package = "processx"
+  )
+  err <- tryCatch(lms_server_start(wait = 0), error = function(e) e)
+  expect_s3_class(err, "error")
+  squish(conditionMessage(err))
+}
+
+expect_quotes <- function(msg, text) {
+  expect_true(grepl(squish(text), msg, fixed = TRUE), label = msg)
+}
+
+test_that("a failed start quotes the stderr text the CLI gave", {
+  # Recorded from `lms server start --port abc` on 2026-09-28.
+  stderr <- paste0(
+    "error: option '-p, --port <port>' argument 'abc' is invalid. ",
+    "Not a number\n"
+  )
+  msg <- start_failure_message(list(status = 1, stdout = "", stderr = stderr))
+  expect_quotes(msg, "Exit code: 1")
+  expect_quotes(msg, stderr)
+})
+
+test_that("a failed start quotes stdout when stderr holds nothing", {
+  msg <- start_failure_message(
+    list(status = 2, stdout = "Port is in use.\n", stderr = "")
+  )
+  expect_quotes(msg, "Exit code: 2")
+  expect_quotes(msg, "Port is in use.")
+})
+
+test_that("braces in the CLI text reach the message as text", {
+  msg <- start_failure_message(
+    list(status = 1, stdout = "", stderr = "bad value {port} here")
+  )
+  expect_quotes(msg, "bad value {port} here")
+})
+
+test_that("a long stderr of two lines reaches the message whole", {
+  stderr <- paste0(
+    "error: the server could not start on the port that was asked for.\n",
+    "  Another program may hold it; pick a different port and try again.\n"
+  )
+  expect_gt(nchar(stderr), 80)
+  msg <- start_failure_message(list(status = 1, stdout = "", stderr = stderr))
+  expect_quotes(msg, stderr)
+})
+
+test_that("a failed start with no CLI output gives the exit code alone", {
+  empties <- list(
+    list(status = 1),
+    list(status = 1, stdout = NULL, stderr = NULL),
+    list(status = 1, stdout = NA_character_, stderr = NA_character_),
+    list(status = 1, stdout = " \n", stderr = "\t"),
+    # trimws() alone keeps these two.
+    list(status = 1, stdout = "\f", stderr = "\v\n"),
+    # \s does not match a non-breaking space (LESSONS, M013).
+    list(status = 1, stdout = "\u00a0", stderr = "\u00a0\u00a0")
+  )
+  for (res in empties) {
+    msg <- start_failure_message(res)
+    expect_quotes(msg, "Failed to start the LM Studio server. Exit code: 1.")
+    expect_false(grepl("The CLI said", msg, fixed = TRUE), label = msg)
+  }
+})
+
+test_that("stderr wins over stdout when both hold text", {
+  msg <- start_failure_message(
+    list(status = 1, stdout = "from stdout", stderr = "from stderr")
+  )
+  expect_quotes(msg, "from stderr")
+  expect_false(grepl("from stdout", msg, fixed = TRUE), label = msg)
+})
+
+test_that("a stderr of only whitespace falls through to stdout", {
+  for (stderr in c("  \n ", "\f", "\u00a0")) {
+    msg <- start_failure_message(
+      list(status = 1, stdout = "from stdout\n", stderr = stderr)
+    )
+    expect_quotes(msg, "from stdout")
+  }
+})
+
+test_that("CLI text that is not valid UTF-8 keeps the exit code in the abort", {
+  # The byte 0xff is never valid UTF-8. Before the fix, gsub() failed on it
+  # with "input string 1 is invalid", and the exit code was lost.
+  stderr <- rawToChar(as.raw(c(0x62, 0x61, 0x64, 0x20, 0xff, 0x0a)))
+  warnings <- 0L
+  msg <- withCallingHandlers(
+    start_failure_message(list(status = 3, stdout = "", stderr = stderr)),
+    warning = function(w) {
+      warnings <<- warnings + 1L
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_quotes(msg, "Failed to start the LM Studio server. Exit code: 3.")
+  expect_quotes(msg, "The CLI said: bad")
+  expect_identical(warnings, 0L)
 })
 
 test_that("none of the three warnings is silenced by the quiet option", {

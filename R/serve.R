@@ -7,7 +7,10 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
   args <- c("server", "start")
 
   if (!is.null(port)) {
-    args <- c(args, "--port", as.character(port))
+    # lms_server_start() passes an integer already. The integer step covers a
+    # direct call with a double, which as.character() can print in
+    # scientific notation, such as "8.08e+03" under options(scipen = -5).
+    args <- c(args, "--port", as.character(as.integer(port)))
   }
 
   if (isTRUE(cors)) {
@@ -32,10 +35,11 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' which port the server uses, and that read runs before the `wait` seconds
 #' start to count.
 #'
-#' @param port Integer. Port to run the server on. If not provided, LM Studio
-#'   uses the last used port.
+#' @param port Numeric or `NULL`. Port to run the server on. It must be one
+#'   whole number from 1 to 65535, given as a number and not as an array or a
+#'   string. `NULL`, the default, lets LM Studio use the last used port.
 #' @param cors Logical. Enable CORS support for web application development.
-#'   Defaults to FALSE.
+#'   Must be `TRUE` or `FALSE`. Defaults to `FALSE`.
 #' @param wait Numeric. How many seconds to keep asking the REST API whether
 #'   it is ready. Defaults to 10. With `wait = 0` the function sends no
 #'   readiness request and returns as soon as the CLI does. A `wait` that is
@@ -60,12 +64,19 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' The request carries `token`, read as described under that argument.
 #'
-#' Beside a bad `wait`, two faults in the call abort before the CLI runs,
-#' with any `wait`. One is a `host` that is not `NULL` and that the readiness
-#' request cannot be built from, such as a vector of two strings, `NA`, an
-#' empty string, or `"localhost:1234"`, which lacks `http://`. That message
-#' names `host` and quotes the reason httr2 or curl gave. The other is a
-#' `token` that is not one character string and not `NULL`.
+#' Five faults in the call abort before the CLI runs, with any `wait`: a bad
+#' `wait`, `port`, `cors`, `host`, or `token`. A bad `host` is one that is
+#' not `NULL` and that the readiness request cannot be built from, such as a
+#' vector of two strings, `NA`, an empty string, or `"localhost:1234"`, which
+#' lacks `http://`. That message names `host` and quotes the reason httr2 or
+#' curl gave. A bad `token` is one that is not one character string and not
+#' `NULL`.
+#'
+#' If the CLI refuses the start and exits with a status other than 0, the
+#' function aborts. The message gives the exit code and quotes the text the
+#' CLI wrote to stderr. If stderr holds nothing, it quotes the stdout text.
+#' Whitespace at the ends of the quoted text is dropped, and each run of
+#' whitespace inside it becomes one space.
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -107,6 +118,14 @@ lms_server_start <- function(
   token = NULL
 ) {
   rlm_check_wait(wait)
+  rlm_check_port(port)
+  rlm_check_flag(cors, "cors")
+  # The port goes to the CLI, the success message, and the readiness host. An
+  # integer prints as plain digits under any scipen option, and as.integer()
+  # also drops names.
+  if (!is.null(port)) {
+    port <- as.integer(port)
+  }
   # Faults in host and token are knowable without a server, and a start that
   # has already run cannot be undone, so both are checked before the CLI runs.
   # The host check builds its request with token = NULL, so it never sees the
@@ -131,9 +150,14 @@ lms_server_start <- function(
       )
     }
   } else {
-    cli::cli_abort(
-      "Failed to start the LM Studio server. Exit code: {.val {res$status}}."
-    )
+    # The CLI text is spliced in as a value, so cli does not run its braces
+    # (LESSONS, M012).
+    output <- cli_output_text(res)
+    msg <- "Failed to start the LM Studio server. Exit code: {.val {res$status}}."
+    if (!is.null(output)) {
+      msg <- c(msg, "x" = "The CLI said: {output}")
+    }
+    cli::cli_abort(msg)
   }
 
   if (wait > 0) {
@@ -141,6 +165,36 @@ lms_server_start <- function(
   }
 
   invisible(res$status)
+}
+
+#' Read the text a failed CLI run gave
+#'
+#' The CLI writes its reason to stderr, so stderr is read first and stdout
+#' only when stderr holds nothing. A field that is absent, `NULL`, `NA`, or
+#' only whitespace holds nothing. Each whitespace run becomes one space, so
+#' a text of several lines fits on one bullet. A byte that is not valid UTF-8
+#' is written as `<xx>`, its hex value.
+#'
+#' @param res The list `processx::run()` returned.
+#' @return One string, or `NULL` when neither field holds text.
+#'
+#' @noRd
+cli_output_text <- function(res) {
+  for (field in c("stderr", "stdout")) {
+    text <- res[[field]]
+    if (is.character(text) && length(text) == 1L && !is.na(text)) {
+      # A byte that is not valid UTF-8 makes gsub() fail, which would hide
+      # the exit code. sub = "byte" writes such a byte as "<ff>".
+      text <- iconv(text, "UTF-8", "UTF-8", sub = "byte")
+      # Collapse first. trimws() alone keeps a form feed or a vertical tab,
+      # and [:space:] does not match a non-breaking space (LESSONS, M013).
+      text <- trimws(gsub("[[:space:]\u00a0]+", " ", text))
+      if (nzchar(text)) {
+        return(text)
+      }
+    }
+  }
+  NULL
 }
 
 #' Reject a host the readiness request cannot be built from
@@ -222,10 +276,11 @@ warn_unless_ready <- function(host = NULL, port = NULL, wait = 10,
     return(invisible(FALSE))
   }
 
-  # The pre-start checks cover a host the caller gave, but not one built from
-  # a malformed port, which is left to the CLI. Such a host can still make
-  # lms_server_ready() abort here if the CLI accepted the port. The start
-  # already ran and cannot be undone, so the abort becomes one warning.
+  # Each input the target is built from is checked before this point. The
+  # caller's host and port are checked before the CLI runs, and the port is
+  # an integer by then. server_status_port() drops a port it cannot use. The tryCatch() stays as
+  # a guard. The start already ran and cannot be undone, so an abort from the
+  # probe becomes one warning.
   # suppressWarnings() sits inside the tryCatch() so that a warning the probe
   # raises before it aborts does not reach the user as a second warning for
   # the same fault.
