@@ -46,7 +46,10 @@ test_that("check_lms_version shows unparsed output with braces and does not run 
   expect_false(result)
   expect_match(
     shown$messages,
-    paste0("Could not parse the LM Studio CLI version. Output was: ", brace_probe_val),
+    paste0(
+      "Could not parse the LM Studio CLI version. Output was: ",
+      brace_probe_val
+    ),
     fixed = TRUE
   )
   expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
@@ -83,9 +86,20 @@ test_that("a failed installer run quotes its output", {
     list(status = 1L, stdout = brace_probe, stderr = NULL)
   })
   expect_identical(calls, 1L)
-  expect_match(shown$message, "Headless installation failed. Exit code: 1.", fixed = TRUE)
-  expect_match(shown$message, paste("The installer said:", brace_probe), fixed = TRUE)
-  expect_identical(count_fixed("Headless installation failed", shown$message), 1L)
+  expect_match(
+    shown$message,
+    "Headless installation failed. Exit code: 1.",
+    fixed = TRUE
+  )
+  expect_match(
+    shown$message,
+    paste("The installer said:", brace_probe),
+    fixed = TRUE
+  )
+  expect_identical(
+    count_fixed("Headless installation failed", shown$message),
+    1L
+  )
   expect_no_match(shown$message, "Error message:", fixed = TRUE)
   expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
 })
@@ -109,7 +123,11 @@ test_that("a long installer log is cleaned and keeps its end", {
     list(status = 22L, stdout = stdout, stderr = NULL)
   })
   expect_match(shown$message, "Exit code: 22.", fixed = TRUE)
-  expect_match(shown$message, paste("The installer said:", expected), fixed = TRUE)
+  expect_match(
+    shown$message,
+    paste("The installer said:", expected),
+    fixed = TRUE
+  )
   expect_no_match(shown$message, "Downloading", fixed = TRUE)
 })
 

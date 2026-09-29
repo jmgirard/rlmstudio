@@ -52,10 +52,22 @@ bytes <- function(...) rawToChar(as.raw(c(...)))
 
 test_that("a failed run gives the exit code and quotes stderr first", {
   cases <- list(
-    stderr = list(res = list(stdout = "", stderr = "from stderr\n"), said = "from stderr"),
-    stdout = list(res = list(stdout = "from stdout\n", stderr = ""), said = "from stdout"),
-    both = list(res = list(stdout = "from stdout", stderr = "from stderr"), said = "from stderr"),
-    blank_stderr = list(res = list(stdout = "from stdout", stderr = " \n "), said = "from stdout")
+    stderr = list(
+      res = list(stdout = "", stderr = "from stderr\n"),
+      said = "from stderr"
+    ),
+    stdout = list(
+      res = list(stdout = "from stdout\n", stderr = ""),
+      said = "from stdout"
+    ),
+    both = list(
+      res = list(stdout = "from stdout", stderr = "from stderr"),
+      said = "from stderr"
+    ),
+    blank_stderr = list(
+      res = list(stdout = "from stdout", stderr = " \n "),
+      said = "from stdout"
+    )
   )
   for (name in names(cli_callers)) {
     for (case in names(cases)) {
@@ -63,12 +75,19 @@ test_that("a failed run gives the exit code and quotes stderr first", {
       got <- cli_failure(cli_callers[[name]], res)
       label <- paste(name, case)
       expect_true(
-        grepl(paste(cli_whats[[name]], "Exit code: 2."), got$message, fixed = TRUE),
+        grepl(
+          paste(cli_whats[[name]], "Exit code: 2."),
+          got$message,
+          fixed = TRUE
+        ),
         label = label
       )
       expect_cli_said(got$message, cases[[case]]$said, label)
       if (case == "both") {
-        expect_false(grepl("from stdout", got$message, fixed = TRUE), label = label)
+        expect_false(
+          grepl("from stdout", got$message, fixed = TRUE),
+          label = label
+        )
       }
     }
   }
@@ -85,10 +104,17 @@ test_that("a failed run with no text gives the exit code alone", {
     for (res in empties) {
       got <- cli_failure(cli_callers[[name]], res)
       expect_true(
-        grepl(paste(cli_whats[[name]], "Exit code: 1."), got$message, fixed = TRUE),
+        grepl(
+          paste(cli_whats[[name]], "Exit code: 1."),
+          got$message,
+          fixed = TRUE
+        ),
         label = name
       )
-      expect_false(grepl("The CLI said", got$message, fixed = TRUE), label = name)
+      expect_false(
+        grepl("The CLI said", got$message, fixed = TRUE),
+        label = name
+      )
     }
   }
 })
@@ -132,7 +158,10 @@ test_that("the quoted text has no ANSI escape sequences", {
       )
       expect_cli_said(got$message, expected[[form]], paste(name, form))
       expect_false(grepl("\033", got$message, fixed = TRUE), label = form)
-      expect_false(grepl("lmstudio.ai", got$message, fixed = TRUE), label = form)
+      expect_false(
+        grepl("lmstudio.ai", got$message, fixed = TRUE),
+        label = form
+      )
     }
   }
 })
@@ -223,7 +252,12 @@ test_that("lms_server_stop is a no-op when no server runs", {
       list(status = 1L, stdout = "", stderr = texts[[name]])
     )
     expect_null(got$error)
-    expect_match(got$messages, "server is already stopped", fixed = TRUE, info = name)
+    expect_match(
+      got$messages,
+      "server is already stopped",
+      fixed = TRUE,
+      info = name
+    )
     expect_identical(got$value, list(value = 1L, visible = FALSE), info = name)
   }
 })
@@ -243,8 +277,17 @@ test_that("lms_daemon_stop keeps running when the GUI manages the daemon", {
       list(status = 1L, stdout = "", stderr = texts[[name]])
     )
     expect_null(got$error)
-    expect_match(got$messages, "managed by the LM Studio GUI", fixed = TRUE, info = name)
-    expect_identical(got$value, list(value = FALSE, visible = FALSE), info = name)
+    expect_match(
+      got$messages,
+      "managed by the LM Studio GUI",
+      fixed = TRUE,
+      info = name
+    )
+    expect_identical(
+      got$value,
+      list(value = FALSE, visible = FALSE),
+      info = name
+    )
   }
 })
 
@@ -263,8 +306,17 @@ test_that("lms_daemon_stop is a no-op when no daemon runs", {
     }
     got <- stop_exit(lms_daemon_stop(), res)
     expect_null(got$error)
-    expect_match(got$messages, "daemon is already stopped", fixed = TRUE, info = name)
-    expect_identical(got$value, list(value = TRUE, visible = FALSE), info = name)
+    expect_match(
+      got$messages,
+      "daemon is already stopped",
+      fixed = TRUE,
+      info = name
+    )
+    expect_identical(
+      got$value,
+      list(value = TRUE, visible = FALSE),
+      info = name
+    )
   }
 })
 

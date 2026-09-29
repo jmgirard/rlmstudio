@@ -36,9 +36,10 @@ that the daemon is not running, it prints an info message and returns
 message gives the exit code, quotes what the CLI wrote after "The CLI
 said:", and gives a hint about \code{force = TRUE}. The quoted text is the
 stderr text, or the stdout text if stderr holds only whitespace. A byte
-that is not valid UTF-8 shows as \verb{<xx>}, its hex value. ANSI escape codes
-are removed, and each run of whitespace becomes one space. A text longer
-than 1000 characters keeps its last 1000 characters, after "…".
+that is not valid UTF-8 shows as \verb{<xx>}, its hex value. ANSI color codes,
+cursor codes, and terminal links are removed, and each run of whitespace
+becomes one space. A text longer than 1000 characters keeps at most its
+last 1000 characters, after "…".
 }
 
 \examples{

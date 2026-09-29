@@ -3,7 +3,7 @@
 * If a run of the LM Studio CLI or the headless installer fails, the abort message now quotes what the run wrote, beside the exit code.
   * `lms_server_start()`, `lms_server_stop()`, `lms_daemon_start()`, and `lms_daemon_stop()` quote it after "The CLI said:". Before, `lms_server_stop()` and `lms_daemon_start()` gave the exit code alone, and `lms_daemon_stop()` wrote "CLI output:" with the text in quotes. The quoted text is the stderr text. If stderr holds only whitespace, it is the stdout text.
   * `install_lmstudio(method = "headless")` quotes the installer output after "The installer said:". Before, the message the user saw dropped that output. Any other error of the install step still aborts with "Headless installation failed." and the error message.
-  * In the quoted text, a byte that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI escape codes are removed, and each run of whitespace becomes one space. A text longer than 1000 characters keeps its last 1000 characters, after "…".
+  * In the quoted text, a byte that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI color codes, cursor codes, and terminal links are removed, and each run of whitespace becomes one space. A text longer than 1000 characters keeps at most its last 1000 characters, after "…".
   * If the CLI text holds a byte that is not valid UTF-8, `lms_daemon_stop()` no longer fails with a base R error.
 
 * `lms_server_stop()` with no server running now prints an info message and returns the CLI exit code invisibly. Before, it aborted. If no server is running, `lms_daemon_stop(force = TRUE)` shows the same message.

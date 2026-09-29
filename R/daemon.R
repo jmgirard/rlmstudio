@@ -17,9 +17,9 @@ build_args_daemon_up <- function() {
 #' message gives the exit code and quotes what the CLI wrote, after "The CLI
 #' said:". The quoted text is the stderr text, or the stdout text if stderr
 #' holds only whitespace. A byte that is not valid UTF-8 shows as `<xx>`,
-#' its hex value. ANSI escape codes are removed, and each run of whitespace
-#' becomes one space. A text longer than 1000 characters keeps its last 1000
-#' characters, after "…".
+#' its hex value. ANSI color codes, cursor codes, and terminal links are
+#' removed, and each run of whitespace becomes one space. A text longer than
+#' 1000 characters keeps at most its last 1000 characters, after "…".
 #'
 #' @section Desktop Users: On desktop operating systems (macOS and Windows),
 #'   running this command may actually launch the LM Studio desktop application
@@ -105,9 +105,10 @@ build_args_daemon_down <- function() {
 #' message gives the exit code, quotes what the CLI wrote after "The CLI
 #' said:", and gives a hint about `force = TRUE`. The quoted text is the
 #' stderr text, or the stdout text if stderr holds only whitespace. A byte
-#' that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI escape codes
-#' are removed, and each run of whitespace becomes one space. A text longer
-#' than 1000 characters keeps its last 1000 characters, after "…".
+#' that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI color codes,
+#' cursor codes, and terminal links are removed, and each run of whitespace
+#' becomes one space. A text longer than 1000 characters keeps at most its
+#' last 1000 characters, after "…".
 #'
 #' @param force Logical. If `TRUE`, attempts to stop the local server before
 #'   shutting down the daemon. The daemon cannot be stopped while the server

@@ -23,9 +23,10 @@ If the CLI exits with a status other than 0 for another reason, the
 function aborts. The message gives the exit code and quotes what the CLI
 wrote, after "The CLI said:". The quoted text is the stderr text, or the
 stdout text if stderr holds only whitespace. A byte that is not valid
-UTF-8 shows as \verb{<xx>}, its hex value. ANSI escape codes are removed, and
-each run of whitespace becomes one space. A text longer than 1000
-characters keeps its last 1000 characters, after "…".
+UTF-8 shows as \verb{<xx>}, its hex value. ANSI color codes, cursor codes, and
+terminal links are removed, and each run of whitespace becomes one space.
+A text longer than 1000 characters keeps at most its last 1000
+characters, after "…".
 }
 \examples{
 \dontrun{

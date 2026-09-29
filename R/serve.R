@@ -76,9 +76,10 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' function aborts. The message gives the exit code and quotes what the CLI
 #' wrote, after "The CLI said:". The quoted text is the stderr text, or the
 #' stdout text if stderr holds only whitespace. A byte that is not valid
-#' UTF-8 shows as `<xx>`, its hex value. ANSI escape codes are removed, and
-#' each run of whitespace becomes one space. A text longer than 1000
-#' characters keeps its last 1000 characters, after "…".
+#' UTF-8 shows as `<xx>`, its hex value. ANSI color codes, cursor codes, and
+#' terminal links are removed, and each run of whitespace becomes one space.
+#' A text longer than 1000 characters keeps at most its last 1000
+#' characters, after "…".
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -216,9 +217,9 @@ cli_output_text <- function(res) {
 #' The CLI writes its reason to stderr, so stderr is read first and stdout
 #' only when stderr holds nothing. A field that is absent, `NULL`, `NA`, or
 #' only whitespace holds nothing. A byte that is not valid UTF-8 is written
-#' as `<xx>`, its hex value. ANSI escape sequences are removed. Each
-#' whitespace run becomes one space, so a text of several lines fits on one
-#' bullet.
+#' as `<xx>`, its hex value. ANSI color codes, cursor codes, and terminal
+#' links are removed. Each whitespace run becomes one space, so a text of
+#' several lines fits on one bullet.
 #'
 #' @param res The list `processx::run()` returned.
 #' @return One string, or `NULL` when neither field holds text.
@@ -265,7 +266,9 @@ cli_output_cut <- function(text, max = 1000L) {
   # A token that starts at one of the three characters before the cut and
   # ends at or after it is split. Its end is dropped from what is kept.
   for (start in (first - 3L):(first - 1L)) {
-    if (start >= 1L && grepl("^<[0-9a-f]{2}>$", substr(text, start, start + 3L))) {
+    if (
+      start >= 1L && grepl("^<[0-9a-f]{2}>$", substr(text, start, start + 3L))
+    ) {
       kept <- substr(kept, start + 4L - first + 1L, nchar(kept))
       break
     }
@@ -411,9 +414,10 @@ build_args_server_stop <- function() {
 #' function aborts. The message gives the exit code and quotes what the CLI
 #' wrote, after "The CLI said:". The quoted text is the stderr text, or the
 #' stdout text if stderr holds only whitespace. A byte that is not valid
-#' UTF-8 shows as `<xx>`, its hex value. ANSI escape codes are removed, and
-#' each run of whitespace becomes one space. A text longer than 1000
-#' characters keeps its last 1000 characters, after "…".
+#' UTF-8 shows as `<xx>`, its hex value. ANSI color codes, cursor codes, and
+#' terminal links are removed, and each run of whitespace becomes one space.
+#' A text longer than 1000 characters keeps at most its last 1000
+#' characters, after "…".
 #'
 #' @seealso [LM Studio CLI Server Stop
 #'   Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)
