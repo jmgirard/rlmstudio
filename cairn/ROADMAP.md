@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-29 (M053 done, M050 row pruned, one candidate row extended, one lesson extended)_
+_Last hygiene check: 2026-09-29 (M054 done, M051 row pruned, one candidate row added, two lessons extended)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-29 (M053 done, M050 row pruned, one candidate row e
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M054 | A failed CLI or installer run quotes what it wrote | review | none | normal | milestones/M054-cli-output-quotes.md |
+| M054 | A failed CLI or installer run quotes what it wrote | done | none | normal | milestones/archive/M054-cli-output-quotes.md |
 | M053 | The server start call says why a start was refused | done | none | normal | milestones/archive/M053-server-start-reasons.md |
 | M052 | The two list functions check their arguments before any request | done | none | normal | milestones/archive/M052-list-arg-checks.md |
-| M051 | A schema data-frame batch returns one column per schema property | done | none | normal | milestones/archive/M051-batch-schema-columns.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -50,7 +49,8 @@ _Last hygiene check: 2026-09-29 (M053 done, M050 row pruned, one candidate row e
 - Two `messages` data-frame columns that `empty_rows()` reads badly, both on main before M046. A `dim` column whose first extent is not the row count, in a frame built by hand, makes `empty_rows()` return more than one value per row. A 3-by-2 matrix in a 2-row frame returned a 3-by-2 matrix. A zero-width matrix with a class, such as `"Date"`, aborts with the jsonlite text "values must be length 2". Decide whether each gets its own detail, added 2026-09-28, M046 review findings O5 and O6
 - The other exported functions read their TRUE/FALSE arguments through `isTRUE()`. Examples are `simplify`, `logprobs`, `force`, and `echo_load_config`. A value such as `"yes"` then acts as `FALSE` with no message. M052 checks the flags of `list_models()` and `list_instances()`, and M053 checks `cors` of `lms_server_start()`. Also, `quiet = FALSE` on those two defers to the `rlmstudio.quiet` option, because `rlm_inform()` reads it again. So `NULL` acts as `FALSE` there. In `lms_embed()` and `lms_chat_batch()`, `FALSE` overrides the option. Decide one meaning. Promote on a user whom an ignored flag misleads, added 2026-09-28, M052 plan gate and review finding O1
 - `type_fault()` and `id_fault()` in `R/utils-args.R` report a string with an invalid encoding as "holds only whitespace". An example is `"\xff"` in a UTF-8 locale, which also gives two `grepl()` warnings. Give such a string its own detail, added 2026-09-28, M052 review finding O3
-- More tests for `list_instances()`: a field that mixes only a number and a string, and `display_name = ""`. M052 takes `type = NA` and an empty `type`. The code handles each today. Also, `devtools::check()` failed once in `test-ttl.R` at `rawToChar(out$body)` inside `httr2::req_dry_run()`, and 15 reruns passed. If it fails again, promote the flaky part, added 2026-09-28, M050 review finding O4 and a review check run
+- More tests for `list_instances()`: a field that mixes only a number and a string, and `display_name = ""`. M052 takes `type = NA` and an empty `type`. The code handles each today. Also, `devtools::check()` failed once in `test-ttl.R` at `rawToChar(out$body)` inside `httr2::req_dry_run()`, and 15 reruns passed. It failed again on 2026-09-29 in `test-arg-guards.R:1810` at the same call, with other R sessions running beside it, and two reruns passed. If it fails again, promote the flaky part, added 2026-09-28, M050 review finding O4 and review check runs of M050 and M054
+- `strip_escapes()` in `R/serve.R` can remove real CLI text. A string escape with no terminator removes the rest of the text, so the abort quotes stdout or nothing. A lone ESC removes the next character, and ESC and a space remove one more. BEL, backspace, and U+009B pass through. Promote on real `lms` or installer output that hits one of these, added 2026-09-29, M054 review findings R1, R2, R5
 - [low] The macOS check job has two exits from its Package Manager workaround. If a released pak extracts zstd archives, remove the workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. If Posit Package Manager stops serving gzip macOS binaries or drops its R 4.6 path, pin the job to R 4.5. M011 rejected that pin (rows merged M022), added 2026-09-20, M011 scope and plan gate, r-lib/pkgdepends#485
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
