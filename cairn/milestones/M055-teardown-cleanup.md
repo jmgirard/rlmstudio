@@ -1,6 +1,6 @@
 # M055: Cleanup of vignette teardown, test helpers, and the token hint
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -94,7 +94,7 @@ stay candidates in the ROADMAP.
       unload chunks run. In `headless-config.Rmd`, if the server was
       stopped before, the `with-daemon` chunk runs. If that chunk loaded
       the model, it unloads it.
-- [ ] T2: Install the branch with `devtools::install()`. Run the eight
+- [x] T2: Install the branch with `devtools::install()`. Run the eight
       renders of AC1. Before and after each render, read both facts, the
       daemon status, and the `ps -p` name of the daemon pid.
 - [x] T3: Delete the `on.exit()` unload fallbacks at
@@ -150,6 +150,10 @@ stay candidates in the ROADMAP.
 - 2026-09-29: mini gate: the user accepted the fixed AC1 and the Scope Out sentence.
 - 2026-09-29: re-audit: AC1 (full) — two narrowing fixes: the daemon check decides which renders count instead of reading as a third fact to keep, and the procedure names one such host. The Scope sentence also covers `getting-started.Rmd`, kept to match the AC1 condition. The user accepted both fixes at a second gate, so AC1 wording is now closed to further readers.
 - 2026-09-29: T2 reopened, because its procedure gains the daemon read.
+- 2026-09-29: T2 done again. After `devtools::install()` of 35aec07, the eight renders all exited 0. Each left `running` and the `google/gemma-3-1b` instance count (1 or 0) as they were. Before and after each, `lms daemon status --json` read `running` with pid 81115, and `ps -p` named `/Applications/LM Studio.app/Contents/MacOS/LM Studio`. Liveness: the kept HTML of both renders from a stopped server with no model shows the live unload output, and `getting-started` shows the live stop.
+- 2026-09-29: claim audit: 11 claims read, 0 corrected — R/utils-token.R, tests/testthat/test-token-hint.R, vignettes/getting-started.Rmd. The reader covered the 32 lines that the review fixes added after the first audit (`git diff 9a88b28..HEAD`).
+- 2026-09-29: with the token set, full `devtools::test()` at 35aec07 plus this record: 0 failures, 0 errors, 0 warnings, 0 skips, 14777 passes. No R code changed in this session.
+- 2026-09-29: implement done after the amendment, status review.
 
 ## Decisions
 

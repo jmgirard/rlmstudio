@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-29 (M054 done, M051 row pruned, one candidate row a
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M055 | Cleanup of vignette teardown, test helpers, and the token hint | in-progress | none | normal | milestones/M055-teardown-cleanup.md |
+| M055 | Cleanup of vignette teardown, test helpers, and the token hint | review | none | normal | milestones/M055-teardown-cleanup.md |
 | M054 | A failed CLI or installer run quotes what it wrote | done | none | normal | milestones/archive/M054-cli-output-quotes.md |
 | M053 | The server start call says why a start was refused | done | none | normal | milestones/archive/M053-server-start-reasons.md |
 | M052 | The two list functions check their arguments before any request | done | none | normal | milestones/archive/M052-list-arg-checks.md |
