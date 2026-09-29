@@ -178,9 +178,10 @@ lms_daemon_stop <- function(force = FALSE) {
 #' @section Desktop Users:
 #' Be cautious using this wrapper if you already have the LM Studio GUI open.
 #' While the setup phase (`lms_daemon_start`) will succeed, the teardown phase
-#' (`lms_daemon_stop`) will fail because the CLI prevents programmatic shutdowns
-#' of the graphical interface. This wrapper is best reserved for strictly
-#' headless environments or fully automated scripts.
+#' (`lms_daemon_stop`) does not stop the daemon, because the CLI prevents
+#' programmatic shutdowns of the graphical interface. The teardown prints an
+#' info message, and the daemon keeps running. This wrapper is best reserved
+#' for strictly headless environments or fully automated scripts.
 #'
 #' @param code An R expression to execute while the daemon is running.
 #'

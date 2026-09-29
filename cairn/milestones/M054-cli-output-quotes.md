@@ -162,6 +162,8 @@ Each done task's detail is in its work-log line.
 - 2026-09-29: the corrections. The stdout fallback now reads "holds only whitespace and escape codes" on four pages and in NEWS. The `lms_server_stop()` page names the "not running" match. The `strip_escapes()` and `cli_output_cut()` notes and one code comment now match the code. The same reader re-read them once, and all held. It also flagged the `cli_output_clean()` note, now fixed. The claims about what the real `lms` CLI prints stay as recorded on 2026-09-29.
 - 2026-09-29: T9 done. A second `document()` wrote nothing. The server was started and the token set. `devtools::test()` gave 558 tests, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
 - 2026-09-29: minor amendment. The file was over the 150-line cap after T7 to T9, so the Tasks section was compressed in one rewrite. The task texts before it are in git.
+- 2026-09-29: review pass 2. All six criteria verified. Three fresh reviewers gave 15 findings. The gate fixed R3 now, sent R1, R2, and R5 to a candidate row, and rejected the rest.
+- 2026-09-29: step-7 approval: m054-cli-output-quotes approved for merge
 
 ## Decisions
 
@@ -233,3 +235,15 @@ Findings came from three fresh reviewers. The GitHub probe found no review comme
 - B1: if the wrapped code stopped the server, as the vignette does, `with_lms_daemon()` teardown now prints "server is already stopped".
 - B4 (O14, S3): any failure text with "not running" reads as already stopped. It is the plan's recorded falsifier.
 - B6 (P2, S7): the 1000-character cut drops an early cause. It is the plan's recorded falsifier.
+
+Dispositions, set at the merge gate on 2026-09-29:
+
+- R3: fixed now. The `with_lms_daemon()` Desktop Users text now says that teardown prints an info message and the daemon keeps running. A new test in `test-daemon.R` runs the wrapper with a GUI-managed daemon. With a failing GUI exit planted in a scratch copy, it went red. `document()` wrote only `man/with_lms_daemon.Rd`. With the server started and the token set, `devtools::test()` gave 0 failed, 0 skipped.
+- R1, R2, R5: follow-up. One ROADMAP candidate row, added at hygiene. No existing row covers them.
+- R4: rejected. A run with no text has nothing to quote.
+- R6, R7, R8: rejected. Test style, a rule covered by other cases, and one cosmetic space.
+- R9: rejected. A condition class can be added later without breaking callers.
+- R10, R11: rejected. processx gives an integer status and UTF-8 text.
+- R12: rejected. The NEWS entry states the new message shape.
+- B1: rejected. It is a message only, it honors the quiet option, and AC3 plans it.
+- B4, B6: rejected. The plan chose each and recorded its falsifier.
