@@ -35,12 +35,12 @@ outside this milestone.
 
 ## Acceptance criteria
 
-- [ ] AC1: Each loop that `grep -nE '^  for \(name in '
+- [x] AC1: Each loop that `grep -nE '^  for \(name in '
       tests/testthat/test-arg-guards.R` lists at commit 65d6bd4 (16 loops)
       runs as one `test_that()` block per function name. Each block's
       description contains that name. The same grep on the branch lists no
       line.
-- [ ] AC2: Take a scratch copy of the branch. In it, `lms_download_status()`
+- [x] AC2: Take a scratch copy of the branch. In it, `lms_download_status()`
       aborts with `stop("planted")` in place of its identifier check. No
       function in `R/` calls it (grep of `R/` on 2026-09-29).
       `testthat::test_file()` on `test-arg-guards.R` then reports at least
@@ -48,12 +48,12 @@ outside this milestone.
       `lms_download_status` as a whole word in its description. Each block
       that names another function that `guarded_exports(c("model",
       "job_id"))` returns passes.
-- [ ] AC3: The live test "live: the id column holds the instance ids of the
+- [x] AC3: The live test "live: the id column holds the instance ids of the
       model list" in `tests/testthat/test-list-instances.R` calls
       `list_models()` with no handler for `rlmstudio_api_error`. A refused
       model-list request then fails the test and does not skip it. Its
       comment no longer says that a refused request skips.
-- [ ] AC4: Four pairs of consecutive `if` checks call
+- [x] AC4: Four pairs of consecutive `if` checks call
       `rlm_abort_bad_response()` in `R/chat.R`. They are output/item and
       item/message in `chat_message_items()`, and content/part and
       part/output_text in `responses_text_parts()`. For each pair, one shape
@@ -63,7 +63,7 @@ outside this milestone.
       in a scratch copy. That shape alone then raises an
       `rlmstudio_bad_response` whose message contains the detail sentence of
       the check that now runs first.
-- [ ] AC5: `devtools::test()` reports no failure. `devtools::check()` gives 0
+- [x] AC5: `devtools::test()` reports no failure. `devtools::check()` gives 0
       errors, 0 warnings, and no note that main at 65d6bd4 does not give.
 
 ## Coverage
@@ -108,7 +108,17 @@ outside this milestone.
 - 2026-09-29: T5 done. `devtools::check()` with the token on 6ab7f53: 0 errors, 0 warnings, 0 notes, so no run on 65d6bd4 was needed. `devtools::test()` is the T4 run above.
 - claim audit: not owed — internal tier
 - 2026-09-29: status set to review. The session stopped the LM Studio server it started for T3, and left no model loaded.
+- 2026-09-29: review evidence recorded for AC1 to AC5, and the consistency gate passed. The three independent reviewers are still running. The review session started and then stopped the LM Studio server.
 
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-09-29 on e959045, which is up to date with origin/main (5dc57f9).
+
+- AC1: `grep -nE '^  for \(name in '` lists 16 lines at 65d6bd4 and none on the branch (exit 1). The file has 16 top-level `for (name in ...)` loops, each with exactly one `test_that()` whose description is built by `paste0()` around `name`. The plant run of AC2 holds 117 blocks.
+- AC2: A scratch copy (git archive of e959045) replaced `rlm_check_id(job_id, "job_id")` in `lms_download_status()` with `stop("planted")`. A grep of `R/` found that name only in roxygen text, never in a call. `test_file()` ran 117 blocks. Three failed, and each names `lms_download_status` as a whole word: the bad-id, omitted-id, and server-down blocks. Its fourth block passed. The other nine functions of `guarded_exports(c("model", "job_id"))` passed all their blocks. Each had between 4 and 16 blocks, so the run held blocks for them.
+- AC3: The test calls `list_models(detailed = TRUE, quiet = TRUE)` with no `tryCatch()`, and its comment says a refused list fails the test. The server ran with no token set, and `NOT_CRAN=true`. Then `test_file()` on `test-list-instances.R` reported that test as an error, not a skip. The error was `rlmstudio_api_error` "API List Failed" at line 412, because a token is required. With the token, the full suite skipped it only because no model was loaded.
+- AC4: Four shapes pin the four pairs. "An output string" pins output/item, and "an item that is null" pins item/message. "A message content that is a string" pins content/part, and "a part that is null" pins part/output_text. `test-chat.R` asserts the detail of each through `native_unreadable_details()` and `responses_unreadable_details()`, and the suite passes. A scratch copy swapped each pair of `if` blocks in `R/chat.R` in turn, one swap at a time. Each pinning shape then raised `rlmstudio_bad_response` with the detail of the check that ran first: item, message, part, and output_text. The second check of each pair did not crash on its shape.
+- AC5: `devtools::test()` with the token: 635 blocks, 0 failed, 0 errored, 3 skipped. The two live embedding tests and the live id-column test skipped because no model was loaded. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes, so no note is new against 65d6bd4.
+- Gate: `cairn_validate.py` passed (exit 0). `devtools::document()` left no diff. `pkgdown::check_pkgdown()` found no problems. The diff does not touch README.Rmd, NEWS.md, DESCRIPTION, or any top-level file. No NEWS entry is owed, because only test files changed. No DESIGN principle changed, so `cairn_impact.py` was not run.
