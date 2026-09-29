@@ -1089,8 +1089,8 @@ rlm_check_no_na <- function(value, arg) {
 #'
 #' `list_models()` and `list_instances()` keep the models whose `type` is in
 #' this vector. The package keeps no list of the types LM Studio knows, so an
-#' unknown name passes and matches nothing. A value that can match nothing
-#' whatever the server holds, such as a number or an empty string, aborts.
+#' unknown name passes and matches nothing. A value that is not a usable type
+#' name, such as a number or an empty string, aborts.
 #'
 #' @param value The value the caller passed as `type`.
 #' @return `value`, invisibly.

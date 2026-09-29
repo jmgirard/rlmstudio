@@ -1,6 +1,6 @@
 # M052: The two list functions check their arguments before any request
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -57,6 +57,8 @@
 - 2026-09-28: T2 done. `rlm_check_type()` and `rlm_check_flag()` are in `R/utils-args.R`, and both list functions call them above `stop_if_no_server()`. The T1 tests pass, and `devtools::test()` gave 523 tests, 0 failed, 0 errors, 3 skipped.
 - 2026-09-28: T3 done. `test-list-args.R` adds the AC1 passing-value, AC2 `quiet = NULL`, and AC4 unknown-type tests. `git diff --stat main -- tests/` lists only the new file. `devtools::test()` gave 526 tests, 0 failed, 0 errors, 3 skipped.
 - 2026-09-28: T4 done. The `@param` text of the four arguments, the "Server not running" section, and a NEWS entry are updated. `devtools::document()` regenerated 13 pages that inherit that section. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. T2 reads `quiet` through `is_quiet()` as planned. `rlm_inform()` reads the option again, so `FALSE` still defers to the option.
+- 2026-09-28: claim audit: 32 claims read, 2 corrected — NEWS.md, R/utils-args.R
+- 2026-09-28: the two corrections were the NEWS claim that `quiet = NA` always failed, which held only on a call that matched no model, and a `rlm_check_type()` comment that a number or an empty string can match nothing. The reader re-read both once and found them correct. Status set to review.
 
 ## Decisions
 
