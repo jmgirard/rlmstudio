@@ -1,13 +1,13 @@
 # M054: A failed CLI or installer run quotes what it wrote
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP5, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — the abort messages and one stop exit of five exported functions
-- **Branch/PR:** —
+- **Branch/PR:** m054-cli-output-quotes
 
 ## Goal
 
@@ -111,7 +111,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 
 ## Tasks
 
-- [ ] T1: In `R/serve.R`, give `cli_output_text()` the AC2 order: the
+- [x] T1: In `R/serve.R`, give `cli_output_text()` the AC2 order: the
       `<xx>` step, then `cli::ansi_strip()`, then the whitespace collapse,
       then the cut. Keep the cut a separate step, so a phrase match can
       read the cleaned text before the cut. Test every AC2 rule through
@@ -154,6 +154,8 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: plan gate chose to keep the last 1000 characters over no cap or the first 1000. A log ends with its reason. Falsified by a failure whose reason sits more than 1000 characters before the end.
 - 2026-09-29: plan gate chose to fold the installer bug in over a separate hotfix. It shares the helper. Falsified by a review finding that the installer fix needs a design choice the CLI functions do not share.
 - 2026-09-29: plan chose to strip ANSI codes over leaving them. `lms` wrote none into a pipe on 2026-09-29, but `lms_daemon_status()` strips them and a forced-color setting passes them. Falsified by a CLI message whose meaning depends on an escape sequence.
+- 2026-09-29: implement started. No question gate, because the plan left no open choice.
+- 2026-09-29: T1 done. `cli_output_clean()` and `cli_output_cut()` split out of `cli_output_text()` in `R/serve.R`. New `test-cli-output.R` ran red on the escape and cut rules before the change. A cut with no token step turned the three token cases red. `devtools::test()`: 547 tests, 0 failed, 3 skipped.
 
 ## Decisions
 

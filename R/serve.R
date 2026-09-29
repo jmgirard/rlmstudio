@@ -169,23 +169,41 @@ lms_server_start <- function(
 
 #' Read the text a failed CLI run gave
 #'
-#' The CLI writes its reason to stderr, so stderr is read first and stdout
-#' only when stderr holds nothing. A field that is absent, `NULL`, `NA`, or
-#' only whitespace holds nothing. Each whitespace run becomes one space, so
-#' a text of several lines fits on one bullet. A byte that is not valid UTF-8
-#' is written as `<xx>`, its hex value.
+#' `cli_output_text()` is the text a failed-run abort quotes. It is the text
+#' of `cli_output_clean()`, cut by `cli_output_cut()`. A caller that looks
+#' for a phrase reads `cli_output_clean()`, so a phrase far from the end is
+#' still found.
 #'
 #' @param res The list `processx::run()` returned.
 #' @return One string, or `NULL` when neither field holds text.
 #'
 #' @noRd
 cli_output_text <- function(res) {
+  cli_output_cut(cli_output_clean(res))
+}
+
+#' Clean the text a failed CLI run gave
+#'
+#' The CLI writes its reason to stderr, so stderr is read first and stdout
+#' only when stderr holds nothing. A field that is absent, `NULL`, `NA`, or
+#' only whitespace holds nothing. A byte that is not valid UTF-8 is written
+#' as `<xx>`, its hex value. ANSI escape sequences are removed. Each
+#' whitespace run becomes one space, so a text of several lines fits on one
+#' bullet.
+#'
+#' @param res The list `processx::run()` returned.
+#' @return One string, or `NULL` when neither field holds text.
+#'
+#' @noRd
+cli_output_clean <- function(res) {
   for (field in c("stderr", "stdout")) {
     text <- res[[field]]
     if (is.character(text) && length(text) == 1L && !is.na(text)) {
       # A byte that is not valid UTF-8 makes gsub() fail, which would hide
       # the exit code. sub = "byte" writes such a byte as "<ff>".
       text <- iconv(text, "UTF-8", "UTF-8", sub = "byte")
+      # Color codes, other cursor codes, and terminal links.
+      text <- cli::ansi_strip(text, sgr = TRUE, csi = TRUE, link = TRUE)
       # Collapse first. trimws() alone keeps a form feed or a vertical tab,
       # and [:space:] does not match a non-breaking space (LESSONS, M013).
       text <- trimws(gsub("[[:space:]\u00a0]+", " ", text))
@@ -195,6 +213,35 @@ cli_output_text <- function(res) {
     }
   }
   NULL
+}
+
+#' Cut a long CLI text to its end
+#'
+#' A text of more than `max` characters keeps its last `max`, after a
+#' leading "\u2026" that is not counted. The end of a log usually holds the
+#' reason for a failure. If the cut splits a `<xx>` token of
+#' `cli_output_clean()`, the part of the token is dropped.
+#'
+#' @param text One string, or `NULL`.
+#' @param max The number of characters to keep.
+#' @return One string, or `NULL` when `text` is `NULL`.
+#'
+#' @noRd
+cli_output_cut <- function(text, max = 1000L) {
+  if (is.null(text) || nchar(text) <= max) {
+    return(text)
+  }
+  first <- nchar(text) - max + 1L
+  kept <- substr(text, first, nchar(text))
+  # A token that starts at one of the three characters before the cut and
+  # ends at or after it is split. Its end is dropped from what is kept.
+  for (start in (first - 3L):(first - 1L)) {
+    if (start >= 1L && grepl("^<[0-9a-f]{2}>$", substr(text, start, start + 3L))) {
+      kept <- substr(kept, start + 4L - first + 1L, nchar(kept))
+      break
+    }
+  }
+  paste0("\u2026", kept)
 }
 
 #' Reject a host the readiness request cannot be built from
