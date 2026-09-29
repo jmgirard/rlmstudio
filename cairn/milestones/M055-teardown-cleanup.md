@@ -35,7 +35,7 @@ stay candidates in the ROADMAP.
 
 ## Acceptance criteria
 
-- [ ] AC1: On a host where the LM Studio desktop app process is the
+- [x] AC1: On a host where the LM Studio desktop app process is the
       daemon, a render of either vignette leaves two facts as they were
       before it. The first fact is the `running` field of `lms server status
       --json`. The second fact is whether `lms ps --json` lists
@@ -194,3 +194,15 @@ Independent review: three fresh reviewers ran. [O] is the diff reviewer, [B] the
 - B5, B9, P4: no finding.
 
 Gate outcome, 2026-09-29: the user chose to narrow AC1 and re-review, not to merge. The four fix-now items landed on the branch. For O5, each run now reads the `authorization` header through `request_target(redact_headers = FALSE)`. For O11, `expect_s3_class()` takes no `info` argument, so those two assertions became `expect_true(inherits(...), info = site$label)`. For O7, the new comment says that no later step in `lms_embed()` changes the `Authorization` header. A read of `embed_request()` backs that: its one later header write is the content type from `rlm_req_body()`. After the fixes, `devtools::test()` gave 0 failures, 0 skips, and 14777 passes, and `devtools::document()` gave no diff. The AC1 box is cleared again, because its text changes before the next review.
+
+### Second pass
+
+Branch head 7206ce5, after the AC1 amendment. Main had not moved. Evidence gathered 2026-09-29.
+
+- AC1 (amended text): After `devtools::install()` of 7206ce5, the eight renders (two vignettes, four starting states) all exited 0, each through `rmarkdown::render(output_dir = tempdir())`. Each left `running` and the count of `google/gemma-3-1b` instances in `lms ps --json` as they were before it (1 or 0 each time). Before and after every render, `lms daemon status --json` read `running` with pid 81115, and `ps -p 81115` named `/Applications/LM Studio.app/Contents/MacOS/LM Studio`, so all eight renders count. Liveness control: the kept HTML of the two renders from a stopped server with no model shows timed live unload lines and the stop line. The kept HTML of `headless-config.Rmd` from a running server with the model loaded shows none, so the gates skipped the teardown there.
+- AC2: The sweep reads four files (`test-chat.R`, `test-list-instances.R`, `test-integration.R`, `test-embed.R`) and lists five calls: `test-integration.R:15` and `:25`, `test-chat.R:13`, `:14`, and `:35`. The mock blocks open at `test-chat.R:12` and `test-integration.R:14` and close at `:36` and `:26`, so all five sit inside them. With the token set, the server running, and `google/gemma-3-1b` loaded, `devtools::test(filter = "^(chat|integration)$")` gave 0 failures, 0 errors, 0 skips, and 1584 passes. `lms ps --json` listed `google/gemma-3-1b` before and after the run.
+- AC3: `test-embed.R:1116` and `:1140` take the list from `loaded_embedding_models()` in `helper-skips.R:17`, which calls `list_models()` with no `tryCatch()`. `test-skip-helpers.R` mocks `list_models()` to raise `rlmstudio_api_error` at 401, `rlmstudio_bad_response`, and a `stop()` error. For each, it asserts the same class and no skip, and it asserts status 401 on the first. On the branch, the file gave 10 passes and 0 failures. Planted defect: a helper whose `tryCatch()` turns a list error into a skip, run with helper loading off, gave 7 failures and 3 passes. The 7 are the three class checks, the three no-skip checks, and the status check.
+- AC4: `grep -n 'rlm_token(' R/*.R` lists `R/chat.R:2013` in `lms_client()` and `R/serve.R:136` in `lms_server_start()`. The `rlm_abort_api(` grep, roxygen lines left out, lists nine sites. They are `chat.R:235`, `:546`, `:1214`, `download.R:99`, `:231`, `embed.R:291`, `list.R:425`, `load.R:145`, and `unload.R:68`. `test-token-hint.R` drives each to a 401 in both AC4 runs. On the branch, it gave 131 passes and 0 failures. Control: main's `R/` with the branch `tests/` gave 32 failures, 4 at each of the eight non-embed site labels and none at "Embeddings Failed". It also gave 1 error, because `request_sends_token()` does not exist on main.
+- AC5: With the token set, `devtools::test()` gave 0 failures, 0 errors, 0 warnings, 0 skips, and 14777 passes. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The server ran and `google/gemma-3-1b` was loaded before the test run, between the runs, and after the check. NEWS.md has one entry for the hint change and one for the vignette teardown.
+
+Consistency gate (second pass): `cairn_validate.py` passed every check. `devtools::document()` left `NAMESPACE` and `man/` unchanged. The branch does not touch `README.Rmd` or `DESIGN.md`, and the repo has no `_pkgdown.yml`. The branch adds no top-level file, and NEWS.md names no milestone.
