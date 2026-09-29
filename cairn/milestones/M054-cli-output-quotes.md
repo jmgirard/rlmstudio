@@ -51,8 +51,8 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       terminal links. Each whitespace run becomes one space, and a
       non-breaking space counts as whitespace. Last, a text of more than
       1000 characters, as `nchar()` counts them, keeps its last 1000 after
-      a leading "…". The "…" is not counted, and a `<xx>` token is never
-      split. Braces in the text show as written and do not run. A test runs
+      a leading "…". The "…" is not counted. If the cut splits a `<xx>`
+      token, the part of the token is dropped, so fewer than 1000 remain. Braces in the text show as written and do not run. A test runs
       each of the four over one text per rule. One text holds byte 0xff.
       Three texts each hold one of the three escape forms. One text has
       several lines, tabs, and a non-breaking space. One text is
@@ -61,13 +61,17 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       token.
 - [ ] AC3: If the CLI text holds "not running" in any letter case,
       `lms_server_stop()` prints an info message and returns the CLI exit
-      code invisibly, with no abort. `lms_daemon_stop()` keeps its two
+      code invisibly, with no abort. On 2026-09-29, `lms server stop` with
+      no server running exited 1 with the stderr text "Error: The server is
+      not running.", and the test uses that text. `lms_daemon_stop(force =
+      TRUE)` with no server running now shows this info message too, and a
+      test asserts it. `lms_daemon_stop()` keeps its two
       exits. If the text holds "part of LM Studio" in any letter case, it
       returns `FALSE` with the GUI message. A text that holds "not running"
       and not the GUI phrase returns `TRUE` with the already-stopped
       message.
-      The phrases are matched in the text that AC1 selects, after cleaning
-      and before the cut. If the text also has a byte that is not valid
+      In both functions, the phrases are matched in the text that AC1
+      selects, after cleaning and before the cut. If the text also has a byte that is not valid
       UTF-8, each exit still holds. Today that byte makes
       `lms_daemon_stop()` fail with the base R error "input string 1 is
       invalid UTF-8". The abort of `lms_daemon_stop()` keeps its hint about
@@ -99,7 +103,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 ## Coverage
 
 - AC1 → T1, T2, T3
-- AC2 → T1, T2
+- AC2 → T1, T2, T3
 - AC3 → T2, T3
 - AC4 → T4
 - AC5 → T5
@@ -116,15 +120,19 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - [ ] T2: Route the failed runs of `lms_server_stop()` and
       `lms_daemon_start()` through the helper with `The CLI said:`. Add the
       not-running exit to `lms_server_stop()` through `rlm_alert_info()`.
-      Add one table-driven test file that runs all four functions over the
-      AC1 and AC2 texts. Mock `lms_path()` and `processx::run`, so no CLI
-      runs (LESSONS, M003).
+      Add one table-driven test file that runs three functions over the
+      AC1 and AC2 texts. T3 adds the `lms_daemon_stop()` rows. Add the AC3
+      tests of the `lms_server_stop()` exit: plain text, invalid UTF-8
+      text, and a phrase more than 1000 characters before the end. Mock
+      `lms_path()` and `processx::run`, so no CLI runs (LESSONS, M003).
 - [ ] T3: Rewrite the failure branch of `lms_daemon_stop()` in
       `R/daemon.R` to use the helper. Match the two phrases in the cleaned
       text before the cut, "part of LM Studio" first. Change the label to
       `The CLI said:` and keep the hint. Update the brace test in
-      `test-daemon.R` to the new label. Add the AC3 tests, including the
-      invalid UTF-8 regression, which must fail before the fix.
+      `test-daemon.R` to the new label. Add the `lms_daemon_stop()` rows to
+      the T2 test file. Add its AC3 tests, including the invalid UTF-8
+      regression, which must fail before the fix, and the `force = TRUE`
+      message.
 - [ ] T4: In `R/setup.R`, raise the non-zero-exit abort of
       `install_lmstudio()` so that its outer handler does not wrap it, with
       `The installer said:` and the helper. Rewrite the M028 test in
@@ -140,6 +148,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 
 - 2026-09-29: created by /milestone-plan.
 - 2026-09-29: criteria audit, full mode, one [O] reader. It returned 10 findings. Nine were fixed in the wording, and one (a second `lms_server_stop()` call aborts) went to the gate.
+- 2026-09-29: second audit pass, full mode, same [O] reader, on the gate-changed criteria. It returned 5 findings, all fixed in the wording: the cut of a `<xx>` token, a recorded stop text, the `force = TRUE` message, and two Coverage gaps.
 - 2026-09-29: plan gate chose the `The CLI said:` one-line shape over the quoted `CLI output:` shape with line breaks. The helper and its tests exist. Falsified by a user report that a collapsed multi-line CLI message is hard to read.
 - 2026-09-29: plan gate chose an info message for `lms_server_stop()` with no server over the abort. Stop calls are safe to repeat (GP5). Falsified by a CLI failure whose text holds "not running" while a server still runs.
 - 2026-09-29: plan gate chose to keep the last 1000 characters over no cap or the first 1000. A log ends with its reason. Falsified by a failure whose reason sits more than 1000 characters before the end.
