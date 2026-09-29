@@ -212,3 +212,24 @@ Evidence per criterion:
 - AC3 pass. Tests cover the server no-op, the daemon GUI exit, and the daemon not-running exit. Each runs with plain text, invalid UTF-8 text, and a phrase more than 1000 characters before the end. They also cover letter case, both phrases (GUI wins), stdout-only text, the hint, and the `force = TRUE` message.
 - AC4 pass. `test-setup.R` asserts the exit code, one "The installer said:" bullet, and one "Headless installation failed". It also asserts no "Error message:" and braces that do not run. The long-log test puts a color code, ESC 7, a window title, and byte 0xff in the kept tail. It compares the message against a cleaned text written by hand, and it went red with `strip_escapes()` planted out. Three tests assert the wrapped message for a missing `curl`, an unsupported system, and a shell that fails to start.
 - AC5 pass. The five pages state the exit code, the quote label, the stderr-then-stdout rule, `<xx>`, escape removal, whitespace, and the cut. The `lms_server_stop()` page states the not-running exit. The `lms_daemon_stop()` failure paragraph renders in `\details` (`man/lms_daemon_stop.Rd:23`). NEWS.md has one entry with parts, and the stale M053 sub-bullet is gone. Each stated behavior maps to a test named under AC1 to AC4.
+- AC6 pass. `devtools::document()` wrote nothing. The first `devtools::check()` gave 1 error. The test `test-arg-guards.R:1810` failed in `httr2::req_dry_run()` while other R sessions ran beside it. That file is not on the branch. Run alone, it passed twice. A second `devtools::check()` with nothing else running gave 0 errors, 0 warnings, and 0 notes. The vignette build stops the server before the tests run, so 3 live tests skip under `check()` (a known candidate row).
+
+Consistency gate: `cairn_validate.py` passed. No principle text changed, so `cairn_impact` did not run. `document()` gave no diff. The branch does not touch README.md, and the repo has no pkgdown site. NEWS has the entry, with no milestone numbers. The branch adds no top-level files.
+
+Findings came from three fresh reviewers. The GitHub probe found no review comments. R marks the [O] diff reviewer, B the [S] blame-history reviewer, and P the [S] prior-review reviewer. Duplicates are merged under the first ID. The list keeps the reviewers' rank. Each disposition is set at the merge gate.
+
+- R1: an escape sequence with no terminator removes the rest of the text. A probe gave "from stdout" for stderr `"\033]0;title then the real error: port in use"`.
+- R2: a lone ESC in mid-text removes the character after it. A probe gave "one" for `"\033done"` and "a" for `"a \033 b"`.
+- R3 (also B2 and O5): the `with_lms_daemon()` help still says that teardown "will fail" under the GUI (`R/daemon.R:181`). `lms_daemon_stop()` returns `FALSE` there.
+- R4: the pages and NEWS do not state that a run with no text gets no quote bullet.
+- R5 (O9): BEL, backspace, and U+009B pass through the cleaning.
+- R6 (O12): `expect_cli_said()` is a substring match, so extra text after the expected text passes.
+- R7: the whitespace test cannot see the non-breaking-space rule. The blank-stderr and no-text cases carry it.
+- R8 (O8): a cut that drops a token before a space leaves a space after the "…".
+- R9 (O13): CLI and installer aborts carry no package condition class and no `status` field.
+- R10 (also B3, P1, S1): an `NA` or `NULL` installer status now gives a bare R error. processx gives an integer.
+- R11 (also B7, O10): a latin1 or native string cleans to `<xx>` bytes. processx gives UTF-8 text.
+- R12 (also B5, O11): NEWS does not say that the "Unknown CLI error." fallback is gone.
+- B1: if the wrapped code stopped the server, as the vignette does, `with_lms_daemon()` teardown now prints "server is already stopped".
+- B4 (O14, S3): any failure text with "not running" reads as already stopped. It is the plan's recorded falsifier.
+- B6 (P2, S7): the 1000-character cut drops an early cause. It is the plan's recorded falsifier.
