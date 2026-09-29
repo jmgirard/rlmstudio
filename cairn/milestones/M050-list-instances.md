@@ -244,3 +244,34 @@ Dispositions, chosen by the maintainer at the gate on 2026-09-28:
   bullet matches the empty-server message of `list_models()`. S4, because the help page states the stricter reader
   and it is a choice local to this milestone. O8 is informational. S2 is accurate, and the new help page inherits
   that section. P2, because `test-token-rejected.R` covers the shared `request_model_list()` path.
+
+### Re-review after the AC4 amendment
+
+Evidence gathered 2026-09-28 on `m050-list-instances` at caafc79. The merge base is still `origin/main` (417e480), so
+no sync merge was needed. The LM Studio server was stopped, so the live test skipped. AC6 allows that skip. Each
+box stays ticked, and it now rests on the line below.
+
+- AC1: `NAMESPACE` line 8 has `export(list_instances)`. `test-list-instances.R` ran 20 tests with 184 expectations, 0
+  failures, and 1 skip, the live test. The two four-model tests are among them.
+- AC2: the six configuration-column tests pass in that run. No code in `config_column()` changed since the first
+  round.
+- AC3: the two empty-result tests pass in that run.
+- AC4 (amended): the test "an absent or null display_name or config gives NA, or NULL in a list-column" passes. It
+  asserts `NA` in the atomic columns `a` and `b` and `list(list(k = 1L), NULL, NULL)` in the list-column `o`, for an
+  absent and a `null` `config`. The fault tests pass and assert the full fault text. `request_model_list()` (17
+  lines) and `model_list_fault()` (44 lines) match `origin/main`. The one removed line in `R/list.R` is the
+  `@seealso` of `list_models()`. `test-list.R`, `test-model-list-shape.R`, and `test-server-ready.R` have no diff
+  against `origin/main`, and they pass: 3, 9, and 20 tests, 0 failures.
+- AC5: `test-token-wrappers.R` ran 6 tests with 101 expectations and 0 failures. `test-api-error.R` ran 24 tests
+  with 0 failures, with `list_instances` now in `api_error_callers`.
+- AC6: the recorded-reply test passes in the run above. The live test skipped because no server answered, which
+  `skip_if_no_server()` gives.
+- AC7: `devtools::document()` left `git status` clean, and `pkgdown::check_pkgdown()` found no problems.
+  `pkgdown/_pkgdown.yml`, `NEWS.md`, DESIGN, and the API reference page name the function. At the same code tree,
+  `devtools::test()` gave 13534 expectations, 0 failures, 0 warnings, and 3 live skips. `devtools::check()` gave 0
+  errors, 0 warnings, and 0 notes. Both ran on 2026-09-28 with the token set, before the tracking-only commit
+  caafc79.
+
+Consistency gate: `cairn_validate.py` passed with exit 0. No DESIGN principle changed. `devtools::document()` gave
+no diff, and `pkgdown::check_pkgdown()` passed. The branch does not touch the README. `NEWS.md` has the entry and no
+milestone number. The branch adds no top-level file, and the check gave 0 notes.
