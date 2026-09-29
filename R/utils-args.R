@@ -106,7 +106,7 @@ rlm_check_port <- function(value, arg = "port") {
   if (!is.null(fault)) {
     cli::cli_abort(
       c(
-        "{.arg {arg}} must be one whole number from 1 to 65535.",
+        "{.arg {arg}} must be {.code NULL} or one whole number from 1 to 65535.",
         "x" = "{fault}"
       ),
       call = NULL

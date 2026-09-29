@@ -62,6 +62,7 @@ If its own checks or the LM Studio CLI refuse a start, `lms_server_start()` says
 - 2026-09-28: claim audit: 46 claims read, 6 corrected — R/serve.R, R/utils-args.R, NEWS.md, man/lms_server_start.Rd, tests/testthat/test-serve.R
 - 2026-09-28: the claim audit found that `cli_output_text()` trimmed before it collapsed, so a stderr of only a form feed skipped the stdout fallback. The code now collapses first, and a test covers `"\f"` and `"\v\n"`. The other five fixes were wording: the `port` integer-step comment, the `rlm_check_port()` roxygen, the NEWS `port` and `cors` bullets, and how the quoted CLI text is reshaped. The same reader re-read all six once and found them true.
 - 2026-09-28: after the fixes, `devtools::test()` had no failures and no skips, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
+- 2026-09-28: review gate triage accepted all proposed dispositions: fix now O1, O2 with O8 and O9, O3, P2 with O7, and O6. S1 and O4 go to a candidate row, and the rest are rejected. The maintainer allowed the NEWS "Before" sentences under AC5.
 
 ## Decisions
 
@@ -96,3 +97,15 @@ Independent review, 2026-09-28: three fresh reviewers ran, [O] diff, [S] history
 - O11 (`R/serve.R`, `res$status == 0`): an `NA` status gives a base R error. Proposed: reject, because the line is not in the diff.
 - O12: the name `cli_output_text()` reads like a cli function. Proposed: reject, a naming nit.
 - S4 to S7, and the note that `cors = matrix(TRUE)` passes: no conflict found, noted.
+
+Gate triage, 2026-09-28: the maintainer accepted every proposed disposition above. The maintainer also allowed the NEWS "Before" sentences under AC5.
+
+Fix-now work, landed on the branch before the merge chip:
+
+- O1: `cli_output_text()` runs `iconv(sub = "byte")` before the collapse, so a bad byte reads `<ff>`. A new test with a stderr of `"bad \xff\n"` and status 3 checks the exit code, the text "bad", and no warnings. It failed 3 expectations before the fix.
+- O2, O8, O9: `lms_server_start()` makes `port` an integer after the checks. A new test under `options(scipen = -5)` checks "on port 8080" and the host `http://localhost:8080`. It failed 2 expectations before the fix. The accepted-port test also runs under that option now. The two comments were rewritten.
+- O3: the collapse pattern is `[[:space:]\u00a0]+`. The no-output and whitespace-stderr tests gained a non-breaking space case, and each failed 1 expectation before the fix.
+- P2, O7: each rejected `port` and `cors` value now carries its expected detail line, and the `cors` test checks "must be `TRUE` or `FALSE`".
+- O6: the `port` rule line reads "must be `NULL` or one whole number from 1 to 65535". The `port` test failed 42 expectations before the fix.
+
+The review session wrote the fixes. It then removed each fix in a scratch copy, one at a time: the integer step, the `iconv()` call, and the new pattern. It also swapped one `cors` detail. Each change turned its own test red. The Edit tool first wrote a raw non-breaking space into three lines, and a `perl` pass replaced each with the ASCII escape `\u00a0`. After the fixes, `devtools::document()` changed no `man/` file. `devtools::test()` ran 540 tests and 14241 expectations with 0 failures and 0 skips, with the server started and the token set. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. AC1 to AC6 hold on the fixed head, since each criterion's test or read still passes.

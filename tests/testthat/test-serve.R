@@ -395,6 +395,19 @@ test_that("lms_server_start warns when it cannot tell which host to ask", {
   expect_match(conditionMessage(warning), "port")
 })
 
+test_that("the success message and the readiness host print the port as digits", {
+  start_success()
+  fake_clock()
+  stub <- ready_stub(true_on = 1)
+  local_mocked_bindings(lms_server_ready = stub$fn)
+  # Under this option a double 8080 prints as "8.08e+03".
+  withr::local_options(scipen = -5, rlmstudio.quiet = FALSE)
+
+  msgs <- testthat::capture_messages(lms_server_start(port = 8080))
+  expect_match(paste(msgs, collapse = ""), "on port 8080", fixed = TRUE)
+  expect_identical(stub$calls()[[1]]$host, "http://localhost:8080")
+})
+
 test_that("lms_server_start asks the host the caller gave", {
   start_success()
   fake_clock()
@@ -467,7 +480,7 @@ local_counting_run <- function(env = parent.frame()) {
 
 # Each rejected value runs once with wait = 0 and once with a host, so the
 # check cannot hide behind a branch on either.
-expect_start_rejects <- function(arg, value, rule) {
+expect_start_rejects <- function(arg, value, rule, detail) {
   runs <- local_counting_run()
   extras <- list(list(wait = 0), list(host = "http://localhost:1234"))
   for (extra in extras) {
@@ -484,30 +497,57 @@ expect_start_rejects <- function(arg, value, rule) {
     expect_false(any(grepl("^rlmstudio_", class(err))), label = label)
     msg <- conditionMessage(err)
     expect_match(msg, paste0("`", arg, "`"), fixed = TRUE, label = label)
-    if (!is.null(rule)) {
-      expect_match(msg, rule, fixed = TRUE, label = label)
-    }
+    expect_match(msg, rule, fixed = TRUE, label = label)
+    # The detail line names which fault this value has, so a swapped or
+    # dropped detail turns the test red.
+    expect_match(msg, detail, fixed = TRUE, label = label)
   }
   expect_identical(runs$calls, 0L)
 }
 
 test_that("a port that is not one whole number from 1 to 65535 aborts first", {
+  missing <- "You gave a missing value."
+  range <- "You gave a number outside that range."
+  # Each value comes with the detail its fault must give.
   rejected <- list(
     # Not one plain number.
-    "8080", "abc", TRUE, NA, list(8080), factor("8080"), c(8080, 8081),
-    numeric(0), matrix(8080),
+    list("8080", "You gave a character value."),
+    list("abc", "You gave a character value."),
+    list(TRUE, "You gave a logical value."),
+    list(NA, missing),
+    list(list(8080), "You gave a list value."),
+    list(factor("8080"), "You gave a factor value."),
+    list(c(8080, 8081), "You gave 2 values rather than one."),
+    list(numeric(0), "You gave 0 values rather than one."),
+    list(matrix(8080), "You gave an array rather than a single number."),
     # Missing or not finite.
-    NA_real_, NA_integer_, NaN, Inf, -Inf,
+    list(NA_real_, missing),
+    list(NA_integer_, missing),
+    list(NaN, missing),
+    list(Inf, "You gave a value that is not finite."),
+    list(-Inf, "You gave a value that is not finite."),
     # Out of range or not whole.
-    -1, 0, 0L, 8080.5, 65536, 99999, 1e10
+    list(-1, range),
+    list(0, range),
+    list(0L, range),
+    list(8080.5, "You gave a number that is not whole."),
+    list(65536, range),
+    list(99999, range),
+    list(1e10, range)
   )
   expect_length(rejected, 21L)
-  for (value in rejected) {
-    expect_start_rejects("port", value, "one whole number from 1 to 65535")
+  for (case in rejected) {
+    expect_start_rejects(
+      "port", case[[1]],
+      "must be `NULL` or one whole number from 1 to 65535", case[[2]]
+    )
   }
 })
 
 test_that("an accepted port reaches the CLI as a whole-number string", {
+  # A negative scipen prints the double 8080 as "8.08e+03", so this option
+  # makes the integer step load-bearing.
+  withr::local_options(scipen = -5)
   accepted <- list(1, 65535, 8080L, 8080, c(p = 8080))
   sent <- c("1", "65535", "8080", "8080", "8080")
   for (i in seq_along(accepted)) {
@@ -527,9 +567,18 @@ test_that("an accepted port reaches the CLI as a whole-number string", {
 })
 
 test_that("a cors that is not TRUE or FALSE aborts first", {
-  rejected <- list("yes", 1, NA, NULL, logical(0), c(TRUE, FALSE))
-  for (value in rejected) {
-    expect_start_rejects("cors", value, NULL)
+  rejected <- list(
+    list("yes", "You gave a character value."),
+    list(1, "You gave a numeric value."),
+    list(NA, "You gave NA."),
+    list(NULL, "You gave NULL."),
+    list(logical(0), "You gave 0 values rather than one."),
+    list(c(TRUE, FALSE), "You gave 2 values rather than one.")
+  )
+  for (case in rejected) {
+    expect_start_rejects(
+      "cors", case[[1]], "must be `TRUE` or `FALSE`", case[[2]]
+    )
   }
 })
 
@@ -608,7 +657,9 @@ test_that("a failed start with no CLI output gives the exit code alone", {
     list(status = 1, stdout = NA_character_, stderr = NA_character_),
     list(status = 1, stdout = " \n", stderr = "\t"),
     # trimws() alone keeps these two.
-    list(status = 1, stdout = "\f", stderr = "\v\n")
+    list(status = 1, stdout = "\f", stderr = "\v\n"),
+    # \s does not match a non-breaking space (LESSONS, M013).
+    list(status = 1, stdout = "\u00a0", stderr = "\u00a0\u00a0")
   )
   for (res in empties) {
     msg <- start_failure_message(res)
@@ -626,12 +677,29 @@ test_that("stderr wins over stdout when both hold text", {
 })
 
 test_that("a stderr of only whitespace falls through to stdout", {
-  for (stderr in c("  \n ", "\f")) {
+  for (stderr in c("  \n ", "\f", "\u00a0")) {
     msg <- start_failure_message(
       list(status = 1, stdout = "from stdout\n", stderr = stderr)
     )
     expect_quotes(msg, "from stdout")
   }
+})
+
+test_that("CLI text that is not valid UTF-8 keeps the exit code in the abort", {
+  # The byte 0xff is never valid UTF-8. Before the fix, gsub() failed on it
+  # with "input string 1 is invalid", and the exit code was lost.
+  stderr <- rawToChar(as.raw(c(0x62, 0x61, 0x64, 0x20, 0xff, 0x0a)))
+  warnings <- 0L
+  msg <- withCallingHandlers(
+    start_failure_message(list(status = 3, stdout = "", stderr = stderr)),
+    warning = function(w) {
+      warnings <<- warnings + 1L
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_quotes(msg, "Failed to start the LM Studio server. Exit code: 3.")
+  expect_quotes(msg, "The CLI said: bad")
+  expect_identical(warnings, 0L)
 })
 
 test_that("none of the three warnings is silenced by the quiet option", {

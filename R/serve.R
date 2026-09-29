@@ -7,9 +7,9 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
   args <- c("server", "start")
 
   if (!is.null(port)) {
-    # rlm_check_port() limits port to whole numbers from 1 to 65535, which
-    # as.character() prints as plain digits. The integer step guards a direct
-    # call with a large double, such as 1e5, which would go out as "1e+05".
+    # lms_server_start() passes an integer already. The integer step covers a
+    # direct call with a double, which as.character() can print in
+    # scientific notation, such as "8.08e+03" under options(scipen = -5).
     args <- c(args, "--port", as.character(as.integer(port)))
   }
 
@@ -120,6 +120,12 @@ lms_server_start <- function(
   rlm_check_wait(wait)
   rlm_check_port(port)
   rlm_check_flag(cors, "cors")
+  # The port goes to the CLI, the success message, and the readiness host. An
+  # integer prints as plain digits under any scipen option, and as.integer()
+  # also drops names.
+  if (!is.null(port)) {
+    port <- as.integer(port)
+  }
   # Faults in host and token are knowable without a server, and a start that
   # has already run cannot be undone, so both are checked before the CLI runs.
   # The host check builds its request with token = NULL, so it never sees the
@@ -166,7 +172,8 @@ lms_server_start <- function(
 #' The CLI writes its reason to stderr, so stderr is read first and stdout
 #' only when stderr holds nothing. A field that is absent, `NULL`, `NA`, or
 #' only whitespace holds nothing. Each whitespace run becomes one space, so
-#' a text of several lines fits on one bullet.
+#' a text of several lines fits on one bullet. A byte that is not valid UTF-8
+#' is written as `<xx>`, its hex value.
 #'
 #' @param res The list `processx::run()` returned.
 #' @return One string, or `NULL` when neither field holds text.
@@ -176,8 +183,12 @@ cli_output_text <- function(res) {
   for (field in c("stderr", "stdout")) {
     text <- res[[field]]
     if (is.character(text) && length(text) == 1L && !is.na(text)) {
-      # Collapse first. trimws() alone keeps a form feed or a vertical tab.
-      text <- trimws(gsub("\\s+", " ", text))
+      # A byte that is not valid UTF-8 makes gsub() fail, which would hide
+      # the exit code. sub = "byte" writes such a byte as "<ff>".
+      text <- iconv(text, "UTF-8", "UTF-8", sub = "byte")
+      # Collapse first. trimws() alone keeps a form feed or a vertical tab,
+      # and [:space:] does not match a non-breaking space (LESSONS, M013).
+      text <- trimws(gsub("[[:space:]\u00a0]+", " ", text))
       if (nzchar(text)) {
         return(text)
       }
@@ -266,8 +277,8 @@ warn_unless_ready <- function(host = NULL, port = NULL, wait = 10,
   }
 
   # Each input the target is built from is checked before this point. The
-  # caller's host and port are checked before the CLI runs, and
-  # server_status_port() drops a port it cannot use. The tryCatch() stays as
+  # caller's host and port are checked before the CLI runs, and the port is
+  # an integer by then. server_status_port() drops a port it cannot use. The tryCatch() stays as
   # a guard. The start already ran and cannot be undone, so an abort from the
   # probe becomes one warning.
   # suppressWarnings() sits inside the tryCatch() so that a warning the probe
