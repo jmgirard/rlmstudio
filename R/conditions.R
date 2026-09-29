@@ -28,15 +28,15 @@
 #' Studio server is there. The call then does not raise
 #' `rlmstudio_no_server`, and what it does depends on what answers. On a
 #' status-200 body that does not parse as JSON, the chat functions,
-#' [lms_embed()], [list_models()], [lms_load()], [lms_download()],
-#' [lms_download_status()], and [lms_unload_all()] raise
+#' [lms_embed()], [list_models()], [list_instances()], [lms_load()],
+#' [lms_download()], [lms_download_status()], and [lms_unload_all()] raise
 #' `rlmstudio_bad_response`. [lms_unload()] does not read the body, so it can
 #' report success. A body that parses as JSON but has another shape can
 #' come back unchanged with `simplify = FALSE`. With `simplify = TRUE`, the
 #' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it.
-#' [list_models()] raises it for a model list with another shape, and so do
-#' [lms_unload_all()] and [lms_load()] without `force = TRUE`, which read that
-#' list. [lms_load()], [lms_download()], and [lms_download_status()] raise it
+#' [list_models()] and [list_instances()] raise it for a model list with
+#' another shape, and so do [lms_unload_all()] and [lms_load()] without
+#' `force = TRUE`, which read that list. [lms_load()], [lms_download()], and [lms_download_status()] raise it
 #' for a reply of their own with another shape, such as `{}`. A process that
 #' does not answer in HTTP gives an `httr2_failure` error. Use [lms_server_ready()] for
 #' the stronger test: it asks the host for a model list and reports `TRUE`

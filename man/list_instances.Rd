@@ -105,15 +105,15 @@ accepts the connection, so the condition is not raised even though no LM
 Studio server is there. The call then does not raise
 \code{rlmstudio_no_server}, and what it does depends on what answers. On a
 status-200 body that does not parse as JSON, the chat functions,
-\code{\link[=lms_embed]{lms_embed()}}, \code{\link[=list_models]{list_models()}}, \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}},
-\code{\link[=lms_download_status]{lms_download_status()}}, and \code{\link[=lms_unload_all]{lms_unload_all()}} raise
+\code{\link[=lms_embed]{lms_embed()}}, \code{\link[=list_models]{list_models()}}, \code{\link[=list_instances]{list_instances()}}, \code{\link[=lms_load]{lms_load()}},
+\code{\link[=lms_download]{lms_download()}}, \code{\link[=lms_download_status]{lms_download_status()}}, and \code{\link[=lms_unload_all]{lms_unload_all()}} raise
 \code{rlmstudio_bad_response}. \code{\link[=lms_unload]{lms_unload()}} does not read the body, so it can
 report success. A body that parses as JSON but has another shape can
 come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, the
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it.
-\code{\link[=list_models]{list_models()}} raises it for a model list with another shape, and so do
-\code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE}, which read that
-list. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it
+\code{\link[=list_models]{list_models()}} and \code{\link[=list_instances]{list_instances()}} raise it for a model list with
+another shape, and so do \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without
+\code{force = TRUE}, which read that list. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it
 for a reply of their own with another shape, such as \code{{}}. A process that
 does not answer in HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for
 the stronger test: it asks the host for a model list and reports \code{TRUE}

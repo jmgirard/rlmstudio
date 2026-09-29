@@ -274,7 +274,7 @@ test_that("a display_name that is not a string aborts with rlmstudio_bad_respons
     cnd <- instances_raised_by(instances_body(c(loaded_llm, bad)))
     expect_bad_instances(
       cnd,
-      c("`display_name`", "entry 2 of `models`"),
+      c("`display_name` of entry 2 of `models` is not a string."),
       paste("display_name as", form)
     )
   }
@@ -289,7 +289,12 @@ test_that("a config that is not a JSON object aborts with rlmstudio_bad_response
     cnd <- instances_raised_by(instances_body(c(loaded_llm, bad)))
     expect_bad_instances(
       cnd,
-      c("`config`", "entry 2 of `loaded_instances` in entry 2 of `models`"),
+      c(
+        paste(
+          "`config` of entry 2 of `loaded_instances` in entry 2 of `models`",
+          "is not a JSON object."
+        )
+      ),
       paste("config as", form)
     )
   }

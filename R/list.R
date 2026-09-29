@@ -18,7 +18,8 @@
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #'
 #' @seealso [LM Studio List Models
-#'   API](https://lmstudio.ai/docs/developer/rest/list)
+#'   API](https://lmstudio.ai/docs/developer/rest/list), and
+#'   [list_instances()] for one row per loaded instance.
 #'
 #' @return A \code{data.frame} containing information about the available
 #' models. By default, it includes columns for \code{state}, \code{type},

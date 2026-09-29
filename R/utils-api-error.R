@@ -174,7 +174,7 @@ rlm_abort_bad_response <- function(
 
 #' Abort on a model-management reply with the wrong shape
 #'
-#' `list_models()`, `lms_load()`, `lms_download()`, and
+#' `list_models()`, `list_instances()`, `lms_load()`, `lms_download()`, and
 #' `lms_download_status()` have no `simplify` argument, so the default hint of
 #' `rlm_abort_bad_response()` does not apply to them. This hint names the kind
 #' of reply instead.

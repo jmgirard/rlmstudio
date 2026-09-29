@@ -1,6 +1,6 @@
 # M050: A table of loaded model instances
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -134,6 +134,8 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: claim audit: 55 claims read, 3 corrected — R/conditions.R, tests/testthat/test-list-instances.R, data-raw/record-list-instances-cassette.R
 - 2026-09-28: the claim audit reader verified its two open items on its re-read. `lms ps --json` reports `status`, `queued`, `ttlMs`, and `lastUsedTime`, and the recording has none of them. The installed LM Studio is 0.4.25+1. The last suite run after the fixes gave 0 failures, with three live tests skipped because the server had stopped.
 - 2026-09-28: review evidence recorded for AC1 to AC7 and the consistency gate passed. The three fresh reviewers are running, so their findings are not triaged yet.
+- 2026-09-28: gate fix-now work landed for S1, P1, O3, O5, S5, S6. `devtools::test()` gave 0 failures and 0 warnings, with 3 live skips because the server had stopped. The full check was not rerun, and the re-review owes it.
+- 2026-09-28: amendment return: AC4 — "An absent or `null` `config` gives `NA` in every configuration column, or `NULL` in a list-column."
 
 ## Review
 
@@ -221,3 +223,18 @@ are set at the merge gate.
 - P2 `test-list-instances.R:343`: no 401 or 403 token-hint test. The hint goes through `request_model_list()`, which
   `test-token-rejected.R` covers through `list_models()`.
 - Flaky test: the first `devtools::check()` failed once in `test-ttl.R`, which this branch does not touch.
+
+Dispositions, chosen by the maintainer at the gate on 2026-09-28:
+
+- Fix now: S1, P1, O3, O5, S5, S6. S1 adds `list_instances()` to both lists in "Server not running". P1 adds it to
+  `api_error_callers`. O3 asserts the full fault text. O5 adds "of a type in `type`" and the `quiet` rule to NEWS. S5
+  adds a `@seealso` link on `list_models()`. S6 names the fifth caller. A planted dropped `host` turned the
+  host-forwarding test red, and a planted wrong `display_name` text turned its fault test red. Both plants were
+  reverted.
+- Amendment return: O7. AC4 changes one clause, as the work log records.
+- Follow-up: O2 becomes a candidate row. O4 and the flaky `test-ttl.R` run share a second candidate row.
+- Rejected: O1, because AC2 asks for this naming. O6, because the help page says a list-column holds values as
+  `jsonlite::parse_json()` returns them. S3, because the plan chose the four-column empty result, and the `"i"`
+  bullet matches the empty-server message of `list_models()`. S4, because the help page states the stricter reader
+  and it is a choice local to this milestone. O8 is informational. S2 is accurate, and the new help page inherits
+  that section. P2, because `test-token-rejected.R` covers the shared `request_model_list()` path.
