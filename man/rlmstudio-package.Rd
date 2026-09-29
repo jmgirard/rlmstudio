@@ -8,6 +8,13 @@
 \description{
 Run local Large Language Models (LLMs) over many texts from 'R' without sending data to a third party. A community-maintained wrapper for the 'LM Studio' command line interface and API that provides functions to manage the local daemon and server, download and load models, and score, label, or generate text at scale.
 }
+\section{Options}{
+
+\itemize{
+\item \code{rlmstudio.quiet}: A logical value. If \code{TRUE}, suppresses informational console messages and progress bars across the package. Defaults to \code{FALSE}. The \code{quiet} argument of \code{\link[=list_models]{list_models()}}, \code{\link[=list_instances]{list_instances()}}, \code{\link[=lms_chat_batch]{lms_chat_batch()}}, and \code{\link[=lms_embed]{lms_embed()}} defaults to \code{NULL}, which follows this option. \code{quiet = TRUE} hides the output of that function, and \code{quiet = FALSE} shows it, also when this option is \code{TRUE}. The option does not change the \code{quiet} argument of \code{\link[=lms_server_status]{lms_server_status()}}, which passes \code{--quiet} to the \code{lms} CLI.
+}
+}
+
 \seealso{
 Useful links:
 \itemize{

@@ -17,10 +17,12 @@
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param api_type Character. The LM Studio API endpoint to use. Options are
 #'   "openresponses" (default), "openai", or "native".
-#' @param logprobs Logical. Whether to return the log probabilities of the
-#'   generated tokens. Default is FALSE.
-#' @param simplify Logical. If TRUE, extracts the core text response. Default is
-#'   TRUE.
+#' @param logprobs `TRUE` or `FALSE`. Whether to return the log probabilities
+#'   of the generated tokens. Default is `FALSE`. Any other value, `NULL` and
+#'   `NA` included, aborts before the check for a running server.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, extracts the core text
+#'   response. Default is `TRUE`. Any other value, `NULL` and `NA` included,
+#'   aborts before the check for a running server.
 #' @param ... Additional arguments passed to the selected API body.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
@@ -147,9 +149,12 @@ lms_chat <- function(
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param logprobs Logical. Whether to return token probabilities.
-#' @param simplify Logical. If TRUE, parses output to text and dataframe. If
-#'   FALSE, returns raw list.
+#' @param logprobs `TRUE` or `FALSE`. Whether to return token probabilities.
+#'   Any other value, `NULL` and `NA` included, aborts before the check for a
+#'   running server.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses output to text and
+#'   dataframe. If `FALSE`, returns raw list. Any other value, `NULL` and `NA`
+#'   included, aborts before the check for a running server.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature). This
 #'   endpoint accepts a `ttl` field and ignores it. The model keeps the idle
 #'   time that the server sets.
@@ -407,9 +412,12 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param logprobs Logical. Whether to request logprobs (currently stubbed by LM
-#'   Studio).
-#' @param simplify Logical. If TRUE, parses output to text.
+#' @param logprobs `TRUE` or `FALSE`. Whether to request logprobs (currently
+#'   stubbed by LM Studio). Any other value, `NULL` and `NA` included, aborts
+#'   before the check for a running server.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses output to text. Any
+#'   other value, `NULL` and `NA` included, aborts before the check for a
+#'   running server.
 #' @param ... Additional API arguments. A `response_format` here cannot be
 #'   combined with `schema`.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
@@ -1153,12 +1161,18 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param simplify Logical. If TRUE, parses output to text.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses output to text. Any
+#'   other value, `NULL` and `NA` included, aborts before the check for a
+#'   running server.
 #' @param ... Additional API arguments. This endpoint rejects a `ttl` field
 #'   with status 400, which raises `rlmstudio_api_error`.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
+#'   The package also checks each element named exactly `logprobs`. It must
+#'   be `TRUE`, `FALSE`, or `NULL`, and any other value aborts before the check
+#'   for a running server. The endpoint has no logprobs, so no `logprobs` field
+#'   goes into the request body, and a `TRUE` warns.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. The body can
@@ -1483,11 +1497,21 @@ integer_or_na <- function(x) {
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param simplify Logical. If TRUE, parses outputs.
-#' @param quiet Logical. Whether to suppress the progress bar.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses outputs. Any other
+#'   value, `NULL` and `NA` included, aborts before the check for a running
+#'   server.
+#' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+#'   `rlmstudio.quiet` option. `TRUE` hides the progress bar, and `FALSE` shows
+#'   it, also when the option is `TRUE`. Any other value, `NA` included, aborts
+#'   before the check for a running server. `quiet` does not hide the warnings
+#'   about failed inputs, cut-off replies, or a vector format that returns a
+#'   list.
 #' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,
 #'   `logprobs`, `schema`, or `ttl`. A `schema`, a `ttl`, and the `api_type`
 #'   that each needs are checked before the first call.
+#'   A `logprobs` here, or a shortened name that [lms_chat()] reads as
+#'   `logprobs`, must be `TRUE` or `FALSE`. Any other value, `NULL` and `NA`
+#'   included, aborts before the check for a running server.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.

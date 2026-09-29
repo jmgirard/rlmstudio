@@ -10,10 +10,11 @@
 #'   `n` embeddings, in the order given. Must hold at least one value and no
 #'   missing values.
 #' @param host Character. Server URL.
-#' @param simplify Logical. If `TRUE`, the default, returns a numeric matrix
-#'   with one row per input. Any other value returns a list with one element
-#'   per request: the parsed response body, unchanged, or the condition of a
-#'   request that failed.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, the default, returns a
+#'   numeric matrix with one row per input. `FALSE` returns a list with one
+#'   element per request: the parsed response body, unchanged, or the
+#'   condition of a request that failed. Any other value, `NULL` and `NA`
+#'   included, aborts before the check for a running server.
 #' @param ... Additional fields for the request body. LM Studio ignores a
 #'   field it does not recognize, and two OpenAI fields are worth naming for
 #'   that reason: LM Studio ignores `dimensions`, so asking for a narrower
@@ -31,10 +32,12 @@
 #' @param batch_size A whole number from 1 to `.Machine$integer.max`. The
 #'   most texts that one request carries. The default is 100. A value at
 #'   least as large as `length(input)` sends every text in one request.
-#' @param quiet Logical or `NULL`. Whether to suppress the progress bar. `NULL`
-#'   reads the `rlmstudio.quiet` option. The bar shows only when the call sends
-#'   more than one request. `quiet` does not suppress the warning about failed
-#'   inputs.
+#' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+#'   `rlmstudio.quiet` option. `TRUE` hides the progress bar, and `FALSE` shows
+#'   it, also when the option is `TRUE`. The bar shows only when the call sends
+#'   more than one request. Any other value, `NA` included, aborts before the
+#'   check for a running server. `quiet` does not suppress the warning about
+#'   failed inputs.
 #' @return If `simplify = FALSE`, a list with one element per request, in
 #'   request order. Each element is the parsed JSON body of that request, or
 #'   the condition of a request that failed. A call with one request returns

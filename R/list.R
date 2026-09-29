@@ -14,9 +14,9 @@
 #' @param detailed `TRUE` or `FALSE`. Show all information about each model.
 #'   Defaults to \code{FALSE}. Any other value, `NULL` and `NA` included,
 #'   aborts before the check for a running server.
-#' @param quiet `TRUE`, `FALSE`, or `NULL`. If \code{TRUE}, suppresses
-#'   informative console messages. `FALSE` and `NULL` print them unless the
-#'   `rlmstudio.quiet` option is `TRUE`. Defaults to \code{FALSE}. Any other
+#' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+#'   `rlmstudio.quiet` option. `TRUE` hides the message printed when no model
+#'   is found, and `FALSE` prints it, also when the option is `TRUE`. Any other
 #'   value, `NA` included, aborts before the check for a running server. Does
 #'   not suppress the abort raised when the server is not running.
 #' @param host Character. The host address of the local server.
@@ -196,9 +196,9 @@ list_models <- function(
 #'   element can be `NA`, empty, or whitespace only. Any other value, `NULL`
 #'   and a factor included, aborts before the check for a running server. A
 #'   type that no model has, such as `"vlm"`, matches nothing.
-#' @param quiet `TRUE`, `FALSE`, or `NULL`. If \code{TRUE}, suppresses the
-#'   message printed when no instance is found. `FALSE` and `NULL` print it
-#'   unless the `rlmstudio.quiet` option is `TRUE`. Defaults to \code{FALSE}.
+#' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+#'   `rlmstudio.quiet` option. `TRUE` hides the message printed when no
+#'   instance is found, and `FALSE` prints it, also when the option is `TRUE`.
 #'   Any other value, `NA` included, aborts before the check for a running
 #'   server. Does not suppress the abort raised when the server is not
 #'   running.

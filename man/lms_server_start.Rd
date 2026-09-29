@@ -18,7 +18,8 @@ whole number from 1 to 65535, given as a number and not as an array or a
 string. \code{NULL}, the default, lets LM Studio use the last used port.}
 
 \item{cors}{Logical. Enable CORS support for web application development.
-Must be \code{TRUE} or \code{FALSE}. Defaults to \code{FALSE}.}
+Must be \code{TRUE} or \code{FALSE}. Defaults to \code{FALSE}. Any other value, \code{NULL}
+and \code{NA} included, aborts before the \code{lms} CLI runs.}
 
 \item{wait}{Numeric. How many seconds to keep asking the REST API whether
 it is ready. Defaults to 10. With \code{wait = 0} the function sends no

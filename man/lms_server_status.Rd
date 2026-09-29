@@ -12,11 +12,17 @@ lms_server_status(
 )
 }
 \arguments{
-\item{json}{Logical. Output the status in machine-readable JSON format.}
+\item{json}{\code{TRUE} or \code{FALSE}. Output the status in machine-readable JSON
+format. Any other value, \code{NULL} and \code{NA} included, aborts before the \code{lms}
+CLI runs.}
 
-\item{verbose}{Logical. Enable detailed logging output.}
+\item{verbose}{\code{TRUE} or \code{FALSE}. Enable detailed logging output. Any other
+value, \code{NULL} and \code{NA} included, aborts before the \code{lms} CLI runs.}
 
-\item{quiet}{Logical. Suppress all logging output.}
+\item{quiet}{\code{TRUE} or \code{FALSE}. \code{TRUE} passes \code{--quiet} to the \code{lms} CLI,
+which suppresses all logging output. The \code{rlmstudio.quiet} option does not
+change it. Any other value, \code{NULL} and \code{NA} included, aborts before the
+\code{lms} CLI runs.}
 
 \item{log_level}{Character. The level of logging to use (e.g., "info",
 "debug").}

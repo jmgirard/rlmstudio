@@ -11,7 +11,7 @@ lms_chat_batch(
   format = c("vector", "list", "data.frame"),
   host = "http://localhost:1234",
   simplify = TRUE,
-  quiet = FALSE,
+  quiet = NULL,
   ...,
   token = NULL
 )
@@ -29,13 +29,23 @@ one value and no missing values.}
 
 \item{host}{Character. Server URL.}
 
-\item{simplify}{Logical. If TRUE, parses outputs.}
+\item{simplify}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, parses outputs. Any other
+value, \code{NULL} and \code{NA} included, aborts before the check for a running
+server.}
 
-\item{quiet}{Logical. Whether to suppress the progress bar.}
+\item{quiet}{\code{TRUE}, \code{FALSE}, or \code{NULL}, the default. \code{NULL} follows the
+\code{rlmstudio.quiet} option. \code{TRUE} hides the progress bar, and \code{FALSE} shows
+it, also when the option is \code{TRUE}. Any other value, \code{NA} included, aborts
+before the check for a running server. \code{quiet} does not hide the warnings
+about failed inputs, cut-off replies, or a vector format that returns a
+list.}
 
 \item{...}{Additional arguments passed to \code{lms_chat}, such as \code{api_type},
 \code{logprobs}, \code{schema}, or \code{ttl}. A \code{schema}, a \code{ttl}, and the \code{api_type}
 that each needs are checked before the first call.
+A \code{logprobs} here, or a shortened name that \code{\link[=lms_chat]{lms_chat()}} reads as
+\code{logprobs}, must be \code{TRUE} or \code{FALSE}. Any other value, \code{NULL} and \code{NA}
+included, aborts before the check for a running server.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.}
@@ -185,9 +195,10 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
-\code{type} or \code{quiet} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{loaded}
-or \code{detailed} of \code{\link[=list_models]{list_models()}}, or a \code{stream} in the \code{...} of a chat
-function, aborts
+\code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
+argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
+the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

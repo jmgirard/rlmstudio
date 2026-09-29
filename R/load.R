@@ -6,17 +6,25 @@
 #'   consider.
 #' @param eval_batch_size Integer. Number of input tokens to process together in
 #'   a single batch during evaluation.
-#' @param flash_attention Logical. Whether to optimize attention computation.
+#' @param flash_attention `TRUE`, `FALSE`, or `NULL`. Whether to optimize
+#'   attention computation. `NULL`, the default, leaves the field out of the
+#'   request. Any other value, `NA` and `"true"` included, aborts before the
+#'   check for a running server.
 #' @param num_experts Integer. Number of experts to use during inference for MoE
 #'   models.
-#' @param offload_kv_cache_to_gpu Logical. Whether KV cache is offloaded to GPU
-#'   memory.
-#' @param echo_load_config Logical. If \code{TRUE}, echoes the final load
-#'   configuration in the response.
-#' @param force Logical. If \code{TRUE}, bypasses the check for currently loaded
-#'   models and requests a new instance from the server. Note that this does not
-#'   overwrite or replace the existing model; it loads a second concurrent
-#'   instance into VRAM. Defaults to \code{FALSE}.
+#' @param offload_kv_cache_to_gpu `TRUE`, `FALSE`, or `NULL`. Whether KV cache
+#'   is offloaded to GPU memory. `NULL`, the default, leaves the field out of
+#'   the request. Any other value, `NA` and `"true"` included, aborts before
+#'   the check for a running server.
+#' @param echo_load_config `TRUE` or `FALSE`. If \code{TRUE}, echoes the final
+#'   load configuration in the response. Any other value, `NULL` and `NA`
+#'   included, aborts before the check for a running server.
+#' @param force `TRUE` or `FALSE`. If \code{TRUE}, bypasses the check for
+#'   currently loaded models and requests a new instance from the server. Note
+#'   that this does not overwrite or replace the existing model; it loads a
+#'   second concurrent instance into VRAM. Defaults to \code{FALSE}. Any other
+#'   value, `NULL` and `NA` included, aborts before the check for a running
+#'   server.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
 #' @param token Character or `NULL`. An API token for a server that requires

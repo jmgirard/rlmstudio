@@ -28,21 +28,29 @@ consider.}
 \item{eval_batch_size}{Integer. Number of input tokens to process together in
 a single batch during evaluation.}
 
-\item{flash_attention}{Logical. Whether to optimize attention computation.}
+\item{flash_attention}{\code{TRUE}, \code{FALSE}, or \code{NULL}. Whether to optimize
+attention computation. \code{NULL}, the default, leaves the field out of the
+request. Any other value, \code{NA} and \code{"true"} included, aborts before the
+check for a running server.}
 
 \item{num_experts}{Integer. Number of experts to use during inference for MoE
 models.}
 
-\item{offload_kv_cache_to_gpu}{Logical. Whether KV cache is offloaded to GPU
-memory.}
+\item{offload_kv_cache_to_gpu}{\code{TRUE}, \code{FALSE}, or \code{NULL}. Whether KV cache
+is offloaded to GPU memory. \code{NULL}, the default, leaves the field out of
+the request. Any other value, \code{NA} and \code{"true"} included, aborts before
+the check for a running server.}
 
-\item{echo_load_config}{Logical. If \code{TRUE}, echoes the final load
-configuration in the response.}
+\item{echo_load_config}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, echoes the final
+load configuration in the response. Any other value, \code{NULL} and \code{NA}
+included, aborts before the check for a running server.}
 
-\item{force}{Logical. If \code{TRUE}, bypasses the check for currently loaded
-models and requests a new instance from the server. Note that this does not
-overwrite or replace the existing model; it loads a second concurrent
-instance into VRAM. Defaults to \code{FALSE}.}
+\item{force}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, bypasses the check for
+currently loaded models and requests a new instance from the server. Note
+that this does not overwrite or replace the existing model; it loads a
+second concurrent instance into VRAM. Defaults to \code{FALSE}. Any other
+value, \code{NULL} and \code{NA} included, aborts before the check for a running
+server.}
 
 \item{host}{Character. The host address of the local server. Defaults to
 "http://localhost:1234".}
@@ -68,9 +76,10 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
-\code{type} or \code{quiet} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{loaded}
-or \code{detailed} of \code{\link[=list_models]{list_models()}}, or a \code{stream} in the \code{...} of a chat
-function, aborts
+\code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
+argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
+the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

@@ -122,7 +122,7 @@ rows.
       the four warnings with `quiet = TRUE` and the option `TRUE`. Test the
       two `lms_server_status()` cases of AC3 through
       `build_args_server_status()` and the exported function.
-- [ ] T4: Help text for each argument of AC1 to AC5, and the
+- [x] T4: Help text for each argument of AC1 to AC5, and the
       `rlmstudio.quiet` entry in `R/rlmstudio-package.R`. If the
       `rlmstudio-conditions` page names these checks, update it. In NEWS, rewrite the unreleased `quiet`
       bullet of `list_models()` (`NEWS.md:21`), and add one entry for the
@@ -146,6 +146,7 @@ rows.
 - 2026-09-29: T1 done. The five chat functions check `logprobs` and `simplify` above the server probe. The batch checks a `logprobs` name in `rlm_chat_dots()` output, and the native function checks and drops each exact `logprobs`. `test-flag-args.R` covers the chat functions only until T2 and leaves `quiet` to T3. `devtools::test()` gave 0 failures.
 - 2026-09-29: T2 done. `lms_embed()`, `lms_load()`, `lms_daemon_stop()`, and `lms_server_status()` check their flags, and the load body sends `isTRUE()`. `as.logical()` also dropped names and dims, so the body test does not tell the two apart. Its matrix cases fail on a value sent with no conversion, which sends `[[true]]`. `test-load.R` passed `flash_attention = 1` and now passes `TRUE`. `devtools::test()` gave 0 failures.
 - 2026-09-29: T3 done. `quiet` defaults to `NULL` in three functions, `lms_embed()` and `lms_chat_batch()` check it, and `R/list.R` passes it into `rlm_inform()`. The nine pairs and the `lms_server_status()` cases are in `test-flag-args.R`. The four warnings are tested in `test-chat-batch-cut-off.R` and `test-embed.R`, beside their fixtures. A stale comment on the old batch default in `test-chat-batch-cut-off.R` is fixed. `devtools::test()` gave 0 failures.
+- 2026-09-29: T4 done. Help text names the accepted values of each flag, the conditions page names the flag checks, and NEWS has two new entries. Two unreleased NEWS bullets that stated the old `quiet` rule are fixed. The `rlmstudio.quiet` entry sat on a `NULL` block that roxygen skips, so it never reached `?rlmstudio`. It now sits on the package block, and NEWS says so. A second `devtools::document()` run wrote nothing.
 
 ## Decisions
 
