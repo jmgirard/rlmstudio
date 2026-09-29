@@ -33,9 +33,10 @@
 #'   most texts that one request carries. The default is 100. A value at
 #'   least as large as `length(input)` sends every text in one request.
 #' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
-#'   `rlmstudio.quiet` option. `TRUE` hides the progress bar, and `FALSE` shows
-#'   it, also when the option is `TRUE`. The bar shows only when the call sends
-#'   more than one request. Any other value, `NA` included, aborts before the
+#'   `rlmstudio.quiet` option. `TRUE` starts no progress bar, and `FALSE` starts
+#'   one, also when the option is `TRUE`. cli draws a started bar only after a
+#'   delay, two seconds by default. A bar starts only when the
+#'   call sends more than one request. Any other value, `NA` included, aborts before the
 #'   check for a running server. `quiet` does not suppress the warning about
 #'   failed inputs.
 #' @return If `simplify = FALSE`, a list with one element per request, in

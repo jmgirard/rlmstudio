@@ -36,7 +36,7 @@ A \code{data.frame} with one row per loaded instance of a model
 whose type is in \code{type}, with the columns that the "Columns" section
 describes. If there is no such instance, it returns a \code{data.frame}
 with zero rows and the four character columns, invisibly, and prints a
-message unless \code{quiet = TRUE} or the \code{rlmstudio.quiet} option is \code{TRUE}.
+message that \code{quiet} controls.
 }
 \description{
 Retrieves the loaded model instances on the server via the LM Studio REST

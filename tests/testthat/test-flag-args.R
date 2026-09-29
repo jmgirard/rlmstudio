@@ -209,9 +209,9 @@ for (name in names(flag_domain)) {
         good[arg] <- list(probe$value)
         info <- paste0(name, "(", arg, ") with ", probe$label)
         err <- tryCatch(do.call(fn, good), error = identity)
-        expect_s3_class(err, "error")
+        expect_true(inherits(err, "error"), info = info)
         expect_true(passed_the_checks(err), info = info)
-        expect_gt(steps_taken(calls), 0)
+        expect_gt(steps_taken(calls), 0, label = info)
       }
     }
   })
@@ -238,14 +238,19 @@ test_that("a logprobs in the dots of lms_chat_batch() takes only TRUE or FALSE",
     }
   }
 
-  for (probe in flag_good_values) {
-    calls <- local_flag_stubs("lms_chat_batch")
-    err <- tryCatch(
-      lms_chat_batch("a-model", c("a", "b"), logprobs = probe$value),
-      error = identity
-    )
-    expect_s3_class(err, "rlmstudio_no_server")
-    expect_identical(calls$server, 1L, info = probe$label)
+  for (field in prefixes) {
+    for (probe in flag_good_values) {
+      calls <- local_flag_stubs("lms_chat_batch")
+      dots <- list(probe$value)
+      names(dots) <- field
+      info <- paste0("lms_chat_batch(", field, " = ", probe$label, ")")
+      err <- tryCatch(
+        do.call(lms_chat_batch, c(list("a-model", c("a", "b")), dots)),
+        error = identity
+      )
+      expect_true(inherits(err, "rlmstudio_no_server"), info = info)
+      expect_identical(calls$server, 1L, info = info)
+    }
   }
 })
 
@@ -372,6 +377,16 @@ for (name in output_quiet) {
         calls,
         info = paste0(name, "(quiet) with ", probe$label)
       )
+    }
+
+    for (probe in flag_good_values) {
+      calls <- local_flag_stubs(name)
+      good <- args
+      good["quiet"] <- list(probe$value)
+      info <- paste0(name, "(quiet) with ", probe$label)
+      err <- tryCatch(do.call(fn, good), error = identity)
+      expect_true(inherits(err, "rlmstudio_no_server"), info = info)
+      expect_identical(calls$server, 1L, info = info)
     }
   })
 }

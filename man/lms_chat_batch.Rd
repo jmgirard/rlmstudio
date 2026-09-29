@@ -34,9 +34,10 @@ value, \code{NULL} and \code{NA} included, aborts before the check for a running
 server.}
 
 \item{quiet}{\code{TRUE}, \code{FALSE}, or \code{NULL}, the default. \code{NULL} follows the
-\code{rlmstudio.quiet} option. \code{TRUE} hides the progress bar, and \code{FALSE} shows
-it, also when the option is \code{TRUE}. Any other value, \code{NA} included, aborts
-before the check for a running server. \code{quiet} does not hide the warnings
+\code{rlmstudio.quiet} option. \code{TRUE} starts no progress bar, and \code{FALSE}
+starts one, also when the option is \code{TRUE}. cli draws a started bar only
+after a delay, two seconds by default. Any other value, \code{NA} included,
+aborts before the check for a running server. \code{quiet} does not hide the warnings
 about failed inputs, cut-off replies, or a vector format that returns a
 list.}
 

@@ -1214,8 +1214,10 @@ type_fault <- function(value) {
 #'
 #' `isTRUE()` and `isFALSE()` decide, as in D-023, so names, dims, and
 #' attributes on a logical of length one pass. With `null_ok = TRUE`, `NULL`
-#' passes too. `quiet` takes that form, because `NULL` there reads the
-#' `rlmstudio.quiet` option through `is_quiet()`.
+#' passes too, for an argument where `NULL` has its own meaning. For `quiet`,
+#' `NULL` reads the `rlmstudio.quiet` option through `is_quiet()`. For the
+#' two load settings of `lms_load()`, it leaves the field out of the body. For
+#' a `logprobs` in the dots of `lms_chat_native()`, it does nothing.
 #'
 #' @param value The value the caller passed.
 #' @param arg Character. The argument name to report.

@@ -215,7 +215,7 @@ list_models <- function(
 #'   whose type is in `type`, with the columns that the "Columns" section
 #'   describes. If there is no such instance, it returns a \code{data.frame}
 #'   with zero rows and the four character columns, invisibly, and prints a
-#'   message unless `quiet = TRUE` or the `rlmstudio.quiet` option is `TRUE`.
+#'   message that `quiet` controls.
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure

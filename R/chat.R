@@ -1501,9 +1501,10 @@ integer_or_na <- function(x) {
 #'   value, `NULL` and `NA` included, aborts before the check for a running
 #'   server.
 #' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
-#'   `rlmstudio.quiet` option. `TRUE` hides the progress bar, and `FALSE` shows
-#'   it, also when the option is `TRUE`. Any other value, `NA` included, aborts
-#'   before the check for a running server. `quiet` does not hide the warnings
+#'   `rlmstudio.quiet` option. `TRUE` starts no progress bar, and `FALSE`
+#'   starts one, also when the option is `TRUE`. cli draws a started bar only
+#'   after a delay, two seconds by default. Any other value, `NA` included,
+#'   aborts before the check for a running server. `quiet` does not hide the warnings
 #'   about failed inputs, cut-off replies, or a vector format that returns a
 #'   list.
 #' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,

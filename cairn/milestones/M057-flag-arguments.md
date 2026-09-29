@@ -154,6 +154,8 @@ rows.
 - 2026-09-29: review started. No PR yet, main not moved. AC1 to AC6 evidence recorded and ticked. AC7 check and two reviewers still running.
 - 2026-09-29: AC7 evidence recorded and ticked, consistency gate passed. The diff-bug reviewer is still running.
 - 2026-09-29: three-lens review done, 9 findings logged with proposed dispositions, none a criterion failure. Pre-gate checkpoint.
+- step-7 approval: m057-flag-arguments approved for merge, with the six fix-now findings applied first.
+- 2026-09-29: fix-now work for O1 to O5 and S1 applied, and O6 and O7 filed as one candidate row. A planted `quiet` defect turned the four new pass-value blocks red. Checkpoint: the re-run of test and check is still going.
 
 ## Decisions
 
@@ -170,7 +172,7 @@ Evidence, 2026-09-29, on branch head de5feba (main at cd90e63 had not moved):
 - AC7: `devtools::test()` gave 0 failures, 0 warnings, 3 skips for the live server, and 16907 passes. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes, so no note needs the cd90e63 baseline.
 - Consistency gate: `cairn_validate.py` exited 0. `devtools::document()` left no diff. README.Rmd is unchanged, there is no pkgdown site, and DESIGN.md is unchanged. NEWS has the entries, and no new top-level file was added.
 
-Independent review, three fresh lenses. The prior-review lens found no finding, and the GitHub probe was empty. No finding shows a criterion failing. Proposed dispositions, pending the gate:
+Independent review, three fresh lenses. The prior-review lens found no finding, and the GitHub probe was empty. No finding shows a criterion failing. The gate accepted each proposed disposition below:
 
 - O1 (fix now): the `@return` of `list_instances()` at `R/list.R:214-218` still says the message prints "unless `quiet = TRUE` or the `rlmstudio.quiet` option is `TRUE`". With the option `TRUE`, `quiet = FALSE` prints it. The reviewer ran this case.
 - O2 (fix now): the `quiet` help of `lms_chat_batch()` and `lms_embed()` says `FALSE` "shows" the bar. It only starts one, and cli draws it only in a dynamic terminal after a delay.
