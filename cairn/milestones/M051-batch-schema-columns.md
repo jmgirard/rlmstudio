@@ -1,6 +1,6 @@
 # M051: A schema data-frame batch returns one column per schema property
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -63,6 +63,8 @@ With an object `schema` and `format = "data.frame"`, `lms_chat_batch()` returns 
 - 2026-09-28: T4 done. `rlm_check_property_names()` runs before `stop_if_no_server()`. The test went red with the check replaced by a no-op, and `devtools::test()` is clean.
 - 2026-09-28: T5 done. The six-schema test went red with a planted check that reads `c("object", "null")` as an object type, and `devtools::test()` is clean.
 - 2026-09-28: T6 done. The help page and NEWS state the column, type, `NA` and `NULL`, and abort rules. Each claim maps to a T1, T4, or T5 test in `test-chat-schema.R` or `test-arg-guards.R`. With the server running and the token set, `devtools::document()`, `devtools::test()` (no skips), and `devtools::check()` (0 errors, 0 warnings, 0 notes) are clean.
+- 2026-09-28: claim audit: 41 claims read, 1 corrected — R/chat.R, man/lms_chat_batch.Rd, NEWS.md, R/utils-args.R, tests/testthat/test-arg-guards.R, test-chat-batch.R, test-chat-batch-usage.R, test-chat-schema.R. The corrected claim says that a data frame with `logprobs = TRUE` also skips the name check. A new test case covers it, and the reader's re-read found that it holds.
+- 2026-09-28: `devtools::test()` and `devtools::check()` (0 errors, 0 warnings, 0 notes) are clean after the fix. Status set to review.
 
 ## Decisions
 

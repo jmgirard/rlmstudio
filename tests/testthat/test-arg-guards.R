@@ -621,6 +621,21 @@ test_that("a schema property name that cannot name a column aborts before the se
     expect_identical(out, list(list(a = "x")), info = case$label)
   }
   expect_length(recorder$requests, 2L * length(cases))
+
+  # A data frame with logprobs holds text replies and adds no property
+  # column, so it does not check the names either.
+  out <- lms_chat_batch(
+    "a-model",
+    "hi",
+    format = "data.frame",
+    quiet = TRUE,
+    api_type = "openai",
+    logprobs = TRUE,
+    schema = list(type = "object", properties = list(output = one))
+  )
+  expect_identical(names(out)[1:3], c("input", "output", "logprobs"))
+  expect_identical(out$output, '{"a": "x"}')
+  expect_length(recorder$requests, 2L * length(cases) + 1L)
 })
 
 # A call to each function that takes `ttl`, valid apart from `ttl`, keyed by

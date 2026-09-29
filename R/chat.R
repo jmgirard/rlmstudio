@@ -1558,8 +1558,8 @@ integer_or_na <- function(x) {
 #' A property name that is empty, `NA`, repeated, or equal to another column
 #' name aborts before the call checks for a running server. The other column
 #' names are `input`, `output`, `response_id`, `input_tokens`,
-#' `total_output_tokens`, and `reasoning_output_tokens`. The list and vector
-#' formats do not check the names.
+#' `total_output_tokens`, and `reasoning_output_tokens`. A data frame with
+#' `logprobs = TRUE`, and the list and vector formats, do not check the names.
 #' @details
 #' This function calls [lms_chat()] once for each element of `inputs`. It
 #' raises `rlmstudio_no_server` itself, before the first call.

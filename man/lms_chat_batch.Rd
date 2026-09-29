@@ -128,8 +128,8 @@ cells. So does the row of an input that failed.
 A property name that is empty, \code{NA}, repeated, or equal to another column
 name aborts before the call checks for a running server. The other column
 names are \code{input}, \code{output}, \code{response_id}, \code{input_tokens},
-\code{total_output_tokens}, and \code{reasoning_output_tokens}. The list and vector
-formats do not check the names.
+\code{total_output_tokens}, and \code{reasoning_output_tokens}. A data frame with
+\code{logprobs = TRUE}, and the list and vector formats, do not check the names.
 }
 \description{
 Process a vector of inputs sequentially through LM Studio.
