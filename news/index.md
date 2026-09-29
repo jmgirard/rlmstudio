@@ -2,6 +2,28 @@
 
 ## rlmstudio (development version)
 
+- With `api_type = "openai"`, an object `schema`,
+  `format = "data.frame"`, and `logprobs = FALSE`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now adds one column per top-level property of the schema. The columns
+  come after the four reply columns, in the order of `properties`, and
+  have the property names. The `output` list-column stays. The columns
+  come from the schema and not from the replies. If every input failed,
+  they are still there.
+
+  - A `"string"`, `"integer"`, `"number"`, or `"boolean"` property gives
+    a character, integer, double, or logical column. A pair of such a
+    type and `"null"` gives the same column type. Any other property
+    gives a list-column, and a nested object gets no columns of its own.
+  - A field that is not one value of the column type gives `NA` with no
+    warning, and `output` keeps the value. A list-column cell is `NULL`
+    for an absent or `null` field. A reply that is not a JSON object and
+    the row of a failed input give `NA` and `NULL` cells.
+  - If a property name is empty, `NA`, repeated, or equal to another
+    column name such as `output`, the call now aborts. It aborts before
+    the check for a running server. A data frame with `logprobs = TRUE`,
+    and the list and vector formats, do not check the names.
+
 - New
   [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
   returns one row per loaded model instance, the view that `lms ps`
@@ -588,14 +610,16 @@
 - With `api_type = "openresponses"` or `api_type = "openai"` and
   `format = "data.frame"`,
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now returns four more columns at the end of the data frame:
-  `response_id`, `input_tokens`, `total_output_tokens`, and
-  `reasoning_output_tokens`. They carry the names of the first four
-  native columns, so batches from the three routes share them.
-  `response_id` is the reply’s `id`. The counts come from the reply’s
-  `usage` object. The OpenResponses route reads `input_tokens`,
-  `output_tokens`, and `output_tokens_details.reasoning_tokens`. The
-  OpenAI route reads `prompt_tokens`, `completion_tokens`, and
+  now returns four more columns: `response_id`, `input_tokens`,
+  `total_output_tokens`, and `reasoning_output_tokens`. They follow
+  `output`. With `logprobs = TRUE`, they follow `logprobs`. With an
+  object `schema`, the property columns come after them. They carry the
+  names of the first four native columns, so batches from the three
+  routes share them. `response_id` is the reply’s `id`. The counts come
+  from the reply’s `usage` object. The OpenResponses route reads
+  `input_tokens`, `output_tokens`, and
+  `output_tokens_details.reasoning_tokens`. The OpenAI route reads
+  `prompt_tokens`, `completion_tokens`, and
   `completion_tokens_details.reasoning_tokens`. The columns are there
   with `logprobs = TRUE` and with a `schema` too. `response_id` is
   character, and the counts are double. If a field is absent or is not

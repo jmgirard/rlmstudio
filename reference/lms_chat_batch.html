@@ -110,7 +110,7 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The return type depends on the <code>format</code> argument:</p><ul><li><p><code>"vector"</code>: A character vector of responses, with <code>NA</code> for an input that failed. This format is only supported if <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>. With a <code>schema</code>, it warns and returns the list instead.</p></li>
 <li><p><code>"list"</code>: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a <code>schema</code>, <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code>, each element that did not fail is the parsed reply.</p></li>
-<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code>, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow, as described below.</p></li>
+<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code>, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow <code>output</code>, or <code>logprobs</code> when it is there, as described below. With an object <code>schema</code> and <code>logprobs = FALSE</code>, one column per schema property comes after them, as described below.</p></li>
 </ul><p>With <code>api_type = "native"</code> and <code>format = "data.frame"</code>, the data frame ends
 with seven columns read from each reply: <code>response_id</code>, <code>input_tokens</code>,
 <code>total_output_tokens</code>, <code>reasoning_output_tokens</code>, <code>tokens_per_second</code>,
@@ -124,8 +124,9 @@ or is not a JSON object, all six stats cells are <code>NA</code>. The server can
 a field out, such as <code>model_load_time_seconds</code>. Such a cell does not fail
 the input and gives no warning.</p>
 <p>With <code>api_type = "openresponses"</code> or <code>api_type = "openai"</code> and
-<code>format = "data.frame"</code>, the data frame ends with four columns read from
-each reply: <code>response_id</code>, <code>input_tokens</code>, <code>total_output_tokens</code>, and
+<code>format = "data.frame"</code>, the data frame has four columns read from each
+reply after <code>output</code>, or after <code>logprobs</code> when it is there. They are
+<code>response_id</code>, <code>input_tokens</code>, <code>total_output_tokens</code>, and
 <code>reasoning_output_tokens</code>. These are the first four native column names,
 but the servers send the values under other names:</p><ul><li><p><code>response_id</code> is the reply's <code>id</code> on both routes.</p></li>
 <li><p><code>input_tokens</code> is <code>usage.input_tokens</code> on the OpenResponses route
@@ -149,6 +150,36 @@ fields hold. The row of an input that failed holds <code>NA</code> in every colu
 read from the reply. If every input failed, those columns are still there,
 <code>response_id</code> as character and the others as double. The vector and list
 formats add no such column.</p>
+<p>With <code>api_type = "openai"</code>, <code>format = "data.frame"</code>, <code>logprobs = FALSE</code>,
+and an object <code>schema</code>, the data frame ends with one column per top-level
+property of the schema, after the four reply columns. An object schema has
+a <code>type</code> of <code>"object"</code>, written as a string or as a list that holds that
+one string. Its <code>properties</code> is a list of one or more named entries. Each
+column has the property name, in the order of <code>properties</code>. The columns
+come from the schema and not from the replies, so they are there even when
+every input failed. The properties of a nested object get no columns of
+their own. Any other schema adds no column.</p>
+<p>The type of a property column follows the <code>type</code> of the property.
+<code>"string"</code> gives character, <code>"integer"</code> gives integer, <code>"number"</code> gives
+double, and <code>"boolean"</code> gives logical. Each type can be a string or a list
+that holds that one string. A pair of one of these types and <code>"null"</code>,
+such as <code>c("integer", "null")</code>, gives the same column type. Any other
+<code>type</code>, no <code>type</code>, or a property that is not a list gives a list-column.</p>
+<p>A cell of a character, integer, double, or logical property column holds
+the field of the parsed reply when the field is one value of the column
+type. A one-item JSON array counts as one value, and an empty string is
+kept. A double column takes any number. An integer column takes an integer,
+or a whole number from -2147483647 to 2147483647. Otherwise the cell is
+<code>NA</code>, and the call gives no warning. The <code>output</code> column keeps the parsed
+reply, with the value that did not fit. A cell of a list-column holds the
+field as parsed, or <code>NULL</code> when the field is absent or <code>null</code>. A reply that
+is not a JSON object, such as an array or a number, gives <code>NA</code> and <code>NULL</code>
+cells. So does the row of an input that failed.</p>
+<p>A property name that is empty, <code>NA</code>, repeated, or equal to another column
+name aborts before the call checks for a running server. The other column
+names are <code>input</code>, <code>output</code>, <code>response_id</code>, <code>input_tokens</code>,
+<code>total_output_tokens</code>, and <code>reasoning_output_tokens</code>. A data frame with
+<code>logprobs = TRUE</code>, and the list and vector formats, do not check the names.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
