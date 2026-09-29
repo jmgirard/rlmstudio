@@ -1,13 +1,13 @@
 # M055: Cleanup of vignette teardown, test helpers, and the token hint
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP5
 - **Resolves:** —
 - **Surface tier:** user-facing — the vignettes ship, and the 401 and 403 hint is part of exported abort messages
-- **Branch/PR:** —
+- **Branch/PR:** m055-teardown-cleanup
 
 ## Goal
 
@@ -81,7 +81,7 @@ stay candidates in the ROADMAP.
 
 ## Tasks
 
-- [ ] T1: In both vignettes, add hidden chunks (`include = FALSE`). One
+- [x] T1: In both vignettes, add hidden chunks (`include = FALSE`). One
       reads the `running` field of `lms_server_status(json = TRUE)` before
       the start chunk. One reads whether `list_models(loaded = TRUE)` lists
       the model, after the readiness check. If the server was stopped
@@ -126,6 +126,8 @@ stay candidates in the ROADMAP.
 - 2026-09-29: plan gate chose to fail a live embedding test on a model-list error over a skip that quotes the error. A skip keeps the suite green on a misconfigured machine. Falsified by a routine check setup whose server rejects the token on purpose.
 - 2026-09-29: plan gate chose both parts of the `request_target()` row over the parse guard alone. The header part is small and closes the row. Falsified by an opt-in that callers other than the header readers need.
 - 2026-09-29: plan chose a hint flag read off the built request over one token read passed to `lms_client()`. A `NULL` result is read again inside `lms_client()`, so the race stays. Falsified by an httr2 release that drops the header name from the request object.
+- 2026-09-29: implement started on branch m055-teardown-cleanup. Question gate skipped, because the plan left no choice open.
+- 2026-09-29: T1 done. Both vignettes read `server_was_running` and `model_was_loaded` in hidden chunks, and the unload, stop, and `with-daemon` chunks run only on those flags. The `with-daemon` block reads its own `loaded_here` flag in visible code, because its unload runs inside `with_lms_daemon()`. No R code changed, so no test run.
 
 ## Decisions
 
