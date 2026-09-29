@@ -91,7 +91,7 @@ stay candidates in the ROADMAP.
       the model, it unloads it.
 - [x] T2: Install the branch with `devtools::install()`. Run the eight
       renders of AC1, and read both facts before and after each render.
-- [ ] T3: Delete the `on.exit()` unload fallbacks at
+- [x] T3: Delete the `on.exit()` unload fallbacks at
       `tests/testthat/test-chat.R:13-18` and
       `tests/testthat/test-integration.R:15-20`. Run the AC2 sweep and the
       live test run.
@@ -129,6 +129,7 @@ stay candidates in the ROADMAP.
 - 2026-09-29: implement started on branch m055-teardown-cleanup. Question gate skipped, because the plan left no choice open.
 - 2026-09-29: T1 done. Both vignettes read `server_was_running` and `model_was_loaded` in hidden chunks, and the unload, stop, and `with-daemon` chunks run only on those flags. The `with-daemon` block reads its own `loaded_here` flag in visible code, because its unload runs inside `with_lms_daemon()`. No R code changed, so no test run.
 - 2026-09-29: T2 done. After `devtools::install()` of b14cffd, the eight renders all exited 0, and each left `running` and the `lms ps` listing of `google/gemma-3-1b` as they were before it. Control: the main vignette `getting-started.Rmd`, rendered from running with the model loaded, left the server stopped and the model unloaded. A kept render of `headless-config.Rmd` from stopped with no model showed `lms_ready` TRUE and the load, unload, and stop output, so the chunks ran live.
+- 2026-09-29: T3 done. The AC2 sweep over four files lists five calls, all inside `with_mock_dir()` blocks. With the token set, the server running, and `google/gemma-3-1b` loaded, `devtools::test(filter = "^(chat|integration)$")` passed 1584 and left the model loaded. Control: main's `test-integration.R`, run live the same way, unloaded it. Full `devtools::test()` with T3 to T5 in the tree: 0 failures, 0 skips, 14646 passes, and the model stayed loaded.
 
 ## Decisions
 

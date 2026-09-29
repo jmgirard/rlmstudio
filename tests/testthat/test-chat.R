@@ -9,14 +9,6 @@ test_that("Full Integration: Download, Load, and Rate", {
 
   target_model <- "google/gemma-3-1b"
 
-  # Safe teardown fallback (silences the error if it runs unmocked)
-  on.exit(
-    {
-      try(lms_unload(target_model), silent = TRUE)
-    },
-    add = TRUE
-  )
-
   httptest2::with_mock_dir("chat_integration", {
     lms_download(target_model)
     lms_load(target_model, flash_attention = TRUE)
