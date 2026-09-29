@@ -63,6 +63,14 @@ lms_load <- function(
   token = NULL
 ) {
   rlm_check_id(model, "model")
+  rlm_check_flag(flash_attention, "flash_attention", null_ok = TRUE)
+  rlm_check_flag(
+    offload_kv_cache_to_gpu,
+    "offload_kv_cache_to_gpu",
+    null_ok = TRUE
+  )
+  rlm_check_flag(echo_load_config, "echo_load_config")
+  rlm_check_flag(force, "force")
 
   stop_if_no_server(host)
 
@@ -89,7 +97,9 @@ lms_load <- function(
     }
   }
 
-  # 1. Build the explicit body based on current known parameters
+  # 1. Build the explicit body based on current known parameters. `isTRUE()`
+  # sends each checked flag as a plain `true` or `false`, with no names or
+  # dims.
   body <- list(
     model = model,
     context_length = if (!is.null(context_length)) {
@@ -103,13 +113,13 @@ lms_load <- function(
       NULL
     },
     flash_attention = if (!is.null(flash_attention)) {
-      as.logical(flash_attention)
+      isTRUE(flash_attention)
     } else {
       NULL
     },
     num_experts = if (!is.null(num_experts)) as.integer(num_experts) else NULL,
     offload_kv_cache_to_gpu = if (!is.null(offload_kv_cache_to_gpu)) {
-      as.logical(offload_kv_cache_to_gpu)
+      isTRUE(offload_kv_cache_to_gpu)
     } else {
       NULL
     },

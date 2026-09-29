@@ -126,6 +126,8 @@ build_args_daemon_down <- function() {
 #' lms_daemon_stop(force = TRUE)
 #' }
 lms_daemon_stop <- function(force = FALSE) {
+  rlm_check_flag(force, "force")
+
   if (isTRUE(force)) {
     tryCatch(lms_server_stop(), error = function(e) NULL)
   }

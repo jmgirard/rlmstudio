@@ -158,15 +158,34 @@ expect_flag_abort <- function(call, arg, probe, calls, info) {
   expect_identical(calls$delegate, 0L, info = paste(info, "reached a delegate"))
 }
 
-# Only the chat functions carry their checks so far, and `quiet` gets its own
-# rule later.
+# The `quiet` of these three gets its own rule later.
 flag_domain <- flag_formals()
-flag_domain <- flag_domain[startsWith(names(flag_domain), "lms_chat")]
-flag_domain <- lapply(flag_domain, setdiff, "quiet")
+quiet_later <- c("list_instances", "list_models", "lms_chat_batch")
+flag_domain[quiet_later] <- lapply(flag_domain[quiet_later], setdiff, "quiet")
+flag_domain <- Filter(length, flag_domain)
 
 test_that("the flag scan finds functions and arguments", {
   expect_gt(length(flag_domain), 0)
   expect_gt(length(unlist(flag_domain)), 0)
+  # A record of what the scan found on the day this was written, never the
+  # source of the domain. A new flag turns this red, which is the signal to
+  # check that it carries a check.
+  expect_setequal(
+    names(flag_domain),
+    c(
+      "list_models",
+      "lms_chat",
+      "lms_chat_batch",
+      "lms_chat_native",
+      "lms_chat_openai",
+      "lms_chat_openresponses",
+      "lms_daemon_stop",
+      "lms_embed",
+      "lms_load",
+      "lms_server_start",
+      "lms_server_status"
+    )
+  )
 })
 
 for (name in names(flag_domain)) {
@@ -311,4 +330,75 @@ test_that("no logprobs field of lms_chat_native() reaches the request body", {
   lms_chat_native("a-model", "a prompt", logprobs_x = "yes")
   sent <- request_target(recorder$requests[[length(recorder$requests)]])$body
   expect_identical(sent$logprobs_x, "yes")
+})
+
+load_settings <- c("flash_attention", "offload_kv_cache_to_gpu")
+
+test_that("the two load settings of lms_load() are TRUE, FALSE, or NULL", {
+  probes <- c(
+    Filter(function(p) !is.null(p$value), flag_bad_values),
+    # `as.logical()` once read this as TRUE.
+    list(list(label = "the string true", value = "true", match = "a character value"))
+  )
+  for (arg in load_settings) {
+    for (probe in probes) {
+      calls <- local_flag_stubs("lms_load")
+      bad <- list(model = "a-model")
+      bad[arg] <- list(probe$value)
+      expect_flag_abort(
+        do.call(lms_load, bad),
+        arg,
+        probe,
+        calls,
+        info = paste0("lms_load(", arg, ") with ", probe$label)
+      )
+    }
+
+    passing <- list(NULL, TRUE, FALSE)
+    for (value in passing) {
+      calls <- local_flag_stubs("lms_load")
+      good <- list(model = "a-model")
+      good[arg] <- list(value)
+      err <- tryCatch(do.call(lms_load, good), error = identity)
+      expect_s3_class(err, "rlmstudio_no_server")
+      expect_identical(calls$server, 1L, info = paste(arg, deparse(value)))
+    }
+  }
+})
+
+test_that("the two load settings reach the load body as plain true or false", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(mock_response(body = '{"status": "loaded"}'))
+  withr::local_options(rlmstudio.quiet = TRUE)
+
+  cases <- list(
+    list(label = "TRUE", value = TRUE, sent = "true"),
+    list(label = "a named TRUE", value = c(x = TRUE), sent = "true"),
+    list(label = "a one-by-one TRUE matrix", value = matrix(TRUE), sent = "true"),
+    list(label = "FALSE", value = FALSE, sent = "false"),
+    list(label = "a one-by-one FALSE matrix", value = matrix(FALSE), sent = "false"),
+    list(label = "NULL", value = NULL, sent = NULL)
+  )
+  for (arg in load_settings) {
+    for (case in cases) {
+      call_args <- list(model = "a-model", force = TRUE)
+      call_args[arg] <- list(case$value)
+      do.call(lms_load, call_args)
+      req <- recorder$requests[[length(recorder$requests)]]
+      expect_identical(req$url, "http://localhost:1234/api/v1/models/load")
+      text <- request_body_text(req)
+      info <- paste(arg, "with", case$label)
+      if (is.null(case$sent)) {
+        expect_no_match(text, arg, fixed = TRUE, info = info)
+      } else {
+        # The field ends at a comma or brace, so `[true]` or `{"x":true}`
+        # cannot match.
+        expect_match(
+          text,
+          paste0('"', arg, '":', case$sent, "[,}]"),
+          info = info
+        )
+      }
+    }
+  }
 })

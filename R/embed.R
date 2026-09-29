@@ -111,6 +111,7 @@ lms_embed <- function(
   rlm_check_text(input, "input")
   rlm_check_ttl(ttl)
   rlm_check_batch_size(batch_size)
+  rlm_check_flag(simplify, "simplify")
 
   stop_if_no_server(host)
 

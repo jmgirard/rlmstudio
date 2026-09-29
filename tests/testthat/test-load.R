@@ -8,7 +8,7 @@ test_that("lms_load aborts with class rlmstudio_no_server when the server is dow
   )
 })
 
-test_that("lms_load builds body with correct integer/logical conversions", {
+test_that("lms_load builds body with correct integer conversion and flags", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
 
   recorder <- local_request_sequence(list(
@@ -20,7 +20,7 @@ test_that("lms_load builds body with correct integer/logical conversions", {
     lms_load(
       model = "test-model",
       context_length = "2048", # string that should become integer
-      flash_attention = 1, # numeric that should become logical
+      flash_attention = TRUE, # test-flag-args.R covers the other values
       custom_param = "extra" # testing the dots (...) modification
     )
   })

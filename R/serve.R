@@ -532,6 +532,10 @@ lms_server_status <- function(
   quiet = FALSE,
   log_level = NULL
 ) {
+  rlm_check_flag(json, "json")
+  rlm_check_flag(verbose, "verbose")
+  rlm_check_flag(quiet, "quiet")
+
   logging_flags <- sum(c(isTRUE(verbose), isTRUE(quiet), !is.null(log_level)))
   if (logging_flags > 1) {
     cli::cli_warn("Only one logging control flag can be used at a time.")

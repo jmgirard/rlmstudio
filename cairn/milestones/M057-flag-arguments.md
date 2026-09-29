@@ -106,7 +106,7 @@ rows.
       the request, and `processx::run()` count their calls (M015 lesson).
       For `lms_chat()`, stub its delegates, so that its own check is the one
       under test (M003 and M013 lessons).
-- [ ] T2: The other functions. Check `simplify` of `lms_embed()`,
+- [x] T2: The other functions. Check `simplify` of `lms_embed()`,
       `echo_load_config` and `force` of `lms_load()`, `force` of
       `lms_daemon_stop()`, and `json`, `verbose`, and `quiet` of
       `lms_server_status()`. Check `flash_attention` and
@@ -144,6 +144,7 @@ rows.
 - 2026-09-29: plan chose a scan of exported formals as the test domain over a hand list of functions because a new flag argument then falls under the test; falsified by a flag argument whose default is not a constant `TRUE` or `FALSE` that the scan misses.
 - 2026-09-29: implement started on branch m057-flag-arguments. Question gate skipped, because the plan left nothing open. The export scan found that `lms_embed()` takes `quiet = NULL` with no check, so T3 adds one for AC2.
 - 2026-09-29: T1 done. The five chat functions check `logprobs` and `simplify` above the server probe. The batch checks a `logprobs` name in `rlm_chat_dots()` output, and the native function checks and drops each exact `logprobs`. `test-flag-args.R` covers the chat functions only until T2 and leaves `quiet` to T3. `devtools::test()` gave 0 failures.
+- 2026-09-29: T2 done. `lms_embed()`, `lms_load()`, `lms_daemon_stop()`, and `lms_server_status()` check their flags, and the load body sends `isTRUE()`. `as.logical()` also dropped names and dims, so the body test does not tell the two apart. Its matrix cases fail on a value sent with no conversion, which sends `[[true]]`. `test-load.R` passed `flash_attention = 1` and now passes `TRUE`. `devtools::test()` gave 0 failures.
 
 ## Decisions
 
