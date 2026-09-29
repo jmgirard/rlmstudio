@@ -106,8 +106,8 @@ lms_load <- function(
   }
 
   # 1. Build the explicit body based on current known parameters. `isTRUE()`
-  # sends each checked flag as a plain `true` or `false`, with no names or
-  # dims.
+  # sends each of the two load settings as a plain `true` or `false`, with no
+  # names or dims.
   body <- list(
     model = model,
     context_length = if (!is.null(context_length)) {

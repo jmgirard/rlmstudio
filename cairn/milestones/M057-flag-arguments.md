@@ -1,6 +1,6 @@
 # M057: One meaning for each flag argument
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -149,6 +149,8 @@ rows.
 - 2026-09-29: T4 done. Help text names the accepted values of each flag, the conditions page names the flag checks, and NEWS has two new entries. Two unreleased NEWS bullets that stated the old `quiet` rule are fixed. The `rlmstudio.quiet` entry sat on a `NULL` block that roxygen skips, so it never reached `?rlmstudio`. It now sits on the package block, and NEWS says so. A second `devtools::document()` run wrote nothing.
 - 2026-09-29: T5 done. In a scratch copy, the `simplify` check of `lms_chat()` and the `json` check of `lms_server_status()` were deleted. Of 27 blocks in `test-flag-args.R`, only the blocks of those two functions went red, with "a delegate was reached" and "the lms CLI ran".
 - 2026-09-29: T6 done. `devtools::test()` gave 0 failures and 3 skips for the live server. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes, so the cd90e63 baseline run was not needed.
+- claim audit: 63 claims read, 2 corrected — R/load.R, R/rlmstudio-package.R (man/rlmstudio-package.Rd regenerated). The re-read found both corrected claims true. A third finding, on the older "across the package" phrase of the option entry, was left because the branch did not add it.
+- 2026-09-29: implement done, status set to review.
 
 ## Decisions
 
