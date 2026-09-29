@@ -141,7 +141,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - [x] T5: Update the five help pages and add the NEWS.md entry. Write each
       stated behavior from a test run of T1 to T4. Run
       `devtools::document()`.
-- [ ] T6: Run `devtools::test()` and `devtools::check()`. Set
+- [x] T6: Run `devtools::test()` and `devtools::check()`. Set
       `RLMSTUDIO_API_TOKEN` and start the server first (LESSONS, M009).
 
 ## Work log
@@ -160,6 +160,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: T3 done. `lms_daemon_stop()` matches its phrases in `cli_output_clean()` text and aborts through `rlm_abort_cli_run()` with its hint. Its new tests went red first, the invalid UTF-8 and no-text cases included. The `force = TRUE` test passed before T3, because T2 added the server exit. `devtools::test()`: 554 tests, 0 failed, 3 skipped.
 - 2026-09-29: T4 done. The install `tryCatch()` now returns the run, and the exit-code check follows it through `rlm_abort_cli_run()` with "The installer said". The M028 test is rewritten. On the old code the two output tests went red, and the three wrapped-message tests passed, as they pin unchanged text. `devtools::test()`: 558 tests, 0 failed, 3 skipped.
 - 2026-09-29: T5 done. Five help pages and one NEWS entry with two parts. Minor amendment: the pages of `lms_daemon_start()` and `lms_daemon_stop()` also get a corrected `@return`, and the GUI section of `lms_daemon_stop()` no longer says the call fails. The code returns 0, or `TRUE` and `FALSE`, and tests assert both. A second `document()` wrote nothing, and `devtools::test()` gave 558 tests, 0 failed.
+- 2026-09-29: T6 done. With the server started and the token set, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 
