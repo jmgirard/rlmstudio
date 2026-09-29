@@ -1,6 +1,6 @@
 # M050: A table of loaded model instances
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -141,6 +141,7 @@ requests, the ttl, and the last-used time. They go to a candidate row. The miles
 - 2026-09-28: the absent-config test in `test-list-instances.R` now also asserts `NULL` cells in a list-column. A planted defect that gave `NA` there turned only that assertion red.
 - 2026-09-28: claim audit: 12 claims read, 0 corrected — NEWS.md, R/conditions.R, R/list.R, R/utils-api-error.R, tests/testthat/test-api-error.R, tests/testthat/test-list-instances.R (the lines added since 909b7fd, which the first audit did not read)
 - 2026-09-28: the claim audit also found that the chat model lookup is missing from two help notes, which is older than this branch. It went into the M049 model-name candidate row as a seventh case.
+- 2026-09-28: amendment complete, status review. With the token set and the server stopped, `devtools::test()` gave 0 failures, 0 warnings, and 3 live skips. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 
 ## Review
 
