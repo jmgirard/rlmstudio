@@ -1083,6 +1083,65 @@ test_that("a list property cell holds the parsed field, and NULL when it is abse
   )
 })
 
+test_that("a schema that is not an object schema adds no column", {
+  schemas <- list(
+    "the empty list" = list(),
+    "an array type" = list(type = "array", items = list(type = "integer")),
+    "an object or null type" = list(
+      type = c("object", "null"),
+      properties = list(score = list(type = "integer"))
+    ),
+    "no properties" = list(type = "object"),
+    "empty properties" = list(
+      type = "object",
+      properties = structure(list(), names = character())
+    ),
+    "properties with no names" = list(
+      type = "object",
+      properties = list(list(type = "integer"))
+    )
+  )
+  for (label in names(schemas)) {
+    out <- batch_with_reply('{"score": 3}', "data.frame", schema = schemas[[label]])
+    expect_identical(names(out), frame_columns, info = label)
+    expect_identical(out$output, list(list(score = 3L), list(score = 3L)), info = label)
+  }
+})
+
+test_that("an object schema adds no column with logprobs or outside a data frame", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_recorder(mock_response(200L, completion_body(quoted('{"score": 3}'))))
+  out <- lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = "data.frame",
+    quiet = TRUE,
+    api_type = "openai",
+    logprobs = TRUE,
+    schema = score_schema
+  )
+  expect_identical(
+    names(out),
+    c("input", "output", "logprobs", frame_columns[-(1:2)])
+  )
+  # The reply is text with logprobs, so it is not parsed.
+  expect_identical(out$output, c('{"score": 3}', '{"score": 3}'))
+
+  schema <- object_schema(
+    zeta = list(type = "string"),
+    alpha = list(type = "integer")
+  )
+  reply <- '{"zeta": "a", "alpha": 1}'
+  parsed <- list(zeta = "a", alpha = 1L)
+  out <- batch_with_reply(reply, "list", schema = schema)
+  expect_identical(out, list(parsed, parsed))
+  expect_warning(
+    out <- batch_with_reply(reply, "vector", schema = schema),
+    "cannot store replies parsed"
+  )
+  expect_identical(out, list(parsed, parsed))
+})
+
 test_that("the property columns keep their types when every input failed", {
   schema <- object_schema(
     s = list(type = "string"),
