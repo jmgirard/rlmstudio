@@ -105,13 +105,16 @@ test_that("a failed installer run quotes its output", {
 })
 
 test_that("a long installer log is cleaned and keeps its end", {
+  # The escape codes near the end sit in the part that the cut keeps: a
+  # color code, the cursor save code ESC 7, and a window title.
   stdout <- paste0(
     "\033[32mDownloading\033[0m\n",
     strrep("8", 1500),
-    "\ncurl: (22) The requested URL returned error: 404 ",
+    "\ncurl: (22) The requested URL returned error: \033[31m404\033[0m\0337",
+    "\033]0;lmstudio.ai\a ",
     rawToChar(as.raw(0xff))
   )
-  # The cleaning written out by hand: no color codes, one space per line
+  # The cleaning written out by hand: no escape codes, one space per line
   # break, and the byte 0xff as "<ff>".
   cleaned <- paste0(
     "Downloading ",
@@ -129,6 +132,8 @@ test_that("a long installer log is cleaned and keeps its end", {
     fixed = TRUE
   )
   expect_no_match(shown$message, "Downloading", fixed = TRUE)
+  expect_no_match(shown$message, "\033", fixed = TRUE)
+  expect_no_match(shown$message, "lmstudio.ai", fixed = TRUE)
 })
 
 # Every other error inside the install step keeps the wrapped message.

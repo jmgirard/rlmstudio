@@ -76,10 +76,10 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #' function aborts. The message gives the exit code and quotes what the CLI
 #' wrote, after "The CLI said:". The quoted text is the stderr text, or the
 #' stdout text if stderr holds only whitespace. A byte that is not valid
-#' UTF-8 shows as `<xx>`, its hex value. ANSI color codes, cursor codes, and
-#' terminal links are removed, and each run of whitespace becomes one space.
-#' A text longer than 1000 characters keeps at most its last 1000
-#' characters, after "…".
+#' UTF-8 shows as `<xx>`, its hex value. ANSI escape codes, such as color
+#' codes, cursor codes, and terminal links, are removed, and each run of
+#' whitespace becomes one space. A text longer than 1000 characters keeps at
+#' most its last 1000 characters, after "…".
 #'
 #' A wait that runs out does not abort. The server was already started and
 #' that cannot be undone, so the function raises a warning and returns the
@@ -166,7 +166,10 @@ lms_server_start <- function(
 #' Abort for a failed CLI run
 #'
 #' The message gives the exit code. If the run wrote any text, a bullet
-#' quotes it after `label`, as `cli_output_text()` gives it.
+#' quotes it after `label`. The quoted text is `text`, cut by
+#' `cli_output_cut()`. A caller that looks for a phrase reads
+#' `cli_output_clean()` first and passes it as `text`, so a phrase far from
+#' the end is still found.
 #'
 #' @param what The first sentence of the message. It is a cli format string,
 #'   so it never holds text from the CLI.
@@ -197,28 +200,13 @@ rlm_abort_cli_run <- function(
   cli::cli_abort(c(msg, hint), call = call)
 }
 
-#' Read the text a failed CLI run gave
-#'
-#' `cli_output_text()` is the text a failed-run abort quotes. It is the text
-#' of `cli_output_clean()`, cut by `cli_output_cut()`. A caller that looks
-#' for a phrase reads `cli_output_clean()`, so a phrase far from the end is
-#' still found.
-#'
-#' @param res The list `processx::run()` returned.
-#' @return One string, or `NULL` when neither field holds text.
-#'
-#' @noRd
-cli_output_text <- function(res) {
-  cli_output_cut(cli_output_clean(res))
-}
-
 #' Clean the text a failed CLI run gave
 #'
 #' The CLI writes its reason to stderr, so stderr is read first and stdout
 #' only when stderr holds nothing. A field that is absent, `NULL`, `NA`, or
 #' only whitespace holds nothing. A byte that is not valid UTF-8 is written
-#' as `<xx>`, its hex value. ANSI color codes, cursor codes, and terminal
-#' links are removed. Each whitespace run becomes one space, so a text of
+#' as `<xx>`, its hex value. ANSI escape codes are removed by
+#' `cli::ansi_strip()` and then `strip_escapes()`. Each whitespace run becomes one space, so a text of
 #' several lines fits on one bullet.
 #'
 #' @param res The list `processx::run()` returned.
@@ -434,10 +422,10 @@ build_args_server_stop <- function() {
 #' function aborts. The message gives the exit code and quotes what the CLI
 #' wrote, after "The CLI said:". The quoted text is the stderr text, or the
 #' stdout text if stderr holds only whitespace. A byte that is not valid
-#' UTF-8 shows as `<xx>`, its hex value. ANSI color codes, cursor codes, and
-#' terminal links are removed, and each run of whitespace becomes one space.
-#' A text longer than 1000 characters keeps at most its last 1000
-#' characters, after "…".
+#' UTF-8 shows as `<xx>`, its hex value. ANSI escape codes, such as color
+#' codes, cursor codes, and terminal links, are removed, and each run of
+#' whitespace becomes one space. A text longer than 1000 characters keeps at
+#' most its last 1000 characters, after "…".
 #'
 #' @seealso [LM Studio CLI Server Stop
 #'   Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)

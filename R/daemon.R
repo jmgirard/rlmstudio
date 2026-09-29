@@ -17,9 +17,10 @@ build_args_daemon_up <- function() {
 #' message gives the exit code and quotes what the CLI wrote, after "The CLI
 #' said:". The quoted text is the stderr text, or the stdout text if stderr
 #' holds only whitespace. A byte that is not valid UTF-8 shows as `<xx>`,
-#' its hex value. ANSI color codes, cursor codes, and terminal links are
-#' removed, and each run of whitespace becomes one space. A text longer than
-#' 1000 characters keeps at most its last 1000 characters, after "…".
+#' its hex value. ANSI escape codes, such as color codes, cursor codes, and
+#' terminal links, are removed, and each run of whitespace becomes one space.
+#' A text longer than 1000 characters keeps at most its last 1000
+#' characters, after "…".
 #'
 #' @section Desktop Users: On desktop operating systems (macOS and Windows),
 #'   running this command may actually launch the LM Studio desktop application
@@ -90,13 +91,6 @@ build_args_daemon_down <- function() {
 #' Stops the `llmster` daemon via the CLI. Use this to clean up system resources when
 #' you are completely finished using LM Studio in headless mode.
 #'
-#' @section Desktop Users:
-#' If the daemon is currently being managed by the LM Studio desktop
-#' application, the CLI does not stop it. The CLI intentionally prevents
-#' programmatic shutdowns of the GUI to avoid disrupting visual sessions.
-#' This function then returns `FALSE`, and the daemon keeps running. In this
-#' scenario, you must close the desktop application manually.
-#'
 #' If the CLI exits with a status other than 0, the function reads what the
 #' CLI wrote. If the text says that the daemon is part of LM Studio, the
 #' function prints an info message and returns `FALSE`. If the text says
@@ -105,10 +99,17 @@ build_args_daemon_down <- function() {
 #' message gives the exit code, quotes what the CLI wrote after "The CLI
 #' said:", and gives a hint about `force = TRUE`. The quoted text is the
 #' stderr text, or the stdout text if stderr holds only whitespace. A byte
-#' that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI color codes,
-#' cursor codes, and terminal links are removed, and each run of whitespace
-#' becomes one space. A text longer than 1000 characters keeps at most its
-#' last 1000 characters, after "…".
+#' that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI escape
+#' codes, such as color codes, cursor codes, and terminal links, are
+#' removed, and each run of whitespace becomes one space. A text longer than
+#' 1000 characters keeps at most its last 1000 characters, after "…".
+#'
+#' @section Desktop Users:
+#' If the daemon is currently being managed by the LM Studio desktop
+#' application, the CLI does not stop it. The CLI intentionally prevents
+#' programmatic shutdowns of the GUI to avoid disrupting visual sessions.
+#' This function then returns `FALSE`, and the daemon keeps running. In this
+#' scenario, you must close the desktop application manually.
 #'
 #' @param force Logical. If `TRUE`, attempts to stop the local server before
 #'   shutting down the daemon. The daemon cannot be stopped while the server

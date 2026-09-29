@@ -1,9 +1,9 @@
 # rlmstudio (development version)
 
 * If a run of the LM Studio CLI or the headless installer fails, the abort message now quotes what the run wrote, beside the exit code.
-  * `lms_server_start()`, `lms_server_stop()`, `lms_daemon_start()`, and `lms_daemon_stop()` quote it after "The CLI said:". Before, `lms_server_stop()` and `lms_daemon_start()` gave the exit code alone, and `lms_daemon_stop()` wrote "CLI output:" with the text in quotes. The quoted text is the stderr text. If stderr holds only whitespace, it is the stdout text.
+  * `lms_server_start()`, `lms_server_stop()`, `lms_daemon_start()`, and `lms_daemon_stop()` quote it after "The CLI said:". Before, `lms_server_start()`, `lms_server_stop()`, and `lms_daemon_start()` gave the exit code alone. `lms_daemon_stop()` wrote "CLI output:" with the text in quotes. The quoted text is the stderr text. If stderr holds only whitespace, it is the stdout text.
   * `install_lmstudio(method = "headless")` quotes the installer output after "The installer said:". Before, the message the user saw dropped that output. Any other error of the install step still aborts with "Headless installation failed." and the error message.
-  * In the quoted text, a byte that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI color codes, cursor codes, and terminal links are removed, and each run of whitespace becomes one space. A text longer than 1000 characters keeps at most its last 1000 characters, after "…".
+  * In the quoted text, a byte that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI escape codes, such as color codes, cursor codes, and terminal links, are removed, and each run of whitespace becomes one space. A text longer than 1000 characters keeps at most its last 1000 characters, after "…".
   * If the CLI text holds a byte that is not valid UTF-8, `lms_daemon_stop()` no longer fails with a base R error.
 
 * `lms_server_stop()` with no server running now prints an info message and returns the CLI exit code invisibly. Before, it aborted. If no server is running, `lms_daemon_stop(force = TRUE)` shows the same message.
@@ -11,7 +11,6 @@
 * `lms_server_start()` now checks `port` and `cors` before the CLI runs. A bad value aborts with a message that names the argument, and no server starts.
   * `port` must be `NULL` or one whole number from 1 to 65535, given as a number. `port = "8080"` and a one-cell matrix now abort. Before, each reached the CLI as `"8080"` and started a server. A missing value, a number outside the range, and a vector of two ports now abort before the CLI runs.
   * `cors` must be `TRUE` or `FALSE`. `cors = NULL`, `NA`, `1`, and `"yes"` now abort. Before, each acted as `FALSE`.
-  * If the CLI refuses a start, the abort message now quotes the CLI output beside the exit code. The output is the stderr text. If stderr holds nothing, it is the stdout text. Whitespace at the ends of the text is dropped, and each run of whitespace inside it becomes one space.
 
 * `list_models()` and `list_instances()` now check `type` and `quiet`, and `list_models()` also checks `loaded` and `detailed`. A bad value aborts with a message that names the argument. It aborts before the check for a running server and sends no request. Before, `quiet = NA` failed with a base R error after the request, on a call that matched no model. `type = 1` returned an empty data frame, and `loaded = "yes"` acted as `FALSE`. `quiet = 1` acted as `TRUE`, and it now aborts too.
   * `type` must be a character vector of one or more elements, and no element can be `NA`, empty, or whitespace only. A factor aborts. A type that no model has, such as `"vlm"`, still returns an empty data frame and a message.
