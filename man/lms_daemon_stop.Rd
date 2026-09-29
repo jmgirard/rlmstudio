@@ -9,21 +9,39 @@ lms_daemon_stop(force = FALSE)
 \arguments{
 \item{force}{Logical. If \code{TRUE}, attempts to stop the local server before
 shutting down the daemon. The daemon cannot be stopped while the server
-is actively running. Defaults to \code{FALSE}.}
+is actively running. Defaults to \code{FALSE}. If no server is running, the
+message of \code{\link[=lms_server_stop]{lms_server_stop()}} says so.}
 }
 \value{
-Invisibly returns the system exit code (0 for success).
+Invisibly returns \code{TRUE} if the daemon stopped or was not
+running, and \code{FALSE} if the LM Studio GUI manages it.
 }
 \description{
 Stops the \code{llmster} daemon via the CLI. Use this to clean up system resources when
 you are completely finished using LM Studio in headless mode.
 }
+\details{
+If the CLI exits with a status other than 0, the function reads what the
+CLI wrote. If the text says that the daemon is part of LM Studio, the
+function prints an info message and returns \code{FALSE}. If the text says
+that the daemon is not running, it prints an info message and returns
+\code{TRUE}. Letter case does not matter. Any other failure aborts. The
+message gives the exit code, quotes what the CLI wrote after "The CLI
+said:", and gives a hint about \code{force = TRUE}. The quoted text is the
+stderr text, or the stdout text if stderr holds only whitespace and
+escape codes. A byte
+that is not valid UTF-8 shows as \verb{<xx>}, its hex value. ANSI escape
+codes, such as color codes, cursor codes, and terminal links, are
+removed, and each run of whitespace becomes one space. A text longer than
+1000 characters keeps at most its last 1000 characters, after "…".
+}
 \section{Desktop Users}{
 
 If the daemon is currently being managed by the LM Studio desktop
-application, this function will fail. The CLI intentionally prevents
+application, the CLI does not stop it. The CLI intentionally prevents
 programmatic shutdowns of the GUI to avoid disrupting visual sessions.
-In this scenario, you must close the desktop application manually.
+This function then returns \code{FALSE}, and the daemon keeps running. In this
+scenario, you must close the desktop application manually.
 }
 
 \examples{

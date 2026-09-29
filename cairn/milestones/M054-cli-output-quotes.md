@@ -1,13 +1,13 @@
 # M054: A failed CLI or installer run quotes what it wrote
 
-- **Status:** planned
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP5, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — the abort messages and one stop exit of five exported functions
-- **Branch/PR:** —
+- **Branch/PR:** m054-cli-output-quotes
 
 ## Goal
 
@@ -32,7 +32,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 
 ## Acceptance criteria
 
-- [ ] AC1: The grep `grep -n 'processx::run(lms_path()' R/*.R` lists six
+- [x] AC1: The grep `grep -n 'processx::run(lms_path()' R/*.R` lists six
       call sites. Two of them return the output and never abort:
       `lms_server_status()` and `lms_daemon_status()`. The other four are
       in `lms_server_start()`, `lms_server_stop()`, `lms_daemon_start()`,
@@ -45,7 +45,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       and no text. It compares after it collapses each whitespace run. It
       asserts the exit code and which text is quoted. For no text, it
       asserts that no "The CLI said" bullet shows.
-- [ ] AC2: The quoted text of each of the four is cleaned in this order. A
+- [x] AC2: The quoted text of each of the four is cleaned in this order. A
       byte that is not valid UTF-8 shows as `<xx>`, its hex value. ANSI
       escape sequences are removed: color codes, other cursor codes, and
       terminal links. Each whitespace run becomes one space, and a
@@ -59,7 +59,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       `brace_probe`. The cut has three texts: 1500 characters, exactly 1000
       characters that are not cut, and a cut that falls inside a `<xx>`
       token.
-- [ ] AC3: If the CLI text holds "not running" in any letter case,
+- [x] AC3: If the CLI text holds "not running" in any letter case,
       `lms_server_stop()` prints an info message and returns the CLI exit
       code invisibly, with no abort. On 2026-09-29, `lms server stop` with
       no server running exited 1 with the stderr text "Error: The server is
@@ -79,7 +79,7 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       and with invalid UTF-8 text. Tests also cover a phrase that sits more
       than 1000 characters before the end, a text with both phrases, and
       the hint.
-- [ ] AC4: If the headless installer exits with a status other than 0,
+- [x] AC4: If the headless installer exits with a status other than 0,
       `install_lmstudio()` aborts. The error message holds the exit code
       and one bullet `The installer said: <text>`. The installer runs with
       stderr sent to stdout, so `<text>` is the stdout text, cleaned by the
@@ -90,59 +90,49 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
       installation failed." with an "Error message:" bullet. Tests assert
       that message for a missing `curl`, an unsupported system, and a shell
       that fails to start.
-- [ ] AC5: The help pages of `lms_server_start()`, `lms_server_stop()`,
+- [x] AC5: The help pages of `lms_server_start()`, `lms_server_stop()`,
       `lms_daemon_start()`, `lms_daemon_stop()`, and `install_lmstudio()`
       state what the message of a failed run quotes. The
       `lms_server_stop()` page states the not-running exit. NEWS.md has one
       entry for the change. A test of AC1 to AC4 asserts each behavior that
       these texts state.
-- [ ] AC6: `devtools::document()` leaves no diff. `devtools::test()` is
+- [x] AC6: `devtools::document()` leaves no diff. `devtools::test()` is
       clean, and `devtools::check()` gives 0 errors, 0 warnings, and 0
       notes.
 
 ## Coverage
 
 - AC1 → T1, T2, T3
-- AC2 → T1, T2, T3
+- AC2 → T1, T2, T3, T7
 - AC3 → T2, T3
-- AC4 → T4
-- AC5 → T5
-- AC6 → T6
+- AC4 → T4, T7, T8
+- AC5 → T5, T8
+- AC6 → T6, T9
 
 ## Tasks
 
-- [ ] T1: In `R/serve.R`, give `cli_output_text()` the AC2 order: the
-      `<xx>` step, then `cli::ansi_strip()`, then the whitespace collapse,
-      then the cut. Keep the cut a separate step, so a phrase match can
-      read the cleaned text before the cut. Test every AC2 rule through
-      `lms_server_start()` first, and see each new test red before the
-      code changes.
-- [ ] T2: Route the failed runs of `lms_server_stop()` and
-      `lms_daemon_start()` through the helper with `The CLI said:`. Add the
-      not-running exit to `lms_server_stop()` through `rlm_alert_info()`.
-      Add one table-driven test file that runs three functions over the
-      AC1 and AC2 texts. T3 adds the `lms_daemon_stop()` rows. Add the AC3
-      tests of the `lms_server_stop()` exit: plain text, invalid UTF-8
-      text, and a phrase more than 1000 characters before the end. Mock
-      `lms_path()` and `processx::run`, so no CLI runs (LESSONS, M003).
-- [ ] T3: Rewrite the failure branch of `lms_daemon_stop()` in
-      `R/daemon.R` to use the helper. Match the two phrases in the cleaned
-      text before the cut, "part of LM Studio" first. Change the label to
-      `The CLI said:` and keep the hint. Update the brace test in
-      `test-daemon.R` to the new label. Add the `lms_daemon_stop()` rows to
-      the T2 test file. Add its AC3 tests, including the invalid UTF-8
-      regression, which must fail before the fix, and the `force = TRUE`
-      message.
-- [ ] T4: In `R/setup.R`, raise the non-zero-exit abort of
-      `install_lmstudio()` so that its outer handler does not wrap it, with
-      `The installer said:` and the helper. Rewrite the M028 test in
-      `test-setup.R` to assert the message the user gets. Add the three
-      tests of the wrapped message.
-- [ ] T5: Update the five help pages and add the NEWS.md entry. Write each
-      stated behavior from a test run of T1 to T4. Run
-      `devtools::document()`.
-- [ ] T6: Run `devtools::test()` and `devtools::check()`. Set
-      `RLMSTUDIO_API_TOKEN` and start the server first (LESSONS, M009).
+Each done task's detail is in its work-log line.
+
+- [x] T1: Clean the CLI text in the AC2 order in `R/serve.R`, with the cut
+      a separate step. Test each AC2 rule red first.
+- [x] T2: Route server stop and daemon start through the helper. Add the
+      server not-running exit. Add the table-driven test file, with mocked
+      `lms_path()` and `processx::run` (LESSONS, M003).
+- [x] T3: Route the `lms_daemon_stop()` failure through the helper, with
+      the phrases matched before the cut and the hint kept. Add its rows
+      and its AC3 tests, the invalid UTF-8 regression red first.
+- [x] T4: Raise the installer abort outside its outer handler in
+      `R/setup.R`. Rewrite the M028 test and add the wrapped-message tests.
+- [x] T5: Update the five help pages and NEWS from test runs.
+- [x] T6: Run `test()` and `check()` with the server and token (LESSONS,
+      M009).
+- [x] T7: Remove the escape codes that `cli::ansi_strip()` leaves. Add
+      one escape text per form, red first.
+- [x] T8: Move the `lms_daemon_stop()` failure text out of "Desktop
+      Users". Make the installer test see escape removal. Align the escape
+      wording, cut the stale M053 NEWS sub-bullet, and remove
+      `cli_output_text()`.
+- [x] T9: Run `document()`, `test()`, and `check()` again, as in T6.
 
 ## Work log
 
@@ -154,7 +144,106 @@ The other CLI and messaging rows stay candidates in the ROADMAP.
 - 2026-09-29: plan gate chose to keep the last 1000 characters over no cap or the first 1000. A log ends with its reason. Falsified by a failure whose reason sits more than 1000 characters before the end.
 - 2026-09-29: plan gate chose to fold the installer bug in over a separate hotfix. It shares the helper. Falsified by a review finding that the installer fix needs a design choice the CLI functions do not share.
 - 2026-09-29: plan chose to strip ANSI codes over leaving them. `lms` wrote none into a pipe on 2026-09-29, but `lms_daemon_status()` strips them and a forced-color setting passes them. Falsified by a CLI message whose meaning depends on an escape sequence.
+- 2026-09-29: implement started. No question gate, because the plan left no open choice.
+- 2026-09-29: T1 done. `cli_output_clean()` and `cli_output_cut()` split out of `cli_output_text()` in `R/serve.R`. New `test-cli-output.R` ran red on the escape and cut rules before the change. A cut with no token step turned the three token cases red. `devtools::test()`: 547 tests, 0 failed, 3 skipped.
+- 2026-09-29: T2 done. New `rlm_abort_cli_run()` in `R/serve.R` builds the abort for server start, server stop, and daemon start. `lms_server_stop()` has the not-running exit. The code came before its tests, so the new tests ran against the T1 code: every case but "no text" went red. `devtools::test()`: 550 tests, 0 failed, 3 skipped.
+- 2026-09-29: T3 done. `lms_daemon_stop()` matches its phrases in `cli_output_clean()` text and aborts through `rlm_abort_cli_run()` with its hint. Its new tests went red first, the invalid UTF-8 and no-text cases included. The `force = TRUE` test passed before T3, because T2 added the server exit. `devtools::test()`: 554 tests, 0 failed, 3 skipped.
+- 2026-09-29: T4 done. The install `tryCatch()` now returns the run, and the exit-code check follows it through `rlm_abort_cli_run()` with "The installer said". The M028 test is rewritten. On the old code the two output tests went red, and the three wrapped-message tests passed, as they pin unchanged text. `devtools::test()`: 558 tests, 0 failed, 3 skipped.
+- 2026-09-29: T5 done. Five help pages and one NEWS entry with two parts. Minor amendment: the pages of `lms_daemon_start()` and `lms_daemon_stop()` also get a corrected `@return`, and the GUI section of `lms_daemon_stop()` no longer says the call fails. The code returns 0, or `TRUE` and `FALSE`, and tests assert both. A second `document()` wrote nothing, and `devtools::test()` gave 558 tests, 0 failed.
+- 2026-09-29: T6 done. With the server started and the token set, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-29: claim audit: 95 claims read, 3 corrected — R/serve.R, R/daemon.R, R/setup.R, NEWS.md, man/*.Rd
+- 2026-09-29: the three claim-audit fixes. "ANSI escape codes" now names color codes, cursor codes, and terminal links. "keeps its last 1000" became "keeps at most". The `R/setup.R` handler comment names all three errors. The same reader re-read them once, and all held. Air formatted `test-cli-output.R` and `test-setup.R`. `devtools::test()`: 558 tests, 0 failed. Status set to review.
+- 2026-09-29: review return 1 (defect). AC2 failed: the whitespace test has no non-breaking space, and `cli_output_clean()` keeps ESC 7, ESC 8, ESC ( B, and OSC 0 sequences. AC4 inherits the escape defect. AC5 failed three ways. Pages and NEWS claim that cursor codes are removed. The `lms_daemon_stop()` failure paragraph renders under "Desktop Users". No installer test tells ANSI removal apart from the cut. AC1, AC3, and AC6 passed. Status set to in-progress.
+- 2026-09-29: implement resumed. The question gate added three fixes from review findings: `cli::ansi_strip()` with default arguments, the stale M053 NEWS sub-bullet, and the unused `cli_output_text()`. Minor amendment: T7 to T9 added, and the Coverage lines name them.
+- 2026-09-29: correction to review return 1. The whitespace test text already held two non-breaking spaces as literal characters, so AC2 fail 1 was a misread. cli prints a run of spaces as one, so the rule shows only in a field that holds nothing else. A planted defect turned the blank-stderr case red for all four functions.
+- 2026-09-29: T7 done. New `strip_escapes()` in `R/serve.R` runs after `cli::ansi_strip()`. The five new escape texts went red first. The literal non-breaking spaces in the test file are now ` ` escapes. `devtools::test()`: 0 failed.
+- 2026-09-29: T8 done. The `lms_daemon_stop()` failure paragraph now renders in Details (`man/lms_daemon_stop.Rd:23`). The five pages and NEWS say "ANSI escape codes, such as color codes, cursor codes, and terminal links, are removed". The installer test puts a color code, ESC 7, and a window title in the kept tail. With the second strip pass planted out, it went red, and with both passes out, it went red. The M053 NEWS sub-bullet is cut, and the new entry names `lms_server_start()` among the functions that gave the exit code alone in v0.2.2. `cli_output_text()` is removed. `devtools::test()`: 0 failed.
+- 2026-09-29: claim audit: 60 claims read, 5 corrected — R/serve.R, R/daemon.R, NEWS.md, man/*.Rd
+- 2026-09-29: the corrections. The stdout fallback now reads "holds only whitespace and escape codes" on four pages and in NEWS. The `lms_server_stop()` page names the "not running" match. The `strip_escapes()` and `cli_output_cut()` notes and one code comment now match the code. The same reader re-read them once, and all held. It also flagged the `cli_output_clean()` note, now fixed. The claims about what the real `lms` CLI prints stay as recorded on 2026-09-29.
+- 2026-09-29: T9 done. A second `document()` wrote nothing. The server was started and the token set. `devtools::test()` gave 558 tests, 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. Status set to review.
+- 2026-09-29: minor amendment. The file was over the 150-line cap after T7 to T9, so the Tasks section was compressed in one rewrite. The task texts before it are in git.
+- 2026-09-29: review pass 2. All six criteria verified. Three fresh reviewers gave 15 findings. The gate fixed R3 now, sent R1, R2, and R5 to a candidate row, and rejected the rest.
+- 2026-09-29: step-7 approval: m054-cli-output-quotes approved for merge
 
 ## Decisions
 
 ## Review
+
+Pass 1, 2026-09-29. The branch was level with `origin/main`, so no merge was needed.
+
+Evidence per criterion:
+
+- AC1 pass. The grep lists six call sites. `R/daemon.R:44` is daemon start, `:69` daemon status, and `:132` daemon stop. `R/serve.R:143` is server start, `:438` server stop, and `:537` server status. The two status functions never abort. `test-cli-output.R` runs the four other functions over stderr text, stdout text alone, both, a blank stderr, and four no-text forms. It asserts the exit code and which text is quoted. For no text, it asserts that no bullet shows.
+- AC2 fail, two ways. First, the whitespace test text `"line one\n\tline two  end\r\n  "` holds no non-breaking space, and the criterion requires one. A probe put a non-breaking space in that text, and all four functions gave the right quote. Only the test is missing. Second, the criterion says that "other cursor codes" are removed. A probe of `cli_output_clean()` kept ESC 7 and ESC 8 (save and restore the cursor), ESC ( B, and an OSC 0 window title. The ESC byte stayed in the output. `cli::ansi_strip()` removes only the CSI, SGR, and OSC 8 forms. The other AC2 rules have passing tests for all four functions.
+- AC4 not ticked. Its tests pass for the exit code, "The installer said:", one "Headless installation failed", no "Error message:", braces, and the three wrapped errors. AC4 cleans by the AC2 rules, so the cursor-code defect of AC2 also reaches the installer text.
+- AC3 pass. Tests cover the server no-op, the daemon GUI exit, and the daemon not-running exit. Each runs with plain text, invalid UTF-8 text, and a phrase more than 1000 characters before the end. Tests also cover mixed letter case, both phrases (GUI wins), stdout-only text, the hint, and the `force = TRUE` message.
+- AC5 fail, three ways. First, the five pages and NEWS say that cursor codes are removed, and the AC2 probe shows that some are not. Second, the new failure paragraph of `lms_daemon_stop()` follows `@section Desktop Users:` with no new tag. The Rd renders it inside that section (`man/lms_daemon_stop.Rd:23`), not in Details. Third, the `install_lmstudio()` page states ANSI removal. The only installer test with an escape code puts it in the part that the 1000-character cut drops. That test passes without the removal.
+- AC6 pass. `devtools::document()` wrote nothing. `devtools::test()` ran with the server started and the token set: 0 failed, 0 skipped. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+
+Consistency gate: `cairn_validate.py` passed. No principle text changed, so `cairn_impact` did not run. `document()` gave no diff. The branch does not touch README.md. The repo has no pkgdown site. NEWS has the entry, with no milestone numbers. The branch adds no top-level files.
+
+Findings came from three fresh reviewers: [O] diff, [S] blame history, and [S] prior reviews. The GitHub probe found no review comments. The list keeps the reviewers' rank. Disposition for this pass: every finding goes to the next implement pass and the next review gate, where the maintainer triages it.
+
+- O1 is AC5 fail 2. The failure paragraph of `lms_daemon_stop()` renders under "Desktop Users".
+- O2 is AC2 fail 2. Escape sequences that are not CSI (ESC 7, ESC 8, ESC ( B, OSC 0) pass through. A raw C1 CSI byte shows as `<9b>`.
+- O3 is AC2 fail 1. The whitespace test has no non-breaking space.
+- O4 is AC5 fail 3. The installer cleaning test does not tell ANSI removal apart from the cut.
+- O5: the `with_lms_daemon()` help still says that teardown "will fail" under the GUI. Its teardown now prints "server is already stopped" after the wrapped code stops the server.
+- O6 and S5: `cli_output_text()` has no caller, and the `rlm_abort_cli_run()` roxygen still cites it.
+- O7: real text shaped like `<ab>` at the cut loses its end. The AC allows this, and no document states it.
+- O8: a cut that drops a token before a space leaves a space after the "…".
+- O9: backspace and a BEL outside an OSC link pass through.
+- O10: `iconv(text, "UTF-8", "UTF-8")` ignores a declared latin1 or native encoding. "café" can then show as `caf<e9>`, a Windows risk (D-002).
+- O11: the M053 NEWS entry in the same dev section still says "If stderr holds nothing" and that end whitespace is dropped. The new entry does not name the dropped "Unknown CLI error." fallback.
+- O12: `expect_cli_said()` is a substring match, so extra trailing text passes.
+- O13: CLI failures carry no condition class and no `status` field, unlike `rlm_abort_api()`.
+- O14 and S3: any failure text that holds "not running" reads as already stopped. The plan recorded this as its falsifier. S3 adds that `lms_server_stop()` now returns 1 on this no-op.
+- S1 and P1: the installer check `res$status != 0` now sits outside the `tryCatch()`. An `NA` or `NULL` status then raises a bare R error. [O] found that processx gives -9 on a kill, not `NA`.
+- S2: `lms_daemon_stop(force = TRUE)` with no server now prints a new line. AC3 asks for it.
+- S4: the "Unknown CLI error." fallback and the `{.val}` quotes are gone. AC1 asks for no bullet.
+- S6: `cli::ansi_strip(sgr =, csi =, link =)` needs a cli version with those arguments. DESCRIPTION sets no minimum version.
+- S7: the 1000-character cap drops an early cause. The plan recorded this as its falsifier.
+- S8: the rewritten M028 installer test keeps its brace guard. Noted, it requests nothing.
+
+Pass 2, 2026-09-29. The branch was level with `origin/main`, so no merge was needed. No PR exists for the branch. With the server started and the token set, `devtools::test()` gave 0 failed, 0 warnings, 0 skipped.
+
+Evidence per criterion:
+
+- AC1 pass. The grep lists six call sites. `R/daemon.R:45` is daemon start, `:70` daemon status, and `:134` daemon stop. `R/serve.R:143` is server start, `:448` server stop, and `:547` server status. The two status functions never abort. `test-cli-output.R` runs the four other functions over stderr text, stdout text alone, both, a blank stderr, and four no-text forms. It asserts the exit code and which text is quoted. For no text, it asserts that no bullet shows.
+- AC2 pass. A probe of `cli_output_clean()` removed ESC 7, ESC 8, ESC ( B, a color code, and an OSC 8 link. It also removed OSC 0 closed by BEL and by ESC \, and it left no ESC byte. It gave `g h i` for two non-breaking spaces, a line break, and a tab. It gave `j<ff>` for byte 0xff. `test-cli-output.R` runs all four functions over byte 0xff and nine escape texts. Five of those texts hold forms that `cli::ansi_strip()` leaves. It also runs them over a text with lines, tabs, and two non-breaking spaces, over `brace_probe`, and over the three cut texts. Two defects were planted in a scratch copy. With the non-breaking space out of the whitespace pattern, the stderr-first and no-text tests went red. With `strip_escapes()` out, the escape test and the installer log test went red.
+- AC3 pass. Tests cover the server no-op, the daemon GUI exit, and the daemon not-running exit. Each runs with plain text, invalid UTF-8 text, and a phrase more than 1000 characters before the end. They also cover letter case, both phrases (GUI wins), stdout-only text, the hint, and the `force = TRUE` message.
+- AC4 pass. `test-setup.R` asserts the exit code, one "The installer said:" bullet, and one "Headless installation failed". It also asserts no "Error message:" and braces that do not run. The long-log test puts a color code, ESC 7, a window title, and byte 0xff in the kept tail. It compares the message against a cleaned text written by hand, and it went red with `strip_escapes()` planted out. Three tests assert the wrapped message for a missing `curl`, an unsupported system, and a shell that fails to start.
+- AC5 pass. The five pages state the exit code, the quote label, the stderr-then-stdout rule, `<xx>`, escape removal, whitespace, and the cut. The `lms_server_stop()` page states the not-running exit. The `lms_daemon_stop()` failure paragraph renders in `\details` (`man/lms_daemon_stop.Rd:23`). NEWS.md has one entry with parts, and the stale M053 sub-bullet is gone. Each stated behavior maps to a test named under AC1 to AC4.
+- AC6 pass. `devtools::document()` wrote nothing. The first `devtools::check()` gave 1 error. The test `test-arg-guards.R:1810` failed in `httr2::req_dry_run()` while other R sessions ran beside it. That file is not on the branch. Run alone, it passed twice. A second `devtools::check()` with nothing else running gave 0 errors, 0 warnings, and 0 notes. The vignette build stops the server before the tests run, so 3 live tests skip under `check()` (a known candidate row).
+
+Consistency gate: `cairn_validate.py` passed. No principle text changed, so `cairn_impact` did not run. `document()` gave no diff. The branch does not touch README.md, and the repo has no pkgdown site. NEWS has the entry, with no milestone numbers. The branch adds no top-level files.
+
+Findings came from three fresh reviewers. The GitHub probe found no review comments. R marks the [O] diff reviewer, B the [S] blame-history reviewer, and P the [S] prior-review reviewer. Duplicates are merged under the first ID. The list keeps the reviewers' rank. Each disposition is set at the merge gate.
+
+- R1: an escape sequence with no terminator removes the rest of the text. A probe gave "from stdout" for stderr `"\033]0;title then the real error: port in use"`.
+- R2: a lone ESC in mid-text removes the character after it. A probe gave "one" for `"\033done"` and "a" for `"a \033 b"`.
+- R3 (also B2 and O5): the `with_lms_daemon()` help still says that teardown "will fail" under the GUI (`R/daemon.R:181`). `lms_daemon_stop()` returns `FALSE` there.
+- R4: the pages and NEWS do not state that a run with no text gets no quote bullet.
+- R5 (O9): BEL, backspace, and U+009B pass through the cleaning.
+- R6 (O12): `expect_cli_said()` is a substring match, so extra text after the expected text passes.
+- R7: the whitespace test cannot see the non-breaking-space rule. The blank-stderr and no-text cases carry it.
+- R8 (O8): a cut that drops a token before a space leaves a space after the "…".
+- R9 (O13): CLI and installer aborts carry no package condition class and no `status` field.
+- R10 (also B3, P1, S1): an `NA` or `NULL` installer status now gives a bare R error. processx gives an integer.
+- R11 (also B7, O10): a latin1 or native string cleans to `<xx>` bytes. processx gives UTF-8 text.
+- R12 (also B5, O11): NEWS does not say that the "Unknown CLI error." fallback is gone.
+- B1: if the wrapped code stopped the server, as the vignette does, `with_lms_daemon()` teardown now prints "server is already stopped".
+- B4 (O14, S3): any failure text with "not running" reads as already stopped. It is the plan's recorded falsifier.
+- B6 (P2, S7): the 1000-character cut drops an early cause. It is the plan's recorded falsifier.
+
+Dispositions, set at the merge gate on 2026-09-29:
+
+- R3: fixed now. The `with_lms_daemon()` Desktop Users text now says that teardown prints an info message and the daemon keeps running. A new test in `test-daemon.R` runs the wrapper with a GUI-managed daemon. With a failing GUI exit planted in a scratch copy, it went red. `document()` wrote only `man/with_lms_daemon.Rd`. With the server started and the token set, `devtools::test()` gave 0 failed, 0 skipped.
+- R1, R2, R5: follow-up. One ROADMAP candidate row, added at hygiene. No existing row covers them.
+- R4: rejected. A run with no text has nothing to quote.
+- R6, R7, R8: rejected. Test style, a rule covered by other cases, and one cosmetic space.
+- R9: rejected. A condition class can be added later without breaking callers.
+- R10, R11: rejected. processx gives an integer status and UTF-8 text.
+- R12: rejected. The NEWS entry states the new message shape.
+- B1: rejected. It is a message only, it honors the quiet option, and AC3 plans it.
+- B4, B6: rejected. The plan chose each and recorded its falsifier.

@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-29 (M053 done, M050 row pruned, one candidate row e
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M054 | A failed CLI or installer run quotes what it wrote | planned | none | normal | milestones/M054-cli-output-quotes.md |
+| M054 | A failed CLI or installer run quotes what it wrote | review | none | normal | milestones/M054-cli-output-quotes.md |
 | M053 | The server start call says why a start was refused | done | none | normal | milestones/archive/M053-server-start-reasons.md |
 | M052 | The two list functions check their arguments before any request | done | none | normal | milestones/archive/M052-list-arg-checks.md |
 | M051 | A schema data-frame batch returns one column per schema property | done | none | normal | milestones/archive/M051-batch-schema-columns.md |
