@@ -1,6 +1,6 @@
 # M066: A test that reads a request survives a dry-run port that another program holds
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -82,7 +82,7 @@ a candidate row. The package code does not change.
 - [x] T6: In `request_dry_run()`, give each try a 5-second timeout with
       `httr2::req_timeout()`. Retry on any error of class `curl_error`, as
       well as on the bind error. Update the helper comment.
-- [ ] T7: In a scratch copy, remove the `curl_error` retry and see the T5
+- [x] T7: In a scratch copy, remove the `curl_error` retry and see the T5
       test go red. Then run `devtools::test()` and `devtools::check()`.
 
 ## Work log
@@ -103,6 +103,9 @@ a candidate row. The package code does not change.
 - 2026-09-30: implement resumed. Minor amendment: added T5 to T7 for the review return, with Coverage lines. A probe showed that an httpuv handler that returns `NULL` never replies, so the T5 test needs no new package. Reset, banner, and timeout errors all have class `curl_error`.
 - 2026-09-30: T5 done. Against the old helper, the never-replies test gave no result after 20 seconds, and an alarm ended the run.
 - 2026-09-30: T6 done. `request_dry_run()` sets a 5-second timeout on each try and retries on any `curl_error`. The never-replies test passes with 2 tries. A probe with the reset and banner listeners got POST with 2 tries each. `devtools::test()`: 0 failed, 0 errors, 3 skipped.
+- 2026-09-30: T7 done. In a scratch copy without the `curl_error` retry, the never-replies test stopped on try 1 with "Timeout was reached [127.0.0.1]". The repo copy did not change. `devtools::check()` with the API token: 0 errors, 0 warnings, 0 notes.
+- 2026-09-30: claim audit: not owed, internal tier
+- 2026-09-30: all tasks done again after review return 1. Status set to review.
 
 ## Decisions
 
