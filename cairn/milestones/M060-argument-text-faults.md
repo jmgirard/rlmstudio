@@ -1,13 +1,13 @@
 # M060: Names that are not plain text, and dots that lms_chat() sets
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes the aborts, the sent values, and two return values of exported functions.
-- **Branch/PR:** —
+- **Branch/PR:** m060-argument-text-faults
 
 ## Goal
 
@@ -44,7 +44,7 @@ Three kinds of argument value get a correct outcome before any request, in place
 
 ## Tasks
 
-- [ ] T1: Write the AC1 tests first and see them red on main. Add one text rule shared by `id_fault()` and `type_fault()`. It rejects a string for which `validEnc()` is `FALSE`. It rejects a string marked `"bytes"` with its own detail, because jsonlite cannot write it. It runs before the whitespace `grepl()`. Add a guard test that searches `R/` for calls to `rlm_check_id()`, `rlm_check_response_id()`, and `rlm_check_type()`. It passes on the call sites that the AC1 list covers and fails on a new one.
+- [x] T1: Write the AC1 tests first and see them red on main. Add one text rule shared by `id_fault()` and `type_fault()`. It rejects a string for which `validEnc()` is `FALSE`. It rejects a string marked `"bytes"` with its own detail, because jsonlite cannot write it. It runs before the whitespace `grepl()`. Add a guard test that searches `R/` for calls to `rlm_check_id()`, `rlm_check_response_id()`, and `rlm_check_type()`. It passes on the call sites that the AC1 list covers and fails on a new one.
 - [ ] T2: Write the AC2 tests first and see them red on main. Make `rlm_check_id()` and `rlm_check_response_id()` return `unclass(x)[[1]]` (M049 lesson). Reassign the value only in the functions that send it: R/chat.R:256, 260, 561, 1307, 1310, R/embed.R:114, R/load.R:73, R/download.R:49, 198, and R/unload.R:46. `lms_chat()` and `lms_chat_batch()` send nothing themselves, so they keep the check alone (M003 lesson). In a scratch copy, remove each reassignment in turn and see a test go red.
 - [ ] T3: Write the AC3 tests first and see them red on main. Add a route check of the dots. Call it in `lms_chat()` after `match.arg()`, and in `lms_chat_batch()` after the route is read (R/chat.R:1830) and above `stop_if_no_server()` (R/chat.R:1877). Add a guard test that walks the body of `lms_chat()`. It takes the arguments passed by name to a route function, less the formals of `lms_chat()`. It expects `instructions` and `messages` alone.
 - [ ] T4: Update the help, NEWS.md, and the fault list in R/conditions.R. Run `devtools::document()`. Append one D-entry. A checked name or id must be valid text and is sent as a plain string, which annotates D-031. `lms_chat()` aborts on a dot that it sets itself, which narrows D-003 as D-023 did.
@@ -57,6 +57,8 @@ Three kinds of argument value get a correct outcome before any request, in place
 - 2026-09-29: criteria audit pass 2 (full mode, new fresh [O] reader) on the final wording returned 9 findings, all fixed without a question. AC1 adds UTF-8 and unmarked `"café"` as passing forms and gives the bytes mark its own detail and probe. AC2 names the body field, the two `lms_load()` paths, a mocked server check, and an `as.character()` method on the class probe. AC3 adds `lms_chat()` with no route. AC4 defines the text rule and requires the `@return` change.
 - 2026-09-29: plan gate chose to send a classed name as a plain string over an abort on any class, because glue and S4 strings work today. Falsified by a server field that needs the JSON form a class gives, such as the array from `I()`.
 - 2026-09-29: plan gate chose an abort for an `instructions` or `messages` dot over a dot that replaces what `lms_chat()` builds. A replacing dot drops `system_prompt` with no message. Falsified by a user who needs to pass their own `instructions` or `messages` through `lms_chat()`.
+- 2026-09-29: implement started on branch m060-argument-text-faults. The plan left no choice open, so the question gate was skipped.
+- 2026-09-29: T1 done. `text_fault()` and `text_fault_at()` in R/utils-args.R, called by `id_fault()` and `type_fault()`. tests/testthat/test-name-faults.R was red on main with "whitespace only" and two warnings, and a planted call site turned its guard red. Full `devtools::test()`: 747 blocks, 0 failed, 3 skipped.
 
 ## Decisions
 

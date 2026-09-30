@@ -181,6 +181,10 @@ id_fault <- function(value) {
   if (!nzchar(value)) {
     return("You gave an empty string.")
   }
+  text <- text_fault(value)
+  if (!is.null(text)) {
+    return(paste0("You gave a string that ", text, "."))
+  }
   # `trimws()` strips space, tab, carriage return, and line feed and nothing
   # else, so a form feed or a vertical tab survives it. The rule is stated
   # over the whole `[[:space:]]` class, so the test reads that class.
@@ -188,6 +192,37 @@ id_fault <- function(value) {
     return("You gave a string of whitespace only.")
   }
   NULL
+}
+
+#' Which text rule does this string break?
+#'
+#' A string that is not valid in its declared encoding reaches jsonlite, which
+#' writes each bad byte as U+FFFD, and `grepl()` warns on it and reads it as
+#' whitespace. A string marked `"bytes"` fails in jsonlite, which cannot
+#' translate it. Run this before any `grepl()` on the string.
+#'
+#' @param value A character vector with no `NA`.
+#' @return The rule the first bad element breaks, as words that follow "that"
+#'   or an element number, or `NULL` when every element passes.
+#'
+#' @noRd
+text_fault <- function(value) {
+  i <- text_fault_at(value)
+  if (is.null(i)) {
+    return(NULL)
+  }
+  if (Encoding(value[[i]]) == "bytes") "is marked as bytes" else "is not valid in its encoding"
+}
+
+#' The position of the first element that breaks a text rule
+#'
+#' @param value A character vector with no `NA`.
+#' @return The position, or `NULL` when every element passes.
+#'
+#' @noRd
+text_fault_at <- function(value) {
+  bad <- which(Encoding(value) == "bytes" | !validEnc(value))
+  if (length(bad) == 0L) NULL else bad[[1]]
 }
 
 #' The indefinite article that a class name takes
@@ -1253,6 +1288,10 @@ type_fault <- function(value) {
   missing <- which(is.na(value))
   if (length(missing) > 0L) {
     return(paste0("Element ", missing[[1]], " is NA."))
+  }
+  bad <- text_fault_at(value)
+  if (!is.null(bad)) {
+    return(paste0("Element ", bad, " ", text_fault(value[bad]), "."))
   }
   # The same `[[:space:]]` rule as `id_fault()`, for the reason stated there.
   blank <- which(!grepl("[^[:space:]]", value))
