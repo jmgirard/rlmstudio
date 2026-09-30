@@ -39,7 +39,7 @@ row.
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_chat_openai()` refuses a `messages` data frame that holds a
+- [x] AC1: `lms_chat_openai()` refuses a `messages` data frame that holds a
       column whose row count differs from the row count of the data frame
       that holds it. The error has the shape header "`messages` must be a
       data frame or an unnamed list of messages." The detail is "You gave a
@@ -61,7 +61,7 @@ row.
       and an `I()` character column of length 3. Four probes are data-frame
       columns. Two of them have 3 rows and 0 rows. The other two have 2 rows
       and hold a 3-by-2 matrix or a list column of length 3.
-- [ ] AC2: Each AC1 probe raises no warning. Three classed columns in a
+- [x] AC2: Each AC1 probe raises no warning. Three classed columns in a
       2-row frame also raise no warning and no R error from outside the
       package: a `Date` column of length 3, a `factor` column of length 3,
       and a one-dimensional `Date` array of length 1. Each of the three
@@ -74,7 +74,7 @@ row.
       still gets the empty-row detail. A test in
       `tests/testthat/test-arg-guards.R` counts the warnings of each probe
       and asserts each outcome.
-- [ ] AC3: The trial write of a `messages` data frame can fail. When a
+- [x] AC3: The trial write of a `messages` data frame can fail. When a
       top-level column fails alone, the abort keeps its detail "You gave a
       value that jsonlite cannot write: <jsonlite message>" and adds a line
       that names that column. The package writer writes each top-level column
@@ -89,7 +89,7 @@ row.
       comes before a `"foo"` matrix column. The test asserts that the line
       names the data-frame column. A `messages` list that is not a data frame
       and fails the trial write gets no such line, and a test asserts that.
-- [ ] AC4: The `messages` help of `lms_chat_openai()` states the AC1 rule
+- [x] AC4: The `messages` help of `lms_chat_openai()` states the AC1 rule
       among the shape rules and states the AC3 line. `NEWS.md` has an entry
       for each.
 - [ ] AC5: `devtools::test()` reports 0 failed and 0 errors.
@@ -145,7 +145,15 @@ row.
 - claim audit: 79 claims read, 6 corrected — NEWS.md, R/chat.R, R/utils-args.R, tests/testthat/test-arg-guards.R
 - 2026-09-30: the re-read of the corrected claims fixed two more sites: the `empty_rows()` note on length-1 classed columns and the NEWS sentence order. It also stated the zero-row edge of the recycling note.
 - 2026-09-30: T6 done. `devtools::test()`: 0 failed, 0 errors, 3 live skips. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
+- 2026-09-30: review checkpoint. AC1 to AC4 evidence recorded and ticked. AC5 waits on the full `devtools::test()` run, and the three reviewers are running.
 
 ## Decisions
 
 ## Review
+
+Sync: the branch contains `origin/main` (590ff80), and main has no unpushed commits, so no merge was needed.
+
+- AC1 evidence (2026-09-30): `devtools::test(filter = "arg-guards")` gives 1040 tests, 0 failed, 0 errors. The test "a column with a wrong row count aborts with no warning" holds 15 subtests, 3 expectations each, all passing. They assert 0 warnings, an unclassed `rlang_error`, and the row-count detail. The probe list matches the AC1 list: 7 with a `dim`, 4 without, and 4 data-frame columns. The same 15 probes run in "a messages value that breaks a rule aborts before the server probe", which asserts the shape header. The `NA` matrix probe gets the row-count detail, not the empty-row detail, so the rule runs first. Each parent asserts `probe$calls` of 0. testthat 3.3.2 counts a passing parent assertion after subtests as 0 expectations. A planted failing one in a scratch file reports as failed, so the assertion runs.
+- AC2 evidence (2026-09-30): the AC1 subtests assert 0 warnings for each of the 15 probes. "a classed column with a wrong length reaches the trial write" passes 3 subtests. They cover the length-3 `Date`, the length-3 factor, and the length-1 one-dimensional `Date` array. Each asserts 0 warnings, an unclassed `rlang_error`, the value header, and the trial-write detail. The same three probes are in the AC3 test, which asserts the column line naming `x`. "a length-1 POSIXlt column is read as jsonlite writes it" passes 6 expectations. They cover the sent body with no warning, and the empty-row detail for the frame whose only non-`NA` column is an `NA` `POSIXlt`. A scratch probe captured the request body of the `POSIXlt` frame on this branch and on main (590ff80). Both bodies are the same text, with the time in each message, and neither run warns.
+- AC3 evidence (2026-09-30): "a failed trial write of a data frame names the first column that fails" passes 8 subtests, 3 expectations each. Each asserts the trial-write detail, the value header, and the named column. The five AC3 probes are the 2-by-0 `Date` matrix, the 2-by-2 `Date` matrix, and the `"foo"` matrix, each named `x`. The fourth is the `"foo"` matrix named `{a}`. The fifth is the data-frame column `sub`, named before the later `"foo"` column. The three AC2 classed probes also name `x`. The parent asserts that a list of messages gets no column line. A scratch run printed both messages: the `{a}` frame ends with `Column "{a}" is the first column that jsonlite cannot write on its own.`, and the list case has the jsonlite line alone. The code writes each top-level column as a lone `"data.frame"` with the row count of the value, in column order (`first_unwritable_column()` in R/utils-args.R).
+- AC4 evidence (2026-09-30): `man/lms_chat_openai.Rd` line 43 opens the row-count rule among the shape rules, before the empty-row rule. Line 146 ends the trial-write rule with the column line text. `devtools::document()` leaves no diff, so the Rd matches the roxygen in R/chat.R. `NEWS.md` has two new entries under the development heading, one for the row-count rule and one for the column line, with no milestone numbers.
