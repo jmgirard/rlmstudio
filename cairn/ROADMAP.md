@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-30 (M058 done, M055 row pruned)_
+_Last hygiene check: 2026-09-30 (M059 done, M056 row pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-30 (M058 done, M055 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M059 | Batch logprobs and repeated-argument faults | review | none | normal | milestones/M059-batch-logprobs-faults.md |
+| M059 | Batch logprobs and repeated-argument faults | done | none | normal | milestones/archive/M059-batch-logprobs-faults.md |
 | M058 | Continue a chat thread by its reply id | done | none | normal | milestones/archive/M058-chat-thread-id.md |
 | M057 | One meaning for each flag argument | done | none | normal | milestones/archive/M057-flag-arguments.md |
-| M056 | Test failures that name each broken function and reply check | done | none | normal | milestones/archive/M056-test-failure-isolation.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
