@@ -62,6 +62,7 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 - 2026-09-30: all tasks done; status set to review.
 - 2026-09-30: correction to the T2 line (review finding O7). Only the deleted call in `lms_chat()` turned the openai-route test red. A deleted call in `lms_chat_native()` or `lms_chat_openresponses()` turned the direct-call test of that function red.
 - 2026-09-30: review ran AC1 to AC5 with fresh evidence, passed the consistency gate, and triaged 17 findings from three reviewers, none of which fails a criterion. Fix-now edits to comments and test formatting are committed.
+- 2026-09-30: step-7 approval: m062-chat-input-one-prompt approved for merge
 
 ## Decisions
 
