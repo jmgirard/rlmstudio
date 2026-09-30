@@ -1,6 +1,6 @@
 # M065: An error in one test-loop pass no longer stops the later passes
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -89,7 +89,7 @@ defines top-level blocks already gives one block per pass.
       sure that each run holds subtests for the other names or labels
       before you trust its green. Log the counts of failed, errored, and
       passed subtests.
-- [ ] T6: Run the sweep, `devtools::test()`, and `devtools::check()`. If
+- [x] T6: Run the sweep, `devtools::test()`, and `devtools::check()`. If
       `check()` gives a note, run it on a42a1ab to compare.
 
 ## Work log
@@ -105,6 +105,9 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: T2 done by the Opus agent. It wrapped the 36 rows and the 9 inner loops that the wraps exposed. The sweep prints 45 `nested` rows and no `flat` row for `test-arg-guards.R`. Three counters that the parent block checks after a loop now add with `<<-`. The scan's other three hazards were false: the code after the loop assigns the variable again before it reads it. A plant of `<-` in one counter turned `expect_identical(n_cases, 105L)` red. A reporter that counts every result gave 3678 passes before and after, with 0 failed and 0 errors.
 - 2026-09-30: one agent run of the new `test-arg-guards.R` took over 10 minutes and recorded 1 error, with no test name kept. A rerun took 22 s and was clean. The other agent ran tests at the same time. The candidate row for the error that comes and goes (M059) covers it.
 - 2026-09-30: T5 done. AC2 plant, `stop("planted")` first in `lms_daemon_stop()`: the 8 `cli_callers` loops gave 32 subtests. All 8 for `lms_daemon_stop` failed or errored, and 0 of the 24 for the other three functions did. AC3 plant, `match = "planted"` on the `no values` probe: for each of the 10 functions, its one `no values` subtest failed or errored, and 0 of its 12 other-label subtests did.
+- 2026-09-30: T6 done. The sweep prints 290 rows on the branch and no `flat` row in scope, and no triple from the plan commit is missing. The first full `devtools::test()` gave 1 error at `test-arg-guards.R:1986`, `rawToChar(out$body)` "argument 'x' must be a raw vector" inside the dry run. That is the failure the `list_instances()` candidate row records at `test-ttl.R` and `test-arg-guards.R:1810` on main. Three reruns of the file and a second full run were clean. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-30: claim audit: not owed, internal tier.
+- 2026-09-30: all tasks done, status set to review.
 
 ## Decisions
 
