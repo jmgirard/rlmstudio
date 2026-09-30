@@ -1,13 +1,13 @@
 # M065: An error in one test-loop pass no longer stops the later passes
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — the deliverable is test code, a test dependency floor, and a dev script, which no package user runs
-- **Branch/PR:** —
+- **Branch/PR:** m065-nested-loop-subtests
 
 ## Goal
 
@@ -72,7 +72,7 @@ defines top-level blocks already gives one block per pass.
 
 ## Tasks
 
-- [ ] T1: In `DESCRIPTION`, raise the Suggests entry to
+- [x] T1: In `DESCRIPTION`, raise the Suggests entry to
       `testthat (>= 3.3.0)`, as D-038 records.
 - [ ] T2: In `test-arg-guards.R`, wrap the body of each of the 36 loops in
       one `test_that()`. Its description names the pass by the probe
@@ -98,6 +98,8 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: criteria audit, reduced mode (internal tier), by a fresh Opus reader. It returned six findings, all fixed before the gate. The AC1 base count moved to Scope, and AC1 compares whole triples. AC2 names its loops by sweep row, plants in the first body statement, and limits the failing subtest to its loops. AC3 matches the end of a subtest's own description. T3 and T4 leave exposed inner loops flat.
 - 2026-09-30: plan gate chose nested `test_that()` blocks over top-level blocks per pass, as M056 built. Nesting keeps the shared setup and mocks in the parent block, at the cost of a testthat 3.3.0 floor. Falsified by a run where an error in a nested subtest still stops a later pass.
 - 2026-09-30: plan gate chose 78 loops over all 270 in two milestones. The other 192 go to a candidate row. Falsified by a run where one of those loops hides passes after an error.
+- 2026-09-30: implement started on m065-nested-loop-subtests. The plan left no choice open, so the question gate was skipped. A scan found six probe loops in `test-arg-guards.R` that assign a variable the code after the loop reads. It found no `next`, `break`, or `skip()` in the 78 loop bodies.
+- 2026-09-30: T1 done. `DESCRIPTION` Suggests now lists `testthat (>= 3.3.0)`. The suite runs in T6, after the wraps.
 
 ## Decisions
 
