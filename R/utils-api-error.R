@@ -177,7 +177,9 @@ rlm_abort_bad_response <- function(
 #' `list_models()`, `list_instances()`, `lms_load()`, `lms_download()`, and
 #' `lms_download_status()` have no `simplify` argument, so the default hint of
 #' `rlm_abort_bad_response()` does not apply to them. This hint names the kind
-#' of reply instead.
+#' of reply instead. The model-list lookup of `lms_chat_openai()` and
+#' `lms_chat_openresponses()` also aborts here, through
+#' `request_model_list()`, whatever the `simplify` of the chat call.
 #'
 #' @param resp An httr2 response with status 200.
 #' @param label Character. The calling wrapper's own label.

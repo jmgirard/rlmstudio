@@ -514,20 +514,23 @@ test_that("a lookup body that does not parse raises a bad response", {
 test_that("a lookup body that fails a model-list check raises a bad response", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   for (route in chat_routes) {
-    local_request_sequence(list(
-      reply_with_model(route, quoted("org/model-y")),
-      mock_response(200L, '{"models": 5}')
-    ))
-    err <- expect_error(
-      mocked_call(route, "org/model-x"),
-      class = "rlmstudio_bad_response"
-    )
-    expect_false(inherits(err, "rlmstudio_model_mismatch"), info = route)
-    expect_lookup_message(err, route)
-    expect_true(
-      grepl("`models` is not an array", conditionMessage(err)),
-      info = route
-    )
+    for (simplify in c(TRUE, FALSE)) {
+      info <- paste(route, "simplify =", simplify)
+      local_request_sequence(list(
+        reply_with_model(route, quoted("org/model-y")),
+        mock_response(200L, '{"models": 5}')
+      ))
+      err <- expect_error(
+        mocked_call(route, "org/model-x", simplify = simplify),
+        class = "rlmstudio_bad_response"
+      )
+      expect_false(inherits(err, "rlmstudio_model_mismatch"), info = info)
+      expect_lookup_message(err, route)
+      expect_true(
+        grepl("`models` is not an array", conditionMessage(err)),
+        info = info
+      )
+    }
   }
 })
 
