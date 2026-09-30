@@ -1,6 +1,6 @@
 # M066: A test that reads a request survives a dry-run port that another program holds
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -73,7 +73,7 @@ a candidate row. The package code does not change.
       `sent_messages()` in `test-arg-guards.R`, `sent_json()` in
       `test-ttl.R`, and the helpers in `test-embed.R`, `test-chat-schema.R`,
       and `test-token.R`. Run the AC3 grep.
-- [ ] T4: In a scratch copy, remove the retry and see the AC1 test go red.
+- [x] T4: In a scratch copy, remove the retry and see the AC1 test go red.
       Then restore it. Run `devtools::test()` and `devtools::check()`.
 
 ## Work log
@@ -83,12 +83,15 @@ a candidate row. The package code does not change.
 - 2026-09-30: plan gate chose a retry in one shared helper over a mock of curl's port picker around every dry run. The mock ties each request read to a curl internal, and a race stays. Falsified by a dry-run failure that retries do not clear.
 - 2026-09-30: implement started on branch m066-dry-run-held-port. A probe on macOS reproduced the empty dry run with a mocked `find_port`. Docker was not running, so no Linux probe ran.
 - 2026-09-30: implement question gate chose a retry on httpuv's bind error too (see Decisions).
-- 2026-09-30: T1 done. Before the fix, the held-port test got no method, path, or body after 1 try, and the all-tries test got "argument 'x' must be a raw vector".
+- 2026-09-30: T1 done. Before the fix, the held-port test got no method, path, or body after 1 try. The all-tries test got "argument 'x' must be a raw vector".
 - 2026-09-30: T2 done. `request_dry_run()` in `helper-mock-http.R` retries up to 5 tries, and `request_target()` and `request_body_text()` call it. A third test holds the first port on all addresses, so the bind-error retry runs on macOS too. `devtools::test()`: 0 failed, 0 errors, 3 skipped.
-- 2026-09-30: T3 done. The five local reads call `request_dry_run()` and drop their own `require_httpuv()`. The AC3 grep returns 4 comment lines and the one call in the helper. The first `devtools::test()` gave 0 failed and 1 error, but the summary kept no test name or message. Four later runs gave 0 failed and 0 errors, and a script that prints each error's file, test, and message named none. This is the unnamed-error candidate row.
+- 2026-09-30: T3 done. The five local reads call `request_dry_run()` and drop their own `require_httpuv()`. The AC3 grep returns 4 comment lines and the one call in the helper. The first `devtools::test()` gave 0 failed and 1 error, but the summary kept no test name or message. Four later runs gave 0 failed and 0 errors. Three of them ran in a script that prints the file, test, and message of each error, and it printed none.
+- 2026-09-30: T4 done. In a scratch copy with the helper set to 1 try, both read tests stopped with the AC2 message. The all-tries test counted 1 try in place of 5. The repo copy did not change. `devtools::check()` with the API token: 0 errors, 0 warnings, 0 notes.
+- 2026-09-30: claim audit: not owed — internal tier
+- 2026-09-30: all tasks done. Status set to review. This is the unnamed-error candidate row.
 
 ## Decisions
 
-- 2026-09-30 (implement gate): If the dry run fails with httpuv's "Failed to create server" error, the shared dry-run helper also retries. That retry uses the same 5 tries and ends with the AC2 message. On Linux, and likely on Windows, the operating system is expected to refuse the echo server's bind to 0.0.0.0 on a port that 127.0.0.1 holds. There, the forced-port tests get that error in place of an empty result. The helper catches no other error.
+- 2026-09-30 (implement gate): If the dry run fails with httpuv's "Failed to create server" error, the shared dry-run helper also retries. That retry uses the same 5 tries and ends with the AC2 message. Linux, and probably Windows, is expected to refuse a bind to 0.0.0.0 on a port that 127.0.0.1 holds. On those systems, the forced-port tests get that error in place of an empty result. The helper catches no other error.
 
 ## Review
