@@ -170,6 +170,44 @@ test_that("a context_length that as.integer() cannot read gives no context warni
   }
 })
 
+test_that("a context_length of \"abc\" gives R's coercion warning once", {
+  res <- run_load(list_reply(list_entry(max = "2048")), context_length = "abc")
+  coercion <- Filter(
+    function(w) grepl("NAs introduced by coercion", conditionMessage(w), fixed = TRUE),
+    res$warnings
+  )
+  expect_length(coercion, 1L)
+  expect_length(res$warnings, 1L)
+})
+
+test_that("the warning text says the load goes out and counts one token", {
+  res <- run_load(list_reply(list_entry(max = "0")), context_length = 1)
+  msg <- conditionMessage(above_max(res$warnings)[[1]])
+  expect_match(msg, "The load request goes out with 1 token.", fixed = TRUE)
+  res <- run_load(list_reply(list_entry()), context_length = 65536)
+  msg <- conditionMessage(above_max(res$warnings)[[1]])
+  expect_match(msg, "The load request goes out with 65536 tokens.", fixed = TRUE)
+})
+
+test_that("a bad max_context_length also aborts list_instances() and lms_unload_all()", {
+  body <- list_reply(list_entry(max = '"32768"', loaded = TRUE))
+  callers <- list(
+    list_instances = function() list_instances(quiet = TRUE),
+    lms_unload_all = function() lms_unload_all()
+  )
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (name in names(callers)) {
+    recorder <- local_request_sequence(list(body))
+    err <- expect_error(
+      suppressMessages(callers[[name]]()),
+      class = "rlmstudio_bad_response"
+    )
+    expect_match(conditionMessage(err), "max_context_length", fixed = TRUE, info = name)
+    # The abort comes from the model list, before any unload is sent.
+    expect_length(recorder$requests, 1L)
+  }
+})
+
 test_that("a max_context_length that is not a number or null is a bad response", {
   bad <- list(string = '"32768"', object = '{"value": 32768}')
   for (name in names(bad)) {

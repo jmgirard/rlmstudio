@@ -72,6 +72,8 @@ A user with a prompt longer than the loaded context learns from R how LM Studio 
 - 2026-09-30: claim audit: 59 claims read, 5 corrected — NEWS.md, R/load.R. The NEWS rule line named `lms_load()` without `force = FALSE`. The `context_length` param omitted `force = FALSE`. The batch sentence said the condition is kept in every format. The helper doc named a `quiet` argument that `lms_load()` lacks. The warning claimed a quality loss that no probe recorded. The same reader re-read the 5 and found each true.
 - 2026-09-30: to back the NEWS rule line, `test-model-list-shape.R` gained `max_context_length` fault and pass rows beside `size_bytes`. With the rule removed in a scratch copy, 18 cases went red in each of the `list_models()` and `lms_server_ready()` tests.
 - 2026-09-30: T4 done. `devtools::test()`: 0 failures, 0 errors. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set: 0 errors, 0 warnings, 0 notes. Status set to review.
+- 2026-09-30: review gate fixes landed on the branch: NEWS split and widened, warning text and plural, coercion and caller tests, help alias, help wording. One candidate row added.
+- step-7 approval: m063-long-prompts approved for merge
 
 ## Decisions
 
@@ -104,3 +106,13 @@ Independent review: three fresh reviewers (Opus diff-bug D, Sonnet blame-history
 12. D6: `context_length = 3e9` becomes NA and gives no warning. Proposed: reject. It matches the documented rule that the value reads as one integer.
 13. D7: a factor `context_length` sends the level code. Proposed: reject. That behavior predates this branch, and the new check agrees with the body.
 14. B5: the old `loaded = TRUE` form kept M008's intent, and the new form keeps it too. Proposed: noted, no action.
+
+Gate, 2026-09-30: the user chose to fix the six items, then merge. The dispositions below are as proposed.
+- Items 1 and 6, fixed. NEWS has a separate top-level entry for the type rule. It names `list_models()`, `list_instances()`, `lms_unload_all()`, `lms_load()` with `force = FALSE`, and `lms_server_ready()`. A new test aborts `list_instances()` and `lms_unload_all()` on a string `max_context_length`, with 1 request each.
+- Item 2, fixed. The warning now reads "The load request goes out with N token(s). LM Studio gives no message for such a value." A new test asserts "1 token." and "65536 tokens.".
+- Item 4, fixed. A new test asserts one coercion warning and one warning in all for "abc". Without `suppressWarnings()` in a scratch copy, it failed 2 expectations.
+- Item 5, fixed. `@aliases rlmstudio_context_above_max` is on the `lms_load()` page.
+- Item 7, fixed. The help now says "When the server reports it" before the column.
+- Items 3 and 8, follow-up. One candidate row in ROADMAP.md holds both.
+- Items 9 to 13, rejected for the reasons given. Item 14, noted.
+- After the fixes: `devtools::test()` had 0 failures and 0 errors. `devtools::check()` with the token set gave 0 errors, 0 warnings, and 0 notes. `cairn_validate.py` passed.

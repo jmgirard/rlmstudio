@@ -1,8 +1,9 @@
 # rlmstudio (development version)
 
 * `lms_load()` now warns when `context_length` is larger than the `max_context_length` that the model list gives for the model. The warning has the class `rlmstudio_context_above_max`, names both numbers, and shows when the `rlmstudio.quiet` option is `TRUE`. The load still goes ahead with the asked value, as the server loads it with no message. The warning comes only with `force = FALSE`, for a model that is not loaded yet.
-  * `list_models()`, and `lms_load()` with `force = FALSE`, now abort with `rlmstudio_bad_response` when the `max_context_length` of a model in the list is not a number or `null`. `lms_server_ready()` returns `FALSE` for such a list.
   * The `lms_load()` and `lms_chat()` help pages have a new "Long prompts" section. It covers the error for a prompt longer than the loaded context, the warning, and how to read the prompt token count.
+
+* The model-list check now requires the `max_context_length` of each model to be a number, absent, or `null`. Any other value makes `list_models()`, `list_instances()`, `lms_unload_all()`, and `lms_load()` with `force = FALSE` abort with `rlmstudio_bad_response`. `lms_server_ready()` returns `FALSE` for such a list.
 
 * `lms_chat()`, `lms_chat_native()`, and `lms_chat_openresponses()` now abort when a character `input` does not hold exactly one string. The message names `input`, states how many strings were given, and names `lms_chat_batch()`, which sends several prompts, one request each. The abort has no condition class, and it comes before the check for a running server. A character `input` that holds an `NA` still gets the message about missing values first. Before, a two-string `input` went to the server as a JSON array, and each route answered with a 400 whose message did not say that more than one prompt was sent. A list `input` is still sent as given.
 

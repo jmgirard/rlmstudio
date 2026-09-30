@@ -2,6 +2,7 @@
 % Please edit documentation in R/load.R
 \name{lms_load}
 \alias{lms_load}
+\alias{rlmstudio_context_above_max}
 \title{Load a model via REST API}
 \usage{
 lms_load(
@@ -89,9 +90,9 @@ With \code{format = "list"}, the element of that input holds the condition. With
 \code{format = "vector"}, it holds \code{NA}.
 
 To fit a longer prompt, load the model with a larger \code{context_length} in
-\code{\link[=lms_load]{lms_load()}}. The \code{max_context_length} column of
-\code{list_models(detailed = TRUE)} gives the largest context length that the
-model list reports for each model. If \code{context_length} is larger, the
+\code{\link[=lms_load]{lms_load()}}. When the server reports it, the \code{max_context_length} column
+of \code{list_models(detailed = TRUE)} gives the largest context length that
+the model list reports for each model. If \code{context_length} is larger, the
 server loads the model with the asked value and gives no message. On LM
 Studio 0.4.25+1, it loaded google/gemma-3-1b at 65536 tokens, above its
 maximum of 32768. So \code{\link[=lms_load]{lms_load()}} gives a warning of class

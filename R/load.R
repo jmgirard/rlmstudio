@@ -58,9 +58,9 @@
 #' `format = "vector"`, it holds `NA`.
 #'
 #' To fit a longer prompt, load the model with a larger `context_length` in
-#' [lms_load()]. The `max_context_length` column of
-#' `list_models(detailed = TRUE)` gives the largest context length that the
-#' model list reports for each model. If `context_length` is larger, the
+#' [lms_load()]. When the server reports it, the `max_context_length` column
+#' of `list_models(detailed = TRUE)` gives the largest context length that
+#' the model list reports for each model. If `context_length` is larger, the
 #' server loads the model with the asked value and gives no message. On LM
 #' Studio 0.4.25+1, it loaded google/gemma-3-1b at 65536 tokens, above its
 #' maximum of 32768. So [lms_load()] gives a warning of class
@@ -83,6 +83,7 @@
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #'
+#' @aliases rlmstudio_context_above_max
 #' @export
 #'
 #' @examples
@@ -252,7 +253,7 @@ warn_context_above_max <- function(context_length, model, models) {
   cli::cli_warn(
     c(
       "{.arg context_length} {asked} is larger than {max_text}, the maximum context length that the model list gives for {.val {model}}.",
-      "i" = "LM Studio loads the model with {asked} tokens and gives no message."
+      "i" = "The load request goes out with {asked} token{?s}. LM Studio gives no message for such a value."
     ),
     class = "rlmstudio_context_above_max"
   )
