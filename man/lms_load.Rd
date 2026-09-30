@@ -2,6 +2,7 @@
 % Please edit documentation in R/load.R
 \name{lms_load}
 \alias{lms_load}
+\alias{rlmstudio_context_above_max}
 \title{Load a model via REST API}
 \usage{
 lms_load(
@@ -25,7 +26,8 @@ declared encoding and not marked \code{"bytes"}. A class, names, and the S4
 bit are removed before the name is sent.}
 
 \item{context_length}{Integer. Maximum number of tokens that the model will
-consider.}
+consider. With \code{force = FALSE}, a value above the maximum in the model
+list gives a warning. See the "Long prompts" section.}
 
 \item{eval_batch_size}{Integer. Number of input tokens to process together in
 a single batch during evaluation.}
@@ -74,6 +76,42 @@ returns a list containing the model's detailed load configuration.
 \description{
 Load a model via REST API
 }
+\section{Long prompts}{
+
+A prompt longer than the context length of the loaded model fails. On LM
+Studio 0.4.25+1, with google/gemma-3-1b loaded at a \code{context_length} of
+512, the \verb{/v1/responses} and \verb{/api/v1/chat} routes answered a longer prompt
+with status 500. The \verb{/v1/chat/completions} route answered it with status
+400. Each message began "The number of tokens to keep from the initial
+prompt is greater than the context length". The chat functions raise such a
+reply as an \code{rlmstudio_api_error}, and the message holds the server text.
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} fails that input alone and goes on to the next input.
+With \code{format = "list"}, the element of that input holds the condition. With
+\code{format = "vector"}, it holds \code{NA}.
+
+To fit a longer prompt, load the model with a larger \code{context_length} in
+\code{\link[=lms_load]{lms_load()}}. When the server reports it, the \code{max_context_length} column
+of \code{list_models(detailed = TRUE)} gives the largest context length that
+the model list reports for each model. If \code{context_length} is larger, the
+server loads the model with the asked value and gives no message. On LM
+Studio 0.4.25+1, it loaded google/gemma-3-1b at 65536 tokens, above its
+maximum of 32768. So \code{\link[=lms_load]{lms_load()}} gives a warning of class
+\code{rlmstudio_context_above_max} that names both numbers, and then sends the
+load. The \code{rlmstudio.quiet} option does not hide it. The warning needs the
+model list, so it comes only with \code{force = FALSE}, and only when the list
+has a maximum for the model and the model is not loaded yet.
+
+On LM Studio 0.4.25+1, the load endpoint answered a \code{rope_frequency_scale}
+field in \code{...} with status 400 and the code \code{"unrecognized_keys"}. So
+\code{\link[=lms_load]{lms_load()}} cannot set RoPE scaling through that field. RoPE scaling
+stretches the position encoding of a model past its trained length.
+
+To see how many tokens a prompt took, use
+\code{lms_chat_batch(format = "data.frame")}. Its \code{input_tokens} column holds
+the prompt token count that the server reports for each reply, on every
+route.
+}
+
 \section{Server not running}{
 
 Functions that call the LM Studio REST API open a TCP connection to the
@@ -209,7 +247,8 @@ read by its exact name, so a field named \code{keyX} does not stand in for
 can be empty.
 \item Each entry of \code{models} is a JSON object. Its \code{type} and \code{key} are
 strings, and its \code{loaded_instances} is an array.
-\item The \code{size_bytes} of an entry is a number, or absent, or \code{null}.
+\item The \code{size_bytes} of an entry is a number, or absent, or \code{null}. So is
+its \code{max_context_length}.
 \item Each entry of \code{loaded_instances} is a JSON object whose \code{id} is a string
 with a character that is not whitespace.
 }

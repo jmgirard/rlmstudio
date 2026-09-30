@@ -5,7 +5,8 @@
 #'   declared encoding and not marked `"bytes"`. A class, names, and the S4
 #'   bit are removed before the name is sent.
 #' @param context_length Integer. Maximum number of tokens that the model will
-#'   consider.
+#'   consider. With `force = FALSE`, a value above the maximum in the model
+#'   list gives a warning. See the "Long prompts" section.
 #' @param eval_batch_size Integer. Number of input tokens to process together in
 #'   a single batch during evaluation.
 #' @param flash_attention `TRUE`, `FALSE`, or `NULL`. Whether to optimize
@@ -44,10 +45,45 @@
 #'   and this call loads the model, it instead invisibly
 #'   returns a list containing the model's detailed load configuration.
 #'
+#' @section Long prompts:
+#' A prompt longer than the context length of the loaded model fails. On LM
+#' Studio 0.4.25+1, with google/gemma-3-1b loaded at a `context_length` of
+#' 512, the `/v1/responses` and `/api/v1/chat` routes answered a longer prompt
+#' with status 500. The `/v1/chat/completions` route answered it with status
+#' 400. Each message began "The number of tokens to keep from the initial
+#' prompt is greater than the context length". The chat functions raise such a
+#' reply as an `rlmstudio_api_error`, and the message holds the server text.
+#' [lms_chat_batch()] fails that input alone and goes on to the next input.
+#' With `format = "list"`, the element of that input holds the condition. With
+#' `format = "vector"`, it holds `NA`.
+#'
+#' To fit a longer prompt, load the model with a larger `context_length` in
+#' [lms_load()]. When the server reports it, the `max_context_length` column
+#' of `list_models(detailed = TRUE)` gives the largest context length that
+#' the model list reports for each model. If `context_length` is larger, the
+#' server loads the model with the asked value and gives no message. On LM
+#' Studio 0.4.25+1, it loaded google/gemma-3-1b at 65536 tokens, above its
+#' maximum of 32768. So [lms_load()] gives a warning of class
+#' `rlmstudio_context_above_max` that names both numbers, and then sends the
+#' load. The `rlmstudio.quiet` option does not hide it. The warning needs the
+#' model list, so it comes only with `force = FALSE`, and only when the list
+#' has a maximum for the model and the model is not loaded yet.
+#'
+#' On LM Studio 0.4.25+1, the load endpoint answered a `rope_frequency_scale`
+#' field in `...` with status 400 and the code `"unrecognized_keys"`. So
+#' [lms_load()] cannot set RoPE scaling through that field. RoPE scaling
+#' stretches the position encoding of a model past its trained length.
+#'
+#' To see how many tokens a prompt took, use
+#' `lms_chat_batch(format = "data.frame")`. Its `input_tokens` column holds
+#' the prompt token count that the server reports for each reply, on every
+#' route.
+#'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #'
+#' @aliases rlmstudio_context_above_max
 #' @export
 #'
 #' @examples
@@ -86,17 +122,24 @@ lms_load <- function(
 
   stop_if_no_server(host)
 
-  # Check if the model is already loaded to prevent redundant API calls
+  # Check if the model is already loaded to prevent redundant API calls. The
+  # list holds every model, so the check below can also read the maximum
+  # context length of a model that is not loaded yet.
   if (!isTRUE(force)) {
-    active_models <- list_models(
-      loaded = TRUE,
+    models <- list_models(
+      loaded = FALSE,
       detailed = TRUE,
       quiet = TRUE,
       host = host,
       token = token
     )
+    loaded_keys <- if (nrow(models) > 0) {
+      models$key[models$state == "loaded"]
+    } else {
+      character()
+    }
 
-    if (nrow(active_models) > 0 && model %in% active_models$key) {
+    if (model %in% loaded_keys) {
       rlm_alert_info(
         "Model {.val {model}} is already loaded. Use {.code force = TRUE} to load an additional instance."
       )
@@ -107,6 +150,8 @@ lms_load <- function(
       }
       return(invisible(model))
     }
+
+    warn_context_above_max(context_length, model, models)
   }
 
   # 1. Build the explicit body based on current known parameters. `isTRUE()`
@@ -165,6 +210,54 @@ lms_load <- function(
   }
 
   rlm_abort_api(resp, "API Load Failed", request_sends_token(req))
+}
+
+#' Warn when a load asks for more context than the model list allows
+#'
+#' LM Studio loads a `context_length` above the `max_context_length` of the
+#' model list as asked, with no clamp and no message (observed on 0.4.25+1).
+#' This warning is the only sign in R. The `rlmstudio.quiet` option does not
+#' hide it. A value that `as.integer()` cannot read as one
+#' number, a model with no row in the list, and a row with no maximum give no
+#' warning.
+#'
+#' @param context_length The `context_length` argument of `lms_load()`.
+#' @param model Character. The checked model name.
+#' @param models The data frame that `list_models(detailed = TRUE)` returns.
+#' @return `NULL`, invisibly.
+#'
+#' @noRd
+warn_context_above_max <- function(context_length, model, models) {
+  if (is.null(context_length) || !"max_context_length" %in% names(models)) {
+    return(invisible(NULL))
+  }
+  # The body is built from the same `as.integer()` call later, so a value it
+  # cannot read raises there as before, and its coercion warning shows once.
+  asked <- tryCatch(
+    suppressWarnings(as.integer(context_length)),
+    error = function(e) NULL
+  )
+  if (length(asked) != 1L || is.na(asked)) {
+    return(invisible(NULL))
+  }
+  row <- match(model, models$key)
+  if (is.na(row)) {
+    return(invisible(NULL))
+  }
+  max <- models$max_context_length[[row]]
+  if (!is.numeric(max) || is.na(max) || asked <= max) {
+    return(invisible(NULL))
+  }
+
+  max_text <- format(max, scientific = FALSE, trim = TRUE)
+  cli::cli_warn(
+    c(
+      "{.arg context_length} {asked} is larger than {max_text}, the maximum context length that the model list gives for {.val {model}}.",
+      "i" = "The load request goes out with {asked} token{?s}. LM Studio gives no message for such a value."
+    ),
+    class = "rlmstudio_context_above_max"
+  )
+  invisible(NULL)
 }
 
 #' Find the first way a load reply breaks its shape rules

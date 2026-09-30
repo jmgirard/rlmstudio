@@ -450,7 +450,8 @@ request_model_list <- function(host, token, label) {
 #' 1. The body is a JSON object whose `models` is an array.
 #' 2. Each entry of `models` is a JSON object. Its `type` and `key` are
 #'    strings, and its `loaded_instances` is an array.
-#' 3. The `size_bytes` of an entry is a number, or absent, or `null`.
+#' 3. The `size_bytes` and the `max_context_length` of an entry are each a
+#'    number, or absent, or `null`. `lms_load()` reads `max_context_length`.
 #' 4. Each entry of `loaded_instances` is a JSON object whose `id` is a string
 #'    with a character that is not whitespace.
 #'
@@ -484,9 +485,11 @@ model_list_fault <- function(body) {
         return(paste0("`", field, "` of ", where, " is not a string."))
       }
     }
-    size <- entry[["size_bytes"]]
-    if (!is.null(size) && !is_json_number(size)) {
-      return(paste0("`size_bytes` of ", where, " is not a number."))
+    for (field in c("size_bytes", "max_context_length")) {
+      value <- entry[[field]]
+      if (!is.null(value) && !is_json_number(value)) {
+        return(paste0("`", field, "` of ", where, " is not a number."))
+      }
     }
     instances <- entry[["loaded_instances"]]
     if (!is_json_array(instances)) {

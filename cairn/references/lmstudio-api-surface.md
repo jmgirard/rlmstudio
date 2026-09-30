@@ -89,7 +89,13 @@ all.
 - **Load configuration.** `/api/v1/models/load` accepts `context_length`,
   `eval_batch_size`, `flash_attention`, `num_experts`,
   `offload_kv_cache_to_gpu`, and `echo_load_config`. `lms_load()` names all
-  six already. The endpoint rejects `ttl` (corrected M034).
+  six already. The endpoint rejects `ttl` (corrected M034). On LM Studio
+  0.4.25+1, it loaded google/gemma-3-1b at `context_length` 65536 with status
+  200. The model list gives that model a `max_context_length` of 32768. The
+  load had no clamp and no message. It answered `rope_frequency_scale` with status 400
+  and the code `unrecognized_keys`. `lms load` has no rope flag. Only the SDK
+  websocket protocol names `ropeFrequencyBase` and `ropeFrequencyScale`
+  (M063) — observed 2026-09-30.
 - **Embedding context cut** (M048). `/v1/embeddings` embeds only the first
   `context_length` tokens of each text, where `context_length` is that of the
   loaded instance. It answers status 200 with a vector and no error, warning,
@@ -170,6 +176,14 @@ all.
   'content': 'content' array must only contain objects."). An empty `input`
   array got status 400 on `/v1/responses`, code
   `missing_required_parameter` — observed 2026-09-30.
+- **A prompt longer than the loaded context** (M063). With google/gemma-3-1b
+  loaded at `context_length` 512 on LM Studio 0.4.25+1, a longer prompt got
+  these raw bodies. `/v1/responses` answered status 500 with
+  `{"error":{"message":"The number of tokens to keep from the initial prompt is greater than the context length. Try to load the model with a larger context length, or provide a shorter input","type":"internal_error","param":null,"code":"unknown"}}`.
+  `/api/v1/chat` answered status 500 with the same object, its keys in the
+  order `message`, `type`, `code`, `param`. `/v1/chat/completions` answered
+  status 400 with `{"error":"<the same text>"}`, the text as a string in
+  `error` — observed 2026-09-30.
 
 ## CLI commands the package does not wrap
 
