@@ -170,6 +170,14 @@ all.
   'content': 'content' array must only contain objects."). An empty `input`
   array got status 400 on `/v1/responses`, code
   `missing_required_parameter` — observed 2026-09-30.
+- **A prompt longer than the loaded context** (M063). With google/gemma-3-1b
+  loaded at `context_length` 512 on LM Studio 0.4.25+1, a longer prompt got
+  these raw bodies. `/v1/responses` answered status 500 with
+  `{"error":{"message":"The number of tokens to keep from the initial prompt is greater than the context length. Try to load the model with a larger context length, or provide a shorter input","type":"internal_error","param":null,"code":"unknown"}}`.
+  `/api/v1/chat` answered status 500 with the same object, its keys in the
+  order `message`, `type`, `code`, `param`. `/v1/chat/completions` answered
+  status 400 with `{"error":"<the same text>"}`, the text as a string in
+  `error` — observed 2026-09-30.
 
 ## CLI commands the package does not wrap
 

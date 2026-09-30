@@ -86,17 +86,24 @@ lms_load <- function(
 
   stop_if_no_server(host)
 
-  # Check if the model is already loaded to prevent redundant API calls
+  # Check if the model is already loaded to prevent redundant API calls. The
+  # list holds every model, so the check below can also read the maximum
+  # context length of a model that is not loaded yet.
   if (!isTRUE(force)) {
-    active_models <- list_models(
-      loaded = TRUE,
+    models <- list_models(
+      loaded = FALSE,
       detailed = TRUE,
       quiet = TRUE,
       host = host,
       token = token
     )
+    loaded_keys <- if (nrow(models) > 0) {
+      models$key[models$state == "loaded"]
+    } else {
+      character()
+    }
 
-    if (nrow(active_models) > 0 && model %in% active_models$key) {
+    if (model %in% loaded_keys) {
       rlm_alert_info(
         "Model {.val {model}} is already loaded. Use {.code force = TRUE} to load an additional instance."
       )
@@ -107,6 +114,8 @@ lms_load <- function(
       }
       return(invisible(model))
     }
+
+    warn_context_above_max(context_length, model, models)
   }
 
   # 1. Build the explicit body based on current known parameters. `isTRUE()`
@@ -165,6 +174,54 @@ lms_load <- function(
   }
 
   rlm_abort_api(resp, "API Load Failed", request_sends_token(req))
+}
+
+#' Warn when a load asks for more context than the model list allows
+#'
+#' LM Studio loads a `context_length` above the `max_context_length` of the
+#' model list as asked, with no clamp and no message (observed on 0.4.25+1).
+#' This warning is the only sign in R. It shows past `quiet` and the
+#' `rlmstudio.quiet` option. A value that `as.integer()` cannot read as one
+#' number, a model with no row in the list, and a row with no maximum give no
+#' warning.
+#'
+#' @param context_length The `context_length` argument of `lms_load()`.
+#' @param model Character. The checked model name.
+#' @param models The data frame that `list_models(detailed = TRUE)` returns.
+#' @return `NULL`, invisibly.
+#'
+#' @noRd
+warn_context_above_max <- function(context_length, model, models) {
+  if (is.null(context_length) || !"max_context_length" %in% names(models)) {
+    return(invisible(NULL))
+  }
+  # The body is built from the same `as.integer()` call later, so a value it
+  # cannot read raises there as before, and its coercion warning shows once.
+  asked <- tryCatch(
+    suppressWarnings(as.integer(context_length)),
+    error = function(e) NULL
+  )
+  if (length(asked) != 1L || is.na(asked)) {
+    return(invisible(NULL))
+  }
+  row <- match(model, models$key)
+  if (is.na(row)) {
+    return(invisible(NULL))
+  }
+  max <- models$max_context_length[[row]]
+  if (!is.numeric(max) || is.na(max) || asked <= max) {
+    return(invisible(NULL))
+  }
+
+  max_text <- format(max, scientific = FALSE, trim = TRUE)
+  cli::cli_warn(
+    c(
+      "{.arg context_length} {asked} is larger than {max_text}, the maximum context length that the model list gives for {.val {model}}.",
+      "i" = "LM Studio loads the model with {asked} tokens and gives no message. Replies past the maximum can lose quality."
+    ),
+    class = "rlmstudio_context_above_max"
+  )
+  invisible(NULL)
 }
 
 #' Find the first way a load reply breaks its shape rules

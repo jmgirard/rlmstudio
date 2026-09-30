@@ -1,13 +1,13 @@
 # M063: A load above the trained context warns, and the help says how to fit a long prompt
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP1, GP4, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — it adds a warning to `lms_load()` and help text to exported functions.
-- **Branch/PR:** —
+- **Branch/PR:** m063-long-prompts
 
 ## Goal
 
@@ -50,8 +50,8 @@ A user with a prompt longer than the loaded context learns from R how LM Studio 
 
 ## Tasks
 
-- [ ] T1: Write the three raw overflow bodies of 2026-09-30 into cairn/references/lmstudio-api-surface.md, from the plan work log. Write the AC1 to AC5 tests first with `local_request_sequence()` (tests/testthat/helper-mock-http.R:37), a model-list reply and then a load reply. See the AC1, AC3, and AC4 tests red on main. Copy the overflow bodies into the test file. Plant a wrong warning message and see the AC1 test go red (M026 lesson). Count warnings with `withCallingHandlers()` (M019 lesson).
-- [ ] T2: In `lms_load()` (R/load.R:64), make the `force = FALSE` pre-check (R/load.R:90) read the model list with `loaded = FALSE`. Keep its loaded filter on that list, so the call still sends two requests (M008 lesson). Compare `as.integer(context_length)` with the `max_context_length` of the row whose `key` is `model`. Warn with `cli::cli_warn()` and the class. A missing row, column, or value gives no warning. Add the `max_context_length` rule to `model_list_fault()` (R/list.R:467) beside the `size_bytes` rule. In a scratch copy, remove the warning and see a test go red.
+- [x] T1: Write the three raw overflow bodies of 2026-09-30 into cairn/references/lmstudio-api-surface.md, from the plan work log. Write the AC1 to AC5 tests first with `local_request_sequence()` (tests/testthat/helper-mock-http.R:37), a model-list reply and then a load reply. See the AC1, AC3, and AC4 tests red on main. Copy the overflow bodies into the test file. Plant a wrong warning message and see the AC1 test go red (M026 lesson). Count warnings with `withCallingHandlers()` (M019 lesson).
+- [x] T2: In `lms_load()` (R/load.R:64), make the `force = FALSE` pre-check (R/load.R:90) read the model list with `loaded = FALSE`. Keep its loaded filter on that list, so the call still sends two requests (M008 lesson). Compare `as.integer(context_length)` with the `max_context_length` of the row whose `key` is `model`. Warn with `cli::cli_warn()` and the class. A missing row, column, or value gives no warning. Add the `max_context_length` rule to `model_list_fault()` (R/list.R:467) beside the `size_bytes` rule. In a scratch copy, remove the warning and see a test go red.
 - [ ] T3: Write the two help sections from the probe facts, then run `devtools::document()`. Add the facts to cairn/references/lmstudio-api-surface.md with the date and version. With gemma-3-1b loaded at 512 tokens, the Responses and native routes answered 500 with the overflow text. The OpenAI route answered 400 with it. The load endpoint loaded gemma-3-1b at 65536 tokens with status 200, above its maximum of 32768. It rejected `rope_frequency_scale` with code `unrecognized_keys`. Add the NEWS.md entry.
 - [ ] T4: Append one D-entry: the load warning shows past quiet, which widens the GP6 exceptions of D-010 and D-021. The entry also records the `max_context_length` rule under D-017. Set `RLMSTUDIO_API_TOKEN`, then run `devtools::test()` and `devtools::check()`.
 
@@ -64,6 +64,9 @@ A user with a prompt longer than the loaded context learns from R how LM Studio 
 - 2026-09-30: plan gate chose a warning that shows past quiet over one that honors quiet. Replies past the trained length can degrade with no other sign. Falsified by a user who runs quiet scripts and treats the warning as noise.
 - 2026-09-30: plan gate chose a warning and help text over a text-splitting helper, which GP1 keeps out. Falsified by users who need one vector or answer for a text longer than any context the model allows.
 - 2026-09-30: criteria audit pass 2 (full mode, new fresh Opus reader) returned 3 findings, all fixed without a question. Added the D-017 shape rule on `max_context_length` (AC3), a guard and probes for `context_length` values that `as.integer()` cannot read, and the raw overflow bodies with the field that holds the text.
+- 2026-09-30: implement started on branch m063-long-prompts. The question gate was skipped, because the plan left no choice open.
+- 2026-09-30: T1 done. The overflow bodies are in the API surface reference. `test-long-prompts.R` went red on main for AC1, AC3, and AC4, and AC2 and AC5 passed there.
+- 2026-09-30: T2 done. `lms_load()` reads the full model list and warns through `warn_context_above_max()`. `model_list_fault()` checks `max_context_length`. In scratch copies, a message without the maximum turned the AC1 tests red, and a removed warning turned AC1 and AC4 red. `devtools::test()`: 0 failures, 0 errors.
 
 ## Decisions
 
