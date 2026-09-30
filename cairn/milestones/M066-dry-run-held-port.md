@@ -69,7 +69,7 @@ a candidate row. The package code does not change.
       After 5 tries, it stops with the AC2 message. Route `request_target()`
       and `request_body_text()` through it. The comment states the cause from
       the probe.
-- [ ] T3: Route the five local dry-run reads through the helper. They are
+- [x] T3: Route the five local dry-run reads through the helper. They are
       `sent_messages()` in `test-arg-guards.R`, `sent_json()` in
       `test-ttl.R`, and the helpers in `test-embed.R`, `test-chat-schema.R`,
       and `test-token.R`. Run the AC3 grep.
@@ -85,6 +85,7 @@ a candidate row. The package code does not change.
 - 2026-09-30: implement question gate chose a retry on httpuv's bind error too (see Decisions).
 - 2026-09-30: T1 done. Before the fix, the held-port test got no method, path, or body after 1 try, and the all-tries test got "argument 'x' must be a raw vector".
 - 2026-09-30: T2 done. `request_dry_run()` in `helper-mock-http.R` retries up to 5 tries, and `request_target()` and `request_body_text()` call it. A third test holds the first port on all addresses, so the bind-error retry runs on macOS too. `devtools::test()`: 0 failed, 0 errors, 3 skipped.
+- 2026-09-30: T3 done. The five local reads call `request_dry_run()` and drop their own `require_httpuv()`. The AC3 grep returns 4 comment lines and the one call in the helper. The first `devtools::test()` gave 0 failed and 1 error, but the summary kept no test name or message. Four later runs gave 0 failed and 0 errors, and a script that prints each error's file, test, and message named none. This is the unnamed-error candidate row.
 
 ## Decisions
 

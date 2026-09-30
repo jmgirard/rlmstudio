@@ -1907,8 +1907,7 @@ test_that("a value that is not a vector, a list, or NULL aborts with its own det
 # The messages field of the body a captured request sends, parsed back with no
 # simplification, so a list of objects stays a list of lists.
 sent_messages <- function(req) {
-  require_httpuv()
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  out <- request_dry_run(req, redact_headers = FALSE)
   jsonlite::parse_json(rawToChar(out$body), simplifyVector = FALSE)$messages
 }
 
