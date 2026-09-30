@@ -58,7 +58,7 @@ defines top-level blocks already gives one block per pass.
       description ends with another `label` of `id_probes` passes. The own
       description is the text after the last ` / ` of the reported test name.
 - [x] AC4: `DESCRIPTION` lists `testthat (>= 3.3.0)` in Suggests.
-- [ ] AC5: `devtools::test()` reports no failure and no error.
+- [x] AC5: `devtools::test()` reports no failure and no error.
       `devtools::check()` gives 0 errors, 0 warnings, and no note that main
       at a42a1ab does not give.
 
@@ -118,3 +118,5 @@ defines top-level blocks already gives one block per pass.
 - AC4 (2026-09-30): `grep testthat DESCRIPTION` shows `testthat (>= 3.3.0),` at line 30, in the Suggests field.
 - AC2 (2026-09-30): in a `git archive` copy of HEAD, `stop("planted")` is the first statement of `lms_daemon_stop()`. `test_file()` on `test-cli-output.R`, with a reporter that records each result and its full test name, gives 32 subtests under 8 parent blocks. The 8 parent names match the 8 plan-commit sweep rows with the header `for (name in names(cli_callers))`. Each subtest's own description is its function name. All 8 `lms_daemon_stop` subtests failed or errored. All 24 subtests for `lms_server_start`, `lms_server_stop`, and `lms_daemon_start` passed.
 - AC3 (2026-09-30): in a `git archive` copy of HEAD, the `match` of the `no values` probe in `id_probes` is `"planted"`. `test_file()` on `test-arg-guards.R`, with the same recording reporter, ran in 26 s. `guarded_exports(c("model", "job_id"))`, evaluated from the file, returns 10 functions, and `id_probes` holds 13 labels. Each of the 10 blocks has 13 subtests, and each own description is one of the 13 labels. In each block the one `no values` subtest failed or errored, and 0 of the 12 other-label subtests did.
+- AC5 (2026-09-30): `devtools::test()` on HEAD gave 0 failed, 0 errors, 3 skipped (live server tests), and 19707 passed. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, with tests OK in 89 s. With 0 notes, no compare run on a42a1ab is owed.
+- Consistency gate (2026-09-30): `cairn_validate.py` exits 0 with every check PASS or OK. No principle changed, so `cairn_impact` is skipped. `devtools::document()` gives no diff. The branch changes no README or R source, and the repo has no `_pkgdown.yml`. The change is test code and a Suggests floor, so NEWS owes no entry. `cairn/` is already in `.Rbuildignore`.
