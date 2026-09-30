@@ -138,6 +138,7 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: the first T10 `devtools::check()` ran at the same time as the plants and gave 1 error and 0 warnings. Its text was not captured, so the error is not identified. A rerun with nothing else running gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-30: claim audit: not owed, internal tier.
 - 2026-09-30: all tasks done, status set to review.
+- 2026-09-30: review pass 2 started at 8b88a1f. Main had not moved. The pass 1 criterion ticks were cleared. AC1 to AC5 and the consistency gate pass on fresh evidence, and three fresh reviewers are running.
 
 ## Decisions
 
@@ -180,3 +181,12 @@ Gate (2026-09-30): the maintainer declined the merge and sent M065 back to imple
 - O5, O6, O8, B3, B4: noted. Each reviewer found no broken check.
 - P3: noted. No rule was shown broken.
 - P4: rejected. The lines are also long on main.
+
+Pass 2 (2026-09-30), at 8b88a1f, after T7 to T10. Main is still at a03fdc1. The pass 1 ticks were cleared and each box is ticked again on the evidence below.
+
+- AC1: the sweep on a `git archive` copy of a03fdc1 prints 270 rows, all `flat`: 36 for `test-arg-guards.R` and 42 with a `for (name in ` header. On the branch it prints 289 rows: 203 `flat`, 86 `nested`, 0 `before-subtest`. `test-arg-guards.R` has 44 rows, all `nested`. The 42 `for (name in ` rows are all `nested`. Of the 268 distinct plan-commit triples, 0 print fewer times on the branch.
+- AC2: in a `git archive` copy of HEAD, `stop("planted")` is the first statement of `lms_daemon_stop()`. `test_file()` on `test-cli-output.R`, with a reporter that records each result and its full test name, ran 361 results. The 8 parent names from the plan-commit sweep rows with the header `for (name in names(cli_callers))` all appear, with 32 subtests, 4 per parent. Each own description is one function name. All 8 `lms_daemon_stop` subtests failed or errored. All 24 for `lms_server_start`, `lms_server_stop`, and `lms_daemon_start` passed. 16 of the 26 bad results name "planted", and the other 10 are expectations on the output of the same aborted call. 3 more failures are in the block "a cut inside a <xx> token", whose outer loop is `for (n in 997:999)` and out of scope. An unplanted copy ran 363 results, all passed.
+- AC3: in a `git archive` copy of HEAD, the `match` of the `no values` probe in `id_probes` is `"planted"`. `test_file()` on `test-arg-guards.R`, with the same recording reporter, ran 2801 results in 16 s: 10 errors and 2791 passes. `guarded_exports(c("model", "job_id"))`, evaluated from the file, returns 10 functions, and `id_probes` holds 13 labels. All 10 blocks appear, each with 13 subtests, and each own description is one of the 13 labels. In each block the one `no values` subtest errored with the "0 values rather than one" abort, which no longer matches the planted pattern. 0 of the 120 other-label subtests failed or errored, and no result outside these blocks did.
+- AC4: `DESCRIPTION` line 30 is `testthat (>= 3.3.0),`, the seventh line of the Suggests field.
+- AC5: `devtools::test()` gave 0 failed, 0 errors, 3 skipped (live server tests), and 19368 passed, and its reporter printed no Failed section. T10 logged 19371 passed with no code change since d30258b, so the pass count varies by 3 between runs. `devtools::check()`, run with nothing else running, gave 0 errors, 0 warnings, and 0 notes, with tests OK in 73 s. With 0 notes, no compare run on a42a1ab is owed.
+- Consistency gate: `cairn_validate.py` exits 0 with every check PASS or OK. No principle changed, so `cairn_impact` is skipped. `devtools::document()` gives no diff. The branch changes no README or R source, and the repo has no `_pkgdown.yml`. The change is test code, a dev script under `cairn/`, and a Suggests floor, so NEWS owes no entry. `cairn/` is already in `.Rbuildignore`, and `check()` gave no note.
