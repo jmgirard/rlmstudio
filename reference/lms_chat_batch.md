@@ -60,8 +60,10 @@ lms_chat_batch(
 - ...:
 
   Additional arguments passed to `lms_chat`, such as `api_type`,
-  `logprobs`, `schema`, or `ttl`. A `schema`, a `ttl`, and the
-  `api_type` that each needs are checked before the first call. A
+  `logprobs`, `schema`, `ttl`, or `previous_response_id`. A `schema`, a
+  `ttl`, a `previous_response_id`, and the `api_type` that each needs
+  are checked before the first call. A `previous_response_id` goes to
+  every call, so each input continues the same stored reply. A
   `logprobs` here, or a shortened name that
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
   reads as `logprobs`, must be `TRUE` or `FALSE`. Any other value,
@@ -100,6 +102,15 @@ The return type depends on the `format` argument:
   `output`, or `logprobs` when it is there, as described below. With an
   object `schema` and `logprobs = FALSE`, one column per schema property
   comes after them, as described below.
+
+On the native and OpenResponses routes with `simplify = TRUE`,
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+returns each reply that carries an id with a `response_id` attribute, as
+its help describes. With `format = "list"`, each reply keeps it. So does
+each element of the list that `format = "vector"` returns with
+`logprobs = TRUE`. The character vector of `format = "vector"` and the
+`output` column of `format = "data.frame"` carry no `response_id`
+attribute. The data frame holds the ids in its `response_id` column.
 
 With `api_type = "native"` and `format = "data.frame"`, the data frame
 ends with seven columns read from each reply: `response_id`,
@@ -232,6 +243,12 @@ give these for a model name that the server cannot find, so every later
 input fails in the same way. See the "Reply from another model" section
 below.
 
+A `previous_response_id` that the server does not hold gives status 400
+with the `code` `"invalid_value"` on the native route and
+`"previous_response_not_found"` on the OpenResponses route. The batch
+does not abort at either one. Each such input fails alone, as described
+above, and the batch goes on to the next input.
+
 An `rlmstudio_no_server` from
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 also aborts the batch. Its `results` field holds the results so far, as
@@ -243,8 +260,8 @@ other class aborts the batch unchanged.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
-`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`, or
-`batch_size`, a bad `type` of
+`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`,
+`previous_response_id`, or `batch_size`, a bad `type` of
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),

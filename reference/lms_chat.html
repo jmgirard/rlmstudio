@@ -61,6 +61,7 @@ selected API type.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  schema <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ttl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  previous_response_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -129,6 +130,20 @@ just-in-time loading setting is on. A model that is already loaded keeps
 its idle time.</p></dd>
 
 
+<dt id="arg-previous-response-id">previous_response_id<a class="anchor" aria-label="anchor" href="#arg-previous-response-id"></a></dt>
+<dd><p>One string, or <code>NULL</code>. The id of a stored reply
+that this chat continues, such as the <code>response_id</code> attribute of an
+earlier reply. <code>NULL</code>, the default, starts a new thread. It needs
+<code>api_type = "native"</code> or <code>api_type = "openresponses"</code>. With
+<code>api_type = "openai"</code>, a string aborts before the request, because the
+OpenAI chat endpoint keeps no thread. <code>NA</code>, an empty string, a string of
+whitespace only, a value that is not a string, and more or fewer than one
+string abort before the check for a running server. Only this exact name
+is checked. A shortened name, such as <code>previous</code>, goes into the request
+body unchecked, under the name you wrote. An id that the server does not
+hold raises <code>rlmstudio_api_error</code> with status 400.</p></dd>
+
+
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
 <dd><p>Character or <code>NULL</code>. An API token for a server that requires
 authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option and then the
@@ -140,7 +155,16 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <p>Depending on the arguments provided:</p><ul><li><p>If <code>simplify = FALSE</code>, returns a parsed list of the raw JSON response.</p></li>
 <li><p>If <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>, returns a single character string containing the model's text response. With a <code>schema</code>, it returns the reply parsed into an R value instead.</p></li>
 <li><p>If <code>simplify = TRUE</code> and <code>logprobs = TRUE</code> (and the chosen API type supports it), returns an object of class <code>lms_chat_result</code> containing both the text and a data.frame of token probabilities.</p></li>
-</ul></div>
+</ul><p>With <code>simplify = TRUE</code> and <code>api_type = "native"</code> or
+<code>api_type = "openresponses"</code>, the value carries the id of the reply in a
+<code>response_id</code> attribute. Pass it as <code>previous_response_id</code> to continue the
+thread. The id is the <code>response_id</code> field of a native reply and the <code>id</code>
+field of an OpenResponses reply. The value has no attribute when that
+field is absent or is not one string. A native reply sent with
+<code>store = FALSE</code> in <code>...</code> carries no id, and an OpenResponses reply sent
+with <code>store = FALSE</code> still carries one. With <code>api_type = "openai"</code>, or
+with <code>simplify = FALSE</code>, the value has no <code>response_id</code> attribute.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function calls <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code>, <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code>, or
@@ -162,7 +186,8 @@ other than the one asked for.</p>
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
+<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, <code>previous_response_id</code>,
+or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
 argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
 the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of

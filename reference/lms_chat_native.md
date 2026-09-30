@@ -13,6 +13,7 @@ lms_chat_native(
   host = "http://localhost:1234",
   simplify = TRUE,
   ...,
+  previous_response_id = NULL,
   token = NULL
 )
 ```
@@ -55,6 +56,27 @@ lms_chat_native(
   server. The endpoint has no logprobs, so no `logprobs` field goes into
   the request body, and a `TRUE` warns.
 
+- previous_response_id:
+
+  One string, or `NULL`. The id of a stored reply that this chat
+  continues, such as the `response_id` attribute of an earlier reply of
+  this function. `NULL`, the default, starts a new thread. `NA`, an
+  empty string, a string of whitespace only, a value that is not a
+  string, and more or fewer than one string abort before the check for a
+  running server. Only this exact name is checked. A shortened name,
+  such as `previous`, goes into the request body unchecked, under the
+  name you wrote. An id that the server does not hold raises
+  `rlmstudio_api_error` with status 400 and the `code`
+  `"invalid_value"`.
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  and
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  refuse a string with `api_type = "openai"`, because the OpenAI chat
+  endpoint keeps no thread.
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  has no such argument. A `previous_response_id` in its `...` goes into
+  the request body unchecked, and the endpoint ignores it.
+
 - token:
 
   Character or `NULL`. An API token for a server that requires
@@ -77,13 +99,24 @@ with no separator. Items of other types, such as reasoning and tool
 calls, are skipped. A reply with no readable answer text raises
 `rlmstudio_bad_response`, as described below.
 
+With `simplify = TRUE`, the string carries the `response_id` field of
+the reply in a `response_id` attribute. Pass it as
+`previous_response_id` to continue the thread. The string has no
+attribute when `response_id` is absent or is not one string. A reply
+sent with `store = FALSE` in `...` carries no `response_id`, so its
+string has no attribute.
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+reads the attribute from the `id` field of its reply instead. An
+OpenResponses reply sent with `store = FALSE` still carries an `id`, so
+its value still carries the attribute.
+
 ## Server not running
 
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
-`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`, or
-`batch_size`, a bad `type` of
+`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`,
+`previous_response_id`, or `batch_size`, a bad `type` of
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),

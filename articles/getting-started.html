@@ -180,10 +180,15 @@ instructions. You use it to tell the AI how to behave, what role to
 play, or how to format its answers (like asking it to act as an expert R
 programmer).</p></li>
 </ul>
-<p><em>Note:</em> The rlmstudio package currently processes each chat
-request independently. Every time you run the lms_chat() function, you
-are starting a brand new conversation. The model will not remember
-previous messages or context from earlier in your R script.</p>
+<p><em>Note:</em> By default, each call to <code><a href="../reference/lms_chat.html">lms_chat()</a></code>
+starts a new conversation. The model does not remember earlier messages
+or context from your R script. To continue a conversation, pass the
+<code>response_id</code> attribute of the earlier reply as
+<code>previous_response_id</code>. This works on the default route,
+<code>api_type = "openresponses"</code>, and on
+<code>api_type = "native"</code>, but not on
+<code>api_type = "openai"</code>. See <code><a href="../reference/lms_chat.html">?lms_chat</a></code> for
+details.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model</span>,</span>

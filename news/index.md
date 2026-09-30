@@ -2,6 +2,44 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  and
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  gain a `previous_response_id` argument that continues a stored chat
+  thread.
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  takes it in `...`. With `simplify = TRUE`, the native and
+  OpenResponses routes now return the id of the reply in a `response_id`
+  attribute. Pass it as `previous_response_id` in the next call.
+
+  - `previous_response_id` must be `NULL` or one string that is not
+    empty and not whitespace only. Any other value aborts before the
+    check for a running server. With `api_type = "openai"`,
+    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+    and
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    abort on a string, because the OpenAI chat endpoint keeps no thread.
+  - A simplified string reply with an id now prints an
+    `attr(,"response_id")` line under the text.
+    [`identical()`](https://rdrr.io/r/base/identical.html) of such a
+    reply and a plain string returns `FALSE`.
+    [`trimws()`](https://rdrr.io/r/base/trimws.html),
+    [`toupper()`](https://rdrr.io/r/base/chartr.html),
+    [`sub()`](https://rdrr.io/r/base/grep.html), and
+    [`gsub()`](https://rdrr.io/r/base/grep.html) keep the attribute on
+    the text they return, and
+    [`paste0()`](https://rdrr.io/r/base/paste.html) drops it. If you
+    need the plain string, remove the attribute with
+    `attr(x, "response_id") <- NULL`.
+  - In
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+    the list format keeps the attribute on each reply. The character
+    vector of the vector format and the `output` column of the data
+    frame carry none. With `logprobs = TRUE`, the vector format returns
+    a list, and each element keeps the attribute. An id that the server
+    does not hold fails each input alone.
+
 - Each `TRUE` or `FALSE` argument now takes only `TRUE` or `FALSE`. Any
   other value aborts with a message that names the argument, and the
   abort has no condition class. It aborts before the check for a running

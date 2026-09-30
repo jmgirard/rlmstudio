@@ -88,7 +88,8 @@ before the first call. It can raise <code>rlmstudio_api_error</code> through
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
+<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, <code>previous_response_id</code>,
+or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
 argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
 the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of

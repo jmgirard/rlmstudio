@@ -58,8 +58,8 @@ JSON object whose `status` is a string.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
-`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`, or
-`batch_size`, a bad `type` of
+`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`,
+`previous_response_id`, or `batch_size`, a bad `type` of
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),

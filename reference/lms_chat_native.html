@@ -51,6 +51,7 @@
 <span>  host <span class="op">=</span> <span class="st">"http://localhost:1234"</span>,</span>
 <span>  simplify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  previous_response_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -95,6 +96,22 @@ for a running server. The endpoint has no logprobs, so no <code>logprobs</code> 
 goes into the request body, and a <code>TRUE</code> warns.</p></dd>
 
 
+<dt id="arg-previous-response-id">previous_response_id<a class="anchor" aria-label="anchor" href="#arg-previous-response-id"></a></dt>
+<dd><p>One string, or <code>NULL</code>. The id of a stored reply
+that this chat continues, such as the <code>response_id</code> attribute of an
+earlier reply of this function. <code>NULL</code>, the default, starts a new thread.
+<code>NA</code>, an empty string, a string of whitespace only, a value that is not a
+string, and more or fewer than one string abort before the check for a
+running server. Only this exact name is checked. A shortened name, such
+as <code>previous</code>, goes into the request body unchecked, under the name you
+wrote. An id that the server does not hold raises <code>rlmstudio_api_error</code>
+with status 400 and the <code>code</code> <code>"invalid_value"</code>. <code><a href="lms_chat.html">lms_chat()</a></code> and
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> refuse a string with <code>api_type = "openai"</code>, because
+the OpenAI chat endpoint keeps no thread. <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> has no
+such argument. A <code>previous_response_id</code> in its <code>...</code> goes into the
+request body unchecked, and the endpoint ignores it.</p></dd>
+
+
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
 <dd><p>Character or <code>NULL</code>. An API token for a server that requires
 authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option and then the
@@ -115,6 +132,14 @@ returns one character string: the
 together in order with no separator. Items of other types, such as
 reasoning and tool calls, are skipped. A reply with no readable answer
 text raises <code>rlmstudio_bad_response</code>, as described below.</p>
+<p>With <code>simplify = TRUE</code>, the string carries the <code>response_id</code> field of the
+reply in a <code>response_id</code> attribute. Pass it as <code>previous_response_id</code> to
+continue the thread. The string has no attribute when <code>response_id</code> is
+absent or is not one string. A reply sent with <code>store = FALSE</code> in <code>...</code>
+carries no <code>response_id</code>, so its string has no attribute.
+<code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> reads the attribute from the <code>id</code> field of its
+reply instead. An OpenResponses reply sent with <code>store = FALSE</code> still
+carries an <code>id</code>, so its value still carries the attribute.</p>
     </div>
     <div class="section level2">
     <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
@@ -123,7 +148,8 @@ text raises <code>rlmstudio_bad_response</code>, as described below.</p>
 <p>Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
-<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
+<code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, <code>previous_response_id</code>,
+or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
 argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
 the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of

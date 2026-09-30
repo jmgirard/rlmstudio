@@ -112,8 +112,8 @@ returns it, and `NULL` where the field is absent or `null`.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
-`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`, or
-`batch_size`, a bad `type` of
+`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`,
+`previous_response_id`, or `batch_size`, a bad `type` of
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 or `list_instances()`, a bad `TRUE` or `FALSE` argument such as
 `simplify`, `logprobs`, `quiet`, or `force`, a `stream` in the `...` of

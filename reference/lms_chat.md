@@ -18,6 +18,7 @@ lms_chat(
   ...,
   schema = NULL,
   ttl = NULL,
+  previous_response_id = NULL,
   token = NULL
 )
 ```
@@ -85,6 +86,20 @@ lms_chat(
   its just-in-time loading setting is on. A model that is already loaded
   keeps its idle time.
 
+- previous_response_id:
+
+  One string, or `NULL`. The id of a stored reply that this chat
+  continues, such as the `response_id` attribute of an earlier reply.
+  `NULL`, the default, starts a new thread. It needs
+  `api_type = "native"` or `api_type = "openresponses"`. With
+  `api_type = "openai"`, a string aborts before the request, because the
+  OpenAI chat endpoint keeps no thread. `NA`, an empty string, a string
+  of whitespace only, a value that is not a string, and more or fewer
+  than one string abort before the check for a running server. Only this
+  exact name is checked. A shortened name, such as `previous`, goes into
+  the request body unchecked, under the name you wrote. An id that the
+  server does not hold raises `rlmstudio_api_error` with status 400.
+
 - token:
 
   Character or `NULL`. An API token for a server that requires
@@ -105,6 +120,16 @@ Depending on the arguments provided:
 - If `simplify = TRUE` and `logprobs = TRUE` (and the chosen API type
   supports it), returns an object of class `lms_chat_result` containing
   both the text and a data.frame of token probabilities.
+
+With `simplify = TRUE` and `api_type = "native"` or
+`api_type = "openresponses"`, the value carries the id of the reply in a
+`response_id` attribute. Pass it as `previous_response_id` to continue
+the thread. The id is the `response_id` field of a native reply and the
+`id` field of an OpenResponses reply. The value has no attribute when
+that field is absent or is not one string. A native reply sent with
+`store = FALSE` in `...` carries no id, and an OpenResponses reply sent
+with `store = FALSE` still carries one. With `api_type = "openai"`, or
+with `simplify = FALSE`, the value has no `response_id` attribute.
 
 ## Details
 
@@ -135,8 +160,8 @@ for a reply from a model other than the one asked for.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
-`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`, or
-`batch_size`, a bad `type` of
+`model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`,
+`previous_response_id`, or `batch_size`, a bad `type` of
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),

@@ -127,10 +127,15 @@ function takes a few key arguments to guide the AI’s response:
   You use it to tell the AI how to behave, what role to play, or how to
   format its answers (like asking it to act as an expert R programmer).
 
-*Note:* The rlmstudio package currently processes each chat request
-independently. Every time you run the lms_chat() function, you are
-starting a brand new conversation. The model will not remember previous
-messages or context from earlier in your R script.
+*Note:* By default, each call to
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+starts a new conversation. The model does not remember earlier messages
+or context from your R script. To continue a conversation, pass the
+`response_id` attribute of the earlier reply as `previous_response_id`.
+This works on the default route, `api_type = "openresponses"`, and on
+`api_type = "native"`, but not on `api_type = "openai"`. See
+[`?lms_chat`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+for details.
 
 ``` r
 
