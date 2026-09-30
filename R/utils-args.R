@@ -563,7 +563,9 @@ schema_fault <- function(value) {
 #' `messages` is a named argument of `lms_chat_openai()`, so GP4 puts the check
 #' on the package, and it runs before the server probe (D-008). The shape
 #' rules read the shape of the value and the names at each level, and their
-#' abort carries the named-list hint. Four value rules follow, under a header
+#' abort carries the named-list hint. For a data frame, the row-count rule
+#' runs after the column-name rule and before the empty-row rule, as
+#' `data_frame_messages_fault()` states. Four value rules follow, under a header
 #' of their own and with no hint: a function anywhere inside the value, a
 #' value anywhere inside it that is not an atomic vector, a list, or `NULL`,
 #' a number that jsonlite writes as a string or leaves out, and a trial write
@@ -1070,6 +1072,12 @@ has_bad_name <- function(value) {
 #' repeated column name with a suffix. The column rule runs first, because a
 #' data frame with no columns also has rows in which every cell is `NA`.
 #'
+#' The row-count rule runs next, before the empty-row rule. jsonlite cannot
+#' write a column whose row count differs from the data frame, and its
+#' message names no column. `empty_rows()` would also recycle such a column,
+#' with an R warning or an R error. `wrong_row_count()` states which columns
+#' the rule reads.
+#'
 #' @param value A data frame with at least one row.
 #' @return A one-sentence detail, or `NULL` when the value is usable.
 #'
@@ -1083,6 +1091,12 @@ data_frame_messages_fault <- function(value) {
       "You gave a data frame that has no columns or a column name that is missing or repeated."
     )
   }
+  if (wrong_row_count(value)) {
+    return(paste(
+      "You gave a data frame with a column whose row count differs from the",
+      "row count of the data frame."
+    ))
+  }
   if (any(empty_rows(value))) {
     return(
       "You gave a data frame with a row in which every cell is NA or a NULL list cell."
@@ -1092,6 +1106,56 @@ data_frame_messages_fault <- function(value) {
     return(inner_list_array_detail)
   }
   nested_names_fault(value)
+}
+
+#' Does a column of this data frame have a row count other than its own?
+#'
+#' The rule reads each data-frame column, and each atomic or list column with
+#' no class attribute or with the class `"AsIs"` alone. It goes down into
+#' each data-frame column and reads its columns against its own row count.
+#' A column with another class is written by that class. jsonlite writes a
+#' length-1 `POSIXlt` in each row, so the package sends such a column, and
+#' the rule does not read it. A classed column of another wrong length fails the
+#' trial write, and `empty_rows()` reads it as not empty. `column_row_count()`
+#' gives the row count of a column that is not a data frame.
+#'
+#' @param value A data frame.
+#' @return `TRUE` when the walk reaches a column whose row count differs from
+#'   the row count of the data frame that holds it.
+#'
+#' @noRd
+wrong_row_count <- function(value) {
+  n <- nrow(value)
+  for (column in value) {
+    if (is.data.frame(column)) {
+      if (nrow(column) != n || wrong_row_count(column)) {
+        return(TRUE)
+      }
+    } else if (
+      !is.null(column) &&
+        (is.atomic(column) || is.list(column)) &&
+        (is.null(oldClass(column)) || identical(oldClass(column), "AsIs")) &&
+        column_row_count(column) != n
+    ) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+#' The row count of a data-frame column that is not a data frame
+#'
+#' jsonlite writes a column with a `dim` attribute one row per first index,
+#' so its row count is the first extent of the `dim`. The row count of any
+#' other column is its length.
+#'
+#' @param column A column that is not a data frame.
+#' @return A whole number.
+#'
+#' @noRd
+column_row_count <- function(column) {
+  column_dim <- attr(column, "dim", exact = TRUE)
+  if (is.null(column_dim)) length(column) else column_dim[[1L]]
 }
 
 #' Which rows of a messages data frame hold no field value?
@@ -1122,28 +1186,38 @@ data_frame_messages_fault <- function(value) {
 #' one at a time, because `is.na()` on the whole data frame spreads a matrix
 #' column over several.
 #'
+#' The row-count rule runs first, so a column whose row count, as
+#' `column_row_count()` gives it, differs from the data frame has a class
+#' other than `"AsIs"`. A length-1 such column is read as jsonlite writes it,
+#' with its one cell in each row. A column of any other wrong length is not
+#' empty in any row, and the trial write refuses it later. So no column is
+#' recycled, which would warn or fail in R.
+#'
 #' @param value A data frame.
 #' @return A logical vector with one element per row of `value`.
 #'
 #' @noRd
 empty_rows <- function(value) {
-  empty <- rep(TRUE, nrow(value))
+  n <- nrow(value)
+  empty <- rep(TRUE, n)
   for (column in value) {
     if (is.data.frame(column)) {
       column_empty <- empty_rows(column)
     } else if (!is.atomic(column) && !is.list(column)) {
       column_empty <- FALSE
+    } else if (column_row_count(column) != n && length(column) != 1L) {
+      column_empty <- rep(FALSE, n)
     } else {
       cell_empty <- is.na(column)
       if (is.list(column)) {
         cell_empty[] <- cell_empty | vapply(column, is.null, logical(1))
       }
       column_dim <- dim(column)
-      column_empty <- if (
-        !is.null(column_dim) && column_dim[[1L]] == nrow(value)
-      ) {
+      column_empty <- if (column_row_count(column) != n) {
+        rep(cell_empty[[1L]], n)
+      } else if (!is.null(column_dim)) {
         if (prod(column_dim[-1L]) == 0) {
-          rep(FALSE, nrow(value))
+          rep(FALSE, n)
         } else {
           apply(cell_empty, 1L, all)
         }

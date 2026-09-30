@@ -111,7 +111,7 @@ row.
       `withCallingHandlers()` and count them. For the `POSIXlt` probe, state
       the expected body text by hand. Run the tests on main and record the
       failure identity of each.
-- [ ] T2: Add the row-count rule to `data_frame_messages_fault()`, before
+- [x] T2: Add the row-count rule to `data_frame_messages_fault()`, before
       `empty_rows()`, with a helper that goes down data-frame columns. Change
       `empty_rows()` to read a wrong-length column as AC2 states. Update the
       `@noRd` text of `rlm_check_messages()`, `data_frame_messages_fault()`,
@@ -137,6 +137,7 @@ row.
 - 2026-09-30: plan gate chose naming the first column that fails a lone write over keeping the jsonlite text alone. Falsified by a data frame whose write fails while each column writes alone.
 - 2026-09-30: implement started on branch m067-messages-column-faults. The question gate chose an info line for AC3. Its text is `Column {.val {name}} is the first column that jsonlite cannot write on its own.` The name is quoted, as model names are in other errors.
 - 2026-09-30: T1 done. On main the 15 AC1 probes fail as planned. Thirteen get the jsonlite detail, and the `NA` matrix gets the empty-row detail. The length-1 array gets the R error from `empty_rows()`. Six carry the recycling warning. Date and factor warn once each. The 1-d Date array gets the R error. The `POSIXlt` tests pass on main, as they must.
+- 2026-09-30: T2 done. `wrong_row_count()` and `column_row_count()` added, and `empty_rows()` reads a wrong-length classed column as AC2 states. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
 
 ## Decisions
 
