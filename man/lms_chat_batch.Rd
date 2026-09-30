@@ -71,7 +71,9 @@ server.
 An \code{instructions} here on the \code{"openresponses"} route, the default, and
 a \code{messages} here on the \code{"openai"} route abort before the check for a
 running server, with the message that \code{\link[=lms_chat]{lms_chat()}} gives. A
-\code{previous_response_id} here follows the rules of \code{\link[=lms_chat]{lms_chat()}}.
+\code{previous_response_id} here follows the rules of \code{\link[=lms_chat]{lms_chat()}}. It must
+be valid in its declared encoding and not marked \code{"bytes"}. A class,
+names, and the S4 bit are removed before the id is sent.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.}

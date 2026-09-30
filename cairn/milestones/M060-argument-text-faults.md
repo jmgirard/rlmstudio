@@ -1,6 +1,6 @@
 # M060: Names that are not plain text, and dots that lms_chat() sets
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -66,6 +66,8 @@ Three kinds of argument value get a correct outcome before any request, in place
 - 2026-09-29: claim audit: 75 claims read, 3 corrected — R/utils-args.R, tests/testthat/test-name-faults.R, R/load.R
 - 2026-09-29: the claim audit showed that jsonlite copies an invalid byte into the body unchanged. The plan's Out item and the new candidate row said U+FFFD. The row is corrected in place. The Out item is plan-owned and stands as written, and this line supersedes its U+FFFD clause.
 - 2026-09-29: review return 1 (defect): AC4 fails for `previous_response_id` of `lms_chat_batch()`. Its help says only "follows the rules of `lms_chat()`" and states neither the text rule nor the class sentence. AC1, AC2, AC3, and AC5 passed, and the gate checks passed. Status is back to in-progress. The reviewer findings are listed in the Review section, not yet triaged.
+- 2026-09-29: implement resumed for return 1. main had not moved. The `...` help of `lms_chat_batch()` now states the text rule and the class sentence for `previous_response_id`, and `devtools::document()` rewrote man/lms_chat_batch.Rd. The carried reviewer findings are left for the review gate. `devtools::test()`: 0 failed, 3 skipped. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set: 0 errors, 0 warnings, 0 notes.
+- 2026-09-29: claim audit: 3 claims read, 0 corrected — R/chat.R
 
 ## Decisions
 

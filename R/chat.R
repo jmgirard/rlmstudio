@@ -1674,7 +1674,9 @@ integer_or_na <- function(x) {
 #'   An `instructions` here on the `"openresponses"` route, the default, and
 #'   a `messages` here on the `"openai"` route abort before the check for a
 #'   running server, with the message that [lms_chat()] gives. A
-#'   `previous_response_id` here follows the rules of [lms_chat()].
+#'   `previous_response_id` here follows the rules of [lms_chat()]. It must
+#'   be valid in its declared encoding and not marked `"bytes"`. A class,
+#'   names, and the S4 bit are removed before the id is sent.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
