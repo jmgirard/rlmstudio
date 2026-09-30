@@ -155,7 +155,8 @@ other value, \code{NULL} and \code{NA} included, aborts before the check for a
 running server.}
 
 \item{...}{Additional API arguments. A \code{response_format} here cannot be
-combined with \code{schema}.
+combined with \code{schema}. This function has no \code{store} argument, so a
+\code{store} here goes into the request body unchecked, whatever its value.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.}

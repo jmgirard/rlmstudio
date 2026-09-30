@@ -90,7 +90,8 @@ default, sends no \code{store} field, so the server default applies, and that
 default stores the reply. \code{TRUE} and \code{FALSE} go out as a plain JSON
 \code{true} or \code{false}, also when the value has names, dimensions, or a class.
 Any other value, \code{NA} included, aborts before the check for a running
-server. It needs \code{api_type = "native"} or \code{api_type = "openresponses"}.
+server. A \code{TRUE} or \code{FALSE} needs \code{api_type = "native"} or
+\code{api_type = "openresponses"}. \code{NULL} passes on every route.
 With \code{api_type = "openai"}, \code{TRUE} or \code{FALSE} aborts before the request,
 because the OpenAI chat endpoint keeps no thread. Only this exact name is
 checked. A shortened name, such as \code{sto}, goes into the request body

@@ -111,7 +111,9 @@ but the server does not hold that reply. A later call of this function
 that passes that id as \code{previous_response_id} raises
 \code{rlmstudio_api_error} with status 400 and the \code{code}
 \code{"previous_response_not_found"}. \code{\link[=lms_chat_native]{lms_chat_native()}} reads
-the attribute from the \code{response_id} field of its reply instead.
+the attribute from the \code{response_id} field of its reply instead. A
+native reply sent with \code{store = FALSE} has no \code{response_id} field, so
+its value has no attribute.
 
 With either setting of \code{simplify}, a reply from a model other than the
 one asked for raises \code{rlmstudio_model_mismatch}. See the "Reply from

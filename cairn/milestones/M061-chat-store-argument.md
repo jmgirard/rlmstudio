@@ -76,6 +76,8 @@ A user turns off the storage of chat replies from R with a checked `store` argum
 - 2026-09-30: T5 done. NEWS.md entry and D-035 added, and a test pins that `lms_chat_openai()` still sends a `store` in `...` unchecked. `devtools::test()`: 0 failed, 0 errors, 19048 passed. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set: 0 errors, 0 warnings, 0 notes, run again after the audit fixes. Server state was the same after each run.
 - 2026-09-30: claim audit: 102 claims read, 3 corrected — R/chat.R, tests/testthat/test-store.R. The "previous_response_not_found" sentences on three pages now name the OpenResponses route, and two test comments no longer claim more than the tests show. The same reader re-read the fixes once and narrowed one test comment further.
 - 2026-09-30: status set to review.
+- 2026-09-30: review: all seven criteria verified, gate clean, 10 findings, none failing a criterion. R1 to R3 fixed at the gate.
+- step-7 approval: m061-chat-store-argument approved for merge
 
 ## Decisions
 
@@ -105,3 +107,5 @@ Independent review: three fresh reviewers (Opus diff, Sonnet history, Sonnet pri
 - R8 (Opus): an `expect_s3_class()` in `expect_store_value_aborts()` has no `info` label. Proposed: reject, a diagnostic nit.
 - R9 (history): the re-recorded thread fixtures changed ids, timings, and the request hash. Proposed: noted, because the T3 work-log line records the re-recording and all its checks passed.
 - R10 (history): the archived M058 summary still quotes the old "in `...`" wording. Proposed: reject, because archives are history.
+
+Gate triage, 2026-09-30: the maintainer took the proposed dispositions. R1 to R3 were fixed now, R4 to R8 and R10 rejected, and R9 noted, each for the reason above. The fixes add four help sentences in R/chat.R: the other route's `store = FALSE` fact on `?lms_chat_native` and `?lms_chat_openresponses`, "A `TRUE` or `FALSE` needs" on `?lms_chat`, and the unchecked `store` on `?lms_chat_openai`. After `devtools::document()`, `tools::checkRd()` on the four pages reported nothing, both AC5 searches still exit 1, and `devtools::test()` gave no failed or errored test.
