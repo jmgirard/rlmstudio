@@ -1,6 +1,6 @@
 # M062: A chat call aborts on a text input that is not one prompt
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -58,6 +58,8 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 - 2026-09-30: T2 added `rlm_check_one_prompt()` to R/utils-args.R and called it after each `rlm_check_no_na(input, "input")` in R/chat.R. Deleting each of the three calls in a scratch copy turned one AC1 test red (the `lms_chat()` call through its openai route). `devtools::test()`: 802 tests, 0 failures, 0 errors, 3 skips.
 - 2026-09-30: T3 rewrote the `input` entry of the three help pages, added the NEWS.md entry, and added the "Chat input of two strings" bullet to the API reference. R/conditions.R needed no edit, because its "Server not running" list already names a bad `input` among the argument aborts.
 - 2026-09-30: T4 appended D-036. With `RLMSTUDIO_API_TOKEN` set, `devtools::test()` gave 802 tests, 0 failures, 0 errors, 3 skips, and `devtools::check()` gave 0 errors, 0 warnings, 0 notes. The server was stopped before and after.
+- 2026-09-30: claim audit: 37 claims read, 2 corrected — NEWS.md, R/utils-args.R. Both overstated what the server 400 replies said, and the same reader confirmed the corrected wording.
+- 2026-09-30: all tasks done; status set to review.
 
 ## Decisions
 
