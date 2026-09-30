@@ -114,6 +114,7 @@
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Cut-off reply
 #' @inheritSection rlmstudio-conditions Reply from another model
+#' @inheritSection lms_load Long prompts
 #' @export
 lms_chat <- function(
   model,

@@ -89,7 +89,13 @@ all.
 - **Load configuration.** `/api/v1/models/load` accepts `context_length`,
   `eval_batch_size`, `flash_attention`, `num_experts`,
   `offload_kv_cache_to_gpu`, and `echo_load_config`. `lms_load()` names all
-  six already. The endpoint rejects `ttl` (corrected M034).
+  six already. The endpoint rejects `ttl` (corrected M034). On LM Studio
+  0.4.25+1, it loaded google/gemma-3-1b at `context_length` 65536 with status
+  200. The model list gives that model a `max_context_length` of 32768. The
+  load had no clamp and no message. It answered `rope_frequency_scale` with status 400
+  and the code `unrecognized_keys`. `lms load` has no rope flag. Only the SDK
+  websocket protocol names `ropeFrequencyBase` and `ropeFrequencyScale`
+  (M063) — observed 2026-09-30.
 - **Embedding context cut** (M048). `/v1/embeddings` embeds only the first
   `context_length` tokens of each text, where `context_length` is that of the
   loaded instance. It answers status 200 with a vector and no error, warning,

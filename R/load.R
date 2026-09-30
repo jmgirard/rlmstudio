@@ -5,7 +5,8 @@
 #'   declared encoding and not marked `"bytes"`. A class, names, and the S4
 #'   bit are removed before the name is sent.
 #' @param context_length Integer. Maximum number of tokens that the model will
-#'   consider.
+#'   consider. A value above the maximum in the model list gives a warning.
+#'   See the "Long prompts" section.
 #' @param eval_batch_size Integer. Number of input tokens to process together in
 #'   a single batch during evaluation.
 #' @param flash_attention `TRUE`, `FALSE`, or `NULL`. Whether to optimize
@@ -43,6 +44,39 @@
 #'   string, with no class, names, or S4 bit. If \code{echo_load_config = TRUE}
 #'   and this call loads the model, it instead invisibly
 #'   returns a list containing the model's detailed load configuration.
+#'
+#' @section Long prompts:
+#' A prompt longer than the context length of the loaded model fails. On LM
+#' Studio 0.4.25+1, with google/gemma-3-1b loaded at a `context_length` of
+#' 512, the `/v1/responses` and `/api/v1/chat` routes answered a longer prompt
+#' with status 500. The `/v1/chat/completions` route answered it with status
+#' 400. Each message began "The number of tokens to keep from the initial
+#' prompt is greater than the context length". The chat functions raise such a
+#' reply as an `rlmstudio_api_error`, and the message holds the server text.
+#' [lms_chat_batch()] keeps the condition for that input and goes on to the
+#' next input.
+#'
+#' To fit a longer prompt, load the model with a larger `context_length` in
+#' [lms_load()]. The `max_context_length` column of
+#' `list_models(detailed = TRUE)` gives the largest context length that the
+#' model list reports for each model. If `context_length` is larger, the
+#' server loads the model with the asked value and gives no message. On LM
+#' Studio 0.4.25+1, it loaded google/gemma-3-1b at 65536 tokens, above its
+#' maximum of 32768. So [lms_load()] gives a warning of class
+#' `rlmstudio_context_above_max` that names both numbers, and then sends the
+#' load. The `rlmstudio.quiet` option does not hide it. The warning needs the
+#' model list, so it comes only with `force = FALSE`, and only when the list
+#' has a maximum for the model and the model is not loaded yet.
+#'
+#' On LM Studio 0.4.25+1, the load endpoint answered a `rope_frequency_scale`
+#' field in `...` with status 400 and the code `"unrecognized_keys"`. So
+#' [lms_load()] cannot set RoPE scaling through that field. RoPE scaling
+#' stretches the position encoding of a model past its trained length.
+#'
+#' To see how many tokens a prompt took, use
+#' `lms_chat_batch(format = "data.frame")`. Its `input_tokens` column holds
+#' the prompt token count that the server reports for each reply, on every
+#' route.
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
