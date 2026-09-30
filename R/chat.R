@@ -130,6 +130,7 @@ lms_chat <- function(
   rlm_check_route_dots(...names(), api_type)
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_one_prompt(input, "input")
   rlm_check_schema(schema, ...names())
   rlm_check_schema_route(schema, api_type)
   rlm_check_ttl(ttl)
@@ -309,6 +310,7 @@ lms_chat_openresponses <- function(
 ) {
   model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_one_prompt(input, "input")
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
   previous_response_id <- rlm_check_response_id(previous_response_id)
@@ -1401,6 +1403,7 @@ lms_chat_native <- function(
 ) {
   model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_one_prompt(input, "input")
   rlm_check_flag(simplify, "simplify")
   previous_response_id <- rlm_check_response_id(previous_response_id)
   rlm_check_flag(store, "store", null_ok = TRUE)

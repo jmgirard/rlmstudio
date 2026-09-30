@@ -44,7 +44,7 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 ## Tasks
 
 - [x] T1: Write the AC1 to AC3 tests first with the request recorder of tests/testthat/helper-mock-http.R, and see the AC1 tests red on main. Read the sent bytes, not a parsed body (M004 lesson). Count calls to the server check rather than `fail()` in a stub (M015 lesson). Test `lms_chat()` on the OpenAI route, the one route with no delegate that checks again (M013 lesson).
-- [ ] T2: Add the rule to R/utils-args.R beside `rlm_check_no_na()` (R/utils-args.R:1278), and call it where the three functions call `rlm_check_no_na(input, "input")` (R/chat.R:132, R/chat.R:311, R/chat.R:1403). In a scratch copy, remove each call in turn and see a test go red.
+- [x] T2: Add the rule to R/utils-args.R beside `rlm_check_no_na()` (R/utils-args.R:1278), and call it where the three functions call `rlm_check_no_na(input, "input")` (R/chat.R:132, R/chat.R:311, R/chat.R:1403). In a scratch copy, remove each call in turn and see a test go red.
 - [ ] T3: Write the help text and run `devtools::document()`. Add the fault to the list in R/conditions.R. Add the NEWS.md entry. Add the probe facts of 2026-09-30 to cairn/references/lmstudio-api-surface.md, with the LM Studio version that `lms version` gives. A two-string `input` got a 400 on `/v1/responses` ("Invalid type for 'input'.") and on `/api/v1/chat` (code `invalid_union`). A two-string `content` got a 400 on `/v1/chat/completions`. An empty `input` array got a 400 on `/v1/responses`.
 - [ ] T4: Append one D-entry: a character `input` must be one string on the chat routes, which narrows D-003 as D-020 did. Set `RLMSTUDIO_API_TOKEN`, then run `devtools::test()` and `devtools::check()`.
 
@@ -55,6 +55,7 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 - 2026-09-30: plan gate chose an abort in R over pasting the strings into one prompt and over documenting the 400. The abort guesses nothing and can be relaxed later. Falsified by users who pass several strings on purpose and expect one joined prompt.
 - 2026-09-30: implement started on branch m062-chat-input-one-prompt. The question gate was skipped, because the plan left no choice open.
 - 2026-09-30: T1 added tests/testthat/test-input-length.R. On main, the five AC1 length tests failed (10 expectations each), and the NA-order, pass-through, and batch tests passed.
+- 2026-09-30: T2 added `rlm_check_one_prompt()` to R/utils-args.R and called it after each `rlm_check_no_na(input, "input")` in R/chat.R. Deleting each of the three calls in a scratch copy turned one AC1 test red (the `lms_chat()` call through its openai route). `devtools::test()`: 802 tests, 0 failures, 0 errors, 3 skips.
 
 ## Decisions
 
