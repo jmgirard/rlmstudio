@@ -254,6 +254,29 @@ functions reads the body only after a 200, and reports every other status
 as an \code{rlmstudio_api_error} instead.
 }
 
+\section{Malformed embeddings}{
+
+\code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
+it returns are placed by the index that the response reports, so a block
+with a missing, repeated, or out-of-range index would otherwise pair a
+vector with the wrong text and give back a matrix that is silently wrong.
+
+\code{\link[=lms_embed]{lms_embed()}} reads each request on its own. A bad body, of either kind
+that the "Malformed response" section and this section describe, fails the
+inputs of that request alone, and the call warns once and
+goes on. The call aborts with the condition only if every request fails,
+and then with the condition of the first. With \code{simplify = TRUE}, it also
+aborts with \code{rlmstudio_bad_response} for a request whose embeddings have
+another number of dimensions than those of an earlier request. That
+condition carries a \code{results} field, a matrix as the "Server not running"
+section describes. See the details of \code{\link[=lms_embed]{lms_embed()}}.
+
+The messages of \code{\link[=lms_embed]{lms_embed()}} name \code{simplify = FALSE}, which returns the
+body unchanged, with one exception. A body that did not parse as JSON is
+checked before that argument is read, so its message points at the host
+instead.
+}
+
 \examples{
 \dontrun{
 vectors <- lms_embed(

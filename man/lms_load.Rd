@@ -246,6 +246,67 @@ functions reads the body only after a 200, and reports every other status
 as an \code{rlmstudio_api_error} instead.
 }
 
+\section{Malformed model list}{
+
+\code{\link[=list_models]{list_models()}} also raises it for a status-200 model list with the wrong
+shape. \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE} raise it
+through \code{\link[=list_models]{list_models()}}. A model list must follow four rules. Each field is
+read by its exact name, so a field named \code{keyX} does not stand in for
+\code{key}.
+\enumerate{
+\item The body is a JSON object whose \code{models} field is an array. The array
+can be empty.
+\item Each entry of \code{models} is a JSON object. Its \code{type} and \code{key} are
+strings, and its \code{loaded_instances} is an array.
+\item The \code{size_bytes} of an entry is a number, or absent, or \code{null}. So is
+its \code{max_context_length}.
+\item Each entry of \code{loaded_instances} is a JSON object whose \code{id} is a string
+with a character that is not whitespace.
+}
+
+The rules are checked before the \code{type} and \code{loaded} filters, so an entry
+that the filters drop can still raise the condition. The message names the
+field or entry that broke a rule. \code{\link[=lms_server_ready]{lms_server_ready()}} applies the same
+rules and returns \code{FALSE} for a body that breaks one.
+
+\code{\link[=list_instances]{list_instances()}} applies the four rules too, and two more. They cover
+only an entry whose \code{type} is in its \code{type} argument and that has at least
+one loaded instance. The \code{display_name} of such an entry is a string, or
+absent, or \code{null}. The \code{config} of each of its instances is a JSON object,
+or absent, or \code{null}. \code{\link[=list_models]{list_models()}} and \code{\link[=lms_server_ready]{lms_server_ready()}} do not apply
+these two rules.
+}
+
+\section{Malformed load or download reply}{
+
+\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} also raise it
+for a status-200 reply of their own with the wrong shape. Each reply must
+follow the rule of its function. Each field is read by its exact name. The
+rules check the type of a field and not its value, with four exceptions.
+The \code{status} of a load reply must be \code{"loaded"}. A download reply whose
+\code{status} is \code{"already_downloaded"} needs no \code{job_id}. A download reply whose
+\code{status} is \code{"failed"} always aborts. The \code{job_id} of any other download
+reply must hold a character that is not whitespace.
+\enumerate{
+\item A reply of \code{\link[=lms_load]{lms_load()}} is a JSON object whose \code{status} is the string
+\code{"loaded"}. With \code{echo_load_config = TRUE}, its \code{load_config} is also a
+JSON object.
+\item A reply of \code{\link[=lms_download]{lms_download()}} is a JSON object whose \code{status} is a string
+other than \code{"failed"}. If the status is not \code{"already_downloaded"}, its
+\code{job_id} is a string with a character that is not whitespace. For a
+\code{"failed"} status, the message says that LM Studio reports that the
+download failed. It names the reply's \code{job_id} if that is a string with
+a character that is not whitespace.
+\item A reply of \code{\link[=lms_download_status]{lms_download_status()}} is a JSON object whose \code{job_id} and
+\code{status} are strings. Its \code{total_size_bytes}, \code{downloaded_bytes}, and
+\code{bytes_per_second} are each a number, or absent, or \code{null}.
+}
+
+For the other faults, the message names the field that broke the rule, or
+it says that the body is not a JSON object. It also says that something
+other than LM Studio may be answering on the host.
+}
+
 \examples{
 \dontrun{
 lms_server_start()

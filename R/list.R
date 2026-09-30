@@ -39,6 +39,7 @@
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
 #'
 #' @export
 #'
@@ -222,6 +223,7 @@ list_models <- function(
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
 #'
 #' @export
 #'

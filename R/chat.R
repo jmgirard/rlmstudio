@@ -112,6 +112,9 @@
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed chat reply
+#' @inheritSection rlmstudio-conditions Malformed logprobs
 #' @inheritSection rlmstudio-conditions Cut-off reply
 #' @inheritSection rlmstudio-conditions Reply from another model
 #' @inheritSection lms_load Long prompts
@@ -302,6 +305,9 @@ lms_chat <- function(
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed chat reply
+#' @inheritSection rlmstudio-conditions Malformed logprobs
 #' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 lms_chat_openresponses <- function(
@@ -599,6 +605,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed chat reply
 #' @inheritSection rlmstudio-conditions Cut-off reply
 #' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
@@ -1394,6 +1402,7 @@ store_field <- function(store) {
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed chat reply
 #' @export
 lms_chat_native <- function(
   model,
@@ -1924,6 +1933,9 @@ integer_or_na <- function(x) {
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed chat reply
+#' @inheritSection rlmstudio-conditions Malformed logprobs
 #' @inheritSection rlmstudio-conditions Cut-off reply
 #' @inheritSection rlmstudio-conditions Reply from another model
 #' @export

@@ -240,3 +240,65 @@ functions reads the body only after a 200, and reports every other status
 as an \code{rlmstudio_api_error} instead.
 }
 
+\section{Malformed chat reply}{
+
+\code{\link[=lms_chat_native]{lms_chat_native()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it with
+\code{simplify = TRUE} when the reply holds no readable answer text. Both read
+the answer from the items of type \code{"message"} in the \code{output} array. They
+raise it when \code{output} is missing, empty, or not an array, or when an item
+in it is not a JSON object. They also raise it when no item has the type
+\code{"message"}, as in a reply that holds only reasoning or a tool call. The
+text of a message must be one string. For \code{\link[=lms_chat_native]{lms_chat_native()}} that is the
+\code{content} of the item. For \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} it is the \code{text} of
+each part of type \code{"output_text"}. For \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} only, the
+\code{content} of each message must be an array of JSON objects, and the
+messages together must hold at least one \code{"output_text"} part.
+
+Apart from a body that does not parse as JSON, \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises
+it in four cases, all only with \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
+missing, empty, or not an array, or whose first element is not a JSON
+object with a \code{message} object in it, so there is no reply to read. This
+case is raised with or without a \code{schema}, and with \code{logprobs = TRUE} as
+well. The second case is a reply that does not parse. A \code{schema} was
+given, \code{logprobs = FALSE}, and the reply content is not one string of valid
+JSON. The third case is reply content that is not one string, such as
+\code{null}, a missing \code{content} field, a number, or an array. A reply that
+holds only a tool call has \code{null} content. This case is raised without a
+\code{schema}, and with \code{logprobs = TRUE} with or without one. The fourth case
+is a cut-off reply. A \code{schema} was given, \code{logprobs = FALSE}, and the
+server reports the finish reason \code{"length"}. This case is raised also when
+the reply content parses, because a reply that stops part way can parse to
+a wrong value, such as the first digit of a longer number. In the second,
+third, and fourth cases, if the server reports the finish reason
+\code{"length"}, a length limit ended the reply. The limit is \code{max_tokens} or
+the context length of the model. The message then says so and names both.
+
+With \code{simplify = TRUE}, \code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}},
+and \code{\link[=lms_chat_openai]{lms_chat_openai()}} also raise it for a body that is a bare JSON value,
+such as \code{5}, \code{"s"}, or \code{true}. The message says that the response body is
+not a JSON object. A body of \code{null} gets the message about its missing
+\code{output} or \code{choices} field instead.
+\code{\link[=lms_chat]{lms_chat()}} can raise the condition through all three chat functions.
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it, except on the subclass
+\code{rlmstudio_model_mismatch}, as the "Reply from another model" section of
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} says. The element of the failed input holds the
+condition, or \code{NA} where the result is text, and the batch warns once and
+goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
+
+A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}}
+about its reply also carries two more fields. A condition from the
+model-list lookup does not, as the "Reply from another model" section of
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} says. The \code{content} field holds the reply content of the first choice,
+and the \code{finish_reason} field holds the finish reason of the first choice.
+Both are \code{NULL} for a response with no \code{choices}. In the third case,
+\code{content} holds the value that was read, which is \code{NULL} for \code{null} or
+missing content. For the second, third, and fourth cases, the message names the
+\code{content} field, so you can read what the model wrote without a second
+request. The other messages of the chat functions name
+\code{simplify = FALSE}, which returns the body unchanged, with one exception. A body that did not parse as JSON is
+checked before that argument is read, so its message points at the host
+instead. For such a body, the \code{content} and \code{finish_reason} fields of a
+condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}.
+}
+
