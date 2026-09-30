@@ -2,6 +2,71 @@
 
 ## rlmstudio (development version)
 
+- A `model`, `job_id`, `previous_response_id`, or `type` string that is
+  not valid in its declared encoding now aborts. The message says so. An
+  example is the byte `0xff` in a UTF-8 string. A string marked
+  `"bytes"` also aborts, with a message that says it is marked as bytes.
+  Each abort names the argument and comes before the check for a running
+  server. Before, such a string was reported as “whitespace only”, with
+  two warnings from [`grepl()`](https://rdrr.io/r/base/grep.html), and a
+  string marked `"bytes"` passed the check. The check covers `model` of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+  and
+  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md).
+  It also covers `job_id` of
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
+  `previous_response_id` of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  and
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  and `type` of
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  and
+  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md).
+  For `type`, the message names the element.
+
+- A `model`, `job_id`, or `previous_response_id` that has a class,
+  names, or the S4 bit is now sent as a plain string. Before, a class
+  that jsonlite has no method for failed after the check for a running
+  server. For `structure("m", class = "foo")`, the error was “No method
+  asJSON S3 class: foo”. `I("m")` was sent as the JSON array `["m"]`. A
+  classed `"already_downloaded"` job id in
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  sent a request instead of returning the already-downloaded status.
+
+  - [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+    and
+    [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
+    now return the plain string. Before, they returned the value as
+    given, with its class, names, or S4 bit.
+
+- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  and
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now abort when their `...` holds an `instructions` on the
+  `"openresponses"` route, the default, or a `messages` on the
+  `"openai"` route.
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  sets `instructions` from `system_prompt` on the first route, and it
+  builds `messages` from `system_prompt` and `input` on the second. The
+  message names the argument and says what
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  sets it from. The abort has no condition class, and it comes before
+  the check for a running server. Before, R’s own error “formal argument
+  matched by multiple actual arguments” came from inside the package. In
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  it came after the check for a running server. On the other routes,
+  each name still goes into the request body.
+
 - With `api_type = "native"`,
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
   now ignores `logprobs = TRUE` in every format, because the native

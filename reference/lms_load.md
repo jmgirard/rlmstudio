@@ -25,7 +25,9 @@ lms_load(
 - model:
 
   Character. Unique identifier for the model to load. Must be one name,
-  given as a single string.
+  given as a single string. The string must be valid in its declared
+  encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+  removed before the name is sent.
 
 - context_length:
 
@@ -89,8 +91,10 @@ lms_load(
 ## Value
 
 Invisibly returns a character string of the loaded model identifier upon
-success. If `echo_load_config = TRUE`, it instead invisibly returns a
-list containing the model's detailed load configuration.
+success, also when the model was already loaded. It is a plain string,
+with no class, names, or S4 bit. If `echo_load_config = TRUE` and this
+call loads the model, it instead invisibly returns a list containing the
+model's detailed load configuration.
 
 ## Server not running
 
@@ -108,12 +112,20 @@ a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-or a value in the `...` of
+a value in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 that
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-reads as an argument already given, aborts with an argument message and
-no condition class even when the server is down. A condition of class
+reads as an argument already given, an `instructions` or `messages` in
+the `...` of
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+or
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+on the route where
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+sets it, or a name, id, or `type` string that is not valid in its
+encoding or is marked as bytes, aborts with an argument message and no
+condition class even when the server is down. A condition of class
 `rlmstudio_no_server` is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse
 and a hostname that does not resolve. An address that neither accepts

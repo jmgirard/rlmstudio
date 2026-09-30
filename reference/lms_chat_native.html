@@ -62,7 +62,9 @@
 
 <dl><dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
 <dd><p>Character. The loaded model name. Must be one name, given as a
-single string.</p></dd>
+single string. The string must be valid in its declared encoding and not
+marked <code>"bytes"</code>. A class, names, and the S4 bit are removed before the
+name is sent.</p></dd>
 
 
 <dt id="arg-input">input<a class="anchor" aria-label="anchor" href="#arg-input"></a></dt>
@@ -99,7 +101,9 @@ goes into the request body, and a <code>TRUE</code> warns.</p></dd>
 <dt id="arg-previous-response-id">previous_response_id<a class="anchor" aria-label="anchor" href="#arg-previous-response-id"></a></dt>
 <dd><p>One string, or <code>NULL</code>. The id of a stored reply
 that this chat continues, such as the <code>response_id</code> attribute of an
-earlier reply of this function. <code>NULL</code>, the default, starts a new thread.
+earlier reply of this function. The string must be valid in its declared
+encoding and not marked <code>"bytes"</code>. A class, names, and the S4 bit are
+removed before the id is sent. <code>NULL</code>, the default, starts a new thread.
 <code>NA</code>, an empty string, a string of whitespace only, a value that is not a
 string, and more or fewer than one string abort before the check for a
 running server. Only this exact name is checked. A shortened name, such
@@ -153,8 +157,11 @@ or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
 argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
 the <code>...</code> of a chat function, a <code>logprobs</code> in the <code>...</code> of
-<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code>lms_chat_native()</code>, or a value in the <code>...</code> of
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code>lms_chat_native()</code>, a value in the <code>...</code> of
 <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> that <code><a href="lms_chat.html">lms_chat()</a></code> reads as an argument already given,
+an <code>instructions</code> or <code>messages</code> in the <code>...</code> of <code><a href="lms_chat.html">lms_chat()</a></code> or
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> on the route where <code><a href="lms_chat.html">lms_chat()</a></code> sets it, or a name, id,
+or <code>type</code> string that is not valid in its encoding or is marked as bytes,
 aborts
 with an argument message and no condition class even when the server is
 down. A condition of class

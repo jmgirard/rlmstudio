@@ -53,7 +53,9 @@
 
 <dl><dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
 <dd><p>Character. Unique identifier (<code>instance_id</code>) of the model
-instance to unload. Must be one name, given as a single string.</p></dd>
+instance to unload. Must be one name, given as a single string. The
+string must be valid in its declared encoding and not marked <code>"bytes"</code>.
+A class, names, and the S4 bit are removed before the name is sent.</p></dd>
 
 
 <dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
@@ -74,7 +76,8 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Invisibly returns a character string representing the unloaded
-<code>instance_id</code> upon success.</p>
+<code>instance_id</code> upon success. It is a plain string, with no class,
+names, or S4 bit.</p>
     </div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
@@ -98,8 +101,11 @@ or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
 argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
 the <code>...</code> of a chat function, a <code>logprobs</code> in the <code>...</code> of
-<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, or a value in the <code>...</code> of
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, a value in the <code>...</code> of
 <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> that <code><a href="lms_chat.html">lms_chat()</a></code> reads as an argument already given,
+an <code>instructions</code> or <code>messages</code> in the <code>...</code> of <code><a href="lms_chat.html">lms_chat()</a></code> or
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> on the route where <code><a href="lms_chat.html">lms_chat()</a></code> sets it, or a name, id,
+or <code>type</code> string that is not valid in its encoding or is marked as bytes,
 aborts
 with an argument message and no condition class even when the server is
 down. A condition of class

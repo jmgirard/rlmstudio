@@ -28,7 +28,9 @@ lms_chat(
 - model:
 
   Character. The name of the loaded model. Must be one name, given as a
-  single string.
+  single string. The string must be valid in its declared encoding and
+  not marked `"bytes"`. A class, names, and the S4 bit are removed
+  before the name is sent.
 
 - input:
 
@@ -66,7 +68,14 @@ lms_chat(
   Additional arguments passed to the selected API body. The package
   checks a `stream` here. A `stream` other than `FALSE` or `NULL` aborts
   before the call checks for a running server, because the package reads
-  a whole reply and not a streamed one.
+  a whole reply and not a streamed one. An `instructions` here with
+  `api_type = "openresponses"`, the default, aborts before the request,
+  because `lms_chat()` sets `instructions` from `system_prompt` on that
+  route. A `messages` here with `api_type = "openai"` also aborts,
+  because `lms_chat()` builds `messages` from `system_prompt` and
+  `input` on that route. The message names the argument, and the abort
+  has no condition class. Only these exact names abort. On the other
+  routes, each goes into the request body.
 
 - schema:
 
@@ -90,7 +99,9 @@ lms_chat(
 
   One string, or `NULL`. The id of a stored reply that this chat
   continues, such as the `response_id` attribute of an earlier reply.
-  `NULL`, the default, starts a new thread. It needs
+  The string must be valid in its declared encoding and not marked
+  `"bytes"`. A class, names, and the S4 bit are removed before the id is
+  sent. `NULL`, the default, starts a new thread. It needs
   `api_type = "native"` or `api_type = "openresponses"`. With
   `api_type = "openai"`, a string aborts before the request, because the
   OpenAI chat endpoint keeps no thread. `NA`, an empty string, a string
@@ -171,9 +182,13 @@ a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-or a value in the `...` of
+a value in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-that `lms_chat()` reads as an argument already given, aborts with an
+that `lms_chat()` reads as an argument already given, an `instructions`
+or `messages` in the `...` of `lms_chat()` or
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+on the route where `lms_chat()` sets it, or a name, id, or `type` string
+that is not valid in its encoding or is marked as bytes, aborts with an
 argument message and no condition class even when the server is down. A
 condition of class `rlmstudio_no_server` is raised when that connection
 cannot be opened. A refused connection raises it. So do an address the

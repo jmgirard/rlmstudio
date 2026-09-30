@@ -24,7 +24,9 @@ lms_chat_openai(
 - model:
 
   Character. The loaded model name. Must be one name, given as a single
-  string.
+  string. The string must be valid in its declared encoding and not
+  marked `"bytes"`. A class, names, and the S4 bit are removed before
+  the name is sent.
 
 - messages:
 
@@ -268,12 +270,20 @@ a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-or a value in the `...` of
+a value in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 that
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-reads as an argument already given, aborts with an argument message and
-no condition class even when the server is down. A condition of class
+reads as an argument already given, an `instructions` or `messages` in
+the `...` of
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+or
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+on the route where
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+sets it, or a name, id, or `type` string that is not valid in its
+encoding or is marked as bytes, aborts with an argument message and no
+condition class even when the server is down. A condition of class
 `rlmstudio_no_server` is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse
 and a hostname that does not resolve. An address that neither accepts

@@ -23,7 +23,9 @@ lms_chat_native(
 - model:
 
   Character. The loaded model name. Must be one name, given as a single
-  string.
+  string. The string must be valid in its declared encoding and not
+  marked `"bytes"`. A class, names, and the S4 bit are removed before
+  the name is sent.
 
 - input:
 
@@ -60,8 +62,10 @@ lms_chat_native(
 
   One string, or `NULL`. The id of a stored reply that this chat
   continues, such as the `response_id` attribute of an earlier reply of
-  this function. `NULL`, the default, starts a new thread. `NA`, an
-  empty string, a string of whitespace only, a value that is not a
+  this function. The string must be valid in its declared encoding and
+  not marked `"bytes"`. A class, names, and the S4 bit are removed
+  before the id is sent. `NULL`, the default, starts a new thread. `NA`,
+  an empty string, a string of whitespace only, a value that is not a
   string, and more or fewer than one string abort before the check for a
   running server. Only this exact name is checked. A shortened name,
   such as `previous`, goes into the request body unchecked, under the
@@ -124,12 +128,20 @@ a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
 `quiet`, or `force`, a `stream` in the `...` of a chat function, a
 `logprobs` in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-or `lms_chat_native()`, or a value in the `...` of
+or `lms_chat_native()`, a value in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 that
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-reads as an argument already given, aborts with an argument message and
-no condition class even when the server is down. A condition of class
+reads as an argument already given, an `instructions` or `messages` in
+the `...` of
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+or
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+on the route where
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+sets it, or a name, id, or `type` string that is not valid in its
+encoding or is marked as bytes, aborts with an argument message and no
+condition class even when the server is down. A condition of class
 `rlmstudio_no_server` is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse
 and a hostname that does not resolve. An address that neither accepts
