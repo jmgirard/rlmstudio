@@ -1837,7 +1837,17 @@ lms_chat_batch <- function(
     )
   }
 
-  has_logprobs <- isTRUE(args[["logprobs"]])
+  # The native route has no logprobs, so the batch treats the flag as off
+  # there and returns what `logprobs = FALSE` returns. It warns once for the
+  # batch, not once per input, and it sends each call no `logprobs`, so
+  # `lms_chat()` does not warn as well.
+  native_logprobs <- api_type == "native" && isTRUE(args[["logprobs"]])
+  chat_dots <- list(...)
+  if (native_logprobs) {
+    reached <- rlm_dots_reached(chat_dots)
+    chat_dots <- chat_dots[is.na(reached) | reached != "logprobs"]
+  }
+  has_logprobs <- isTRUE(args[["logprobs"]]) && !native_logprobs
   # A data frame of parsed replies adds one column per schema property
   # (D-027). A data frame with logprobs holds text replies, so it adds none.
   property_columns <- if (format == "data.frame" && !has_logprobs) {
@@ -1846,6 +1856,15 @@ lms_chat_batch <- function(
   rlm_check_property_names(names(property_columns))
 
   stop_if_no_server(host)
+
+  # After the server probe, so a batch that cannot run gives no warning.
+  # Shown whatever `quiet` says, because it is the only sign that the
+  # logprobs asked for are missing (D-032).
+  if (native_logprobs) {
+    cli::cli_warn(
+      "The 'native' API type does not support logprobs. Ignoring argument."
+    )
+  }
 
   # Each result is a parsed reply of any shape, not one string.
   has_parsed <- !is.null(schema) && isTRUE(simplify) && !has_logprobs
@@ -1969,31 +1988,37 @@ lms_chat_batch <- function(
       class = "rlmstudio_reply_cut_off"
     )
   }
+  # The dots go through `chat_dots`, which can drop a `logprobs` above.
+  # `simplify` comes after `...`, so only its exact name matches it, and
+  # `quote = TRUE` passes a dot that holds a call or a symbol as it is.
+  chat_once <- function(..., simplify) {
+    lms_chat(
+      model = model,
+      input = inputs[[i]],
+      system_prompt = system_prompt,
+      host = host,
+      simplify = simplify,
+      ...,
+      token = token
+    )
+  }
   for (i in seq_along(inputs)) {
     res <- tryCatch(
       withCallingHandlers(
         if (body_frame) {
-          body <- lms_chat(
-            model = model,
-            input = inputs[[i]],
-            system_prompt = system_prompt,
-            host = host,
-            simplify = FALSE,
-            ...,
-            token = token
+          body <- do.call(
+            chat_once,
+            c(chat_dots, list(simplify = FALSE)),
+            quote = TRUE
           )
           read <- read_reply(body)
           reply_fields[[i]] <- read$fields
           read$value
         } else {
-          lms_chat(
-            model = model,
-            input = inputs[[i]],
-            system_prompt = system_prompt,
-            host = host,
-            simplify = simplify,
-            ...,
-            token = token
+          do.call(
+            chat_once,
+            c(chat_dots, list(simplify = simplify)),
+            quote = TRUE
           )
         },
         rlmstudio_reply_cut_off = note_cut_off
@@ -2168,44 +2193,47 @@ lms_chat_batch <- function(
 #'   matches.
 #' @noRd
 rlm_chat_dots <- function(dots) {
-  fixed <- c("model", "input", "system_prompt", "host", "simplify", "token")
-  placeholders <- vector("list", length(fixed))
-  names(placeholders) <- fixed
-  rlm_check_chat_dots_once(dots, placeholders)
+  rlm_check_chat_dots_once(dots)
+  placeholders <- vector("list", length(batch_chat_args))
+  names(placeholders) <- batch_chat_args
   call <- as.call(c(list(quote(lms_chat)), placeholders, dots))
   matched <- as.list(match.call(lms_chat, call))[-1]
-  matched[setdiff(names(matched), fixed)]
+  matched[setdiff(names(matched), batch_chat_args)]
 }
 
-#' Abort when two dots of lms_chat_batch() reach one lms_chat() argument
+# The `lms_chat()` arguments that `lms_chat_batch()` passes by name.
+batch_chat_args <- c("model", "input", "system_prompt", "host", "simplify", "token")
+
+#' Which lms_chat() argument does each dot of lms_chat_batch() reach?
 #'
 #' Each named dot is matched alone, beside the arguments that
 #' `lms_chat_batch()` passes by name, so R's own rules say which `lms_chat()`
 #' argument it reaches. R matches exact names before shortened ones, so the
 #' arguments that some dot names exactly are held as placeholders too. A
 #' shortened name then falls through to the `...` of `lms_chat()`, as in the
-#' real call. A dot that reaches no argument goes to that `...`, where two of
-#' one name are legal. A dot named as one of the passed arguments collides
-#' with it. Of those, only `input` can be a dot,
-#' because the others are formals of `lms_chat_batch()`. An unnamed dot fills
-#' an argument that nothing else matched, so it cannot collide.
+#' real call. A dot that reaches no argument goes to that `...`. A dot named
+#' as one of the passed arguments collides with it. Of those, only `input`
+#' can be a dot, because the others are formals of `lms_chat_batch()`. An
+#' unnamed dot fills an argument that nothing else matched, so it reaches
+#' none here.
 #'
 #' @param dots The list of `...` values.
-#' @param placeholders A named list of the arguments the batch passes by name.
-#' @return `dots`, invisibly.
+#' @return A character vector as long as `dots`: the argument each dot
+#'   reaches, or `NA` for a dot that goes to the `...` of `lms_chat()` or has
+#'   no name.
 #' @noRd
-rlm_check_chat_dots_once <- function(dots, placeholders) {
+rlm_dots_reached <- function(dots) {
+  reached <- rep(NA_character_, length(dots))
   nms <- names(dots)
   if (is.null(nms)) {
-    return(invisible(dots))
+    return(reached)
   }
-  fixed <- names(placeholders)
   arguments <- setdiff(names(formals(lms_chat)), "...")
   named <- !is.na(nms) & nzchar(nms)
-  exact <- named & nms %in% c(fixed, arguments)
-  reached <- ifelse(exact, nms, NA_character_)
+  exact <- named & nms %in% c(batch_chat_args, arguments)
+  reached[exact] <- nms[exact]
   # Every argument some dot names exactly, so a shortened name skips it.
-  held <- unique(c(fixed, nms[exact]))
+  held <- unique(c(batch_chat_args, nms[exact]))
   holders <- vector("list", length(held))
   names(holders) <- held
   for (i in which(named & !exact)) {
@@ -2215,9 +2243,23 @@ rlm_check_chat_dots_once <- function(dots, placeholders) {
       reached[[i]] <- name
     }
   }
+  reached
+}
+
+#' Abort when two dots of lms_chat_batch() reach one lms_chat() argument
+#'
+#' R would fail in `match.call()` or in the call itself with a base R error.
+#' This names the argument instead.
+#'
+#' @param dots The list of `...` values.
+#' @return `dots`, invisibly.
+#' @noRd
+rlm_check_chat_dots_once <- function(dots) {
+  nms <- names(dots)
+  reached <- rlm_dots_reached(dots)
   for (arg in unique(reached[!is.na(reached)])) {
     given <- nms[!is.na(reached) & reached == arg]
-    if (arg %in% fixed) {
+    if (arg %in% batch_chat_args) {
       cli::cli_abort(
         c(
           "{.arg {arg}} is given more than once.",

@@ -774,18 +774,20 @@ test_that("a native data-frame batch adds the reply id and stats of each reply",
   for (logprobs in c(FALSE, TRUE)) {
     info <- paste("logprobs:", logprobs)
     res <- run_stats_batch(replies, logprobs = logprobs)
-    leading <- if (logprobs) c("input", "output", "logprobs") else c("input", "output")
-    expect_identical(names(res$out), c(leading, reply_columns), info = info)
+    # The native route treats logprobs as off, so no logprobs column.
+    expect_identical(
+      names(res$out),
+      c("input", "output", reply_columns),
+      info = info
+    )
     expect_identical(res$out$output, c("reply 1", "reply 2"), info = info)
     for (col in reply_columns) {
       expect_identical(res$out[[col]], expected[[col]], info = paste(info, col))
     }
     if (logprobs) {
-      # The native route ignores logprobs and says so once per input.
-      expect_identical(length(res$warnings), 2L, info = info)
-      for (w in res$warnings) {
-        expect_match(w, "does not support logprobs", info = info)
-      }
+      # The native route ignores logprobs and says so once for the batch.
+      expect_identical(length(res$warnings), 1L, info = info)
+      expect_match(res$warnings, "does not support logprobs", info = info)
     } else {
       expect_identical(res$warnings, character(), info = info)
     }
@@ -926,8 +928,11 @@ test_that("the reply columns are there when every input failed", {
         list(failing_native[[cls]], failing_native[[cls]]),
         logprobs = logprobs
       )
-      leading <- if (logprobs) c("input", "output", "logprobs") else c("input", "output")
-      expect_identical(names(res$out), c(leading, reply_columns), info = info)
+      expect_identical(
+        names(res$out),
+        c("input", "output", reply_columns),
+        info = info
+      )
       expect_reply_column_types(res$out, info)
       for (col in reply_columns) {
         expect_true(all(is.na(res$out[[col]])), info = paste(info, col))
