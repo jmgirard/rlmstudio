@@ -1,13 +1,13 @@
 # M062: A chat call aborts on a text input that is not one prompt
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it narrows the `input` argument of three exported chat functions.
-- **Branch/PR:** —
+- **Branch/PR:** m062-chat-input-one-prompt
 
 ## Goal
 
@@ -43,7 +43,7 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 
 ## Tasks
 
-- [ ] T1: Write the AC1 to AC3 tests first with the request recorder of tests/testthat/helper-mock-http.R, and see the AC1 tests red on main. Read the sent bytes, not a parsed body (M004 lesson). Count calls to the server check rather than `fail()` in a stub (M015 lesson). Test `lms_chat()` on the OpenAI route, the one route with no delegate that checks again (M013 lesson).
+- [x] T1: Write the AC1 to AC3 tests first with the request recorder of tests/testthat/helper-mock-http.R, and see the AC1 tests red on main. Read the sent bytes, not a parsed body (M004 lesson). Count calls to the server check rather than `fail()` in a stub (M015 lesson). Test `lms_chat()` on the OpenAI route, the one route with no delegate that checks again (M013 lesson).
 - [ ] T2: Add the rule to R/utils-args.R beside `rlm_check_no_na()` (R/utils-args.R:1278), and call it where the three functions call `rlm_check_no_na(input, "input")` (R/chat.R:132, R/chat.R:311, R/chat.R:1403). In a scratch copy, remove each call in turn and see a test go red.
 - [ ] T3: Write the help text and run `devtools::document()`. Add the fault to the list in R/conditions.R. Add the NEWS.md entry. Add the probe facts of 2026-09-30 to cairn/references/lmstudio-api-surface.md, with the LM Studio version that `lms version` gives. A two-string `input` got a 400 on `/v1/responses` ("Invalid type for 'input'.") and on `/api/v1/chat` (code `invalid_union`). A two-string `content` got a 400 on `/v1/chat/completions`. An empty `input` array got a 400 on `/v1/responses`.
 - [ ] T4: Append one D-entry: a character `input` must be one string on the chat routes, which narrows D-003 as D-020 did. Set `RLMSTUDIO_API_TOKEN`, then run `devtools::test()` and `devtools::check()`.
@@ -53,6 +53,8 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 - 2026-09-30: created by /milestone-plan from the candidate row on an `input` of length two (M013 plan gate).
 - 2026-09-30: criteria audit (full mode, fresh Opus reader), pass 1, returned 4 findings, all fixed without a question. The NA check runs first and AC1 adds `c("a", NA)`, AC2 names its two probe forms, the NEWS claim is limited to the probed two-string case, and a line citation is corrected. Pass 2 (new fresh Opus reader) returned no finding.
 - 2026-09-30: plan gate chose an abort in R over pasting the strings into one prompt and over documenting the 400. The abort guesses nothing and can be relaxed later. Falsified by users who pass several strings on purpose and expect one joined prompt.
+- 2026-09-30: implement started on branch m062-chat-input-one-prompt. The question gate was skipped, because the plan left no choice open.
+- 2026-09-30: T1 added tests/testthat/test-input-length.R. On main, the five AC1 length tests failed (10 expectations each), and the NA-order, pass-through, and batch tests passed.
 
 ## Decisions
 
