@@ -32,12 +32,12 @@ defines top-level blocks already gives one block per pass.
 
 ## Acceptance criteria
 
-- [ ] AC1: On the branch, `Rscript cairn/tools/loop-sweep.R` prints no
+- [x] AC1: On the branch, `Rscript cairn/tools/loop-sweep.R` prints no
       `flat` row for `test-arg-guards.R`. It also prints no `flat` row whose
       loop header starts with `for (name in `. Each (file, block, header)
       triple that the sweep prints at the plan commit prints on the branch
       at least as many times.
-- [ ] AC2: At the plan commit, the sweep prints 8 rows for
+- [x] AC2: At the plan commit, the sweep prints 8 rows for
       `tests/testthat/test-cli-output.R` with the header
       `for (name in names(cli_callers))`. On the branch, each of those loops
       defines one subtest per name in `cli_callers`. Each subtest
@@ -48,7 +48,7 @@ defines top-level blocks already gives one block per pass.
       `lms_daemon_stop`. Every subtest of those loops whose description
       contains `lms_server_start`, `lms_server_stop`, or `lms_daemon_start`
       passes.
-- [ ] AC3: In a scratch copy of the branch, the `match` field of the
+- [x] AC3: In a scratch copy of the branch, the `match` field of the
       `no values` probe in `id_probes` of `tests/testthat/test-arg-guards.R`
       is `"planted"`. Run `testthat::test_file()` on that file. Take each
       function that `guarded_exports(c("model", "job_id"))` returns, and
@@ -57,7 +57,7 @@ defines top-level blocks already gives one block per pass.
       `no values` errors or fails. Each subtest of that block whose own
       description ends with another `label` of `id_probes` passes. The own
       description is the text after the last ` / ` of the reported test name.
-- [ ] AC4: `DESCRIPTION` lists `testthat (>= 3.3.0)` in Suggests.
+- [x] AC4: `DESCRIPTION` lists `testthat (>= 3.3.0)` in Suggests.
 - [ ] AC5: `devtools::test()` reports no failure and no error.
       `devtools::check()` gives 0 errors, 0 warnings, and no note that main
       at a42a1ab does not give.
@@ -108,7 +108,13 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: T6 done. The sweep prints 290 rows on the branch and no `flat` row in scope, and no triple from the plan commit is missing. The first full `devtools::test()` gave 1 error at `test-arg-guards.R:1986`, `rawToChar(out$body)` "argument 'x' must be a raw vector" inside the dry run. That is the failure the `list_instances()` candidate row records at `test-ttl.R` and `test-arg-guards.R:1810` on main. Three reruns of the file and a second full run were clean. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-30: claim audit: not owed, internal tier.
 - 2026-09-30: all tasks done, status set to review.
+- 2026-09-30: review checkpoint (in progress). AC1 to AC4 evidence recorded and ticked. `devtools::test()` gave 0 failed and 0 errors. `devtools::check()` and the Opus reviewer are still running.
 
 ## Decisions
 
 ## Review
+
+- AC1 (2026-09-30): I ran the sweep on a `git archive` copy of a03fdc1 and on the branch. At the plan commit it prints 270 rows, all `flat`. Of these, 36 are for `test-arg-guards.R` and 42 have a `for (name in ` header. On the branch it prints 290 rows. No `flat` row is for `test-arg-guards.R`, which has 45 `nested` rows. No `flat` row has a `for (name in ` header, and 42 such rows are `nested`. Of the 268 distinct (file, block, header) triples at the plan commit, 0 print fewer times on the branch.
+- AC4 (2026-09-30): `grep testthat DESCRIPTION` shows `testthat (>= 3.3.0),` at line 30, in the Suggests field.
+- AC2 (2026-09-30): in a `git archive` copy of HEAD, `stop("planted")` is the first statement of `lms_daemon_stop()`. `test_file()` on `test-cli-output.R`, with a reporter that records each result and its full test name, gives 32 subtests under 8 parent blocks. The 8 parent names match the 8 plan-commit sweep rows with the header `for (name in names(cli_callers))`. Each subtest's own description is its function name. All 8 `lms_daemon_stop` subtests failed or errored. All 24 subtests for `lms_server_start`, `lms_server_stop`, and `lms_daemon_start` passed.
+- AC3 (2026-09-30): in a `git archive` copy of HEAD, the `match` of the `no values` probe in `id_probes` is `"planted"`. `test_file()` on `test-arg-guards.R`, with the same recording reporter, ran in 26 s. `guarded_exports(c("model", "job_id"))`, evaluated from the file, returns 10 functions, and `id_probes` holds 13 labels. Each of the 10 blocks has 13 subtests, and each own description is one of the 13 labels. In each block the one `no values` subtest failed or errored, and 0 of the 12 other-label subtests did.
