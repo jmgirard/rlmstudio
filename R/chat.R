@@ -2007,7 +2007,8 @@ lms_chat_batch <- function(
       class = "rlmstudio_reply_cut_off"
     )
   }
-  # The dots go through `chat_dots`, which can drop a `logprobs` above.
+  # The dots go through `chat_dots`, where the native route has set the dot
+  # that fills `logprobs` to `FALSE` above.
   # `simplify` comes after `...`, so only its exact name matches it, and
   # `quote = TRUE` passes a dot that holds a call or a symbol as it is.
   chat_once <- function(..., simplify) {
