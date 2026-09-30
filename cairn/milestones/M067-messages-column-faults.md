@@ -122,7 +122,7 @@ row.
       write each top-level column alone through `rlm_json_text()` and add the
       line for the first that fails. Splice the column name as a value, so
       cli does not read its braces (the M012 lesson).
-- [ ] T5: Update the `messages` help in `R/chat.R` near line 489 and add two
+- [x] T5: Update the `messages` help in `R/chat.R` near line 489 and add two
       `NEWS.md` entries. Run `devtools::document()`.
 - [ ] T6: In a scratch copy, move the row-count rule after `empty_rows()` and
       see the `NA` matrix probe go red. Remove the column line and see the
@@ -140,6 +140,7 @@ row.
 - 2026-09-30: T2 done. `wrong_row_count()` and `column_row_count()` added, and `empty_rows()` reads a wrong-length classed column as AC2 states. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
 - 2026-09-30: T3 done. On the T2 code the 8 data-frame probes (5 AC3, 3 AC2 classed) get the jsonlite detail and no column line. The list probe passes, as it must.
 - 2026-09-30: T4 done. `first_unwritable_column()` writes each top-level column alone as a plain data frame, and `rlm_check_messages()` adds the info line. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
+- 2026-09-30: T5 done. The `messages` help states the row-count rule and the column line, and `NEWS.md` has two entries. Probes this session showed that length-1 and length-0 `Date`, factor, and `POSIXct` columns fail the write, so the help names `POSIXlt` alone as sent in each row. `devtools::test()` clean.
 
 ## Decisions
 
