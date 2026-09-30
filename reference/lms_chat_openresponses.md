@@ -31,8 +31,12 @@ lms_chat_openresponses(
 
 - input:
 
-  Character. The user prompt. A character vector must hold no missing
-  values.
+  Character. The user prompt, as one string. A character vector must
+  hold no missing values, and its length must be one. Any other
+  character value aborts before the check for a running server. To send
+  several prompts, one request each, use
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
+  A list is sent as given in the `input` field.
 
 - instructions:
 

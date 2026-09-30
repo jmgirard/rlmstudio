@@ -6,6 +6,22 @@
   [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
   and
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+  now abort when a character `input` does not hold exactly one string.
+  The message names `input`, states how many strings were given, and
+  names
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  which sends several prompts, one request each. The abort has no
+  condition class, and it comes before the check for a running server. A
+  character `input` that holds an `NA` still gets the message about
+  missing values first. Before, a two-string `input` went to the server
+  as a JSON array, and each route answered with a 400 whose message did
+  not say that more than one prompt was sent. A list `input` is still
+  sent as given.
+
+- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  and
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
   gain a `store` argument that turns off the storage of a reply on the
   server.
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
