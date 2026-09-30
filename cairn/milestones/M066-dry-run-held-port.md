@@ -35,7 +35,7 @@ a candidate row. The package code does not change.
 
 ## Acceptance criteria
 
-- [ ] AC1: If another listener holds the first dry-run port on 127.0.0.1,
+- [x] AC1: If another listener holds the first dry-run port on 127.0.0.1,
       `request_target()` still returns the sent method, path, and body. That
       function is in `tests/testthat/helper-mock-http.R`. A test in
       `tests/testthat/test-mock-http-helper.R` holds such a listener.
@@ -106,6 +106,7 @@ a candidate row. The package code does not change.
 - 2026-09-30: T7 done. In a scratch copy without the `curl_error` retry, the never-replies test stopped on try 1 with "Timeout was reached [127.0.0.1]". The repo copy did not change. `devtools::check()` with the API token: 0 errors, 0 warnings, 0 notes.
 - 2026-09-30: claim audit: not owed, internal tier
 - 2026-09-30: all tasks done again after review return 1. Status set to review.
+- 2026-09-30: second review pass started. AC1 to AC3 verified again. The check and one reviewer are still running (checkpoint, review not done).
 
 ## Decisions
 
@@ -131,3 +132,9 @@ a candidate row. The package code does not change.
   - History (3): the helper matches "Failed to create server" exactly. It re-raises a reworded httpuv error.
   - History (4): the same double `require_httpuv()` call.
   - Prior-review: no conflict with earlier reviews. It noted that the new test names a local variable `message`.
+
+Second pass (after review return 1):
+
+- AC1 evidence (2026-09-30): `devtools::test(filter = "mock-http-helper")` gave 0 failed, 0 errors. The held-port, bind-error, and never-replies tests passed with 2 tries each. A probe held the first port with a Python listener of each kind the first pass named. A reset listener, an SSH-banner listener, and a silent listener each gave POST, `/v1/models/load`, and the body, with 2 tries. The silent case took 5 s. With `tries` set to 1 in the probe, all three stopped with the AC2 message, so the retry is what makes them pass.
+- AC2 evidence (2026-09-30): in the same run, the all-tries test passed its 5 expectations. It asserts "received no request", "another program", no "must be a raw vector", and 5 tries. The 1-try probe above printed the full message, which names another program on 127.0.0.1 as the likely cause.
+- AC3 evidence (2026-09-30): the grep returned 5 lines. Four are comments at `helper-mock-http.R` lines 88, 102, 177, and 179. One is the call at line 199, inside `request_dry_run()`.
