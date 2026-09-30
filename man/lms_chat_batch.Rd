@@ -37,9 +37,9 @@ server.}
 \code{rlmstudio.quiet} option. \code{TRUE} starts no progress bar, and \code{FALSE}
 starts one, also when the option is \code{TRUE}. cli draws a started bar only
 after a delay, two seconds by default. Any other value, \code{NA} included,
-aborts before the check for a running server. \code{quiet} does not hide the warnings
-about failed inputs, cut-off replies, or a vector format that returns a
-list.}
+aborts before the check for a running server. \code{quiet} does not hide the
+warnings about failed inputs, cut-off replies, a vector format that
+returns a list, or a \code{logprobs = TRUE} that the \code{"native"} route ignores.}
 
 \item{...}{Additional arguments passed to \code{lms_chat}, such as \code{api_type},
 \code{logprobs}, \code{schema}, \code{ttl}, or \code{previous_response_id}. A \code{schema}, a
@@ -49,6 +49,23 @@ call, so each input continues the same stored reply.
 A \code{logprobs} here, or a shortened name that \code{\link[=lms_chat]{lms_chat()}} reads as
 \code{logprobs}, must be \code{TRUE} or \code{FALSE}. Any other value, \code{NULL} and \code{NA}
 included, aborts before the check for a running server.
+With \code{api_type = "native"}, which has no logprobs, a \code{logprobs} of
+\code{TRUE} is ignored. The batch then returns what it returns with
+\code{logprobs = FALSE}, in each format. It gives one warning for the whole
+batch, after the check for a running server, even with \code{quiet = TRUE}.
+Two values here that \code{\link[=lms_chat]{lms_chat()}} reads as the same argument abort
+with a message that names the argument. Examples are
+\verb{logprobs = TRUE, logprobs = FALSE}, the shortened names
+\verb{log = TRUE, lo = FALSE}, and two \code{previous_response_id} values. An
+exact name and a shortened name, such as \code{logprobs} and \code{log}, do not
+abort, because R gives the shortened one to the \code{...} of \code{\link[=lms_chat]{lms_chat()}}.
+An \code{input} here also aborts, because the batch passes each element of
+\code{inputs} as \code{input}. An \code{input} reaches \code{...} only when \code{inputs} is
+given by its full name. Otherwise R reads \code{input} as a shortened
+\code{inputs}, so it becomes \code{inputs}, and the value given by position fills
+the next unnamed argument, such as \code{system_prompt}. These aborts come
+before every other check of \code{...} and before the check for a running
+server.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.}
@@ -60,18 +77,19 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \value{
 The return type depends on the \code{format} argument:
 \itemize{
-\item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
+\item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE}, and \code{logprobs = FALSE} or \code{api_type = "native"}. With a \code{schema}, it warns and returns the list instead.
 \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
+\item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE} on the \code{"openresponses"} or \code{"openai"} route, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. The \code{"native"} route adds no \code{logprobs} column. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 }
 
 On the native and OpenResponses routes with \code{simplify = TRUE}, \code{\link[=lms_chat]{lms_chat()}}
 returns each reply that carries an id with a \code{response_id} attribute, as
 its help describes. With \code{format = "list"}, each reply keeps
 it. So does each element of the list that \code{format = "vector"} returns with
-\code{logprobs = TRUE}. The character vector of \code{format = "vector"} and the
-\code{output} column of \code{format = "data.frame"} carry no \code{response_id}
-attribute. The data frame holds the ids in its \code{response_id} column.
+\code{logprobs = TRUE} on the OpenResponses route. The character vector of
+\code{format = "vector"} and the \code{output} column of \code{format = "data.frame"}
+carry no \code{response_id} attribute. The data frame holds the ids in its
+\code{response_id} column.
 
 With \code{api_type = "native"} and \code{format = "data.frame"}, the data frame ends
 with seven columns read from each reply: \code{response_id}, \code{input_tokens},
@@ -169,9 +187,10 @@ element for that input holds the condition without its backtrace. An
 \code{rlmstudio_bad_response} for reply content that does not
 parse keeps that content in its \code{content} field. Where the result is text,
 the element holds \code{NA}. The result is text with \code{format = "vector"} when it
-returns a vector (\code{simplify = TRUE}, no \code{schema}, \code{logprobs = FALSE}), and
-with a data frame whose replies are not parsed (no \code{schema}, or
-\code{logprobs = TRUE}). The \code{logprobs} column holds \code{NULL} for a failed input.
+returns a vector (\code{simplify = TRUE}, no \code{schema}, and \code{logprobs = FALSE}
+or the native route), and with a data frame whose replies are not parsed
+(no \code{schema}, or \code{logprobs = TRUE}). On the OpenResponses and OpenAI
+routes, the \code{logprobs} column holds \code{NULL} for a failed input.
 A reply with no readable answer text, such as one whose content is \code{null},
 fails as an \code{rlmstudio_bad_response} in the same way. So does a
 status-200 body that does not parse as JSON, such as an HTML page from a
@@ -215,8 +234,10 @@ that checks its own arguments does that first, so a bad \code{model}, \code{job_
 or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
-the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, aborts
+the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
+aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

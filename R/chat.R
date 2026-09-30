@@ -1619,9 +1619,9 @@ integer_or_na <- function(x) {
 #'   `rlmstudio.quiet` option. `TRUE` starts no progress bar, and `FALSE`
 #'   starts one, also when the option is `TRUE`. cli draws a started bar only
 #'   after a delay, two seconds by default. Any other value, `NA` included,
-#'   aborts before the check for a running server. `quiet` does not hide the warnings
-#'   about failed inputs, cut-off replies, or a vector format that returns a
-#'   list.
+#'   aborts before the check for a running server. `quiet` does not hide the
+#'   warnings about failed inputs, cut-off replies, a vector format that
+#'   returns a list, or a `logprobs = TRUE` that the `"native"` route ignores.
 #' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,
 #'   `logprobs`, `schema`, `ttl`, or `previous_response_id`. A `schema`, a
 #'   `ttl`, a `previous_response_id`, and the `api_type` that each needs are
@@ -1630,23 +1630,41 @@ integer_or_na <- function(x) {
 #'   A `logprobs` here, or a shortened name that [lms_chat()] reads as
 #'   `logprobs`, must be `TRUE` or `FALSE`. Any other value, `NULL` and `NA`
 #'   included, aborts before the check for a running server.
+#'   With `api_type = "native"`, which has no logprobs, a `logprobs` of
+#'   `TRUE` is ignored. The batch then returns what it returns with
+#'   `logprobs = FALSE`, in each format. It gives one warning for the whole
+#'   batch, after the check for a running server, even with `quiet = TRUE`.
+#'   Two values here that [lms_chat()] reads as the same argument abort
+#'   with a message that names the argument. Examples are
+#'   `logprobs = TRUE, logprobs = FALSE`, the shortened names
+#'   `log = TRUE, lo = FALSE`, and two `previous_response_id` values. An
+#'   exact name and a shortened name, such as `logprobs` and `log`, do not
+#'   abort, because R gives the shortened one to the `...` of [lms_chat()].
+#'   An `input` here also aborts, because the batch passes each element of
+#'   `inputs` as `input`. An `input` reaches `...` only when `inputs` is
+#'   given by its full name. Otherwise R reads `input` as a shortened
+#'   `inputs`, so it becomes `inputs`, and the value given by position fills
+#'   the next unnamed argument, such as `system_prompt`. These aborts come
+#'   before every other check of `...` and before the check for a running
+#'   server.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
-#'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
+#'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE}, and \code{logprobs = FALSE} or \code{api_type = "native"}. With a \code{schema}, it warns and returns the list instead.
 #'   \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE} on the \code{"openresponses"} or \code{"openai"} route, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. The \code{"native"} route adds no \code{logprobs} column. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 #' }
 #'
 #' On the native and OpenResponses routes with `simplify = TRUE`, [lms_chat()]
 #' returns each reply that carries an id with a `response_id` attribute, as
 #' its help describes. With `format = "list"`, each reply keeps
 #' it. So does each element of the list that `format = "vector"` returns with
-#' `logprobs = TRUE`. The character vector of `format = "vector"` and the
-#' `output` column of `format = "data.frame"` carry no `response_id`
-#' attribute. The data frame holds the ids in its `response_id` column.
+#' `logprobs = TRUE` on the OpenResponses route. The character vector of
+#' `format = "vector"` and the `output` column of `format = "data.frame"`
+#' carry no `response_id` attribute. The data frame holds the ids in its
+#' `response_id` column.
 #'
 #' With `api_type = "native"` and `format = "data.frame"`, the data frame ends
 #' with seven columns read from each reply: `response_id`, `input_tokens`,
@@ -1740,9 +1758,10 @@ integer_or_na <- function(x) {
 #' `rlmstudio_bad_response` for reply content that does not
 #' parse keeps that content in its `content` field. Where the result is text,
 #' the element holds `NA`. The result is text with `format = "vector"` when it
-#' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and
-#' with a data frame whose replies are not parsed (no `schema`, or
-#' `logprobs = TRUE`). The `logprobs` column holds `NULL` for a failed input.
+#' returns a vector (`simplify = TRUE`, no `schema`, and `logprobs = FALSE`
+#' or the native route), and with a data frame whose replies are not parsed
+#' (no `schema`, or `logprobs = TRUE`). On the OpenResponses and OpenAI
+#' routes, the `logprobs` column holds `NULL` for a failed input.
 #' A reply with no readable answer text, such as one whose content is `null`,
 #' fails as an `rlmstudio_bad_response` in the same way. So does a
 #' status-200 body that does not parse as JSON, such as an HTML page from a
@@ -1837,7 +1856,17 @@ lms_chat_batch <- function(
     )
   }
 
-  has_logprobs <- isTRUE(args[["logprobs"]])
+  # The native route has no logprobs, so the batch treats the flag as off
+  # there and returns what `logprobs = FALSE` returns. It warns once for the
+  # batch, not once per input, and it sends each call `logprobs = FALSE`, so
+  # `lms_chat()` does not warn as well. The dot keeps its name and place, so
+  # no other dot moves into the `logprobs` of `lms_chat()`.
+  native_logprobs <- api_type == "native" && isTRUE(args[["logprobs"]])
+  chat_dots <- list(...)
+  if (native_logprobs) {
+    chat_dots[[rlm_dot_filling(chat_dots, "logprobs")]] <- FALSE
+  }
+  has_logprobs <- isTRUE(args[["logprobs"]]) && !native_logprobs
   # A data frame of parsed replies adds one column per schema property
   # (D-027). A data frame with logprobs holds text replies, so it adds none.
   property_columns <- if (format == "data.frame" && !has_logprobs) {
@@ -1846,6 +1875,15 @@ lms_chat_batch <- function(
   rlm_check_property_names(names(property_columns))
 
   stop_if_no_server(host)
+
+  # After the server probe, so a batch that cannot run gives no warning.
+  # Shown whatever `quiet` says, because it is the only sign that the
+  # logprobs asked for are missing (D-032).
+  if (native_logprobs) {
+    cli::cli_warn(
+      "The 'native' API type does not support logprobs. Ignoring argument."
+    )
+  }
 
   # Each result is a parsed reply of any shape, not one string.
   has_parsed <- !is.null(schema) && isTRUE(simplify) && !has_logprobs
@@ -1969,31 +2007,40 @@ lms_chat_batch <- function(
       class = "rlmstudio_reply_cut_off"
     )
   }
+  # The dots go through `chat_dots`, where the native route has set the dot
+  # that fills `logprobs` to `FALSE` above.
+  # `simplify` comes after `...`, so only its exact name matches it, and
+  # `quote = TRUE` passes a dot that holds a call or a symbol as it is. The
+  # calls below name `chat_once` as a string, so a backtrace shows that name
+  # and not the body of the function.
+  chat_once <- function(..., simplify) {
+    lms_chat(
+      model = model,
+      input = inputs[[i]],
+      system_prompt = system_prompt,
+      host = host,
+      simplify = simplify,
+      ...,
+      token = token
+    )
+  }
   for (i in seq_along(inputs)) {
     res <- tryCatch(
       withCallingHandlers(
         if (body_frame) {
-          body <- lms_chat(
-            model = model,
-            input = inputs[[i]],
-            system_prompt = system_prompt,
-            host = host,
-            simplify = FALSE,
-            ...,
-            token = token
+          body <- do.call(
+            "chat_once",
+            c(chat_dots, list(simplify = FALSE)),
+            quote = TRUE
           )
           read <- read_reply(body)
           reply_fields[[i]] <- read$fields
           read$value
         } else {
-          lms_chat(
-            model = model,
-            input = inputs[[i]],
-            system_prompt = system_prompt,
-            host = host,
-            simplify = simplify,
-            ...,
-            token = token
+          do.call(
+            "chat_once",
+            c(chat_dots, list(simplify = simplify)),
+            quote = TRUE
           )
         },
         rlmstudio_reply_cut_off = note_cut_off
@@ -2117,8 +2164,9 @@ lms_chat_batch <- function(
       return(add_property_columns(add_reply_columns(df)))
     }
 
-    # Keyed on the argument, not on the results, so the column is there even
-    # when every input failed (GP2).
+    # Keyed on the argument and the route, not on the results, so the column
+    # is there even when every input failed (GP2). The native route has none
+    # (D-033).
     if (has_logprobs) {
       df <- data.frame(
         input = inputs,
@@ -2160,17 +2208,129 @@ lms_chat_batch <- function(
 #' `api_type`. The arguments that `lms_chat_batch()` passes by name are
 #' matched first and then dropped, as in the real call.
 #'
+#' Two dots that reach the same `lms_chat()` argument abort here, before
+#' `match.call()` would fail with a base R error.
+#'
 #' @param dots The list of `...` values.
 #' @return `dots`, with each name replaced by the `lms_chat()` argument it
 #'   matches.
 #' @noRd
 rlm_chat_dots <- function(dots) {
-  fixed <- c("model", "input", "system_prompt", "host", "simplify", "token")
-  placeholders <- vector("list", length(fixed))
-  names(placeholders) <- fixed
+  rlm_check_chat_dots_once(dots)
+  placeholders <- vector("list", length(batch_chat_args))
+  names(placeholders) <- batch_chat_args
   call <- as.call(c(list(quote(lms_chat)), placeholders, dots))
   matched <- as.list(match.call(lms_chat, call))[-1]
-  matched[setdiff(names(matched), fixed)]
+  matched[setdiff(names(matched), batch_chat_args)]
+}
+
+# The `lms_chat()` arguments that `lms_chat_batch()` passes by name.
+batch_chat_args <- c(
+  "model",
+  "input",
+  "system_prompt",
+  "host",
+  "simplify",
+  "token"
+)
+
+#' Which dot of lms_chat_batch() fills one lms_chat() argument?
+#'
+#' Runs R's own argument matching over the call that `lms_chat_batch()` makes,
+#' with each dot replaced by its position. So a dot counts whether it fills
+#' the argument by its exact name, a shortened name, or its position. Call it
+#' after `rlm_check_chat_dots_once()`, because two dots for one argument make
+#' `match.call()` fail.
+#'
+#' @param dots The list of `...` values.
+#' @param arg The name of an `lms_chat()` argument.
+#' @return The position in `dots` of the dot that fills `arg`, or `NULL` when
+#'   no dot fills it.
+#' @noRd
+rlm_dot_filling <- function(dots, arg) {
+  placeholders <- vector("list", length(batch_chat_args))
+  names(placeholders) <- batch_chat_args
+  positions <- as.list(seq_along(dots))
+  names(positions) <- names(dots)
+  call <- as.call(c(list(quote(lms_chat)), placeholders, positions))
+  match.call(lms_chat, call)[[arg]]
+}
+
+#' Which lms_chat() argument does each dot of lms_chat_batch() reach?
+#'
+#' Each named dot is matched alone, beside the arguments that
+#' `lms_chat_batch()` passes by name, so R's own rules say which `lms_chat()`
+#' argument it reaches. R matches exact names before shortened ones, so the
+#' arguments that some dot names exactly are held as placeholders too. A
+#' shortened name then falls through to the `...` of `lms_chat()`, as in the
+#' real call. A dot that reaches no argument goes to that `...`. A dot named
+#' as one of the passed arguments collides with it. Of those, only `input`
+#' can be a dot, because the others are formals of `lms_chat_batch()`. An
+#' unnamed dot fills an argument that nothing else matched, so it reaches
+#' none here.
+#'
+#' @param dots The list of `...` values.
+#' @return A character vector as long as `dots`: the argument each dot
+#'   reaches, or `NA` for a dot that goes to the `...` of `lms_chat()` or has
+#'   no name.
+#' @noRd
+rlm_dots_reached <- function(dots) {
+  reached <- rep(NA_character_, length(dots))
+  nms <- names(dots)
+  if (is.null(nms)) {
+    return(reached)
+  }
+  arguments <- setdiff(names(formals(lms_chat)), "...")
+  named <- !is.na(nms) & nzchar(nms)
+  exact <- named & nms %in% c(batch_chat_args, arguments)
+  reached[exact] <- nms[exact]
+  # Every argument some dot names exactly, so a shortened name skips it.
+  held <- unique(c(batch_chat_args, nms[exact]))
+  holders <- vector("list", length(held))
+  names(holders) <- held
+  for (i in which(named & !exact)) {
+    call <- as.call(c(list(quote(lms_chat)), holders, dots[i]))
+    name <- setdiff(names(as.list(match.call(lms_chat, call))[-1]), held)
+    if (name %in% arguments) {
+      reached[[i]] <- name
+    }
+  }
+  reached
+}
+
+#' Abort when two dots of lms_chat_batch() reach one lms_chat() argument
+#'
+#' R would fail in `match.call()` or in the call itself with a base R error.
+#' This names the argument instead.
+#'
+#' @param dots The list of `...` values.
+#' @return `dots`, invisibly.
+#' @noRd
+rlm_check_chat_dots_once <- function(dots) {
+  nms <- names(dots)
+  reached <- rlm_dots_reached(dots)
+  for (arg in unique(reached[!is.na(reached)])) {
+    given <- nms[!is.na(reached) & reached == arg]
+    if (arg %in% batch_chat_args) {
+      cli::cli_abort(
+        c(
+          "{.arg {arg}} is given more than once.",
+          "x" = "{.fn lms_chat_batch} passes each element of {.arg inputs} to {.fn lms_chat} as {.arg {arg}}, so {.arg ...} cannot hold an {.arg {arg}}."
+        ),
+        call = NULL
+      )
+    }
+    if (length(given) > 1L) {
+      cli::cli_abort(
+        c(
+          "{.arg {arg}} is given more than once.",
+          "x" = "{.arg ...} holds {length(given)} values that {.fn lms_chat} reads as {.arg {arg}}: {.arg {given}}."
+        ),
+        call = NULL
+      )
+    }
+  }
+  invisible(dots)
 }
 
 #' Create a base request for the LM Studio API

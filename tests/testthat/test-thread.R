@@ -568,15 +568,10 @@ test_that("the list a vector batch returns with logprobs keeps the reply ids", {
       c("resp_a", "resp_b")[[i]]
     )
   }
-  # On the native route, the replies stay strings.
+  # The native route treats logprobs as off, so the vector format returns a
+  # character vector with no reply id, as with logprobs = FALSE.
   res <- run_thread_batch("native", "vector", logprobs = TRUE)
-  expect_identical(
-    res$value,
-    list(
-      structure("hi", response_id = "resp_a"),
-      structure("hi", response_id = "resp_b")
-    )
-  )
+  expect_identical(res$value, c("hi", "hi"))
 })
 
 test_that("a vector batch returns a character vector with no reply id", {
