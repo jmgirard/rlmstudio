@@ -171,6 +171,39 @@ test_that("the dry-run helper names the cause when every try lands on a held por
   expect_identical(tries$n, 5L)
 })
 
+# curl rejects a path with a space before it connects, so every try fails the
+# same way. The stop message must keep curl's own error.
+test_that("the dry-run helper keeps curl's error when the request itself is at fault", {
+  require_httpuv()
+  req <- httr2::request("http://localhost:1234/v1/a b")
+
+  cnd <- expect_error(request_target(req))
+
+  message <- conditionMessage(cnd)
+  expect_match(message, "received no request", fixed = TRUE)
+  expect_match(message, "Malformed input to a URL function", fixed = TRUE)
+})
+
+# Each try must end before the time limit of request_body_text() does. A limit
+# that fires inside the dry run can halt R, so here every try lands on a
+# program that never replies, under a limit of 3 seconds.
+test_that("request_body_text() spreads its time limit over the dry-run tries", {
+  require_httpuv()
+  held <- free_port()
+  id <- httpuv::startServer("127.0.0.1", held, list(call = function(req) NULL))
+  withr::defer(httpuv::stopServer(id))
+  tries <- local_dry_run_ports(function(n) held)
+  req <- httr2::request("http://localhost:1234/v1/chat") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+
+  cnd <- expect_error(request_body_text(req, seconds = 3))
+
+  message <- conditionMessage(cnd)
+  expect_match(message, "received no request in 5 tries", fixed = TRUE)
+  expect_match(message, "Timeout was reached", fixed = TRUE)
+  expect_identical(tries$n, 5L)
+})
+
 test_that("local_request_sequence() serves its responses in order", {
   recorder <- local_request_sequence(list(
     mock_response(200L, '{"n": 1}'),

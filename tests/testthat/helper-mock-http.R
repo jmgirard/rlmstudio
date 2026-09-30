@@ -165,12 +165,18 @@ request_target <- function(req, redact_headers = TRUE) {
 # byte for byte with a jsonlite write. The old httr2 1.3.0 writer,
 # req_body_json(), rebuilt the body when the request was dry-run, and a
 # POSIXlt value there recursed with no end. So the dry run gets `seconds` and
-# then fails, and a red run on the old writer ends.
+# then fails, and a red run on the old writer ends. The dry-run helper makes up
+# to 5 tries, and each try gets one sixth of `seconds`, 5 at most. So every try
+# ends before the limit does. A limit that fires inside the dry run can halt R.
 request_body_text <- function(req, seconds = 30) {
-  require_httpuv()
   setTimeLimit(elapsed = seconds, transient = TRUE)
   on.exit(setTimeLimit(elapsed = Inf), add = TRUE)
-  out <- request_dry_run(req, redact_headers = FALSE)
+  out <- request_dry_run(
+    req,
+    redact_headers = FALSE,
+    tries = 5L,
+    seconds = min(5, seconds / 6)
+  )
   rawToChar(out$body)
 }
 
@@ -184,16 +190,17 @@ request_body_text <- function(req, seconds = 30) {
 # to that program. If it answers in HTTP, the result holds no method, path, or
 # body. If it closes the connection, sends text that is not HTTP, or never
 # replies, the dry run stops with a curl error. Each try gets `seconds`, so a
-# program that never replies ends the try with curl's timeout error. The dry
-# run sends to the echo port alone, so every curl error comes from that port.
-# If the echo server cannot bind, the dry run stops with httpuv's "Failed to
-# create server". In each case this helper tries again on a new port. After
-# `tries` tries, it stops and names the likely cause. No other error is
-# caught.
+# program that never replies ends the try with curl's timeout error. If the
+# echo server cannot bind, the dry run stops with httpuv's "Failed to create
+# server". In each case this helper tries again on a new port. A request that
+# curl cannot send, such as a URL with a space in its path, also gives a curl
+# error, on every try. So after `tries` tries, the stop message names the
+# likely cause and keeps the last error. No other error is caught.
 request_dry_run <- function(req, redact_headers = TRUE, tries = 5L,
                             seconds = 5) {
   require_httpuv()
   req <- httr2::req_timeout(req, seconds)
+  last_error <- NULL
   for (i in seq_len(tries)) {
     out <- tryCatch(
       httr2::req_dry_run(req, quiet = TRUE, redact_headers = redact_headers),
@@ -202,6 +209,7 @@ request_dry_run <- function(req, redact_headers = TRUE, tries = 5L,
           !identical(conditionMessage(cnd), "Failed to create server")) {
           stop(cnd)
         }
+        last_error <<- cnd
         NULL
       }
     )
@@ -210,9 +218,13 @@ request_dry_run <- function(req, redact_headers = TRUE, tries = 5L,
     }
   }
   stop(
-    "The dry run received no request in ", tries, " tries. ",
+    "The dry run received no request in ", tries,
+    if (tries == 1L) " try. " else " tries. ",
     "Another program probably listens on 127.0.0.1 at the port that ",
     "curl::curl_echo() picked.",
+    if (!is.null(last_error)) {
+      paste0(" The last try ended with this error: ", conditionMessage(last_error))
+    },
     call. = FALSE
   )
 }

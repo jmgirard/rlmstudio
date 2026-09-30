@@ -108,11 +108,13 @@ a candidate row. The package code does not change.
 - 2026-09-30: all tasks done again after review return 1. Status set to review.
 - 2026-09-30: second review pass started. AC1 to AC3 verified again. The check and one reviewer are still running (checkpoint, review not done).
 - 2026-09-30: second pass AC1 to AC4 verified and gate passed. Three reviewers reported. No finding shows a criterion failing, so no return. Findings go to the merge gate for triage (pre-gate checkpoint).
+- 2026-09-30: merge gate triage. The user chose fix now for the hidden curl error and the time limit, and a candidate row for Linux. Two tests went red first, then passed after the fix. The merge question waits for the full test and check runs.
 
 ## Decisions
 
 - 2026-09-30 (implement gate): If the dry run fails with httpuv's "Failed to create server" error, the shared dry-run helper also retries. That retry uses the same 5 tries and ends with the AC2 message. Linux, and probably Windows, is expected to refuse a bind to 0.0.0.0 on a port that 127.0.0.1 holds. On those systems, the forced-port tests get that error in place of an empty result. The helper catches no other error.
 - 2026-09-30 (review return): this entry narrows the one above. The shared dry-run helper also retries on any error of class `curl_error`. The dry run sends to the echo port alone, so a curl error means that the connection to that port failed. Each try gets a 5-second timeout, so a program that never replies ends the try. Five tries then fit inside the 30-second limit of `request_body_text()`. The helper still re-raises every other error.
+- 2026-09-30 (merge gate): this entry narrows the one above. The claim that every curl error comes from the echo port is false. A URL with a space in its path gives a curl error before any connection. The helper still retries every curl error, but its stop message now keeps the last error. `request_body_text()` gives each try one sixth of its limit, 5 s at most, so every try ends before the limit fires.
 
 ## Review
 
@@ -152,3 +154,9 @@ Second pass (after review return 1):
   - History (new): the comment above `request_body_text()` says the dry run gets `seconds`. The retries can now use 25 s of the 30 s default.
   - History (new) and prior-review (2): LESSONS M010 says that no test can prove that a `req_timeout()` line is needed. Without that line, the never-replies test hangs and does not fail. T7 proved that the `curl_error` retry is needed, but not the timeout line.
   - Prior-review: the GitHub review-comment surface is empty. No archived review finding is contradicted.
+- Triage at the merge gate (2026-09-30), chosen by the user:
+  - Diff-bug (1) and (4): fix now. The stop message keeps the last error, and a new Decisions entry narrows the false claim. A new test asserts curl's "Malformed input to a URL function" in the message. Against the old helper, that test failed.
+  - Diff-bug (2) and history (new, the `request_body_text()` comment): fix now. Each try gets one sixth of the limit. A new test puts all 5 tries on a silent listener under a 3 s limit. Against the old helper, R halted with "reached elapsed time limit". After the fix, the test passed.
+  - The "1 tries" text and the double `require_httpuv()` call: fixed now.
+  - Diff-bug (3): follow-up, a new candidate row for a Linux run.
+  - Rejected, because each one changes no test result: the 5 s of the never-replies test, the `sample()` draws, and the mock of `find_port`. Also rejected for that reason: the exact httpuv match, the stderr line, and no Windows run. The last two rejected items are the `stop(cnd)` call stack and the `req_timeout()` line that no test can prove.
