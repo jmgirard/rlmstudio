@@ -119,9 +119,10 @@ with \code{simplify = FALSE}, the value has no \code{response_id} attribute.
 A native reply sent with \code{store = FALSE} has no \code{response_id} field, so
 its value has no attribute. An OpenResponses reply sent with
 \code{store = FALSE} still has an \code{id}, so its value carries the attribute, but
-the server does not hold that reply. A later call that passes that id as
-\code{previous_response_id} raises \code{rlmstudio_api_error} with status 400 and the
-\code{code} \code{"previous_response_not_found"}.
+the server does not hold that reply. A later call on the OpenResponses
+route that passes that id as \code{previous_response_id} raises
+\code{rlmstudio_api_error} with status 400 and the \code{code}
+\code{"previous_response_not_found"}.
 }
 \description{
 Send a prompt to a locally running LM Studio model. This wrapper

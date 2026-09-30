@@ -88,9 +88,10 @@
 #' A native reply sent with `store = FALSE` has no `response_id` field, so
 #' its value has no attribute. An OpenResponses reply sent with
 #' `store = FALSE` still has an `id`, so its value carries the attribute, but
-#' the server does not hold that reply. A later call that passes that id as
-#' `previous_response_id` raises `rlmstudio_api_error` with status 400 and the
-#' `code` `"previous_response_not_found"`.
+#' the server does not hold that reply. A later call on the OpenResponses
+#' route that passes that id as `previous_response_id` raises
+#' `rlmstudio_api_error` with status 400 and the `code`
+#' `"previous_response_not_found"`.
 #' @details
 #' This function calls [lms_chat_openresponses()], [lms_chat_openai()], or
 #' [lms_chat_native()], according to `api_type`. It runs no request of its own.
@@ -277,9 +278,10 @@ lms_chat <- function(
 #'   `previous_response_id` to continue the thread. The value has no
 #'   attribute when `id` is absent or is not one string. A reply sent with
 #'   `store = FALSE` still has an `id`, so its value carries the attribute,
-#'   but the server does not hold that reply. A later call that passes that
-#'   id as `previous_response_id` raises `rlmstudio_api_error` with status 400
-#'   and the `code` `"previous_response_not_found"`. [lms_chat_native()] reads
+#'   but the server does not hold that reply. A later call of this function
+#'   that passes that id as `previous_response_id` raises
+#'   `rlmstudio_api_error` with status 400 and the `code`
+#'   `"previous_response_not_found"`. [lms_chat_native()] reads
 #'   the attribute from the `response_id` field of its reply instead.
 #'
 #'   With either setting of `simplify`, a reply from a model other than the
@@ -1726,8 +1728,9 @@ integer_or_na <- function(x) {
 #'   as `sto`, goes into each request body unchecked, under the name you
 #'   wrote. With `store = FALSE`, a native reply has no `response_id` field.
 #'   An OpenResponses reply still has an `id`, but the server does not hold
-#'   that reply, so a later call that passes it as `previous_response_id`
-#'   gets status 400 with the `code` `"previous_response_not_found"`.
+#'   that reply, so a later call on the OpenResponses route that passes it as
+#'   `previous_response_id` gets status 400 with the `code`
+#'   `"previous_response_not_found"`.
 #'   A `logprobs` here, or a shortened name that [lms_chat()] reads as
 #'   `logprobs`, must be `TRUE` or `FALSE`. Any other value, `NULL` and `NA`
 #'   included, aborts before the check for a running server.

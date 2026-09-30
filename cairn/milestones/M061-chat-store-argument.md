@@ -1,6 +1,6 @@
 # M061: A named store argument on the thread chat routes
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -57,7 +57,7 @@ A user turns off the storage of chat replies from R with a checked `store` argum
 - [x] T2: Write the AC1 to AC4 tests first with the request recorder of tests/testthat/helper-mock-http.R, and see them red on main. Read the sent bytes, not a parsed body (M004 lesson). In the batch tests, count calls to the server check, because `lms_chat_batch()` reaches `lms_chat()` (M003 lesson).
 - [x] T3: Add `store = NULL` after `...` in the three functions. Check it with `rlm_check_flag(store, "store", null_ok = TRUE)` before `stop_if_no_server()`. If it is not `NULL`, send `isTRUE(store)`, so every accepted form goes out as a plain `true` or `false`. Add a route check beside `rlm_check_thread_route()` (R/utils-args.R:418) and call it in `lms_chat()` and `lms_chat_batch()`. In the batch, check `args[["store"]]` beside `previous_response_id` (R/chat.R:1866). In a scratch copy, remove each check in turn and see a test go red.
 - [x] T4: Write the `store` help on the four pages from the T1 facts, and rewrite the sentences that the two AC5 searches find. Add the `store` faults to the fault list in R/conditions.R:15. Run `devtools::document()`.
-- [ ] T5: Add the NEWS.md entry. Append one D-entry: a named `store` is checked, sent as a plain flag, and refused on the OpenAI route, which narrows D-003 as D-030 did. Set `RLMSTUDIO_API_TOKEN`, then run `devtools::test()` and `devtools::check()`.
+- [x] T5: Add the NEWS.md entry. Append one D-entry: a named `store` is checked, sent as a plain flag, and refused on the OpenAI route, which narrows D-003 as D-030 did. Set `RLMSTUDIO_API_TOKEN`, then run `devtools::test()` and `devtools::check()`.
 
 ## Work log
 
@@ -73,6 +73,9 @@ A user turns off the storage of chat replies from R with a checked `store` argum
 - 2026-09-30: T2 done. tests/testthat/test-store.R has 16 tests. On main, 11 were red. Five passed, because a `store` in `...` already reached the body as a plain flag for `TRUE`, `FALSE`, and `NULL`: the shortened name, the OpenAI `NULL` body, and the three batch-send tests. The repeat-domain test in test-batch-repeated-args.R now lists `store`.
 - 2026-09-30: T3 done. `store_field()` sends `isTRUE(store)`, and `rlm_check_store_route()` sits beside `rlm_check_thread_route()`. `store` now comes before the dots in the body, so the request hash of the two recorded `store = FALSE` calls changed. data-raw/record-thread-cassette.R re-recorded tests/testthat/thread_live/ live, and all seven of its checks passed. In a scratch copy, removing each of the 10 new lines turned test-store.R red. `devtools::test()`: 0 failed, 0 errors, 19045 passed.
 - 2026-09-30: T4 done. `store` help on the four pages, with the T1 reply-id facts per route, and the three "`store = FALSE` in `...`" sentences rewritten. R/conditions.R lists a bad `store` and a `store` on the `"openai"` route. After `devtools::document()`, both AC5 searches find no line. `devtools::test()`: 0 failed, 0 errors.
+- 2026-09-30: T5 done. NEWS.md entry and D-035 added, and a test pins that `lms_chat_openai()` still sends a `store` in `...` unchecked. `devtools::test()`: 0 failed, 0 errors, 19048 passed. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set: 0 errors, 0 warnings, 0 notes, run again after the audit fixes. Server state was the same after each run.
+- 2026-09-30: claim audit: 102 claims read, 3 corrected — R/chat.R, tests/testthat/test-store.R. The "previous_response_not_found" sentences on three pages now name the OpenResponses route, and two test comments no longer claim more than the tests show. The same reader re-read the fixes once and narrowed one test comment further.
+- 2026-09-30: status set to review.
 
 ## Decisions
 

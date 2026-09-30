@@ -1,7 +1,9 @@
 # The `store` argument that turns off the storage of a chat reply on the
-# native and OpenResponses routes. The tests read the request bytes, not a
-# parsed body (LESSONS, M004), because an accepted form such as
-# `matrix(FALSE)` must still go out as a plain `false`.
+# native and OpenResponses routes. The tests of accepted forms match the JSON
+# text of each request body and do not rely on a parsed body alone (LESSONS,
+# M004),
+# because an accepted form such as `matrix(FALSE)` must still go out as a
+# plain `false`.
 
 # native_reply(), responses_reply(), openai_reply(), and quoted() live in
 # helper-chat-bodies.R.
@@ -349,8 +351,8 @@ expect_store_in_every_body <- function(res, word, info) {
   for (json in res$jsons) {
     expect_match(json, paste0('"store":', word, "[,}]"), info = info)
   }
-  # One probe for the batch and one for each call of `lms_chat()`, so each
-  # input went out through `lms_chat()`.
+  # One probe for the batch and one for the route function of each input, so
+  # each input made its own call to a route function.
   expect_identical(res$probes, 4L, info = info)
 }
 

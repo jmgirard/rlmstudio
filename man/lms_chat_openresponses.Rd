@@ -107,9 +107,10 @@ With \code{simplify = TRUE}, the string or the \code{lms_chat_result} carries th
 \code{previous_response_id} to continue the thread. The value has no
 attribute when \code{id} is absent or is not one string. A reply sent with
 \code{store = FALSE} still has an \code{id}, so its value carries the attribute,
-but the server does not hold that reply. A later call that passes that
-id as \code{previous_response_id} raises \code{rlmstudio_api_error} with status 400
-and the \code{code} \code{"previous_response_not_found"}. \code{\link[=lms_chat_native]{lms_chat_native()}} reads
+but the server does not hold that reply. A later call of this function
+that passes that id as \code{previous_response_id} raises
+\code{rlmstudio_api_error} with status 400 and the \code{code}
+\code{"previous_response_not_found"}. \code{\link[=lms_chat_native]{lms_chat_native()}} reads
 the attribute from the \code{response_id} field of its reply instead.
 
 With either setting of \code{simplify}, a reply from a model other than the

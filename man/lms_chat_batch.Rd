@@ -58,8 +58,9 @@ running server. Only this exact name is checked. A shortened name, such
 as \code{sto}, goes into each request body unchecked, under the name you
 wrote. With \code{store = FALSE}, a native reply has no \code{response_id} field.
 An OpenResponses reply still has an \code{id}, but the server does not hold
-that reply, so a later call that passes it as \code{previous_response_id}
-gets status 400 with the \code{code} \code{"previous_response_not_found"}.
+that reply, so a later call on the OpenResponses route that passes it as
+\code{previous_response_id} gets status 400 with the \code{code}
+\code{"previous_response_not_found"}.
 A \code{logprobs} here, or a shortened name that \code{\link[=lms_chat]{lms_chat()}} reads as
 \code{logprobs}, must be \code{TRUE} or \code{FALSE}. Any other value, \code{NULL} and \code{NA}
 included, aborts before the check for a running server.
