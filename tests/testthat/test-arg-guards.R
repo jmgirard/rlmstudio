@@ -1900,6 +1900,114 @@ test_that("a classed column with a wrong length reaches the trial write", {
   expect_identical(probe$calls, 0L)
 })
 
+# The columns that the column lines of a messages abort name, in order. The
+# line text is stated here rather than read from the package.
+column_line_names <- function(message) {
+  lines <- regmatches(
+    message,
+    gregexpr(
+      "Column \"[^\n]*\" is the first column that jsonlite cannot write on its own\\.",
+      message
+    )
+  )[[1]]
+  sub("^Column \"(.*)\" is the first column.*$", "\\1", lines)
+}
+
+# When the trial write of a data frame fails, each top-level column is written
+# alone, in column order, and the abort names the first that fails. Each probe
+# column comes after a role column that writes. The 2-by-2 Date matrix inside
+# the data-frame column sub fails before the later foo matrix is reached.
+test_that("a failed trial write of a data frame names the first column that fails", {
+  probe <- local_counting_probe()
+  foo_matrix <- structure(matrix(1:2, 2), class = "foo")
+  date_matrix <- structure(
+    as.Date(c("2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04")),
+    dim = c(2L, 2L)
+  )
+  roles <- c("user", "user")
+  cases <- list(
+    list(
+      label = "a 2-by-0 Date matrix",
+      value = two_row_frame(structure(as.Date(character()), dim = c(2L, 0L))),
+      column = "x"
+    ),
+    list(
+      label = "a 2-by-2 Date matrix",
+      value = two_row_frame(date_matrix),
+      column = "x"
+    ),
+    list(
+      label = "a 2-by-1 matrix with the class foo alone",
+      value = two_row_frame(foo_matrix),
+      column = "x"
+    ),
+    list(
+      label = "a foo matrix in a column named {a}",
+      value = df_of_rows(2L, role = roles, `{a}` = foo_matrix),
+      column = "{a}"
+    ),
+    list(
+      label = "a data-frame column with a Date matrix, then a foo matrix",
+      value = df_of_rows(
+        2L,
+        role = roles,
+        sub = df_of_rows(2L, d = date_matrix),
+        x = foo_matrix
+      ),
+      column = "sub"
+    ),
+    list(
+      label = "a Date column of length 3",
+      value = two_row_frame(
+        as.Date(c("2026-01-01", "2026-01-02", "2026-01-03"))
+      ),
+      column = "x"
+    ),
+    list(
+      label = "a factor column of length 3",
+      value = two_row_frame(factor(c("a", "b", "c"))),
+      column = "x"
+    ),
+    list(
+      label = "a one-dimensional Date array of length 1",
+      value = two_row_frame(structure(as.Date("2026-01-01"), dim = 1L)),
+      column = "x"
+    )
+  )
+  for (case in cases) {
+    test_that(case$label, {
+      err <- expect_error(
+        lms_chat_openai("a-model", case$value),
+        messages_rule_details[["rule10"]],
+        fixed = TRUE,
+        info = case$label
+      )
+      expect_true(
+        startsWith(conditionMessage(err), messages_headers[["value"]]),
+        info = case$label
+      )
+      expect_identical(
+        column_line_names(conditionMessage(err)),
+        case$column,
+        info = case$label
+      )
+    })
+  }
+
+  # A messages list that is not a data frame keeps the jsonlite text alone.
+  err <- expect_error(
+    lms_chat_openai(
+      "a-model",
+      list(list(role = "user", content = structure(1L, class = "foo")))
+    ),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_identical(column_line_names(conditionMessage(err)), character())
+  expect_no_match(conditionMessage(err), "Column", fixed = TRUE)
+  expect_identical(probe$calls, 0L)
+})
+
 # Each kind below is neither an atomic vector, a list, nor NULL. The last
 # five carry a class set by hand. jsonlite writes each of those five as
 # printed text or null, so the trial write alone does not refuse them. The
