@@ -53,6 +53,22 @@ lms_chat_openai(
   - A data frame has at least one column, and no column name is `NA`,
     empty, or repeated.
 
+  - No column of a data frame has a row count that differs from the row
+    count of the data frame that holds it. jsonlite cannot write such a
+    column. The rule reads each data-frame column, and each atomic or
+    list column with no class or with the class `"AsIs"` alone. It reads
+    such columns in the data frame and in its data-frame columns at any
+    depth. The row count of a data-frame column is its own row count.
+    The row count of a column with a `dim` attribute, such as a matrix,
+    is the first extent of the `dim`. The row count of any other column
+    is its length. So a character column of length one in a two-row data
+    frame breaks this rule. The rule does not read a column with another
+    class, such as a `Date`, a factor, or a `POSIXlt` time. jsonlite
+    writes a `POSIXlt` column of length one with its one value in each
+    message, and the rule below reads that value in each row. A `Date`
+    or factor column of a wrong length breaks the last rule, unless an
+    earlier rule refuses the data frame first.
+
   - A data frame has no row in which every cell is `NA` or is a `NULL`
     cell of a list column. jsonlite leaves out an `NA` cell of another
     column and writes an `NA` or `NULL` list cell as `null`, so such a
@@ -148,8 +164,14 @@ lms_chat_openai(
     `c("foo", "list")`. It does not read the parts of a `POSIXlt` value.
 
   - jsonlite can write the value, with the options that the request
-    uses. If it cannot, the error gives the jsonlite message. This rule
-    is checked last.
+    uses. If it cannot, the error gives the jsonlite message. For a data
+    frame, jsonlite then writes each top-level column alone, in column
+    order, as a data frame with the same row count. If a column fails,
+    the error names the first that fails. For a column `d`, the line
+    reads
+    `Column "d" is the first column that jsonlite cannot write on its own.`
+    A list that is not a data frame gets the jsonlite message alone.
+    This rule is checked last.
 
   A list that is not a data frame is sent without its class attribute,
   and each of its messages is sent without its class attribute. A class

@@ -88,6 +88,21 @@ of its fields has a name that is not <code>NA</code> and not empty. A data frame
 as an element breaks this rule.</p></li>
 <li><p>A data frame has at least one column, and no column name is <code>NA</code>,
 empty, or repeated.</p></li>
+<li><p>No column of a data frame has a row count that differs from the row
+count of the data frame that holds it. jsonlite cannot write such a
+column. The rule reads each data-frame column, and each atomic or list
+column with no class or with the class <code>"AsIs"</code> alone. It reads such
+columns in the data frame and in its data-frame columns at any depth.
+The row count of a data-frame column is its own row count. The row
+count of a column with a <code>dim</code> attribute, such as a matrix, is the
+first extent of the <code>dim</code>. The row count of any other column is its
+length. So a character column of length one in a two-row data frame
+breaks this rule. The rule does not read a column with another class,
+such as a <code>Date</code>, a factor, or a <code>POSIXlt</code> time. jsonlite writes a
+<code>POSIXlt</code> column of length one with its one value in each message,
+and the rule below reads that value in each row. A <code>Date</code> or factor
+column of a wrong length breaks the last rule, unless an earlier rule
+refuses the data frame first.</p></li>
 <li><p>A data frame has no row in which every cell is <code>NA</code> or is a <code>NULL</code>
 cell of a list column. jsonlite leaves out an <code>NA</code> cell of another
 column and writes an <code>NA</code> or <code>NULL</code> list cell as <code>null</code>, so such a row
@@ -169,8 +184,13 @@ jsonlite writes that list as it writes the list without its class,
 such as a list with the class <code>c("foo", "list")</code>. It does not read
 the parts of a <code>POSIXlt</code> value.</p></li>
 <li><p>jsonlite can write the value, with the options that the request uses.
-If it cannot, the error gives the jsonlite message. This rule is
-checked last.</p></li>
+If it cannot, the error gives the jsonlite message. For a data frame,
+jsonlite then writes each top-level column alone, in column order, as
+a data frame with the same row count. If a column fails, the error
+names the first that fails. For a column <code>d</code>, the line reads
+<code>Column "d" is the first column that jsonlite cannot write on its own.</code>
+A list that is not a data frame gets the jsonlite message alone. This
+rule is checked last.</p></li>
 </ul><p>A list that is not a data frame is sent without its class attribute, and
 each of its messages is sent without its class attribute. A class on a
 field inside a message is kept, so a field wrapped in <code><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I()</a></code> is sent as an
