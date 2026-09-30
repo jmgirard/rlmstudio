@@ -1,13 +1,13 @@
 # M059: Batch logprobs and repeated-argument faults
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP4, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes the return value, warnings, and argument aborts of the exported `lms_chat_batch()`.
-- **Branch/PR:** —
+- **Branch/PR:** m059-batch-logprobs-faults
 
 ## Goal
 
@@ -45,7 +45,7 @@
 
 ## Tasks
 
-- [ ] T1: Write the AC1 test first, and see it red on main with the base R error. Build its name list from `formals(lms_chat)`, not from a hand list. Then make the batch abort with a message that names the argument. The abort is unclassed and sits above every other dots check and `stop_if_no_server()` (D-008). Delete the new abort in a scratch copy, and see the test go red for the reason that AC1 names.
+- [x] T1: Write the AC1 test first, and see it red on main with the base R error. Build its name list from `formals(lms_chat)`, not from a hand list. Then make the batch abort with a message that names the argument. The abort is unclassed and sits above every other dots check and `stop_if_no_server()` (D-008). Delete the new abort in a scratch copy, and see the test go red for the reason that AC1 names.
 - [ ] T2: Write the AC2 and AC3 tests first. Compare whole values, and do not strip the `response_id` attribute first (M058 lesson). Count warnings with `collect_warnings()`, because `expect_warning()` catches only one (M019 lesson). Then set the logprobs flag of the batch from the route (R/chat.R:1840). Give one batch warning past `quiet`, after the server probe. Keep the per-input warning of `lms_chat()` from reaching the user. Update the pins at `test-thread.R:572` and `test-chat-batch.R:784`.
 - [ ] T3: Read the existing OpenResponses and OpenAI `logprobs = TRUE` batch tests. Add the AC4 cases that they miss.
 - [ ] T4: Rewrite the `logprobs` sentences about the batch in its roxygen (R/chat.R:1625-1745) and in the development NEWS entries at NEWS.md:6 and NEWS.md:11. Read each whole sentence, because a sentence can wrap across lines. Add NEWS entries for AC1 and for the native rule. Add the AC1 abort to the fault list in R/conditions.R:12-22. Run `devtools::document()`. Append a D-entry: the native batch treats `logprobs` as off, and its one warning shows past `quiet`. The entry trades GP6 as D-010 does, and it annotates D-013 and D-029.
@@ -60,6 +60,9 @@
 - 2026-09-29: plan gate chose one warning per batch over one per input, because a long batch repeats the same warning once per input. Falsified by a user who needs the warning tied to each input.
 - 2026-09-29: plan gate chose to show the native warning past `quiet` over hiding it, because it is the only sign that the asked-for logprobs are missing. Falsified by a quiet-batch user who reports the warning as noise.
 - 2026-09-29: plan gate chose the abort for every `lms_chat()` argument that dots can reach over `logprobs` and `previous_response_id` alone, because the same `match.call()` error hits all of them. Falsified by a dots argument whose repeat the batch must pass through.
+
+- 2026-09-29: implement started on branch `m059-batch-logprobs-faults`. No implementation gate: the plan fixed the behavior, and the one open choice has no public surface. The batch will drop the `logprobs` dots before each native call rather than give the `lms_chat()` warning a class.
+- 2026-09-29: T1 done. `rlm_check_chat_dots_once()` in R/chat.R matches each named dot alone and holds exact names first, as R does. `test-batch-repeated-args.R` was red on main with the base R error. With the abort removed in a scratch copy, it went red with "matched by multiple actual arguments". Full suite 17491 pass, 3 skip.
 
 ## Decisions
 

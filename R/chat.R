@@ -2160,6 +2160,9 @@ lms_chat_batch <- function(
 #' `api_type`. The arguments that `lms_chat_batch()` passes by name are
 #' matched first and then dropped, as in the real call.
 #'
+#' Two dots that reach the same `lms_chat()` argument abort here, before
+#' `match.call()` would fail with a base R error.
+#'
 #' @param dots The list of `...` values.
 #' @return `dots`, with each name replaced by the `lms_chat()` argument it
 #'   matches.
@@ -2168,9 +2171,72 @@ rlm_chat_dots <- function(dots) {
   fixed <- c("model", "input", "system_prompt", "host", "simplify", "token")
   placeholders <- vector("list", length(fixed))
   names(placeholders) <- fixed
+  rlm_check_chat_dots_once(dots, placeholders)
   call <- as.call(c(list(quote(lms_chat)), placeholders, dots))
   matched <- as.list(match.call(lms_chat, call))[-1]
   matched[setdiff(names(matched), fixed)]
+}
+
+#' Abort when two dots of lms_chat_batch() reach one lms_chat() argument
+#'
+#' Each named dot is matched alone, beside the arguments that
+#' `lms_chat_batch()` passes by name, so R's own rules say which `lms_chat()`
+#' argument it reaches. R matches exact names before shortened ones, so the
+#' arguments that some dot names exactly are held as placeholders too. A
+#' shortened name then falls through to the `...` of `lms_chat()`, as in the
+#' real call. A dot that reaches no argument goes to that `...`, where two of
+#' one name are legal. A dot named as one of the passed arguments collides
+#' with it. Of those, only `input` can be a dot,
+#' because the others are formals of `lms_chat_batch()`. An unnamed dot fills
+#' an argument that nothing else matched, so it cannot collide.
+#'
+#' @param dots The list of `...` values.
+#' @param placeholders A named list of the arguments the batch passes by name.
+#' @return `dots`, invisibly.
+#' @noRd
+rlm_check_chat_dots_once <- function(dots, placeholders) {
+  nms <- names(dots)
+  if (is.null(nms)) {
+    return(invisible(dots))
+  }
+  fixed <- names(placeholders)
+  arguments <- setdiff(names(formals(lms_chat)), "...")
+  named <- !is.na(nms) & nzchar(nms)
+  exact <- named & nms %in% c(fixed, arguments)
+  reached <- ifelse(exact, nms, NA_character_)
+  # Every argument some dot names exactly, so a shortened name skips it.
+  held <- unique(c(fixed, nms[exact]))
+  holders <- vector("list", length(held))
+  names(holders) <- held
+  for (i in which(named & !exact)) {
+    call <- as.call(c(list(quote(lms_chat)), holders, dots[i]))
+    name <- setdiff(names(as.list(match.call(lms_chat, call))[-1]), held)
+    if (name %in% arguments) {
+      reached[[i]] <- name
+    }
+  }
+  for (arg in unique(reached[!is.na(reached)])) {
+    given <- nms[!is.na(reached) & reached == arg]
+    if (arg %in% fixed) {
+      cli::cli_abort(
+        c(
+          "{.arg {arg}} is given more than once.",
+          "x" = "{.fn lms_chat_batch} passes each element of {.arg inputs} to {.fn lms_chat} as {.arg {arg}}, so {.arg ...} cannot hold an {.arg {arg}}."
+        ),
+        call = NULL
+      )
+    }
+    if (length(given) > 1L) {
+      cli::cli_abort(
+        c(
+          "{.arg {arg}} is given more than once.",
+          "x" = "{.arg ...} holds {length(given)} values that {.fn lms_chat} reads as {.arg {arg}}: {.arg {given}}."
+        ),
+        call = NULL
+      )
+    }
+  }
+  invisible(dots)
 }
 
 #' Create a base request for the LM Studio API
