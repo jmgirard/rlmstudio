@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-30 (M061 done, M058 row pruned)_
+_Last hygiene check: 2026-09-30 (M062 done, M059 row pruned, one candidate added)_
 
 ## Milestones
 
@@ -9,11 +9,10 @@ _Last hygiene check: 2026-09-30 (M061 done, M058 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M062 | A chat call aborts on a text input that is not one prompt | review | none | normal | milestones/M062-chat-input-one-prompt.md |
 | M063 | A load above the trained context warns, and the help says how to fit a long prompt | planned | none | normal | milestones/M063-long-prompts.md |
+| M062 | A chat call aborts on a text input that is not one prompt | done | none | normal | milestones/archive/M062-chat-input-one-prompt.md |
 | M061 | A named store argument on the thread chat routes | done | none | normal | milestones/archive/M061-chat-store-argument.md |
 | M060 | Names that are not plain text, and dots that lms_chat() sets | done | none | normal | milestones/archive/M060-argument-text-faults.md |
-| M059 | Batch logprobs and repeated-argument faults | done | none | normal | milestones/archive/M059-batch-logprobs-faults.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -50,6 +49,7 @@ _Last hygiene check: 2026-09-30 (M061 done, M058 row pruned)_
 - `request_sends_token()` reads the httr2 field `req$headers`, where httr2 exports `req_get_headers()`. `test-mock-http-helper.R` expects the httr2 1.3 class `httr2_redacted_sentinel`. DESCRIPTION sets no httr2 floor, and adding one is a dependency change. Promote on an httr2 release that moves the headers or changes the redaction class, added 2026-09-29, M055 review findings O4 and O8
 - An error in `devtools::test()` that comes and goes. On 2026-09-29, two full runs gave 1 error each, and neither was identified. One ran beside `devtools::check()` against the same live server. Four other full runs that day were clean. Promote on a run that records the test name and the message, added 2026-09-29, M059 review
 - Follow-ups to the text and plain-string checks of M060. A class `[` method on `type` can replace the package abort, and a classed `type` filter matches through its `as.character()`, so strip the class first. In a C locale, `validEnc()` passes an unmarked byte `0xff`, and the name goes out unchanged. `lms_chat()` checks an `instructions` or `messages` dot before `model`, and the batch checks it after `schema`. The headline "must be one name, given as a single string" sits over the encoding detail. Four test gaps remain. The names and S4 probes turn no sending site red. The batch passing-route test does not read the body. The call-site guard sees only `name <- function` definitions. No test shows a shortened `instr` passing. The `check_reply_model()` comment on classed names is stale. Promote on a user who passes a classed `type` or runs R in a C locale, added 2026-09-30, M060 review
+- Four chat `input` shapes that the one-prompt rule of M062 does not stop. A one-string `input` with a `dim` or the class `"AsIs"` goes out as an array, so `matrix("a")` is sent as `[["a"]]`. A factor `input` skips the NA and length checks, so `factor(c("a", "b"))` is sent as a two-string array. jsonlite cannot write a character `input` with a class such as `"foo"`, and the call fails there, after the server check. `lms_chat_openai()` still sends a two-string `content` that `lms_chat()` now stops. D-034 and D-035 strip such attributes for names and flags. Promote on a user who passes one of these shapes, added 2026-09-30, M062 review findings O1, O2, O3, O6
 - [low] The macOS check job has two exits from its Package Manager workaround. If a released pak extracts zstd archives, remove the workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. If Posit Package Manager stops serving gzip macOS binaries or drops its R 4.6 path, pin the job to R 4.5. M011 rejected that pin (rows merged M022), added 2026-09-20, M011 scope and plan gate, r-lib/pkgdepends#485
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
