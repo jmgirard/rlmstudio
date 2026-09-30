@@ -689,8 +689,11 @@ test_that("a schema property name that cannot name a column aborts before the se
       expect_false(any(grepl("^rlmstudio_", class(err))), info = case$label)
     })
   }
-  expect_identical(probes, 0L)
-  expect_length(recorder$requests, 0L)
+  # In a subtest, so testthat keeps a failure here in its results.
+  test_that("the data frame format probes and sends nothing", {
+    expect_identical(probes, 0L)
+    expect_length(recorder$requests, 0L)
+  })
 
   # The list and vector formats keep the replies as parsed, so the same
   # schemas send their requests.
@@ -1037,13 +1040,16 @@ for (name in stream_domain()) {
               recorder <- local_request_recorder(
                 mock_response(200L, stream_reply(name, route))
               )
-              expect_no_error(stream_call(name, route, dots))
-              expected <- if (identical(name, "lms_chat_batch")) 2L else 1L
-              expect_identical(
-                length(recorder$requests),
-                expected,
-                info = label
-              )
+              # In a subtest, so testthat keeps a failure here in its results.
+              test_that("the call", {
+                expect_no_error(stream_call(name, route, dots))
+                expected <- if (identical(name, "lms_chat_batch")) 2L else 1L
+                expect_identical(
+                  length(recorder$requests),
+                  expected,
+                  info = label
+                )
+              })
               for (req in recorder$requests) {
                 test_that(paste("a request of", label), {
                   body <- request_target(req)$body
@@ -1699,16 +1705,16 @@ test_that("a messages value that breaks a rule aborts before the server probe", 
         info = p$label
       )
       # The detail of every other rule is absent, so the abort names one rule.
-      for (other in setdiff(names(messages_rule_details), p$rule)) {
-        test_that(other, {
-          expect_no_match(
-            conditionMessage(err),
-            messages_rule_details[[other]],
-            fixed = TRUE,
-            info = paste(p$label, "names", other)
-          )
-        })
-      }
+      # A failure lists the other rules whose detail the message holds.
+      others <- setdiff(names(messages_rule_details), p$rule)
+      named <- others[vapply(
+        messages_rule_details[others],
+        grepl,
+        NA,
+        x = conditionMessage(err),
+        fixed = TRUE
+      )]
+      expect_identical(named, character(), info = p$label)
     })
   }
   expect_identical(probe$calls, 0L)
@@ -1854,7 +1860,6 @@ non_vector_types <- c(
 test_that("a value that is not a vector, a list, or NULL aborts with its own detail", {
   probe <- local_counting_probe()
   kinds <- non_vector_kinds()
-  expect_setequal(names(kinds), names(non_vector_types))
   n_cases <- 0L
 
   for (kind in names(kinds)) {
@@ -1888,6 +1893,8 @@ test_that("a value that is not a vector, a list, or NULL aborts with its own det
       }
     })
   }
+  # After the subtests, so testthat keeps a failure here in its results.
+  expect_setequal(names(kinds), names(non_vector_types))
   expect_identical(n_cases, 105L)
   expect_identical(probe$calls, 0L)
 })
@@ -2155,11 +2162,14 @@ test_that("a number jsonlite cannot send as a number aborts", {
     })
   }
 
-  expect_number_fault(
-    list(list(role = "user", content = I(NA_real_))),
-    "a double NA in I() as a field"
-  )
-  n_cases <- n_cases + 1L
+  # In a subtest, so testthat keeps a failure here in its results.
+  test_that("a double NA in I() as a field", {
+    expect_number_fault(
+      list(list(role = "user", content = I(NA_real_))),
+      "a double NA in I() as a field"
+    )
+    n_cases <<- n_cases + 1L
+  })
 
   for (number in c(Inf, -Inf)) {
     test_that(paste("number", number), {
@@ -2193,7 +2203,6 @@ test_that("numbers jsonlite leaves out, and classed values, still reach the requ
       list(role = "user", c = list(list(k = "a")))
     )
   )
-  expect_setequal(names(left_out), names(plain_column_places))
   missing_numbers <- list(
     "a double NA" = NA_real_,
     "NaN" = NaN,
@@ -2260,6 +2269,8 @@ test_that("numbers jsonlite leaves out, and classed values, still reach the requ
       )
     })
   }
+  # After the subtests, so testthat keeps a failure here in its results.
+  expect_setequal(names(left_out), names(plain_column_places))
 })
 
 # jsonlite writes a list whose class vector ends in "list" as a plain list,
@@ -3039,7 +3050,6 @@ test_that("each rule-order probe also fails the jsonlite write", {
     "a repeated name and an environment field"
   )
   labels <- vapply(messages_probes, `[[`, character(1), "label")
-  expect_true(all(order_labels %in% labels))
   for (p in messages_probes[labels %in% order_labels]) {
     test_that(p$label, {
       expect_error(
@@ -3055,6 +3065,8 @@ test_that("each rule-order probe also fails the jsonlite write", {
       )
     })
   }
+  # After the subtests, so testthat keeps a failure here in its results.
+  expect_true(all(order_labels %in% labels))
 })
 
 # A class below the outer list and its messages is not removed, so a class

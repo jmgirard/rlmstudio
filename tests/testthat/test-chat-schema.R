@@ -938,6 +938,12 @@ test_that("a property column's type follows the property type", {
     "data.frame",
     schema = list(type = "object", properties = properties)
   )
+  for (name in c("nested", "array", "mixed", "untyped", "bare")) {
+    test_that(name, {
+      expect_identical(typeof(out[[name]]), "list", info = name)
+    })
+  }
+  # After the subtests, so testthat keeps a failure here in its results.
   expect_identical(names(out), c(frame_columns, names(properties)))
   for (type in names(types)) {
     for (form in names(type_forms(type))) {
@@ -945,11 +951,6 @@ test_that("a property column's type follows the property type", {
       expect_identical(typeof(out[[name]]), types[[type]]$column, info = name)
       expect_identical(out[[name]], rep(types[[type]]$value, 2L), info = name)
     }
-  }
-  for (name in c("nested", "array", "mixed", "untyped", "bare")) {
-    test_that(name, {
-      expect_identical(typeof(out[[name]]), "list", info = name)
-    })
   }
   expect_identical(out$nested, list(list(inner = 1L), list(inner = 1L)))
   expect_false("inner" %in% names(out))

@@ -64,10 +64,6 @@ test_that("the exports that take previous_response_id are the three chat functio
     },
     sort(getNamespaceExports("rlmstudio"))
   )
-  expect_identical(
-    exports,
-    c("lms_chat", "lms_chat_native", "lms_chat_openresponses")
-  )
   for (name in exports) {
     test_that(name, {
       fm <- formals(get(name, envir = asNamespace("rlmstudio")))
@@ -79,6 +75,11 @@ test_that("the exports that take previous_response_id are the three chat functio
       expect_null(fm$previous_response_id)
     })
   }
+  # After the subtests, so testthat keeps a failure here in its results.
+  expect_identical(
+    exports,
+    c("lms_chat", "lms_chat_native", "lms_chat_openresponses")
+  )
 })
 
 # The body field (AC1) --------------------------------------------------------

@@ -91,10 +91,11 @@ defines top-level blocks already gives one block per pass.
       passed subtests.
 - [x] T6: Run the sweep, `devtools::test()`, and `devtools::check()`. If
       `check()` gives a note, run it on a42a1ab to compare.
-- [ ] T7: (review O1, O2) A parent block can hold an expectation that
+- [x] T7: (review O1, O2) A parent block can hold an expectation that
       runs before or between its nested subtests. Move each such
-      expectation into its own nested subtest or after the loops. If a
-      wrapped body cannot raise, undo that wrap. Plant a wrong value at
+      expectation into its own nested subtest or after the loops. An
+      inner loop in `test-arg-guards.R` whose body cannot raise becomes
+      one expectation with no loop. Plant a wrong value at
       `test-store.R:69`, and make sure that
       `test_dir(stop_on_failure = TRUE)` stops.
 - [ ] T8: (review O7) Make `loop-sweep.R` report each `expect_*()` call
@@ -127,6 +128,9 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: review returned M065 to in-progress, defect return 1. The maintainer judged review finding O1 a defect that blocks the merge. A parent expectation before or between nested subtests no longer fails `R CMD check`. T7 to T10 hold the requested changes.
 - 2026-09-30: correction of the 2026-09-30 line on the five files that counted fewer expectations. `R CMD check` does not catch a failure that a parent block records before its nested subtests. The reporter prints FAIL 1, but `test_check()` does not stop (review O1).
 - 2026-09-30: review checkpoint (in progress). AC1 to AC4 evidence recorded and ticked. `devtools::test()` gave 0 failed and 0 errors. `devtools::check()` and the Opus reviewer are still running.
+- 2026-09-30: implement resumed after defect return 1. Main had not moved. Question gate: if the four O2 wraps are undone, four `for (name in ` loops go back to `flat`, which AC1 forbids. The maintainer chose to keep the wraps and move the parent expectations after the loops. T7's undo clause now applies only to inner loops in `test-arg-guards.R`, as one expectation with no loop.
+- 2026-09-30: a scratch file under testthat 3.3.2 showed which parent results the `test_file()` data frame keeps. It drops passes before and after the nested subtests, and failures before or between them. It keeps a failure after the last subtest.
+- 2026-09-30: T7 done. The T8 sweep found 21 parent expectations before a subtest at the pre-T7 head. Each moved after its loops or into its own subtest. The `other` loop at `test-arg-guards.R:1708` became one `expect_identical()` of the rules whose detail the message holds. The sweep then printed 0 such rows. A plant of `"planted"` in the export list of `test-store.R` stopped `test_dir(stop_on_failure = TRUE)` with "Test failures". Its diff showed `"planted"`. The same plant on the pre-T7 file did not stop. The five edited files ran 0 failed and 0 errors.
 
 ## Decisions
 

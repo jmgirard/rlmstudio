@@ -350,7 +350,6 @@ quiet_exports <- function() {
 output_quiet <- c("list_instances", "list_models", "lms_chat_batch", "lms_embed")
 
 test_that("quiet is in five functions, and four default to NULL", {
-  expect_setequal(quiet_exports(), c(output_quiet, "lms_server_status"))
   for (name in output_quiet) {
     test_that(name, {
       fn <- get(name, envir = asNamespace("rlmstudio"))
@@ -358,6 +357,8 @@ test_that("quiet is in five functions, and four default to NULL", {
       expect_null(formals(fn)$quiet)
     })
   }
+  # After the subtests, so testthat keeps a failure here in its results.
+  expect_setequal(quiet_exports(), c(output_quiet, "lms_server_status"))
   expect_false(formals(lms_server_status)$quiet)
 })
 

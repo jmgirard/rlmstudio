@@ -66,10 +66,6 @@ test_that("the exports that take store are the three chat functions", {
     },
     sort(getNamespaceExports("rlmstudio"))
   )
-  expect_identical(
-    exports,
-    c("lms_chat", "lms_chat_native", "lms_chat_openresponses")
-  )
   for (name in exports) {
     test_that(name, {
       fm <- formals(get(name, envir = asNamespace("rlmstudio")))
@@ -78,6 +74,11 @@ test_that("the exports that take store are the three chat functions", {
       expect_null(fm$store)
     })
   }
+  # After the subtests, so testthat keeps a failure here in its results.
+  expect_identical(
+    exports,
+    c("lms_chat", "lms_chat_native", "lms_chat_openresponses")
+  )
 })
 
 # The body field (AC1) --------------------------------------------------------
