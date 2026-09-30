@@ -15,7 +15,9 @@
 #' `input`, `inputs`, `messages`, `schema`, `ttl`, `previous_response_id`,
 #' or `batch_size`, a bad
 #' `type` of [list_models()] or [list_instances()], a bad `TRUE` or `FALSE`
-#' argument such as `simplify`, `logprobs`, `quiet`, or `force`, a `stream` in
+#' argument such as `simplify`, `logprobs`, `quiet`, `force`, or `store`, a
+#' `store` on the `"openai"` route of [lms_chat()] or [lms_chat_batch()], a
+#' `stream` in
 #' the `...` of a chat function, a `logprobs` in the `...` of
 #' [lms_chat_batch()] or [lms_chat_native()], a value in the `...` of
 #' [lms_chat_batch()] that [lms_chat()] reads as an argument already given,

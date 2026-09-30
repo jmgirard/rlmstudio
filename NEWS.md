@@ -1,5 +1,12 @@
 # rlmstudio (development version)
 
+* `lms_chat()`, `lms_chat_native()`, and `lms_chat_openresponses()` gain a `store` argument that turns off the storage of a reply on the server. `lms_chat_batch()` takes it in `...` and sends it with every call.
+  * `store` must be `TRUE`, `FALSE`, or `NULL`. Any other value, `NA` included, aborts before the check for a running server, with a message that names `store`. A `TRUE` or `FALSE` with names, dimensions, or a class is sent as a plain JSON `true` or `false`.
+  * `NULL`, the default, sends no `store` field, so the server default applies, and that default stores the reply.
+  * With `api_type = "openai"`, `lms_chat()` and `lms_chat_batch()` abort on `TRUE` or `FALSE`, because the OpenAI chat endpoint keeps no thread.
+  * Before, a `store` in `...` went to the server unchecked on every route, the `"openai"` route included. A `matrix(FALSE)` was sent as `[[false]]`, and a classed value failed after the check for a running server.
+  * `lms_chat_openai()` has no `store` argument. It still sends a `store` in `...` to the server unchecked.
+
 * A `model`, `job_id`, `previous_response_id`, or `type` string that is not valid in its declared encoding now aborts. The message says so. An example is the byte `0xff` in a UTF-8 string. A string marked `"bytes"` also aborts, with a message that says it is marked as bytes. Each abort names the argument and comes before the check for a running server. Before, such a string was reported as "whitespace only", with two warnings from `grepl()`, and a string marked `"bytes"` passed the check. The check covers `model` of `lms_chat()`, `lms_chat_batch()`, `lms_chat_native()`, `lms_chat_openai()`, `lms_chat_openresponses()`, `lms_download()`, `lms_embed()`, `lms_load()`, and `lms_unload()`. It also covers `job_id` of `lms_download_status()`, `previous_response_id` of `lms_chat()`, `lms_chat_batch()`, `lms_chat_native()`, and `lms_chat_openresponses()`, and `type` of `list_models()` and `list_instances()`. For `type`, the message names the element.
 
 * A `model`, `job_id`, or `previous_response_id` that has a class, names, or the S4 bit is now sent as a plain string. Before, a class that jsonlite has no method for failed after the check for a running server. For `structure("m", class = "foo")`, the error was "No method asJSON S3 class: foo". `I("m")` was sent as the JSON array `["m"]`. A classed `"already_downloaded"` job id in `lms_download_status()` sent a request instead of returning the already-downloaded status.

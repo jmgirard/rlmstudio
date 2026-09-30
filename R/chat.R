@@ -59,6 +59,18 @@
 #'   is checked. A shortened name, such as `previous`, goes into the request
 #'   body unchecked, under the name you wrote. An id that the server does not
 #'   hold raises `rlmstudio_api_error` with status 400.
+#' @param store `TRUE`, `FALSE`, or `NULL`. Whether the server stores the
+#'   reply, so that a later call can continue from its id. `NULL`, the
+#'   default, sends no `store` field, so the server default applies, and that
+#'   default stores the reply. `TRUE` and `FALSE` go out as a plain JSON
+#'   `true` or `false`, also when the value has names, dimensions, or a class.
+#'   Any other value, `NA` included, aborts before the check for a running
+#'   server. A `TRUE` or `FALSE` needs `api_type = "native"` or
+#'   `api_type = "openresponses"`. `NULL` passes on every route.
+#'   With `api_type = "openai"`, `TRUE` or `FALSE` aborts before the request,
+#'   because the OpenAI chat endpoint keeps no thread. Only this exact name is
+#'   checked. A shortened name, such as `sto`, goes into the request body
+#'   unchecked, under the name you wrote.
 #' @return Depending on the arguments provided:
 #' \itemize{
 #'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
@@ -71,10 +83,16 @@
 #' `response_id` attribute. Pass it as `previous_response_id` to continue the
 #' thread. The id is the `response_id` field of a native reply and the `id`
 #' field of an OpenResponses reply. The value has no attribute when that
-#' field is absent or is not one string. A native reply sent with
-#' `store = FALSE` in `...` carries no id, and an OpenResponses reply sent
-#' with `store = FALSE` still carries one. With `api_type = "openai"`, or
+#' field is absent or is not one string. With `api_type = "openai"`, or
 #' with `simplify = FALSE`, the value has no `response_id` attribute.
+#'
+#' A native reply sent with `store = FALSE` has no `response_id` field, so
+#' its value has no attribute. An OpenResponses reply sent with
+#' `store = FALSE` still has an `id`, so its value carries the attribute, but
+#' the server does not hold that reply. A later call on the OpenResponses
+#' route that passes that id as `previous_response_id` raises
+#' `rlmstudio_api_error` with status 400 and the `code`
+#' `"previous_response_not_found"`.
 #' @details
 #' This function calls [lms_chat_openresponses()], [lms_chat_openai()], or
 #' [lms_chat_native()], according to `api_type`. It runs no request of its own.
@@ -105,6 +123,7 @@ lms_chat <- function(
   schema = NULL,
   ttl = NULL,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 ) {
   api_type <- match.arg(api_type)
@@ -117,6 +136,8 @@ lms_chat <- function(
   rlm_check_ttl_route(ttl, api_type)
   rlm_check_response_id(previous_response_id)
   rlm_check_thread_route(previous_response_id, api_type)
+  rlm_check_flag(store, "store", null_ok = TRUE)
+  rlm_check_store_route(store, api_type)
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
 
@@ -130,6 +151,7 @@ lms_chat <- function(
       simplify = simplify,
       ...,
       previous_response_id = previous_response_id,
+      store = store,
       token = token
     ))
   }
@@ -168,6 +190,7 @@ lms_chat <- function(
       simplify = simplify,
       ...,
       previous_response_id = previous_response_id,
+      store = store,
       token = token
     ))
   }
@@ -217,6 +240,16 @@ lms_chat <- function(
 #'   endpoint keeps no thread. [lms_chat_openai()] has no such argument. A
 #'   `previous_response_id` in its `...` goes into the request body
 #'   unchecked, and the endpoint ignores it.
+#' @param store `TRUE`, `FALSE`, or `NULL`. Whether the server stores the
+#'   reply, so that a later call can continue from its id. `NULL`, the
+#'   default, sends no `store` field, so the server default applies, and that
+#'   default stores the reply. `TRUE` and `FALSE` go out as a plain JSON
+#'   `true` or `false`, also when the value has names, dimensions, or a class.
+#'   Any other value, `NA` included, aborts before the check for a running
+#'   server. Only this exact name is checked. A shortened name, such as `sto`,
+#'   goes into the request body unchecked, under the name you wrote.
+#'   [lms_chat()] and [lms_chat_batch()] refuse `TRUE` or `FALSE` with
+#'   `api_type = "openai"`.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
@@ -245,10 +278,14 @@ lms_chat <- function(
 #'   `id` field of the reply in a `response_id` attribute. Pass it as
 #'   `previous_response_id` to continue the thread. The value has no
 #'   attribute when `id` is absent or is not one string. A reply sent with
-#'   `store = FALSE` in `...` still carries an `id`, so its value still
-#'   carries the attribute. [lms_chat_native()] reads the attribute from the
-#'   `response_id` field of its reply instead. A native reply sent with
-#'   `store = FALSE` carries no `response_id`, so its value has no attribute.
+#'   `store = FALSE` still has an `id`, so its value carries the attribute,
+#'   but the server does not hold that reply. A later call of this function
+#'   that passes that id as `previous_response_id` raises
+#'   `rlmstudio_api_error` with status 400 and the `code`
+#'   `"previous_response_not_found"`. [lms_chat_native()] reads
+#'   the attribute from the `response_id` field of its reply instead. A
+#'   native reply sent with `store = FALSE` has no `response_id` field, so
+#'   its value has no attribute.
 #'
 #'   With either setting of `simplify`, a reply from a model other than the
 #'   one asked for raises `rlmstudio_model_mismatch`. See the "Reply from
@@ -267,6 +304,7 @@ lms_chat_openresponses <- function(
   simplify = TRUE,
   ...,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 ) {
   model <- rlm_check_id(model, "model")
@@ -274,6 +312,7 @@ lms_chat_openresponses <- function(
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
   previous_response_id <- rlm_check_response_id(previous_response_id)
+  rlm_check_flag(store, "store", null_ok = TRUE)
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
@@ -282,7 +321,8 @@ lms_chat_openresponses <- function(
     model = model,
     input = input,
     instructions = instructions,
-    previous_response_id = previous_response_id
+    previous_response_id = previous_response_id,
+    store = store_field(store)
   )
   if (isTRUE(logprobs)) {
     body$include <- list("message.output_text.logprobs")
@@ -496,7 +536,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   other value, `NULL` and `NA` included, aborts before the check for a
 #'   running server.
 #' @param ... Additional API arguments. A `response_format` here cannot be
-#'   combined with `schema`.
+#'   combined with `schema`. This function has no `store` argument, so a
+#'   `store` here goes into the request body unchecked, whatever its value.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
@@ -1249,6 +1290,24 @@ with_response_id <- function(value, id) {
   value
 }
 
+#' The store field of a chat request
+#'
+#' `rlm_check_flag()` lets names, dims, and a class on a `TRUE` or `FALSE`
+#' pass. The body writer sends `matrix(FALSE)` as `[[false]]` and fails on
+#' `structure(TRUE, class = "foo")` with "No method asJSON S3 class: foo".
+#' So every accepted form goes out as a plain `true` or `false`.
+#'
+#' @param store `NULL`, or a value that `isTRUE()` or `isFALSE()` accepts.
+#' @return `NULL`, which leaves the field out, or one plain logical.
+#'
+#' @noRd
+store_field <- function(store) {
+  if (is.null(store)) {
+    return(NULL)
+  }
+  isTRUE(store)
+}
+
 #' Chat Completion via Native API
 #'
 #' Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.
@@ -1291,6 +1350,16 @@ with_response_id <- function(value, id) {
 #'   the OpenAI chat endpoint keeps no thread. [lms_chat_openai()] has no
 #'   such argument. A `previous_response_id` in its `...` goes into the
 #'   request body unchecked, and the endpoint ignores it.
+#' @param store `TRUE`, `FALSE`, or `NULL`. Whether the server stores the
+#'   reply, so that a later call can continue from its id. `NULL`, the
+#'   default, sends no `store` field, so the server default applies, and that
+#'   default stores the reply. `TRUE` and `FALSE` go out as a plain JSON
+#'   `true` or `false`, also when the value has names, dimensions, or a class.
+#'   Any other value, `NA` included, aborts before the check for a running
+#'   server. Only this exact name is checked. A shortened name, such as `sto`,
+#'   goes into the request body unchecked, under the name you wrote.
+#'   [lms_chat()] and [lms_chat_batch()] refuse `TRUE` or `FALSE` with
+#'   `api_type = "openai"`.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. The body can
@@ -1307,11 +1376,14 @@ with_response_id <- function(value, id) {
 #'   With `simplify = TRUE`, the string carries the `response_id` field of the
 #'   reply in a `response_id` attribute. Pass it as `previous_response_id` to
 #'   continue the thread. The string has no attribute when `response_id` is
-#'   absent or is not one string. A reply sent with `store = FALSE` in `...`
-#'   carries no `response_id`, so its string has no attribute.
-#'   [lms_chat_openresponses()] reads the attribute from the `id` field of its
-#'   reply instead. An OpenResponses reply sent with `store = FALSE` still
-#'   carries an `id`, so its value still carries the attribute.
+#'   absent or is not one string. A reply sent with `store = FALSE` has no
+#'   `response_id` field, so its string has no attribute, and there is no id
+#'   to continue from. [lms_chat_openresponses()] reads the attribute from the
+#'   `id` field of its reply instead. An OpenResponses reply sent with
+#'   `store = FALSE` still has an `id`, so its value carries the attribute,
+#'   but the server does not hold that reply. A later OpenResponses call that
+#'   passes that id as `previous_response_id` raises `rlmstudio_api_error`
+#'   with status 400 and the `code` `"previous_response_not_found"`.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
@@ -1324,12 +1396,14 @@ lms_chat_native <- function(
   simplify = TRUE,
   ...,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 ) {
   model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_flag(simplify, "simplify")
   previous_response_id <- rlm_check_response_id(previous_response_id)
+  rlm_check_flag(store, "store", null_ok = TRUE)
   dots <- list(...)
   rlm_check_stream(dots)
   # The endpoint has no logprobs, so each element named exactly `logprobs` is
@@ -1350,7 +1424,8 @@ lms_chat_native <- function(
     model = model,
     input = input,
     system_prompt = system_prompt,
-    previous_response_id = previous_response_id
+    previous_response_id = previous_response_id,
+    store = store_field(store)
   )
   body <- Filter(Negate(is.null), body)
 
@@ -1647,10 +1722,23 @@ integer_or_na <- function(x) {
 #'   warnings about failed inputs, cut-off replies, a vector format that
 #'   returns a list, or a `logprobs = TRUE` that the `"native"` route ignores.
 #' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,
-#'   `logprobs`, `schema`, `ttl`, or `previous_response_id`. A `schema`, a
-#'   `ttl`, a `previous_response_id`, and the `api_type` that each needs are
-#'   checked before the first call. A `previous_response_id` goes to every
-#'   call, so each input continues the same stored reply.
+#'   `logprobs`, `schema`, `ttl`, `previous_response_id`, or `store`. A
+#'   `schema`, a `ttl`, a `previous_response_id`, a `store`, and the
+#'   `api_type` that each needs are checked before the first call. A
+#'   `previous_response_id` goes to every call, so each input continues the
+#'   same stored reply.
+#'   A `store` here goes to [lms_chat()] for every call, and it is checked
+#'   there by the rules of [lms_chat()]. It must be `TRUE`, `FALSE`, or
+#'   `NULL`, and `NULL`, the default, sends no `store` field. Any other value,
+#'   `NA` included, aborts before the check for a running server. With
+#'   `api_type = "openai"`, `TRUE` or `FALSE` aborts before the check for a
+#'   running server. Only this exact name is checked. A shortened name, such
+#'   as `sto`, goes into each request body unchecked, under the name you
+#'   wrote. With `store = FALSE`, a native reply has no `response_id` field.
+#'   An OpenResponses reply still has an `id`, but the server does not hold
+#'   that reply, so a later call on the OpenResponses route that passes it as
+#'   `previous_response_id` gets status 400 with the `code`
+#'   `"previous_response_not_found"`.
 #'   A `logprobs` here, or a shortened name that [lms_chat()] reads as
 #'   `logprobs`, must be `TRUE` or `FALSE`. Any other value, `NULL` and `NA`
 #'   included, aborts before the check for a running server.
@@ -1866,6 +1954,9 @@ lms_chat_batch <- function(
   previous_response_id <- args[["previous_response_id"]]
   rlm_check_response_id(previous_response_id)
   rlm_check_thread_route(previous_response_id, api_type)
+  store <- args[["store"]]
+  rlm_check_flag(store, "store", null_ok = TRUE)
+  rlm_check_store_route(store, api_type)
   # The raw dots, because `args` keeps only the first of two same-named
   # values. No `lms_chat()` argument starts with `stream`, so the names match.
   rlm_check_stream(list(...))

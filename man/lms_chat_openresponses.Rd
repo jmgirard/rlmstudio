@@ -13,6 +13,7 @@ lms_chat_openresponses(
   simplify = TRUE,
   ...,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 )
 }
@@ -61,6 +62,17 @@ endpoint keeps no thread. \code{\link[=lms_chat_openai]{lms_chat_openai()}} has 
 \code{previous_response_id} in its \code{...} goes into the request body
 unchecked, and the endpoint ignores it.}
 
+\item{store}{\code{TRUE}, \code{FALSE}, or \code{NULL}. Whether the server stores the
+reply, so that a later call can continue from its id. \code{NULL}, the
+default, sends no \code{store} field, so the server default applies, and that
+default stores the reply. \code{TRUE} and \code{FALSE} go out as a plain JSON
+\code{true} or \code{false}, also when the value has names, dimensions, or a class.
+Any other value, \code{NA} included, aborts before the check for a running
+server. Only this exact name is checked. A shortened name, such as \code{sto},
+goes into the request body unchecked, under the name you wrote.
+\code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}} refuse \code{TRUE} or \code{FALSE} with
+\code{api_type = "openai"}.}
+
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
@@ -94,10 +106,14 @@ With \code{simplify = TRUE}, the string or the \code{lms_chat_result} carries th
 \code{id} field of the reply in a \code{response_id} attribute. Pass it as
 \code{previous_response_id} to continue the thread. The value has no
 attribute when \code{id} is absent or is not one string. A reply sent with
-\code{store = FALSE} in \code{...} still carries an \code{id}, so its value still
-carries the attribute. \code{\link[=lms_chat_native]{lms_chat_native()}} reads the attribute from the
-\code{response_id} field of its reply instead. A native reply sent with
-\code{store = FALSE} carries no \code{response_id}, so its value has no attribute.
+\code{store = FALSE} still has an \code{id}, so its value carries the attribute,
+but the server does not hold that reply. A later call of this function
+that passes that id as \code{previous_response_id} raises
+\code{rlmstudio_api_error} with status 400 and the \code{code}
+\code{"previous_response_not_found"}. \code{\link[=lms_chat_native]{lms_chat_native()}} reads
+the attribute from the \code{response_id} field of its reply instead. A
+native reply sent with \code{store = FALSE} has no \code{response_id} field, so
+its value has no attribute.
 
 With either setting of \code{simplify}, a reply from a model other than the
 one asked for raises \code{rlmstudio_model_mismatch}. See the "Reply from
@@ -115,7 +131,9 @@ that checks its own arguments does that first, so a bad \code{model}, \code{job_
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, \code{previous_response_id},
 or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
-argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
+argument such as \code{simplify}, \code{logprobs}, \code{quiet}, \code{force}, or \code{store}, a
+\code{store} on the \code{"openai"} route of \code{\link[=lms_chat]{lms_chat()}} or \code{\link[=lms_chat_batch]{lms_chat_batch()}}, a
+\code{stream} in
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
