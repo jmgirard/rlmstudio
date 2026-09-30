@@ -19,16 +19,18 @@ test_that("a POSIXlt value in the dots reaches each request", {
   )
 
   for (name in names(calls)) {
-    # The reply is not what these tests read, so any fault it raises after
-    # the request is recorded is ignored.
-    recorder <- local_request_recorder(mock_response(200L, "{}"))
-    try(suppressWarnings(suppressMessages(calls[[name]]())), silent = TRUE)
-    expect_identical(length(recorder$requests), 1L, info = name)
-    sent <- tryCatch(
-      request_body_text(recorder$requests[[1]], seconds = 10),
-      error = function(e) paste("no body:", conditionMessage(e))
-    )
-    expect_match(sent, '"when":"2020-01-01 10:00:00"', fixed = TRUE, info = name)
+    test_that(name, {
+      # The reply is not what these tests read, so any fault it raises after
+      # the request is recorded is ignored.
+      recorder <- local_request_recorder(mock_response(200L, "{}"))
+      try(suppressWarnings(suppressMessages(calls[[name]]())), silent = TRUE)
+      expect_identical(length(recorder$requests), 1L, info = name)
+      sent <- tryCatch(
+        request_body_text(recorder$requests[[1]], seconds = 10),
+        error = function(e) paste("no body:", conditionMessage(e))
+      )
+      expect_match(sent, '"when":"2020-01-01 10:00:00"', fixed = TRUE, info = name)
+    })
   }
 })
 

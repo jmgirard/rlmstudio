@@ -100,26 +100,30 @@ expect_arg_aborts <- function(fun, name, arg, probes, rule) {
 test_that("a bad type aborts, named, before any request", {
   local_guard_only()
   for (name in names(list_calls)) {
-    expect_arg_aborts(
-      list_calls[[name]],
-      name,
-      "type",
-      type_probes,
-      "`type` must be one or more model types, given as a character vector."
-    )
+    test_that(name, {
+      expect_arg_aborts(
+        list_calls[[name]],
+        name,
+        "type",
+        type_probes,
+        "`type` must be one or more model types, given as a character vector."
+      )
+    })
   }
 })
 
 test_that("a bad quiet aborts, named, before any request", {
   local_guard_only()
   for (name in names(list_calls)) {
-    expect_arg_aborts(
-      list_calls[[name]],
-      name,
-      "quiet",
-      flag_probes,
-      "`quiet` must be `TRUE`, `FALSE`, or `NULL`."
-    )
+    test_that(name, {
+      expect_arg_aborts(
+        list_calls[[name]],
+        name,
+        "quiet",
+        flag_probes,
+        "`quiet` must be `TRUE`, `FALSE`, or `NULL`."
+      )
+    })
   }
 })
 
@@ -174,13 +178,15 @@ local_one_loaded_llm <- function(.env = parent.frame()) {
 test_that("a named type and a 1-by-1 character matrix pass", {
   withr::local_options(rlmstudio.quiet = NULL)
   for (name in names(list_calls)) {
-    for (value in list(c(a = "llm"), matrix("llm"))) {
-      local_one_loaded_llm()
-      info <- paste(name, "with", class(value)[[1]])
-      res <- list_calls[[name]](type = value)
-      expect_identical(nrow(res), 1L, info = info)
-      expect_identical(res$key, "m1", info = info)
-    }
+    test_that(name, {
+      for (value in list(c(a = "llm"), matrix("llm"))) {
+        local_one_loaded_llm()
+        info <- paste(name, "with", class(value)[[1]])
+        res <- list_calls[[name]](type = value)
+        expect_identical(nrow(res), 1L, info = info)
+        expect_identical(res$key, "m1", info = info)
+      }
+    })
   }
 })
 
@@ -191,16 +197,18 @@ no_match_messages <- c(
 
 test_that("quiet = NULL prints the no-match message unless the option is TRUE", {
   for (name in names(list_calls)) {
-    local_one_loaded_llm()
-    withr::with_options(list(rlmstudio.quiet = NULL), {
-      expect_message(
-        list_calls[[name]](type = "vlm", quiet = NULL),
-        no_match_messages[[name]],
-        info = name
-      )
-    })
-    withr::with_options(list(rlmstudio.quiet = TRUE), {
-      expect_no_message(list_calls[[name]](type = "vlm", quiet = NULL))
+    test_that(name, {
+      local_one_loaded_llm()
+      withr::with_options(list(rlmstudio.quiet = NULL), {
+        expect_message(
+          list_calls[[name]](type = "vlm", quiet = NULL),
+          no_match_messages[[name]],
+          info = name
+        )
+      })
+      withr::with_options(list(rlmstudio.quiet = TRUE), {
+        expect_no_message(list_calls[[name]](type = "vlm", quiet = NULL))
+      })
     })
   }
 })
@@ -208,14 +216,16 @@ test_that("quiet = NULL prints the no-match message unless the option is TRUE", 
 test_that("quiet = TRUE prints no no-match message with the option unset", {
   withr::local_options(rlmstudio.quiet = NULL)
   for (name in names(list_calls)) {
-    local_one_loaded_llm()
-    expect_no_message(list_calls[[name]](type = "vlm", quiet = TRUE))
-    local_one_loaded_llm()
-    expect_message(
-      list_calls[[name]](type = "vlm", quiet = FALSE),
-      no_match_messages[[name]],
-      info = name
-    )
+    test_that(name, {
+      local_one_loaded_llm()
+      expect_no_message(list_calls[[name]](type = "vlm", quiet = TRUE))
+      local_one_loaded_llm()
+      expect_message(
+        list_calls[[name]](type = "vlm", quiet = FALSE),
+        no_match_messages[[name]],
+        info = name
+      )
+    })
   }
 })
 

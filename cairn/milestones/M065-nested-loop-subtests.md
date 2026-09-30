@@ -79,7 +79,7 @@ defines top-level blocks already gives one block per pass.
       `label` or by the value. Move setup that can raise into the subtest.
       Wrap the loops that this exposes in the same way. Repeat until the
       sweep prints no `flat` row for the file.
-- [ ] T3: Wrap the 23 `for (name in ` loops in `test-cli-output.R`,
+- [x] T3: Wrap the 23 `for (name in ` loops in `test-cli-output.R`,
       `test-list-args.R`, `test-body-parse.R`, and `test-body-write.R` in the
       same way. Each description contains the name. Leave an inner loop
       that a wrap exposes as it is.
@@ -100,6 +100,8 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: plan gate chose 78 loops over all 270 in two milestones. The other 192 go to a candidate row. Falsified by a run where one of those loops hides passes after an error.
 - 2026-09-30: implement started on m065-nested-loop-subtests. The plan left no choice open, so the question gate was skipped. A scan found six probe loops in `test-arg-guards.R` that assign a variable the code after the loop reads. It found no `next`, `break`, or `skip()` in the 78 loop bodies.
 - 2026-09-30: T1 done. `DESCRIPTION` Suggests now lists `testthat (>= 3.3.0)`. The suite runs in T6, after the wraps.
+- 2026-09-30: T3 and T4 delegated to one Sonnet agent, and T2 to one Opus agent. The Sonnet agent wrapped the 42 name loops in 15 files, and the sweep prints 42 `nested` rows for them. `git diff -w` holds the 42 wraps and one `expect_identical()` split over lines, nothing else. Each file ran 0 failed and 0 errors before and after.
+- 2026-09-30: five files counted fewer expectations after the wraps. A scratch run showed why. In the data frame of `test_file()` results, a parent block that holds subtests loses its own results from before the subtests, a failure included. The progress, check, and summary reporters still print that failure as FAIL 1, so `devtools::test()` and `R CMD check` still catch it.
 
 ## Decisions
 
