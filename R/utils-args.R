@@ -1126,9 +1126,10 @@ has_bad_name <- function(value) {
 #'
 #' The row-count rule runs next, before the empty-row rule. jsonlite cannot
 #' write a column whose row count differs from the data frame, and its
-#' message names no column. `empty_rows()` would also recycle such a column,
-#' with an R warning or an R error. `wrong_row_count()` states which columns
-#' the rule reads.
+#' message names no column. `empty_rows()` would recycle a data-frame column
+#' whose row count differs and is not zero. For a 3-row data-frame column in a 2-row data
+#' frame, R gives a warning. `wrong_row_count()` states which columns the rule
+#' reads.
 #'
 #' @param value A data frame with at least one row.
 #' @return A one-sentence detail, or `NULL` when the value is usable.
@@ -1240,10 +1241,13 @@ column_row_count <- function(column) {
 #'
 #' The row-count rule runs first, so a column whose row count, as
 #' `column_row_count()` gives it, differs from the data frame has a class
-#' other than `"AsIs"`. A length-1 such column is read as jsonlite writes it,
-#' with its one cell in each row. A column of any other wrong length is not
-#' empty in any row, and the trial write refuses it later. So no column is
-#' recycled, which would warn or fail in R.
+#' other than `"AsIs"`. A length-1 such column is read with its one cell in
+#' each row. jsonlite writes a length-1 `POSIXlt` column this way. It cannot
+#' write a length-1 `Date` or factor column. The trial write refuses such a
+#' column later, unless the empty-row rule refuses the data frame first. A
+#' column of any other wrong length is not empty in any row, and the
+#' trial write refuses it later. So no column is recycled, which would warn or
+#' fail in R.
 #'
 #' @param value A data frame.
 #' @return A logical vector with one element per row of `value`.

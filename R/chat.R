@@ -541,8 +541,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   * jsonlite can write the value, with the options that the request uses.
 #'     If it cannot, the error gives the jsonlite message. For a data frame,
 #'     jsonlite then writes each top-level column alone, in column order, as
-#'     a data frame with the same row count. The error names the first column
-#'     that fails, on a line that reads, for a column `d`, "Column "d" is the
+#'     a data frame with the same row count. If a column fails, the error
+#'     names the first that fails, on a line that reads, for a column `d`, "Column "d" is the
 #'     first column that jsonlite cannot write on its own." A list that is
 #'     not a data frame gets the jsonlite message alone. This rule is checked
 #'     last.

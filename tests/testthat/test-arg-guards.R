@@ -1160,11 +1160,13 @@ two_row_frame <- function(x) {
   df_of_rows(2L, role = c("user", "user"), x = x)
 }
 
-# Each column below has no class but "AsIs", or is a data frame, and its row
-# count differs from the row count of the data frame that holds it. The row
-# count is the first extent of a dim, the row count of a data frame, and the
-# length of any other column. The NA matrix is the only column of its frame,
-# so the empty-row rule would refuse the frame if it ran first.
+# Each probe holds a column whose row count differs from the row count of the
+# data frame that holds it. The column is at the top level or inside a
+# data-frame column. Each such column has no class but "AsIs", or is a data
+# frame. The row count is the first extent of a dim, the row count of a data
+# frame, and the length of any other column. The NA matrix is the only column
+# of its frame. Before the row-count rule, the empty-row rule refused this
+# frame with its own detail.
 row_count_probes <- list(
   list(label = "a 3-by-2 character matrix column", x = matrix("a", 3, 2)),
   list(label = "a 1-by-2 character matrix column", x = matrix("a", 1, 2)),

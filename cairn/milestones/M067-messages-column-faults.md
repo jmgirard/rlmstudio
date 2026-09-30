@@ -1,6 +1,6 @@
 # M067: A messages data frame with a wrong-length or unwritable column gets a message that names the fault
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -124,7 +124,7 @@ row.
       cli does not read its braces (the M012 lesson).
 - [x] T5: Update the `messages` help in `R/chat.R` near line 489 and add two
       `NEWS.md` entries. Run `devtools::document()`.
-- [ ] T6: In a scratch copy, move the row-count rule after `empty_rows()` and
+- [x] T6: In a scratch copy, move the row-count rule after `empty_rows()` and
       see the 3-row data-frame column probe go red on its warning count. Remove the column line and see the
       AC3 tests go red. Restore both. Run `devtools::test()` and
       `devtools::check()`.
@@ -141,7 +141,10 @@ row.
 - 2026-09-30: T3 done. On the T2 code the 8 data-frame probes (5 AC3, 3 AC2 classed) get the jsonlite detail and no column line. The list probe passes, as it must.
 - 2026-09-30: T4 done. `first_unwritable_column()` writes each top-level column alone as a plain data frame, and `rlm_check_messages()` adds the info line. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
 - 2026-09-30: T5 done. The `messages` help states the row-count rule and the column line, and `NEWS.md` has two entries. Probes showed that length-1 and length-0 `Date`, factor, and `POSIXct` columns fail the write. So the help names `POSIXlt` alone as sent in each row. `devtools::test()` clean.
-- 2026-09-30: T6 minor amendment. With the rule order swapped in a scratch copy, the `NA` matrix probe stays green, because the T2 `empty_rows()` reads a wrong-length column as not empty. The 3-row data-frame column probe goes red on its warning count, so T6 now names that probe. With the column line removed, the 8 AC3 probes go red. T6 in progress: `devtools::check()` and the claim audit are running.
+- 2026-09-30: T6 minor amendment. A scratch copy swapped the rule order. The `NA` matrix probe stayed green, because the T2 `empty_rows()` reads a wrong-length column as not empty. The 3-row data-frame column probe goes red on its warning count, so T6 now names that probe. With the column line removed, the 8 AC3 probes go red. T6 in progress: `devtools::check()` and the claim audit are running.
+- claim audit: 79 claims read, 6 corrected — NEWS.md, R/chat.R, R/utils-args.R, tests/testthat/test-arg-guards.R
+- 2026-09-30: the re-read of the corrected claims fixed two more sites: the `empty_rows()` note on length-1 classed columns and the NEWS sentence order. It also stated the zero-row edge of the recycling note.
+- 2026-09-30: T6 done. `devtools::test()`: 0 failed, 0 errors, 3 live skips. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
 
 ## Decisions
 
