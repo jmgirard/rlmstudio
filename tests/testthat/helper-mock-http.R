@@ -146,8 +146,7 @@ require_httpuv <- function(action = httpuv_absence_action()) {
 # asks for it. Names arrive lowercased, so read `headers$authorization` rather
 # than the sent spelling.
 request_target <- function(req, redact_headers = TRUE) {
-  require_httpuv()
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = redact_headers)
+  out <- request_dry_run(req, redact_headers = redact_headers)
   body <- NULL
   if (length(out$body) > 0L) {
     text <- rawToChar(out$body)
@@ -171,8 +170,43 @@ request_body_text <- function(req, seconds = 30) {
   require_httpuv()
   setTimeLimit(elapsed = seconds, transient = TRUE)
   on.exit(setTimeLimit(elapsed = Inf), add = TRUE)
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  out <- request_dry_run(req, redact_headers = FALSE)
   rawToChar(out$body)
+}
+
+# Dry-run `req` and return what httr2::req_dry_run() reports. Every test that
+# reads a request goes through here. With curl 8.0.0 and httr2 1.3.0,
+# req_dry_run() calls curl::curl_echo(). That function takes a port from
+# find_port(), which shuffles 1024:49151 with sample() on each call. It starts
+# an echo server on 0.0.0.0 at that port and sends the request to 127.0.0.1
+# there. A program that listens on 127.0.0.1 alone at that port does not stop
+# find_port(), and on macOS the echo server binds too. The request then goes
+# to that program, and the result holds no method, path, or body. If the echo
+# server cannot bind, the dry run stops with httpuv's "Failed to create
+# server". In both cases this helper tries again on a new port. After `tries`
+# tries, it stops and names the likely cause. No other error is caught.
+request_dry_run <- function(req, redact_headers = TRUE, tries = 5L) {
+  require_httpuv()
+  for (i in seq_len(tries)) {
+    out <- tryCatch(
+      httr2::req_dry_run(req, quiet = TRUE, redact_headers = redact_headers),
+      error = function(cnd) {
+        if (!identical(conditionMessage(cnd), "Failed to create server")) {
+          stop(cnd)
+        }
+        NULL
+      }
+    )
+    if (!is.null(out$method)) {
+      return(out)
+    }
+  }
+  stop(
+    "The dry run received no request in ", tries, " tries. ",
+    "Another program probably listens on 127.0.0.1 at the port that ",
+    "curl::curl_echo() picked.",
+    call. = FALSE
+  )
 }
 
 # Mock httr2::req_perform() for the calling test so that any request at all

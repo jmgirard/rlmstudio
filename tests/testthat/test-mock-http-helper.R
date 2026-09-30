@@ -69,6 +69,88 @@ test_that("request_target() returns a body that is not JSON as its text", {
   }
 })
 
+# Hold `port` on 127.0.0.1 alone, as another program can, until `env` exits.
+# The listener answers every request with an empty 200.
+local_loopback_listener <- function(port, env = parent.frame()) {
+  id <- httpuv::startServer(
+    "127.0.0.1",
+    port,
+    list(call = function(req) list(status = 200L, headers = list(), body = ""))
+  )
+  withr::defer(httpuv::stopServer(id), envir = env)
+  invisible(port)
+}
+
+# Mock the port picker that curl_echo() calls for each dry run. `pick` takes
+# the try number, counted from 1, and returns the port for that try. Read the
+# number of tries from `tries$n`.
+local_dry_run_ports <- function(pick, env = parent.frame()) {
+  tries <- new.env(parent = emptyenv())
+  tries$n <- 0L
+  testthat::local_mocked_bindings(
+    find_port = function(...) {
+      tries$n <- tries$n + 1L
+      pick(tries$n)
+    },
+    .package = "curl",
+    .env = env
+  )
+  tries
+}
+
+test_that("request_target() reads a request when another program holds the first dry-run port", {
+  require_httpuv()
+  held <- free_port()
+  local_loopback_listener(held)
+  # free_port() binds all addresses, which a macOS host allows over a port
+  # that 127.0.0.1 alone holds, so the held port is left out of the scan.
+  spare <- free_port(setdiff(20000:40000, held))
+  tries <- local_dry_run_ports(function(n) if (n == 1L) held else spare)
+  req <- httr2::request("http://localhost:1234/v1/models/load") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+
+  target <- request_target(req)
+
+  expect_identical(target$method, "POST")
+  expect_identical(target$path, "/v1/models/load")
+  expect_identical(target$body, list(model = "m"))
+  expect_identical(tries$n, 2L)
+})
+
+# A port held on all addresses makes the echo server's own bind fail, which is
+# the other outcome the dry-run helper tries again on.
+test_that("request_target() reads a request when the echo server cannot bind the first port", {
+  require_httpuv()
+  held <- local_listener()
+  spare <- free_port(setdiff(20000:40000, held))
+  tries <- local_dry_run_ports(function(n) if (n == 1L) held else spare)
+  req <- httr2::request("http://localhost:1234/v1/models/load") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+
+  target <- request_target(req)
+
+  expect_identical(target$method, "POST")
+  expect_identical(target$body, list(model = "m"))
+  expect_identical(tries$n, 2L)
+})
+
+test_that("the dry-run helper names the cause when every try lands on a held port", {
+  require_httpuv()
+  held <- free_port()
+  local_loopback_listener(held)
+  tries <- local_dry_run_ports(function(n) held)
+  req <- httr2::request("http://localhost:1234/v1/chat") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+
+  cnd <- expect_error(request_body_text(req))
+
+  message <- conditionMessage(cnd)
+  expect_match(message, "received no request", fixed = TRUE)
+  expect_match(tolower(message), "another program", fixed = TRUE)
+  expect_no_match(message, "must be a raw vector", fixed = TRUE)
+  expect_identical(tries$n, 5L)
+})
+
 test_that("local_request_sequence() serves its responses in order", {
   recorder <- local_request_sequence(list(
     mock_response(200L, '{"n": 1}'),

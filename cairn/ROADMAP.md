@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-30 (M065 done, M062 row pruned, dry-run test error 
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M066 | A test that reads a request survives a dry-run port that another program holds | planned | none | high | milestones/M066-dry-run-held-port.md |
+| M066 | A test that reads a request survives a dry-run port that another program holds | in-progress | none | high | milestones/M066-dry-run-held-port.md |
 | M065 | An error in one test-loop pass no longer stops the later passes | done | none | normal | milestones/archive/M065-nested-loop-subtests.md |
 | M064 | Each help page shows the malformed-reply rules that its function applies | done | none | normal | milestones/archive/M064-malformed-section-split.md |
 | M063 | A load above the trained context warns, and the help says how to fit a long prompt | done | none | normal | milestones/archive/M063-long-prompts.md |

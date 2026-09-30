@@ -1,13 +1,13 @@
 # M066: A test that reads a request survives a dry-run port that another program holds
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — the deliverable is test helper code, which no package user runs
-- **Branch/PR:** —
+- **Branch/PR:** m066-dry-run-held-port
 
 ## Goal
 
@@ -59,12 +59,12 @@ a candidate row. The package code does not change.
 
 ## Tasks
 
-- [ ] T1: Write the AC1 and AC2 tests first. Hold a loopback listener with
+- [x] T1: Write the AC1 and AC2 tests first. Hold a loopback listener with
       `httpuv::startServer("127.0.0.1", port)` on a port from `free_port()`.
       Mock curl's `find_port` so that the first try, or every try, gets the
       held port. Run the tests against the current helper and record the
       failure identity.
-- [ ] T2: Add the shared dry-run helper to `helper-mock-http.R`. It calls
+- [x] T2: Add the shared dry-run helper to `helper-mock-http.R`. It calls
       `httr2::req_dry_run()`. If the result has no `method`, it tries again.
       After 5 tries, it stops with the AC2 message. Route `request_target()`
       and `request_body_text()` through it. The comment states the cause from
@@ -81,7 +81,13 @@ a candidate row. The package code does not change.
 - 2026-09-30: created by /milestone-plan, from the [high] candidate row on the test error at `rawToChar(out$body)`. A scratch probe reproduced the error with a listener on 127.0.0.1 at the dry-run port.
 - 2026-09-30: criteria audit (reduced mode, fresh Opus reader) found one issue. AC1 named how the test mocks the port, an instrument detail. The sentence moved to T1. AC2 to AC4 had no finding.
 - 2026-09-30: plan gate chose a retry in one shared helper over a mock of curl's port picker around every dry run. The mock ties each request read to a curl internal, and a race stays. Falsified by a dry-run failure that retries do not clear.
+- 2026-09-30: implement started on branch m066-dry-run-held-port. A probe on macOS reproduced the empty dry run with a mocked `find_port`. Docker was not running, so no Linux probe ran.
+- 2026-09-30: implement question gate chose a retry on httpuv's bind error too (see Decisions).
+- 2026-09-30: T1 done. Before the fix, the held-port test got no method, path, or body after 1 try, and the all-tries test got "argument 'x' must be a raw vector".
+- 2026-09-30: T2 done. `request_dry_run()` in `helper-mock-http.R` retries up to 5 tries, and `request_target()` and `request_body_text()` call it. A third test holds the first port on all addresses, so the bind-error retry runs on macOS too. `devtools::test()`: 0 failed, 0 errors, 3 skipped.
 
 ## Decisions
+
+- 2026-09-30 (implement gate): If the dry run fails with httpuv's "Failed to create server" error, the shared dry-run helper also retries. That retry uses the same 5 tries and ends with the AC2 message. On Linux, and likely on Windows, the operating system is expected to refuse the echo server's bind to 0.0.0.0 on a port that 127.0.0.1 holds. There, the forced-port tests get that error in place of an empty result. The helper catches no other error.
 
 ## Review
