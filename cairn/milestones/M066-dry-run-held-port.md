@@ -159,4 +159,5 @@ Second pass (after review return 1):
   - Diff-bug (2) and history (new, the `request_body_text()` comment): fix now. Each try gets one sixth of the limit. A new test puts all 5 tries on a silent listener under a 3 s limit. Against the old helper, R halted with "reached elapsed time limit". After the fix, the test passed.
   - The "1 tries" text and the double `require_httpuv()` call: fixed now.
   - Diff-bug (3): follow-up, a new candidate row for a Linux run.
+- After the gate fixes (2026-09-30): `devtools::test()` gave 0 failed, 0 errors, 3 skipped, 19390 passed. `devtools::check()` with the API token gave 0 errors, 0 warnings, 0 notes. The AC3 grep returned four comment lines and the one call at `helper-mock-http.R` line 206.
   - Rejected, because each one changes no test result: the 5 s of the never-replies test, the `sample()` draws, and the mock of `find_port`. Also rejected for that reason: the exact httpuv match, the stderr line, and no Windows run. The last two rejected items are the `stop(cnd)` call stack and the `req_timeout()` line that no test can prove.
