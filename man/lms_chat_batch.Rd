@@ -44,10 +44,22 @@ warnings about failed inputs, cut-off replies, a vector format that
 returns a list, or a \code{logprobs = TRUE} that the \code{"native"} route ignores.}
 
 \item{...}{Additional arguments passed to \code{lms_chat}, such as \code{api_type},
-\code{logprobs}, \code{schema}, \code{ttl}, or \code{previous_response_id}. A \code{schema}, a
-\code{ttl}, a \code{previous_response_id}, and the \code{api_type} that each needs are
-checked before the first call. A \code{previous_response_id} goes to every
-call, so each input continues the same stored reply.
+\code{logprobs}, \code{schema}, \code{ttl}, \code{previous_response_id}, or \code{store}. A
+\code{schema}, a \code{ttl}, a \code{previous_response_id}, a \code{store}, and the
+\code{api_type} that each needs are checked before the first call. A
+\code{previous_response_id} goes to every call, so each input continues the
+same stored reply.
+A \code{store} here goes to \code{\link[=lms_chat]{lms_chat()}} for every call, and it is checked
+there by the rules of \code{\link[=lms_chat]{lms_chat()}}. It must be \code{TRUE}, \code{FALSE}, or
+\code{NULL}, and \code{NULL}, the default, sends no \code{store} field. Any other value,
+\code{NA} included, aborts before the check for a running server. With
+\code{api_type = "openai"}, \code{TRUE} or \code{FALSE} aborts before the check for a
+running server. Only this exact name is checked. A shortened name, such
+as \code{sto}, goes into each request body unchecked, under the name you
+wrote. With \code{store = FALSE}, a native reply has no \code{response_id} field.
+An OpenResponses reply still has an \code{id}, but the server does not hold
+that reply, so a later call that passes it as \code{previous_response_id}
+gets status 400 with the \code{code} \code{"previous_response_not_found"}.
 A \code{logprobs} here, or a shortened name that \code{\link[=lms_chat]{lms_chat()}} reads as
 \code{logprobs}, must be \code{TRUE} or \code{FALSE}. Any other value, \code{NULL} and \code{NA}
 included, aborts before the check for a running server.
@@ -241,7 +253,9 @@ that checks its own arguments does that first, so a bad \code{model}, \code{job_
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, \code{previous_response_id},
 or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
-argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
+argument such as \code{simplify}, \code{logprobs}, \code{quiet}, \code{force}, or \code{store}, a
+\code{store} on the \code{"openai"} route of \code{\link[=lms_chat]{lms_chat()}} or \code{\link[=lms_chat_batch]{lms_chat_batch()}}, a
+\code{stream} in
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
