@@ -16,8 +16,10 @@
 #' or `batch_size`, a bad
 #' `type` of [list_models()] or [list_instances()], a bad `TRUE` or `FALSE`
 #' argument such as `simplify`, `logprobs`, `quiet`, or `force`, a `stream` in
-#' the `...` of a chat function, or a `logprobs` in the `...` of
-#' [lms_chat_batch()] or [lms_chat_native()], aborts
+#' the `...` of a chat function, a `logprobs` in the `...` of
+#' [lms_chat_batch()] or [lms_chat_native()], or a value in the `...` of
+#' [lms_chat_batch()] that [lms_chat()] reads as an argument already given,
+#' aborts
 #' with an argument message and no condition class even when the server is
 #' down. A condition of class
 #' `rlmstudio_no_server` is raised when that connection cannot be opened. A

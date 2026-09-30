@@ -1630,21 +1630,34 @@ integer_or_na <- function(x) {
 #'   A `logprobs` here, or a shortened name that [lms_chat()] reads as
 #'   `logprobs`, must be `TRUE` or `FALSE`. Any other value, `NULL` and `NA`
 #'   included, aborts before the check for a running server.
+#'   With `api_type = "native"`, which has no logprobs, a `logprobs` of
+#'   `TRUE` is ignored. The batch then returns what it returns with
+#'   `logprobs = FALSE`, in each format. It gives one warning for the whole
+#'   batch, after the check for a running server, even with `quiet = TRUE`.
+#'   Two values here that [lms_chat()] reads as the same argument abort
+#'   with a message that names the argument. Examples are
+#'   `logprobs = TRUE, logprobs = FALSE`, the shortened names
+#'   `log = TRUE, lo = FALSE`, and two `previous_response_id` values. An
+#'   exact name and a shortened name, such as `logprobs` and `log`, do not
+#'   abort, because R gives the shortened one to the `...` of [lms_chat()].
+#'   An `input` here also aborts, because the batch passes each element of
+#'   `inputs` as `input`. These aborts come before every other check of
+#'   `...` and before the check for a running server.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
-#'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE} and \code{logprobs = FALSE}. With a \code{schema}, it warns and returns the list instead.
+#'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE}, and \code{logprobs = FALSE} or \code{api_type = "native"}. With a \code{schema}, it warns and returns the list instead.
 #'   \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
-#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
+#'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE} on the \code{"openresponses"} or \code{"openai"} route, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. The \code{"native"} route adds no \code{logprobs} column. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 #' }
 #'
 #' On the native and OpenResponses routes with `simplify = TRUE`, [lms_chat()]
 #' returns each reply that carries an id with a `response_id` attribute, as
 #' its help describes. With `format = "list"`, each reply keeps
 #' it. So does each element of the list that `format = "vector"` returns with
-#' `logprobs = TRUE`. The character vector of `format = "vector"` and the
+#' `logprobs = TRUE` on the OpenResponses route. The character vector of `format = "vector"` and the
 #' `output` column of `format = "data.frame"` carry no `response_id`
 #' attribute. The data frame holds the ids in its `response_id` column.
 #'
@@ -1740,9 +1753,10 @@ integer_or_na <- function(x) {
 #' `rlmstudio_bad_response` for reply content that does not
 #' parse keeps that content in its `content` field. Where the result is text,
 #' the element holds `NA`. The result is text with `format = "vector"` when it
-#' returns a vector (`simplify = TRUE`, no `schema`, `logprobs = FALSE`), and
-#' with a data frame whose replies are not parsed (no `schema`, or
-#' `logprobs = TRUE`). The `logprobs` column holds `NULL` for a failed input.
+#' returns a vector (`simplify = TRUE`, no `schema`, and `logprobs = FALSE`
+#' or the native route), and with a data frame whose replies are not parsed
+#' (no `schema`, or `logprobs = TRUE`). On the OpenResponses and OpenAI
+#' routes, the `logprobs` column holds `NULL` for a failed input.
 #' A reply with no readable answer text, such as one whose content is `null`,
 #' fails as an `rlmstudio_bad_response` in the same way. So does a
 #' status-200 body that does not parse as JSON, such as an HTML page from a
