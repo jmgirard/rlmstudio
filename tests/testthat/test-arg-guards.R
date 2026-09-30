@@ -162,28 +162,30 @@ for (name in guarded_exports(c("model", "job_id"))) {
       target <- intersect(c("model", "job_id"), names(args))[[1]]
 
       for (probe in id_probes) {
-        bad <- args
-        bad[target] <- list(probe$value)
-        expect_error(
-          do.call(fn, bad),
-          probe$match,
-          info = paste(name, "with", probe$label, "by name")
-        )
-        expect_error(
-          do.call(fn, bad),
-          target,
-          info = paste(name, "with", probe$label, "names the argument")
-        )
+        test_that(probe$label, {
+          bad <- args
+          bad[target] <- list(probe$value)
+          expect_error(
+            do.call(fn, bad),
+            probe$match,
+            info = paste(name, "with", probe$label, "by name")
+          )
+          expect_error(
+            do.call(fn, bad),
+            target,
+            info = paste(name, "with", probe$label, "names the argument")
+          )
 
-        # The same value supplied positionally. Every function in this domain
-        # carries the guarded argument first.
-        expect_identical(names(formals(fn))[[1]], target)
-        positional <- c(list(probe$value), bad[setdiff(names(bad), target)])
-        expect_error(
-          do.call(fn, positional),
-          probe$match,
-          info = paste(name, "with", probe$label, "positionally")
-        )
+          # The same value supplied positionally. Every function in this domain
+          # carries the guarded argument first.
+          expect_identical(names(formals(fn))[[1]], target)
+          positional <- c(list(probe$value), bad[setdiff(names(bad), target)])
+          expect_error(
+            do.call(fn, positional),
+            probe$match,
+            info = paste(name, "with", probe$label, "positionally")
+          )
+        })
       }
     }
   )
@@ -291,14 +293,16 @@ for (name in names(strict_text)) {
 
       bad_values <- list(1:3, list("a"), TRUE, character(0), NULL, factor("a"))
       for (bad_value in bad_values) {
-        bad <- args
-        bad[target] <- list(bad_value)
-        expect_error(
-          do.call(fn, bad),
-          "non-empty character vector",
-          info = paste(name, "with", class(bad_value)[[1]])
-        )
-        expect_error(do.call(fn, bad), target, info = name)
+        test_that(deparse1(bad_value), {
+          bad <- args
+          bad[target] <- list(bad_value)
+          expect_error(
+            do.call(fn, bad),
+            "non-empty character vector",
+            info = paste(name, "with", class(bad_value)[[1]])
+          )
+          expect_error(do.call(fn, bad), target, info = name)
+        })
       }
     }
   )
@@ -327,18 +331,20 @@ for (name in c(names(strict_text), names(loose_text))) {
       args <- baseline_args(name)
 
       for (probe in na_probes) {
-        bad <- args
-        bad[target] <- list(probe$value)
-        expect_error(
-          do.call(fn, bad),
-          probe$match,
-          info = paste(name, "with NA", probe$label)
-        )
-        expect_error(
-          do.call(fn, bad),
-          target,
-          info = paste(name, "with NA", probe$label, "names the argument")
-        )
+        test_that(probe$label, {
+          bad <- args
+          bad[target] <- list(probe$value)
+          expect_error(
+            do.call(fn, bad),
+            probe$match,
+            info = paste(name, "with NA", probe$label)
+          )
+          expect_error(
+            do.call(fn, bad),
+            target,
+            info = paste(name, "with NA", probe$label, "names the argument")
+          )
+        })
       }
     }
   )
@@ -443,21 +449,23 @@ for (name in names(schema_calls)) {
 
       call <- schema_calls[[name]]
       for (p in schema_probes) {
-        err <- expect_error(
-          call(schema = p$value),
-          p$match,
-          info = paste(name, "with", p$label)
-        )
-        expect_match(conditionMessage(err), "schema", info = name)
-        expect_false(
-          inherits(err, "rlmstudio_no_server"),
-          info = paste(name, "with", p$label)
-        )
-        # No package class on an argument fault (D-008).
-        expect_false(
-          any(grepl("^rlmstudio_", class(err))),
-          info = paste(name, "with", p$label)
-        )
+        test_that(p$label, {
+          err <- expect_error(
+            call(schema = p$value),
+            p$match,
+            info = paste(name, "with", p$label)
+          )
+          expect_match(conditionMessage(err), "schema", info = name)
+          expect_false(
+            inherits(err, "rlmstudio_no_server"),
+            info = paste(name, "with", p$label)
+          )
+          # No package class on an argument fault (D-008).
+          expect_false(
+            any(grepl("^rlmstudio_", class(err))),
+            info = paste(name, "with", p$label)
+          )
+        })
       }
       expect_identical(probe$calls, 0L)
     }
@@ -507,11 +515,13 @@ for (name in names(schema_calls)) {
         NULL
       )
       for (value in valid) {
-        expect_error(
-          schema_calls[[name]](schema = value),
-          class = "rlmstudio_no_server",
-          info = name
-        )
+        test_that(deparse1(value), {
+          expect_error(
+            schema_calls[[name]](schema = value),
+            class = "rlmstudio_no_server",
+            info = name
+          )
+        })
       }
       expect_identical(probe$calls, length(valid))
     }
@@ -549,18 +559,20 @@ for (name in names(route_calls)) {
       probe <- local_counting_probe()
 
       for (route in list("openresponses", "native", NULL)) {
-        label <- paste(
-          name,
-          "with",
-          if (is.null(route)) "the default" else route
-        )
-        err <- expect_error(
-          route_calls[[name]](route),
-          'api_type = "openai"',
-          fixed = TRUE,
-          info = label
-        )
-        expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+        test_that(paste("route", deparse1(route)), {
+          label <- paste(
+            name,
+            "with",
+            if (is.null(route)) "the default" else route
+          )
+          err <- expect_error(
+            route_calls[[name]](route),
+            'api_type = "openai"',
+            fixed = TRUE,
+            info = label
+          )
+          expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+        })
       }
       expect_identical(probe$calls, 0L)
     }
@@ -665,15 +677,17 @@ test_that("a schema property name that cannot name a column aborts before the se
     )
   )
   for (case in cases) {
-    err <- expect_error(
-      batch(case$properties),
-      class = "rlang_error",
-      info = case$label
-    )
-    message <- gsub("\\s+", " ", conditionMessage(err))
-    expect_match(message, case$match, fixed = TRUE, info = case$label)
-    # No package class on an argument fault (D-008).
-    expect_false(any(grepl("^rlmstudio_", class(err))), info = case$label)
+    test_that(case$label, {
+      err <- expect_error(
+        batch(case$properties),
+        class = "rlang_error",
+        info = case$label
+      )
+      message <- gsub("\\s+", " ", conditionMessage(err))
+      expect_match(message, case$match, fixed = TRUE, info = case$label)
+      # No package class on an argument fault (D-008).
+      expect_false(any(grepl("^rlmstudio_", class(err))), info = case$label)
+    })
   }
   expect_identical(probes, 0L)
   expect_length(recorder$requests, 0L)
@@ -681,14 +695,16 @@ test_that("a schema property name that cannot name a column aborts before the se
   # The list and vector formats keep the replies as parsed, so the same
   # schemas send their requests.
   for (case in cases) {
-    out <- batch(case$properties, "list")
-    expect_identical(out, list(list(a = "x")), info = case$label)
-    expect_warning(
-      out <- batch(case$properties, "vector"),
-      "cannot store replies parsed",
-      info = case$label
-    )
-    expect_identical(out, list(list(a = "x")), info = case$label)
+    test_that(case$label, {
+      out <- batch(case$properties, "list")
+      expect_identical(out, list(list(a = "x")), info = case$label)
+      expect_warning(
+        out <- batch(case$properties, "vector"),
+        "cannot store replies parsed",
+        info = case$label
+      )
+      expect_identical(out, list(list(a = "x")), info = case$label)
+    })
   }
   expect_length(recorder$requests, 2L * length(cases))
 
@@ -787,15 +803,17 @@ for (name in ttl_domain()) {
       probe <- local_counting_probe()
 
       for (value in ttl_bad_values) {
-        label <- paste(name, "with", deparse(value))
-        err <- expect_error(
-          ttl_calls[[name]](ttl = value),
-          "must be one whole number",
-          info = label
-        )
-        expect_match(conditionMessage(err), "ttl", info = label)
-        # No package class on an argument fault (D-008).
-        expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+        test_that(deparse1(value), {
+          label <- paste(name, "with", deparse(value))
+          err <- expect_error(
+            ttl_calls[[name]](ttl = value),
+            "must be one whole number",
+            info = label
+          )
+          expect_match(conditionMessage(err), "ttl", info = label)
+          # No package class on an argument fault (D-008).
+          expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+        })
       }
       expect_identical(probe$calls, 0L)
     }
@@ -814,11 +832,13 @@ for (name in ttl_domain()) {
 
       valid <- list(NULL, 1, 300L, .Machine$integer.max)
       for (value in valid) {
-        expect_error(
-          ttl_calls[[name]](ttl = value),
-          class = "rlmstudio_no_server",
-          info = paste(name, "with", deparse(value))
-        )
+        test_that(deparse1(value), {
+          expect_error(
+            ttl_calls[[name]](ttl = value),
+            class = "rlmstudio_no_server",
+            info = paste(name, "with", deparse(value))
+          )
+        })
       }
       expect_identical(probe$calls, length(valid))
     }
@@ -856,19 +876,21 @@ for (name in names(ttl_route_calls)) {
       probe <- local_counting_probe()
 
       for (route in list("openresponses", "native", NULL)) {
-        label <- paste(
-          name,
-          "with",
-          if (is.null(route)) "the default" else route
-        )
-        err <- expect_error(
-          ttl_route_calls[[name]](route),
-          'api_type = "openai"',
-          fixed = TRUE,
-          info = label
-        )
-        expect_match(conditionMessage(err), "ttl", info = label)
-        expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+        test_that(paste("route", deparse1(route)), {
+          label <- paste(
+            name,
+            "with",
+            if (is.null(route)) "the default" else route
+          )
+          err <- expect_error(
+            ttl_route_calls[[name]](route),
+            'api_type = "openai"',
+            fixed = TRUE,
+            info = label
+          )
+          expect_match(conditionMessage(err), "ttl", info = label)
+          expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+        })
       }
       expect_identical(probe$calls, 0L)
     }
@@ -962,17 +984,21 @@ for (name in stream_domain()) {
       probe <- local_counting_probe()
 
       for (route in stream_routes(name)) {
-        for (dots in stream_bad_dots) {
-          label <- stream_label(name, route, dots)
-          err <- expect_error(
-            stream_call(name, route, dots),
-            "must be `FALSE` or `NULL`",
-            fixed = TRUE,
-            info = label
-          )
-          expect_match(conditionMessage(err), "stream", info = label)
-          expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
-        }
+        test_that(paste("route", deparse1(route)), {
+          for (dots in stream_bad_dots) {
+            test_that(deparse1(dots), {
+              label <- stream_label(name, route, dots)
+              err <- expect_error(
+                stream_call(name, route, dots),
+                "must be `FALSE` or `NULL`",
+                fixed = TRUE,
+                info = label
+              )
+              expect_match(conditionMessage(err), "stream", info = label)
+              expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+            })
+          }
+        })
       }
       expect_identical(probe$calls, 0L)
     }
@@ -1003,24 +1029,34 @@ for (name in stream_domain()) {
       testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
       for (route in stream_routes(name)) {
-        for (value in list(FALSE, NULL)) {
-          dots <- list(stream = value)
-          label <- stream_label(name, route, dots)
-          recorder <- local_request_recorder(
-            mock_response(200L, stream_reply(name, route))
-          )
-          expect_no_error(stream_call(name, route, dots))
-          expected <- if (identical(name, "lms_chat_batch")) 2L else 1L
-          expect_identical(length(recorder$requests), expected, info = label)
-          for (req in recorder$requests) {
-            body <- request_target(req)$body
-            if (is.null(value)) {
-              expect_false("stream" %in% names(body), info = label)
-            } else {
-              expect_identical(body[["stream"]], FALSE, info = label)
-            }
+        test_that(paste("route", deparse1(route)), {
+          for (value in list(FALSE, NULL)) {
+            test_that(paste("stream =", deparse1(value)), {
+              dots <- list(stream = value)
+              label <- stream_label(name, route, dots)
+              recorder <- local_request_recorder(
+                mock_response(200L, stream_reply(name, route))
+              )
+              expect_no_error(stream_call(name, route, dots))
+              expected <- if (identical(name, "lms_chat_batch")) 2L else 1L
+              expect_identical(
+                length(recorder$requests),
+                expected,
+                info = label
+              )
+              for (req in recorder$requests) {
+                test_that(paste("a request of", label), {
+                  body <- request_target(req)$body
+                  if (is.null(value)) {
+                    expect_false("stream" %in% names(body), info = label)
+                  } else {
+                    expect_identical(body[["stream"]], FALSE, info = label)
+                  }
+                })
+              }
+            })
           }
-        }
+        })
       }
     }
   )
@@ -1030,14 +1066,16 @@ test_that("a FALSE with names or attributes passes, as isFALSE() reads it", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
 
   for (value in list(c(a = FALSE), structure(FALSE, foo = 1))) {
-    label <- deparse1(value)
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(
-      lms_chat_openai("a-model", arg_placeholders$messages, stream = value)
-    )
-    expect_identical(length(recorder$requests), 1L, info = label)
-    body <- request_target(recorder$requests[[1]])$body
-    expect_identical(body[["stream"]], FALSE, info = label)
+    test_that(deparse1(value), {
+      label <- deparse1(value)
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(
+        lms_chat_openai("a-model", arg_placeholders$messages, stream = value)
+      )
+      expect_identical(length(recorder$requests), 1L, info = label)
+      body <- request_target(recorder$requests[[1]])$body
+      expect_identical(body[["stream"]], FALSE, info = label)
+    })
   }
 })
 
@@ -1613,61 +1651,65 @@ test_that("a messages value that breaks a rule aborts before the server probe", 
   probe <- local_counting_probe()
 
   for (p in messages_probes) {
-    err <- expect_error(
-      lms_chat_openai("a-model", p$value),
-      messages_rule_details[[p$rule]],
-      fixed = TRUE,
-      info = p$label
-    )
-    expect_match(
-      conditionMessage(err),
-      "`messages`",
-      fixed = TRUE,
-      info = p$label
-    )
-    # The header of the rule's kind opens the message, and the other kind's
-    # header is absent. Only a shape fault carries the named-list hint.
-    kind <- if (p$rule %in% messages_value_rules) "value" else "shape"
-    expect_true(
-      startsWith(conditionMessage(err), messages_headers[[kind]]),
-      info = p$label
-    )
-    expect_no_match(
-      conditionMessage(err),
-      messages_headers[[setdiff(names(messages_headers), kind)]],
-      fixed = TRUE,
-      info = p$label
-    )
-    if (kind == "shape") {
+    test_that(p$label, {
+      err <- expect_error(
+        lms_chat_openai("a-model", p$value),
+        messages_rule_details[[p$rule]],
+        fixed = TRUE,
+        info = p$label
+      )
       expect_match(
         conditionMessage(err),
-        messages_shape_hint,
+        "`messages`",
         fixed = TRUE,
         info = p$label
       )
-    } else {
+      # The header of the rule's kind opens the message, and the other kind's
+      # header is absent. Only a shape fault carries the named-list hint.
+      kind <- if (p$rule %in% messages_value_rules) "value" else "shape"
+      expect_true(
+        startsWith(conditionMessage(err), messages_headers[[kind]]),
+        info = p$label
+      )
       expect_no_match(
         conditionMessage(err),
-        messages_shape_hint,
+        messages_headers[[setdiff(names(messages_headers), kind)]],
         fixed = TRUE,
         info = p$label
       )
-    }
-    # No package class on an argument fault (D-008).
-    expect_identical(
-      class(err),
-      c("rlang_error", "error", "condition"),
-      info = p$label
-    )
-    # The detail of every other rule is absent, so the abort names one rule.
-    for (other in setdiff(names(messages_rule_details), p$rule)) {
-      expect_no_match(
-        conditionMessage(err),
-        messages_rule_details[[other]],
-        fixed = TRUE,
-        info = paste(p$label, "names", other)
+      if (kind == "shape") {
+        expect_match(
+          conditionMessage(err),
+          messages_shape_hint,
+          fixed = TRUE,
+          info = p$label
+        )
+      } else {
+        expect_no_match(
+          conditionMessage(err),
+          messages_shape_hint,
+          fixed = TRUE,
+          info = p$label
+        )
+      }
+      # No package class on an argument fault (D-008).
+      expect_identical(
+        class(err),
+        c("rlang_error", "error", "condition"),
+        info = p$label
       )
-    }
+      # The detail of every other rule is absent, so the abort names one rule.
+      for (other in setdiff(names(messages_rule_details), p$rule)) {
+        test_that(other, {
+          expect_no_match(
+            conditionMessage(err),
+            messages_rule_details[[other]],
+            fixed = TRUE,
+            info = paste(p$label, "names", other)
+          )
+        })
+      }
+    })
   }
   expect_identical(probe$calls, 0L)
 })
@@ -1682,13 +1724,15 @@ test_that("a function column aborts with no warning on the way", {
   nested$sub <- inner
 
   for (value in list(top, nested)) {
-    expect_no_warning(
-      expect_error(
-        lms_chat_openai("a-model", value),
-        messages_rule_details[["rule12"]],
-        fixed = TRUE
+    test_that(paste("columns", toString(names(value))), {
+      expect_no_warning(
+        expect_error(
+          lms_chat_openai("a-model", value),
+          messages_rule_details[["rule12"]],
+          fixed = TRUE
+        )
       )
-    )
+    })
   }
   expect_identical(probe$calls, 0L)
 })
@@ -1814,31 +1858,35 @@ test_that("a value that is not a vector, a list, or NULL aborts with its own det
   n_cases <- 0L
 
   for (kind in names(kinds)) {
-    for (position in names(non_vector_positions)) {
-      value <- kinds[[kind]]()
-      type <- non_vector_types[[kind]]
-      label <- paste(kind, "as", position)
-      messages <- non_vector_positions[[position]](value)
-      err <- expect_no_warning(
-        expect_error(
-          lms_chat_openai("a-model", messages),
-          non_vector_detail(type),
-          fixed = TRUE,
-          info = label
-        )
-      )
-      expect_true(
-        startsWith(conditionMessage(err), messages_headers[["value"]]),
-        info = label
-      )
-      expect_no_match(
-        conditionMessage(err),
-        messages_rule_details[["rule10"]],
-        fixed = TRUE,
-        info = label
-      )
-      n_cases <- n_cases + 1L
-    }
+    test_that(kind, {
+      for (position in names(non_vector_positions)) {
+        test_that(position, {
+          value <- kinds[[kind]]()
+          type <- non_vector_types[[kind]]
+          label <- paste(kind, "as", position)
+          messages <- non_vector_positions[[position]](value)
+          err <- expect_no_warning(
+            expect_error(
+              lms_chat_openai("a-model", messages),
+              non_vector_detail(type),
+              fixed = TRUE,
+              info = label
+            )
+          )
+          expect_true(
+            startsWith(conditionMessage(err), messages_headers[["value"]]),
+            info = label
+          )
+          expect_no_match(
+            conditionMessage(err),
+            messages_rule_details[["rule10"]],
+            fixed = TRUE,
+            info = label
+          )
+          n_cases <<- n_cases + 1L
+        })
+      }
+    })
   }
   expect_identical(n_cases, 105L)
   expect_identical(probe$calls, 0L)
@@ -1932,13 +1980,15 @@ test_that("values the non-vector rule passes reach the request", {
   )
 
   for (case in cases) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(lms_chat_openai("a-model", case$value), message = NULL)
-    expect_identical(
-      sent_messages(recorder$requests[[1]]),
-      case$sent,
-      info = case$label
-    )
+    test_that(case$label, {
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(lms_chat_openai("a-model", case$value), message = NULL)
+      expect_identical(
+        sent_messages(recorder$requests[[1]]),
+        case$sent,
+        info = case$label
+      )
+    })
   }
 })
 
@@ -2092,13 +2142,17 @@ test_that("a number jsonlite cannot send as a number aborts", {
     "an integer NA" = NA_integer_
   )
   for (number in names(numbers)) {
-    for (position in names(number_positions)) {
-      expect_number_fault(
-        number_positions[[position]](numbers[[number]]),
-        paste(number, "as", position)
-      )
-      n_cases <- n_cases + 1L
-    }
+    test_that(number, {
+      for (position in names(number_positions)) {
+        test_that(position, {
+          expect_number_fault(
+            number_positions[[position]](numbers[[number]]),
+            paste(number, "as", position)
+          )
+          n_cases <<- n_cases + 1L
+        })
+      }
+    })
   }
 
   expect_number_fault(
@@ -2108,13 +2162,17 @@ test_that("a number jsonlite cannot send as a number aborts", {
   n_cases <- n_cases + 1L
 
   for (number in c(Inf, -Inf)) {
-    for (place in names(plain_column_places)) {
-      expect_number_fault(
-        plain_column_places[[place]](number),
-        paste(number, "in a plain column at", place)
-      )
-      n_cases <- n_cases + 1L
-    }
+    test_that(paste("number", number), {
+      for (place in names(plain_column_places)) {
+        test_that(place, {
+          expect_number_fault(
+            plain_column_places[[place]](number),
+            paste(number, "in a plain column at", place)
+          )
+          n_cases <<- n_cases + 1L
+        })
+      }
+    })
   }
 
   expect_identical(n_cases, 49L)
@@ -2142,22 +2200,29 @@ test_that("numbers jsonlite leaves out, and classed values, still reach the requ
     "an integer NA" = NA_integer_
   )
   for (number in names(missing_numbers)) {
-    for (place in names(plain_column_places)) {
-      label <- paste(number, "in a plain column at", place)
-      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-      expect_no_error(
-        lms_chat_openai(
-          "a-model",
-          plain_column_places[[place]](missing_numbers[[number]])
-        ),
-        message = NULL
-      )
-      expect_identical(
-        sent_messages(recorder$requests[[1]]),
-        left_out[[place]],
-        info = label
-      )
-    }
+    test_that(number, {
+      for (place in names(plain_column_places)) {
+        test_that(place, {
+          label <- paste(number, "in a plain column at", place)
+          recorder <- local_request_recorder(mock_response(
+            200L,
+            openai_reply()
+          ))
+          expect_no_error(
+            lms_chat_openai(
+              "a-model",
+              plain_column_places[[place]](missing_numbers[[number]])
+            ),
+            message = NULL
+          )
+          expect_identical(
+            sent_messages(recorder$requests[[1]]),
+            left_out[[place]],
+            info = label
+          )
+        })
+      }
+    })
   }
 
   classed <- list(
@@ -2179,19 +2244,21 @@ test_that("numbers jsonlite leaves out, and classed values, still reach the requ
     )
   )
   for (case in classed) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(
-      lms_chat_openai(
-        "a-model",
-        list(list(role = "user", content = case$value))
-      ),
-      message = NULL
-    )
-    expect_identical(
-      sent_messages(recorder$requests[[1]]),
-      list(list(role = "user", content = case$sent)),
-      info = case$label
-    )
+    test_that(case$label, {
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(
+        lms_chat_openai(
+          "a-model",
+          list(list(role = "user", content = case$value))
+        ),
+        message = NULL
+      )
+      expect_identical(
+        sent_messages(recorder$requests[[1]]),
+        list(list(role = "user", content = case$sent)),
+        info = case$label
+      )
+    })
   }
 })
 
@@ -2210,16 +2277,18 @@ test_that("a number in a classed list that jsonlite writes as a list aborts", {
     "Inf in a classed list in a list-column cell" = df
   )
   for (label in names(cases)) {
-    err <- expect_error(
-      lms_chat_openai("a-model", cases[[label]]),
-      number_detail,
-      fixed = TRUE,
-      info = label
-    )
-    expect_true(
-      startsWith(conditionMessage(err), messages_headers[["value"]]),
-      info = label
-    )
+    test_that(label, {
+      err <- expect_error(
+        lms_chat_openai("a-model", cases[[label]]),
+        number_detail,
+        fixed = TRUE,
+        info = label
+      )
+      expect_true(
+        startsWith(conditionMessage(err), messages_headers[["value"]]),
+        info = label
+      )
+    })
   }
   expect_identical(probe$calls, 0L)
 })
@@ -2351,18 +2420,20 @@ test_that("a column that is not a vector is not empty and gives no warning", {
   )
 
   for (label in names(cases)) {
-    err <- expect_no_warning(
-      expect_error(
-        lms_chat_openai("a-model", cases[[label]]),
-        messages_rule_details[["rule13"]],
-        fixed = TRUE,
+    test_that(label, {
+      err <- expect_no_warning(
+        expect_error(
+          lms_chat_openai("a-model", cases[[label]]),
+          messages_rule_details[["rule13"]],
+          fixed = TRUE,
+          info = label
+        )
+      )
+      expect_true(
+        startsWith(conditionMessage(err), messages_headers[["value"]]),
         info = label
       )
-    )
-    expect_true(
-      startsWith(conditionMessage(err), messages_headers[["value"]]),
-      info = label
-    )
+    })
   }
 
   function_cases <- list(
@@ -2374,14 +2445,16 @@ test_that("a column that is not a vector is not empty and gives no warning", {
     })
   )
   for (label in names(function_cases)) {
-    expect_no_warning(
-      expect_error(
-        lms_chat_openai("a-model", function_cases[[label]]),
-        messages_rule_details[["rule12"]],
-        fixed = TRUE,
-        info = label
+    test_that(label, {
+      expect_no_warning(
+        expect_error(
+          lms_chat_openai("a-model", function_cases[[label]]),
+          messages_rule_details[["rule12"]],
+          fixed = TRUE,
+          info = label
+        )
       )
-    )
+    })
   }
   expect_identical(probe$calls, 0L)
 })
@@ -2432,18 +2505,22 @@ test_that("empty_rows() finds no empty row in a column that is not a vector", {
   )
 
   for (label in names(columns)) {
-    # `$<-` refuses an environment in a frame with rows.
-    top <- structure(
-      list(role = NA_character_, x = columns[[label]]),
-      class = "data.frame",
-      row.names = 1L
-    )
-    nested <- data.frame(role = NA_character_)
-    nested$sub <- top
-    for (value in list(top, nested)) {
-      expect_no_warning(result <- empty_rows(value))
-      expect_identical(result, FALSE, info = label)
-    }
+    test_that(label, {
+      # `$<-` refuses an environment in a frame with rows.
+      top <- structure(
+        list(role = NA_character_, x = columns[[label]]),
+        class = "data.frame",
+        row.names = 1L
+      )
+      nested <- data.frame(role = NA_character_)
+      nested$sub <- top
+      for (value in list(top, nested)) {
+        test_that(paste("columns", toString(names(value))), {
+          expect_no_warning(result <- empty_rows(value))
+          expect_identical(result, FALSE, info = label)
+        })
+      }
+    })
   }
   expect_no_warning(formula_result <- empty_rows(na_frame(3L, y ~ x)))
   expect_identical(formula_result, rep(FALSE, 3L))
@@ -2499,26 +2576,28 @@ test_that("a column with no cells in a row is not empty", {
     )
   )
   for (case in cases) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(
-      lms_chat_openai("a-model", no_cell_frame(case$column)),
-      message = NULL
-    )
-    expected <- jsonlite::parse_json(
-      paste0(
-        '[{"role":"user","content":"Hi","x":',
-        case$row2,
-        '},{"x":',
-        case$row2,
-        "}]"
-      ),
-      simplifyVector = FALSE
-    )
-    expect_identical(
-      sent_messages(recorder$requests[[1]]),
-      expected,
-      info = case$label
-    )
+    test_that(case$label, {
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(
+        lms_chat_openai("a-model", no_cell_frame(case$column)),
+        message = NULL
+      )
+      expected <- jsonlite::parse_json(
+        paste0(
+          '[{"role":"user","content":"Hi","x":',
+          case$row2,
+          '},{"x":',
+          case$row2,
+          "}]"
+        ),
+        simplifyVector = FALSE
+      )
+      expect_identical(
+        sent_messages(recorder$requests[[1]]),
+        expected,
+        info = case$label
+      )
+    })
   }
 })
 
@@ -2554,21 +2633,23 @@ test_that("a data-frame column with only empty columns counts as empty", {
     )
   )
   for (case in cases) {
-    written <- jsonlite::parse_json(
-      rlm_json_text(case$column),
-      simplifyVector = FALSE
-    )
-    expect_identical(
-      written[[2]],
-      jsonlite::parse_json(case$row2, simplifyVector = FALSE),
-      info = case$label
-    )
-    expect_error(
-      lms_chat_openai("a-model", no_cell_frame(case$column)),
-      messages_rule_details[["rule6"]],
-      fixed = TRUE,
-      info = case$label
-    )
+    test_that(case$label, {
+      written <- jsonlite::parse_json(
+        rlm_json_text(case$column),
+        simplifyVector = FALSE
+      )
+      expect_identical(
+        written[[2]],
+        jsonlite::parse_json(case$row2, simplifyVector = FALSE),
+        info = case$label
+      )
+      expect_error(
+        lms_chat_openai("a-model", no_cell_frame(case$column)),
+        messages_rule_details[["rule6"]],
+        fixed = TRUE,
+        info = case$label
+      )
+    })
   }
   expect_identical(probe$calls, 0L)
 })
@@ -2584,17 +2665,19 @@ test_that("a list array with no cells in a row gets the list-array detail", {
     "a 2-by-3-by-0 list array" = array(list(), c(2L, 3L, 0L))
   )
   for (label in names(cases)) {
-    err <- expect_error(
-      lms_chat_openai("a-model", no_cell_frame(cases[[label]])),
-      messages_rule_details[["rule11"]],
-      fixed = TRUE,
-      info = label
-    )
-    expect_no_match(
-      conditionMessage(err),
-      messages_rule_details[["rule6"]],
-      fixed = TRUE
-    )
+    test_that(label, {
+      err <- expect_error(
+        lms_chat_openai("a-model", no_cell_frame(cases[[label]])),
+        messages_rule_details[["rule11"]],
+        fixed = TRUE,
+        info = label
+      )
+      expect_no_match(
+        conditionMessage(err),
+        messages_rule_details[["rule6"]],
+        fixed = TRUE
+      )
+    })
   }
   expect_identical(probe$calls, 0L)
 })
@@ -2695,30 +2778,32 @@ test_that("a column with a dim attribute is read row by row", {
   )
 
   for (case in cases) {
-    probe <- local_counting_probe()
-    if (case$outcome == "server") {
-      expect_error(
-        lms_chat_openai("a-model", case$value),
-        class = "rlmstudio_no_server",
-        info = case$label
-      )
-      expect_identical(probe$calls, 1L, info = case$label)
-    } else {
-      err <- expect_error(
-        lms_chat_openai("a-model", case$value),
-        messages_rule_details[[case$outcome]],
-        fixed = TRUE,
-        info = case$label
-      )
-      other <- setdiff(c("rule6", "rule11"), case$outcome)
-      expect_no_match(
-        conditionMessage(err),
-        messages_rule_details[[other]],
-        fixed = TRUE,
-        info = case$label
-      )
-      expect_identical(probe$calls, 0L, info = case$label)
-    }
+    test_that(case$label, {
+      probe <- local_counting_probe()
+      if (case$outcome == "server") {
+        expect_error(
+          lms_chat_openai("a-model", case$value),
+          class = "rlmstudio_no_server",
+          info = case$label
+        )
+        expect_identical(probe$calls, 1L, info = case$label)
+      } else {
+        err <- expect_error(
+          lms_chat_openai("a-model", case$value),
+          messages_rule_details[[case$outcome]],
+          fixed = TRUE,
+          info = case$label
+        )
+        other <- setdiff(c("rule6", "rule11"), case$outcome)
+        expect_no_match(
+          conditionMessage(err),
+          messages_rule_details[[other]],
+          fixed = TRUE,
+          info = case$label
+        )
+        expect_identical(probe$calls, 0L, info = case$label)
+      }
+    })
   }
 })
 
@@ -2931,14 +3016,16 @@ test_that("a messages value that keeps every rule reaches the request", {
   )
 
   for (p in passes) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(lms_chat_openai("a-model", p$value))
-    expect_identical(length(recorder$requests), 1L, info = p$label)
-    expect_identical(
-      sent_messages(recorder$requests[[1]]),
-      p$sent,
-      info = p$label
-    )
+    test_that(p$label, {
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(lms_chat_openai("a-model", p$value))
+      expect_identical(length(recorder$requests), 1L, info = p$label)
+      expect_identical(
+        sent_messages(recorder$requests[[1]]),
+        p$sent,
+        info = p$label
+      )
+    })
   }
 })
 
@@ -2954,17 +3041,19 @@ test_that("each rule-order probe also fails the jsonlite write", {
   labels <- vapply(messages_probes, `[[`, character(1), "label")
   expect_true(all(order_labels %in% labels))
   for (p in messages_probes[labels %in% order_labels]) {
-    expect_error(
-      jsonlite::toJSON(
-        unclass_messages(p$value),
-        auto_unbox = TRUE,
-        digits = 22,
-        null = "null"
-      ),
-      "No method asJSON S3 class",
-      fixed = TRUE,
-      info = p$label
-    )
+    test_that(p$label, {
+      expect_error(
+        jsonlite::toJSON(
+          unclass_messages(p$value),
+          auto_unbox = TRUE,
+          digits = 22,
+          null = "null"
+        ),
+        "No method asJSON S3 class",
+        fixed = TRUE,
+        info = p$label
+      )
+    })
   }
 })
 
@@ -3041,13 +3130,15 @@ test_that("matrix forms the list-array rule allows reach the request", {
   )
 
   for (case in cases) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(lms_chat_openai("a-model", case$value), message = NULL)
-    expect_identical(
-      sent_messages(recorder$requests[[1]]),
-      case$sent,
-      info = case$label
-    )
+    test_that(case$label, {
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(lms_chat_openai("a-model", case$value), message = NULL)
+      expect_identical(
+        sent_messages(recorder$requests[[1]]),
+        case$sent,
+        info = case$label
+      )
+    })
   }
 })
 
@@ -3081,13 +3172,15 @@ test_that("a list-matrix column is sent with its cells boxed", {
     list(label = "unbox and a data frame", value = other_row, form = other_form)
   )
   for (case in cases) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(lms_chat_openai("a-model", case$value))
-    expect_identical(
-      sent_messages(recorder$requests[[1]]),
-      list(jsonlite::parse_json(case$form, simplifyVector = FALSE)),
-      info = case$label
-    )
+    test_that(case$label, {
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(lms_chat_openai("a-model", case$value))
+      expect_identical(
+        sent_messages(recorder$requests[[1]]),
+        list(jsonlite::parse_json(case$form, simplifyVector = FALSE)),
+        info = case$label
+      )
+    })
   }
 })
 
@@ -3116,13 +3209,15 @@ test_that("an NA in a three-dimensional logical or character column is sent as n
     )
   )
   for (case in cases) {
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(lms_chat_openai("a-model", case$value))
-    expect_identical(
-      sent_messages(recorder$requests[[1]]),
-      jsonlite::parse_json(case$form, simplifyVector = FALSE),
-      info = case$label
-    )
+    test_that(case$label, {
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(lms_chat_openai("a-model", case$value))
+      expect_identical(
+        sent_messages(recorder$requests[[1]]),
+        jsonlite::parse_json(case$form, simplifyVector = FALSE),
+        info = case$label
+      )
+    })
   }
 })
 
@@ -3182,20 +3277,22 @@ test_that("messages reach the request as jsonlite writes them", {
   )
 
   for (label in names(cases)) {
-    value <- cases[[label]]
-    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
-    expect_no_error(lms_chat_openai("a-model", value), message = NULL)
-    expected <- as.character(jsonlite::toJSON(
-      list(model = "a-model", messages = value),
-      auto_unbox = TRUE,
-      digits = 22,
-      null = "null"
-    ))
-    sent <- tryCatch(
-      request_body_text(recorder$requests[[1]], seconds = 10),
-      error = function(e) paste("no body:", conditionMessage(e))
-    )
-    expect_identical(sent, expected, info = label)
+    test_that(label, {
+      value <- cases[[label]]
+      recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+      expect_no_error(lms_chat_openai("a-model", value), message = NULL)
+      expected <- as.character(jsonlite::toJSON(
+        list(model = "a-model", messages = value),
+        auto_unbox = TRUE,
+        digits = 22,
+        null = "null"
+      ))
+      sent <- tryCatch(
+        request_body_text(recorder$requests[[1]], seconds = 10),
+        error = function(e) paste("no body:", conditionMessage(e))
+      )
+      expect_identical(sent, expected, info = label)
+    })
   }
 
   # Two sent forms stated by hand, so the check does not rest on jsonlite
