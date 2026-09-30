@@ -97,6 +97,7 @@ lms_chat <- function(
   token = NULL
 ) {
   api_type <- match.arg(api_type)
+  rlm_check_route_dots(...names(), api_type)
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_schema(schema, ...names())
@@ -1828,6 +1829,7 @@ lms_chat_batch <- function(
     api_type <- "openresponses"
   }
   api_type <- match.arg(api_type, c("openresponses", "openai", "native"))
+  rlm_check_route_dots(names(args), api_type)
   rlm_check_schema_route(schema, api_type)
   ttl <- args[["ttl"]]
   rlm_check_ttl(ttl)
@@ -2331,6 +2333,35 @@ rlm_check_chat_dots_once <- function(dots) {
     }
   }
   invisible(dots)
+}
+
+#' Abort on a dot that lms_chat() passes to the route function itself
+#'
+#' On the `"openresponses"` route, `lms_chat()` passes `system_prompt` as
+#' `instructions`. On the `"openai"` route, it builds `messages` from
+#' `system_prompt` and `input`. A dot with that exact name would reach the
+#' route function a second time, and R would fail with its own error. A
+#' shortened name, such as `instr`, goes to the `...` of the route function,
+#' because R matches the exact name first.
+#'
+#' @param dot_names The names of the `...` values, or `NULL`.
+#' @param api_type Character. The route, already matched.
+#' @return `dot_names`, invisibly.
+#' @noRd
+rlm_check_route_dots <- function(dot_names, api_type) {
+  arg <- switch(api_type, openresponses = "instructions", openai = "messages")
+  if (!is.null(arg) && arg %in% dot_names) {
+    hint <- switch(
+      arg,
+      instructions = "{.fn lms_chat} sets {.arg instructions} from {.arg system_prompt} on the {.val openresponses} route. Give the text as {.arg system_prompt}.",
+      messages = "{.fn lms_chat} builds {.arg messages} from {.arg system_prompt} and {.arg input} on the {.val openai} route. To send your own messages, call {.fn lms_chat_openai}."
+    )
+    cli::cli_abort(
+      c("{.arg {arg}} is given more than once.", "x" = hint),
+      call = NULL
+    )
+  }
+  invisible(dot_names)
 }
 
 #' Create a base request for the LM Studio API
