@@ -352,9 +352,11 @@ output_quiet <- c("list_instances", "list_models", "lms_chat_batch", "lms_embed"
 test_that("quiet is in five functions, and four default to NULL", {
   expect_setequal(quiet_exports(), c(output_quiet, "lms_server_status"))
   for (name in output_quiet) {
-    fn <- get(name, envir = asNamespace("rlmstudio"))
-    expect_true("quiet" %in% names(formals(fn)), info = name)
-    expect_null(formals(fn)$quiet)
+    test_that(name, {
+      fn <- get(name, envir = asNamespace("rlmstudio"))
+      expect_true("quiet" %in% names(formals(fn)), info = name)
+      expect_null(formals(fn)$quiet)
+    })
   }
   expect_false(formals(lms_server_status)$quiet)
 })

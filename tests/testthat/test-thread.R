@@ -69,13 +69,15 @@ test_that("the exports that take previous_response_id are the three chat functio
     c("lms_chat", "lms_chat_native", "lms_chat_openresponses")
   )
   for (name in exports) {
-    fm <- formals(get(name, envir = asNamespace("rlmstudio")))
-    # After `...`, so a shortened name never matches it, and NULL by default.
-    expect_gt(
-      match("previous_response_id", names(fm)),
-      match("...", names(fm))
-    )
-    expect_null(fm$previous_response_id)
+    test_that(name, {
+      fm <- formals(get(name, envir = asNamespace("rlmstudio")))
+      # After `...`, so a shortened name never matches it, and NULL by default.
+      expect_gt(
+        match("previous_response_id", names(fm)),
+        match("...", names(fm))
+      )
+      expect_null(fm$previous_response_id)
+    })
   }
 })
 

@@ -156,11 +156,13 @@ test_that("server_status_port returns NULL for a port it cannot use", {
   )
 
   for (name in names(unusable)) {
-    value <- unusable[[name]]
-    local_mocked_bindings(
-      lms_server_status = function(...) list(running = TRUE, port = value)
-    )
-    expect_null(server_status_port(), info = name)
+    test_that(name, {
+      value <- unusable[[name]]
+      local_mocked_bindings(
+        lms_server_status = function(...) list(running = TRUE, port = value)
+      )
+      expect_null(server_status_port(), info = name)
+    })
   }
 })
 

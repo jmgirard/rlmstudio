@@ -947,7 +947,9 @@ test_that("a property column's type follows the property type", {
     }
   }
   for (name in c("nested", "array", "mixed", "untyped", "bare")) {
-    expect_identical(typeof(out[[name]]), "list", info = name)
+    test_that(name, {
+      expect_identical(typeof(out[[name]]), "list", info = name)
+    })
   }
   expect_identical(out$nested, list(list(inner = 1L), list(inner = 1L)))
   expect_false("inner" %in% names(out))

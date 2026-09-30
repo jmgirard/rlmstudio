@@ -189,18 +189,20 @@ test_that("token is a named-only argument wherever the function takes dots", {
   # there moved no existing argument. A function without dots takes `token`
   # last, which moves nothing either.
   for (name in vapply(wrapper_table, function(e) e$name, character(1))) {
-    argument_names <- names(formals(get(name, envir = asNamespace("rlmstudio"))))
+    test_that(name, {
+      argument_names <- names(formals(get(name, envir = asNamespace("rlmstudio"))))
 
-    expect_true("token" %in% argument_names, info = name)
+      expect_true("token" %in% argument_names, info = name)
 
-    if ("..." %in% argument_names) {
-      expect_gt(
-        match("token", argument_names),
-        match("...", argument_names)
-      )
-    } else {
-      expect_identical(argument_names[length(argument_names)], "token")
-    }
+      if ("..." %in% argument_names) {
+        expect_gt(
+          match("token", argument_names),
+          match("...", argument_names)
+        )
+      } else {
+        expect_identical(argument_names[length(argument_names)], "token")
+      }
+    })
   }
 })
 

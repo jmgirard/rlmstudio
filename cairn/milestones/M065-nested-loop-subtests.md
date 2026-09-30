@@ -83,7 +83,7 @@ defines top-level blocks already gives one block per pass.
       `test-list-args.R`, `test-body-parse.R`, and `test-body-write.R` in the
       same way. Each description contains the name. Leave an inner loop
       that a wrap exposes as it is.
-- [ ] T4: Do the same for the 19 `for (name in ` loops in the other 11
+- [x] T4: Do the same for the 19 `for (name in ` loops in the other 11
       files.
 - [ ] T5: Run the AC2 and AC3 plants in scratch copies of the branch. Make
       sure that each run holds subtests for the other names or labels
