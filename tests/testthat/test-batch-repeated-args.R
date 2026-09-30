@@ -1,7 +1,7 @@
 # `lms_chat_batch()` passes its `...` to `lms_chat()`. Two dots that R
 # matches to the same `lms_chat()` argument abort in the batch, with a message
-# that names the argument, before any other check and before the server
-# probe.
+# that names the argument, before every other check of `...` and before the
+# server probe. The checks of `model` and `inputs` come first.
 
 # The `lms_chat()` arguments that a dot of the batch can reach. The batch
 # passes `input` by name itself, and its own formals take `model`,
@@ -49,7 +49,9 @@ test_that("the repeat domain holds the lms_chat() arguments that dots reach", {
 
 test_that("two exact-name dots for one lms_chat() argument abort", {
   for (arg in setdiff(repeat_domain, "input")) {
-    # Values that no other check accepts, so the repeat abort must come first.
+    # Values that most other checks reject, so for those arguments the repeat
+    # abort must come first. A lone `previous_response_id = "a"` is valid, so
+    # for it the message check, not the order of checks, shows the abort.
     dots <- list("a", "b")
     names(dots) <- c(arg, arg)
     expect_repeat_abort(run_repeat_batch(dots), arg, info = arg)

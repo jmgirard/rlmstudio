@@ -1641,7 +1641,10 @@ integer_or_na <- function(x) {
 #'   exact name and a shortened name, such as `logprobs` and `log`, do not
 #'   abort, because R gives the shortened one to the `...` of [lms_chat()].
 #'   An `input` here also aborts, because the batch passes each element of
-#'   `inputs` as `input`. These aborts come before every other check of
+#'   `inputs` as `input`. An `input` reaches `...` only when `inputs` is
+#'   given by its full name. Otherwise R reads `input` as a shortened
+#'   `inputs`, so it becomes `inputs`, and the value given by position fills
+#'   the next unnamed argument, such as `system_prompt`. These aborts come before every other check of
 #'   `...` and before the check for a running server.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the

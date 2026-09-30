@@ -60,7 +60,10 @@ with a message that names the argument. Examples are
 exact name and a shortened name, such as \code{logprobs} and \code{log}, do not
 abort, because R gives the shortened one to the \code{...} of \code{\link[=lms_chat]{lms_chat()}}.
 An \code{input} here also aborts, because the batch passes each element of
-\code{inputs} as \code{input}. These aborts come before every other check of
+\code{inputs} as \code{input}. An \code{input} reaches \code{...} only when \code{inputs} is
+given by its full name. Otherwise R reads \code{input} as a shortened
+\code{inputs}, so it becomes \code{inputs}, and the value given by position fills
+the next unnamed argument, such as \code{system_prompt}. These aborts come before every other check of
 \code{...} and before the check for a running server.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
