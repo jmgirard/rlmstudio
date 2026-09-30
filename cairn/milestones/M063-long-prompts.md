@@ -87,3 +87,20 @@ Evidence gathered 2026-09-30 on branch m063-long-prompts at e7117f7, main unmove
 - AC6: `man/lms_load.Rd` and `man/lms_chat.Rd` each hold `\section{Long prompts}` once. Each names `rlmstudio_context_above_max`, `rlmstudio_api_error`, and the text "The number of tokens to keep". Each names `rope_frequency_scale` with 0.4.25+1, and the `input_tokens` column of `lms_chat_batch()`. NEWS.md has one entry for the warning, at line 3.
 - AC7: a fresh `devtools::test()` at ff92968 had 0 failures and 0 errors, with 3 live tests skipped. A fresh `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes.
 - Consistency gate: `cairn_validate.py` passed, exit 0. `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. README.Rmd and DESIGN.md are not touched, and there are no new top-level files. NEWS.md has the entry. No principle text changed, so `cairn_impact` was skipped.
+
+Independent review: three fresh reviewers (Opus diff-bug D, Sonnet blame-history B, Sonnet prior-review P). No finding shows a criterion failing. Findings merged where two lenses found the same thing, ranked, with the disposition proposed at the gate:
+
+1. D1, B1, P2: NEWS names only `list_models()`, `lms_load()`, and `lms_server_ready()` for the new rule. `list_instances()`, `lms_unload_all()`, and the chat model lookup also abort, and D-037 leaves out the first two. Proposed: fix now. Name `list_instances()` and `lms_unload_all()` in NEWS with a test each. The chat lookup stays in D-037 and the conditions help.
+2. D2: the warning's second line says that LM Studio loads the model, but it shows before the load is sent. With `context_length = TRUE` it reads "1 tokens". Proposed: fix now. Say that the load request goes out with the asked value, and pluralize.
+3. B1, B2, B6: the rule sits in the shared model-list check, as `size_bytes` does. So a bad `max_context_length` on any model blocks `list_instances()`, `lms_unload_all()`, `lms_load()`, and the server wait, none of which reads the field for that model. Proposed: follow-up candidate row. The plan chose this placement, and M050 set the other precedent.
+4. D8: no test shows the coercion warning once for `context_length = "abc"`. Proposed: fix now, with one assertion.
+5. P1: `rlmstudio_context_above_max` has no alias or help section, as the other classes have. Proposed: fix now, with an alias on the `lms_load()` page.
+6. D9, B7: the `max_context_length` abort is a sub-bullet of the warning entry in NEWS. Proposed: fix now, as its own top-level entry.
+7. D10: the help says that the `max_context_length` column gives the maximum, and a list without the field has no column. Proposed: fix now, with a wording change.
+8. D4, D5, B8, B9: the row match is exact. A variant name (`key@4bit`), another letter case, or a second row with the same key gives no warning, or reads the first row only. Proposed: the same follow-up candidate row as item 3.
+9. D3: a `max_context_length` of 0 or less passes the rule and warns for any value. Proposed: reject. No fixture or probe shows such a value.
+10. B3: the past-quiet warning stretches the D-010 and D-021 class to a load that loses nothing, and D-037's title does not say "trades GP6". Proposed: reject. The plan gate chose it, and D-037 records the trade in its Consequences.
+11. B4: D-037 does not cite D-003. Proposed: reject. D-003 governs checks on request fields, and this is a warning only.
+12. D6: `context_length = 3e9` becomes NA and gives no warning. Proposed: reject. It matches the documented rule that the value reads as one integer.
+13. D7: a factor `context_length` sends the level code. Proposed: reject. That behavior predates this branch, and the new check agrees with the body.
+14. B5: the old `loaded = TRUE` form kept M008's intent, and the new form keeps it too. Proposed: noted, no action.
