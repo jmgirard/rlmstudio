@@ -35,16 +35,16 @@ a candidate row. The package code does not change.
 
 ## Acceptance criteria
 
-- [ ] AC1: If another listener holds the first dry-run port on 127.0.0.1,
+- [x] AC1: If another listener holds the first dry-run port on 127.0.0.1,
       `request_target()` still returns the sent method, path, and body. That
       function is in `tests/testthat/helper-mock-http.R`. A test in
       `tests/testthat/test-mock-http-helper.R` holds such a listener.
-- [ ] AC2: If every try lands on a held port, the shared dry-run helper stops
+- [x] AC2: If every try lands on a held port, the shared dry-run helper stops
       with a message. The message says that the dry run received no request.
       It names another program on the port as the likely cause. It replaces
       "argument 'x' must be a raw vector". A test in
       `tests/testthat/test-mock-http-helper.R` asserts that message.
-- [ ] AC3: Each line that `grep -rn "req_dry_run(" tests/testthat` returns is
+- [x] AC3: Each line that `grep -rn "req_dry_run(" tests/testthat` returns is
       a comment or the one call inside the shared dry-run helper. That helper
       is in `tests/testthat/helper-mock-http.R`.
 - [ ] AC4: `devtools::test()` reports 0 failed and 0 errors.
@@ -89,9 +89,14 @@ a candidate row. The package code does not change.
 - 2026-09-30: T4 done. In a scratch copy with the helper set to 1 try, both read tests stopped with the AC2 message. The all-tries test counted 1 try in place of 5. The repo copy did not change. `devtools::check()` with the API token: 0 errors, 0 warnings, 0 notes.
 - 2026-09-30: claim audit: not owed — internal tier
 - 2026-09-30: all tasks done. Status set to review. This is the unnamed-error candidate row.
+- 2026-09-30: review started. AC1 to AC3 verified. AC4 run, the document() check, and three reviewers are still running (checkpoint, review not done).
 
 ## Decisions
 
 - 2026-09-30 (implement gate): If the dry run fails with httpuv's "Failed to create server" error, the shared dry-run helper also retries. That retry uses the same 5 tries and ends with the AC2 message. Linux, and probably Windows, is expected to refuse a bind to 0.0.0.0 on a port that 127.0.0.1 holds. On those systems, the forced-port tests get that error in place of an empty result. The helper catches no other error.
 
 ## Review
+
+- AC1 evidence (2026-09-30): `test_file("test-mock-http-helper.R")` passed. The held-port test and the bind-error test got POST, the path, and the body, with 2 tries each. In a scratch copy with 1 try, both tests stopped with the AC2 message, so the retry is what makes them pass.
+- AC2 evidence (2026-09-30): the all-tries test passed with 5 tries. It asserts "received no request", "another program", and no "must be a raw vector". In the 1-try scratch copy, the stop message read "The dry run received no request in 1 tries. Another program probably listens on 127.0.0.1 at the port that curl::curl_echo() picked."
+- AC3 evidence (2026-09-30): the grep returned 5 lines. Four are comments at `helper-mock-http.R` lines 88, 102, 177, and 179. One is the call at line 192, inside `request_dry_run()`.
