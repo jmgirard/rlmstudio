@@ -2,6 +2,34 @@
 
 ## rlmstudio (development version)
 
+- [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  now warns when `context_length` is larger than the
+  `max_context_length` that the model list gives for the model. The
+  warning has the class `rlmstudio_context_above_max`, names both
+  numbers, and shows when the `rlmstudio.quiet` option is `TRUE`. The
+  load still goes ahead with the asked value, as the server loads it
+  with no message. The warning comes only with `force = FALSE`, for a
+  model that is not loaded yet.
+
+  - The
+    [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+    and
+    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+    help pages have a new “Long prompts” section. It covers the error
+    for a prompt longer than the loaded context, the warning, and how to
+    read the prompt token count.
+
+- The model-list check now requires the `max_context_length` of each
+  model to be a number, absent, or `null`. Any other value makes
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
+  and
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  with `force = FALSE` abort with `rlmstudio_bad_response`.
+  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+  returns `FALSE` for such a list.
+
 - [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
   [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
   and

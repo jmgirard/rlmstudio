@@ -312,7 +312,8 @@ read by its exact name, so a field named <code>keyX</code> does not stand in for
 can be empty.</p></li>
 <li><p>Each entry of <code>models</code> is a JSON object. Its <code>type</code> and <code>key</code> are
 strings, and its <code>loaded_instances</code> is an array.</p></li>
-<li><p>The <code>size_bytes</code> of an entry is a number, or absent, or <code>null</code>.</p></li>
+<li><p>The <code>size_bytes</code> of an entry is a number, or absent, or <code>null</code>. So is
+its <code>max_context_length</code>.</p></li>
 <li><p>Each entry of <code>loaded_instances</code> is a JSON object whose <code>id</code> is a string
 with a character that is not whitespace.</p></li>
 </ol><p>The rules are checked before the <code>type</code> and <code>loaded</code> filters, so an entry

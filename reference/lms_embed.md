@@ -339,7 +339,8 @@ name, so a field named `keyX` does not stand in for `key`.
 2.  Each entry of `models` is a JSON object. Its `type` and `key` are
     strings, and its `loaded_instances` is an array.
 
-3.  The `size_bytes` of an entry is a number, or absent, or `null`.
+3.  The `size_bytes` of an entry is a number, or absent, or `null`. So
+    is its `max_context_length`.
 
 4.  Each entry of `loaded_instances` is a JSON object whose `id` is a
     string with a character that is not whitespace.
