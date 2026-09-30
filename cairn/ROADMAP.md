@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-30 (M064 done, M061 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M065 | An error in one test-loop pass no longer stops the later passes | in-progress | none | normal | milestones/M065-nested-loop-subtests.md |
+| M065 | An error in one test-loop pass no longer stops the later passes | review | none | normal | milestones/M065-nested-loop-subtests.md |
 | M064 | Each help page shows the malformed-reply rules that its function applies | done | none | normal | milestones/archive/M064-malformed-section-split.md |
 | M063 | A load above the trained context warns, and the help says how to fit a long prompt | done | none | normal | milestones/archive/M063-long-prompts.md |
 | M062 | A chat call aborts on a text input that is not one prompt | done | none | normal | milestones/archive/M062-chat-input-one-prompt.md |

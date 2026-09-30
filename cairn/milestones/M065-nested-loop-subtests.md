@@ -1,6 +1,6 @@
 # M065: An error in one test-loop pass no longer stops the later passes
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -106,7 +106,7 @@ defines top-level blocks already gives one block per pass.
       loops near `:680` and `:698`. The second is the loop pair in the
       `empty_rows()` test near `:2500`. The third is the "a request of"
       subtests near `:1048`.
-- [ ] T10: Rerun the sweep, the AC2 and AC3 plants, `devtools::test()`,
+- [x] T10: Rerun the sweep, the AC2 and AC3 plants, `devtools::test()`,
       and `devtools::check()`. Then set the status to review.
 
 ## Work log
@@ -134,6 +134,10 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: after T7, `devtools::test()` gave 0 failed, 0 errors, 3 skipped, and 19365 passed. The drop from 19707 is the `other` loop, now one check per probe, and parent passes that the results table no longer counts.
 - 2026-09-30: T8 done. `loop-sweep.R` adds rows with the status `before-subtest`, one per `expect_*()` call that a block runs before or between its nested `test_that()` calls. It skips calls inside a function literal. At 0b6d583, before T7, it prints 21 such rows, which hold every site that review O1 names. At d32ea11 it prints 0. Its other rows at 0b6d583 match the old script line for line. A scratch fixture of seven blocks gave rows for the three that hold an early call and none for the four that do not.
 - 2026-09-30: T9 done. In `test-arg-guards.R` the two `cases` loops now name their subtests "<label> in a data frame" and "<label> in a list and a vector". The request loop names "request <i> of <label>". The `empty_rows()` pair names "at top level" and "one level down". Before T9, `test_file()` gave 15 full test names twice. After it, 0 of 995. `devtools::test()` gave 0 failed, 0 errors, 3 skipped, and 19371 passed.
+- 2026-09-30: T10 done, at d30258b. The sweep prints 289 rows: 203 `flat`, 86 `nested`, and 0 `before-subtest`. No `flat` row is in AC1 scope, and 0 of the 268 plan-commit triples print fewer times. AC2 plant: the 8 `cli_callers` blocks hold 32 subtests. All 8 for `lms_daemon_stop` failed, with "planted" in their messages, and 0 of the other 24 did. AC3 plant: the 10 blocks hold 130 subtests, each named by one of the 13 labels. In each block the one `no values` subtest errored with the "0 values rather than one" abort, and 0 of the other 120 failed or errored. `devtools::test()` gave 0 failed, 0 errors, 3 skipped, and 19371 passed.
+- 2026-09-30: the first T10 `devtools::check()` ran at the same time as the plants and gave 1 error and 0 warnings. Its text was not captured, so the error is not identified. A rerun with nothing else running gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-30: claim audit: not owed, internal tier.
+- 2026-09-30: all tasks done, status set to review.
 
 ## Decisions
 
