@@ -37,9 +37,9 @@ server.}
 \code{rlmstudio.quiet} option. \code{TRUE} starts no progress bar, and \code{FALSE}
 starts one, also when the option is \code{TRUE}. cli draws a started bar only
 after a delay, two seconds by default. Any other value, \code{NA} included,
-aborts before the check for a running server. \code{quiet} does not hide the warnings
-about failed inputs, cut-off replies, or a vector format that returns a
-list.}
+aborts before the check for a running server. \code{quiet} does not hide the
+warnings about failed inputs, cut-off replies, a vector format that
+returns a list, or a \code{logprobs = TRUE} that the \code{"native"} route ignores.}
 
 \item{...}{Additional arguments passed to \code{lms_chat}, such as \code{api_type},
 \code{logprobs}, \code{schema}, \code{ttl}, or \code{previous_response_id}. A \code{schema}, a
@@ -63,8 +63,9 @@ An \code{input} here also aborts, because the batch passes each element of
 \code{inputs} as \code{input}. An \code{input} reaches \code{...} only when \code{inputs} is
 given by its full name. Otherwise R reads \code{input} as a shortened
 \code{inputs}, so it becomes \code{inputs}, and the value given by position fills
-the next unnamed argument, such as \code{system_prompt}. These aborts come before every other check of
-\code{...} and before the check for a running server.
+the next unnamed argument, such as \code{system_prompt}. These aborts come
+before every other check of \code{...} and before the check for a running
+server.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.}
@@ -85,9 +86,10 @@ On the native and OpenResponses routes with \code{simplify = TRUE}, \code{\link[
 returns each reply that carries an id with a \code{response_id} attribute, as
 its help describes. With \code{format = "list"}, each reply keeps
 it. So does each element of the list that \code{format = "vector"} returns with
-\code{logprobs = TRUE} on the OpenResponses route. The character vector of \code{format = "vector"} and the
-\code{output} column of \code{format = "data.frame"} carry no \code{response_id}
-attribute. The data frame holds the ids in its \code{response_id} column.
+\code{logprobs = TRUE} on the OpenResponses route. The character vector of
+\code{format = "vector"} and the \code{output} column of \code{format = "data.frame"}
+carry no \code{response_id} attribute. The data frame holds the ids in its
+\code{response_id} column.
 
 With \code{api_type = "native"} and \code{format = "data.frame"}, the data frame ends
 with seven columns read from each reply: \code{response_id}, \code{input_tokens},

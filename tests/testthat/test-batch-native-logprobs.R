@@ -14,13 +14,26 @@ native_batch_replies <- function(n, fail = integer()) {
     }
     mock_response(
       200L,
-      native_reply(sprintf("reply %d", k), response_id = quoted(sprintf("resp_%d", k)))
+      native_reply(
+        sprintf("reply %d", k),
+        response_id = quoted(sprintf("resp_%d", k))
+      )
     )
   })
 }
 
+# Call `lms_chat_batch()` with `args` against `replies`, and return its value
+# with every warning it gave and every request it sent.
+drive_native_batch <- function(args, replies) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(replies)
+  res <- collect_warnings(do.call(lms_chat_batch, args))
+  res$requests <- recorder$requests
+  res
+}
+
 # Run a native batch of `n` inputs with `dots` against `replies`, and return
-# its value with every warning it gave.
+# its value with every warning it gave and every request it sent.
 run_native_batch <- function(
   dots,
   format,
@@ -28,18 +41,20 @@ run_native_batch <- function(
   replies = native_batch_replies(n),
   quiet = TRUE
 ) {
-  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-  local_request_sequence(replies)
   args <- c(
     list("a-model", sprintf("input %d", seq_len(n)), format = format),
     list(quiet = quiet),
     dots
   )
-  collect_warnings(do.call(lms_chat_batch, args))
+  drive_native_batch(args, replies)
 }
 
 warning_texts <- function(warnings) {
-  vapply(warnings, function(w) cli::ansi_strip(conditionMessage(w)), character(1))
+  vapply(
+    warnings,
+    function(w) cli::ansi_strip(conditionMessage(w)),
+    character(1)
+  )
 }
 
 formats <- c("vector", "list", "data.frame")
@@ -124,24 +139,162 @@ test_that("a native batch with logprobs warns once, past quiet", {
           1L,
           info = info
         )
-        expect_false(any(grepl("Returning list", shown, fixed = TRUE)), info = info)
+        expect_false(
+          any(grepl("Returning list", shown, fixed = TRUE)),
+          info = info
+        )
         if (length(b$fail) == 0L) {
           expect_identical(length(shown), 1L, info = info)
         } else {
           # The notice and the failed-inputs warning, which names position 2.
           expect_identical(length(shown), 2L, info = info)
           failure <- shown[shown != native_logprobs_text]
-          expect_match(failure, "1 input failed, at position 2.", fixed = TRUE, info = info)
+          expect_match(
+            failure,
+            "1 input failed, at position 2.",
+            fixed = TRUE,
+            info = info
+          )
         }
       }
     }
   }
 })
 
+# Assert that `on` and `off` return the same value and that `on` gave the one
+# notice and no other warning.
+expect_one_notice_same_value <- function(on, off, info) {
+  expect_identical(on$value, off$value, info = info)
+  expect_identical(
+    warning_texts(on$warnings),
+    native_logprobs_text,
+    info = info
+  )
+}
+
+test_that("a shortened log dot beside logprobs stays a body field on native", {
+  # R matches the exact `logprobs` first, so `log` goes to the `...` of
+  # `lms_chat()` and on to the request body, as it does with the flag off.
+  for (value in list(TRUE, FALSE, "x")) {
+    for (format in formats) {
+      info <- paste(format, "log =", deparse(value))
+      on <- run_native_batch(
+        list(api_type = "native", logprobs = TRUE, log = value),
+        format
+      )
+      off <- run_native_batch(
+        list(api_type = "native", logprobs = FALSE, log = value),
+        format
+      )
+      expect_one_notice_same_value(on, off, info)
+      expect_identical(length(on$requests), 2L, info = info)
+      for (req in on$requests) {
+        body <- jsonlite::fromJSON(req$body$data, simplifyVector = FALSE)
+        expect_identical(body[["log"]], value, info = info)
+        expect_false("logprobs" %in% names(body), info = info)
+      }
+    }
+  }
+})
+
+# The arguments of a batch of two inputs that fill every formal before `...`
+# by position, so each element of `dots` is a dot, named or not.
+positional_batch <- function(format, dots) {
+  c(
+    list(
+      "a-model",
+      c("input 1", "input 2"),
+      NULL,
+      format,
+      "http://localhost:1234",
+      TRUE,
+      TRUE
+    ),
+    dots
+  )
+}
+
+test_that("an unnamed dot after logprobs on native goes where it goes with the flag off", {
+  for (format in formats) {
+    on <- drive_native_batch(
+      positional_batch(
+        format,
+        list(api_type = "native", logprobs = TRUE, "extra")
+      ),
+      native_batch_replies(2L)
+    )
+    off <- drive_native_batch(
+      positional_batch(
+        format,
+        list(api_type = "native", logprobs = FALSE, "extra")
+      ),
+      native_batch_replies(2L)
+    )
+    expect_one_notice_same_value(on, off, format)
+  }
+})
+
+test_that("a logprobs given by position on native is treated as off", {
+  # The first two dots, unnamed, are what `lms_chat()` reads as `api_type`
+  # and `logprobs`.
+  for (format in formats) {
+    on <- drive_native_batch(
+      positional_batch(format, list("native", TRUE)),
+      native_batch_replies(2L)
+    )
+    off <- drive_native_batch(
+      positional_batch(format, list("native", FALSE)),
+      native_batch_replies(2L)
+    )
+    expect_one_notice_same_value(on, off, format)
+  }
+})
+
+test_that("a native batch with logprobs that stops at a 401 keeps its results", {
+  replies <- list(
+    native_batch_replies(1L)[[1]],
+    mock_response(401L, '{"error": {"message": "refused"}}')
+  )
+  stop_batch <- function(flag, format) {
+    drive_native_batch(
+      list(
+        "a-model",
+        c("input 1", "input 2", "input 3"),
+        format = format,
+        quiet = TRUE,
+        api_type = "native",
+        logprobs = flag
+      ),
+      replies
+    )
+  }
+  caught <- function(flag, format) {
+    tryCatch(stop_batch(flag, format), rlmstudio_api_error = identity)
+  }
+  for (format in formats) {
+    on <- caught(TRUE, format)
+    off <- caught(FALSE, format)
+    expect_s3_class(on, "rlmstudio_api_error")
+    expect_identical(on$status, 401L, info = format)
+    # The whole value, attributes included.
+    expect_identical(
+      on$results,
+      list(structure("reply 1", response_id = "resp_1"), NULL, NULL),
+      info = format
+    )
+    expect_identical(on$results, off$results, info = format)
+  }
+})
+
 test_that("a native batch with logprobs and no server gives no notice", {
   probe <- local_counting_probe()
   res <- collect_warnings(tryCatch(
-    lms_chat_batch("a-model", c("a", "b"), api_type = "native", logprobs = TRUE),
+    lms_chat_batch(
+      "a-model",
+      c("a", "b"),
+      api_type = "native",
+      logprobs = TRUE
+    ),
     rlmstudio_no_server = identity
   ))
   expect_s3_class(res$value, "rlmstudio_no_server")

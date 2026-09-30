@@ -10,8 +10,9 @@ batch_formals <- c("model", "system_prompt", "host", "simplify", "token")
 repeat_domain <- setdiff(names(formals(lms_chat)), c("...", batch_formals))
 
 # Run a batch with `dots` against a stopped server that counts its probes,
-# and return the error with the probe count.
-run_repeat_batch <- function(dots, inputs = list("a", "b")) {
+# and return the error with the probe count. `inputs` is the list of
+# arguments that give `inputs`, by position unless named.
+run_repeat_batch <- function(dots, inputs = list(c("a", "b"))) {
   probe <- local_counting_probe()
   err <- tryCatch(
     do.call(lms_chat_batch, c(list("a-model"), inputs, dots)),

@@ -1619,9 +1619,9 @@ integer_or_na <- function(x) {
 #'   `rlmstudio.quiet` option. `TRUE` starts no progress bar, and `FALSE`
 #'   starts one, also when the option is `TRUE`. cli draws a started bar only
 #'   after a delay, two seconds by default. Any other value, `NA` included,
-#'   aborts before the check for a running server. `quiet` does not hide the warnings
-#'   about failed inputs, cut-off replies, or a vector format that returns a
-#'   list.
+#'   aborts before the check for a running server. `quiet` does not hide the
+#'   warnings about failed inputs, cut-off replies, a vector format that
+#'   returns a list, or a `logprobs = TRUE` that the `"native"` route ignores.
 #' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,
 #'   `logprobs`, `schema`, `ttl`, or `previous_response_id`. A `schema`, a
 #'   `ttl`, a `previous_response_id`, and the `api_type` that each needs are
@@ -1644,8 +1644,9 @@ integer_or_na <- function(x) {
 #'   `inputs` as `input`. An `input` reaches `...` only when `inputs` is
 #'   given by its full name. Otherwise R reads `input` as a shortened
 #'   `inputs`, so it becomes `inputs`, and the value given by position fills
-#'   the next unnamed argument, such as `system_prompt`. These aborts come before every other check of
-#'   `...` and before the check for a running server.
+#'   the next unnamed argument, such as `system_prompt`. These aborts come
+#'   before every other check of `...` and before the check for a running
+#'   server.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
@@ -1660,9 +1661,10 @@ integer_or_na <- function(x) {
 #' returns each reply that carries an id with a `response_id` attribute, as
 #' its help describes. With `format = "list"`, each reply keeps
 #' it. So does each element of the list that `format = "vector"` returns with
-#' `logprobs = TRUE` on the OpenResponses route. The character vector of `format = "vector"` and the
-#' `output` column of `format = "data.frame"` carry no `response_id`
-#' attribute. The data frame holds the ids in its `response_id` column.
+#' `logprobs = TRUE` on the OpenResponses route. The character vector of
+#' `format = "vector"` and the `output` column of `format = "data.frame"`
+#' carry no `response_id` attribute. The data frame holds the ids in its
+#' `response_id` column.
 #'
 #' With `api_type = "native"` and `format = "data.frame"`, the data frame ends
 #' with seven columns read from each reply: `response_id`, `input_tokens`,
@@ -1856,13 +1858,13 @@ lms_chat_batch <- function(
 
   # The native route has no logprobs, so the batch treats the flag as off
   # there and returns what `logprobs = FALSE` returns. It warns once for the
-  # batch, not once per input, and it sends each call no `logprobs`, so
-  # `lms_chat()` does not warn as well.
+  # batch, not once per input, and it sends each call `logprobs = FALSE`, so
+  # `lms_chat()` does not warn as well. The dot keeps its name and place, so
+  # no other dot moves into the `logprobs` of `lms_chat()`.
   native_logprobs <- api_type == "native" && isTRUE(args[["logprobs"]])
   chat_dots <- list(...)
   if (native_logprobs) {
-    reached <- rlm_dots_reached(chat_dots)
-    chat_dots <- chat_dots[is.na(reached) | reached != "logprobs"]
+    chat_dots[[rlm_dot_filling(chat_dots, "logprobs")]] <- FALSE
   }
   has_logprobs <- isTRUE(args[["logprobs"]]) && !native_logprobs
   # A data frame of parsed replies adds one column per schema property
@@ -2219,7 +2221,36 @@ rlm_chat_dots <- function(dots) {
 }
 
 # The `lms_chat()` arguments that `lms_chat_batch()` passes by name.
-batch_chat_args <- c("model", "input", "system_prompt", "host", "simplify", "token")
+batch_chat_args <- c(
+  "model",
+  "input",
+  "system_prompt",
+  "host",
+  "simplify",
+  "token"
+)
+
+#' Which dot of lms_chat_batch() fills one lms_chat() argument?
+#'
+#' Runs R's own argument matching over the call that `lms_chat_batch()` makes,
+#' with each dot replaced by its position. So a dot counts whether it fills
+#' the argument by its exact name, a shortened name, or its position. Call it
+#' after `rlm_check_chat_dots_once()`, because two dots for one argument make
+#' `match.call()` fail.
+#'
+#' @param dots The list of `...` values.
+#' @param arg The name of an `lms_chat()` argument.
+#' @return The position in `dots` of the dot that fills `arg`, or `NULL` when
+#'   no dot fills it.
+#' @noRd
+rlm_dot_filling <- function(dots, arg) {
+  placeholders <- vector("list", length(batch_chat_args))
+  names(placeholders) <- batch_chat_args
+  positions <- as.list(seq_along(dots))
+  names(positions) <- names(dots)
+  call <- as.call(c(list(quote(lms_chat)), placeholders, positions))
+  match.call(lms_chat, call)[[arg]]
+}
 
 #' Which lms_chat() argument does each dot of lms_chat_batch() reach?
 #'
