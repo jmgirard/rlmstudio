@@ -190,3 +190,21 @@ Pass 2 (2026-09-30), at 8b88a1f, after T7 to T10. Main is still at a03fdc1. The 
 - AC4: `DESCRIPTION` line 30 is `testthat (>= 3.3.0),`, the seventh line of the Suggests field.
 - AC5: `devtools::test()` gave 0 failed, 0 errors, 3 skipped (live server tests), and 19368 passed, and its reporter printed no Failed section. T10 logged 19371 passed with no code change since d30258b, so the pass count varies by 3 between runs. `devtools::check()`, run with nothing else running, gave 0 errors, 0 warnings, and 0 notes, with tests OK in 73 s. With 0 notes, no compare run on a42a1ab is owed.
 - Consistency gate: `cairn_validate.py` exits 0 with every check PASS or OK. No principle changed, so `cairn_impact` is skipped. `devtools::document()` gives no diff. The branch changes no README or R source, and the repo has no `_pkgdown.yml`. The change is test code, a dev script under `cairn/`, and a Suggests floor, so NEWS owes no entry. `cairn/` is already in `.Rbuildignore`, and `check()` gave no note.
+
+Pass 2 findings come from three fresh reviewers: Opus diff (Q), Sonnet history (H), and Sonnet prior reviews (R). Each reviewer ranked its own findings.
+
+- Q1: three parent blocks call `baseline_args()` before their nested subtests, at `test-arg-guards.R:161`, `:292`, and `:331`. If a placeholder is missing, that helper calls `testthat::fail()`, and the results table drops that failure. The reviewer reproduced it with `inputs` removed from `arg_placeholders`. `test_check()` still stops, because the block at `:136` tests a superset of these functions and holds no subtest. The T7 and T8 claims of 0 such sites are not accurate. Review read the code at the three sites and found the same. The two `flag_baseline_args()` calls in `test-flag-args.R` sit in flat blocks, so they are not affected.
+- Q2: the `before-subtest` report of `loop-sweep.R` misses five patterns. They are a helper not named `expect_*` that records a result, `lapply()` with a function literal, `testthat::expect_*()`, a `testthat::test_that()` subtest, and a subtest that a helper in the block makes. In a 6-block fixture it reported 1 of 6 dropped failures. Only the first pattern occurs in the repo (Q1).
+- Q3: no durable record states that a parent's results before or between nested subtests are dropped, or that parent checks go after the last subtest. D-038 tells later loops to nest, so a later edit can bring O1 back.
+- Q4: `devtools::test()` passes vary by 3 between runs with no code change (19368 against 19371). The cause is not found.
+- Q5: the header comment of `loop-sweep.R` says each row is a loop, but `before-subtest` rows name a call and its line.
+- Q, clean: a reporter that flags a result recorded before a subtest of its own block found 0 on all 16 changed files at HEAD, and every O1 site at 0b6d583. 0 duplicate full names in 1468 test starts. Loop-carried state, the T7 moves, and the T9 renames check the same things as before.
+- H1: the `other` loop near `test-arg-guards.R:1708`, now one `expect_identical()`, is equivalent. A failure now lists the rules in one message.
+- H2: the `<<-` counters are correct. A subtest that errors before its increment also fails the count check.
+- H3: guards moved after their loops still fire, but now fail second.
+- H4: the stream request loop runs only over the requests sent, as before.
+- H5: the hidden-request checks near `:692` are kept in their own subtest.
+- H6: a `require_httpuv()` skip now ends one subtest (same as O5).
+- H7: same as Q2, for `testthat::test_that()` and helpers.
+- H8: the results table counts fewer passes, which a pass-count baseline will see once.
+- R: no regression of a prior review finding. `air format --check` is clean on five changed files, `test-arg-guards.R` among them (P3). The B1, P2, and P1 hygiene edits are still to come, as the pass 1 gate set.
