@@ -102,7 +102,11 @@ test_that("a body that does not parse fails only its own input in a batch", {
         expect_identical(length(warnings), 1L, info = info)
         expect_match(warnings, "1 input failed, at position 2\\.", info = info)
         if (format == "list") {
-          expect_identical(without_response_id(out[[1]]), "reply 1", info = info)
+          expect_identical(
+            without_response_id(out[[1]]),
+            "reply 1",
+            info = info
+          )
           expect_s3_class(out[[2]], "rlmstudio_bad_response")
           expect_match(
             conditionMessage(out[[2]]),
@@ -110,7 +114,11 @@ test_that("a body that does not parse fails only its own input in a batch", {
             fixed = TRUE,
             info = info
           )
-          expect_identical(without_response_id(out[[3]]), "reply 3", info = info)
+          expect_identical(
+            without_response_id(out[[3]]),
+            "reply 3",
+            info = info
+          )
         } else if (format == "vector") {
           expect_identical(out, c("reply 1", NA, "reply 3"), info = info)
         } else {

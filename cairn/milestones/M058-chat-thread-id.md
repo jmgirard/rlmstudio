@@ -180,3 +180,27 @@ Pass 2, 2026-09-29, on d1499b9. The default branch had not moved. T8 changed onl
 - AC6: each of the three chat pages now states both `store = FALSE` facts and both reply fields. The OpenResponses page names the native `response_id` field, and the native page names the OpenResponses `id` field. The pass-1 reads of the other AC6 sentences, the batch help, and NEWS still hold, because T8 changed none of them. A `devtools::document()` run after the check left no diff.
 - AC7: the same `devtools::test()` run gave 0 failures. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The server and model state were the same after both runs.
 - Gate: `cairn_validate.py` passed with exit 0. `pkgdown::check_pkgdown()` found no problems. The other pass-1 gate results hold, because T8 added no file.
+
+Independent review, pass 2. An Opus diff reviewer gave O1 to O13. A Sonnet blame-history reviewer gave R1 to R5, and a Sonnet prior-review reviewer gave Q1 to Q6. No finding showed a criterion failing, so none returned the milestone. The user accepted this triage at the gate.
+
+- O1 and R3, fix now: the `results` field of a batch abort held the id in the list and vector formats only. `R/conditions.R` and a code comment say every format holds the same values. The data-frame reader now attaches the id, and a new `test-thread.R` block pins `cnd$results` in all three formats. Without the fix it failed on the data-frame format of both routes.
+- Q1, fix now: `previous_response_id` added to the "Server not running" list in `R/conditions.R`.
+- O2 and R2, fix now: the note in `vignettes/getting-started.Rmd` now says how to continue a conversation.
+- O3, fix now: the "Reply from another model" pointer moved back to its paragraph in the batch help.
+- O4, fix now: the batch help sentence on reply ids now names `simplify = TRUE` and a reply that carries an id.
+- O9, fix now: the recorded-thread test also reads the reply body and checks its `previous_response_id` and `id`.
+- O11, fix now: NEWS says that `trimws()`, `toupper()`, `sub()`, and `gsub()` keep the attribute and `paste0()` drops it, as an R run showed.
+- Q4, fix now: `air format` on `test-thread.R` and `record-thread-cassette.R`, and on the two branch lines of `test-chat-body-parse.R`. The other edited R files have the same Air hunk counts as main.
+- Q2, fix now: `cairn/references/lmstudio-api-surface.md` marks stateful chat as wrapped by M058.
+- R1 and O6, fix now: D-031 annotates D-013 and D-030. It records the reversal of the D-013 attribute rejection and the whitespace rule.
+- Q3 and O12, follow-up: added to the M057 O6 and O7 candidate row.
+- Q5, follow-up: added to the `id_fault()` candidate row.
+- O7 and O8, follow-up: added to the candidate row on a batch stop at an unknown id.
+- O5, rejected: AC3 gives an empty id the attribute, and no server was seen to send one.
+- O10, rejected: the print method is cosmetic, and the attribute is reachable.
+- O13, rejected: the next recording run removes the folder, as in the older scripts.
+- Q6, rejected: the plan gate chose to keep going past an unknown id, and a candidate row covers a stop.
+- R4, rejected: the test at `test-thread.R:463` pins the OpenAI case.
+- R5, rejected: every check runs before the probe, and no rule fixes their order.
+- After the fixes, the first full run failed two older tests. `test-chat-batch.R` and `test-chat-batch-usage.R` pinned the data-frame `cnd$results` without the id, the behavior O1 fixes. Both now expect the list-format values.
+- Checks after the fixes: `devtools::test()` gave 0 failures and 3 live skips. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. `devtools::document()` left no diff, and `air format --check` passed on the two new files.

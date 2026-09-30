@@ -65,8 +65,9 @@ The return type depends on the \code{format} argument:
 \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 }
 
-On the native and OpenResponses routes, \code{\link[=lms_chat]{lms_chat()}} returns each reply
-with a \code{response_id} attribute. With \code{format = "list"}, each reply keeps
+On the native and OpenResponses routes with \code{simplify = TRUE}, \code{\link[=lms_chat]{lms_chat()}}
+returns each reply that carries an id with a \code{response_id} attribute, as
+its help describes. With \code{format = "list"}, each reply keeps
 it. So does each element of the list that \code{format = "vector"} returns with
 \code{logprobs = TRUE}. The character vector of \code{format = "vector"} and the
 \code{output} column of \code{format = "data.frame"} carry no \code{response_id}
@@ -192,13 +193,13 @@ The batch aborts in the same way at an \code{rlmstudio_api_error} with \code{sta
 \code{rlmstudio_model_mismatch}. The \code{"openai"} and \code{"openresponses"} routes
 give these for a model name that the server cannot find, so every later
 input fails in the same way.
+See the "Reply from another model" section below.
 
 A \code{previous_response_id} that the server does not hold gives status 400
 with the \code{code} \code{"invalid_value"} on the native route and
 \code{"previous_response_not_found"} on the OpenResponses route. The batch does
 not abort at either one. Each such input fails alone, as described above,
 and the batch goes on to the next input.
-See the "Reply from another model" section below.
 
 An \code{rlmstudio_no_server} from \code{\link[=lms_chat]{lms_chat()}} also aborts the batch. Its
 \code{results} field holds the results so far, as described in the "Server not
@@ -210,7 +211,8 @@ unchanged.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
+\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, \code{previous_response_id},
+or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of

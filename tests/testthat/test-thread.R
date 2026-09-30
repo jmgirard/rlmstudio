@@ -283,7 +283,12 @@ test_that("lms_chat() passes a string and NULL to its delegate", {
     for (value in list("resp_1", NULL)) {
       before <- delegates$calls
       expect_identical(
-        lms_chat("a-model", "hi", api_type = route, previous_response_id = value),
+        lms_chat(
+          "a-model",
+          "hi",
+          api_type = route,
+          previous_response_id = value
+        ),
         "ok",
         info = route
       )
@@ -310,12 +315,21 @@ test_that("lms_chat() refuses previous_response_id on the openai route", {
   probe <- local_counting_probe()
   delegates <- local_counting_delegates()
   err <- expect_error(
-    lms_chat("a-model", "hi", api_type = "openai", previous_response_id = "resp_1"),
+    lms_chat(
+      "a-model",
+      "hi",
+      api_type = "openai",
+      previous_response_id = "resp_1"
+    ),
     "previous_response_id",
     fixed = TRUE
   )
   expect_match(conditionMessage(err), "api_type = \"native\"", fixed = TRUE)
-  expect_match(conditionMessage(err), "api_type = \"openresponses\"", fixed = TRUE)
+  expect_match(
+    conditionMessage(err),
+    "api_type = \"openresponses\"",
+    fixed = TRUE
+  )
   expect_false(any(grepl("^rlmstudio_", class(err))))
   expect_identical(probe$calls, 0L)
   expect_identical(delegates$calls, 0L)
@@ -344,7 +358,11 @@ test_that("lms_chat_batch() refuses previous_response_id on the openai route", {
     fixed = TRUE
   )
   expect_match(conditionMessage(err), "api_type = \"native\"", fixed = TRUE)
-  expect_match(conditionMessage(err), "api_type = \"openresponses\"", fixed = TRUE)
+  expect_match(
+    conditionMessage(err),
+    "api_type = \"openresponses\"",
+    fixed = TRUE
+  )
   expect_false(any(grepl("^rlmstudio_", class(err))))
   expect_identical(probe$calls, 0L)
 
@@ -456,7 +474,11 @@ test_that("lms_chat() returns the attribute on the two thread routes", {
       function() lms_chat("a-model", "hi", api_type = route),
       thread_reply_with_id(route, quoted("resp_9"))
     )
-    expect_identical(value, structure("hi", response_id = "resp_9"), info = route)
+    expect_identical(
+      value,
+      structure("hi", response_id = "resp_9"),
+      info = route
+    )
   }
 })
 
@@ -582,6 +604,38 @@ test_that("a data-frame batch keeps the ids in its column and not on the output"
   }
 })
 
+# The `results` field of a batch abort holds what the list format returns, so
+# the reply ids of the inputs before the abort are there in every format.
+test_that("a batch abort keeps the reply ids in its results in every format", {
+  for (route in c("native", "openresponses")) {
+    for (format in c("list", "vector", "data.frame")) {
+      info <- paste(route, format)
+      testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+      local_request_sequence(list(
+        mock_response(200L, thread_reply_with_id(route, quoted("resp_a"))),
+        mock_response(401L, '{"error": {"message": "refused"}}')
+      ))
+      cnd <- tryCatch(
+        lms_chat_batch(
+          "a-model",
+          c("first", "second"),
+          format = format,
+          quiet = TRUE,
+          api_type = route
+        ),
+        rlmstudio_api_error = identity
+      )
+      expect_s3_class(cnd, "rlmstudio_api_error")
+      expect_identical(cnd$status, 401L, info = info)
+      expect_identical(
+        cnd$results,
+        list(structure("hi", response_id = "resp_a"), NULL),
+        info = info
+      )
+    }
+  }
+})
+
 # A thread over the recorded replies ----------------------------------------
 
 # The recorded replies in thread_live/ come from a live LM Studio server.
@@ -636,6 +690,16 @@ test_that("a recorded native reply id continues a thread on the OpenResponses ro
     second_id <- attr(second, "response_id")
     expect_true(is.character(second_id) && length(second_id) == 1L)
     expect_false(identical(second_id, id))
+    # The same request with `simplify = FALSE` reads the same recorded reply.
+    # That reply names the stored reply it continued.
+    body <- thread_recorded_call(
+      "openresponses",
+      input = thread_second_prompt,
+      previous_response_id = id,
+      simplify = FALSE
+    )
+    expect_identical(body[["previous_response_id"]], id)
+    expect_identical(body[["id"]], second_id)
   })
 })
 
@@ -685,14 +749,21 @@ recorded_unknown_reply <- function(route) {
   } else {
     test_path("thread_live", "localhost-1234", "v1")
   }
-  pattern <- if (route == "native") "^chat-.*-POST\\.R$" else "^responses-.*-POST\\.R$"
+  pattern <- if (route == "native") {
+    "^chat-.*-POST\\.R$"
+  } else {
+    "^responses-.*-POST\\.R$"
+  }
   file <- list.files(dir, pattern = pattern, full.names = TRUE)
   stopifnot(length(file) == 1L)
   source(file, local = TRUE)$value
 }
 
 test_that("a batch keeps going past a recorded unknown-id reply on both routes", {
-  codes <- c(native = "invalid_value", openresponses = "previous_response_not_found")
+  codes <- c(
+    native = "invalid_value",
+    openresponses = "previous_response_not_found"
+  )
   for (route in names(codes)) {
     testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
     recorder <- local_request_sequence(list(

@@ -1053,5 +1053,9 @@ test_that("a lost server in a native data frame carries the answer strings so fa
     ),
     class = "rlmstudio_no_server"
   )
-  expect_identical(cnd$results, list("x", NULL, NULL))
+  # The answer carries its reply id, as in the list format.
+  expect_identical(
+    cnd$results,
+    list(structure("x", response_id = "resp_1"), NULL, NULL)
+  )
 })

@@ -161,7 +161,12 @@ invisible(tryCatch(
       server_started <- TRUE
       lms_server_start()
     }
-    loaded <- list_models(loaded = TRUE, type = "llm", quiet = TRUE, host = host)
+    loaded <- list_models(
+      loaded = TRUE,
+      type = "llm",
+      quiet = TRUE,
+      host = host
+    )
     if (!(model %in% loaded$key)) {
       model_loaded <- TRUE
       lms_load(model, host = host)
@@ -199,7 +204,11 @@ check(
 )
 for (route in c("native", "responses")) {
   cnd <- got[[paste0(route, "_unknown")]]
-  code <- if (route == "native") "invalid_value" else "previous_response_not_found"
+  code <- if (route == "native") {
+    "invalid_value"
+  } else {
+    "previous_response_not_found"
+  }
   check(
     inherits(cnd, "rlmstudio_api_error") &&
       identical(cnd$status, 400L) &&

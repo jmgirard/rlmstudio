@@ -1640,8 +1640,9 @@ integer_or_na <- function(x) {
 #'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 #' }
 #'
-#' On the native and OpenResponses routes, [lms_chat()] returns each reply
-#' with a `response_id` attribute. With `format = "list"`, each reply keeps
+#' On the native and OpenResponses routes with `simplify = TRUE`, [lms_chat()]
+#' returns each reply that carries an id with a `response_id` attribute, as
+#' its help describes. With `format = "list"`, each reply keeps
 #' it. So does each element of the list that `format = "vector"` returns with
 #' `logprobs = TRUE`. The character vector of `format = "vector"` and the
 #' `output` column of `format = "data.frame"` carry no `response_id`
@@ -1763,13 +1764,13 @@ integer_or_na <- function(x) {
 #' `rlmstudio_model_mismatch`. The `"openai"` and `"openresponses"` routes
 #' give these for a model name that the server cannot find, so every later
 #' input fails in the same way.
+#' See the "Reply from another model" section below.
 #'
 #' A `previous_response_id` that the server does not hold gives status 400
 #' with the `code` `"invalid_value"` on the native route and
 #' `"previous_response_not_found"` on the OpenResponses route. The batch does
 #' not abort at either one. Each such input fails alone, as described above,
 #' and the batch goes on to the next input.
-#' See the "Reply from another model" section below.
 #'
 #' An `rlmstudio_no_server` from [lms_chat()] also aborts the batch. Its
 #' `results` field holds the results so far, as described in the "Server not
@@ -1918,11 +1919,20 @@ lms_chat_batch <- function(
   # The single calls return the body only for status 200, so the abort a bad
   # body raises carries that status.
   ok_resp <- httr2::response(status_code = 200L)
+  # The value carries the reply id as the single call's does, so `results`
+  # holds the same values in every format (D-030). The data frame drops the
+  # attribute when it builds its `output` column.
   read_reply <- function(body) {
     value <- switch(
       api_type,
-      native = native_reply_text(ok_resp, body),
-      openresponses = responses_reply_value(ok_resp, body, has_logprobs),
+      native = with_response_id(
+        native_reply_text(ok_resp, body),
+        body[["response_id"]]
+      ),
+      openresponses = with_response_id(
+        responses_reply_value(ok_resp, body, has_logprobs),
+        body[["id"]]
+      ),
       openai = openai_reply_value(ok_resp, body, has_logprobs, schema)
     )
     # Read after the answer, so a reply that fails leaves no values.

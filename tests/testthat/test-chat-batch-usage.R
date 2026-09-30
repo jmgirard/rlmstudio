@@ -363,11 +363,15 @@ test_that("the four columns are there when every input failed", {
 
 test_that("a lost server keeps what the results field held before", {
   cases <- list(
-    list(s = usage_settings[[1]], check = function(x) expect_identical(x, "reply 1")),
+    # The OpenResponses values carry the reply id, as the list format's do.
+    list(s = usage_settings[[1]], check = function(x) {
+      expect_identical(x, structure("reply 1", response_id = "id_1"))
+    }),
     list(s = usage_settings[[2]], check = function(x) {
       expect_s3_class(x, "lms_chat_result")
       expect_identical(x$text, "reply 1")
       expect_identical(x$logprobs$step_token, "r")
+      expect_identical(attr(x, "response_id"), "id_1")
     }),
     list(s = usage_settings[[5]], check = function(x) expect_identical(x, list(score = 1L)))
   )
