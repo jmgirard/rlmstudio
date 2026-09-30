@@ -44,7 +44,15 @@ test_that("the repeat domain holds the lms_chat() arguments that dots reach", {
   # new `lms_chat()` argument turns this red, the signal to check it here.
   expect_setequal(
     repeat_domain,
-    c("input", "api_type", "logprobs", "schema", "ttl", "previous_response_id")
+    c(
+      "input",
+      "api_type",
+      "logprobs",
+      "schema",
+      "ttl",
+      "previous_response_id",
+      "store"
+    )
   )
 })
 

@@ -105,6 +105,7 @@ lms_chat <- function(
   schema = NULL,
   ttl = NULL,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 ) {
   api_type <- match.arg(api_type)
@@ -117,6 +118,8 @@ lms_chat <- function(
   rlm_check_ttl_route(ttl, api_type)
   rlm_check_response_id(previous_response_id)
   rlm_check_thread_route(previous_response_id, api_type)
+  rlm_check_flag(store, "store", null_ok = TRUE)
+  rlm_check_store_route(store, api_type)
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
 
@@ -130,6 +133,7 @@ lms_chat <- function(
       simplify = simplify,
       ...,
       previous_response_id = previous_response_id,
+      store = store,
       token = token
     ))
   }
@@ -168,6 +172,7 @@ lms_chat <- function(
       simplify = simplify,
       ...,
       previous_response_id = previous_response_id,
+      store = store,
       token = token
     ))
   }
@@ -267,6 +272,7 @@ lms_chat_openresponses <- function(
   simplify = TRUE,
   ...,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 ) {
   model <- rlm_check_id(model, "model")
@@ -274,6 +280,7 @@ lms_chat_openresponses <- function(
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
   previous_response_id <- rlm_check_response_id(previous_response_id)
+  rlm_check_flag(store, "store", null_ok = TRUE)
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
@@ -282,7 +289,8 @@ lms_chat_openresponses <- function(
     model = model,
     input = input,
     instructions = instructions,
-    previous_response_id = previous_response_id
+    previous_response_id = previous_response_id,
+    store = store_field(store)
   )
   if (isTRUE(logprobs)) {
     body$include <- list("message.output_text.logprobs")
@@ -1249,6 +1257,24 @@ with_response_id <- function(value, id) {
   value
 }
 
+#' The store field of a chat request
+#'
+#' `rlm_check_flag()` lets names, dims, and a class on a `TRUE` or `FALSE`
+#' pass. The body writer sends `matrix(FALSE)` as `[[false]]` and fails on
+#' `structure(TRUE, class = "foo")` with "No method asJSON S3 class: foo".
+#' So every accepted form goes out as a plain `true` or `false`.
+#'
+#' @param store `NULL`, or a value that `isTRUE()` or `isFALSE()` accepts.
+#' @return `NULL`, which leaves the field out, or one plain logical.
+#'
+#' @noRd
+store_field <- function(store) {
+  if (is.null(store)) {
+    return(NULL)
+  }
+  isTRUE(store)
+}
+
 #' Chat Completion via Native API
 #'
 #' Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.
@@ -1324,12 +1350,14 @@ lms_chat_native <- function(
   simplify = TRUE,
   ...,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 ) {
   model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_flag(simplify, "simplify")
   previous_response_id <- rlm_check_response_id(previous_response_id)
+  rlm_check_flag(store, "store", null_ok = TRUE)
   dots <- list(...)
   rlm_check_stream(dots)
   # The endpoint has no logprobs, so each element named exactly `logprobs` is
@@ -1350,7 +1378,8 @@ lms_chat_native <- function(
     model = model,
     input = input,
     system_prompt = system_prompt,
-    previous_response_id = previous_response_id
+    previous_response_id = previous_response_id,
+    store = store_field(store)
   )
   body <- Filter(Negate(is.null), body)
 
@@ -1866,6 +1895,9 @@ lms_chat_batch <- function(
   previous_response_id <- args[["previous_response_id"]]
   rlm_check_response_id(previous_response_id)
   rlm_check_thread_route(previous_response_id, api_type)
+  store <- args[["store"]]
+  rlm_check_flag(store, "store", null_ok = TRUE)
+  rlm_check_store_route(store, api_type)
   # The raw dots, because `args` keeps only the first of two same-named
   # values. No `lms_chat()` argument starts with `stream`, so the names match.
   rlm_check_stream(list(...))

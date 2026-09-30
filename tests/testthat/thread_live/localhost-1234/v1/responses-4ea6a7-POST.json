@@ -1,23 +1,23 @@
 {
-    "id": "resp_86f6ec9c4e2f91e603835425313dc967b0d7a6fdef1f0b5a",
+    "id": "resp_ddf7a7bbe5c60142a62240157f82d733733785657e9f33ec",
     "object": "response",
-    "created_at": 1790728064,
-    "completed_at": 1790728064,
+    "created_at": 1790777270,
+    "completed_at": 1790777270,
     "status": "completed",
     "incomplete_details": null,
     "model": "google/gemma-3-1b",
-    "previous_response_id": null,
+    "previous_response_id": "resp_61f4b36a50a69b19bc133d2d364774c1e4a569fa1bfab1e0",
     "instructions": null,
     "output": [
         {
-            "id": "msg_r641ieraunejkeht8fylf",
+            "id": "msg_ztjxvthr2hizvtodu648i",
             "type": "message",
             "role": "assistant",
             "status": "completed",
             "content": [
                 {
                     "type": "output_text",
-                    "text": "Hi.",
+                    "text": "Bye.",
                     "annotations": [
 
                     ],
@@ -50,9 +50,9 @@
         "effort": null
     },
     "usage": {
-        "input_tokens": 0,
+        "input_tokens": 15,
         "output_tokens": 2,
-        "total_tokens": 2,
+        "total_tokens": 17,
         "input_tokens_details": {
             "cached_tokens": 0
         },
@@ -62,7 +62,7 @@
     },
     "max_output_tokens": null,
     "max_tool_calls": null,
-    "store": false,
+    "store": true,
     "background": false,
     "service_tier": "default",
     "metadata": {

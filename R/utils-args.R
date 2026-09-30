@@ -429,6 +429,33 @@ rlm_check_thread_route <- function(previous_response_id, api_type) {
   invisible(previous_response_id)
 }
 
+#' Reject a store flag sent to a route that keeps no reply
+#'
+#' On 2026-09-30, LM Studio 0.4.25+1 left the `response_id` out of a
+#' `/api/v1/chat` reply sent with `store: false`, and it refused a
+#' continuation from the id of such a `/v1/responses` reply with status 400.
+#' `/v1/chat/completions`, the `"openai"` route of `lms_chat()`, returned 200
+#' for `store` true and false, and it has no route that reads a stored reply.
+#'
+#' @param store The value the caller passed, already checked as a flag.
+#' @param api_type Character. The route, already matched.
+#' @return `store`, invisibly.
+#'
+#' @noRd
+rlm_check_store_route <- function(store, api_type) {
+  if (!is.null(store) && identical(api_type, "openai")) {
+    cli::cli_abort(
+      c(
+        "{.arg store} needs {.code api_type = \"native\"} or {.code api_type = \"openresponses\"}.",
+        "x" = "You gave {.code api_type = \"openai\"}.",
+        "i" = "The OpenAI chat endpoint keeps no thread, so it has no stored reply to turn off."
+      ),
+      call = NULL
+    )
+  }
+  invisible(store)
+}
+
 #' Reject a stream field that would make the server stream its reply
 #'
 #' The chat functions read one whole JSON reply. A `stream` of `TRUE` makes
@@ -1336,8 +1363,9 @@ type_fault <- function(value) {
 #' attributes on a logical of length one pass. With `null_ok = TRUE`, `NULL`
 #' passes too, for an argument where `NULL` has its own meaning. For `quiet`,
 #' `NULL` reads the `rlmstudio.quiet` option through `is_quiet()`. For the
-#' two load settings of `lms_load()`, it leaves the field out of the body. For
-#' a `logprobs` in the dots of `lms_chat_native()`, it does nothing.
+#' two load settings of `lms_load()`, and for the `store` of the chat
+#' functions, it leaves the field out of the body. For a `logprobs` in the
+#' dots of `lms_chat_native()`, it does nothing.
 #'
 #' @param value The value the caller passed.
 #' @param arg Character. The argument name to report.
