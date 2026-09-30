@@ -107,6 +107,7 @@ a candidate row. The package code does not change.
 - 2026-09-30: claim audit: not owed, internal tier
 - 2026-09-30: all tasks done again after review return 1. Status set to review.
 - 2026-09-30: second review pass started. AC1 to AC3 verified again. The check and one reviewer are still running (checkpoint, review not done).
+- 2026-09-30: second pass AC1 to AC4 verified and gate passed. Three reviewers reported. No finding shows a criterion failing, so no return. Findings go to the merge gate for triage (pre-gate checkpoint).
 
 ## Decisions
 
@@ -138,3 +139,16 @@ Second pass (after review return 1):
 - AC1 evidence (2026-09-30): `devtools::test(filter = "mock-http-helper")` gave 0 failed, 0 errors. The held-port, bind-error, and never-replies tests passed with 2 tries each. A probe held the first port with a Python listener of each kind the first pass named. A reset listener, an SSH-banner listener, and a silent listener each gave POST, `/v1/models/load`, and the body, with 2 tries. The silent case took 5 s. With `tries` set to 1 in the probe, all three stopped with the AC2 message, so the retry is what makes them pass.
 - AC2 evidence (2026-09-30): in the same run, the all-tries test passed its 5 expectations. It asserts "received no request", "another program", no "must be a raw vector", and 5 tries. The 1-try probe above printed the full message, which names another program on 127.0.0.1 as the likely cause.
 - AC3 evidence (2026-09-30): the grep returned 5 lines. Four are comments at `helper-mock-http.R` lines 88, 102, 177, and 179. One is the call at line 199, inside `request_dry_run()`.
+- AC4 evidence (2026-09-30): `devtools::test()` gave 0 failed, 0 errors, 3 skipped (no local LM Studio server), 19383 passed. `devtools::check()` with the API token gave 0 errors, 0 warnings, 0 notes.
+- Gate (2026-09-30): `cairn_validate.py` passed every check. `devtools::document()` left no diff. The branch changes nothing in `R/`, `man/`, `NEWS.md`, or the README. The repo has no pkgdown site. No changelog entry is owed.
+- Findings, second pass (2026-09-30), most severe first. None shows an acceptance criterion failing.
+  - Diff-bug (1), reproduced by a probe here: the helper retries every `curl_error`, including errors that the request itself causes. A request to `http://localhost:1234/v1/a b` raised `curl_error_url_malformat`. The helper retried 5 times in 0.1 s and stopped with "Another program probably listens", so curl's message was lost. A header value that holds a line break and a URL with no host act the same way. The helper comment and the review-return Decisions entry say that every curl error comes from the echo port, and that claim is false.
+  - Diff-bug (2): `request_body_text(req, seconds = 10)` has callers in `test-body-write.R` and `test-arg-guards.R`. Three silent-listener tries of 5 s each passed the 10 s limit, and R halted with "reached elapsed time limit". This needs a silent listener on 2 or more random ports in one read.
+  - Diff-bug (3): on Linux, the held-port and never-replies tests probably pass through the bind-error retry, so no Linux run covers the curl-error retry. Not probed, because Docker is not running.
+  - Diff-bug (4): the review-return Decisions entry states the false premise of finding (1).
+  - Diff-bug (5): the never-replies test adds 5 s to each test run.
+  - Carried over from the first pass, still open: the "1 tries" text, the double `require_httpuv()` call, and one `sample()` draw per retry. Also open: the mock of curl's private `find_port`, the exact match on "Failed to create server", the "createTcpServer" line on stderr, and no Windows run.
+  - Diff-bug nit: `stop(cnd)` inside the handler re-raises the error without its original call stack.
+  - History (new): the comment above `request_body_text()` says the dry run gets `seconds`. The retries can now use 25 s of the 30 s default.
+  - History (new) and prior-review (2): LESSONS M010 says that no test can prove that a `req_timeout()` line is needed. Without that line, the never-replies test hangs and does not fail. T7 proved that the `curl_error` retry is needed, but not the timeout line.
+  - Prior-review: the GitHub review-comment surface is empty. No archived review finding is contradicted.
