@@ -12,8 +12,7 @@ probe. `rlm_check_id()` and `rlm_check_response_id()` return `plain_string()`
 (`unclass(x)[[1]]`), and the 10 sending sites reassign it. `lms_load()` and
 `lms_unload()` return the plain string. `rlm_check_route_dots()` aborts on an
 `instructions` dot on the openresponses route and a `messages` dot on the
-openai route. It runs in `lms_chat()`, and before the probe in the batch. Help, NEWS,
-and the R/conditions.R fault list were updated.
+openai route. It runs in `lms_chat()`, and before the probe in the batch.
 
 **Decisions:** D-034 (the text rule and plain string for checked names, and
 the abort on a dot that `lms_chat()` sets).
