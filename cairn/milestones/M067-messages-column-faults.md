@@ -105,7 +105,7 @@ row.
 
 ## Tasks
 
-- [ ] T1: Write the AC1 and AC2 tests first in `test-arg-guards.R`. Add the
+- [x] T1: Write the AC1 and AC2 tests first in `test-arg-guards.R`. Add the
       AC1 detail to the rule table near line 1114, stated by hand. Build
       each probe with `structure()`. Collect warnings with
       `withCallingHandlers()` and count them. For the `POSIXlt` probe, state
@@ -136,6 +136,7 @@ row.
 - 2026-09-30: plan gate chose a row-count rule over plain and `"AsIs"` columns over one over every column by `length()`. The wider rule refuses a length-1 `POSIXlt` that is sent today. Falsified by a report that such a column sent a wrong value, or a classed wrong-length column whose column line a user misreads.
 - 2026-09-30: plan gate chose naming the first column that fails a lone write over keeping the jsonlite text alone. Falsified by a data frame whose write fails while each column writes alone.
 - 2026-09-30: implement started on branch m067-messages-column-faults. The question gate chose an info line for AC3. Its text is `Column {.val {name}} is the first column that jsonlite cannot write on its own.` The name is quoted, as model names are in other errors.
+- 2026-09-30: T1 done. On main the 15 AC1 probes fail as planned. Thirteen get the jsonlite detail, and the `NA` matrix gets the empty-row detail. The length-1 array gets the R error from `empty_rows()`. Six carry the recycling warning. Date and factor warn once each. The 1-d Date array gets the R error. The `POSIXlt` tests pass on main, as they must.
 
 ## Decisions
 
