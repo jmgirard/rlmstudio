@@ -85,7 +85,7 @@ defines top-level blocks already gives one block per pass.
       that a wrap exposes as it is.
 - [x] T4: Do the same for the 19 `for (name in ` loops in the other 11
       files.
-- [ ] T5: Run the AC2 and AC3 plants in scratch copies of the branch. Make
+- [x] T5: Run the AC2 and AC3 plants in scratch copies of the branch. Make
       sure that each run holds subtests for the other names or labels
       before you trust its green. Log the counts of failed, errored, and
       passed subtests.
@@ -104,6 +104,7 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: five files counted fewer expectations after the wraps. A scratch run showed why. In the data frame of `test_file()` results, a parent block that holds subtests loses its own results from before the subtests, a failure included. The progress, check, and summary reporters still print that failure as FAIL 1, so `devtools::test()` and `R CMD check` still catch it.
 - 2026-09-30: T2 done by the Opus agent. It wrapped the 36 rows and the 9 inner loops that the wraps exposed. The sweep prints 45 `nested` rows and no `flat` row for `test-arg-guards.R`. Three counters that the parent block checks after a loop now add with `<<-`. The scan's other three hazards were false: the code after the loop assigns the variable again before it reads it. A plant of `<-` in one counter turned `expect_identical(n_cases, 105L)` red. A reporter that counts every result gave 3678 passes before and after, with 0 failed and 0 errors.
 - 2026-09-30: one agent run of the new `test-arg-guards.R` took over 10 minutes and recorded 1 error, with no test name kept. A rerun took 22 s and was clean. The other agent ran tests at the same time. The candidate row for the error that comes and goes (M059) covers it.
+- 2026-09-30: T5 done. AC2 plant, `stop("planted")` first in `lms_daemon_stop()`: the 8 `cli_callers` loops gave 32 subtests. All 8 for `lms_daemon_stop` failed or errored, and 0 of the 24 for the other three functions did. AC3 plant, `match = "planted"` on the `no values` probe: for each of the 10 functions, its one `no values` subtest failed or errored, and 0 of its 12 other-label subtests did.
 
 ## Decisions
 
