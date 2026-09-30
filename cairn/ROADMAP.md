@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-30 (M066 done, M063 row pruned, Linux retry-test row added)_
+_Last hygiene check: 2026-09-30 (M067 done, M064 row pruned, M067 follow-up row added)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-30 (M066 done, M063 row pruned, Linux retry-test ro
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M067 | A messages data frame with a wrong-length or unwritable column gets a message that names the fault | review | none | normal | milestones/M067-messages-column-faults.md |
+| M067 | A messages data frame with a wrong-length or unwritable column gets a message that names the fault | done | none | normal | milestones/archive/M067-messages-column-faults.md |
 | M066 | A test that reads a request survives a dry-run port that another program holds | done | none | high | milestones/archive/M066-dry-run-held-port.md |
 | M065 | An error in one test-loop pass no longer stops the later passes | done | none | normal | milestones/archive/M065-nested-loop-subtests.md |
-| M064 | Each help page shows the malformed-reply rules that its function applies | done | none | normal | milestones/archive/M064-malformed-section-split.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -53,6 +52,7 @@ _Last hygiene check: 2026-09-30 (M066 done, M063 row pruned, Linux retry-test ro
 - Four chat `input` shapes that the one-prompt rule of M062 does not stop. A one-string `input` with a `dim` or the class `"AsIs"` goes out as an array, so `matrix("a")` is sent as `[["a"]]`. A factor `input` skips the NA and length checks, so `factor(c("a", "b"))` is sent as a two-string array. jsonlite cannot write a character `input` with a class such as `"foo"`, and the call fails there, after the server check. `lms_chat_openai()` still sends a two-string `content` that `lms_chat()` now stops. D-034 and D-035 strip such attributes for names and flags. Promote on a user who passes one of these shapes, added 2026-09-30, M062 review findings O1, O2, O3, O6
 - Split the "Server not running" and "API failure" help sections of `R/conditions.R` as M064 splits "Malformed response". Both carry batch and embedding paragraphs to every page that inherits them. Promote on a user who misreads such a paragraph, added 2026-09-30, M064 plan gate
 - A vignette that shows the features the development-version NEWS lists. `getting-started.Rmd` and `headless-config.Rmd` cover setup, the server, model loads, and one chat. Neither shows `lms_chat_batch()`, `lms_embed()`, `list_instances()`, `lms_unload_all()`, a `schema` for structured output, `logprobs`, or the `rlmstudio.quiet` option. `getting-started.Rmd` has one note on `previous_response_id`, and the README shows one `lms_chat_batch()` call. The vignette builds against a live LM Studio, as the other two do, added 2026-09-30, user request at the M067 plan
+- Two follow-ups to the `messages` data-frame checks of M067. First, the row-count detail does not name the column, so a user with a wide frame cannot tell which column is wrong. Promote on a user who cannot find that column. Second, on R 4.1 and 4.2, `vapply()` over a `POSIXlt` column in `empty_rows()` can read the parts of the time and warn. The same code runs on main for a `POSIXlt` column of the right length. DESCRIPTION allows R 4.1.0, and no run covered it. Promote on a run on R 4.1 or 4.2 that warns, added 2026-09-30, M067 review findings R5 and R6
 - [low] The macOS check job has two exits from its Package Manager workaround. If a released pak extracts zstd archives, remove the workaround from `R-CMD-check.yaml` and set `use-public-rspm` back to `true`. If Posit Package Manager stops serving gzip macOS binaries or drops its R 4.6 path, pin the job to R 4.5. M011 rejected that pin (rows merged M022), added 2026-09-20, M011 scope and plan gate, r-lib/pkgdepends#485
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [low] Make the headless CI job install LM Studio or rename it to say what it runs, added 2026-09-17, DESIGN Known issues
