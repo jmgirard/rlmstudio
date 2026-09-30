@@ -343,8 +343,9 @@ logprobs_rule_messages <- c(
   R2 = "A step in the `logprobs` of an `output_text` part is not a JSON object.",
   R3 = "The `token` of a `logprobs` step is not a string.",
   R4 = "The `logprob` of a `logprobs` step is not a number.",
-  R5 = "The `top_logprobs` of a `logprobs` step is not an array of JSON objects.",
-  R6 = paste(
+  R5 = "The `top_logprobs` of a `logprobs` step is not an array.",
+  R6 = "A candidate in `top_logprobs` is not a JSON object.",
+  R7 = paste(
     "A candidate in `top_logprobs` has a `token` that is not a string",
     "or a `logprob` that is not a number."
   )
@@ -420,7 +421,7 @@ test_that("a bad logprobs candidate is caught first in the list and in a later s
   first <- step_json(top = json_array(candidate_json(token = "5"), candidate_json()))
   expect_logprobs_rule(
     output_body(responses_message(output_text(quoted("a"), json_array(first)))),
-    "R6",
+    "R7",
     info = "a bad first candidate"
   )
   expect_logprobs_rule(
@@ -428,7 +429,7 @@ test_that("a bad logprobs candidate is caught first in the list and in a later s
       quoted("a"),
       json_array(step_json(top = json_array(candidate_json())), first)
     ))),
-    "R6",
+    "R7",
     info = "a bad candidate in a step after a good step with candidates"
   )
 })
@@ -455,7 +456,7 @@ test_that("the logprobs rules are checked in order within a step and across step
     one_part(json_array(
       step_json(top = json_array(candidate_json(token = "5"), "5"))
     )),
-    "R6",
+    "R7",
     info = "a bad candidate token before a candidate that is not an object"
   )
   # A bad candidate in the first step comes before a bad second step.
@@ -464,7 +465,7 @@ test_that("the logprobs rules are checked in order within a step and across step
       step_json(top = json_array(candidate_json(token = "5"))),
       "5"
     )),
-    "R6",
+    "R7",
     info = "a bad candidate before a bad step"
   )
   # A bad step in the first part comes before a bad value in the second part.
@@ -485,7 +486,7 @@ test_that("a null step or candidate and an empty object break their rules", {
   expect_logprobs_rule(one_part("[null]"), "R2", info = "a null step")
   expect_logprobs_rule(
     one_part(json_array(step_json(top = "[null]"))),
-    "R5",
+    "R6",
     info = "a null candidate"
   )
   expect_logprobs_rule(one_part("{}"), "R1", info = "an empty object value")

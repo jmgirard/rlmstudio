@@ -213,28 +213,72 @@ json_object <- function(...) {
 # A JSON array of the given JSON texts.
 json_array <- function(...) sprintf("[%s]", paste(c(...), collapse = ", "))
 
-# `logprobs` values that break one rule each, two JSON types per rule. R1
-# entries are whole values. The other entries are one bad step, which a test
-# places in an array. The R6 entries put the bad candidate after a good one.
+# `logprobs` values that break one rule each, at least two JSON types per
+# rule. R1 entries are whole values. The other entries are one bad step, which
+# a test places in an array. The R5 entries give `top_logprobs` each JSON type
+# that is not an array. The R6 entries give each type of candidate that is not
+# a JSON object, first and after a good candidate. The R7 entries put the bad
+# candidate after a good one.
 logprobs_breaks <- function() {
-  list(
-    list(rule = "R1", label = "an object", value = '{"a": 1}'),
-    list(rule = "R1", label = "a number", value = "5"),
-    list(rule = "R2", label = "a number step", step = "5"),
-    list(rule = "R2", label = "an array step", step = "[]"),
-    list(rule = "R3", label = "a number token", step = step_json(token = "5")),
-    list(rule = "R3", label = "a boolean token", step = step_json(token = "true")),
-    list(rule = "R4", label = "a string logprob", step = step_json(logprob = quoted("-0.5"))),
-    list(rule = "R4", label = "a boolean logprob", step = step_json(logprob = "true")),
-    list(rule = "R5", label = "an object top_logprobs", step = step_json(top = candidate_json())),
-    list(rule = "R5", label = "a number candidate", step = step_json(top = json_array(candidate_json(), "5"))),
+  top_values <- c(
+    "a string" = quoted("x"),
+    "a number" = "5",
+    "a boolean" = "true",
+    "an object" = candidate_json(),
+    "an empty object" = "{}"
+  )
+  top_breaks <- lapply(names(top_values), function(kind) {
     list(
-      rule = "R6", label = "a number candidate token",
-      step = step_json(top = json_array(candidate_json(), candidate_json(token = "5")))
+      rule = "R5",
+      label = paste(kind, "top_logprobs"),
+      step = step_json(top = top_values[[kind]])
+    )
+  })
+  candidate_values <- c(
+    "a string" = quoted("x"),
+    "a number" = "5",
+    "a boolean" = "true",
+    "an array" = "[]",
+    "a null" = "null"
+  )
+  candidate_breaks <- list()
+  for (kind in names(candidate_values)) {
+    bad <- candidate_values[[kind]]
+    candidate_breaks <- c(candidate_breaks, list(
+      list(
+        rule = "R6",
+        label = paste(kind, "first candidate"),
+        step = step_json(top = json_array(bad))
+      ),
+      list(
+        rule = "R6",
+        label = paste(kind, "candidate after a good one"),
+        step = step_json(top = json_array(candidate_json(), bad))
+      )
+    ))
+  }
+  c(
+    list(
+      list(rule = "R1", label = "an object", value = '{"a": 1}'),
+      list(rule = "R1", label = "a number", value = "5"),
+      list(rule = "R2", label = "a number step", step = "5"),
+      list(rule = "R2", label = "an array step", step = "[]"),
+      list(rule = "R3", label = "a number token", step = step_json(token = "5")),
+      list(rule = "R3", label = "a boolean token", step = step_json(token = "true")),
+      list(rule = "R4", label = "a string logprob", step = step_json(logprob = quoted("-0.5"))),
+      list(rule = "R4", label = "a boolean logprob", step = step_json(logprob = "true"))
     ),
+    top_breaks,
+    candidate_breaks,
     list(
-      rule = "R6", label = "a string candidate logprob",
-      step = step_json(top = json_array(candidate_json(), candidate_json(logprob = quoted("x"))))
+      list(
+        rule = "R7", label = "a number candidate token",
+        step = step_json(top = json_array(candidate_json(), candidate_json(token = "5")))
+      ),
+      list(
+        rule = "R7", label = "a string candidate logprob",
+        step = step_json(top = json_array(candidate_json(), candidate_json(logprob = quoted("x"))))
+      )
     )
   )
 }
