@@ -82,6 +82,8 @@
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed load or download reply
 #'
 #' @aliases rlmstudio_context_above_max
 #' @export

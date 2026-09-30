@@ -287,10 +287,14 @@ come back unchanged with \code{simplify = FALSE}. With \code{simplify = TRUE}, t
 chat functions and \code{\link[=lms_embed]{lms_embed()}} raise \code{rlmstudio_bad_response} for it.
 \code{\link[=list_models]{list_models()}} and \code{\link[=list_instances]{list_instances()}} raise it for a model list with
 another shape, and so do \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without
-\code{force = TRUE}, which read that list. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
-\code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their own with another
-shape, such as \code{{}}. A process that does not answer in HTTP gives an
-\code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+\code{force = TRUE}, which read that list. \code{\link[=lms_chat_openai]{lms_chat_openai()}} and
+\code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it for such a model list too, with either
+setting of \code{simplify}, through the model lookup that a reply from another
+model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_load]{lms_load()}},
+\code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their
+own with another shape, such as \code{{}}. A process that does not answer in
+HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the
+stronger test: it
 asks the host for a model list and reports \code{TRUE} only for a model list
 that \code{\link[=list_models]{list_models()}} can read.
 
@@ -357,7 +361,7 @@ it for a body they cannot read: \code{\link[=lms_embed]{lms_embed()}}, \code{\li
 through the chat function it calls. \code{\link[=lms_unload_all]{lms_unload_all()}} raises it through
 \code{\link[=list_models]{list_models()}}, and so does \code{\link[=lms_load]{lms_load()}} unless \code{force = TRUE}.
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} raises it only as \code{rlmstudio_model_mismatch}, which the
-"Reply from another model" section describes.
+"Reply from another model" section of \code{\link[=lms_chat_openai]{lms_chat_openai()}} describes.
 
 All eleven raise it for a status-200 body that does not parse as JSON, such
 as an HTML page from a proxy, JSON text that stops part way, or an empty
@@ -371,9 +375,20 @@ The message says that the body did not parse as JSON and that something
 other than LM Studio may be answering on the host. It does not hold the
 body text.
 
+The condition carries a \code{status} field, which holds the HTTP response
+status as an integer. Today the status is always 200: each of these
+functions reads the body only after a 200, and reports every other status
+as an \code{rlmstudio_api_error} instead.
+}
+
+\section{Malformed model list}{
+
 \code{\link[=list_models]{list_models()}} also raises it for a status-200 model list with the wrong
 shape. \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE} raise it
-through \code{\link[=list_models]{list_models()}}. A model list must follow four rules. Each field is
+through \code{\link[=list_models]{list_models()}}. \code{\link[=lms_chat_openai]{lms_chat_openai()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}
+apply these rules to the model list of their model lookup, as the "Reply
+from another model" section of \code{\link[=lms_chat_openai]{lms_chat_openai()}} describes. A model list
+must follow four rules. Each field is
 read by its exact name, so a field named \code{keyX} does not stand in for
 \code{key}.
 \enumerate{
@@ -398,47 +413,9 @@ one loaded instance. The \code{display_name} of such an entry is a string, or
 absent, or \code{null}. The \code{config} of each of its instances is a JSON object,
 or absent, or \code{null}. \code{\link[=list_models]{list_models()}} and \code{\link[=lms_server_ready]{lms_server_ready()}} do not apply
 these two rules.
-
-\code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} also raise it
-for a status-200 reply of their own with the wrong shape. Each reply must
-follow the rule of its function. Each field is read by its exact name. The
-rules check the type of a field and not its value, with four exceptions.
-The \code{status} of a load reply must be \code{"loaded"}. A download reply whose
-\code{status} is \code{"already_downloaded"} needs no \code{job_id}. A download reply whose
-\code{status} is \code{"failed"} always aborts. The \code{job_id} of any other download
-reply must hold a character that is not whitespace.
-\enumerate{
-\item A reply of \code{\link[=lms_load]{lms_load()}} is a JSON object whose \code{status} is the string
-\code{"loaded"}. With \code{echo_load_config = TRUE}, its \code{load_config} is also a
-JSON object.
-\item A reply of \code{\link[=lms_download]{lms_download()}} is a JSON object whose \code{status} is a string
-other than \code{"failed"}. If the status is not \code{"already_downloaded"}, its
-\code{job_id} is a string with a character that is not whitespace. For a
-\code{"failed"} status, the message says that LM Studio reports that the
-download failed. It names the reply's \code{job_id} if that is a string with
-a character that is not whitespace.
-\item A reply of \code{\link[=lms_download_status]{lms_download_status()}} is a JSON object whose \code{job_id} and
-\code{status} are strings. Its \code{total_size_bytes}, \code{downloaded_bytes}, and
-\code{bytes_per_second} are each a number, or absent, or \code{null}.
 }
 
-For the other faults, the message names the field that broke the rule, or
-it says that the body is not a JSON object. It also says that something
-other than LM Studio may be answering on the host.
-
-\code{\link[=lms_embed]{lms_embed()}} raises it on an embeddings block it cannot trust. The vectors
-it returns are placed by the index that the response reports, so a block
-with a missing, repeated, or out-of-range index would otherwise pair a
-vector with the wrong text and give back a matrix that is silently wrong.
-
-\code{\link[=lms_embed]{lms_embed()}} reads each request on its own. A bad body, of either kind
-above, fails the inputs of that request alone, and the call warns once and
-goes on. The call aborts with the condition only if every request fails,
-and then with the condition of the first. With \code{simplify = TRUE}, it also
-aborts with \code{rlmstudio_bad_response} for a request whose embeddings have
-another number of dimensions than those of an earlier request. That
-condition carries a \code{results} field, a matrix as the "Server not running"
-section describes. See the details of \code{\link[=lms_embed]{lms_embed()}}.
+\section{Malformed chat reply}{
 
 \code{\link[=lms_chat_native]{lms_chat_native()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it with
 \code{simplify = TRUE} when the reply holds no readable answer text. Both read
@@ -451,31 +428,6 @@ text of a message must be one string. For \code{\link[=lms_chat_native]{lms_chat
 each part of type \code{"output_text"}. For \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} only, the
 \code{content} of each message must be an array of JSON objects, and the
 messages together must hold at least one \code{"output_text"} part.
-
-With \code{simplify = TRUE} and \code{logprobs = TRUE}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}
-also raises it for a \code{logprobs} value that breaks one of these rules. The
-\code{logprobs} value of each \code{"output_text"} part is checked. A \code{logprobs}
-value, \code{token}, \code{logprob}, or \code{top_logprobs} that is \code{null} or absent
-passes its rule. A \code{null} step or candidate breaks rule 2 or rule 5.
-\enumerate{
-\item The value is an array.
-\item Each step in the array is a JSON object.
-\item The \code{token} of a step is a string.
-\item The \code{logprob} of a step is a number.
-\item The \code{top_logprobs} of a step is an array of JSON objects.
-\item The \code{token} and \code{logprob} of each of those objects follow rules 3 and 4.
-}
-
-The parts are checked in order, then the steps of a part, then the
-candidates of a step, one at a time. Within a step, rules 3 and 4 and the
-array test of rule 5 come before the candidates. The message names the
-first broken rule that this order reaches. These checks run only after the
-text of every \code{"output_text"} part is read, so a reply that also has a bad
-\code{text} in any part gets the text message.
-Parts of other types, such as a refusal, are not checked, and with
-\code{logprobs = FALSE} no part is checked. Fields are read by their exact
-names, so a field whose name only starts with the one asked for, such as
-\code{tokenX}, reads as absent and gives \code{NA} in the data frame.
 
 Apart from a body that does not parse as JSON, \code{\link[=lms_chat_openai]{lms_chat_openai()}} raises
 it in four cases, all only with \code{simplify = TRUE}. The first case is a response whose \code{choices} field is
@@ -495,8 +447,6 @@ a wrong value, such as the first digit of a longer number. In the second,
 third, and fourth cases, if the server reports the finish reason
 \code{"length"}, a length limit ended the reply. The limit is \code{max_tokens} or
 the context length of the model. The message then says so and names both.
-A cut-off reply that is returned as text gives a warning of class
-\code{rlmstudio_reply_cut_off} instead, which \link{rlmstudio-conditions} describes.
 
 With \code{simplify = TRUE}, \code{\link[=lms_chat_native]{lms_chat_native()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}},
 and \code{\link[=lms_chat_openai]{lms_chat_openai()}} also raise it for a body that is a bare JSON value,
@@ -507,27 +457,56 @@ not a JSON object. A body of \code{null} gets the message about its missing
 
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} does not abort on it, except on the subclass
 \code{rlmstudio_model_mismatch}, as the "Reply from another model" section of
-\link{rlmstudio-conditions} says. The element of the failed input holds the
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} says. The element of the failed input holds the
 condition, or \code{NA} where the result is text, and the batch warns once and
 goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 
-The condition carries a \code{status} field, which holds the HTTP response
-status as an integer. Today the status is always 200: each of these
-functions reads the body only after a 200, and reports every other status
-as an \code{rlmstudio_api_error} instead. A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}}
-about its reply also carries two more fields. A condition from the
-model-list lookup does not, as the "Reply from another model" section
-says. The \code{content} field holds the reply content of the first choice,
-and the \code{finish_reason} field holds the finish reason of the first choice.
+A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} about its reply also carries two more
+fields. A condition from the model-list lookup does not, as the "Reply from
+another model" section of \code{\link[=lms_chat_openai]{lms_chat_openai()}} says. The \code{content} field
+holds the reply content of the first choice, and the \code{finish_reason} field
+holds the finish reason of the first choice.
 Both are \code{NULL} for a response with no \code{choices}. In the third case,
 \code{content} holds the value that was read, which is \code{NULL} for \code{null} or
 missing content. For the second, third, and fourth cases, the message names the
 \code{content} field, so you can read what the model wrote without a second
-request. The other messages of the chat functions and \code{\link[=lms_embed]{lms_embed()}} name
+request. The other messages of the chat functions about the reply name
 \code{simplify = FALSE}, which returns the body unchanged, with one exception. A body that did not parse as JSON is
 checked before that argument is read, so its message points at the host
 instead. For such a body, the \code{content} and \code{finish_reason} fields of a
-condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}.
+condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}. The messages of
+\code{rlmstudio_model_mismatch} and of the model-list lookup do not name
+\code{simplify = FALSE}, because the check runs with either setting of
+\code{simplify}.
+}
+
+\section{Malformed logprobs}{
+
+With \code{simplify = TRUE} and \code{logprobs = TRUE}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}
+also raises it for a \code{logprobs} value that breaks one of these rules. The
+\code{logprobs} value of each \code{"output_text"} part is checked. A \code{logprobs}
+value, \code{token}, \code{logprob}, or \code{top_logprobs} that is \code{null} or absent
+passes its rule. A \code{null} step or candidate breaks rule 2 or rule 6.
+\enumerate{
+\item The value is an array.
+\item Each step in the array is a JSON object.
+\item The \code{token} of a step is a string.
+\item The \code{logprob} of a step is a number.
+\item The \code{top_logprobs} of a step is an array.
+\item Each candidate in \code{top_logprobs} is a JSON object.
+\item The \code{token} and \code{logprob} of each candidate follow rules 3 and 4.
+}
+
+The parts are checked in order, then the steps of a part, then the
+candidates of a step, one at a time. Within a step, rules 3, 4, and 5 come
+before the candidates. The message names the
+first broken rule that this order reaches. These checks run only after the
+text of every \code{"output_text"} part is read, so a reply that also has a bad
+\code{text} in any part gets the text message.
+Parts of other types, such as a refusal, are not checked, and with
+\code{logprobs = FALSE} no part is checked. Fields are read by their exact
+names, so a field whose name only starts with the one asked for, such as
+\code{tokenX}, reads as absent and gives \code{NA} in the data frame.
 }
 
 \section{Cut-off reply}{
@@ -541,7 +520,7 @@ content that is one string, in three settings: no \code{schema},
 \code{logprobs = TRUE}, and a \code{schema} with \code{logprobs = TRUE}. The call returns
 what the same reply returns without the cut-off. A \code{schema} reply with
 \code{logprobs = FALSE} raises \code{rlmstudio_bad_response} instead, as the
-"Malformed response" section says. The warning and that abort read the
+"Malformed chat reply" section says. The warning and that abort read the
 finish reason of the first choice, which is the choice that the call
 reads. No other element of \code{choices} is read. With \code{simplify = FALSE}, the call
 returns the body with every choice and no warning.
@@ -588,7 +567,7 @@ with no answer text. A reply is not checked if its body is not a JSON
 object, if it has no \code{model} field, or if its \code{model} is not one string or
 holds only whitespace. A body that is not a JSON object is returned with
 \code{simplify = FALSE}, and with \code{simplify = TRUE} it raises the error that the
-"Malformed response" section describes. If the instance that answered is
+"Malformed chat reply" section describes. If the instance that answered is
 unloaded before the model-list request, the call aborts, also when that
 instance belongs to the asked model.
 
@@ -596,7 +575,7 @@ If the model-list request fails, the call raises the condition of that
 failure. The message opens with the label of the chat function, followed
 by "because the model-list lookup failed". A status other than 200 raises
 \code{rlmstudio_api_error}. A body that does not parse as JSON, or that breaks a
-rule of a model list in the "Malformed response" section, raises
+rule of a model list in the "Malformed model list" section, raises
 \code{rlmstudio_bad_response}. A server that the port check before the request
 cannot reach raises \code{rlmstudio_no_server}. A condition from the lookup does
 not carry the \code{content} and \code{finish_reason} fields, also when

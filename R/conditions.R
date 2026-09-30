@@ -48,10 +48,14 @@
 #' chat functions and [lms_embed()] raise `rlmstudio_bad_response` for it.
 #' [list_models()] and [list_instances()] raise it for a model list with
 #' another shape, and so do [lms_unload_all()] and [lms_load()] without
-#' `force = TRUE`, which read that list. [lms_load()], [lms_download()], and
-#' [lms_download_status()] raise it for a reply of their own with another
-#' shape, such as `{}`. A process that does not answer in HTTP gives an
-#' `httr2_failure` error. Use [lms_server_ready()] for the stronger test: it
+#' `force = TRUE`, which read that list. [lms_chat_openai()] and
+#' [lms_chat_openresponses()] raise it for such a model list too, with either
+#' setting of `simplify`, through the model lookup that a reply from another
+#' model starts. [lms_chat()] raises it through them. [lms_load()],
+#' [lms_download()], and [lms_download_status()] raise it for a reply of their
+#' own with another shape, such as `{}`. A process that does not answer in
+#' HTTP gives an `httr2_failure` error. Use [lms_server_ready()] for the
+#' stronger test: it
 #' asks the host for a model list and reports `TRUE` only for a model list
 #' that [list_models()] can read.
 #'
@@ -114,7 +118,7 @@
 #' through the chat function it calls. [lms_unload_all()] raises it through
 #' [list_models()], and so does [lms_load()] unless `force = TRUE`.
 #' [lms_chat_batch()] raises it only as `rlmstudio_model_mismatch`, which the
-#' "Reply from another model" section describes.
+#' "Reply from another model" section of [lms_chat_openai()] describes.
 #'
 #' All eleven raise it for a status-200 body that does not parse as JSON, such
 #' as an HTML page from a proxy, JSON text that stops part way, or an empty
@@ -128,9 +132,18 @@
 #' other than LM Studio may be answering on the host. It does not hold the
 #' body text.
 #'
+#' The condition carries a `status` field, which holds the HTTP response
+#' status as an integer. Today the status is always 200: each of these
+#' functions reads the body only after a 200, and reports every other status
+#' as an `rlmstudio_api_error` instead.
+#'
+#' @section Malformed model list:
 #' [list_models()] also raises it for a status-200 model list with the wrong
 #' shape. [lms_unload_all()] and [lms_load()] without `force = TRUE` raise it
-#' through [list_models()]. A model list must follow four rules. Each field is
+#' through [list_models()]. [lms_chat_openai()] and [lms_chat_openresponses()]
+#' apply these rules to the model list of their model lookup, as the "Reply
+#' from another model" section of [lms_chat_openai()] describes. A model list
+#' must follow four rules. Each field is
 #' read by its exact name, so a field named `keyX` does not stand in for
 #' `key`.
 #'
@@ -155,6 +168,7 @@
 #' or absent, or `null`. [list_models()] and [lms_server_ready()] do not apply
 #' these two rules.
 #'
+#' @section Malformed load or download reply:
 #' [lms_load()], [lms_download()], and [lms_download_status()] also raise it
 #' for a status-200 reply of their own with the wrong shape. Each reply must
 #' follow the rule of its function. Each field is read by its exact name. The
@@ -181,13 +195,15 @@
 #' it says that the body is not a JSON object. It also says that something
 #' other than LM Studio may be answering on the host.
 #'
+#' @section Malformed embeddings:
 #' [lms_embed()] raises it on an embeddings block it cannot trust. The vectors
 #' it returns are placed by the index that the response reports, so a block
 #' with a missing, repeated, or out-of-range index would otherwise pair a
 #' vector with the wrong text and give back a matrix that is silently wrong.
 #'
 #' [lms_embed()] reads each request on its own. A bad body, of either kind
-#' above, fails the inputs of that request alone, and the call warns once and
+#' that the "Malformed response" section and this section describe, fails the
+#' inputs of that request alone, and the call warns once and
 #' goes on. The call aborts with the condition only if every request fails,
 #' and then with the condition of the first. With `simplify = TRUE`, it also
 #' aborts with `rlmstudio_bad_response` for a request whose embeddings have
@@ -195,6 +211,12 @@
 #' condition carries a `results` field, a matrix as the "Server not running"
 #' section describes. See the details of [lms_embed()].
 #'
+#' The messages of [lms_embed()] name `simplify = FALSE`, which returns the
+#' body unchanged, with one exception. A body that did not parse as JSON is
+#' checked before that argument is read, so its message points at the host
+#' instead.
+#'
+#' @section Malformed chat reply:
 #' [lms_chat_native()] and [lms_chat_openresponses()] raise it with
 #' `simplify = TRUE` when the reply holds no readable answer text. Both read
 #' the answer from the items of type `"message"` in the `output` array. They
@@ -206,30 +228,6 @@
 #' each part of type `"output_text"`. For [lms_chat_openresponses()] only, the
 #' `content` of each message must be an array of JSON objects, and the
 #' messages together must hold at least one `"output_text"` part.
-#'
-#' With `simplify = TRUE` and `logprobs = TRUE`, [lms_chat_openresponses()]
-#' also raises it for a `logprobs` value that breaks one of these rules. The
-#' `logprobs` value of each `"output_text"` part is checked. A `logprobs`
-#' value, `token`, `logprob`, or `top_logprobs` that is `null` or absent
-#' passes its rule. A `null` step or candidate breaks rule 2 or rule 5.
-#'
-#' 1. The value is an array.
-#' 2. Each step in the array is a JSON object.
-#' 3. The `token` of a step is a string.
-#' 4. The `logprob` of a step is a number.
-#' 5. The `top_logprobs` of a step is an array of JSON objects.
-#' 6. The `token` and `logprob` of each of those objects follow rules 3 and 4.
-#'
-#' The parts are checked in order, then the steps of a part, then the
-#' candidates of a step, one at a time. Within a step, rules 3 and 4 and the
-#' array test of rule 5 come before the candidates. The message names the
-#' first broken rule that this order reaches. These checks run only after the
-#' text of every `"output_text"` part is read, so a reply that also has a bad
-#' `text` in any part gets the text message.
-#' Parts of other types, such as a refusal, are not checked, and with
-#' `logprobs = FALSE` no part is checked. Fields are read by their exact
-#' names, so a field whose name only starts with the one asked for, such as
-#' `tokenX`, reads as absent and gives `NA` in the data frame.
 #'
 #' Apart from a body that does not parse as JSON, [lms_chat_openai()] raises
 #' it in four cases, all only with `simplify = TRUE`. The first case is a response whose `choices` field is
@@ -249,8 +247,6 @@
 #' third, and fourth cases, if the server reports the finish reason
 #' `"length"`, a length limit ended the reply. The limit is `max_tokens` or
 #' the context length of the model. The message then says so and names both.
-#' A cut-off reply that is returned as text gives a warning of class
-#' `rlmstudio_reply_cut_off` instead, which [rlmstudio-conditions] describes.
 #'
 #' With `simplify = TRUE`, [lms_chat_native()], [lms_chat_openresponses()],
 #' and [lms_chat_openai()] also raise it for a body that is a bare JSON value,
@@ -261,27 +257,53 @@
 #'
 #' [lms_chat_batch()] does not abort on it, except on the subclass
 #' `rlmstudio_model_mismatch`, as the "Reply from another model" section of
-#' [rlmstudio-conditions] says. The element of the failed input holds the
+#' [lms_chat_openai()] says. The element of the failed input holds the
 #' condition, or `NA` where the result is text, and the batch warns once and
 #' goes on. See the details of [lms_chat_batch()].
 #'
-#' The condition carries a `status` field, which holds the HTTP response
-#' status as an integer. Today the status is always 200: each of these
-#' functions reads the body only after a 200, and reports every other status
-#' as an `rlmstudio_api_error` instead. A condition from [lms_chat_openai()]
-#' about its reply also carries two more fields. A condition from the
-#' model-list lookup does not, as the "Reply from another model" section
-#' says. The `content` field holds the reply content of the first choice,
-#' and the `finish_reason` field holds the finish reason of the first choice.
+#' A condition from [lms_chat_openai()] about its reply also carries two more
+#' fields. A condition from the model-list lookup does not, as the "Reply from
+#' another model" section of [lms_chat_openai()] says. The `content` field
+#' holds the reply content of the first choice, and the `finish_reason` field
+#' holds the finish reason of the first choice.
 #' Both are `NULL` for a response with no `choices`. In the third case,
 #' `content` holds the value that was read, which is `NULL` for `null` or
 #' missing content. For the second, third, and fourth cases, the message names the
 #' `content` field, so you can read what the model wrote without a second
-#' request. The other messages of the chat functions and [lms_embed()] name
+#' request. The other messages of the chat functions about the reply name
 #' `simplify = FALSE`, which returns the body unchanged, with one exception. A body that did not parse as JSON is
 #' checked before that argument is read, so its message points at the host
 #' instead. For such a body, the `content` and `finish_reason` fields of a
-#' condition from [lms_chat_openai()] are `NULL`.
+#' condition from [lms_chat_openai()] are `NULL`. The messages of
+#' `rlmstudio_model_mismatch` and of the model-list lookup do not name
+#' `simplify = FALSE`, because the check runs with either setting of
+#' `simplify`.
+#'
+#' @section Malformed logprobs:
+#' With `simplify = TRUE` and `logprobs = TRUE`, [lms_chat_openresponses()]
+#' also raises it for a `logprobs` value that breaks one of these rules. The
+#' `logprobs` value of each `"output_text"` part is checked. A `logprobs`
+#' value, `token`, `logprob`, or `top_logprobs` that is `null` or absent
+#' passes its rule. A `null` step or candidate breaks rule 2 or rule 6.
+#'
+#' 1. The value is an array.
+#' 2. Each step in the array is a JSON object.
+#' 3. The `token` of a step is a string.
+#' 4. The `logprob` of a step is a number.
+#' 5. The `top_logprobs` of a step is an array.
+#' 6. Each candidate in `top_logprobs` is a JSON object.
+#' 7. The `token` and `logprob` of each candidate follow rules 3 and 4.
+#'
+#' The parts are checked in order, then the steps of a part, then the
+#' candidates of a step, one at a time. Within a step, rules 3, 4, and 5 come
+#' before the candidates. The message names the
+#' first broken rule that this order reaches. These checks run only after the
+#' text of every `"output_text"` part is read, so a reply that also has a bad
+#' `text` in any part gets the text message.
+#' Parts of other types, such as a refusal, are not checked, and with
+#' `logprobs = FALSE` no part is checked. Fields are read by their exact
+#' names, so a field whose name only starts with the one asked for, such as
+#' `tokenX`, reads as absent and gives `NA` in the data frame.
 #'
 #' @section Cut-off reply:
 #' A warning of class `rlmstudio_reply_cut_off` is given when a length limit
@@ -293,7 +315,7 @@
 #' `logprobs = TRUE`, and a `schema` with `logprobs = TRUE`. The call returns
 #' what the same reply returns without the cut-off. A `schema` reply with
 #' `logprobs = FALSE` raises `rlmstudio_bad_response` instead, as the
-#' "Malformed response" section says. The warning and that abort read the
+#' "Malformed chat reply" section says. The warning and that abort read the
 #' finish reason of the first choice, which is the choice that the call
 #' reads. No other element of `choices` is read. With `simplify = FALSE`, the call
 #' returns the body with every choice and no warning.
@@ -338,7 +360,7 @@
 #' object, if it has no `model` field, or if its `model` is not one string or
 #' holds only whitespace. A body that is not a JSON object is returned with
 #' `simplify = FALSE`, and with `simplify = TRUE` it raises the error that the
-#' "Malformed response" section describes. If the instance that answered is
+#' "Malformed chat reply" section describes. If the instance that answered is
 #' unloaded before the model-list request, the call aborts, also when that
 #' instance belongs to the asked model.
 #'
@@ -346,7 +368,7 @@
 #' failure. The message opens with the label of the chat function, followed
 #' by "because the model-list lookup failed". A status other than 200 raises
 #' `rlmstudio_api_error`. A body that does not parse as JSON, or that breaks a
-#' rule of a model list in the "Malformed response" section, raises
+#' rule of a model list in the "Malformed model list" section, raises
 #' `rlmstudio_bad_response`. A server that the port check before the request
 #' cannot reach raises `rlmstudio_no_server`. A condition from the lookup does
 #' not carry the `content` and `finish_reason` fields, also when

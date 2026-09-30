@@ -112,6 +112,9 @@
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed chat reply
+#' @inheritSection rlmstudio-conditions Malformed logprobs
 #' @inheritSection rlmstudio-conditions Cut-off reply
 #' @inheritSection rlmstudio-conditions Reply from another model
 #' @inheritSection lms_load Long prompts
@@ -277,11 +280,12 @@ lms_chat <- function(
 #'   field is read by its exact name. A field that is `null` or absent gives
 #'   `NA`, and so does a field whose name only starts with the one asked for,
 #'   such as `tokenX`. With `logprobs = TRUE`, the `logprobs` value of each
-#'   `"output_text"` part must follow six rules, which the section below
-#'   lists. A value that breaks one raises `rlmstudio_bad_response`, and the
-#'   message names the first broken rule in the order the section below
-#'   gives. Parts of other types are not checked. With `logprobs = FALSE`, the value is not read, and the call
-#'   returns the text.
+#'   `"output_text"` part must follow seven rules, which the "Malformed
+#'   logprobs" section below lists. A value that breaks one raises
+#'   `rlmstudio_bad_response`, and the message names the first broken rule in
+#'   the order the section below gives. Parts of other types are not checked.
+#'   With `logprobs = FALSE`, the value is not read, and the call returns the
+#'   text.
 #'
 #'   With `simplify = TRUE`, the string or the `lms_chat_result` carries the
 #'   `id` field of the reply in a `response_id` attribute. Pass it as
@@ -302,6 +306,9 @@ lms_chat <- function(
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed chat reply
+#' @inheritSection rlmstudio-conditions Malformed logprobs
 #' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 lms_chat_openresponses <- function(
@@ -599,6 +606,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed chat reply
 #' @inheritSection rlmstudio-conditions Cut-off reply
 #' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
@@ -1146,19 +1155,19 @@ join_reply_texts <- function(resp, texts, label, detail) {
 
 #' Check the logprobs of the output_text parts of an OpenResponses reply
 #'
-#' The value of each part must follow six rules:
+#' The value of each part must follow seven rules:
 #' 1. It is absent, `null`, or an array.
 #' 2. Each step in the array is a JSON object.
 #' 3. The `token` of a step is absent, `null`, or a string.
 #' 4. The `logprob` of a step is absent, `null`, or a number.
-#' 5. The `top_logprobs` of a step is absent, `null`, or an array of JSON
-#'    objects.
-#' 6. The `token` and `logprob` of each of those objects follow rules 3 and 4.
+#' 5. The `top_logprobs` of a step is absent, `null`, or an array.
+#' 6. Each candidate in `top_logprobs` is a JSON object.
+#' 7. The `token` and `logprob` of each candidate follow rules 3 and 4.
 #'
 #' The parts are checked in order, then the steps of a part, then the
-#' candidates of a step, one at a time. Within a step, rules 2 to 4 are
-#' checked in number order, then that `top_logprobs` is an array, then each
-#' candidate against rule 5 and then rule 6. The first broken rule reached in
+#' candidates of a step, one at a time. Within a step, rules 2 to 5 are
+#' checked in number order, then each candidate against rule 6 and then
+#' rule 7. The first broken rule reached in
 #' that order aborts, with one message per rule. Fields are read with `[[`, because `$` would read a
 #' field whose name only starts with the one asked for.
 #'
@@ -1178,12 +1187,6 @@ check_part_logprobs <- function(resp, parts, label) {
         "or with {.code simplify = FALSE} to get the body unchanged."
       )
     )
-  }
-  abort_top_logprobs <- function() {
-    abort_rule(paste(
-      "The `top_logprobs` of a `logprobs` step is not an array of JSON",
-      "objects."
-    ))
   }
   # A field that is absent or `null` reads as NULL.
   is_null_or <- function(x, test) is.null(x) || test(x)
@@ -1209,13 +1212,13 @@ check_part_logprobs <- function(resp, parts, label) {
       }
       candidates <- step[["top_logprobs"]]
       if (!is_null_or(candidates, is_json_array)) {
-        abort_top_logprobs()
+        abort_rule("The `top_logprobs` of a `logprobs` step is not an array.")
       }
       # One candidate at a time, as for the steps, so a bad field in one
       # candidate is named before a later candidate that is not an object.
       for (candidate in candidates) {
         if (!is_json_object(candidate)) {
-          abort_top_logprobs()
+          abort_rule("A candidate in `top_logprobs` is not a JSON object.")
         }
         if (
           !is_null_or(candidate[["token"]], is_string) ||
@@ -1400,6 +1403,7 @@ store_field <- function(store) {
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed chat reply
 #' @export
 lms_chat_native <- function(
   model,
@@ -1930,6 +1934,9 @@ integer_or_na <- function(x) {
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
+#' @inheritSection rlmstudio-conditions Malformed model list
+#' @inheritSection rlmstudio-conditions Malformed chat reply
+#' @inheritSection rlmstudio-conditions Malformed logprobs
 #' @inheritSection rlmstudio-conditions Cut-off reply
 #' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
