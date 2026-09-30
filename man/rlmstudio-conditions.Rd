@@ -152,7 +152,8 @@ read by its exact name, so a field named \code{keyX} does not stand in for
 can be empty.
 \item Each entry of \code{models} is a JSON object. Its \code{type} and \code{key} are
 strings, and its \code{loaded_instances} is an array.
-\item The \code{size_bytes} of an entry is a number, or absent, or \code{null}.
+\item The \code{size_bytes} of an entry is a number, or absent, or \code{null}. So is
+its \code{max_context_length}.
 \item Each entry of \code{loaded_instances} is a JSON object whose \code{id} is a string
 with a character that is not whitespace.
 }

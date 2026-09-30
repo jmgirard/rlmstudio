@@ -68,6 +68,7 @@ A user with a prompt longer than the loaded context learns from R how LM Studio 
 - 2026-09-30: T1 done. The overflow bodies are in the API surface reference. `test-long-prompts.R` went red on main for AC1, AC3, and AC4, and AC2 and AC5 passed there.
 - 2026-09-30: T2 done. `lms_load()` reads the full model list and warns through `warn_context_above_max()`. `model_list_fault()` checks `max_context_length`. In scratch copies, a message without the maximum turned the AC1 tests red, and a removed warning turned AC1 and AC4 red. `devtools::test()`: 0 failures, 0 errors.
 - 2026-09-30: T3 done. The "Long prompts" section is written on `lms_load()` and inherited by `lms_chat()`. The load and rope probe facts are in the API surface reference, and NEWS.md has one entry. A draft NEWS sentence said that `lms_load()` now requests the full model list. It was removed, because `list_models()` always requested the full list and filtered it in R.
+- 2026-09-30: T4 in progress (checkpoint). D-037 is appended, and the "Malformed response" model-list rule 3 now names `max_context_length`. `devtools::test()`: 0 failures, 0 errors. `devtools::check()` and the claim audit are running.
 
 ## Decisions
 
