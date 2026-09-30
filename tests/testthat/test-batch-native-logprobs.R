@@ -274,7 +274,7 @@ test_that("a native batch with logprobs that stops at a 401 keeps its results", 
   for (format in formats) {
     on <- caught(TRUE, format)
     off <- caught(FALSE, format)
-    expect_s3_class(on, "rlmstudio_api_error")
+    expect_true(inherits(on, "rlmstudio_api_error"), info = format)
     expect_identical(on$status, 401L, info = format)
     # The whole value, attributes included.
     expect_identical(
@@ -332,9 +332,11 @@ test_that("the openresponses and openai routes keep the logprobs results", {
   for (route in names(logprobs_route_replies)) {
     lst <- run_route_batch(route, "list")
     expect_identical(lst$warnings, list(), info = route)
-    expect_type(lst$value, "list")
+    # `expect_type()` and `expect_s3_class()` take no `info`, so these name
+    # the route through `expect_true()`.
+    expect_true(is.list(lst$value), info = route)
     for (x in lst$value) {
-      expect_s3_class(x, "lms_chat_result")
+      expect_true(inherits(x, "lms_chat_result"), info = route)
     }
 
     vec <- run_route_batch(route, "vector")
@@ -350,7 +352,7 @@ test_that("the openresponses and openai routes keep the logprobs results", {
 
     df <- run_route_batch(route, "data.frame")$value
     expect_true("logprobs" %in% names(df), info = route)
-    expect_type(df$logprobs, "list")
+    expect_true(is.list(df$logprobs), info = route)
     expect_identical(df$output, c("reply 1", "reply 2"), info = route)
   }
 })

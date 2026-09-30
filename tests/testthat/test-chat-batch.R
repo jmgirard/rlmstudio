@@ -1064,3 +1064,44 @@ test_that("a lost server in a native data frame carries the answer strings so fa
     list(structure("x", response_id = "resp_1"), NULL, NULL)
   )
 })
+
+test_that("a dot that holds a symbol or a call reaches lms_chat() unevaluated", {
+  # A stand-in with the formals of `lms_chat()`, so the batch matches its
+  # dots as it does for the real function. It records its own `...`.
+  seen <- new.env()
+  fake <- lms_chat
+  body(fake) <- quote({
+    seen$dots <- list(...)
+    "reply"
+  })
+  environment(fake) <- environment()
+  testthat::local_mocked_bindings(
+    lms_chat = fake,
+    is_server_running = function(...) TRUE
+  )
+  values <- list(
+    symbol = as.name("not_an_object"),
+    call = quote(stop("the batch evaluated a dot"))
+  )
+  # The native route with `logprobs = TRUE` edits the dots before the call.
+  routes <- list(
+    openresponses = list(api_type = "openresponses"),
+    native = list(api_type = "native", logprobs = TRUE)
+  )
+  for (name in names(values)) {
+    for (route in names(routes)) {
+      info <- paste(name, route)
+      seen$dots <- NULL
+      collect_warnings(do.call(
+        "lms_chat_batch",
+        c(
+          list("a-model", "hi", format = "list", quiet = TRUE),
+          routes[[route]],
+          list(foo = values[[name]])
+        ),
+        quote = TRUE
+      ))
+      expect_identical(seen$dots$foo, values[[name]], info = info)
+    }
+  }
+})

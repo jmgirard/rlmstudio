@@ -2010,7 +2010,9 @@ lms_chat_batch <- function(
   # The dots go through `chat_dots`, where the native route has set the dot
   # that fills `logprobs` to `FALSE` above.
   # `simplify` comes after `...`, so only its exact name matches it, and
-  # `quote = TRUE` passes a dot that holds a call or a symbol as it is.
+  # `quote = TRUE` passes a dot that holds a call or a symbol as it is. The
+  # calls below name `chat_once` as a string, so a backtrace shows that name
+  # and not the body of the function.
   chat_once <- function(..., simplify) {
     lms_chat(
       model = model,
@@ -2027,7 +2029,7 @@ lms_chat_batch <- function(
       withCallingHandlers(
         if (body_frame) {
           body <- do.call(
-            chat_once,
+            "chat_once",
             c(chat_dots, list(simplify = FALSE)),
             quote = TRUE
           )
@@ -2036,7 +2038,7 @@ lms_chat_batch <- function(
           read$value
         } else {
           do.call(
-            chat_once,
+            "chat_once",
             c(chat_dots, list(simplify = simplify)),
             quote = TRUE
           )
@@ -2162,8 +2164,9 @@ lms_chat_batch <- function(
       return(add_property_columns(add_reply_columns(df)))
     }
 
-    # Keyed on the argument, not on the results, so the column is there even
-    # when every input failed (GP2).
+    # Keyed on the argument and the route, not on the results, so the column
+    # is there even when every input failed (GP2). The native route has none
+    # (D-033).
     if (has_logprobs) {
       df <- data.frame(
         input = inputs,

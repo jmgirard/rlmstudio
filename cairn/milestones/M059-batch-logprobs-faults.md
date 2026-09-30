@@ -75,6 +75,8 @@
 - 2026-09-29: claim audit: 58 claims read, 1 corrected — R/chat.R. A comment still said that `chat_dots` drops a `logprobs` dot. The re-read found the new wording holds.
 - 2026-09-29: status set to review.
 - 2026-09-29: review pass 2 started on adbbe3c. AC1 to AC6 pass with fresh evidence, and the consistency gate passes. Three fresh reviewers are running; their findings are not yet triaged.
+- 2026-09-29: review pass 2 gate: Q1 to Q4 fixed on the branch, Q5 and the test error that came and went became candidate rows, and the rest were rejected. Suite 17707 pass, 3 skip. Check 0 errors, 0 warnings, 0 notes.
+- step-7 approval: m059-batch-logprobs-faults approved for merge
 
 ## Decisions
 
@@ -138,3 +140,15 @@ Pass-2 findings from the three reviewers, ranked. All three confirm that R1 to R
 - Q10 ([S] blame 5): D-032 keeps its "D-013's shape" wording. D-033 corrects it, and DECISIONS.md is append-only. Recommended: reject.
 - Q11 ([S] prior 6): no test gives a shortened dot that could match `simplify`. `chat_once()` puts `simplify` after `...`, so only its exact name matches. Recommended: reject.
 - Q12 ([O] 5, [S] prior 7, [S] blame 6 and 7): the pass-1 items R10, R11, and R13 and the `NA`-named dot are still in the code. Recommended: reject, as pass 1 proposed.
+
+Gate, 2026-09-29: the user chose to fix Q1 to Q4 and then merge. Dispositions:
+
+- Q1: fixed. A test in `test-chat-batch.R` gives a dot that holds a symbol and one that holds a call, on the OpenResponses route and on native with `logprobs = TRUE`. A stand-in `lms_chat()` with the real formals records its `...`. With `quote = FALSE` planted in a scratch copy, the test failed with "object 'not_an_object' not found", so the batch had evaluated the dot.
+- Q2: fixed. Both calls pass `"chat_once"` as a string.
+- Q3: fixed. The comment now says the column is keyed on the argument and the route, and it cites D-033.
+- Q4: fixed. Four checks in `test-batch-native-logprobs.R` now use `expect_true()` with `info`.
+- Q5: follow-up. A candidate row was added, with R12 as its source.
+- Q6 to Q12, and the pass-1 items R10, R11, and R13: rejected, for the reasons given above.
+- A second candidate row was added for the `devtools::test()` error that came and went. After the fixes, one run gave 1 error that was not identified, and the next three runs were clean.
+
+After the fixes: `devtools::test()` gave 17707 pass, 0 fail, 3 skip on two runs in a row. `devtools::check()` with the token gave 0 errors, 0 warnings, 0 notes. Air is clean on the new lines.
