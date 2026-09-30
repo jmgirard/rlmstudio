@@ -111,9 +111,9 @@ OpenAI route gets no argument. A shortened name in `...`, such as
       stays as it is. Read the id with `[[` (M018 lesson). Test the AC3 reply shapes with bodies from
       `helper-chat-bodies.R`. Update existing tests that compare a whole reply with
       `identical()`.
-- [ ] T3: The batch. Test the AC4 formats and the AC5 batch case on both routes, with a
+- [x] T3: The batch. Test the AC4 formats and the AC5 batch case on both routes, with a
       two-input batch whose first reply is the unknown-id 400.
-- [ ] T4: Live fixtures. Add `data-raw/record-thread-cassette.R` in the form of
+- [x] T4: Live fixtures. Add `data-raw/record-thread-cassette.R` in the form of
       `data-raw/record-model-mismatch-cassette.R`. It records a native reply with an id and a
       continued OpenResponses reply. It records a native reply and an OpenResponses reply sent
       with `store = false`. It records the two unknown-id 400 bodies. Clean up in `finally` (M017
@@ -139,5 +139,8 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - 2026-09-29: implement started on m058-chat-thread-id. No question gate, because the plan leaves no choice open.
 - 2026-09-29: T1 done. `rlm_check_response_id()` and `rlm_check_thread_route()` in `R/utils-args.R`, the argument on the three functions, the batch checks, and `tests/testthat/test-thread.R`. `local_counting_probe()` moved to `helper-mock-http.R` so the new file can use it. Full suite 0 failures, 3 live skips.
 - 2026-09-29: T2 done. `with_response_id()` in `R/chat.R` sets the attribute and forces the reply reader first, because a lazy `[[` read of the id failed with a base R error on a bare-value body before the reader could abort. Six tests in four files that compared a whole reply were updated, and `without_response_id()` was added to `helper-chat-bodies.R`. Full suite 0 failures, 3 live skips.
+- 2026-09-29: minor amendment. T3 and T4 land in one commit, because the T3 batch case replays the unknown-id bodies that T4 records.
+- 2026-09-29: T4 done. `data-raw/record-thread-cassette.R` recorded six calls into `tests/testthat/thread_live/` from google/gemma-3-1b on LM Studio 0.4.25+1. All seven script checks passed. The server and model state were restored, and no token is in the files.
+- 2026-09-29: T3 done. `test-thread.R` covers the list, vector, logprobs vector, and data-frame formats on both routes. It covers the recorded thread chain, the recorded `store = FALSE` replies, and the unknown-id cases for the single calls and the batch. Full suite 0 failures, 3 live skips.
 
 ## Decisions

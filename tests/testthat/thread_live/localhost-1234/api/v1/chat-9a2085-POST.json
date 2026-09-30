@@ -1,0 +1,17 @@
+{
+    "model_instance_id": "google/gemma-3-1b",
+    "output": [
+        {
+            "type": "message",
+            "content": "Hi."
+        }
+    ],
+    "stats": {
+        "input_tokens": 15,
+        "total_output_tokens": 3,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 381.20651863146867,
+        "time_to_first_token_seconds": 0.146
+    },
+    "response_id": "resp_6b20f8f9269df3e71dd1dfb5a16c84837804beb7cd808a68"
+}
