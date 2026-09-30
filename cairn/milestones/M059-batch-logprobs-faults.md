@@ -123,3 +123,18 @@ Run 2026-09-29 on branch head adbbe3c, which contains origin/main (21fdc4b). No 
 - AC6: pass. `devtools::test()` run alone: 17703 pass, 0 fail, 3 skip. `devtools::check()` with the token: 0 errors, 0 warnings, 0 notes, with tests and vignettes inside it. A first `devtools::test()` ran at the same time as that check, against the same live server, and gave 1 error that was not identified. The run alone was clean.
 
 Consistency gate: `cairn_validate.py` passed with exit 0. No DESIGN principle changed, so `cairn_impact` was skipped. `devtools::document()` left no diff. README.Rmd and README.md did not change on the branch. `pkgdown/_pkgdown.yml` exists, and `pkgdown::check_pkgdown()` found no problems. Pass 1 said the repo had no pkgdown site, which was wrong. NEWS.md has entries for the changes, with no milestone numbers. No new top-level file, and the check gave no NOTE.
+
+Pass-2 findings from the three reviewers, ranked. All three confirm that R1 to R9, R14, and R15 are fixed. No finding shows a criterion failing. Each finding has a recommended disposition for the gate.
+
+- Q1 ([O] 1, confirmed by mutation): no test pins `do.call(..., quote = TRUE)`. With both calls set to `quote = FALSE` in a scratch copy, the suite still passed. A dot such as `foo = as.name("bar")` would then be evaluated. Recommended: fix now, one test.
+- Q2 ([O] 2, confirmed): `do.call()` gets the `chat_once` closure itself. So a backtrace shows an unnamed function, and base `traceback()` prints its whole body. `do.call("chat_once", ...)` avoids that. Recommended: fix now.
+- Q3 ([S] blame 1, [S] prior 1): the comment above the data-frame `logprobs` column says the column is keyed on the argument. It is now keyed on the argument and the route. Recommended: fix now, the comment only. The narrowing itself is recorded in D-032 and D-033.
+- Q4 ([S] prior 5): the AC4 test calls `expect_s3_class()` in a loop over routes, and that call takes no `info`. So a failure would not name the route. Recommended: fix now.
+- Q5 ([O] 4, pass-1 R12, pre-existing): `instructions` on the OpenResponses route and `messages` on the OpenAI route still raise R's own error after the probe. Recommended: follow-up, a candidate row.
+- Q6 ([O] 3): `rlm_dot_filling()` returns `NULL` when no dot fills the argument, and the caller has no guard. No input reaches it, because the caller runs only when `rlm_chat_dots()` found a filling dot. Recommended: reject.
+- Q7 ([S] prior 4): the repeat-abort message does not join the dot names with `trunc = Inf`, so cli would shorten past 20 dots for one argument. Recommended: reject, because no real call gives 20 such dots.
+- Q8 ([S] prior 2 and 3, [S] blame 2): the branch reverses the M058 native vector pin and the M019 and M022 native column tests. The plan named these changes. Recommended: reject, intended.
+- Q9 ([S] blame 3): D-032 does not say that the old per-input warning also ignored `quiet`. So the batch makes no new exception to GP6. Recommended: reject, because D-032 stays correct.
+- Q10 ([S] blame 5): D-032 keeps its "D-013's shape" wording. D-033 corrects it, and DECISIONS.md is append-only. Recommended: reject.
+- Q11 ([S] prior 6): no test gives a shortened dot that could match `simplify`. `chat_once()` puts `simplify` after `...`, so only its exact name matches. Recommended: reject.
+- Q12 ([O] 5, [S] prior 7, [S] blame 6 and 7): the pass-1 items R10, R11, and R13 and the `NA`-named dot are still in the code. Recommended: reject, as pass 1 proposed.
