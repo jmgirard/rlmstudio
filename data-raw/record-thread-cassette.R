@@ -26,9 +26,9 @@
 #
 #   Rscript data-raw/record-thread-cassette.R
 #
-# The chat calls are made with simplify = FALSE, and a condition that a chat
-# call raises is kept, because httptest2 writes the response before the
-# package reads it.
+# The chat calls are made with simplify = FALSE. Calls 5 and 6 keep the
+# rlmstudio_api_error that they raise. httptest2 writes the response before
+# the package reads it.
 #
 # httptest2 records only when the target directory is absent, so the script
 # records into a fresh directory beside it. The old cassettes are replaced only
@@ -71,7 +71,7 @@ target <- file.path("tests", "testthat", "thread_live")
 fresh <- paste0(target, "_new")
 unlink(fresh, recursive = TRUE)
 
-# The six calls. A chat call that raises an API error returns the condition.
+# The six calls. Calls 5 and 6 return the API error that they raise.
 record_thread <- function() {
   keep <- function(expr) {
     tryCatch(expr, rlmstudio_api_error = identity)

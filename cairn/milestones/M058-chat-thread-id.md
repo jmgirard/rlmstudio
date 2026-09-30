@@ -1,6 +1,6 @@
 # M058: Continue a chat thread by its reply id
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -124,7 +124,7 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - [x] T6: Planted defects. In a scratch copy, delete one site at a time. The sites are the
       body-field line, the attribute line, the value check, the `NULL` allowance, the route
       check, and the batch early check. Each one turns its own tests red and leaves the others green.
-- [ ] T7: Run `devtools::check()` on a `git archive` of 30a743e and record its note headings.
+- [x] T7: Run `devtools::check()` on a `git archive` of 30a743e and record its note headings.
       Then run `devtools::test()` and `devtools::check()` on the branch, with
       `RLMSTUDIO_API_TOKEN` set (M009 lesson).
 
@@ -144,5 +144,8 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - 2026-09-29: T3 done. `test-thread.R` covers the list, vector, logprobs vector, and data-frame formats on both routes. It covers the recorded thread chain, the recorded `store = FALSE` replies, and the unknown-id cases for the single calls and the batch. Full suite 0 failures, 3 live skips.
 - 2026-09-29: T5 done. Help text on the four pages and one NEWS entry. The print line and the `identical()` result in NEWS were read from an R run. The `store = FALSE` claims rest on the recorded replies. A second `devtools::document()` run left no diff.
 - 2026-09-29: T6 done. A scratch copy took ten plants, one at a time, and ran the 33 blocks of `test-thread.R`. The control had 0 red blocks. The body field of the native route turned 4 blocks red, and that of the OpenResponses route 5. The attribute line turned 8 red. Each of the five value and route checks turned only its own block red. The `NULL` allowance turned 25 red, because every call that leaves the argument out passes `NULL` through it.
+- 2026-09-29: T7 done. `devtools::check()` on a `git archive` of 30a743e gave 0 errors, 0 warnings, and 0 notes. On the branch at 85cbdb3 it gave the same. `devtools::test()` with `RLMSTUDIO_API_TOKEN` set gave 0 failures and 3 live skips, because the server was not running. The server and model state were the same after both checks.
+- 2026-09-29: claim audit: 131 claims read, 8 corrected — NEWS.md, R/chat.R, data-raw/record-thread-cassette.R, tests/testthat/test-thread.R
+- 2026-09-29: the claim audit found 14 testthat failure files in `tests/testthat/_problems/` that the T2 commit took in. They are removed, and `.gitignore` and `.Rbuildignore` now exclude that folder. After these fixes, the full suite gave 0 failures and 3 live skips.
 
 ## Decisions

@@ -15,6 +15,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.positai$
+^tests/testthat/_problems$
 ^\.claude$
 ^cairn$
 ^data-raw$

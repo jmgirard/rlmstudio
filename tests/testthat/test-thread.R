@@ -1,9 +1,9 @@
 # The `previous_response_id` argument that continues a stored chat thread, and
-# the `response_id` attribute that a simplified reply carries (D-030). Each
-# property gets one test_that() block per function, so a failure names the
-# function it came from. The replies are written here rather than recorded,
-# because a recording cannot show what the request body held. The recorded
-# unknown-id replies are read at the end of the file.
+# the `response_id` attribute that a simplified reply carries (D-030). Most
+# properties get one test_that() block per function, so a failure names the
+# function it came from. Most replies are written here rather than recorded,
+# because a recording cannot show what the request body held. The tests near
+# the end of the file read the recorded replies.
 
 # native_reply(), responses_reply(), and quoted() live in helper-chat-bodies.R.
 thread_replies <- list(
@@ -228,22 +228,22 @@ expect_thread_value_aborts <- function(name, routes) {
   }
 }
 
-test_that("lms_chat_native() aborts on a previous_response_id that is not one string", {
+test_that("lms_chat_native() aborts on a previous_response_id that is not one usable string", {
   expect_thread_value_aborts("lms_chat_native", "native")
 })
 
-test_that("lms_chat_openresponses() aborts on a previous_response_id that is not one string", {
+test_that("lms_chat_openresponses() aborts on a previous_response_id that is not one usable string", {
   expect_thread_value_aborts("lms_chat_openresponses", "openresponses")
 })
 
-test_that("lms_chat() aborts on a previous_response_id that is not one string", {
+test_that("lms_chat() aborts on a previous_response_id that is not one usable string", {
   expect_thread_value_aborts(
     "lms_chat",
     c("native", "openresponses", "openai")
   )
 })
 
-test_that("lms_chat_batch() aborts on a previous_response_id that is not one string", {
+test_that("lms_chat_batch() aborts on a previous_response_id that is not one usable string", {
   expect_thread_value_aborts(
     "lms_chat_batch",
     c("native", "openresponses", "openai")
@@ -377,7 +377,7 @@ id_shapes <- list(
   list(label = "an array", json = json_array(quoted("resp_9")), attr = NULL)
 )
 
-# One OpenResponses part that carries logprobs.
+# The logprobs array of an OpenResponses part. It holds one step.
 thread_logprobs <- json_array(logprob_step("hi"))
 
 # The reply a route sends with the id field `id_json`. `lp` picks the

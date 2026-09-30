@@ -198,7 +198,9 @@ lms_chat <- function(
 #'   hold raises `rlmstudio_api_error` with status 400 and the `code`
 #'   `"previous_response_not_found"`. [lms_chat()] and [lms_chat_batch()]
 #'   refuse a string with `api_type = "openai"`, because the OpenAI chat
-#'   endpoint keeps no thread, and [lms_chat_openai()] has no such argument.
+#'   endpoint keeps no thread. [lms_chat_openai()] has no such argument. A
+#'   `previous_response_id` in its `...` goes into the request body
+#'   unchecked, and the endpoint ignores it.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
@@ -1262,8 +1264,9 @@ with_response_id <- function(value, id) {
 #'   wrote. An id that the server does not hold raises `rlmstudio_api_error`
 #'   with status 400 and the `code` `"invalid_value"`. [lms_chat()] and
 #'   [lms_chat_batch()] refuse a string with `api_type = "openai"`, because
-#'   the OpenAI chat endpoint keeps no thread, and [lms_chat_openai()] has no
-#'   such argument.
+#'   the OpenAI chat endpoint keeps no thread. [lms_chat_openai()] has no
+#'   such argument. A `previous_response_id` in its `...` goes into the
+#'   request body unchecked, and the endpoint ignores it.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. The body can

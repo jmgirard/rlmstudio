@@ -50,8 +50,9 @@ as \code{previous}, goes into the request body unchecked, under the name you
 wrote. An id that the server does not hold raises \code{rlmstudio_api_error}
 with status 400 and the \code{code} \code{"invalid_value"}. \code{\link[=lms_chat]{lms_chat()}} and
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} refuse a string with \code{api_type = "openai"}, because
-the OpenAI chat endpoint keeps no thread, and \code{\link[=lms_chat_openai]{lms_chat_openai()}} has no
-such argument.}
+the OpenAI chat endpoint keeps no thread. \code{\link[=lms_chat_openai]{lms_chat_openai()}} has no
+such argument. A \code{previous_response_id} in its \code{...} goes into the
+request body unchecked, and the endpoint ignores it.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
