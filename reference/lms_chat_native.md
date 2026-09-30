@@ -121,11 +121,15 @@ function that checks its own arguments does that first, so a bad
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
-`quiet`, or `force`, a `stream` in the `...` of a chat function, or a
+`quiet`, or `force`, a `stream` in the `...` of a chat function, a
 `logprobs` in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-or `lms_chat_native()`, aborts with an argument message and no condition
-class even when the server is down. A condition of class
+or `lms_chat_native()`, or a value in the `...` of
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+that
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+reads as an argument already given, aborts with an argument message and
+no condition class even when the server is down. A condition of class
 `rlmstudio_no_server` is raised when that connection cannot be opened. A
 refused connection raises it. So do an address the package cannot parse
 and a hostname that does not resolve. An address that neither accepts

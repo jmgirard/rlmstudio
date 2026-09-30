@@ -276,8 +276,10 @@ that checks its own arguments does that first, so a bad <code>model</code>, <cod
 or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
 argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
-the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of
-<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, aborts
+the <code>...</code> of a chat function, a <code>logprobs</code> in the <code>...</code> of
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, or a value in the <code>...</code> of
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> that <code><a href="lms_chat.html">lms_chat()</a></code> reads as an argument already given,
+aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A

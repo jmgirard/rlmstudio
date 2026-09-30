@@ -94,9 +94,9 @@ server.</p></dd>
 <code>rlmstudio.quiet</code> option. <code>TRUE</code> starts no progress bar, and <code>FALSE</code>
 starts one, also when the option is <code>TRUE</code>. cli draws a started bar only
 after a delay, two seconds by default. Any other value, <code>NA</code> included,
-aborts before the check for a running server. <code>quiet</code> does not hide the warnings
-about failed inputs, cut-off replies, or a vector format that returns a
-list.</p></dd>
+aborts before the check for a running server. <code>quiet</code> does not hide the
+warnings about failed inputs, cut-off replies, a vector format that
+returns a list, or a <code>logprobs = TRUE</code> that the <code>"native"</code> route ignores.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -108,6 +108,23 @@ call, so each input continues the same stored reply.
 A <code>logprobs</code> here, or a shortened name that <code><a href="lms_chat.html">lms_chat()</a></code> reads as
 <code>logprobs</code>, must be <code>TRUE</code> or <code>FALSE</code>. Any other value, <code>NULL</code> and <code>NA</code>
 included, aborts before the check for a running server.
+With <code>api_type = "native"</code>, which has no logprobs, a <code>logprobs</code> of
+<code>TRUE</code> is ignored. The batch then returns what it returns with
+<code>logprobs = FALSE</code>, in each format. It gives one warning for the whole
+batch, after the check for a running server, even with <code>quiet = TRUE</code>.
+Two values here that <code><a href="lms_chat.html">lms_chat()</a></code> reads as the same argument abort
+with a message that names the argument. Examples are
+<code>logprobs = TRUE, logprobs = FALSE</code>, the shortened names
+<code>log = TRUE, lo = FALSE</code>, and two <code>previous_response_id</code> values. An
+exact name and a shortened name, such as <code>logprobs</code> and <code>log</code>, do not
+abort, because R gives the shortened one to the <code>...</code> of <code><a href="lms_chat.html">lms_chat()</a></code>.
+An <code>input</code> here also aborts, because the batch passes each element of
+<code>inputs</code> as <code>input</code>. An <code>input</code> reaches <code>...</code> only when <code>inputs</code> is
+given by its full name. Otherwise R reads <code>input</code> as a shortened
+<code>inputs</code>, so it becomes <code>inputs</code>, and the value given by position fills
+the next unnamed argument, such as <code>system_prompt</code>. These aborts come
+before every other check of <code>...</code> and before the check for a running
+server.
 The package checks a <code>stream</code> here. A <code>stream</code> other than <code>FALSE</code> or
 <code>NULL</code> aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.</p></dd>
@@ -121,16 +138,17 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The return type depends on the <code>format</code> argument:</p><ul><li><p><code>"vector"</code>: A character vector of responses, with <code>NA</code> for an input that failed. This format is only supported if <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>. With a <code>schema</code>, it warns and returns the list instead.</p></li>
+    <p>The return type depends on the <code>format</code> argument:</p><ul><li><p><code>"vector"</code>: A character vector of responses, with <code>NA</code> for an input that failed. This format is only supported if <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code> or <code>api_type = "native"</code>. With a <code>schema</code>, it warns and returns the list instead.</p></li>
 <li><p><code>"list"</code>: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a <code>schema</code>, <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code>, each element that did not fail is the parsed reply.</p></li>
-<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code>, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow <code>output</code>, or <code>logprobs</code> when it is there, as described below. With an object <code>schema</code> and <code>logprobs = FALSE</code>, one column per schema property comes after them, as described below.</p></li>
+<li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code> on the <code>"openresponses"</code> or <code>"openai"</code> route, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. The <code>"native"</code> route adds no <code>logprobs</code> column. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow <code>output</code>, or <code>logprobs</code> when it is there, as described below. With an object <code>schema</code> and <code>logprobs = FALSE</code>, one column per schema property comes after them, as described below.</p></li>
 </ul><p>On the native and OpenResponses routes with <code>simplify = TRUE</code>, <code><a href="lms_chat.html">lms_chat()</a></code>
 returns each reply that carries an id with a <code>response_id</code> attribute, as
 its help describes. With <code>format = "list"</code>, each reply keeps
 it. So does each element of the list that <code>format = "vector"</code> returns with
-<code>logprobs = TRUE</code>. The character vector of <code>format = "vector"</code> and the
-<code>output</code> column of <code>format = "data.frame"</code> carry no <code>response_id</code>
-attribute. The data frame holds the ids in its <code>response_id</code> column.</p>
+<code>logprobs = TRUE</code> on the OpenResponses route. The character vector of
+<code>format = "vector"</code> and the <code>output</code> column of <code>format = "data.frame"</code>
+carry no <code>response_id</code> attribute. The data frame holds the ids in its
+<code>response_id</code> column.</p>
 <p>With <code>api_type = "native"</code> and <code>format = "data.frame"</code>, the data frame ends
 with seven columns read from each reply: <code>response_id</code>, <code>input_tokens</code>,
 <code>total_output_tokens</code>, <code>reasoning_output_tokens</code>, <code>tokens_per_second</code>,
@@ -215,9 +233,10 @@ element for that input holds the condition without its backtrace. An
 <code>rlmstudio_bad_response</code> for reply content that does not
 parse keeps that content in its <code>content</code> field. Where the result is text,
 the element holds <code>NA</code>. The result is text with <code>format = "vector"</code> when it
-returns a vector (<code>simplify = TRUE</code>, no <code>schema</code>, <code>logprobs = FALSE</code>), and
-with a data frame whose replies are not parsed (no <code>schema</code>, or
-<code>logprobs = TRUE</code>). The <code>logprobs</code> column holds <code>NULL</code> for a failed input.
+returns a vector (<code>simplify = TRUE</code>, no <code>schema</code>, and <code>logprobs = FALSE</code>
+or the native route), and with a data frame whose replies are not parsed
+(no <code>schema</code>, or <code>logprobs = TRUE</code>). On the OpenResponses and OpenAI
+routes, the <code>logprobs</code> column holds <code>NULL</code> for a failed input.
 A reply with no readable answer text, such as one whose content is <code>null</code>,
 fails as an <code>rlmstudio_bad_response</code> in the same way. So does a
 status-200 body that does not parse as JSON, such as an HTML page from a
@@ -259,8 +278,10 @@ that checks its own arguments does that first, so a bad <code>model</code>, <cod
 or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
 argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
-the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of
-<code>lms_chat_batch()</code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, aborts
+the <code>...</code> of a chat function, a <code>logprobs</code> in the <code>...</code> of
+<code>lms_chat_batch()</code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, or a value in the <code>...</code> of
+<code>lms_chat_batch()</code> that <code><a href="lms_chat.html">lms_chat()</a></code> reads as an argument already given,
+aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A

@@ -2,6 +2,37 @@
 
 ## rlmstudio (development version)
 
+- With `api_type = "native"`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now ignores `logprobs = TRUE` in every format, because the native
+  route has no logprobs. It returns what it returns with
+  `logprobs = FALSE`. Before, the vector format returned a list of
+  strings, with a warning that the format cannot store logprobs data
+  frames. The data frame had a `logprobs` column of `NULL`.
+
+  - The batch now gives one warning that the native route ignores
+    `logprobs`. Before, it gave the same warning once for each input.
+    The warning comes after the check for a running server, and
+    `quiet = TRUE` does not hide it.
+
+- If two values in the `...` of
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  reach the same
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  argument, the batch now aborts with a message that names the argument.
+  Examples are `logprobs = TRUE, logprobs = "yes"`,
+  `log = TRUE, lo = FALSE`, and two `previous_response_id` values. So
+  does an `input` in its `...`, because the batch passes each element of
+  `inputs` as `input`. An `input` reaches `...` only when `inputs` is
+  given by its full name. Otherwise R reads `input` as a shortened
+  `inputs`. The abort has no condition class, and it comes before every
+  other check of `...` and before the check for a running server.
+  Before, R’s own error “formal argument matched by multiple actual
+  arguments” came from inside the package. An exact name beside a
+  shortened one, such as `logprobs` and `log`, still passes, because R
+  gives the shortened one to the `...` of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md).
+
 - [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
   and
@@ -36,9 +67,10 @@
     [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
     the list format keeps the attribute on each reply. The character
     vector of the vector format and the `output` column of the data
-    frame carry none. With `logprobs = TRUE`, the vector format returns
-    a list, and each element keeps the attribute. An id that the server
-    does not hold fails each input alone.
+    frame carry none. On the OpenResponses route with `logprobs = TRUE`,
+    the vector format returns a list, and each element keeps the
+    attribute. An id that the server does not hold fails each input
+    alone.
 
 - Each `TRUE` or `FALSE` argument now takes only `TRUE` or `FALSE`. Any
   other value aborts with a message that names the argument, and the
@@ -1006,15 +1038,16 @@
   the result is text, the element holds `NA`. That is the case for
   `format = "vector"` when it returns a vector, and for a data frame
   whose replies are not parsed. In such a data frame, the `logprobs`
-  column holds `NULL` for a failed input. A reply with no readable
-  answer text, such as one whose content is `null`, fails in the same
-  way, so the result stays as long as `inputs`. With
-  `format = "data.frame"` and `logprobs = TRUE`, the `logprobs` column
-  is now always there, even when no reply carried log probabilities.
-  Before, it was left out in that case. The call gives one warning that
-  names the count and the positions of the failed inputs. `quiet = TRUE`
-  does not silence it. Where the result holds `NA`, the warning names
-  `format = "list"` as the way to keep the conditions.
+  column of the OpenResponses and OpenAI routes holds `NULL` for a
+  failed input. A reply with no readable answer text, such as one whose
+  content is `null`, fails in the same way, so the result stays as long
+  as `inputs`. On those two routes, with `format = "data.frame"` and
+  `logprobs = TRUE`, the `logprobs` column is now always there, even
+  when no reply carried log probabilities. Before, it was left out in
+  that case. The call gives one warning that names the count and the
+  positions of the failed inputs. `quiet = TRUE` does not silence it.
+  Where the result holds `NA`, the warning names `format = "list"` as
+  the way to keep the conditions.
 
 - An `rlmstudio_no_server` from one input still aborts
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),

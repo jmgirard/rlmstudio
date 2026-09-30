@@ -54,8 +54,9 @@ lms_chat_batch(
   starts one, also when the option is `TRUE`. cli draws a started bar
   only after a delay, two seconds by default. Any other value, `NA`
   included, aborts before the check for a running server. `quiet` does
-  not hide the warnings about failed inputs, cut-off replies, or a
-  vector format that returns a list.
+  not hide the warnings about failed inputs, cut-off replies, a vector
+  format that returns a list, or a `logprobs = TRUE` that the `"native"`
+  route ignores.
 
 - ...:
 
@@ -68,9 +69,29 @@ lms_chat_batch(
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
   reads as `logprobs`, must be `TRUE` or `FALSE`. Any other value,
   `NULL` and `NA` included, aborts before the check for a running
-  server. The package checks a `stream` here. A `stream` other than
-  `FALSE` or `NULL` aborts before the call checks for a running server,
-  because the package reads a whole reply and not a streamed one.
+  server. With `api_type = "native"`, which has no logprobs, a
+  `logprobs` of `TRUE` is ignored. The batch then returns what it
+  returns with `logprobs = FALSE`, in each format. It gives one warning
+  for the whole batch, after the check for a running server, even with
+  `quiet = TRUE`. Two values here that
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  reads as the same argument abort with a message that names the
+  argument. Examples are `logprobs = TRUE, logprobs = FALSE`, the
+  shortened names `log = TRUE, lo = FALSE`, and two
+  `previous_response_id` values. An exact name and a shortened name,
+  such as `logprobs` and `log`, do not abort, because R gives the
+  shortened one to the `...` of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md).
+  An `input` here also aborts, because the batch passes each element of
+  `inputs` as `input`. An `input` reaches `...` only when `inputs` is
+  given by its full name. Otherwise R reads `input` as a shortened
+  `inputs`, so it becomes `inputs`, and the value given by position
+  fills the next unnamed argument, such as `system_prompt`. These aborts
+  come before every other check of `...` and before the check for a
+  running server. The package checks a `stream` here. A `stream` other
+  than `FALSE` or `NULL` aborts before the call checks for a running
+  server, because the package reads a whole reply and not a streamed
+  one.
 
 - token:
 
@@ -84,9 +105,9 @@ lms_chat_batch(
 The return type depends on the `format` argument:
 
 - `"vector"`: A character vector of responses, with `NA` for an input
-  that failed. This format is only supported if `simplify = TRUE` and
-  `logprobs = FALSE`. With a `schema`, it warns and returns the list
-  instead.
+  that failed. This format is only supported if `simplify = TRUE`, and
+  `logprobs = FALSE` or `api_type = "native"`. With a `schema`, it warns
+  and returns the list instead.
 
 - `"list"`: A list where each element is the response corresponding to
   the provided input, or the condition for an input that failed. With a
@@ -94,23 +115,25 @@ The return type depends on the `format` argument:
   did not fail is the parsed reply.
 
 - `"data.frame"`: A data.frame containing `input` and `output` columns,
-  with `NA` in `output` for an input that failed. If `logprobs = TRUE`,
-  an additional list-column named `logprobs` is included, with `NULL`
-  for an input that failed. With a `schema` and `logprobs = FALSE`,
-  `output` is a list-column of parsed replies, with the condition in
-  place of an input that failed. Columns read from each reply follow
-  `output`, or `logprobs` when it is there, as described below. With an
-  object `schema` and `logprobs = FALSE`, one column per schema property
-  comes after them, as described below.
+  with `NA` in `output` for an input that failed. If `logprobs = TRUE`
+  on the `"openresponses"` or `"openai"` route, an additional
+  list-column named `logprobs` is included, with `NULL` for an input
+  that failed. The `"native"` route adds no `logprobs` column. With a
+  `schema` and `logprobs = FALSE`, `output` is a list-column of parsed
+  replies, with the condition in place of an input that failed. Columns
+  read from each reply follow `output`, or `logprobs` when it is there,
+  as described below. With an object `schema` and `logprobs = FALSE`,
+  one column per schema property comes after them, as described below.
 
 On the native and OpenResponses routes with `simplify = TRUE`,
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 returns each reply that carries an id with a `response_id` attribute, as
 its help describes. With `format = "list"`, each reply keeps it. So does
 each element of the list that `format = "vector"` returns with
-`logprobs = TRUE`. The character vector of `format = "vector"` and the
-`output` column of `format = "data.frame"` carry no `response_id`
-attribute. The data frame holds the ids in its `response_id` column.
+`logprobs = TRUE` on the OpenResponses route. The character vector of
+`format = "vector"` and the `output` column of `format = "data.frame"`
+carry no `response_id` attribute. The data frame holds the ids in its
+`response_id` column.
 
 With `api_type = "native"` and `format = "data.frame"`, the data frame
 ends with seven columns read from each reply: `response_id`,
@@ -218,16 +241,17 @@ backtrace. An `rlmstudio_bad_response` for reply content that does not
 parse keeps that content in its `content` field. Where the result is
 text, the element holds `NA`. The result is text with
 `format = "vector"` when it returns a vector (`simplify = TRUE`, no
-`schema`, `logprobs = FALSE`), and with a data frame whose replies are
-not parsed (no `schema`, or `logprobs = TRUE`). The `logprobs` column
-holds `NULL` for a failed input. A reply with no readable answer text,
-such as one whose content is `null`, fails as an
-`rlmstudio_bad_response` in the same way. So does a status-200 body that
-does not parse as JSON, such as an HTML page from a proxy or an empty
-body. That input fails alone, and the other elements keep their replies.
-Use `format = "list"` to keep the conditions. The call gives one warning
-that names the count and the positions of the failed inputs. That
-warning shows even with `quiet = TRUE`.
+`schema`, and `logprobs = FALSE` or the native route), and with a data
+frame whose replies are not parsed (no `schema`, or `logprobs = TRUE`).
+On the OpenResponses and OpenAI routes, the `logprobs` column holds
+`NULL` for a failed input. A reply with no readable answer text, such as
+one whose content is `null`, fails as an `rlmstudio_bad_response` in the
+same way. So does a status-200 body that does not parse as JSON, such as
+an HTML page from a proxy or an empty body. That input fails alone, and
+the other elements keep their replies. Use `format = "list"` to keep the
+conditions. The call gives one warning that names the count and the
+positions of the failed inputs. That warning shows even with
+`quiet = TRUE`.
 
 An `rlmstudio_api_error` with `status` 401, 403, or 404 aborts the batch
 with that condition, and no request goes out after that input. Such a
@@ -266,16 +290,19 @@ function that checks its own arguments does that first, so a bad
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
-`quiet`, or `force`, a `stream` in the `...` of a chat function, or a
+`quiet`, or `force`, a `stream` in the `...` of a chat function, a
 `logprobs` in the `...` of `lms_chat_batch()` or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-aborts with an argument message and no condition class even when the
-server is down. A condition of class `rlmstudio_no_server` is raised
-when that connection cannot be opened. A refused connection raises it.
-So do an address the package cannot parse and a hostname that does not
-resolve. An address that neither accepts nor refuses the connection also
-raises it. That case waits for the operating system to give up, which
-can take a minute. Start the server with
+or a value in the `...` of `lms_chat_batch()` that
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+reads as an argument already given, aborts with an argument message and
+no condition class even when the server is down. A condition of class
+`rlmstudio_no_server` is raised when that connection cannot be opened. A
+refused connection raises it. So do an address the package cannot parse
+and a hostname that does not resolve. An address that neither accepts
+nor refuses the connection also raises it. That case waits for the
+operating system to give up, which can take a minute. Start the server
+with
 [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
 or give `host` the address that your server listens on.
 
