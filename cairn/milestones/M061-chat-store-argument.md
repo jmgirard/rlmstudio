@@ -1,13 +1,13 @@
 # M061: A named store argument on the thread chat routes
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it adds a checked argument to four exported functions.
-- **Branch/PR:** —
+- **Branch/PR:** m061-chat-store-argument
 
 ## Goal
 

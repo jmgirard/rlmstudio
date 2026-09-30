@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-30 (M060 done, M057 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M061 | A named store argument on the thread chat routes | planned | none | normal | milestones/M061-chat-store-argument.md |
+| M061 | A named store argument on the thread chat routes | in-progress | none | normal | milestones/M061-chat-store-argument.md |
 | M060 | Names that are not plain text, and dots that lms_chat() sets | done | none | normal | milestones/archive/M060-argument-text-faults.md |
 | M059 | Batch logprobs and repeated-argument faults | done | none | normal | milestones/archive/M059-batch-logprobs-faults.md |
 | M058 | Continue a chat thread by its reply id | done | none | normal | milestones/archive/M058-chat-thread-id.md |
