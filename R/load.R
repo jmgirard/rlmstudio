@@ -5,8 +5,8 @@
 #'   declared encoding and not marked `"bytes"`. A class, names, and the S4
 #'   bit are removed before the name is sent.
 #' @param context_length Integer. Maximum number of tokens that the model will
-#'   consider. A value above the maximum in the model list gives a warning.
-#'   See the "Long prompts" section.
+#'   consider. With `force = FALSE`, a value above the maximum in the model
+#'   list gives a warning. See the "Long prompts" section.
 #' @param eval_batch_size Integer. Number of input tokens to process together in
 #'   a single batch during evaluation.
 #' @param flash_attention `TRUE`, `FALSE`, or `NULL`. Whether to optimize
@@ -53,8 +53,9 @@
 #' 400. Each message began "The number of tokens to keep from the initial
 #' prompt is greater than the context length". The chat functions raise such a
 #' reply as an `rlmstudio_api_error`, and the message holds the server text.
-#' [lms_chat_batch()] keeps the condition for that input and goes on to the
-#' next input.
+#' [lms_chat_batch()] fails that input alone and goes on to the next input.
+#' With `format = "list"`, the element of that input holds the condition. With
+#' `format = "vector"`, it holds `NA`.
 #'
 #' To fit a longer prompt, load the model with a larger `context_length` in
 #' [lms_load()]. The `max_context_length` column of
@@ -214,8 +215,8 @@ lms_load <- function(
 #'
 #' LM Studio loads a `context_length` above the `max_context_length` of the
 #' model list as asked, with no clamp and no message (observed on 0.4.25+1).
-#' This warning is the only sign in R. It shows past `quiet` and the
-#' `rlmstudio.quiet` option. A value that `as.integer()` cannot read as one
+#' This warning is the only sign in R. The `rlmstudio.quiet` option does not
+#' hide it. A value that `as.integer()` cannot read as one
 #' number, a model with no row in the list, and a row with no maximum give no
 #' warning.
 #'
@@ -251,7 +252,7 @@ warn_context_above_max <- function(context_length, model, models) {
   cli::cli_warn(
     c(
       "{.arg context_length} {asked} is larger than {max_text}, the maximum context length that the model list gives for {.val {model}}.",
-      "i" = "LM Studio loads the model with {asked} tokens and gives no message. Replies past the maximum can lose quality."
+      "i" = "LM Studio loads the model with {asked} tokens and gives no message."
     ),
     class = "rlmstudio_context_above_max"
   )

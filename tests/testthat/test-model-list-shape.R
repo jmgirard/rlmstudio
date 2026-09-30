@@ -14,6 +14,7 @@ model_fields <- function(type = '"llm"', key = '"m"', instances = "[]") {
     key = key,
     display_name = '"M"',
     size_bytes = "1073741824",
+    max_context_length = "32768",
     loaded_instances = instances
   )
 }
@@ -74,10 +75,12 @@ fault_cases <- function() {
       shape_object(model_fields(instances = json_forms[[form]])), field
     )
   }
-  for (form in setdiff(names(json_forms), c("number", "null"))) {
-    fields <- model_fields()
-    fields[["size_bytes"]] <- json_forms[[form]]
-    model_faults[[paste("size_bytes as", form)]] <- list(shape_object(fields), "size_bytes")
+  for (field in c("size_bytes", "max_context_length")) {
+    for (form in setdiff(names(json_forms), c("number", "null"))) {
+      fields <- model_fields()
+      fields[[field]] <- json_forms[[form]]
+      model_faults[[paste(field, "as", form)]] <- list(shape_object(fields), field)
+    }
   }
   for (form in setdiff(names(json_forms), c("empty object", "object"))) {
     model_faults[[paste("model entry as", form)]] <- list(json_forms[[form]], "models", "is not a JSON object")
@@ -128,16 +131,19 @@ fault_cases <- function() {
   cases
 }
 
-# Bodies that pass: `size_bytes` absent, `null`, or under an extended name, an
-# empty model list, and a list with a loaded model.
+# Bodies that pass: `size_bytes` or `max_context_length` absent, `null`, or
+# under an extended name, an empty model list, and a list with a loaded model.
 pass_cases <- function() {
-  list(
-    "size_bytes absent" = list_body(shape_object(model_fields(), drop = "size_bytes")),
-    "size_bytes null" = list_body(shape_object(replace(model_fields(), "size_bytes", "null"))),
-    "size_bytes extended" = list_body(shape_object(model_fields(), extend = "size_bytes")),
+  cases <- list(
     "no models" = list_body(character(0)),
     "one loaded model" = list_body(c(valid_model, loaded_model))
   )
+  for (field in c("size_bytes", "max_context_length")) {
+    cases[[paste(field, "absent")]] <- list_body(shape_object(model_fields(), drop = field))
+    cases[[paste(field, "null")]] <- list_body(shape_object(replace(model_fields(), field, "null")))
+    cases[[paste(field, "extended")]] <- list_body(shape_object(model_fields(), extend = field))
+  }
+  cases
 }
 
 test_that("each rule of the model list aborts list_models() with rlmstudio_bad_response", {

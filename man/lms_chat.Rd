@@ -525,8 +525,9 @@ with status 500. The \verb{/v1/chat/completions} route answered it with status
 400. Each message began "The number of tokens to keep from the initial
 prompt is greater than the context length". The chat functions raise such a
 reply as an \code{rlmstudio_api_error}, and the message holds the server text.
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} keeps the condition for that input and goes on to the
-next input.
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} fails that input alone and goes on to the next input.
+With \code{format = "list"}, the element of that input holds the condition. With
+\code{format = "vector"}, it holds \code{NA}.
 
 To fit a longer prompt, load the model with a larger \code{context_length} in
 \code{\link[=lms_load]{lms_load()}}. The \code{max_context_length} column of

@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-30 (M062 done, M059 row pruned, one candidate added
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M063 | A load above the trained context warns, and the help says how to fit a long prompt | in-progress | none | normal | milestones/M063-long-prompts.md |
+| M063 | A load above the trained context warns, and the help says how to fit a long prompt | review | none | normal | milestones/M063-long-prompts.md |
 | M062 | A chat call aborts on a text input that is not one prompt | done | none | normal | milestones/archive/M062-chat-input-one-prompt.md |
 | M061 | A named store argument on the thread chat routes | done | none | normal | milestones/archive/M061-chat-store-argument.md |
 | M060 | Names that are not plain text, and dots that lms_chat() sets | done | none | normal | milestones/archive/M060-argument-text-faults.md |
