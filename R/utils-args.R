@@ -598,6 +598,7 @@ rlm_check_messages <- function(value) {
       call = NULL
     )
   }
+  column <- NULL
   if (has_function(value)) {
     fault <- paste(
       "You gave a field value that is a function, which jsonlite would send",
@@ -617,17 +618,23 @@ rlm_check_messages <- function(value) {
         "send as a string or leave out."
       )
     } else {
-      messages_write_fault(value)
+      write_fault <- messages_write_fault(value)
+      column <- write_fault$column
+      write_fault$detail
     }
   }
   if (!is.null(fault)) {
-    cli::cli_abort(
-      c(
-        "{.arg messages} holds a field value that cannot be sent as JSON.",
-        "x" = "{fault}"
-      ),
-      call = NULL
+    bullets <- c(
+      "{.arg messages} holds a field value that cannot be sent as JSON.",
+      "x" = "{fault}"
     )
+    if (!is.null(column)) {
+      bullets <- c(
+        bullets,
+        "i" = "Column {.val {column}} is the first column that jsonlite cannot write on its own."
+      )
+    }
+    cli::cli_abort(bullets, call = NULL)
   }
   invisible(value)
 }
@@ -643,14 +650,20 @@ rlm_check_messages <- function(value) {
 #' jsonlite writes it. The jsonlite message is returned as a value, and the
 #' abort splices it in, so cli does not read its braces.
 #'
+#' The jsonlite message for a data frame often names no column. So when the
+#' write of a data frame fails, `first_unwritable_column()` finds the first
+#' top-level column that fails when it is written alone. A list of messages
+#' that is not a data frame gets the jsonlite message alone.
+#'
 #' @param value A `messages` value that passed `messages_fault()` and holds
 #'   no function.
-#' @return A detail that holds the jsonlite message, or `NULL` when the write
-#'   works.
+#' @return `NULL` when the write works. Otherwise a list with `detail`, which
+#'   holds the jsonlite message, and `column`, the name of that column or
+#'   `NULL`.
 #'
 #' @noRd
 messages_write_fault <- function(value) {
-  tryCatch(
+  detail <- tryCatch(
     {
       rlm_json_text(unclass_messages(value))
       NULL
@@ -659,6 +672,45 @@ messages_write_fault <- function(value) {
       paste("You gave a value that jsonlite cannot write:", conditionMessage(e))
     }
   )
+  if (is.null(detail)) {
+    return(NULL)
+  }
+  column <- if (is.data.frame(value)) first_unwritable_column(value)
+  list(detail = detail, column = column)
+}
+
+#' Which top-level column of a data frame fails when it is written alone?
+#'
+#' Each column is written in column order by `rlm_json_text()`, as a data
+#' frame that holds that column alone, with the row count of `value`. The
+#' lone frame has the class `"data.frame"` alone. The column name is returned
+#' as a value, and the abort splices it in, so cli does not read its braces.
+#'
+#' @param value A data frame whose write failed.
+#' @return The name of the first column that fails, or `NULL` when each
+#'   column writes alone.
+#'
+#' @noRd
+first_unwritable_column <- function(value) {
+  n <- nrow(value)
+  for (j in seq_along(value)) {
+    alone <- structure(
+      .subset(value, j),
+      class = "data.frame",
+      row.names = .set_row_names(n)
+    )
+    fails <- tryCatch(
+      {
+        rlm_json_text(alone)
+        FALSE
+      },
+      error = function(e) TRUE
+    )
+    if (fails) {
+      return(names(value)[[j]])
+    }
+  }
+  NULL
 }
 
 #' Does a function sit anywhere inside this messages value?
