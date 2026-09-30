@@ -277,8 +277,8 @@ lms_chat <- function(
 #'   field is read by its exact name. A field that is `null` or absent gives
 #'   `NA`, and so does a field whose name only starts with the one asked for,
 #'   such as `tokenX`. With `logprobs = TRUE`, the `logprobs` value of each
-#'   `"output_text"` part must follow six rules, which the section below
-#'   lists. A value that breaks one raises `rlmstudio_bad_response`, and the
+#'   `"output_text"` part must follow seven rules, which the "Malformed
+#'   logprobs" section below lists. A value that breaks one raises `rlmstudio_bad_response`, and the
 #'   message names the first broken rule in the order the section below
 #'   gives. Parts of other types are not checked. With `logprobs = FALSE`, the value is not read, and the call
 #'   returns the text.
