@@ -121,6 +121,13 @@ raise it for a model list with another shape, and so do
 and
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
 without `force = TRUE`, which read that list.
+[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+and
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+raise it for such a model list too, with either setting of `simplify`,
+through the model lookup that a reply from another model starts.
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+raises it through them.
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 and

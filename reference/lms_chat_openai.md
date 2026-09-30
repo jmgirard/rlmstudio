@@ -324,7 +324,12 @@ raise it for a model list with another shape, and so do
 [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
 and
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-without `force = TRUE`, which read that list.
+without `force = TRUE`, which read that list. `lms_chat_openai()` and
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+raise it for such a model list too, with either setting of `simplify`,
+through the model lookup that a reply from another model starts.
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+raises it through them.
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
 and
@@ -423,7 +428,7 @@ and so does
 unless `force = TRUE`.
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 raises it only as `rlmstudio_model_mismatch`, which the "Reply from
-another model" section describes.
+another model" section of `lms_chat_openai()` describes.
 
 All eleven raise it for a status-200 body that does not parse as JSON,
 such as an HTML page from a proxy, JSON text that stops part way, or an
@@ -437,6 +442,13 @@ the URL or read the file. The message says that the body did not parse
 as JSON and that something other than LM Studio may be answering on the
 host. It does not hold the body text.
 
+The condition carries a `status` field, which holds the HTTP response
+status as an integer. Today the status is always 200: each of these
+functions reads the body only after a 200, and reports every other
+status as an `rlmstudio_api_error` instead.
+
+## Malformed model list
+
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 also raises it for a status-200 model list with the wrong shape.
 [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
@@ -444,8 +456,12 @@ and
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
 without `force = TRUE` raise it through
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md).
-A model list must follow four rules. Each field is read by its exact
-name, so a field named `keyX` does not stand in for `key`.
+`lms_chat_openai()` and
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+apply these rules to the model list of their model lookup, as the "Reply
+from another model" section of `lms_chat_openai()` describes. A model
+list must follow four rules. Each field is read by its exact name, so a
+field named `keyX` does not stand in for `key`.
 
 1.  The body is a JSON object whose `models` field is an array. The
     array can be empty.
@@ -476,59 +492,7 @@ and
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 do not apply these two rules.
 
-[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-and
-[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-also raise it for a status-200 reply of their own with the wrong shape.
-Each reply must follow the rule of its function. Each field is read by
-its exact name. The rules check the type of a field and not its value,
-with four exceptions. The `status` of a load reply must be `"loaded"`. A
-download reply whose `status` is `"already_downloaded"` needs no
-`job_id`. A download reply whose `status` is `"failed"` always aborts.
-The `job_id` of any other download reply must hold a character that is
-not whitespace.
-
-1.  A reply of
-    [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-    is a JSON object whose `status` is the string `"loaded"`. With
-    `echo_load_config = TRUE`, its `load_config` is also a JSON object.
-
-2.  A reply of
-    [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-    is a JSON object whose `status` is a string other than `"failed"`.
-    If the status is not `"already_downloaded"`, its `job_id` is a
-    string with a character that is not whitespace. For a `"failed"`
-    status, the message says that LM Studio reports that the download
-    failed. It names the reply's `job_id` if that is a string with a
-    character that is not whitespace.
-
-3.  A reply of
-    [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-    is a JSON object whose `job_id` and `status` are strings. Its
-    `total_size_bytes`, `downloaded_bytes`, and `bytes_per_second` are
-    each a number, or absent, or `null`.
-
-For the other faults, the message names the field that broke the rule,
-or it says that the body is not a JSON object. It also says that
-something other than LM Studio may be answering on the host.
-
-[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-raises it on an embeddings block it cannot trust. The vectors it returns
-are placed by the index that the response reports, so a block with a
-missing, repeated, or out-of-range index would otherwise pair a vector
-with the wrong text and give back a matrix that is silently wrong.
-
-[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-reads each request on its own. A bad body, of either kind above, fails
-the inputs of that request alone, and the call warns once and goes on.
-The call aborts with the condition only if every request fails, and then
-with the condition of the first. With `simplify = TRUE`, it also aborts
-with `rlmstudio_bad_response` for a request whose embeddings have
-another number of dimensions than those of an earlier request. That
-condition carries a `results` field, a matrix as the "Server not
-running" section describes. See the details of
-[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md).
+## Malformed chat reply
 
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
 and
@@ -546,38 +510,6 @@ it is the `text` of each part of type `"output_text"`. For
 [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
 only, the `content` of each message must be an array of JSON objects,
 and the messages together must hold at least one `"output_text"` part.
-
-With `simplify = TRUE` and `logprobs = TRUE`,
-[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-also raises it for a `logprobs` value that breaks one of these rules.
-The `logprobs` value of each `"output_text"` part is checked. A
-`logprobs` value, `token`, `logprob`, or `top_logprobs` that is `null`
-or absent passes its rule. A `null` step or candidate breaks rule 2 or
-rule 5.
-
-1.  The value is an array.
-
-2.  Each step in the array is a JSON object.
-
-3.  The `token` of a step is a string.
-
-4.  The `logprob` of a step is a number.
-
-5.  The `top_logprobs` of a step is an array of JSON objects.
-
-6.  The `token` and `logprob` of each of those objects follow rules 3
-    and 4.
-
-The parts are checked in order, then the steps of a part, then the
-candidates of a step, one at a time. Within a step, rules 3 and 4 and
-the array test of rule 5 come before the candidates. The message names
-the first broken rule that this order reaches. These checks run only
-after the text of every `"output_text"` part is read, so a reply that
-also has a bad `text` in any part gets the text message. Parts of other
-types, such as a refusal, are not checked, and with `logprobs = FALSE`
-no part is checked. Fields are read by their exact names, so a field
-whose name only starts with the one asked for, such as `tokenX`, reads
-as absent and gives `NA` in the data frame.
 
 Apart from a body that does not parse as JSON, `lms_chat_openai()`
 raises it in four cases, all only with `simplify = TRUE`. The first case
@@ -597,11 +529,7 @@ content parses, because a reply that stops part way can parse to a wrong
 value, such as the first digit of a longer number. In the second, third,
 and fourth cases, if the server reports the finish reason `"length"`, a
 length limit ended the reply. The limit is `max_tokens` or the context
-length of the model. The message then says so and names both. A cut-off
-reply that is returned as text gives a warning of class
-`rlmstudio_reply_cut_off` instead, which
-[rlmstudio-conditions](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
-describes.
+length of the model. The message then says so and names both.
 
 With `simplify = TRUE`,
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
@@ -615,33 +543,29 @@ can raise the condition through all three chat functions.
 
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 does not abort on it, except on the subclass `rlmstudio_model_mismatch`,
-as the "Reply from another model" section of
-[rlmstudio-conditions](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
-says. The element of the failed input holds the condition, or `NA` where
-the result is text, and the batch warns once and goes on. See the
-details of
+as the "Reply from another model" section of `lms_chat_openai()` says.
+The element of the failed input holds the condition, or `NA` where the
+result is text, and the batch warns once and goes on. See the details of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
 
-The condition carries a `status` field, which holds the HTTP response
-status as an integer. Today the status is always 200: each of these
-functions reads the body only after a 200, and reports every other
-status as an `rlmstudio_api_error` instead. A condition from
-`lms_chat_openai()` about its reply also carries two more fields. A
-condition from the model-list lookup does not, as the "Reply from
-another model" section says. The `content` field holds the reply content
-of the first choice, and the `finish_reason` field holds the finish
-reason of the first choice. Both are `NULL` for a response with no
-`choices`. In the third case, `content` holds the value that was read,
-which is `NULL` for `null` or missing content. For the second, third,
-and fourth cases, the message names the `content` field, so you can read
-what the model wrote without a second request. The other messages of the
-chat functions and
-[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-name `simplify = FALSE`, which returns the body unchanged, with one
-exception. A body that did not parse as JSON is checked before that
+A condition from `lms_chat_openai()` about its reply also carries two
+more fields. A condition from the model-list lookup does not, as the
+"Reply from another model" section of `lms_chat_openai()` says. The
+`content` field holds the reply content of the first choice, and the
+`finish_reason` field holds the finish reason of the first choice. Both
+are `NULL` for a response with no `choices`. In the third case,
+`content` holds the value that was read, which is `NULL` for `null` or
+missing content. For the second, third, and fourth cases, the message
+names the `content` field, so you can read what the model wrote without
+a second request. The other messages of the chat functions about the
+reply name `simplify = FALSE`, which returns the body unchanged, with
+one exception. A body that did not parse as JSON is checked before that
 argument is read, so its message points at the host instead. For such a
 body, the `content` and `finish_reason` fields of a condition from
-`lms_chat_openai()` are `NULL`.
+`lms_chat_openai()` are `NULL`. The messages of
+`rlmstudio_model_mismatch` and of the model-list lookup do not name
+`simplify = FALSE`, because the check runs with either setting of
+`simplify`.
 
 ## Cut-off reply
 
@@ -654,7 +578,7 @@ say which one. The message names both. The warning is given with
 settings: no `schema`, `logprobs = TRUE`, and a `schema` with
 `logprobs = TRUE`. The call returns what the same reply returns without
 the cut-off. A `schema` reply with `logprobs = FALSE` raises
-`rlmstudio_bad_response` instead, as the "Malformed response" section
+`rlmstudio_bad_response` instead, as the "Malformed chat reply" section
 says. The warning and that abort read the finish reason of the first
 choice, which is the choice that the call reads. No other element of
 `choices` is read. With `simplify = FALSE`, the call returns the body
@@ -706,7 +630,7 @@ reply with no answer text. A reply is not checked if its body is not a
 JSON object, if it has no `model` field, or if its `model` is not one
 string or holds only whitespace. A body that is not a JSON object is
 returned with `simplify = FALSE`, and with `simplify = TRUE` it raises
-the error that the "Malformed response" section describes. If the
+the error that the "Malformed chat reply" section describes. If the
 instance that answered is unloaded before the model-list request, the
 call aborts, also when that instance belongs to the asked model.
 
@@ -714,11 +638,11 @@ If the model-list request fails, the call raises the condition of that
 failure. The message opens with the label of the chat function, followed
 by "because the model-list lookup failed". A status other than 200
 raises `rlmstudio_api_error`. A body that does not parse as JSON, or
-that breaks a rule of a model list in the "Malformed response" section,
-raises `rlmstudio_bad_response`. A server that the port check before the
-request cannot reach raises `rlmstudio_no_server`. A condition from the
-lookup does not carry the `content` and `finish_reason` fields, also
-when `lms_chat_openai()` raises it.
+that breaks a rule of a model list in the "Malformed model list"
+section, raises `rlmstudio_bad_response`. A server that the port check
+before the request cannot reach raises `rlmstudio_no_server`. A
+condition from the lookup does not carry the `content` and
+`finish_reason` fields, also when `lms_chat_openai()` raises it.
 
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 runs the check through `lms_chat_openai()` and

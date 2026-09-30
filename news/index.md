@@ -2,6 +2,42 @@
 
 ## rlmstudio (development version)
 
+- The help pages now show only the sections on a malformed reply whose
+  rules their function applies. The “Malformed response” section keeps
+  the text that applies to every function: what `rlmstudio_bad_response`
+  is, a body that does not parse as JSON, and the `status` field. The
+  rest moves to five new sections: “Malformed model list”, “Malformed
+  load or download reply”, “Malformed embeddings”, “Malformed chat
+  reply”, and “Malformed logprobs”. Each page has the sections of the
+  rules its function applies, itself or through a call. Before, every
+  such page carried every rule, such as the `logprobs` rules on the
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  page. Two functions can share a section, so a page can still hold a
+  rule of another function. An example is the OpenAI chat rules on the
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
+  page.
+
+  - With `simplify = TRUE` and `logprobs = TRUE`,
+    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+    now gives two messages where it gave one.
+    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+    gives them through it, and
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    keeps them in the element of each failed input. A `top_logprobs`
+    that is not an array gives “The `top_logprobs` of a `logprobs` step
+    is not an array.” A candidate that is not a JSON object gives “A
+    candidate in `top_logprobs` is not a JSON object.” Before, both gave
+    “The `top_logprobs` of a `logprobs` step is not an array of JSON
+    objects.” The “Malformed logprobs” section now lists seven rules.
+  - The “Server not running” section now names
+    [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+    and
+    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+    among the functions that raise `rlmstudio_bad_response` for a model
+    list with another shape. They raise it through the model lookup that
+    a reply from another model starts, with either setting of
+    `simplify`.
+
 - [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
   now warns when `context_length` is larger than the
   `max_context_length` that the model list gives for the model. The
