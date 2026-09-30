@@ -1,7 +1,7 @@
 # The length rule on a character `input` in the three chat functions that
 # take one. A character `input` must hold one prompt. Any other length aborts
 # before the server probe, and the message points to `lms_chat_batch()`. A
-# list `input`, the structured input form, is left to the server (D-003).
+# list `input`, the structured input form, is left to the server (D-036).
 
 # native_reply(), responses_reply(), and openai_reply() live in
 # helper-chat-bodies.R.
@@ -42,45 +42,59 @@ input_call_routes <- c(
 # The length rule (AC1) -------------------------------------------------------
 
 length_probes <- list(
-  list(label = "no strings", value = character(0), match = "You gave 0 strings\\."),
-  list(label = "two strings", value = c("a", "b"), match = "You gave 2 strings\\.")
+  list(
+    label = "no strings",
+    value = character(0),
+    match = "You gave 0 strings\\."
+  ),
+  list(
+    label = "two strings",
+    value = c("a", "b"),
+    match = "You gave 2 strings\\."
+  )
 )
 
 for (name in names(input_calls)) {
-  test_that(paste0(name, " aborts on a character input that is not one string"), {
-    for (p in length_probes) {
-      label <- paste(name, "with", p$label)
-      probe <- local_counting_probe()
-      err <- tryCatch(input_calls[[name]](p$value), error = identity)
+  test_that(
+    paste0(name, " aborts on a character input that is not one string"),
+    {
+      for (p in length_probes) {
+        label <- paste(name, "with", p$label)
+        probe <- local_counting_probe()
+        err <- tryCatch(input_calls[[name]](p$value), error = identity)
 
-      expect_s3_class(err, "error")
-      # No condition class: the argument aborts of the package are unclassed
-      # (D-008).
-      expect_identical(
-        class(err),
-        c("rlang_error", "error", "condition"),
-        info = label
-      )
-      msg <- conditionMessage(err)
-      expect_match(msg, "input", info = label)
-      expect_match(msg, p$match, info = label)
-      expect_match(msg, "lms_chat_batch()", fixed = TRUE, info = label)
-      expect_identical(probe$calls, 0L, info = label)
+        expect_s3_class(err, "error")
+        # No condition class: the argument aborts of the package are unclassed
+        # (D-008).
+        expect_identical(
+          class(err),
+          c("rlang_error", "error", "condition"),
+          info = label
+        )
+        msg <- conditionMessage(err)
+        expect_match(msg, "input", info = label)
+        expect_match(msg, p$match, info = label)
+        expect_match(msg, "lms_chat_batch()", fixed = TRUE, info = label)
+        expect_identical(probe$calls, 0L, info = label)
+      }
     }
-  })
+  )
 }
 
 for (name in names(input_calls)) {
-  test_that(paste0(name, " gives the NA message first for two strings with an NA"), {
-    probe <- local_counting_probe()
-    err <- tryCatch(input_calls[[name]](c("a", NA)), error = identity)
+  test_that(
+    paste0(name, " gives the NA message first for two strings with an NA"),
+    {
+      probe <- local_counting_probe()
+      err <- tryCatch(input_calls[[name]](c("a", NA)), error = identity)
 
-    expect_s3_class(err, "error")
-    msg <- conditionMessage(err)
-    expect_match(msg, "1 NA value\\.", info = name)
-    expect_no_match(msg, "lms_chat_batch", fixed = TRUE)
-    expect_identical(probe$calls, 0L, info = name)
-  })
+      expect_s3_class(err, "error")
+      msg <- conditionMessage(err)
+      expect_match(msg, "1 NA value\\.", info = name)
+      expect_no_match(msg, "lms_chat_batch", fixed = TRUE, info = name)
+      expect_identical(probe$calls, 0L, info = name)
+    }
+  )
 }
 
 # The forms that pass (AC2) ---------------------------------------------------

@@ -60,6 +60,8 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 - 2026-09-30: T4 appended D-036. With `RLMSTUDIO_API_TOKEN` set, `devtools::test()` gave 802 tests, 0 failures, 0 errors, 3 skips, and `devtools::check()` gave 0 errors, 0 warnings, 0 notes. The server was stopped before and after.
 - 2026-09-30: claim audit: 37 claims read, 2 corrected — NEWS.md, R/utils-args.R. Both overstated what the server 400 replies said, and the same reader confirmed the corrected wording.
 - 2026-09-30: all tasks done; status set to review.
+- 2026-09-30: correction to the T2 line (review finding O7). Only the deleted call in `lms_chat()` turned the openai-route test red. A deleted call in `lms_chat_native()` or `lms_chat_openresponses()` turned the direct-call test of that function red.
+- 2026-09-30: review ran AC1 to AC5 with fresh evidence, passed the consistency gate, and triaged 17 findings from three reviewers, none of which fails a criterion. Fix-now edits to comments and test formatting are committed.
 
 ## Decisions
 
@@ -71,3 +73,19 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 - AC4 evidence (2026-09-30): the `input` entry of `man/lms_chat.Rd`, `man/lms_chat_native.Rd`, and `man/lms_chat_openresponses.Rd` states "its length must be one" and links `lms_chat_batch()` for several prompts. NEWS.md has one entry with the rule. It names the three functions and says that before, a two-string `input` went to the server and got a 400 on each route.
 - AC5 evidence (2026-09-30): with `RLMSTUDIO_API_TOKEN` set, `devtools::test()` gave 802 tests, 0 failures, 0 errors, 3 skips. `devtools::check()` then gave 0 errors, 0 warnings, 0 notes.
 - Consistency gate (2026-09-30): `cairn_validate.py` passed every check. No DESIGN principle changed, so `cairn_impact.py` was skipped. `devtools::document()` left no diff. The branch did not touch README.Rmd, and the repo has no `_pkgdown.yml`. NEWS.md has the entry, and the branch adds no top-level file.
+- Independent review (2026-09-30): three fresh reviewers ran, an Opus diff reviewer (O), a Sonnet history reviewer (B), and a Sonnet prior-review reviewer (P). No finding shows a criterion failing. Proposed dispositions follow, most severe first.
+- O1, B5, P2 (follow-up): a one-string `input` with a `dim` or the class `"AsIs"` passes the rule and goes out as an array. A local probe wrote `matrix("a")` as `[["a"]]`. The diff reviewer wrote `I("a")` as `["a"]`. D-034 and D-035 strip such attributes for names and flags. It goes to one new candidate row with O2, O3, and O6.
+- O2 (follow-up): a factor `input` skips both checks, so `factor(c("a", "b"))` goes out as a two-string array. This was true before the branch.
+- O3 (follow-up): jsonlite cannot write a character `input` with a class such as `"foo"`. The call fails there, after the server check. This was true before the branch.
+- O4 (reject): an unnamed list of strings still gets the 400. Scope leaves a list `input` to the server.
+- O5 (fixed): the code comment in R/utils-args.R and the test-file header cited D-003 for leaving a list to the server. D-020 limits D-003 to fields in `...`, so both now cite D-036. The plan-owned Scope and D-036 are history and stay.
+- O6 (follow-up): `lms_chat_openai()` still sends a two-string `content` that `lms_chat()` now stops. Scope leaves `lms_chat_openai()` out.
+- O7 (fixed by a work-log line): the T2 line overstates which test went red for each deleted call.
+- O8 (part fixed): `info = name` was added to the `expect_no_match()` in the NA loop. `expect_s3_class()` takes no `info` (LESSONS, M019), so that part is rejected.
+- B1 (reject): the zero-length abort was probed on one route only. AC1 requires it, and D-036 gives the reason.
+- B2 (reject): D-036 paraphrases the reason M013 gave. D-entries are history, and the paraphrase does not change the decision.
+- B3, P3 (reject): the helper has no direct unit test. The profile tests internal helpers through their callers, and AC2 covers the list pass-through.
+- B4 (reject): `character(0)` gets a different message from the batch and the chat functions. M013 set the two rules on purpose.
+- B6 (reject): the uncommitted file was the review record in progress. It is now committed.
+- P1 (fixed): Air reformatted tests/testthat/test-input-length.R, and the long comment line in R/utils-args.R was wrapped. Air also flags R/chat.R and R/utils-args.R on main, so the rest was there before the branch.
+- Fix-now rerun (2026-09-30): `air format --check` passed on the test file, and `devtools::test(filter = "input-length")` passed.

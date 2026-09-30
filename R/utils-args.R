@@ -1298,8 +1298,8 @@ rlm_check_no_na <- function(value, arg) {
 #' The length rule, for the `input` of the chat wrappers. A character vector of
 #' another length goes out as a JSON array. A two-string array got a 400 on
 #' every chat route, and an empty one got a 400 on `/v1/responses`. No reply
-#' said that more than one prompt was sent. A list, the structured input form, is
-#' left to the server (D-003). Run it after `rlm_check_no_na()`, so a vector
+#' said that more than one prompt was sent. A list, the structured input form,
+#' is left to the server (D-036). Run it after `rlm_check_no_na()`, so a vector
 #' that holds an NA gets that message first.
 #'
 #' @param value The value the caller passed.
