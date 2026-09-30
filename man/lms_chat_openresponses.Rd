@@ -42,6 +42,19 @@ The package checks a \code{stream} here. A \code{stream} other than \code{FALSE}
 \code{NULL} aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.}
 
+\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
+that this chat continues, such as the \code{response_id} attribute of an
+earlier reply of this function or of \code{\link[=lms_chat_native]{lms_chat_native()}}. \code{NULL}, the
+default, starts a new thread. \code{NA}, an empty string, a string of
+whitespace only, a value that is not a string, and more or fewer than one
+string abort before the check for a running server. Only this exact name
+is checked. A shortened name, such as \code{previous}, goes into the request
+body unchecked, under the name you wrote. An id that the server does not
+hold raises \code{rlmstudio_api_error} with status 400 and the \code{code}
+\code{"previous_response_not_found"}. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}}
+refuse a string with \code{api_type = "openai"}, because the OpenAI chat
+endpoint keeps no thread, and \code{\link[=lms_chat_openai]{lms_chat_openai()}} has no such argument.}
+
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
@@ -70,6 +83,13 @@ lists. A value that breaks one raises \code{rlmstudio_bad_response}, and the
 message names the first broken rule in the order the section below
 gives. Parts of other types are not checked. With \code{logprobs = FALSE}, the value is not read, and the call
 returns the text.
+
+With \code{simplify = TRUE}, the string or the \code{lms_chat_result} carries the
+\code{id} field of the reply in a \code{response_id} attribute. Pass it as
+\code{previous_response_id} to continue the thread. The value has no
+attribute when \code{id} is absent or is not one string. A reply sent with
+\code{store = FALSE} in \code{...} still carries an \code{id}, so its value still
+carries the attribute.
 
 With either setting of \code{simplify}, a reply from a model other than the
 one asked for raises \code{rlmstudio_model_mismatch}. See the "Reply from

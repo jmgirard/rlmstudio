@@ -40,6 +40,19 @@ be \code{TRUE}, \code{FALSE}, or \code{NULL}, and any other value aborts before 
 for a running server. The endpoint has no logprobs, so no \code{logprobs} field
 goes into the request body, and a \code{TRUE} warns.}
 
+\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
+that this chat continues, such as the \code{response_id} attribute of an
+earlier reply of this function. \code{NULL}, the default, starts a new thread.
+\code{NA}, an empty string, a string of whitespace only, a value that is not a
+string, and more or fewer than one string abort before the check for a
+running server. Only this exact name is checked. A shortened name, such
+as \code{previous}, goes into the request body unchecked, under the name you
+wrote. An id that the server does not hold raises \code{rlmstudio_api_error}
+with status 400 and the \code{code} \code{"invalid_value"}. \code{\link[=lms_chat]{lms_chat()}} and
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} refuse a string with \code{api_type = "openai"}, because
+the OpenAI chat endpoint keeps no thread, and \code{\link[=lms_chat_openai]{lms_chat_openai()}} has no
+such argument.}
+
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
@@ -57,6 +70,12 @@ returns one character string: the
 together in order with no separator. Items of other types, such as
 reasoning and tool calls, are skipped. A reply with no readable answer
 text raises \code{rlmstudio_bad_response}, as described below.
+
+With \code{simplify = TRUE}, the string carries the \code{response_id} field of the
+reply in a \code{response_id} attribute. Pass it as \code{previous_response_id} to
+continue the thread. The string has no attribute when \code{response_id} is
+absent or is not one string. A reply sent with \code{store = FALSE} in \code{...}
+carries no \code{response_id}, so its string has no attribute.
 }
 \description{
 Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.

@@ -119,7 +119,7 @@ OpenAI route gets no argument. A shortened name in `...`, such as
       with `store = false`. It records the two unknown-id 400 bodies. Clean up in `finally` (M017
       lesson), and restore the server and model state. Add the AC5 single-call tests over the
       400 fixtures.
-- [ ] T5: Help text for `previous_response_id` and the attribute on the three pages, the
+- [x] T5: Help text for `previous_response_id` and the attribute on the three pages, the
       batch help of AC6, and one NEWS entry. Run `devtools::document()`.
 - [ ] T6: Planted defects. In a scratch copy, delete one site at a time. The sites are the
       body-field line, the attribute line, the value check, the `NULL` allowance, the route
@@ -142,5 +142,6 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - 2026-09-29: minor amendment. T3 and T4 land in one commit, because the T3 batch case replays the unknown-id bodies that T4 records.
 - 2026-09-29: T4 done. `data-raw/record-thread-cassette.R` recorded six calls into `tests/testthat/thread_live/` from google/gemma-3-1b on LM Studio 0.4.25+1. All seven script checks passed. The server and model state were restored, and no token is in the files.
 - 2026-09-29: T3 done. `test-thread.R` covers the list, vector, logprobs vector, and data-frame formats on both routes. It covers the recorded thread chain, the recorded `store = FALSE` replies, and the unknown-id cases for the single calls and the batch. Full suite 0 failures, 3 live skips.
+- 2026-09-29: T5 done. Help text on the four pages and one NEWS entry. The print line and the `identical()` result in NEWS were read from an R run. The `store = FALSE` claims rest on the recorded replies. A second `devtools::document()` run left no diff.
 
 ## Decisions
