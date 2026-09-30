@@ -4,8 +4,10 @@
 # root:
 #   Rscript cairn/tools/loop-sweep.R
 # Output: one tab-separated row per loop, with the file, the block
-# description, the loop header, and a status. The block description is the
-# deparsed first argument of the innermost enclosing `test_that()`. If each
+# description, the loop header, and a status. The second report below adds
+# rows of its own, with a call in place of the loop header. The block
+# description is the deparsed first argument of the innermost enclosing
+# `test_that()`. If each
 # statement of the loop body is a `test_that()` call, the status is "nested".
 # Otherwise it is "flat". Under testthat edition 3, an error in a flat body
 # ends its block, and the passes after it do not run. An `expect_error()`
@@ -57,11 +59,15 @@ walk <- function(e, file, block = NA, in_for = FALSE) {
 # Under testthat 3.3.2 the results table drops a failure that a block records
 # before its last nested subtest, so `test_check()` does not stop on it. A
 # call counts if a nested call follows it in the source, or if the two share
-# a loop inside the block. A call inside a function
-# literal does not count where the literal is written, and a helper that
-# checks a value is seen only if its name starts with `expect_`. The row
-# gives the file, the block description, the call and its line, and the
-# status "before-subtest".
+# a loop inside the block. The row gives the file, the block description,
+# the call and its line, and the status "before-subtest".
+# The report does not see these, so 0 rows does not prove 0 sites:
+# - a helper that records a result (for example with `fail()`) but whose name
+#   does not start with `expect_`
+# - a call inside a function literal, even one that runs in place, as in
+#   `lapply(xs, function(x) expect_true(x))`
+# - a call written `testthat::expect_*()`
+# - a subtest written `testthat::test_that()`, or one that a helper makes
 
 events <- NULL
 scan_block <- function(body, file, block) {

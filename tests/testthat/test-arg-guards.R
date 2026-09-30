@@ -158,7 +158,10 @@ for (name in guarded_exports(c("model", "job_id"))) {
       local_guard_only()
 
       fn <- get(name, envir = asNamespace("rlmstudio"))
-      args <- baseline_args(name)
+      # Not baseline_args(): a `fail()` that a block records before its nested
+      # subtests is dropped from the results table. The placeholder block above
+      # fails on a missing placeholder for each of these functions.
+      args <- arg_placeholders[required_formals(name)]
       target <- intersect(c("model", "job_id"), names(args))[[1]]
 
       for (probe in id_probes) {
@@ -289,7 +292,8 @@ for (name in names(strict_text)) {
 
       fn <- get(name, envir = asNamespace("rlmstudio"))
       target <- strict_text[[name]]
-      args <- baseline_args(name)
+      # Not baseline_args(), for the reason given at the model and job id block.
+      args <- arg_placeholders[required_formals(name)]
 
       bad_values <- list(1:3, list("a"), TRUE, character(0), NULL, factor("a"))
       for (bad_value in bad_values) {
@@ -328,7 +332,8 @@ for (name in c(names(strict_text), names(loose_text))) {
 
       fn <- get(name, envir = asNamespace("rlmstudio"))
       target <- c(strict_text, loose_text)[[name]]
-      args <- baseline_args(name)
+      # Not baseline_args(), for the reason given at the model and job id block.
+      args <- arg_placeholders[required_formals(name)]
 
       for (probe in na_probes) {
         test_that(probe$label, {

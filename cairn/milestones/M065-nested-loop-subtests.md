@@ -139,6 +139,7 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: claim audit: not owed, internal tier.
 - 2026-09-30: all tasks done, status set to review.
 - 2026-09-30: review pass 2 started at 8b88a1f. Main had not moved. The pass 1 criterion ticks were cleared. AC1 to AC5 and the consistency gate pass on fresh evidence, and three fresh reviewers are running.
+- 2026-09-30: step-7 approval: m065-nested-loop-subtests approved for merge, with the Q1, Q2, and Q5 fixes made first. They are in the fix commit, with the evidence in the Review section.
 
 ## Decisions
 
@@ -208,3 +209,13 @@ Pass 2 findings come from three fresh reviewers: Opus diff (Q), Sonnet history (
 - H7: same as Q2, for `testthat::test_that()` and helpers.
 - H8: the results table counts fewer passes, which a pass-count baseline will see once.
 - R: no regression of a prior review finding. `air format --check` is clean on five changed files, `test-arg-guards.R` among them (P3). The B1, P2, and P1 hygiene edits are still to come, as the pass 1 gate set.
+
+Gate (2026-09-30): the maintainer approved the merge, with the fixes below made first.
+
+- Q1: fixed. The three blocks now read `arg_placeholders[required_formals(name)]`, with a comment that names the block at `:136`, which checks the placeholders. `baseline_args()` has 4 other callers. The blocks at `:210`, `:243`, and `:392` hold no subtest, and `stream_call()` runs only inside subtests.
+- Q5 and Q2: fixed in the header comment of `loop-sweep.R`. It names the second report's rows and the patterns it does not see, and says that 0 rows does not prove 0 sites.
+- Q3: at the hygiene pass, the LESSONS line (B1, P2) also states that parent checks go after the last subtest or into their own subtest.
+- Q4: at the hygiene pass, with P1, in the `list_instances()` candidate row.
+- H1 to H8: noted. No broken check was found.
+- Fix evidence, on the working tree after the fix: `test-arg-guards.R` ran 0 failed and 0 errors. With `inputs` removed from `arg_placeholders`, the pass 2 diff reviewer's detector found 3 parent failures dropped before the fix, at `:161`, `:292`, and `:331`, and 0 after it. Both copies keep the failure in the results table through the block at `:136`. AC2 plant: 8 of 32 subtests bad, all 8 for `lms_daemon_stop`. AC3 plant: 10 of 130 subtests bad, all `no values`, and no bad result outside those blocks. The sweep prints 203 `flat`, 86 `nested`, and 0 `before-subtest` rows, with 0 flat rows in AC1 scope and 0 of 268 plan triples fewer. `devtools::test()` gave 0 failed, 0 errors, 3 skipped, and 19368 passed.
+- `devtools::check()` after the fix, first run: 1 error in tests, at `test-arg-guards.R:2270` in `sent_messages()`, the `httr2::req_dry_run()` call of the `list_instances()` candidate row. The 13-line excerpt holds no message, so the error class is not identified. Nothing else was running. A rerun gave 0 errors, 0 warnings, and 0 notes. The fix does not touch `sent_messages()` or `:2270`.
