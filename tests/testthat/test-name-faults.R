@@ -160,7 +160,7 @@ plain_probes <- list(
   "S4" = methods::new("rlmTestString", "m")
 )
 
-# `one_loaded_llm` in test-list-args.R, with the key "m".
+# `one_loaded_llm` in test-list-args.R, with the key and the instance id "m".
 model_m_loaded <- paste0(
   '{"models": [{"type": "llm", "key": "m", "display_name": "M", ',
   '"size_bytes": 1073741824, "loaded_instances": [{"id": "m"}]}]}'

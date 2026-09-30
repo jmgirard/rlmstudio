@@ -67,7 +67,8 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \value{
 Invisibly returns a character string of the loaded model identifier
 upon success, also when the model was already loaded. It is a plain
-string, with no class, names, or S4 bit. If \code{echo_load_config = TRUE}, it instead invisibly
+string, with no class, names, or S4 bit. If \code{echo_load_config = TRUE}
+and this call loads the model, it instead invisibly
 returns a list containing the model's detailed load configuration.
 }
 \description{

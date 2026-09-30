@@ -1,6 +1,6 @@
 # M060: Names that are not plain text, and dots that lms_chat() sets
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -48,7 +48,7 @@ Three kinds of argument value get a correct outcome before any request, in place
 - [x] T2: Write the AC2 tests first and see them red on main. Make `rlm_check_id()` and `rlm_check_response_id()` return `unclass(x)[[1]]` (M049 lesson). Reassign the value only in the functions that send it: R/chat.R:256, 260, 561, 1307, 1310, R/embed.R:114, R/load.R:73, R/download.R:49, 198, and R/unload.R:46. `lms_chat()` and `lms_chat_batch()` send nothing themselves, so they keep the check alone (M003 lesson). In a scratch copy, remove each reassignment in turn and see a test go red.
 - [x] T3: Write the AC3 tests first and see them red on main. Add a route check of the dots. Call it in `lms_chat()` after `match.arg()`, and in `lms_chat_batch()` after the route is read (R/chat.R:1830) and above `stop_if_no_server()` (R/chat.R:1877). Add a guard test that walks the body of `lms_chat()`. It takes the arguments passed by name to a route function, less the formals of `lms_chat()`. It expects `instructions` and `messages` alone.
 - [x] T4: Update the help, NEWS.md, and the fault list in R/conditions.R. Run `devtools::document()`. Append one D-entry. A checked name or id must be valid text and is sent as a plain string, which annotates D-031. `lms_chat()` aborts on a dot that it sets itself, which narrows D-003 as D-023 did.
-- [ ] T5: Set `RLMSTUDIO_API_TOKEN` (M009 lesson). Then run `devtools::test()` and `devtools::check()`.
+- [x] T5: Set `RLMSTUDIO_API_TOKEN` (M009 lesson). Then run `devtools::test()` and `devtools::check()`.
 
 ## Work log
 
@@ -62,6 +62,9 @@ Three kinds of argument value get a correct outcome before any request, in place
 - 2026-09-29: T2 done. `plain_string()` in R/utils-args.R, returned by `rlm_check_id()` and `rlm_check_response_id()` and reassigned at the 10 sending sites. The AC2 tests were red on main with "No method asJSON S3 class: foo". Removing each of the 10 reassignments in turn gave 1 to 6 red blocks. Full `devtools::test()`: 765 blocks, 0 failed, 3 skipped.
 - 2026-09-29: T3 done. `rlm_check_route_dots()` in R/chat.R, called by `lms_chat()` after `match.arg()` and by `lms_chat_batch()` after its route is read. tests/testthat/test-chat-dot-clash.R was red on main with R's "matched by multiple actual arguments". With the batch call removed, the batch block went red on `rlmstudio_no_server`. Full `devtools::test()`: 769 blocks, 0 failed, 3 skipped.
 - 2026-09-29: T4 done. Help for the 16 pairs, the `...` of `lms_chat()` and `lms_chat_batch()`, and the `@return` of `lms_load()` and `lms_unload()`. Three NEWS entries, the R/conditions.R fault list, and D-034. `devtools::document()` regenerated 14 Rd files. Full `devtools::test()`: 769 blocks, 0 failed, 3 skipped.
+- 2026-09-29: T5 done. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set: 0 errors, 0 warnings, 0 notes.
+- 2026-09-29: claim audit: 75 claims read, 3 corrected — R/utils-args.R, tests/testthat/test-name-faults.R, R/load.R
+- 2026-09-29: the claim audit showed that jsonlite copies an invalid byte into the body unchanged. The plan's Out item and the new candidate row said U+FFFD. The row is corrected in place. The Out item is plan-owned and stands as written, and this line supersedes its U+FFFD clause.
 
 ## Decisions
 

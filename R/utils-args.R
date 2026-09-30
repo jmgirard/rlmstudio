@@ -216,8 +216,8 @@ id_fault <- function(value) {
 #' Which text rule does this string break?
 #'
 #' A string that is not valid in its declared encoding reaches jsonlite, which
-#' writes each bad byte as U+FFFD, and `grepl()` warns on it and reads it as
-#' whitespace. A string marked `"bytes"` fails in jsonlite, which cannot
+#' copies each bad byte into the JSON text unchanged, so the body is not valid
+#' UTF-8. `grepl()` warns on such a string and reads it as whitespace. A string marked `"bytes"` fails in jsonlite, which cannot
 #' translate it. Run this before any `grepl()` on the string.
 #'
 #' @param value A character vector with no `NA`.
