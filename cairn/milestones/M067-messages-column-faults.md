@@ -125,7 +125,7 @@ row.
 - [x] T5: Update the `messages` help in `R/chat.R` near line 489 and add two
       `NEWS.md` entries. Run `devtools::document()`.
 - [ ] T6: In a scratch copy, move the row-count rule after `empty_rows()` and
-      see the `NA` matrix probe go red. Remove the column line and see the
+      see the 3-row data-frame column probe go red on its warning count. Remove the column line and see the
       AC3 tests go red. Restore both. Run `devtools::test()` and
       `devtools::check()`.
 
@@ -140,7 +140,8 @@ row.
 - 2026-09-30: T2 done. `wrong_row_count()` and `column_row_count()` added, and `empty_rows()` reads a wrong-length classed column as AC2 states. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
 - 2026-09-30: T3 done. On the T2 code the 8 data-frame probes (5 AC3, 3 AC2 classed) get the jsonlite detail and no column line. The list probe passes, as it must.
 - 2026-09-30: T4 done. `first_unwritable_column()` writes each top-level column alone as a plain data frame, and `rlm_check_messages()` adds the info line. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
-- 2026-09-30: T5 done. The `messages` help states the row-count rule and the column line, and `NEWS.md` has two entries. Probes this session showed that length-1 and length-0 `Date`, factor, and `POSIXct` columns fail the write, so the help names `POSIXlt` alone as sent in each row. `devtools::test()` clean.
+- 2026-09-30: T5 done. The `messages` help states the row-count rule and the column line, and `NEWS.md` has two entries. Probes showed that length-1 and length-0 `Date`, factor, and `POSIXct` columns fail the write. So the help names `POSIXlt` alone as sent in each row. `devtools::test()` clean.
+- 2026-09-30: T6 minor amendment. With the rule order swapped in a scratch copy, the `NA` matrix probe stays green, because the T2 `empty_rows()` reads a wrong-length column as not empty. The 3-row data-frame column probe goes red on its warning count, so T6 now names that probe. With the column line removed, the 8 AC3 probes go red. T6 in progress: `devtools::check()` and the claim audit are running.
 
 ## Decisions
 
