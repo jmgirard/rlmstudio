@@ -120,3 +120,22 @@ defines top-level blocks already gives one block per pass.
 - AC3 (2026-09-30): in a `git archive` copy of HEAD, the `match` of the `no values` probe in `id_probes` is `"planted"`. `test_file()` on `test-arg-guards.R`, with the same recording reporter, ran in 26 s. `guarded_exports(c("model", "job_id"))`, evaluated from the file, returns 10 functions, and `id_probes` holds 13 labels. Each of the 10 blocks has 13 subtests, and each own description is one of the 13 labels. In each block the one `no values` subtest failed or errored, and 0 of the 12 other-label subtests did.
 - AC5 (2026-09-30): `devtools::test()` on HEAD gave 0 failed, 0 errors, 3 skipped (live server tests), and 19707 passed. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, with tests OK in 89 s. With 0 notes, no compare run on a42a1ab is owed.
 - Consistency gate (2026-09-30): `cairn_validate.py` exits 0 with every check PASS or OK. No principle changed, so `cairn_impact` is skipped. `devtools::document()` gives no diff. The branch changes no README or R source, and the repo has no `_pkgdown.yml`. The change is test code and a Suggests floor, so NEWS owes no entry. `cairn/` is already in `.Rbuildignore`.
+
+Findings (three fresh reviewers: Opus diff, Sonnet history, Sonnet prior reviews; ranked by each). Dispositions are set at the approval gate.
+
+- O1: a failure that a parent block records before or between its nested subtests no longer fails `R CMD check`. `test_check()` stops only when `all_passed()` is FALSE, and that reads the results table that drops those results. The reviewer planted a wrong value at `test-store.R:69`: main stopped with "Test failures", the branch printed FAIL 1 and exited 0. Sites: `test-store.R:69`, `test-thread.R:67`, `test-flag-args.R:353`, `test-chat-schema.R:941`, `test-arg-guards.R:692-693`, `:1036-1046`, `:1651-1702`, `:1857`, `:2158-2161`, `:2196`, `:3042`. The work-log line that says `R CMD check` still catches it is wrong. Reproduced by review in a 3-line file under testthat 3.3.2: a failure before a nested subtest did not stop `test_dir(stop_on_failure = TRUE)`, and the same failure after the subtests did.
+- O2: the wraps at `test-chat-schema.R:950`, `test-store.R:74`, `test-thread.R:72`, and `test-flag-args.R:355` wrap bodies that cannot raise, and they bring in O1 there.
+- O3: the two `cases` loops at `test-arg-guards.R:680` and `:698` both name subtests by `case$label`, so 9 full test names appear twice.
+- O4: "a request of <label>" at `test-arg-guards.R:1048` does not say which of the 2 `lms_chat_batch` requests, so 6 full names appear twice.
+- O5: a `require_httpuv()` skip now ends one subtest, not the parent. No check after a loop breaks.
+- O6: a nested `test_that()` resets width, crayon, cli, and locale options. No parent in the diff sets them.
+- O7: `loop-sweep.R` does not flag a parent expectation before a nested loop (O1), and misses checks in helpers not named `expect_*`.
+- O8: `test-arg-guards.R` ran in 28 s against 22 s on main, with 1899 reported tests against 117.
+- B1: same fact as O1, seen as a conflict with the LESSONS line (M019) that a plant check sums the `failed` and `error` columns of `as.data.frame()`.
+- B2: same as O3 and O4, plus the pair of loops in the `empty_rows()` test near `test-arg-guards.R:2500`.
+- B3: the `n_cases <<-` counters at `test-arg-guards.R:1886`, `:2152`, `:2172` are correct but fragile to a later edit.
+- B4: mocks and recorders made inside a loop body now clean up per pass. No test depended on the old stacking.
+- P1: T6 logged a third recurrence of the `rawToChar(out$body)` error (`test-arg-guards.R:1986`), which the `list_instances()` candidate row says to promote on. The row is not updated.
+- P2: same as B1, for LESSONS line 44.
+- P3: the hand-wrapped lines in `test-arg-guards.R` were not run through Air (M056 O1). Not verified.
+- P4: 8 added lines over 80 columns in other files. They are also long on main.
