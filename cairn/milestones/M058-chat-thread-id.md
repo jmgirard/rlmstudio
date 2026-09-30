@@ -121,7 +121,7 @@ OpenAI route gets no argument. A shortened name in `...`, such as
       400 fixtures.
 - [x] T5: Help text for `previous_response_id` and the attribute on the three pages, the
       batch help of AC6, and one NEWS entry. Run `devtools::document()`.
-- [ ] T6: Planted defects. In a scratch copy, delete one site at a time. The sites are the
+- [x] T6: Planted defects. In a scratch copy, delete one site at a time. The sites are the
       body-field line, the attribute line, the value check, the `NULL` allowance, the route
       check, and the batch early check. Each one turns its own tests red and leaves the others green.
 - [ ] T7: Run `devtools::check()` on a `git archive` of 30a743e and record its note headings.
@@ -143,5 +143,6 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - 2026-09-29: T4 done. `data-raw/record-thread-cassette.R` recorded six calls into `tests/testthat/thread_live/` from google/gemma-3-1b on LM Studio 0.4.25+1. All seven script checks passed. The server and model state were restored, and no token is in the files.
 - 2026-09-29: T3 done. `test-thread.R` covers the list, vector, logprobs vector, and data-frame formats on both routes. It covers the recorded thread chain, the recorded `store = FALSE` replies, and the unknown-id cases for the single calls and the batch. Full suite 0 failures, 3 live skips.
 - 2026-09-29: T5 done. Help text on the four pages and one NEWS entry. The print line and the `identical()` result in NEWS were read from an R run. The `store = FALSE` claims rest on the recorded replies. A second `devtools::document()` run left no diff.
+- 2026-09-29: T6 done. A scratch copy took ten plants, one at a time, and ran the 33 blocks of `test-thread.R`. The control had 0 red blocks. The body field of the native route turned 4 blocks red, and that of the OpenResponses route 5. The attribute line turned 8 red. Each of the five value and route checks turned only its own block red. The `NULL` allowance turned 25 red, because every call that leaves the argument out passes `NULL` through it.
 
 ## Decisions
