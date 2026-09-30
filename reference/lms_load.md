@@ -107,8 +107,11 @@ function that checks its own arguments does that first, so a bad
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
-`quiet`, or `force`, a `stream` in the `...` of a chat function, a
-`logprobs` in the `...` of
+`quiet`, `force`, or `store`, a `store` on the `"openai"` route of
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+or
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+a `stream` in the `...` of a chat function, a `logprobs` in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),

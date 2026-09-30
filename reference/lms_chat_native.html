@@ -52,6 +52,7 @@
 <span>  simplify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  previous_response_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  store <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -116,6 +117,19 @@ such argument. A <code>previous_response_id</code> in its <code>...</code> goes 
 request body unchecked, and the endpoint ignores it.</p></dd>
 
 
+<dt id="arg-store">store<a class="anchor" aria-label="anchor" href="#arg-store"></a></dt>
+<dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>. Whether the server stores the
+reply, so that a later call can continue from its id. <code>NULL</code>, the
+default, sends no <code>store</code> field, so the server default applies, and that
+default stores the reply. <code>TRUE</code> and <code>FALSE</code> go out as a plain JSON
+<code>true</code> or <code>false</code>, also when the value has names, dimensions, or a class.
+Any other value, <code>NA</code> included, aborts before the check for a running
+server. Only this exact name is checked. A shortened name, such as <code>sto</code>,
+goes into the request body unchecked, under the name you wrote.
+<code><a href="lms_chat.html">lms_chat()</a></code> and <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> refuse <code>TRUE</code> or <code>FALSE</code> with
+<code>api_type = "openai"</code>.</p></dd>
+
+
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
 <dd><p>Character or <code>NULL</code>. An API token for a server that requires
 authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option and then the
@@ -139,11 +153,14 @@ text raises <code>rlmstudio_bad_response</code>, as described below.</p>
 <p>With <code>simplify = TRUE</code>, the string carries the <code>response_id</code> field of the
 reply in a <code>response_id</code> attribute. Pass it as <code>previous_response_id</code> to
 continue the thread. The string has no attribute when <code>response_id</code> is
-absent or is not one string. A reply sent with <code>store = FALSE</code> in <code>...</code>
-carries no <code>response_id</code>, so its string has no attribute.
-<code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> reads the attribute from the <code>id</code> field of its
-reply instead. An OpenResponses reply sent with <code>store = FALSE</code> still
-carries an <code>id</code>, so its value still carries the attribute.</p>
+absent or is not one string. A reply sent with <code>store = FALSE</code> has no
+<code>response_id</code> field, so its string has no attribute, and there is no id
+to continue from. <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> reads the attribute from the
+<code>id</code> field of its reply instead. An OpenResponses reply sent with
+<code>store = FALSE</code> still has an <code>id</code>, so its value carries the attribute,
+but the server does not hold that reply. A later OpenResponses call that
+passes that id as <code>previous_response_id</code> raises <code>rlmstudio_api_error</code>
+with status 400 and the <code>code</code> <code>"previous_response_not_found"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="server-not-running">Server not running<a class="anchor" aria-label="anchor" href="#server-not-running"></a></h2>
@@ -155,7 +172,9 @@ that checks its own arguments does that first, so a bad <code>model</code>, <cod
 <code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, <code>previous_response_id</code>,
 or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
-argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
+argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, <code>force</code>, or <code>store</code>, a
+<code>store</code> on the <code>"openai"</code> route of <code><a href="lms_chat.html">lms_chat()</a></code> or <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code>, a
+<code>stream</code> in
 the <code>...</code> of a chat function, a <code>logprobs</code> in the <code>...</code> of
 <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code>lms_chat_native()</code>, a value in the <code>...</code> of
 <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> that <code><a href="lms_chat.html">lms_chat()</a></code> reads as an argument already given,

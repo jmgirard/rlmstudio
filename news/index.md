@@ -2,6 +2,35 @@
 
 ## rlmstudio (development version)
 
+- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  and
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+  gain a `store` argument that turns off the storage of a reply on the
+  server.
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  takes it in `...` and sends it with every call.
+
+  - `store` must be `TRUE`, `FALSE`, or `NULL`. Any other value, `NA`
+    included, aborts before the check for a running server, with a
+    message that names `store`. A `TRUE` or `FALSE` with names,
+    dimensions, or a class is sent as a plain JSON `true` or `false`.
+  - `NULL`, the default, sends no `store` field, so the server default
+    applies, and that default stores the reply.
+  - With `api_type = "openai"`,
+    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+    and
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    abort on `TRUE` or `FALSE`, because the OpenAI chat endpoint keeps
+    no thread.
+  - Before, a `store` in `...` went to the server unchecked on every
+    route, the `"openai"` route included. A `matrix(FALSE)` was sent as
+    `[[false]]`, and a classed value failed after the check for a
+    running server.
+  - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+    has no `store` argument. It still sends a `store` in `...` to the
+    server unchecked.
+
 - A `model`, `job_id`, `previous_response_id`, or `type` string that is
   not valid in its declared encoding now aborts. The message says so. An
   example is the byte `0xff` in a UTF-8 string. A string marked

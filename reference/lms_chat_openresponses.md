@@ -15,6 +15,7 @@ lms_chat_openresponses(
   simplify = TRUE,
   ...,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 )
 ```
@@ -86,6 +87,21 @@ lms_chat_openresponses(
   has no such argument. A `previous_response_id` in its `...` goes into
   the request body unchecked, and the endpoint ignores it.
 
+- store:
+
+  `TRUE`, `FALSE`, or `NULL`. Whether the server stores the reply, so
+  that a later call can continue from its id. `NULL`, the default, sends
+  no `store` field, so the server default applies, and that default
+  stores the reply. `TRUE` and `FALSE` go out as a plain JSON `true` or
+  `false`, also when the value has names, dimensions, or a class. Any
+  other value, `NA` included, aborts before the check for a running
+  server. Only this exact name is checked. A shortened name, such as
+  `sto`, goes into the request body unchecked, under the name you wrote.
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  and
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  refuse `TRUE` or `FALSE` with `api_type = "openai"`.
+
 - token:
 
   Character or `NULL`. An API token for a server that requires
@@ -123,12 +139,15 @@ With `simplify = TRUE`, the string or the `lms_chat_result` carries the
 `id` field of the reply in a `response_id` attribute. Pass it as
 `previous_response_id` to continue the thread. The value has no
 attribute when `id` is absent or is not one string. A reply sent with
-`store = FALSE` in `...` still carries an `id`, so its value still
-carries the attribute.
+`store = FALSE` still has an `id`, so its value carries the attribute,
+but the server does not hold that reply. A later call of this function
+that passes that id as `previous_response_id` raises
+`rlmstudio_api_error` with status 400 and the `code`
+`"previous_response_not_found"`.
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
 reads the attribute from the `response_id` field of its reply instead. A
-native reply sent with `store = FALSE` carries no `response_id`, so its
-value has no attribute.
+native reply sent with `store = FALSE` has no `response_id` field, so
+its value has no attribute.
 
 With either setting of `simplify`, a reply from a model other than the
 one asked for raises `rlmstudio_model_mismatch`. See the "Reply from
@@ -145,8 +164,11 @@ function that checks its own arguments does that first, so a bad
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
-`quiet`, or `force`, a `stream` in the `...` of a chat function, a
-`logprobs` in the `...` of
+`quiet`, `force`, or `store`, a `store` on the `"openai"` route of
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+or
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+a `stream` in the `...` of a chat function, a `logprobs` in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),

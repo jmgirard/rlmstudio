@@ -103,10 +103,23 @@ returns a list, or a <code>logprobs = TRUE</code> that the <code>"native"</code>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to <code>lms_chat</code>, such as <code>api_type</code>,
-<code>logprobs</code>, <code>schema</code>, <code>ttl</code>, or <code>previous_response_id</code>. A <code>schema</code>, a
-<code>ttl</code>, a <code>previous_response_id</code>, and the <code>api_type</code> that each needs are
-checked before the first call. A <code>previous_response_id</code> goes to every
-call, so each input continues the same stored reply.
+<code>logprobs</code>, <code>schema</code>, <code>ttl</code>, <code>previous_response_id</code>, or <code>store</code>. A
+<code>schema</code>, a <code>ttl</code>, a <code>previous_response_id</code>, a <code>store</code>, and the
+<code>api_type</code> that each needs are checked before the first call. A
+<code>previous_response_id</code> goes to every call, so each input continues the
+same stored reply.
+A <code>store</code> here goes to <code><a href="lms_chat.html">lms_chat()</a></code> for every call, and it is checked
+there by the rules of <code><a href="lms_chat.html">lms_chat()</a></code>. It must be <code>TRUE</code>, <code>FALSE</code>, or
+<code>NULL</code>, and <code>NULL</code>, the default, sends no <code>store</code> field. Any other value,
+<code>NA</code> included, aborts before the check for a running server. With
+<code>api_type = "openai"</code>, <code>TRUE</code> or <code>FALSE</code> aborts before the check for a
+running server. Only this exact name is checked. A shortened name, such
+as <code>sto</code>, goes into each request body unchecked, under the name you
+wrote. With <code>store = FALSE</code>, a native reply has no <code>response_id</code> field.
+An OpenResponses reply still has an <code>id</code>, but the server does not hold
+that reply, so a later call on the OpenResponses route that passes it as
+<code>previous_response_id</code> gets status 400 with the <code>code</code>
+<code>"previous_response_not_found"</code>.
 A <code>logprobs</code> here, or a shortened name that <code><a href="lms_chat.html">lms_chat()</a></code> reads as
 <code>logprobs</code>, must be <code>TRUE</code> or <code>FALSE</code>. Any other value, <code>NULL</code> and <code>NA</code>
 included, aborts before the check for a running server.
@@ -285,7 +298,9 @@ that checks its own arguments does that first, so a bad <code>model</code>, <cod
 <code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, <code>previous_response_id</code>,
 or <code>batch_size</code>, a bad
 <code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
-argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
+argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, <code>force</code>, or <code>store</code>, a
+<code>store</code> on the <code>"openai"</code> route of <code><a href="lms_chat.html">lms_chat()</a></code> or <code>lms_chat_batch()</code>, a
+<code>stream</code> in
 the <code>...</code> of a chat function, a <code>logprobs</code> in the <code>...</code> of
 <code>lms_chat_batch()</code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, a value in the <code>...</code> of
 <code>lms_chat_batch()</code> that <code><a href="lms_chat.html">lms_chat()</a></code> reads as an argument already given,

@@ -63,11 +63,26 @@ lms_chat_batch(
 - ...:
 
   Additional arguments passed to `lms_chat`, such as `api_type`,
-  `logprobs`, `schema`, `ttl`, or `previous_response_id`. A `schema`, a
-  `ttl`, a `previous_response_id`, and the `api_type` that each needs
-  are checked before the first call. A `previous_response_id` goes to
-  every call, so each input continues the same stored reply. A
-  `logprobs` here, or a shortened name that
+  `logprobs`, `schema`, `ttl`, `previous_response_id`, or `store`. A
+  `schema`, a `ttl`, a `previous_response_id`, a `store`, and the
+  `api_type` that each needs are checked before the first call. A
+  `previous_response_id` goes to every call, so each input continues the
+  same stored reply. A `store` here goes to
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  for every call, and it is checked there by the rules of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md).
+  It must be `TRUE`, `FALSE`, or `NULL`, and `NULL`, the default, sends
+  no `store` field. Any other value, `NA` included, aborts before the
+  check for a running server. With `api_type = "openai"`, `TRUE` or
+  `FALSE` aborts before the check for a running server. Only this exact
+  name is checked. A shortened name, such as `sto`, goes into each
+  request body unchecked, under the name you wrote. With
+  `store = FALSE`, a native reply has no `response_id` field. An
+  OpenResponses reply still has an `id`, but the server does not hold
+  that reply, so a later call on the OpenResponses route that passes it
+  as `previous_response_id` gets status 400 with the `code`
+  `"previous_response_not_found"`. A `logprobs` here, or a shortened
+  name that
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
   reads as `logprobs`, must be `TRUE` or `FALSE`. Any other value,
   `NULL` and `NA` included, aborts before the check for a running
@@ -299,7 +314,9 @@ function that checks its own arguments does that first, so a bad
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
-`quiet`, or `force`, a `stream` in the `...` of a chat function, a
+`quiet`, `force`, or `store`, a `store` on the `"openai"` route of
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+or `lms_chat_batch()`, a `stream` in the `...` of a chat function, a
 `logprobs` in the `...` of `lms_chat_batch()` or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
 a value in the `...` of `lms_chat_batch()` that

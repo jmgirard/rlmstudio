@@ -19,6 +19,7 @@ lms_chat(
   schema = NULL,
   ttl = NULL,
   previous_response_id = NULL,
+  store = NULL,
   token = NULL
 )
 ```
@@ -111,6 +112,21 @@ lms_chat(
   the request body unchecked, under the name you wrote. An id that the
   server does not hold raises `rlmstudio_api_error` with status 400.
 
+- store:
+
+  `TRUE`, `FALSE`, or `NULL`. Whether the server stores the reply, so
+  that a later call can continue from its id. `NULL`, the default, sends
+  no `store` field, so the server default applies, and that default
+  stores the reply. `TRUE` and `FALSE` go out as a plain JSON `true` or
+  `false`, also when the value has names, dimensions, or a class. Any
+  other value, `NA` included, aborts before the check for a running
+  server. A `TRUE` or `FALSE` needs `api_type = "native"` or
+  `api_type = "openresponses"`. `NULL` passes on every route. With
+  `api_type = "openai"`, `TRUE` or `FALSE` aborts before the request,
+  because the OpenAI chat endpoint keeps no thread. Only this exact name
+  is checked. A shortened name, such as `sto`, goes into the request
+  body unchecked, under the name you wrote.
+
 - token:
 
   Character or `NULL`. An API token for a server that requires
@@ -137,10 +153,16 @@ With `simplify = TRUE` and `api_type = "native"` or
 `response_id` attribute. Pass it as `previous_response_id` to continue
 the thread. The id is the `response_id` field of a native reply and the
 `id` field of an OpenResponses reply. The value has no attribute when
-that field is absent or is not one string. A native reply sent with
-`store = FALSE` in `...` carries no id, and an OpenResponses reply sent
-with `store = FALSE` still carries one. With `api_type = "openai"`, or
-with `simplify = FALSE`, the value has no `response_id` attribute.
+that field is absent or is not one string. With `api_type = "openai"`,
+or with `simplify = FALSE`, the value has no `response_id` attribute.
+
+A native reply sent with `store = FALSE` has no `response_id` field, so
+its value has no attribute. An OpenResponses reply sent with
+`store = FALSE` still has an `id`, so its value carries the attribute,
+but the server does not hold that reply. A later call on the
+OpenResponses route that passes that id as `previous_response_id` raises
+`rlmstudio_api_error` with status 400 and the `code`
+`"previous_response_not_found"`.
 
 ## Details
 
@@ -177,8 +199,10 @@ function that checks its own arguments does that first, so a bad
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
 a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
-`quiet`, or `force`, a `stream` in the `...` of a chat function, a
-`logprobs` in the `...` of
+`quiet`, `force`, or `store`, a `store` on the `"openai"` route of
+`lms_chat()` or
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+a `stream` in the `...` of a chat function, a `logprobs` in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),

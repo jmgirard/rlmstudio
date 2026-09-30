@@ -118,8 +118,12 @@ function that checks its own arguments does that first, so a bad
 `previous_response_id`, or `batch_size`, a bad `type` of
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 or `list_instances()`, a bad `TRUE` or `FALSE` argument such as
-`simplify`, `logprobs`, `quiet`, or `force`, a `stream` in the `...` of
-a chat function, a `logprobs` in the `...` of
+`simplify`, `logprobs`, `quiet`, `force`, or `store`, a `store` on the
+`"openai"` route of
+[`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+or
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+a `stream` in the `...` of a chat function, a `logprobs` in the `...` of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
 or
 [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
