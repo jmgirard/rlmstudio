@@ -148,3 +148,56 @@ test_that("a native batch with logprobs and no server gives no notice", {
   expect_identical(probe$calls, 1L)
   expect_identical(res$warnings, list())
 })
+
+# The routes that have logprobs keep the logprobs results.
+logprobs_route_replies <- list(
+  openresponses = function(k) {
+    output_body(responses_message(output_text(
+      quoted(sprintf("reply %d", k)),
+      json_array(logprob_step("r"))
+    )))
+  },
+  openai = function(k) completion_body(quoted(sprintf("reply %d", k)))
+)
+
+run_route_batch <- function(route, format) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(lapply(1:2, function(k) {
+    mock_response(200L, logprobs_route_replies[[route]](k))
+  }))
+  collect_warnings(lms_chat_batch(
+    "a-model",
+    c("input 1", "input 2"),
+    format = format,
+    quiet = TRUE,
+    api_type = route,
+    logprobs = TRUE
+  ))
+}
+
+test_that("the openresponses and openai routes keep the logprobs results", {
+  for (route in names(logprobs_route_replies)) {
+    lst <- run_route_batch(route, "list")
+    expect_identical(lst$warnings, list(), info = route)
+    expect_type(lst$value, "list")
+    for (x in lst$value) {
+      expect_s3_class(x, "lms_chat_result")
+    }
+
+    vec <- run_route_batch(route, "vector")
+    expect_identical(vec$value, lst$value, info = route)
+    shown <- warning_texts(vec$warnings)
+    expect_identical(length(shown), 1L, info = route)
+    expect_match(
+      shown,
+      "cannot store logprobs dataframes. Returning list.",
+      fixed = TRUE,
+      info = route
+    )
+
+    df <- run_route_batch(route, "data.frame")$value
+    expect_true("logprobs" %in% names(df), info = route)
+    expect_type(df$logprobs, "list")
+    expect_identical(df$output, c("reply 1", "reply 2"), info = route)
+  }
+})
