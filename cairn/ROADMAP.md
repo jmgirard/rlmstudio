@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-30 (M057 done, M054 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M058 | Continue a chat thread by its reply id | review | none | normal | milestones/M058-chat-thread-id.md |
+| M058 | Continue a chat thread by its reply id | in-progress | none | normal | milestones/M058-chat-thread-id.md |
 | M057 | One meaning for each flag argument | done | none | normal | milestones/archive/M057-flag-arguments.md |
 | M056 | Test failures that name each broken function and reply check | done | none | normal | milestones/archive/M056-test-failure-isolation.md |
 | M055 | Cleanup of vignette teardown, test helpers, and the token hint | done | none | normal | milestones/archive/M055-teardown-cleanup.md |
