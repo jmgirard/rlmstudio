@@ -250,7 +250,10 @@ lms_chat_openresponses <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-    return(responses_reply_value(resp, resp_data, logprobs))
+    return(with_response_id(
+      responses_reply_value(resp, resp_data, logprobs),
+      resp_data[["id"]]
+    ))
   }
 
   rlm_abort_api(resp, "OpenResponses Failed", request_sends_token(req))
@@ -1160,6 +1163,30 @@ logprobs_frame <- function(steps) {
 is_json_array <- function(x) is.list(x) && is.null(names(x))
 is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 
+#' Attach the reply id that continues a thread
+#'
+#' What the two thread routes return with `simplify = TRUE` carries the reply
+#' id in a `response_id` attribute, so a caller can pass it on as
+#' `previous_response_id` (D-030). A value of any other type sets no
+#' attribute and never fails the call, as `native_reply_fields()` treats the
+#' id. The shared readers do not call this, so the data-frame batch returns
+#' its text columns with no attribute.
+#'
+#' @param value The simplified reply: one string or an `lms_chat_result`.
+#' @param id The id field of the parsed reply, read with `[[`.
+#' @return `value`, with the attribute when `id` is one string.
+#'
+#' @noRd
+with_response_id <- function(value, id) {
+  # The reader in `value` runs first. It aborts on a body that is not a JSON
+  # object, where the `[[` read in `id` would fail with a base R error.
+  force(value)
+  if (is_one_string(id)) {
+    attr(value, "response_id") <- id
+  }
+  value
+}
+
 #' Chat Completion via Native API
 #'
 #' Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.
@@ -1257,7 +1284,10 @@ lms_chat_native <- function(
     if (!isTRUE(simplify)) {
       return(resp_data)
     }
-    return(native_reply_text(resp, resp_data))
+    return(with_response_id(
+      native_reply_text(resp, resp_data),
+      resp_data[["response_id"]]
+    ))
   }
 
   rlm_abort_api(resp, "Native API Failed", request_sends_token(req))

@@ -363,3 +363,138 @@ test_that("lms_chat_batch() refuses previous_response_id on the openai route", {
   }
   expect_identical(probe$calls, 3L)
 })
+
+# The response_id attribute (AC3) -------------------------------------------
+
+# The id field of a reply, as JSON text, and the attribute it gives. `NULL`
+# JSON text leaves the field out, and a `NULL` attribute means none.
+id_shapes <- list(
+  list(label = "a string", json = quoted("resp_9"), attr = "resp_9"),
+  list(label = "an empty string", json = quoted(""), attr = ""),
+  list(label = "an absent field", json = NULL, attr = NULL),
+  list(label = "null", json = "null", attr = NULL),
+  list(label = "a number", json = "7", attr = NULL),
+  list(label = "an array", json = json_array(quoted("resp_9")), attr = NULL)
+)
+
+# One OpenResponses part that carries logprobs.
+thread_logprobs <- json_array(logprob_step("hi"))
+
+# The reply a route sends with the id field `id_json`. `lp` picks the
+# OpenResponses part: no logprobs field, or one that carries logprobs.
+thread_reply_with_id <- function(route, id_json, lp = FALSE) {
+  if (route == "native") {
+    return(native_reply("hi", response_id = id_json))
+  }
+  responses_reply(
+    "hi",
+    id = id_json,
+    logprobs_json = if (lp) thread_logprobs
+  )
+}
+
+# What `call` returns for `body`, with the server probe passed.
+simplified_value <- function(call, body) {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(mock_response(200L, body)))
+  call()
+}
+
+# The attribute matches each id shape, and with the attribute removed the
+# value is the one the same reply gives with no id field.
+expect_id_attribute <- function(label, call, route, lp = FALSE, class = NULL) {
+  baseline <- simplified_value(call, thread_reply_with_id(route, NULL, lp))
+  expect_null(attr(baseline, "response_id"), label = label)
+  for (shape in id_shapes) {
+    info <- paste(label, "with", shape$label)
+    value <- simplified_value(call, thread_reply_with_id(route, shape$json, lp))
+    expect_identical(attr(value, "response_id"), shape$attr, info = info)
+    expect_identical(without_response_id(value), baseline, info = info)
+    if (is.null(class)) {
+      expect_identical(without_response_id(value), "hi", info = info)
+    } else {
+      expect_s3_class(value, class)
+    }
+  }
+}
+
+test_that("lms_chat_native() returns the response_id of the reply as an attribute", {
+  expect_id_attribute(
+    "lms_chat_native",
+    function() lms_chat_native("a-model", "hi"),
+    "native"
+  )
+})
+
+test_that("lms_chat_openresponses() returns the id of the reply as an attribute", {
+  expect_id_attribute(
+    "lms_chat_openresponses, logprobs FALSE",
+    function() lms_chat_openresponses("a-model", "hi"),
+    "openresponses"
+  )
+  # With logprobs asked for and no part that carries them, the value is the
+  # string.
+  expect_id_attribute(
+    "lms_chat_openresponses, logprobs TRUE, no logprobs part",
+    function() lms_chat_openresponses("a-model", "hi", logprobs = TRUE),
+    "openresponses"
+  )
+  # A part that carries logprobs gives an lms_chat_result, which carries the
+  # attribute on the object.
+  expect_id_attribute(
+    "lms_chat_openresponses, logprobs TRUE, a logprobs part",
+    function() lms_chat_openresponses("a-model", "hi", logprobs = TRUE),
+    "openresponses",
+    lp = TRUE,
+    class = "lms_chat_result"
+  )
+})
+
+test_that("lms_chat() returns the attribute on the two thread routes", {
+  for (route in c("native", "openresponses")) {
+    value <- simplified_value(
+      function() lms_chat("a-model", "hi", api_type = route),
+      thread_reply_with_id(route, quoted("resp_9"))
+    )
+    expect_identical(value, structure("hi", response_id = "resp_9"), info = route)
+  }
+})
+
+test_that("lms_chat_openai() and lms_chat() on openai return no attribute", {
+  body <- openai_reply(quoted("hi"), id = quoted("chatcmpl-9"))
+  value <- simplified_value(
+    function() {
+      lms_chat_openai("a-model", list(list(role = "user", content = "hi")))
+    },
+    body
+  )
+  expect_identical(value, "hi")
+  value <- simplified_value(
+    function() lms_chat("a-model", "hi", api_type = "openai"),
+    body
+  )
+  expect_identical(value, "hi")
+})
+
+test_that("a call with simplify = FALSE returns the body with no attribute", {
+  calls <- list(
+    native = function() lms_chat_native("a-model", "hi", simplify = FALSE),
+    openresponses = function() {
+      lms_chat_openresponses("a-model", "hi", simplify = FALSE)
+    }
+  )
+  for (route in names(calls)) {
+    for (via in c("direct", "lms_chat")) {
+      info <- paste(route, via)
+      call <- if (via == "direct") {
+        calls[[route]]
+      } else {
+        function() lms_chat("a-model", "hi", api_type = route, simplify = FALSE)
+      }
+      body <- thread_reply_with_id(route, quoted("resp_9"))
+      value <- simplified_value(call, body)
+      expect_null(attr(value, "response_id"), info = info)
+      expect_identical(value, jsonlite::parse_json(body), info = info)
+    }
+  }
+})

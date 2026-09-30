@@ -105,7 +105,7 @@ OpenAI route gets no argument. A shortened name in `...`, such as
       function. Read sent bodies through `local_request_recorder()` (M004 and M008 lessons).
       Stubs for the probe and the request count their calls (M015 lesson). Stub the delegates
       of `lms_chat()`, so its own checks are the ones under test (M003 and M013 lessons).
-- [ ] T2: The attribute. Set it in the `simplify = TRUE` branch of the two exported
+- [x] T2: The attribute. Set it in the `simplify = TRUE` branch of the two exported
       functions (`R/chat.R:238-241` and `R/chat.R:1238-1241`). Do not set it in the shared
       readers `native_reply_text()` and `responses_reply_value()`, so the data-frame batch
       stays as it is. Read the id with `[[` (M018 lesson). Test the AC3 reply shapes with bodies from
@@ -138,5 +138,6 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - 2026-09-29: plan gate kept the D-019 rule for a batch with an unknown id over a stop. The two routes answer with different codes, and the condition carries no `param`. Falsified by a user batch that sends every input to an unknown id.
 - 2026-09-29: implement started on m058-chat-thread-id. No question gate, because the plan leaves no choice open.
 - 2026-09-29: T1 done. `rlm_check_response_id()` and `rlm_check_thread_route()` in `R/utils-args.R`, the argument on the three functions, the batch checks, and `tests/testthat/test-thread.R`. `local_counting_probe()` moved to `helper-mock-http.R` so the new file can use it. Full suite 0 failures, 3 live skips.
+- 2026-09-29: T2 done. `with_response_id()` in `R/chat.R` sets the attribute and forces the reply reader first, because a lazy `[[` read of the id failed with a base R error on a bare-value body before the reader could abort. Six tests in four files that compared a whole reply were updated, and `without_response_id()` was added to `helper-chat-bodies.R`. Full suite 0 failures, 3 live skips.
 
 ## Decisions

@@ -363,7 +363,11 @@ test_that("a 401 aborts the batch on the native and OpenResponses routes", {
     expect_identical(res$cnd$status, 401L, info = api_type)
     expect_identical(res$warnings, character(), info = api_type)
     expect_identical(res$requests, 2L, info = api_type)
-    expect_identical(res$cnd$results, list("reply 1", NULL, NULL), info = api_type)
+    expect_identical(
+      lapply(res$cnd$results, without_response_id),
+      list("reply 1", NULL, NULL),
+      info = api_type
+    )
   }
 })
 
@@ -968,17 +972,15 @@ test_that("the other routes add the usage columns and no stats column", {
   expect_identical(res$warnings, character())
 })
 
-test_that("a single native call still returns one plain string", {
+test_that("a single native call returns one string with its reply id", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_sequence(rep(list(mock_response(200L, native_reply("x"))), 3))
 
   out <- lms_chat_native("a-model", "hi")
-  expect_identical(out, "x")
-  expect_null(attributes(out))
+  expect_identical(out, structure("x", response_id = "resp_1"))
 
   out <- lms_chat("a-model", "hi", api_type = "native")
-  expect_identical(out, "x")
-  expect_null(attributes(out))
+  expect_identical(out, structure("x", response_id = "resp_1"))
 
   body <- lms_chat_native("a-model", "hi", simplify = FALSE)
   expect_identical(body$response_id, "resp_1")
@@ -986,7 +988,7 @@ test_that("a single native call still returns one plain string", {
   expect_identical(body$stats$tokens_per_second, 284.5)
 })
 
-test_that("a native vector or list batch holds plain strings", {
+test_that("a native vector batch holds plain strings and a list batch keeps the ids", {
   inputs <- c(a = "first", b = "second")
   replies <- list(
     mock_response(200L, native_reply("x")),
@@ -1000,10 +1002,13 @@ test_that("a native vector or list batch holds plain strings", {
   expect_identical(names(attributes(out)), "names")
 
   out <- lms_chat_batch("a-model", inputs, format = "list", quiet = TRUE, api_type = "native")
-  expect_identical(unname(out), list("x", "y"))
-  for (x in out) {
-    expect_null(attributes(x))
-  }
+  expect_identical(
+    unname(out),
+    list(
+      structure("x", response_id = "resp_1"),
+      structure("y", response_id = "resp_1")
+    )
+  )
 })
 
 test_that("a native list batch stores each failure with its class", {
@@ -1023,7 +1028,7 @@ test_that("a native list batch stores each failure with its class", {
     ),
     "2 inputs failed"
   )
-  expect_identical(out[[1]], "x")
+  expect_identical(out[[1]], structure("x", response_id = "resp_1"))
   expect_s3_class(out[[2]], "rlmstudio_api_error")
   expect_identical(out[[2]]$status, 400L)
   expect_s3_class(out[[3]], "rlmstudio_bad_response")

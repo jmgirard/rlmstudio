@@ -427,7 +427,13 @@ test_that("a readable reply gives the answer the single call returns", {
         expect_identical(res$out$output[[i]], single$text, info = info)
         expect_identical(res$out$logprobs[[i]], single$logprobs, info = info)
       } else {
-        expect_identical(res$out$output[[i]], single, info = info)
+        # The single call adds the reply id as an attribute, and the text
+        # column of a data frame carries none.
+        expect_identical(
+          res$out$output[[i]],
+          without_response_id(single),
+          info = info
+        )
       }
     }
     if (s$api_type == "openresponses" && s$logprobs) {
