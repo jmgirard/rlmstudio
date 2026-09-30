@@ -8,8 +8,12 @@
 #'   given as a single string. The string must be valid in its declared
 #'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
 #'   removed before the name is sent.
-#' @param input Character. The user prompt to send to the model. A character
-#'   vector must hold no missing values.
+#' @param input Character. The user prompt to send to the model, as one
+#'   string. A character vector must hold no missing values, and its length
+#'   must be one. Any other character value aborts before the check for a
+#'   running server. To send several prompts, one request each, use
+#'   [lms_chat_batch()]. A list is sent as given, as the `input` field or, on
+#'   the `"openai"` route, as the `content` of the user message.
 #' @param system_prompt Character. An optional system prompt to guide model
 #'   behavior.
 #' @param host Character. The base URL of the LM Studio server. Default is
@@ -206,8 +210,11 @@ lms_chat <- function(
 #'   single string. The string must be valid in its declared encoding and not
 #'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
 #'   name is sent.
-#' @param input Character. The user prompt. A character vector must hold no
-#'   missing values.
+#' @param input Character. The user prompt, as one string. A character vector
+#'   must hold no missing values, and its length must be one. Any other
+#'   character value aborts before the check for a running server. To send
+#'   several prompts, one request each, use [lms_chat_batch()]. A list is sent
+#'   as given in the `input` field.
 #' @param instructions Character. Optional system instructions.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -1318,8 +1325,11 @@ store_field <- function(store) {
 #'   single string. The string must be valid in its declared encoding and not
 #'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
 #'   name is sent.
-#' @param input Character. The user prompt. A character vector must hold no
-#'   missing values.
+#' @param input Character. The user prompt, as one string. A character vector
+#'   must hold no missing values, and its length must be one. Any other
+#'   character value aborts before the check for a running server. To send
+#'   several prompts, one request each, use [lms_chat_batch()]. A list is sent
+#'   as given in the `input` field.
 #' @param system_prompt Character. Optional system prompt.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires

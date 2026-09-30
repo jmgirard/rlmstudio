@@ -161,6 +161,15 @@ all.
 - **Image input.** The `input` field of `/api/v1/chat` accepts structured
   objects, and the documentation states that text and image inputs are both
   supported. A model reports image support as `capabilities.vision`.
+- **Chat input of two strings** (M062). With google/gemma-3-1b loaded on LM
+  Studio 0.4.25+1, a JSON array of two strings as `input` got status 400 on
+  `/v1/responses` ("Invalid type for 'input'.", code `invalid_union`) and on
+  `/api/v1/chat` ("Expected object, received string, Expected object,
+  received string", code `invalid_union`). The same array as the `content` of
+  a user message got status 400 on `/v1/chat/completions` ("Invalid
+  'content': 'content' array must only contain objects."). An empty `input`
+  array got status 400 on `/v1/responses`, code
+  `missing_required_parameter` — observed 2026-09-30.
 
 ## CLI commands the package does not wrap
 
