@@ -253,11 +253,11 @@ lms_chat_openresponses <- function(
   previous_response_id = NULL,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
-  rlm_check_response_id(previous_response_id)
+  previous_response_id <- rlm_check_response_id(previous_response_id)
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
@@ -558,7 +558,7 @@ lms_chat_openai <- function(
   ttl = NULL,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_messages(messages)
   rlm_check_schema(schema, ...names())
   rlm_check_ttl(ttl)
@@ -1304,10 +1304,10 @@ lms_chat_native <- function(
   previous_response_id = NULL,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_flag(simplify, "simplify")
-  rlm_check_response_id(previous_response_id)
+  previous_response_id <- rlm_check_response_id(previous_response_id)
   dots <- list(...)
   rlm_check_stream(dots)
   # The endpoint has no logprobs, so each element named exactly `logprobs` is

@@ -46,7 +46,7 @@ lms_download <- function(
   ...,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
 
   stop_if_no_server(host)
 
@@ -195,7 +195,7 @@ lms_download_status <- function(
   host = "http://localhost:1234",
   token = NULL
 ) {
-  rlm_check_id(job_id, "job_id")
+  job_id <- rlm_check_id(job_id, "job_id")
 
   stop_if_no_server(host)
 

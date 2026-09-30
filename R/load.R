@@ -70,7 +70,7 @@ lms_load <- function(
   ...,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_flag(flash_attention, "flash_attention", null_ok = TRUE)
   rlm_check_flag(
     offload_kv_cache_to_gpu,

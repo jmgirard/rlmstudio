@@ -146,3 +146,209 @@ test_that("the pairs above are every call site of the three check helpers", {
   expect_gt(length(found), 0L)
   expect_setequal(found, names(name_pairs))
 })
+
+# A name or id is sent as a plain string ------------------------------------
+
+methods::setClass("rlmTestString", contains = "character")
+
+# Each probe holds the value "m". `as.character()` on the class "foo" returns
+# another value, so a plain string made by `as.character()` would show.
+plain_probes <- list(
+  "class foo" = structure("m", class = "foo"),
+  "I()" = I("m"),
+  "a name" = c(a = "m"),
+  "S4" = methods::new("rlmTestString", "m")
+)
+
+# `one_loaded_llm` in test-list-args.R, with the key "m".
+model_m_loaded <- paste0(
+  '{"models": [{"type": "llm", "key": "m", "display_name": "M", ',
+  '"size_bytes": 1073741824, "loaded_instances": [{"id": "m"}]}]}'
+)
+
+download_status_reply <- '{"job_id": "m", "status": "downloading"}'
+
+# For each pair: the replies to serve, the call, and the field that carries
+# the argument. `field = NULL` means the URL path carries it. `sent` picks the
+# requests that must carry it.
+plain_pairs <- list(
+  "lms_chat(model)" = list(
+    replies = list(responses_reply()),
+    call = function(v) lms_chat(v, "hi"),
+    field = "model"
+  ),
+  "lms_chat_batch(model)" = list(
+    replies = list(responses_reply(), responses_reply()),
+    call = function(v) lms_chat_batch(v, c("first", "second"), quiet = TRUE),
+    field = "model"
+  ),
+  "lms_chat_openresponses(model)" = list(
+    replies = list(responses_reply()),
+    call = function(v) lms_chat_openresponses(v, "hi"),
+    field = "model"
+  ),
+  "lms_chat_openai(model)" = list(
+    replies = list(openai_reply()),
+    call = function(v) {
+      lms_chat_openai(v, list(list(role = "user", content = "hi")))
+    },
+    field = "model"
+  ),
+  "lms_chat_native(model)" = list(
+    replies = list(native_reply()),
+    call = function(v) lms_chat_native(v, "hi"),
+    field = "model"
+  ),
+  "lms_embed(model)" = list(
+    replies = list(paste0(
+      '{"object": "list", "model": "m", "data": ',
+      '[{"object": "embedding", "index": 0, "embedding": [0.1, 0.2]}]}'
+    )),
+    call = function(v) lms_embed(v, "hi", quiet = TRUE),
+    field = "model"
+  ),
+  "lms_load(model)" = list(
+    replies = list('{"models": []}', '{"status": "loaded"}'),
+    call = function(v) lms_load(v),
+    field = "model",
+    sent = 2L
+  ),
+  "lms_download(model)" = list(
+    replies = list('{"job_id": "job-1", "status": "downloading"}'),
+    call = function(v) lms_download(v),
+    field = "model"
+  ),
+  "lms_unload(model)" = list(
+    replies = list('{"status": "unloaded"}'),
+    call = function(v) lms_unload(v),
+    field = "instance_id"
+  ),
+  "lms_download_status(job_id)" = list(
+    replies = list(download_status_reply),
+    call = function(v) lms_download_status(v),
+    field = NULL
+  ),
+  "lms_chat(previous_response_id)" = list(
+    replies = list(responses_reply()),
+    call = function(v) lms_chat("a-model", "hi", previous_response_id = v),
+    field = "previous_response_id"
+  ),
+  "lms_chat_openresponses(previous_response_id)" = list(
+    replies = list(responses_reply()),
+    call = function(v) {
+      lms_chat_openresponses("a-model", "hi", previous_response_id = v)
+    },
+    field = "previous_response_id"
+  ),
+  "lms_chat_native(previous_response_id)" = list(
+    replies = list(native_reply()),
+    call = function(v) {
+      lms_chat_native("a-model", "hi", previous_response_id = v)
+    },
+    field = "previous_response_id"
+  ),
+  "lms_chat_batch(previous_response_id)" = list(
+    replies = list(responses_reply(), responses_reply()),
+    call = function(v) {
+      lms_chat_batch(
+        "a-model",
+        c("first", "second"),
+        quiet = TRUE,
+        previous_response_id = v
+      )
+    },
+    field = "previous_response_id"
+  )
+)
+
+test_that("the plain-string pairs are the pairs of AC1 other than type", {
+  expect_setequal(
+    names(plain_pairs),
+    grep("(type)", names(name_pairs), fixed = TRUE, invert = TRUE, value = TRUE)
+  )
+})
+
+# Runs one pair on one probe and returns the value and the sent requests.
+send_pair <- function(pair, value) {
+  spec <- plain_pairs[[pair]]
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  testthat::local_mocked_s3_method(
+    "as.character",
+    "foo",
+    function(x, ...) "other"
+  )
+  recorder <- local_request_sequence(
+    lapply(spec$replies, function(body) mock_response(200L, body))
+  )
+  out <- suppressMessages(spec$call(value))
+  list(value = out, requests = recorder$requests)
+}
+
+for (pair in names(plain_pairs)) {
+  test_that(paste0(pair, " sends each probe as the plain string \"m\""), {
+    spec <- plain_pairs[[pair]]
+    for (label in names(plain_probes)) {
+      info <- paste(pair, "with", label)
+      sent <- send_pair(pair, plain_probes[[label]])
+      expect_identical(
+        length(sent$requests),
+        length(spec$replies),
+        info = info
+      )
+      picks <- if (is.null(spec$sent)) seq_along(sent$requests) else spec$sent
+      for (req in sent$requests[picks]) {
+        if (is.null(spec$field)) {
+          expect_match(req$url, "/m$", info = info)
+        } else {
+          json <- request_body_text(req)
+          # The field ends after the string, so "mm" does not match.
+          expect_match(
+            json,
+            paste0('"', spec$field, '":"m"[,}]'),
+            info = info
+          )
+          expect_identical(
+            jsonlite::parse_json(json)[[spec$field]],
+            "m",
+            info = info
+          )
+        }
+      }
+    }
+  })
+}
+
+test_that("lms_load() and lms_unload() return the plain string", {
+  for (label in names(plain_probes)) {
+    info <- paste("with", label)
+    expect_identical(
+      send_pair("lms_load(model)", plain_probes[[label]])$value,
+      "m",
+      info = paste("lms_load() load path", info)
+    )
+    expect_identical(
+      send_pair("lms_unload(model)", plain_probes[[label]])$value,
+      "m",
+      info = paste("lms_unload()", info)
+    )
+  }
+})
+
+test_that("lms_load() returns the plain string on the already-loaded path", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (label in names(plain_probes)) {
+    recorder <- local_request_sequence(list(mock_response(200L, model_m_loaded)))
+    out <- suppressMessages(lms_load(plain_probes[[label]]))
+    expect_identical(out, "m", info = label)
+    # The model list alone: no load body went out.
+    expect_identical(length(recorder$requests), 1L, info = label)
+  }
+})
+
+test_that("a classed already_downloaded job id sends no HTTP request", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_no_request_allowed()
+  out <- lms_download_status(structure("already_downloaded", class = "foo"))
+  expect_s3_class(out, "lms_download_status")
+  expect_identical(out$status, "already_downloaded")
+})

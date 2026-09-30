@@ -43,7 +43,7 @@ lms_unload <- function(
   ...,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
 
   stop_if_no_server(host)
 

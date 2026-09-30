@@ -111,7 +111,7 @@ lms_embed <- function(
   batch_size = 100,
   quiet = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_text(input, "input")
   rlm_check_ttl(ttl)
   rlm_check_batch_size(batch_size)

@@ -4,9 +4,14 @@
 #' check on the package rather than on the server. The check runs before the
 #' server probe, because a fault in the argument is knowable without a server.
 #'
+#' A string that passes can still carry a class, names, or the S4 bit.
+#' jsonlite fails on a class it has no method for and writes `I()` as an
+#' array, so the value comes back as a plain string. A caller that sends the
+#' value reassigns it.
+#'
 #' @param value The value the caller passed.
 #' @param arg Character. The argument name to report.
-#' @return `value`, invisibly.
+#' @return `value` as a plain string, invisibly.
 #'
 #' @noRd
 rlm_check_id <- function(value, arg) {
@@ -20,7 +25,21 @@ rlm_check_id <- function(value, arg) {
       call = NULL
     )
   }
-  invisible(value)
+  invisible(plain_string(value))
+}
+
+#' One string with no class, names, or S4 bit
+#'
+#' `unclass()` removes the class and keeps the S4 bit, and `[[` drops the S4
+#' bit and the names (LESSONS, M049). `as.character()` is not used, because
+#' it runs an S3 method of the class.
+#'
+#' @param value A character vector of length one.
+#' @return The plain string.
+#'
+#' @noRd
+plain_string <- function(value) {
+  unclass(value)[[1]]
 }
 
 #' Reject a wait that is not one usable number of seconds
@@ -355,8 +374,11 @@ rlm_check_ttl_route <- function(ttl, api_type) {
 #' probe, for the reason `rlm_check_id()` states. `NULL` passes, because it
 #' starts a new thread.
 #'
+#' A string that passes comes back as a plain string, for the reason
+#' `rlm_check_id()` states.
+#'
 #' @param value The value the caller passed as `previous_response_id`.
-#' @return `value`, invisibly.
+#' @return `NULL`, or `value` as a plain string, invisibly.
 #'
 #' @noRd
 rlm_check_response_id <- function(value) {
@@ -373,7 +395,7 @@ rlm_check_response_id <- function(value) {
       call = NULL
     )
   }
-  invisible(value)
+  invisible(plain_string(value))
 }
 
 #' Reject a thread id sent to a route that has no thread
