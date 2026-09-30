@@ -69,11 +69,11 @@ request loads. The server loads a model that is not loaded yet when its
 just-in-time loading setting is on. A model that is already loaded keeps
 its idle time.}
 
-\item{previous_response_id}{One string, or \code{NULL}. The string must be valid
-in its declared encoding and not marked \code{"bytes"}. A class, names, and
-the S4 bit are removed before the id is sent. The id of a stored reply
+\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
 that this chat continues, such as the \code{response_id} attribute of an
-earlier reply. \code{NULL}, the default, starts a new thread. It needs
+earlier reply. The string must be valid in its declared encoding and not
+marked \code{"bytes"}. A class, names, and the S4 bit are removed before the id
+is sent. \code{NULL}, the default, starts a new thread. It needs
 \code{api_type = "native"} or \code{api_type = "openresponses"}. With
 \code{api_type = "openai"}, a string aborts before the request, because the
 OpenAI chat endpoint keeps no thread. \code{NA}, an empty string, a string of
@@ -133,7 +133,7 @@ or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
 an \code{instructions} or \code{messages} in the \code{...} of \code{\link[=lms_chat]{lms_chat()}} or
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} on the route where \code{\link[=lms_chat]{lms_chat()}} sets it, or a name, id,

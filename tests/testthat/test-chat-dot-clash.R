@@ -55,7 +55,8 @@ expect_clash_abort <- function(call, case, info) {
   expect_identical(class(err), c("rlang_error", "error", "condition"), info = info)
   expect_identical(probe$calls, 0L, info = info)
   msg <- cli::ansi_strip(conditionMessage(err))
-  expect_match(msg, paste0("`", case$arg, "` is given more than once"), fixed = TRUE, info = info)
+  expect_match(msg, paste0("`", case$arg, "` cannot be given in `...` on the \""), fixed = TRUE, info = info)
+  expect_no_match(msg, "more than once", fixed = TRUE, info = info)
   expect_match(msg, case$source, fixed = TRUE, info = info)
   expect_no_match(msg, "matched by multiple actual arguments", fixed = TRUE, info = info)
 }

@@ -46,11 +46,11 @@
 #'   request loads. The server loads a model that is not loaded yet when its
 #'   just-in-time loading setting is on. A model that is already loaded keeps
 #'   its idle time.
-#' @param previous_response_id One string, or `NULL`. The string must be valid
-#'   in its declared encoding and not marked `"bytes"`. A class, names, and
-#'   the S4 bit are removed before the id is sent. The id of a stored reply
+#' @param previous_response_id One string, or `NULL`. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
-#'   earlier reply. `NULL`, the default, starts a new thread. It needs
+#'   earlier reply. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the id
+#'   is sent. `NULL`, the default, starts a new thread. It needs
 #'   `api_type = "native"` or `api_type = "openresponses"`. With
 #'   `api_type = "openai"`, a string aborts before the request, because the
 #'   OpenAI chat endpoint keeps no thread. `NA`, an empty string, a string of
@@ -201,11 +201,11 @@ lms_chat <- function(
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
-#' @param previous_response_id One string, or `NULL`. The string must be valid
-#'   in its declared encoding and not marked `"bytes"`. A class, names, and
-#'   the S4 bit are removed before the id is sent. The id of a stored reply
+#' @param previous_response_id One string, or `NULL`. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
-#'   earlier reply of this function or of [lms_chat_native()]. `NULL`, the
+#'   earlier reply of this function or of [lms_chat_native()]. The string must
+#'   be valid in its declared encoding and not marked `"bytes"`. A class,
+#'   names, and the S4 bit are removed before the id is sent. `NULL`, the
 #'   default, starts a new thread. `NA`, an empty string, a string of
 #'   whitespace only, a value that is not a string, and more or fewer than one
 #'   string abort before the check for a running server. Only this exact name
@@ -1276,11 +1276,11 @@ with_response_id <- function(value, id) {
 #'   be `TRUE`, `FALSE`, or `NULL`, and any other value aborts before the check
 #'   for a running server. The endpoint has no logprobs, so no `logprobs` field
 #'   goes into the request body, and a `TRUE` warns.
-#' @param previous_response_id One string, or `NULL`. The string must be valid
-#'   in its declared encoding and not marked `"bytes"`. A class, names, and
-#'   the S4 bit are removed before the id is sent. The id of a stored reply
+#' @param previous_response_id One string, or `NULL`. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
-#'   earlier reply of this function. `NULL`, the default, starts a new thread.
+#'   earlier reply of this function. The string must be valid in its declared
+#'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+#'   removed before the id is sent. `NULL`, the default, starts a new thread.
 #'   `NA`, an empty string, a string of whitespace only, a value that is not a
 #'   string, and more or fewer than one string abort before the check for a
 #'   running server. Only this exact name is checked. A shortened name, such
@@ -2386,7 +2386,10 @@ rlm_check_route_dots <- function(dot_names, api_type) {
       messages = "{.fn lms_chat} builds {.arg messages} from {.arg system_prompt} and {.arg input} on the {.val openai} route. To send your own messages, call {.fn lms_chat_openai}."
     )
     cli::cli_abort(
-      c("{.arg {arg}} is given more than once.", "x" = hint),
+      c(
+        "{.arg {arg}} cannot be given in {.arg ...} on the {.val {api_type}} route.",
+        "i" = hint
+      ),
       call = NULL
     )
   }

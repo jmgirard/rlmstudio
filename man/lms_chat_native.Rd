@@ -42,11 +42,11 @@ be \code{TRUE}, \code{FALSE}, or \code{NULL}, and any other value aborts before 
 for a running server. The endpoint has no logprobs, so no \code{logprobs} field
 goes into the request body, and a \code{TRUE} warns.}
 
-\item{previous_response_id}{One string, or \code{NULL}. The string must be valid
-in its declared encoding and not marked \code{"bytes"}. A class, names, and
-the S4 bit are removed before the id is sent. The id of a stored reply
+\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
 that this chat continues, such as the \code{response_id} attribute of an
-earlier reply of this function. \code{NULL}, the default, starts a new thread.
+earlier reply of this function. The string must be valid in its declared
+encoding and not marked \code{"bytes"}. A class, names, and the S4 bit are
+removed before the id is sent. \code{NULL}, the default, starts a new thread.
 \code{NA}, an empty string, a string of whitespace only, a value that is not a
 string, and more or fewer than one string abort before the check for a
 running server. Only this exact name is checked. A shortened name, such
@@ -98,7 +98,7 @@ or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
 an \code{instructions} or \code{messages} in the \code{...} of \code{\link[=lms_chat]{lms_chat()}} or
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} on the route where \code{\link[=lms_chat]{lms_chat()}} sets it, or a name, id,

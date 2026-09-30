@@ -217,8 +217,9 @@ id_fault <- function(value) {
 #'
 #' A string that is not valid in its declared encoding reaches jsonlite, which
 #' copies each bad byte into the JSON text unchanged, so the body is not valid
-#' UTF-8. `grepl()` warns on such a string and reads it as whitespace. A string marked `"bytes"` fails in jsonlite, which cannot
-#' translate it. Run this before any `grepl()` on the string.
+#' UTF-8. `grepl()` warns on such a string and reads it as whitespace. A
+#' string marked `"bytes"` fails in jsonlite, which cannot translate it. Run
+#' this before any `grepl()` on the string.
 #'
 #' @param value A character vector with no `NA`.
 #' @return The rule the first bad element breaks, as words that follow "that"
@@ -230,7 +231,11 @@ text_fault <- function(value) {
   if (is.null(i)) {
     return(NULL)
   }
-  if (Encoding(value[[i]]) == "bytes") "is marked as bytes" else "is not valid in its encoding"
+  if (Encoding(value[[i]]) == "bytes") {
+    "is marked as bytes"
+  } else {
+    "is not valid in its encoding"
+  }
 }
 
 #' The position of the first element that breaks a text rule
