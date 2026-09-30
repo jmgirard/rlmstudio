@@ -1293,6 +1293,34 @@ rlm_check_no_na <- function(value, arg) {
   invisible(value)
 }
 
+#' Reject a character prompt that is not one string
+#'
+#' The length rule, for the `input` of the chat wrappers. A character vector of
+#' another length goes out as a JSON array. A two-string array got a 400 on
+#' every chat route, and an empty one got a 400 on `/v1/responses`. No reply
+#' said that more than one prompt was sent. A list, the structured input form,
+#' is left to the server (D-036). Run it after `rlm_check_no_na()`, so a vector
+#' that holds an NA gets that message first.
+#'
+#' @param value The value the caller passed.
+#' @param arg Character. The argument name to report.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_one_prompt <- function(value, arg) {
+  if (is.character(value) && length(value) != 1L) {
+    cli::cli_abort(
+      c(
+        "{.arg {arg}} must be one prompt, given as a single string.",
+        "x" = paste0("You gave ", length(value), " strings."),
+        "i" = "To send several prompts, one request each, use {.fn lms_chat_batch}."
+      ),
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
 #' Reject a model type filter that is not one or more usable names
 #'
 #' `list_models()` and `list_instances()` keep the models whose `type` is in

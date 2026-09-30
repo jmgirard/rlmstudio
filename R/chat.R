@@ -8,8 +8,12 @@
 #'   given as a single string. The string must be valid in its declared
 #'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
 #'   removed before the name is sent.
-#' @param input Character. The user prompt to send to the model. A character
-#'   vector must hold no missing values.
+#' @param input Character. The user prompt to send to the model, as one
+#'   string. A character vector must hold no missing values, and its length
+#'   must be one. Any other character value aborts before the check for a
+#'   running server. To send several prompts, one request each, use
+#'   [lms_chat_batch()]. A list is sent as given, as the `input` field or, on
+#'   the `"openai"` route, as the `content` of the user message.
 #' @param system_prompt Character. An optional system prompt to guide model
 #'   behavior.
 #' @param host Character. The base URL of the LM Studio server. Default is
@@ -130,6 +134,7 @@ lms_chat <- function(
   rlm_check_route_dots(...names(), api_type)
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_one_prompt(input, "input")
   rlm_check_schema(schema, ...names())
   rlm_check_schema_route(schema, api_type)
   rlm_check_ttl(ttl)
@@ -205,8 +210,11 @@ lms_chat <- function(
 #'   single string. The string must be valid in its declared encoding and not
 #'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
 #'   name is sent.
-#' @param input Character. The user prompt. A character vector must hold no
-#'   missing values.
+#' @param input Character. The user prompt, as one string. A character vector
+#'   must hold no missing values, and its length must be one. Any other
+#'   character value aborts before the check for a running server. To send
+#'   several prompts, one request each, use [lms_chat_batch()]. A list is sent
+#'   as given in the `input` field.
 #' @param instructions Character. Optional system instructions.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -309,6 +317,7 @@ lms_chat_openresponses <- function(
 ) {
   model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_one_prompt(input, "input")
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
   previous_response_id <- rlm_check_response_id(previous_response_id)
@@ -1316,8 +1325,11 @@ store_field <- function(store) {
 #'   single string. The string must be valid in its declared encoding and not
 #'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
 #'   name is sent.
-#' @param input Character. The user prompt. A character vector must hold no
-#'   missing values.
+#' @param input Character. The user prompt, as one string. A character vector
+#'   must hold no missing values, and its length must be one. Any other
+#'   character value aborts before the check for a running server. To send
+#'   several prompts, one request each, use [lms_chat_batch()]. A list is sent
+#'   as given in the `input` field.
 #' @param system_prompt Character. Optional system prompt.
 #' @param host Character. Server URL.
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -1401,6 +1413,7 @@ lms_chat_native <- function(
 ) {
   model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_one_prompt(input, "input")
   rlm_check_flag(simplify, "simplify")
   previous_response_id <- rlm_check_response_id(previous_response_id)
   rlm_check_flag(store, "store", null_ok = TRUE)

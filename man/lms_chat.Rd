@@ -26,8 +26,12 @@ given as a single string. The string must be valid in its declared
 encoding and not marked \code{"bytes"}. A class, names, and the S4 bit are
 removed before the name is sent.}
 
-\item{input}{Character. The user prompt to send to the model. A character
-vector must hold no missing values.}
+\item{input}{Character. The user prompt to send to the model, as one
+string. A character vector must hold no missing values, and its length
+must be one. Any other character value aborts before the check for a
+running server. To send several prompts, one request each, use
+\code{\link[=lms_chat_batch]{lms_chat_batch()}}. A list is sent as given, as the \code{input} field or, on
+the \code{"openai"} route, as the \code{content} of the user message.}
 
 \item{system_prompt}{Character. An optional system prompt to guide model
 behavior.}
