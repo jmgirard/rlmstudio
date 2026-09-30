@@ -146,8 +146,7 @@ require_httpuv <- function(action = httpuv_absence_action()) {
 # asks for it. Names arrive lowercased, so read `headers$authorization` rather
 # than the sent spelling.
 request_target <- function(req, redact_headers = TRUE) {
-  require_httpuv()
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = redact_headers)
+  out <- request_dry_run(req, redact_headers = redact_headers)
   body <- NULL
   if (length(out$body) > 0L) {
     text <- rawToChar(out$body)
@@ -166,13 +165,68 @@ request_target <- function(req, redact_headers = TRUE) {
 # byte for byte with a jsonlite write. The old httr2 1.3.0 writer,
 # req_body_json(), rebuilt the body when the request was dry-run, and a
 # POSIXlt value there recursed with no end. So the dry run gets `seconds` and
-# then fails, and a red run on the old writer ends.
+# then fails, and a red run on the old writer ends. The dry-run helper makes up
+# to 5 tries, and each try gets one sixth of `seconds`, 5 at most. So every try
+# ends before the limit does. A limit that fires inside the dry run can halt R.
 request_body_text <- function(req, seconds = 30) {
-  require_httpuv()
   setTimeLimit(elapsed = seconds, transient = TRUE)
   on.exit(setTimeLimit(elapsed = Inf), add = TRUE)
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  out <- request_dry_run(
+    req,
+    redact_headers = FALSE,
+    tries = 5L,
+    seconds = min(5, seconds / 6)
+  )
   rawToChar(out$body)
+}
+
+# Dry-run `req` and return what httr2::req_dry_run() reports. Every test that
+# reads a request goes through here. With curl 8.0.0 and httr2 1.3.0,
+# req_dry_run() calls curl::curl_echo(). That function takes a port from
+# find_port(), which shuffles 1024:49151 with sample() on each call. It starts
+# an echo server on 0.0.0.0 at that port and sends the request to 127.0.0.1
+# there. A program that listens on 127.0.0.1 alone at that port does not stop
+# find_port(), and on macOS the echo server binds too. The request then goes
+# to that program. If it answers in HTTP, the result holds no method, path, or
+# body. If it closes the connection, sends text that is not HTTP, or never
+# replies, the dry run stops with a curl error. Each try gets `seconds`, so a
+# program that never replies ends the try with curl's timeout error. If the
+# echo server cannot bind, the dry run stops with httpuv's "Failed to create
+# server". In each case this helper tries again on a new port. A request that
+# curl cannot send, such as a URL with a space in its path, also gives a curl
+# error, on every try. So after `tries` tries, the stop message names the
+# likely cause and keeps the last error. No other error is caught.
+request_dry_run <- function(req, redact_headers = TRUE, tries = 5L,
+                            seconds = 5) {
+  require_httpuv()
+  req <- httr2::req_timeout(req, seconds)
+  last_error <- NULL
+  for (i in seq_len(tries)) {
+    out <- tryCatch(
+      httr2::req_dry_run(req, quiet = TRUE, redact_headers = redact_headers),
+      error = function(cnd) {
+        if (!inherits(cnd, "curl_error") &&
+          !identical(conditionMessage(cnd), "Failed to create server")) {
+          stop(cnd)
+        }
+        last_error <<- cnd
+        NULL
+      }
+    )
+    if (!is.null(out$method)) {
+      return(out)
+    }
+  }
+  stop(
+    "The dry run received no request in ", tries,
+    if (tries == 1L) " try. " else " tries. ",
+    "Another program probably listens on 127.0.0.1 at the port that ",
+    "curl::curl_echo() picked.",
+    if (!is.null(last_error)) {
+      paste0(" The last try ended with this error: ", conditionMessage(last_error))
+    },
+    call. = FALSE
+  )
 }
 
 # Mock httr2::req_perform() for the calling test so that any request at all

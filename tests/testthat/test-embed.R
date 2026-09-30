@@ -10,8 +10,7 @@
 # string (LESSONS, M008). Parsing with simplifyVector = FALSE keeps the
 # difference: an array arrives as a list, a bare string as a character scalar.
 sent_body <- function(req) {
-  require_httpuv()
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  out <- request_dry_run(req, redact_headers = FALSE)
   jsonlite::fromJSON(rawToChar(out$body), simplifyVector = FALSE)
 }
 

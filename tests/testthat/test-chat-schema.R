@@ -7,8 +7,7 @@
 # that request_target() returns turns `["score"]` into `"score"`, which hides
 # the one-element array this file exists to check (LESSONS, M008).
 sent_json <- function(req) {
-  require_httpuv()
-  out <- httr2::req_dry_run(req, quiet = TRUE, redact_headers = FALSE)
+  out <- request_dry_run(req, redact_headers = FALSE)
   rawToChar(out$body)
 }
 
