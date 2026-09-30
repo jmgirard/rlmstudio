@@ -31,7 +31,7 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 - [x] AC2: The rule lets two forms through to the request body. For each of the three functions, and for `lms_chat()` on each of its three routes, a test reads the serialized request body. The input `"hi"` is there as the JSON string `"hi"`. The input `list(list(type = "message", role = "user", content = "hi"))`, an unnamed list of one message object, is there as a JSON array of one object. The body field is `input`, and on the OpenAI route it is the `content` of the user message.
 - [x] AC3: `lms_chat_batch()` with `inputs = c("a", "b")` sends two requests, and the `input` field of each is one JSON string, `"a"` and then `"b"`. A test reads both serialized bodies.
 - [x] AC4: The `input` entry on the help pages of the three functions states the length rule and names `lms_chat_batch()` for many prompts. NEWS.md has one entry that names the three functions and states the rule. It also states that before, a two-string `input` went to the server and got a 400.
-- [ ] AC5: `devtools::test()` reports 0 failures and 0 errors. `devtools::check()`, run with `RLMSTUDIO_API_TOKEN` set, reports 0 errors and 0 warnings.
+- [x] AC5: `devtools::test()` reports 0 failures and 0 errors. `devtools::check()`, run with `RLMSTUDIO_API_TOKEN` set, reports 0 errors and 0 warnings.
 
 ## Coverage
 
@@ -69,3 +69,5 @@ A chat call stops in R when a character `input` does not hold exactly one prompt
 - AC2 evidence (2026-09-30): the five "sends one string and a list input as given" tests passed on the branch. Each test reads the sent bytes with `request_body_text()`. It matches `"input":"hi"` and `"input":[{"type":"message","role":"user","content":"hi"}]`, with `content` in place of `input` on the openai route of `lms_chat()`.
 - AC3 evidence (2026-09-30): the test "lms_chat_batch() sends each of its inputs as one string" passed on the branch. It records 2 requests and matches `"input":"a"` in the first body and `"input":"b"` in the second.
 - AC4 evidence (2026-09-30): the `input` entry of `man/lms_chat.Rd`, `man/lms_chat_native.Rd`, and `man/lms_chat_openresponses.Rd` states "its length must be one" and links `lms_chat_batch()` for several prompts. NEWS.md has one entry with the rule. It names the three functions and says that before, a two-string `input` went to the server and got a 400 on each route.
+- AC5 evidence (2026-09-30): with `RLMSTUDIO_API_TOKEN` set, `devtools::test()` gave 802 tests, 0 failures, 0 errors, 3 skips. `devtools::check()` then gave 0 errors, 0 warnings, 0 notes.
+- Consistency gate (2026-09-30): `cairn_validate.py` passed every check. No DESIGN principle changed, so `cairn_impact.py` was skipped. `devtools::document()` left no diff. The branch did not touch README.Rmd, and the repo has no `_pkgdown.yml`. NEWS.md has the entry, and the branch adds no top-level file.
