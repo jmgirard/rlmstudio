@@ -295,10 +295,13 @@ Both are \code{NULL} for a response with no \code{choices}. In the third case,
 \code{content} holds the value that was read, which is \code{NULL} for \code{null} or
 missing content. For the second, third, and fourth cases, the message names the
 \code{content} field, so you can read what the model wrote without a second
-request. The other messages of the chat functions name
+request. The other messages of the chat functions about the reply name
 \code{simplify = FALSE}, which returns the body unchanged, with one exception. A body that did not parse as JSON is
 checked before that argument is read, so its message points at the host
 instead. For such a body, the \code{content} and \code{finish_reason} fields of a
-condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}.
+condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} are \code{NULL}. The messages of
+\code{rlmstudio_model_mismatch} and of the model-list lookup do not name
+\code{simplify = FALSE}, because the check runs with either setting of
+\code{simplify}.
 }
 

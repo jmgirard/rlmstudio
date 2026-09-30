@@ -1,6 +1,6 @@
 # M064: Each help page shows the malformed-reply rules that its function applies
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -87,6 +87,8 @@ If a function raises `rlmstudio_bad_response` under a malformed-reply rule, itse
 - 2026-09-30: T3 done. The ten AC1 greps match the table, and a planted wrong row shows FAIL. `devtools::test()`: 0 failures, 0 errors.
 - 2026-09-30: T4 done. The AC2 script is at the session scratchpad `ac2.py`. Two planted phrases printed as unresolved. On `man/` it read 93 phrases with 0 unresolved and listed 6 R/ phrases. The `lms_server_ready()` phrase resolved but pointed at the wrong section, so it now names "Malformed model list" of `list_models()`. AC3 prints 0 (2 on main). AC4 lists the four pages. The lookup test now covers `simplify = FALSE`. `devtools::test()`: 0 failures, 0 errors.
 - 2026-09-30: T5 done. One NEWS.md entry with two sub-items. With `RLMSTUDIO_API_TOKEN` set, `devtools::test()` gave 0 failures, 0 errors, 3 skips, and `devtools::check()` gave 0 errors, 0 warnings, 0 notes.
+- claim audit: 47 claims read, 1 corrected (R/conditions.R)
+- 2026-09-30: The claim audit found that the moved sentence "the other messages of the chat functions name `simplify = FALSE` ... with one exception" missed the mismatch and model-list lookup messages. The sentence now covers messages about the reply, and a new sentence names the two others. This is a change of meaning in moved text beyond T2's three kinds. The same reader re-read it as correct. AC1 to AC4 checks, `devtools::test()`, and `devtools::check()` were run again: all clean, 0 notes.
 
 ## Decisions
 

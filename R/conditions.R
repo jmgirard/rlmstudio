@@ -266,11 +266,14 @@
 #' `content` holds the value that was read, which is `NULL` for `null` or
 #' missing content. For the second, third, and fourth cases, the message names the
 #' `content` field, so you can read what the model wrote without a second
-#' request. The other messages of the chat functions name
+#' request. The other messages of the chat functions about the reply name
 #' `simplify = FALSE`, which returns the body unchanged, with one exception. A body that did not parse as JSON is
 #' checked before that argument is read, so its message points at the host
 #' instead. For such a body, the `content` and `finish_reason` fields of a
-#' condition from [lms_chat_openai()] are `NULL`.
+#' condition from [lms_chat_openai()] are `NULL`. The messages of
+#' `rlmstudio_model_mismatch` and of the model-list lookup do not name
+#' `simplify = FALSE`, because the check runs with either setting of
+#' `simplify`.
 #'
 #' @section Malformed logprobs:
 #' With `simplify = TRUE` and `logprobs = TRUE`, [lms_chat_openresponses()]
