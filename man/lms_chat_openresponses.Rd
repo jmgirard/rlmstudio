@@ -12,6 +12,7 @@ lms_chat_openresponses(
   logprobs = FALSE,
   simplify = TRUE,
   ...,
+  previous_response_id = NULL,
   token = NULL
 )
 }
@@ -40,6 +41,21 @@ time that the server sets.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.}
+
+\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
+that this chat continues, such as the \code{response_id} attribute of an
+earlier reply of this function or of \code{\link[=lms_chat_native]{lms_chat_native()}}. \code{NULL}, the
+default, starts a new thread. \code{NA}, an empty string, a string of
+whitespace only, a value that is not a string, and more or fewer than one
+string abort before the check for a running server. Only this exact name
+is checked. A shortened name, such as \code{previous}, goes into the request
+body unchecked, under the name you wrote. An id that the server does not
+hold raises \code{rlmstudio_api_error} with status 400 and the \code{code}
+\code{"previous_response_not_found"}. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}}
+refuse a string with \code{api_type = "openai"}, because the OpenAI chat
+endpoint keeps no thread. \code{\link[=lms_chat_openai]{lms_chat_openai()}} has no such argument. A
+\code{previous_response_id} in its \code{...} goes into the request body
+unchecked, and the endpoint ignores it.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
@@ -70,6 +86,15 @@ message names the first broken rule in the order the section below
 gives. Parts of other types are not checked. With \code{logprobs = FALSE}, the value is not read, and the call
 returns the text.
 
+With \code{simplify = TRUE}, the string or the \code{lms_chat_result} carries the
+\code{id} field of the reply in a \code{response_id} attribute. Pass it as
+\code{previous_response_id} to continue the thread. The value has no
+attribute when \code{id} is absent or is not one string. A reply sent with
+\code{store = FALSE} in \code{...} still carries an \code{id}, so its value still
+carries the attribute. \code{\link[=lms_chat_native]{lms_chat_native()}} reads the attribute from the
+\code{response_id} field of its reply instead. A native reply sent with
+\code{store = FALSE} carries no \code{response_id}, so its value has no attribute.
+
 With either setting of \code{simplify}, a reply from a model other than the
 one asked for raises \code{rlmstudio_model_mismatch}. See the "Reply from
 another model" section.
@@ -83,7 +108,8 @@ custom instructions.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
+\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, \code{previous_response_id},
+or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of

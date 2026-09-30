@@ -15,6 +15,7 @@ lms_chat(
   ...,
   schema = NULL,
   ttl = NULL,
+  previous_response_id = NULL,
   token = NULL
 )
 }
@@ -59,6 +60,18 @@ request loads. The server loads a model that is not loaded yet when its
 just-in-time loading setting is on. A model that is already loaded keeps
 its idle time.}
 
+\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
+that this chat continues, such as the \code{response_id} attribute of an
+earlier reply. \code{NULL}, the default, starts a new thread. It needs
+\code{api_type = "native"} or \code{api_type = "openresponses"}. With
+\code{api_type = "openai"}, a string aborts before the request, because the
+OpenAI chat endpoint keeps no thread. \code{NA}, an empty string, a string of
+whitespace only, a value that is not a string, and more or fewer than one
+string abort before the check for a running server. Only this exact name
+is checked. A shortened name, such as \code{previous}, goes into the request
+body unchecked, under the name you wrote. An id that the server does not
+hold raises \code{rlmstudio_api_error} with status 400.}
+
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 \code{RLMSTUDIO_API_TOKEN} environment variable. See \link{rlmstudio_token}.}
@@ -70,6 +83,16 @@ Depending on the arguments provided:
 \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response. With a \code{schema}, it returns the reply parsed into an R value instead.
 \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
 }
+
+With \code{simplify = TRUE} and \code{api_type = "native"} or
+\code{api_type = "openresponses"}, the value carries the id of the reply in a
+\code{response_id} attribute. Pass it as \code{previous_response_id} to continue the
+thread. The id is the \code{response_id} field of a native reply and the \code{id}
+field of an OpenResponses reply. The value has no attribute when that
+field is absent or is not one string. A native reply sent with
+\code{store = FALSE} in \code{...} carries no id, and an OpenResponses reply sent
+with \code{store = FALSE} still carries one. With \code{api_type = "openai"}, or
+with \code{simplify = FALSE}, the value has no \code{response_id} attribute.
 }
 \description{
 Send a prompt to a locally running LM Studio model. This wrapper
@@ -94,7 +117,8 @@ other than the one asked for.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
+\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, \code{previous_response_id},
+or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of

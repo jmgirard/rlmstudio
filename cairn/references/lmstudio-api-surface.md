@@ -55,11 +55,11 @@ all.
   `Content-Type` and `Accept` only. With authentication on, every wrapper in
   the package fails. A user cannot fix this through `...`, because `...` goes
   into the request body, not the headers.
-- **Stateful chat.** `/api/v1/chat` stores the conversation by default and
-  returns a `response_id`. A later call continues the thread with
-  `previous_response_id`. A caller who wants no stored thread sends
-  `store: false`. The package returns text and drops the `response_id`, so the
-  thread is unreachable.
+- **Stateful chat** (corrected M058). `/api/v1/chat` stores the conversation
+  by default and returns a `response_id`. A later call continues the thread
+  with `previous_response_id`. A caller who wants no stored thread sends
+  `store: false`. The package now takes `previous_response_id` on the native
+  and OpenResponses routes and returns the id in a `response_id` attribute.
 - **Per-call statistics.** A `/api/v1/chat` response carries a `stats` object
   with `input_tokens`, `total_output_tokens`, `reasoning_output_tokens`,
   `tokens_per_second`, `time_to_first_token_seconds`, and
@@ -192,7 +192,8 @@ scores many items.
 6. A loaded-instance table, the `lms ps` view, flattened from the
    `loaded_instances` field that `list_models(detailed = TRUE)` already
    returns. Wrapped by M050 as `list_instances()`.
-7. Stateful chat through `response_id` and `previous_response_id`.
+7. Stateful chat through `response_id` and `previous_response_id`. Wrapped
+   by M058 on the native and OpenResponses routes.
 8. Streaming. This changes the return shape, so it needs its own design work.
 
 Out of scope under the current boundary: `lms clone`, `lms push`, `lms dev`,

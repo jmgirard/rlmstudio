@@ -44,6 +44,15 @@ quoted <- function(text) {
   as.character(jsonlite::toJSON(text, auto_unbox = TRUE))
 }
 
+# A simplified reply with its `response_id` attribute removed, for a test that
+# compares the answer alone. `NULL` stays `NULL`.
+without_response_id <- function(x) {
+  if (!is.null(x)) {
+    attr(x, "response_id") <- NULL
+  }
+  x
+}
+
 # Bodies for the native and OpenResponses routes. Each builder takes its values
 # as JSON text, so a test can put `null`, a number, or an array where a string
 # belongs. Real LM Studio replies carry a `type` on every item and part.

@@ -313,6 +313,60 @@ rlm_check_ttl_route <- function(ttl, api_type) {
   invisible(ttl)
 }
 
+#' Reject a thread id that is not one usable string
+#'
+#' `previous_response_id` names the stored reply that a chat continues, so
+#' GP4 puts its check on the package (D-030). It runs before the server
+#' probe, for the reason `rlm_check_id()` states. `NULL` passes, because it
+#' starts a new thread.
+#'
+#' @param value The value the caller passed as `previous_response_id`.
+#' @return `value`, invisibly.
+#'
+#' @noRd
+rlm_check_response_id <- function(value) {
+  if (is.null(value)) {
+    return(invisible(value))
+  }
+  fault <- id_fault(value)
+  if (!is.null(fault)) {
+    cli::cli_abort(
+      c(
+        "{.arg previous_response_id} must be one response id, given as a single string, or {.code NULL}.",
+        "x" = "{fault}"
+      ),
+      call = NULL
+    )
+  }
+  invisible(value)
+}
+
+#' Reject a thread id sent to a route that has no thread
+#'
+#' On 2026-09-29, LM Studio 0.4.25+1 continued a thread from
+#' `previous_response_id` on `/api/v1/chat` and `/v1/responses`.
+#' `/v1/chat/completions`, the `"openai"` route of `lms_chat()`, returned 200
+#' and ignored the field.
+#'
+#' @param previous_response_id The value the caller passed.
+#' @param api_type Character. The route, already matched.
+#' @return `previous_response_id`, invisibly.
+#'
+#' @noRd
+rlm_check_thread_route <- function(previous_response_id, api_type) {
+  if (!is.null(previous_response_id) && identical(api_type, "openai")) {
+    cli::cli_abort(
+      c(
+        "{.arg previous_response_id} needs {.code api_type = \"native\"} or {.code api_type = \"openresponses\"}.",
+        "x" = "You gave {.code api_type = \"openai\"}.",
+        "i" = "The OpenAI chat endpoint keeps no thread, so it ignores a response id."
+      ),
+      call = NULL
+    )
+  }
+  invisible(previous_response_id)
+}
+
 #' Reject a stream field that would make the server stream its reply
 #'
 #' The chat functions read one whole JSON reply. A `stream` of `TRUE` makes

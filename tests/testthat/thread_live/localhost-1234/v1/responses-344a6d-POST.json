@@ -1,0 +1,73 @@
+{
+    "id": "resp_4d7ae3b4f0916642f93754f943be102acc2d2d4f05e96c7c",
+    "object": "response",
+    "created_at": 1790728063,
+    "completed_at": 1790728063,
+    "status": "completed",
+    "incomplete_details": null,
+    "model": "google/gemma-3-1b",
+    "previous_response_id": "resp_6b20f8f9269df3e71dd1dfb5a16c84837804beb7cd808a68",
+    "instructions": null,
+    "output": [
+        {
+            "id": "msg_zcfsfmt3yehiqiphng2ji",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "Bye.",
+                    "annotations": [
+
+                    ],
+                    "logprobs": [
+
+                    ]
+                }
+            ]
+        }
+    ],
+    "error": null,
+    "tools": [
+
+    ],
+    "tool_choice": "auto",
+    "truncation": "auto",
+    "parallel_tool_calls": true,
+    "text": {
+        "format": {
+            "type": "text"
+        }
+    },
+    "top_p": false,
+    "presence_penalty": 0,
+    "frequency_penalty": 1.1,
+    "top_logprobs": 0,
+    "temperature": 0,
+    "reasoning": {
+        "summary": null,
+        "effort": null
+    },
+    "usage": {
+        "input_tokens": 15,
+        "output_tokens": 2,
+        "total_tokens": 17,
+        "input_tokens_details": {
+            "cached_tokens": 0
+        },
+        "output_tokens_details": {
+            "reasoning_tokens": 0
+        }
+    },
+    "max_output_tokens": null,
+    "max_tool_calls": null,
+    "store": true,
+    "background": false,
+    "service_tier": "default",
+    "metadata": {
+
+    },
+    "safety_identifier": null,
+    "prompt_cache_key": null
+}

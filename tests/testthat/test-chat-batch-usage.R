@@ -363,11 +363,15 @@ test_that("the four columns are there when every input failed", {
 
 test_that("a lost server keeps what the results field held before", {
   cases <- list(
-    list(s = usage_settings[[1]], check = function(x) expect_identical(x, "reply 1")),
+    # The OpenResponses values carry the reply id, as the list format's do.
+    list(s = usage_settings[[1]], check = function(x) {
+      expect_identical(x, structure("reply 1", response_id = "id_1"))
+    }),
     list(s = usage_settings[[2]], check = function(x) {
       expect_s3_class(x, "lms_chat_result")
       expect_identical(x$text, "reply 1")
       expect_identical(x$logprobs$step_token, "r")
+      expect_identical(attr(x, "response_id"), "id_1")
     }),
     list(s = usage_settings[[5]], check = function(x) expect_identical(x, list(score = 1L)))
   )
@@ -427,7 +431,13 @@ test_that("a readable reply gives the answer the single call returns", {
         expect_identical(res$out$output[[i]], single$text, info = info)
         expect_identical(res$out$logprobs[[i]], single$logprobs, info = info)
       } else {
-        expect_identical(res$out$output[[i]], single, info = info)
+        # The single call adds the reply id as an attribute, and the text
+        # column of a data frame carries none.
+        expect_identical(
+          res$out$output[[i]],
+          without_response_id(single),
+          info = info
+        )
       }
     }
     if (s$api_type == "openresponses" && s$logprobs) {

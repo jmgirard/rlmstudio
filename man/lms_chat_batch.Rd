@@ -42,8 +42,10 @@ about failed inputs, cut-off replies, or a vector format that returns a
 list.}
 
 \item{...}{Additional arguments passed to \code{lms_chat}, such as \code{api_type},
-\code{logprobs}, \code{schema}, or \code{ttl}. A \code{schema}, a \code{ttl}, and the \code{api_type}
-that each needs are checked before the first call.
+\code{logprobs}, \code{schema}, \code{ttl}, or \code{previous_response_id}. A \code{schema}, a
+\code{ttl}, a \code{previous_response_id}, and the \code{api_type} that each needs are
+checked before the first call. A \code{previous_response_id} goes to every
+call, so each input continues the same stored reply.
 A \code{logprobs} here, or a shortened name that \code{\link[=lms_chat]{lms_chat()}} reads as
 \code{logprobs}, must be \code{TRUE} or \code{FALSE}. Any other value, \code{NULL} and \code{NA}
 included, aborts before the check for a running server.
@@ -62,6 +64,14 @@ The return type depends on the \code{format} argument:
 \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
 \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE}, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 }
+
+On the native and OpenResponses routes with \code{simplify = TRUE}, \code{\link[=lms_chat]{lms_chat()}}
+returns each reply that carries an id with a \code{response_id} attribute, as
+its help describes. With \code{format = "list"}, each reply keeps
+it. So does each element of the list that \code{format = "vector"} returns with
+\code{logprobs = TRUE}. The character vector of \code{format = "vector"} and the
+\code{output} column of \code{format = "data.frame"} carry no \code{response_id}
+attribute. The data frame holds the ids in its \code{response_id} column.
 
 With \code{api_type = "native"} and \code{format = "data.frame"}, the data frame ends
 with seven columns read from each reply: \code{response_id}, \code{input_tokens},
@@ -185,6 +195,12 @@ give these for a model name that the server cannot find, so every later
 input fails in the same way.
 See the "Reply from another model" section below.
 
+A \code{previous_response_id} that the server does not hold gives status 400
+with the \code{code} \code{"invalid_value"} on the native route and
+\code{"previous_response_not_found"} on the OpenResponses route. The batch does
+not abort at either one. Each such input fails alone, as described above,
+and the batch goes on to the next input.
+
 An \code{rlmstudio_no_server} from \code{\link[=lms_chat]{lms_chat()}} also aborts the batch. Its
 \code{results} field holds the results so far, as described in the "Server not
 running" section below. An error of any other class aborts the batch
@@ -195,7 +211,8 @@ unchanged.
 Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
-\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
+\code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, \code{previous_response_id},
+or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of
