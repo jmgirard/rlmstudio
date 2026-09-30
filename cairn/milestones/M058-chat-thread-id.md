@@ -69,7 +69,7 @@ OpenAI route gets no argument. A shortened name in `...`, such as
       a reply. The slot of that input holds the `rlmstudio_api_error`, and the next input is
       sent. The tests replay the two reply bodies recorded from a live LM Studio into fixture
       files.
-- [ ] AC6: The help pages of `lms_chat_native()`, `lms_chat_openresponses()`, and `lms_chat()`
+- [x] AC6: The help pages of `lms_chat_native()`, `lms_chat_openresponses()`, and `lms_chat()`
       state what `previous_response_id` accepts, and that only the exact name is checked. They
       state the route rule of AC2 and the `response_id` attribute of AC3, with the reply field
       it comes from. They state that an OpenResponses reply sent with `store = FALSE` still
@@ -172,3 +172,11 @@ Pass 1, 2026-09-29, on 22013ee. The default branch had not moved (origin/main at
 - AC7: `devtools::test()` with `RLMSTUDIO_API_TOKEN` set gave 0 failures and 3 live skips, because the server was not running. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, so no note heading is new against 30a743e. The server and model state were the same after both runs.
 - Gate: `cairn_validate.py` passed with exit 0. `devtools::document()` left no diff. `pkgdown::check_pkgdown()` found no problems. NEWS.md has the entry. README.Rmd is unchanged on the branch. The one new ignore entry is `^tests/testthat/_problems$`, and the check gave no note.
 - Result: returned to `in-progress` on AC6 alone. The step-5 review did not run.
+
+Pass 2, 2026-09-29, on d1499b9. The default branch had not moved. T8 changed only roxygen text and two `.Rd` files since pass 1.
+
+- AC1, AC2, AC4, AC5: `devtools::test()` with `RLMSTUDIO_API_TOKEN` set gave 0 failures and 3 live skips. The `test-thread.R` blocks that pass 1 names for each criterion ran in that suite.
+- AC3: the pass-1 scratch script ran again over 63 calls. All 63 branch values were `identical()` to the 30a743e values with the attribute removed. The 14 values with the attribute are the string and empty-string id shapes on the thread routes, and no other value has one.
+- AC6: each of the three chat pages now states both `store = FALSE` facts and both reply fields. The OpenResponses page names the native `response_id` field, and the native page names the OpenResponses `id` field. The pass-1 reads of the other AC6 sentences, the batch help, and NEWS still hold, because T8 changed none of them. A `devtools::document()` run after the check left no diff.
+- AC7: the same `devtools::test()` run gave 0 failures. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes. The server and model state were the same after both runs.
+- Gate: `cairn_validate.py` passed with exit 0. `pkgdown::check_pkgdown()` found no problems. The other pass-1 gate results hold, because T8 added no file.
