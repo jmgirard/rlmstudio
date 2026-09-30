@@ -1124,7 +1124,8 @@ messages_rule_details <- c(
   rule10 = "You gave a value that jsonlite cannot write:",
   rule11 = "You gave a list with a dim attribute inside a message, such as a list-matrix field.",
   rule12 = "You gave a field value that is a function, which jsonlite would send as its source text.",
-  rule13 = "You gave a field value of type \""
+  rule13 = "You gave a field value of type \"",
+  rule14 = "You gave a data frame with a column whose row count differs from the row count of the data frame."
 )
 
 # The detail of rule13 in full, for a value of the given type.
@@ -1147,6 +1148,76 @@ messages_headers <- c(
 messages_shape_hint <- "Each message is a named list"
 
 good_message <- list(role = "user", content = "hi")
+
+# A data frame of n rows, built by hand, so a column may hold a row count
+# that differs from n. data.frame() would recycle or refuse such a column.
+df_of_rows <- function(n, ...) {
+  structure(list(...), class = "data.frame", row.names = c(NA, -n))
+}
+
+# A 2-row messages frame with a role column and one probe column x.
+two_row_frame <- function(x) {
+  df_of_rows(2L, role = c("user", "user"), x = x)
+}
+
+# Each probe holds a column whose row count differs from the row count of the
+# data frame that holds it. The column is at the top level or inside a
+# data-frame column. Each such column has no class but "AsIs", or is a data
+# frame. The row count is the first extent of a dim, the row count of a data
+# frame, and the length of any other column. The NA matrix is the only column
+# of its frame. Before the row-count rule, the empty-row rule refused this
+# frame with its own detail.
+row_count_probes <- list(
+  list(label = "a 3-by-2 character matrix column", x = matrix("a", 3, 2)),
+  list(label = "a 1-by-2 character matrix column", x = matrix("a", 1, 2)),
+  list(label = "a 3-by-0 matrix column", x = matrix("a", 3, 0)),
+  list(
+    label = "a 3-by-2 NA matrix that is the only column",
+    value = df_of_rows(2L, x = matrix(NA, 3, 2))
+  ),
+  list(
+    label = "a one-dimensional array column of length 3",
+    x = structure(c("a", "b", "c"), dim = 3L)
+  ),
+  list(
+    label = "a one-dimensional array column of length 1",
+    x = structure("a", dim = 1L)
+  ),
+  list(
+    label = "a 3-by-1 list-matrix column",
+    x = matrix(list("a", "b", "c"), 3, 1)
+  ),
+  list(label = "a list column of length 3", x = list("a", "b", "c")),
+  list(label = "a character column of length 1", x = "a"),
+  list(label = "a character(0) column", x = character(0)),
+  list(
+    label = "an I() character column of length 3",
+    x = I(c("a", "b", "c"))
+  ),
+  list(
+    label = "a data-frame column of 3 rows",
+    x = data.frame(a = c("a", "b", "c"))
+  ),
+  list(
+    label = "a data-frame column of 0 rows",
+    x = data.frame(a = character())
+  ),
+  list(
+    label = "a 2-row data-frame column that holds a 3-by-2 matrix",
+    x = df_of_rows(2L, m = matrix("a", 3, 2))
+  ),
+  list(
+    label = "a 2-row data-frame column that holds a list column of length 3",
+    x = df_of_rows(2L, l = list("a", "b", "c"))
+  )
+)
+row_count_probes <- lapply(row_count_probes, function(p) {
+  list(
+    label = p$label,
+    value = if (is.null(p$value)) two_row_frame(p$x) else p$value,
+    rule = "rule14"
+  )
+})
 
 messages_probes <- list(
   list(label = "NULL", value = NULL, rule = "rule1"),
@@ -1657,6 +1728,7 @@ messages_probes <- list(
     rule = "rule11"
   )
 )
+messages_probes <- c(messages_probes, row_count_probes)
 
 test_that("a messages value that breaks a rule aborts before the server probe", {
   probe <- local_counting_probe()
@@ -1745,6 +1817,226 @@ test_that("a function column aborts with no warning on the way", {
       )
     })
   }
+  expect_identical(probe$calls, 0L)
+})
+
+# Runs lms_chat_openai() on a messages value and returns the condition it
+# raises, or NULL, with the number of warnings raised on the way. Each
+# warning is counted and muffled, so none reaches the test output.
+chat_openai_outcome <- function(messages) {
+  n_warnings <- 0L
+  err <- tryCatch(
+    withCallingHandlers(
+      {
+        lms_chat_openai("a-model", messages)
+        NULL
+      },
+      warning = function(w) {
+        n_warnings <<- n_warnings + 1L
+        invokeRestart("muffleWarning")
+      }
+    ),
+    error = function(e) e
+  )
+  list(error = err, n_warnings = n_warnings)
+}
+
+test_that("a column with a wrong row count aborts with no warning", {
+  probe <- local_counting_probe()
+  for (p in row_count_probes) {
+    test_that(p$label, {
+      out <- chat_openai_outcome(p$value)
+      expect_identical(out$n_warnings, 0L, info = p$label)
+      expect_identical(
+        class(out$error),
+        c("rlang_error", "error", "condition"),
+        info = p$label
+      )
+      expect_match(
+        conditionMessage(out$error),
+        messages_rule_details[["rule14"]],
+        fixed = TRUE,
+        info = p$label
+      )
+    })
+  }
+  # After the subtests, so testthat keeps a failure here in its results.
+  expect_length(row_count_probes, 15L)
+  expect_identical(probe$calls, 0L)
+})
+
+# A column with a class other than "AsIs" alone is not read by the row-count
+# rule. jsonlite writes it by its class. A wrong-length one fails the trial
+# write, with no warning and no R error from outside the package on the way.
+test_that("a classed column with a wrong length reaches the trial write", {
+  probe <- local_counting_probe()
+  probes <- list(
+    "a Date column of length 3" = as.Date(c("2026-01-01", "2026-01-02", "2026-01-03")),
+    "a factor column of length 3" = factor(c("a", "b", "c")),
+    "a one-dimensional Date array of length 1" = structure(
+      as.Date("2026-01-01"),
+      dim = 1L
+    )
+  )
+  for (label in names(probes)) {
+    test_that(label, {
+      out <- chat_openai_outcome(two_row_frame(probes[[label]]))
+      expect_identical(out$n_warnings, 0L, info = label)
+      expect_identical(
+        class(out$error),
+        c("rlang_error", "error", "condition"),
+        info = label
+      )
+      expect_true(
+        startsWith(conditionMessage(out$error), messages_headers[["value"]]),
+        info = label
+      )
+      expect_match(
+        conditionMessage(out$error),
+        messages_rule_details[["rule10"]],
+        fixed = TRUE,
+        info = label
+      )
+    })
+  }
+  expect_identical(probe$calls, 0L)
+})
+
+# The columns that the column lines of a messages abort name, in order. The
+# line text is stated here rather than read from the package.
+column_line_names <- function(message) {
+  lines <- regmatches(
+    message,
+    gregexpr(
+      "Column \"[^\n]*\" is the first column that jsonlite cannot write on its own\\.",
+      message
+    )
+  )[[1]]
+  sub("^Column \"(.*)\" is the first column.*$", "\\1", lines)
+}
+
+# When the trial write of a data frame fails, each top-level column is written
+# alone, in column order, and the abort names the first that fails. Each probe
+# column comes after a role column that writes. The 2-by-2 Date matrix inside
+# the data-frame column sub fails before the later foo matrix is reached.
+test_that("a failed trial write of a data frame names the first column that fails", {
+  probe <- local_counting_probe()
+  foo_matrix <- structure(matrix(1:2, 2), class = "foo")
+  date_matrix <- structure(
+    as.Date(c("2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04")),
+    dim = c(2L, 2L)
+  )
+  roles <- c("user", "user")
+  cases <- list(
+    list(
+      label = "a 2-by-0 Date matrix",
+      value = two_row_frame(structure(as.Date(character()), dim = c(2L, 0L))),
+      column = "x"
+    ),
+    list(
+      label = "a 2-by-2 Date matrix",
+      value = two_row_frame(date_matrix),
+      column = "x"
+    ),
+    list(
+      label = "a 2-by-1 matrix with the class foo alone",
+      value = two_row_frame(foo_matrix),
+      column = "x"
+    ),
+    list(
+      label = "a foo matrix in a column named {a}",
+      value = df_of_rows(2L, role = roles, `{a}` = foo_matrix),
+      column = "{a}"
+    ),
+    list(
+      label = "a data-frame column with a Date matrix, then a foo matrix",
+      value = df_of_rows(
+        2L,
+        role = roles,
+        sub = df_of_rows(2L, d = date_matrix),
+        x = foo_matrix
+      ),
+      column = "sub"
+    ),
+    list(
+      label = "a Date column of length 3",
+      value = two_row_frame(
+        as.Date(c("2026-01-01", "2026-01-02", "2026-01-03"))
+      ),
+      column = "x"
+    ),
+    list(
+      label = "a factor column of length 3",
+      value = two_row_frame(factor(c("a", "b", "c"))),
+      column = "x"
+    ),
+    list(
+      label = "a one-dimensional Date array of length 1",
+      value = two_row_frame(structure(as.Date("2026-01-01"), dim = 1L)),
+      column = "x"
+    )
+  )
+  for (case in cases) {
+    test_that(case$label, {
+      err <- expect_error(
+        lms_chat_openai("a-model", case$value),
+        messages_rule_details[["rule10"]],
+        fixed = TRUE,
+        info = case$label
+      )
+      expect_true(
+        startsWith(conditionMessage(err), messages_headers[["value"]]),
+        info = case$label
+      )
+      expect_identical(
+        column_line_names(conditionMessage(err)),
+        case$column,
+        info = case$label
+      )
+    })
+  }
+
+  # A messages list that is not a data frame keeps the jsonlite text alone.
+  err <- expect_error(
+    lms_chat_openai(
+      "a-model",
+      list(list(role = "user", content = structure(1L, class = "foo")))
+    ),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_identical(column_line_names(conditionMessage(err)), character())
+  expect_no_match(conditionMessage(err), "Column", fixed = TRUE)
+  expect_identical(probe$calls, 0L)
+})
+
+# The empty-row rule reads a classed column of a wrong length other than 1 as
+# not empty in each row. So a row whose other cells are NA is not empty, and
+# the frame reaches the trial write. A reading of the column as empty would
+# give the empty-row detail instead.
+test_that("a classed column with a wrong length is not empty in any row", {
+  probe <- local_counting_probe()
+  value <- df_of_rows(
+    2L,
+    role = c("user", NA),
+    x = as.Date(c("2026-01-01", "2026-01-02", "2026-01-03"))
+  )
+  out <- chat_openai_outcome(value)
+  expect_identical(out$n_warnings, 0L)
+  expect_true(
+    startsWith(conditionMessage(out$error), messages_headers[["value"]])
+  )
+  expect_match(
+    conditionMessage(out$error),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_no_match(
+    conditionMessage(out$error),
+    messages_rule_details[["rule6"]],
+    fixed = TRUE
+  )
+  expect_identical(column_line_names(conditionMessage(out$error)), "x")
   expect_identical(probe$calls, 0L)
 })
 
@@ -1910,6 +2202,47 @@ sent_messages <- function(req) {
   out <- request_dry_run(req, redact_headers = FALSE)
   jsonlite::parse_json(rawToChar(out$body), simplifyVector = FALSE)$messages
 }
+
+# jsonlite writes a length-1 POSIXlt column in each row. The row-count rule
+# does not read it, so it is sent with its one value in each message. The
+# sent form is stated here by hand. With every other column NA, the empty-row
+# rule reads its one NA cell in each row.
+test_that("a length-1 POSIXlt column is read as jsonlite writes it", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  stamp <- as.POSIXlt("2026-01-01 12:00:00", tz = "UTC")
+  sent <- df_of_rows(
+    2L,
+    role = c("user", "user"),
+    content = c("a", "b"),
+    t = stamp
+  )
+  recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+  out <- chat_openai_outcome(sent)
+  expect_null(out$error)
+  expect_identical(out$n_warnings, 0L)
+  expect_identical(
+    sent_messages(recorder$requests[[1]]),
+    list(
+      list(role = "user", content = "a", t = "2026-01-01 12:00:00"),
+      list(role = "user", content = "b", t = "2026-01-01 12:00:00")
+    )
+  )
+
+  probe <- local_counting_probe()
+  empty <- df_of_rows(
+    2L,
+    role = c(NA_character_, NA_character_),
+    t = as.POSIXlt(NA)
+  )
+  out <- chat_openai_outcome(empty)
+  expect_identical(out$n_warnings, 0L)
+  expect_match(
+    conditionMessage(out$error),
+    messages_rule_details[["rule6"]],
+    fixed = TRUE
+  )
+  expect_identical(probe$calls, 0L)
+})
 
 # The rule reads the storage type, so each value below passes it. The sent
 # form of each is stated here, as jsonlite writes it with the request's

@@ -1,13 +1,13 @@
 # M067: A messages data frame with a wrong-length or unwritable column gets a message that names the fault
 
-- **Status:** planned
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** user-facing — the change is the error text of the exported `lms_chat_openai()`
-- **Branch/PR:** —
+- **Branch/PR:** m067-messages-column-faults
 
 ## Goal
 
@@ -39,7 +39,7 @@ row.
 
 ## Acceptance criteria
 
-- [ ] AC1: `lms_chat_openai()` refuses a `messages` data frame that holds a
+- [x] AC1: `lms_chat_openai()` refuses a `messages` data frame that holds a
       column whose row count differs from the row count of the data frame
       that holds it. The error has the shape header "`messages` must be a
       data frame or an unnamed list of messages." The detail is "You gave a
@@ -61,7 +61,7 @@ row.
       and an `I()` character column of length 3. Four probes are data-frame
       columns. Two of them have 3 rows and 0 rows. The other two have 2 rows
       and hold a 3-by-2 matrix or a list column of length 3.
-- [ ] AC2: Each AC1 probe raises no warning. Three classed columns in a
+- [x] AC2: Each AC1 probe raises no warning. Three classed columns in a
       2-row frame also raise no warning and no R error from outside the
       package: a `Date` column of length 3, a `factor` column of length 3,
       and a one-dimensional `Date` array of length 1. Each of the three
@@ -74,7 +74,7 @@ row.
       still gets the empty-row detail. A test in
       `tests/testthat/test-arg-guards.R` counts the warnings of each probe
       and asserts each outcome.
-- [ ] AC3: The trial write of a `messages` data frame can fail. When a
+- [x] AC3: The trial write of a `messages` data frame can fail. When a
       top-level column fails alone, the abort keeps its detail "You gave a
       value that jsonlite cannot write: <jsonlite message>" and adds a line
       that names that column. The package writer writes each top-level column
@@ -89,10 +89,10 @@ row.
       comes before a `"foo"` matrix column. The test asserts that the line
       names the data-frame column. A `messages` list that is not a data frame
       and fails the trial write gets no such line, and a test asserts that.
-- [ ] AC4: The `messages` help of `lms_chat_openai()` states the AC1 rule
+- [x] AC4: The `messages` help of `lms_chat_openai()` states the AC1 rule
       among the shape rules and states the AC3 line. `NEWS.md` has an entry
       for each.
-- [ ] AC5: `devtools::test()` reports 0 failed and 0 errors.
+- [x] AC5: `devtools::test()` reports 0 failed and 0 errors.
       `devtools::check()` reports 0 errors, 0 warnings, and 0 notes.
 
 ## Coverage
@@ -105,27 +105,27 @@ row.
 
 ## Tasks
 
-- [ ] T1: Write the AC1 and AC2 tests first in `test-arg-guards.R`. Add the
+- [x] T1: Write the AC1 and AC2 tests first in `test-arg-guards.R`. Add the
       AC1 detail to the rule table near line 1114, stated by hand. Build
       each probe with `structure()`. Collect warnings with
       `withCallingHandlers()` and count them. For the `POSIXlt` probe, state
       the expected body text by hand. Run the tests on main and record the
       failure identity of each.
-- [ ] T2: Add the row-count rule to `data_frame_messages_fault()`, before
+- [x] T2: Add the row-count rule to `data_frame_messages_fault()`, before
       `empty_rows()`, with a helper that goes down data-frame columns. Change
       `empty_rows()` to read a wrong-length column as AC2 states. Update the
       `@noRd` text of `rlm_check_messages()`, `data_frame_messages_fault()`,
       and `empty_rows()` on rule order.
-- [ ] T3: Write the AC3 tests first. Run them on the T2 code and record the
+- [x] T3: Write the AC3 tests first. Run them on the T2 code and record the
       failure identity of each.
-- [ ] T4: In `messages_write_fault()`, on a failed write of a data frame,
+- [x] T4: In `messages_write_fault()`, on a failed write of a data frame,
       write each top-level column alone through `rlm_json_text()` and add the
       line for the first that fails. Splice the column name as a value, so
       cli does not read its braces (the M012 lesson).
-- [ ] T5: Update the `messages` help in `R/chat.R` near line 489 and add two
+- [x] T5: Update the `messages` help in `R/chat.R` near line 489 and add two
       `NEWS.md` entries. Run `devtools::document()`.
-- [ ] T6: In a scratch copy, move the row-count rule after `empty_rows()` and
-      see the `NA` matrix probe go red. Remove the column line and see the
+- [x] T6: In a scratch copy, move the row-count rule after `empty_rows()` and
+      see the 3-row data-frame column probe go red on its warning count. Remove the column line and see the
       AC3 tests go red. Restore both. Run `devtools::test()` and
       `devtools::check()`.
 
@@ -135,7 +135,49 @@ row.
 - 2026-09-30: criteria audit (full mode, fresh Opus reader, two passes). Pass 1: AC1 refused a length-1 `POSIXlt` that works today. The `NA` matrix frame was unstated. Probes missed shapes, among them a 1-d array of length 1 that gives a raw R error. AC2 and AC3 promised past their probes. Pass 2: `empty_rows()` needed a stated reading of wrong-length columns, and the Facts undercounted the warning probes. Each finding was fixed before the gate.
 - 2026-09-30: plan gate chose a row-count rule over plain and `"AsIs"` columns over one over every column by `length()`. The wider rule refuses a length-1 `POSIXlt` that is sent today. Falsified by a report that such a column sent a wrong value, or a classed wrong-length column whose column line a user misreads.
 - 2026-09-30: plan gate chose naming the first column that fails a lone write over keeping the jsonlite text alone. Falsified by a data frame whose write fails while each column writes alone.
+- 2026-09-30: implement started on branch m067-messages-column-faults. The question gate chose an info line for AC3. Its text is `Column {.val {name}} is the first column that jsonlite cannot write on its own.` The name is quoted, as model names are in other errors.
+- 2026-09-30: T1 done. On main the 15 AC1 probes fail as planned. Thirteen get the jsonlite detail, and the `NA` matrix gets the empty-row detail. The length-1 array gets the R error from `empty_rows()`. Six carry the recycling warning. Date and factor warn once each. The 1-d Date array gets the R error. The `POSIXlt` tests pass on main, as they must.
+- 2026-09-30: T2 done. `wrong_row_count()` and `column_row_count()` added, and `empty_rows()` reads a wrong-length classed column as AC2 states. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
+- 2026-09-30: T3 done. On the T2 code the 8 data-frame probes (5 AC3, 3 AC2 classed) get the jsonlite detail and no column line. The list probe passes, as it must.
+- 2026-09-30: T4 done. `first_unwritable_column()` writes each top-level column alone as a plain data frame, and `rlm_check_messages()` adds the info line. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
+- 2026-09-30: T5 done. The `messages` help states the row-count rule and the column line, and `NEWS.md` has two entries. Probes showed that length-1 and length-0 `Date`, factor, and `POSIXct` columns fail the write. So the help names `POSIXlt` alone as sent in each row. `devtools::test()` clean.
+- 2026-09-30: T6 minor amendment. A scratch copy swapped the rule order. The `NA` matrix probe stayed green, because the T2 `empty_rows()` reads a wrong-length column as not empty. The 3-row data-frame column probe goes red on its warning count, so T6 now names that probe. With the column line removed, the 8 AC3 probes go red. T6 in progress: `devtools::check()` and the claim audit are running.
+- claim audit: 79 claims read, 6 corrected — NEWS.md, R/chat.R, R/utils-args.R, tests/testthat/test-arg-guards.R
+- 2026-09-30: the re-read of the corrected claims fixed two more sites: the `empty_rows()` note on length-1 classed columns and the NEWS sentence order. It also stated the zero-row edge of the recycling note.
+- 2026-09-30: T6 done. `devtools::test()`: 0 failed, 0 errors, 3 live skips. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
+- 2026-09-30: review checkpoint. AC1 to AC4 evidence recorded and ticked. AC5 waits on the full `devtools::test()` run, and the three reviewers are running.
+- 2026-09-30: step-7 approval: m067-messages-column-faults approved for merge. Fix-now R1 to R4 landed before the push.
 
 ## Decisions
 
 ## Review
+
+Sync: the branch contains `origin/main` (590ff80), and main has no unpushed commits, so no merge was needed.
+
+- AC1 evidence (2026-09-30): `devtools::test(filter = "arg-guards")` gives 1040 tests, 0 failed, 0 errors. The test "a column with a wrong row count aborts with no warning" holds 15 subtests, 3 expectations each, all passing. They assert 0 warnings, an unclassed `rlang_error`, and the row-count detail. The probe list matches the AC1 list: 7 with a `dim`, 4 without, and 4 data-frame columns. The same 15 probes run in "a messages value that breaks a rule aborts before the server probe", which asserts the shape header. The `NA` matrix probe gets the row-count detail, not the empty-row detail, so the rule runs first. Each parent asserts `probe$calls` of 0. testthat 3.3.2 counts a passing parent assertion after subtests as 0 expectations. A planted failing one in a scratch file reports as failed, so the assertion runs.
+- AC2 evidence (2026-09-30): the AC1 subtests assert 0 warnings for each of the 15 probes. "a classed column with a wrong length reaches the trial write" passes 3 subtests. They cover the length-3 `Date`, the length-3 factor, and the length-1 one-dimensional `Date` array. Each asserts 0 warnings, an unclassed `rlang_error`, the value header, and the trial-write detail. The same three probes are in the AC3 test, which asserts the column line naming `x`. "a length-1 POSIXlt column is read as jsonlite writes it" passes 6 expectations. They cover the sent body with no warning, and the empty-row detail for the frame whose only non-`NA` column is an `NA` `POSIXlt`. A scratch probe captured the request body of the `POSIXlt` frame on this branch and on main (590ff80). Both bodies are the same text, with the time in each message, and neither run warns.
+- AC3 evidence (2026-09-30): "a failed trial write of a data frame names the first column that fails" passes 8 subtests, 3 expectations each. Each asserts the trial-write detail, the value header, and the named column. The five AC3 probes are the 2-by-0 `Date` matrix, the 2-by-2 `Date` matrix, and the `"foo"` matrix, each named `x`. The fourth is the `"foo"` matrix named `{a}`. The fifth is the data-frame column `sub`, named before the later `"foo"` column. The three AC2 classed probes also name `x`. The parent asserts that a list of messages gets no column line. A scratch run printed both messages: the `{a}` frame ends with `Column "{a}" is the first column that jsonlite cannot write on its own.`, and the list case has the jsonlite line alone. The code writes each top-level column as a lone `"data.frame"` with the row count of the value, in column order (`first_unwritable_column()` in R/utils-args.R).
+- AC4 evidence (2026-09-30): `man/lms_chat_openai.Rd` line 43 opens the row-count rule among the shape rules, before the empty-row rule. Line 146 ends the trial-write rule with the column line text. `devtools::document()` leaves no diff, so the Rd matches the roxygen in R/chat.R. `NEWS.md` has two new entries under the development heading, one for the row-count rule and one for the column line, with no milestone numbers.
+- AC5 evidence (2026-09-30): `devtools::test()` gives 1915 tests, 0 failed, 0 errors, 3 skipped (the live-server skips). `devtools::check()` gives 0 errors, 0 warnings, and 0 notes, with vignettes rebuilt against the live server.
+- Consistency gate (2026-09-30): `cairn_validate.py` exits 0 with every check passing. `devtools::document()` leaves no diff. README.Rmd and README.md are untouched. `pkgdown::check_pkgdown()` finds no problems. `NEWS.md` has the two entries. No new top-level files. No DESIGN principle changed, so `cairn_impact` is skipped.
+
+Independent review (2026-09-30): three fresh reviewers, the Opus diff lens and the Sonnet history and past-review lenses. The PR-comment probe found no comments. No finding shows a criterion failing, so status stays `review`. Proposed dispositions, most severe first, are below. Each was checked against the code by a probe on the branch.
+
+- R1 (diff lens): no test tells the AC2 "not empty in each row" reading from an "empty" reading. A frame with `role = c("user", NA)` and a length-3 `Date` column tells them apart. Proposed: fix now, add that test.
+- R2 (diff and past-review lenses): the help says "A `Date` or factor column of a wrong length breaks the last rule". A length-1 `NA` `Date` column in a frame whose other row is empty gets the empty-row detail (probe). Proposed: fix now, add "unless an earlier rule refuses the data frame first".
+- R3 (diff lens): the NEWS example "a length-one `NA` column" is wrong for a plain column, which gets the row-count detail (probe). Only a classed one, such as `as.Date(NA)`, gets the empty-row detail. Proposed: fix now, name a `Date` column.
+- R4 (all three lenses): the help shows the column line in nested quotes, `"Column "d" is ..."`, and some lines that the branch added run past 80 characters. Proposed: fix now, show the line as code and rewrap the added lines.
+- R5 (diff lens): the row-count detail does not name the column. AC1 fixes the detail text. Proposed: follow-up candidate row.
+- R6 (diff lens, not verified): on R 4.1 and 4.2, `vapply()` over a `POSIXlt` column in `empty_rows()` can read its parts and warn. The same code runs on main for a `POSIXlt` column of the right length. Proposed: follow-up candidate row.
+- R7 (diff lens): a `NULL` column skips the row-count rule and gets the jsonlite text with the column line. Proposed: reject, because `NULL` is neither an atomic nor a list column on R 4.4 and later, and the column line names it.
+- R8 (diff lens): the row-count abort carries the named-list hint. Proposed: reject, because every shape-rule abort carries it by design.
+- R9 (diff and history lenses): cli shows a newline in a column name as a space and escapes a quote, and it wraps a long line. Proposed: reject, because the name still identifies the column.
+- R10 (diff and history lenses): a wrong-length 3-dimensional list array and a wrong-length function list column now get the row-count detail with no warning. Before, they got a later detail with an R warning. Proposed: reject, because this is the planned rule order.
+- R11 (diff lens): the lone-column write drops a data-frame subclass and row names. A probe with `c("foo", "data.frame")` named the same column. Proposed: reject as speculative.
+- R12 (diff lens): the AC1 header and no-server-call checks sit in the shared loop and the parent. Proposed: noted, no change.
+- R13 (history lens): two `empty_rows()` branches cannot be reached through `rlm_check_messages()`, and the notes state that dependency. Proposed: reject, internal helper.
+- R14 (history lens): tests cover `Date` and factor. The reviewer's probes of `POSIXct`, `difftime`, `table`, and a classed list gave the column line with no warning. Proposed: noted, no change.
+
+Gate triage (2026-09-30): the maintainer accepted every proposed disposition. R1 to R4 are fixed on the branch. R5 and R6 become candidate rows at hygiene. R7 to R14 stand as rejected or noted, with the reasons above.
+
+- Fix-now evidence (2026-09-30): R1 adds "a classed column with a wrong length is not empty in any row". In a scratch copy, a planted "empty" reading turned this test red and no other test. R2 and R4 rewrite the help, and the Rd shows the column line as code. R3 names a `Date` column in the NEWS example. The arg-guard tests then gave 1041 tests, 0 failed, 0 errors. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.

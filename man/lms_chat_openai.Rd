@@ -40,6 +40,21 @@ of its fields has a name that is not \code{NA} and not empty. A data frame
 as an element breaks this rule.
 \item A data frame has at least one column, and no column name is \code{NA},
 empty, or repeated.
+\item No column of a data frame has a row count that differs from the row
+count of the data frame that holds it. jsonlite cannot write such a
+column. The rule reads each data-frame column, and each atomic or list
+column with no class or with the class \code{"AsIs"} alone. It reads such
+columns in the data frame and in its data-frame columns at any depth.
+The row count of a data-frame column is its own row count. The row
+count of a column with a \code{dim} attribute, such as a matrix, is the
+first extent of the \code{dim}. The row count of any other column is its
+length. So a character column of length one in a two-row data frame
+breaks this rule. The rule does not read a column with another class,
+such as a \code{Date}, a factor, or a \code{POSIXlt} time. jsonlite writes a
+\code{POSIXlt} column of length one with its one value in each message,
+and the rule below reads that value in each row. A \code{Date} or factor
+column of a wrong length breaks the last rule, unless an earlier rule
+refuses the data frame first.
 \item A data frame has no row in which every cell is \code{NA} or is a \code{NULL}
 cell of a list column. jsonlite leaves out an \code{NA} cell of another
 column and writes an \code{NA} or \code{NULL} list cell as \code{null}, so such a row
@@ -125,8 +140,13 @@ jsonlite writes that list as it writes the list without its class,
 such as a list with the class \code{c("foo", "list")}. It does not read
 the parts of a \code{POSIXlt} value.
 \item jsonlite can write the value, with the options that the request uses.
-If it cannot, the error gives the jsonlite message. This rule is
-checked last.
+If it cannot, the error gives the jsonlite message. For a data frame,
+jsonlite then writes each top-level column alone, in column order, as
+a data frame with the same row count. If a column fails, the error
+names the first that fails. For a column \code{d}, the line reads
+\verb{Column "d" is the first column that jsonlite cannot write on its own.}
+A list that is not a data frame gets the jsonlite message alone. This
+rule is checked last.
 }
 
 A list that is not a data frame is sent without its class attribute, and
