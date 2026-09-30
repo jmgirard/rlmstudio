@@ -1,13 +1,13 @@
 # M058: Continue a chat thread by its reply id
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it adds an exported argument and changes the value that exported chat functions return
-- **Branch/PR:** —
+- **Branch/PR:** m058-chat-thread-id
 
 ## Goal
 
@@ -94,7 +94,7 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 
 ## Tasks
 
-- [ ] T1: The argument and its checks. Add `previous_response_id = NULL` after `...` in
+- [x] T1: The argument and its checks. Add `previous_response_id = NULL` after `...` in
       `lms_chat()` (`R/chat.R:64`), `lms_chat_openresponses()` (`R/chat.R:196`), and
       `lms_chat_native()` (`R/chat.R:1192`). Check it above `stop_if_no_server()`, with a
       `NULL` allowance on `rlm_check_id()` (`R/utils-args.R:12`) or a sibling check whose
@@ -136,5 +136,7 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - 2026-09-29: plan gate chose a `response_id` attribute over a new reply class. A classed string can fail to combine with plain strings in a batch pipeline (GP2). It also rejected the id through `simplify = FALSE` alone, because a thread then needs a parse of the raw reply. Falsified by a user report that the printed attribute line costs more than a class.
 - 2026-09-29: plan gate chose both thread routes over the native route alone, because both continued a thread live. Falsified by an LM Studio release where `/v1/responses` drops `previous_response_id`.
 - 2026-09-29: plan gate kept the D-019 rule for a batch with an unknown id over a stop. The two routes answer with different codes, and the condition carries no `param`. Falsified by a user batch that sends every input to an unknown id.
+- 2026-09-29: implement started on m058-chat-thread-id. No question gate, because the plan leaves no choice open.
+- 2026-09-29: T1 done. `rlm_check_response_id()` and `rlm_check_thread_route()` in `R/utils-args.R`, the argument on the three functions, the batch checks, and `tests/testthat/test-thread.R`. `local_counting_probe()` moved to `helper-mock-http.R` so the new file can use it. Full suite 0 failures, 3 live skips.
 
 ## Decisions

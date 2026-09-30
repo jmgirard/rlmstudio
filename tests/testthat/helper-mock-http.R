@@ -187,3 +187,21 @@ local_no_request_allowed <- function(.env = parent.frame()) {
     .env = .env
   )
 }
+
+# A server probe that reports a stopped server and counts its calls. A test
+# that reaches it gets `rlmstudio_no_server`, and the count says so even where
+# `expect_error()` would accept that condition (LESSONS, M015). No request may
+# leave the process.
+local_counting_probe <- function(.env = parent.frame()) {
+  probe <- new.env(parent = emptyenv())
+  probe$calls <- 0L
+  testthat::local_mocked_bindings(
+    is_server_running = function(...) {
+      probe$calls <- probe$calls + 1L
+      FALSE
+    },
+    .env = .env
+  )
+  local_no_request_allowed(.env = .env)
+  probe
+}

@@ -15,6 +15,7 @@ lms_chat(
   ...,
   schema = NULL,
   ttl = NULL,
+  previous_response_id = NULL,
   token = NULL
 )
 }

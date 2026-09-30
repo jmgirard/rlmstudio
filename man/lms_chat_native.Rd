@@ -11,6 +11,7 @@ lms_chat_native(
   host = "http://localhost:1234",
   simplify = TRUE,
   ...,
+  previous_response_id = NULL,
   token = NULL
 )
 }

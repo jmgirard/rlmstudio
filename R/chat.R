@@ -72,6 +72,7 @@ lms_chat <- function(
   ...,
   schema = NULL,
   ttl = NULL,
+  previous_response_id = NULL,
   token = NULL
 ) {
   api_type <- match.arg(api_type)
@@ -81,6 +82,8 @@ lms_chat <- function(
   rlm_check_schema_route(schema, api_type)
   rlm_check_ttl(ttl)
   rlm_check_ttl_route(ttl, api_type)
+  rlm_check_response_id(previous_response_id)
+  rlm_check_thread_route(previous_response_id, api_type)
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
 
@@ -93,6 +96,7 @@ lms_chat <- function(
       logprobs = logprobs,
       simplify = simplify,
       ...,
+      previous_response_id = previous_response_id,
       token = token
     ))
   }
@@ -130,6 +134,7 @@ lms_chat <- function(
       host = host,
       simplify = simplify,
       ...,
+      previous_response_id = previous_response_id,
       token = token
     ))
   }
@@ -201,17 +206,24 @@ lms_chat_openresponses <- function(
   logprobs = FALSE,
   simplify = TRUE,
   ...,
+  previous_response_id = NULL,
   token = NULL
 ) {
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
+  rlm_check_response_id(previous_response_id)
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
 
-  body <- list(model = model, input = input, instructions = instructions)
+  body <- list(
+    model = model,
+    input = input,
+    instructions = instructions,
+    previous_response_id = previous_response_id
+  )
   if (isTRUE(logprobs)) {
     body$include <- list("message.output_text.logprobs")
   }
@@ -1196,11 +1208,13 @@ lms_chat_native <- function(
   host = "http://localhost:1234",
   simplify = TRUE,
   ...,
+  previous_response_id = NULL,
   token = NULL
 ) {
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_flag(simplify, "simplify")
+  rlm_check_response_id(previous_response_id)
   dots <- list(...)
   rlm_check_stream(dots)
   # The endpoint has no logprobs, so each element named exactly `logprobs` is
@@ -1217,7 +1231,12 @@ lms_chat_native <- function(
 
   stop_if_no_server(host)
 
-  body <- list(model = model, input = input, system_prompt = system_prompt)
+  body <- list(
+    model = model,
+    input = input,
+    system_prompt = system_prompt,
+    previous_response_id = previous_response_id
+  )
   body <- Filter(Negate(is.null), body)
 
   if (any(vapply(dots[is_logprobs], isTRUE, logical(1)))) {
@@ -1682,6 +1701,9 @@ lms_chat_batch <- function(
   ttl <- args[["ttl"]]
   rlm_check_ttl(ttl)
   rlm_check_ttl_route(ttl, api_type)
+  previous_response_id <- args[["previous_response_id"]]
+  rlm_check_response_id(previous_response_id)
+  rlm_check_thread_route(previous_response_id, api_type)
   # The raw dots, because `args` keeps only the first of two same-named
   # values. No `lms_chat()` argument starts with `stream`, so the names match.
   rlm_check_stream(list(...))

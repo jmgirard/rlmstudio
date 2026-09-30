@@ -12,6 +12,7 @@ lms_chat_openresponses(
   logprobs = FALSE,
   simplify = TRUE,
   ...,
+  previous_response_id = NULL,
   token = NULL
 )
 }
