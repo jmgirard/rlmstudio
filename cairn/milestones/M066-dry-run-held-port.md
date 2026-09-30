@@ -110,6 +110,7 @@ a candidate row. The package code does not change.
 - 2026-09-30: second pass AC1 to AC4 verified and gate passed. Three reviewers reported. No finding shows a criterion failing, so no return. Findings go to the merge gate for triage (pre-gate checkpoint).
 - 2026-09-30: merge gate triage. The user chose fix now for the hidden curl error and the time limit, and a candidate row for Linux. Two tests went red first, then passed after the fix. The merge question waits for the full test and check runs.
 - 2026-09-30: step-7 approval: m066-dry-run-held-port approved for merge
+- 2026-09-30: PR #66 CI failed on the three Linux jobs, in the new time-limit test. On Linux the echo server cannot bind over the held port, so each try ended with "Failed to create server" and not with a timeout. The test now skips when a 0.0.0.0 bind over the held port fails. On macOS it still runs and passes.
 
 ## Decisions
 

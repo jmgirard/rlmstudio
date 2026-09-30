@@ -186,12 +186,22 @@ test_that("the dry-run helper keeps curl's error when the request itself is at f
 
 # Each try must end before the time limit of request_body_text() does. A limit
 # that fires inside the dry run can halt R, so here every try lands on a
-# program that never replies, under a limit of 3 seconds.
+# program that never replies, under a limit of 3 seconds. Linux refuses the
+# echo server's bind over the held port, so there no try reaches the program
+# and the test is skipped.
 test_that("request_body_text() spreads its time limit over the dry-run tries", {
   require_httpuv()
   held <- free_port()
   id <- httpuv::startServer("127.0.0.1", held, list(call = function(req) NULL))
   withr::defer(httpuv::stopServer(id))
+  echo <- tryCatch(
+    httpuv::startServer("0.0.0.0", held, list(call = function(req) NULL)),
+    error = function(cnd) NULL
+  )
+  if (is.null(echo)) {
+    skip("The echo server cannot bind a port that 127.0.0.1 holds here.")
+  }
+  httpuv::stopServer(echo)
   tries <- local_dry_run_ports(function(n) held)
   req <- httr2::request("http://localhost:1234/v1/chat") |>
     httr2::req_body_raw('{"model": "m"}', type = "application/json")
