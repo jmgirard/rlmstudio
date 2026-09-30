@@ -109,6 +109,7 @@ a candidate row. The package code does not change.
 - 2026-09-30: second review pass started. AC1 to AC3 verified again. The check and one reviewer are still running (checkpoint, review not done).
 - 2026-09-30: second pass AC1 to AC4 verified and gate passed. Three reviewers reported. No finding shows a criterion failing, so no return. Findings go to the merge gate for triage (pre-gate checkpoint).
 - 2026-09-30: merge gate triage. The user chose fix now for the hidden curl error and the time limit, and a candidate row for Linux. Two tests went red first, then passed after the fix. The merge question waits for the full test and check runs.
+- 2026-09-30: step-7 approval: m066-dry-run-held-port approved for merge
 
 ## Decisions
 
