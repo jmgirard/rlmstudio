@@ -8,9 +8,10 @@
 #'   included, aborts before the check for a running server.
 #' @param type Character vector. The types of models to include. Defaults to
 #'   \code{c("llm", "embedding")}. It must hold one or more elements, and no
-#'   element can be `NA`, empty, or whitespace only. Any other value, `NULL`
-#'   and a factor included, aborts before the check for a running server. A
-#'   type that no model has, such as `"vlm"`, matches nothing.
+#'   element can be `NA`, empty, or whitespace only. Each element must be
+#'   valid in its declared encoding and not marked `"bytes"`. Any other value,
+#'   `NULL` and a factor included, aborts before the check for a running
+#'   server. A type that no model has, such as `"vlm"`, matches nothing.
 #' @param detailed `TRUE` or `FALSE`. Show all information about each model.
 #'   Defaults to \code{FALSE}. Any other value, `NULL` and `NA` included,
 #'   aborts before the check for a running server.
@@ -193,9 +194,10 @@ list_models <- function(
 #'
 #' @param type Character vector. The types of models to include. Defaults to
 #'   \code{c("llm", "embedding")}. It must hold one or more elements, and no
-#'   element can be `NA`, empty, or whitespace only. Any other value, `NULL`
-#'   and a factor included, aborts before the check for a running server. A
-#'   type that no model has, such as `"vlm"`, matches nothing.
+#'   element can be `NA`, empty, or whitespace only. Each element must be
+#'   valid in its declared encoding and not marked `"bytes"`. Any other value,
+#'   `NULL` and a factor included, aborts before the check for a running
+#'   server. A type that no model has, such as `"vlm"`, matches nothing.
 #' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
 #'   `rlmstudio.quiet` option. `TRUE` hides the message printed when no
 #'   instance is found, and `FALSE` prints it, also when the option is `TRUE`.

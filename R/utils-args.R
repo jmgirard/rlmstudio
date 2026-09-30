@@ -4,9 +4,14 @@
 #' check on the package rather than on the server. The check runs before the
 #' server probe, because a fault in the argument is knowable without a server.
 #'
+#' A string that passes can still carry a class, names, or the S4 bit.
+#' jsonlite fails on a class it has no method for and writes `I()` as an
+#' array, so the value comes back as a plain string. A caller that sends the
+#' value reassigns it.
+#'
 #' @param value The value the caller passed.
 #' @param arg Character. The argument name to report.
-#' @return `value`, invisibly.
+#' @return `value` as a plain string, invisibly.
 #'
 #' @noRd
 rlm_check_id <- function(value, arg) {
@@ -20,7 +25,21 @@ rlm_check_id <- function(value, arg) {
       call = NULL
     )
   }
-  invisible(value)
+  invisible(plain_string(value))
+}
+
+#' One string with no class, names, or S4 bit
+#'
+#' `unclass()` removes the class and keeps the S4 bit, and `[[` drops the S4
+#' bit and the names (LESSONS, M049). `as.character()` is not used, because
+#' it runs an S3 method of the class.
+#'
+#' @param value A character vector of length one.
+#' @return The plain string.
+#'
+#' @noRd
+plain_string <- function(value) {
+  unclass(value)[[1]]
 }
 
 #' Reject a wait that is not one usable number of seconds
@@ -181,6 +200,10 @@ id_fault <- function(value) {
   if (!nzchar(value)) {
     return("You gave an empty string.")
   }
+  text <- text_fault(value)
+  if (!is.null(text)) {
+    return(paste0("You gave a string that ", text, "."))
+  }
   # `trimws()` strips space, tab, carriage return, and line feed and nothing
   # else, so a form feed or a vertical tab survives it. The rule is stated
   # over the whole `[[:space:]]` class, so the test reads that class.
@@ -188,6 +211,42 @@ id_fault <- function(value) {
     return("You gave a string of whitespace only.")
   }
   NULL
+}
+
+#' Which text rule does this string break?
+#'
+#' A string that is not valid in its declared encoding reaches jsonlite, which
+#' copies each bad byte into the JSON text unchanged, so the body is not valid
+#' UTF-8. `grepl()` warns on such a string and reads it as whitespace. A
+#' string marked `"bytes"` fails in jsonlite, which cannot translate it. Run
+#' this before any `grepl()` on the string.
+#'
+#' @param value A character vector with no `NA`.
+#' @return The rule the first bad element breaks, as words that follow "that"
+#'   or an element number, or `NULL` when every element passes.
+#'
+#' @noRd
+text_fault <- function(value) {
+  i <- text_fault_at(value)
+  if (is.null(i)) {
+    return(NULL)
+  }
+  if (Encoding(value[[i]]) == "bytes") {
+    "is marked as bytes"
+  } else {
+    "is not valid in its encoding"
+  }
+}
+
+#' The position of the first element that breaks a text rule
+#'
+#' @param value A character vector with no `NA`.
+#' @return The position, or `NULL` when every element passes.
+#'
+#' @noRd
+text_fault_at <- function(value) {
+  bad <- which(Encoding(value) == "bytes" | !validEnc(value))
+  if (length(bad) == 0L) NULL else bad[[1]]
 }
 
 #' The indefinite article that a class name takes
@@ -320,8 +379,11 @@ rlm_check_ttl_route <- function(ttl, api_type) {
 #' probe, for the reason `rlm_check_id()` states. `NULL` passes, because it
 #' starts a new thread.
 #'
+#' A string that passes comes back as a plain string, for the reason
+#' `rlm_check_id()` states.
+#'
 #' @param value The value the caller passed as `previous_response_id`.
-#' @return `value`, invisibly.
+#' @return `NULL`, or `value` as a plain string, invisibly.
 #'
 #' @noRd
 rlm_check_response_id <- function(value) {
@@ -338,7 +400,7 @@ rlm_check_response_id <- function(value) {
       call = NULL
     )
   }
-  invisible(value)
+  invisible(plain_string(value))
 }
 
 #' Reject a thread id sent to a route that has no thread
@@ -1253,6 +1315,10 @@ type_fault <- function(value) {
   missing <- which(is.na(value))
   if (length(missing) > 0L) {
     return(paste0("Element ", missing[[1]], " is NA."))
+  }
+  bad <- text_fault_at(value)
+  if (!is.null(bad)) {
+    return(paste0("Element ", bad, " ", text_fault(value[bad]), "."))
   }
   # The same `[[:space:]]` rule as `id_fault()`, for the reason stated there.
   blank <- which(!grepl("[^[:space:]]", value))

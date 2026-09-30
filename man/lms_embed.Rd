@@ -18,7 +18,9 @@ lms_embed(
 }
 \arguments{
 \item{model}{Character. The loaded embedding model name. Must be one name,
-given as a single string.}
+given as a single string. The string must be valid in its declared
+encoding and not marked \code{"bytes"}. A class, names, and the S4 bit are
+removed before the name is sent.}
 
 \item{input}{Character. The texts to embed. A vector of length \code{n} returns
 \code{n} embeddings, in the order given. Must hold at least one value and no
@@ -128,8 +130,11 @@ or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
+an \code{instructions} or \code{messages} in the \code{...} of \code{\link[=lms_chat]{lms_chat()}} or
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} on the route where \code{\link[=lms_chat]{lms_chat()}} sets it, or a name, id,
+or \code{type} string that is not valid in its encoding or is marked as bytes,
 aborts
 with an argument message and no condition class even when the server is
 down. A condition of class

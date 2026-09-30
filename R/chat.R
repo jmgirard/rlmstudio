@@ -5,7 +5,9 @@
 #' selected API type.
 #'
 #' @param model Character. The name of the loaded model. Must be one name,
-#'   given as a single string.
+#'   given as a single string. The string must be valid in its declared
+#'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+#'   removed before the name is sent.
 #' @param input Character. The user prompt to send to the model. A character
 #'   vector must hold no missing values.
 #' @param system_prompt Character. An optional system prompt to guide model
@@ -27,6 +29,13 @@
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
+#'   An `instructions` here with `api_type = "openresponses"`, the default,
+#'   aborts before the request, because `lms_chat()` sets `instructions` from
+#'   `system_prompt` on that route. A `messages` here with
+#'   `api_type = "openai"` also aborts, because `lms_chat()` builds `messages`
+#'   from `system_prompt` and `input` on that route. The message names the
+#'   argument, and the abort has no condition class. Only these exact names
+#'   abort. On the other routes, each goes into the request body.
 #' @param schema A JSON Schema that the reply must match, or `NULL`. It needs
 #'   `api_type = "openai"`, and any other `api_type` aborts before the request.
 #'   See [lms_chat_openai()] for its form and for what is returned.
@@ -39,7 +48,9 @@
 #'   its idle time.
 #' @param previous_response_id One string, or `NULL`. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
-#'   earlier reply. `NULL`, the default, starts a new thread. It needs
+#'   earlier reply. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the id
+#'   is sent. `NULL`, the default, starts a new thread. It needs
 #'   `api_type = "native"` or `api_type = "openresponses"`. With
 #'   `api_type = "openai"`, a string aborts before the request, because the
 #'   OpenAI chat endpoint keeps no thread. `NA`, an empty string, a string of
@@ -97,6 +108,7 @@ lms_chat <- function(
   token = NULL
 ) {
   api_type <- match.arg(api_type)
+  rlm_check_route_dots(...names(), api_type)
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_schema(schema, ...names())
@@ -167,7 +179,9 @@ lms_chat <- function(
 #' custom instructions.
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
-#'   single string.
+#'   single string. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
+#'   name is sent.
 #' @param input Character. The user prompt. A character vector must hold no
 #'   missing values.
 #' @param instructions Character. Optional system instructions.
@@ -189,7 +203,9 @@ lms_chat <- function(
 #'   package reads a whole reply and not a streamed one.
 #' @param previous_response_id One string, or `NULL`. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
-#'   earlier reply of this function or of [lms_chat_native()]. `NULL`, the
+#'   earlier reply of this function or of [lms_chat_native()]. The string must
+#'   be valid in its declared encoding and not marked `"bytes"`. A class,
+#'   names, and the S4 bit are removed before the id is sent. `NULL`, the
 #'   default, starts a new thread. `NA`, an empty string, a string of
 #'   whitespace only, a value that is not a string, and more or fewer than one
 #'   string abort before the check for a running server. Only this exact name
@@ -253,11 +269,11 @@ lms_chat_openresponses <- function(
   previous_response_id = NULL,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_flag(logprobs, "logprobs")
   rlm_check_flag(simplify, "simplify")
-  rlm_check_response_id(previous_response_id)
+  previous_response_id <- rlm_check_response_id(previous_response_id)
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
@@ -349,7 +365,9 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' array format.
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
-#'   single string.
+#'   single string. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
+#'   name is sent.
 #' @param messages The messages to send. Give an unnamed list with one element
 #'   per message, such as `list(list(role = "user", content = "Hi"))`, or a
 #'   data frame with at least one row. A data frame is sent as one message per
@@ -558,7 +576,7 @@ lms_chat_openai <- function(
   ttl = NULL,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_messages(messages)
   rlm_check_schema(schema, ...names())
   rlm_check_ttl(ttl)
@@ -1236,7 +1254,9 @@ with_response_id <- function(value, id) {
 #' Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
-#'   single string.
+#'   single string. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
+#'   name is sent.
 #' @param input Character. The user prompt. A character vector must hold no
 #'   missing values.
 #' @param system_prompt Character. Optional system prompt.
@@ -1258,7 +1278,9 @@ with_response_id <- function(value, id) {
 #'   goes into the request body, and a `TRUE` warns.
 #' @param previous_response_id One string, or `NULL`. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
-#'   earlier reply of this function. `NULL`, the default, starts a new thread.
+#'   earlier reply of this function. The string must be valid in its declared
+#'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+#'   removed before the id is sent. `NULL`, the default, starts a new thread.
 #'   `NA`, an empty string, a string of whitespace only, a value that is not a
 #'   string, and more or fewer than one string abort before the check for a
 #'   running server. Only this exact name is checked. A shortened name, such
@@ -1304,10 +1326,10 @@ lms_chat_native <- function(
   previous_response_id = NULL,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
   rlm_check_flag(simplify, "simplify")
-  rlm_check_response_id(previous_response_id)
+  previous_response_id <- rlm_check_response_id(previous_response_id)
   dots <- list(...)
   rlm_check_stream(dots)
   # The endpoint has no logprobs, so each element named exactly `logprobs` is
@@ -1603,7 +1625,9 @@ integer_or_na <- function(x) {
 #' Process a vector of inputs sequentially through LM Studio.
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
-#'   single string.
+#'   single string. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
+#'   name is sent.
 #' @param inputs Character vector. The prompts to process. Must hold at least
 #'   one value and no missing values.
 #' @param system_prompt Character. Optional system prompt.
@@ -1647,6 +1671,12 @@ integer_or_na <- function(x) {
 #'   the next unnamed argument, such as `system_prompt`. These aborts come
 #'   before every other check of `...` and before the check for a running
 #'   server.
+#'   An `instructions` here on the `"openresponses"` route, the default, and
+#'   a `messages` here on the `"openai"` route abort before the check for a
+#'   running server, with the message that [lms_chat()] gives. A
+#'   `previous_response_id` here follows the rules of [lms_chat()]. It must
+#'   be valid in its declared encoding and not marked `"bytes"`. A class,
+#'   names, and the S4 bit are removed before the id is sent.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
@@ -1828,6 +1858,7 @@ lms_chat_batch <- function(
     api_type <- "openresponses"
   }
   api_type <- match.arg(api_type, c("openresponses", "openai", "native"))
+  rlm_check_route_dots(names(args), api_type)
   rlm_check_schema_route(schema, api_type)
   ttl <- args[["ttl"]]
   rlm_check_ttl(ttl)
@@ -2331,6 +2362,38 @@ rlm_check_chat_dots_once <- function(dots) {
     }
   }
   invisible(dots)
+}
+
+#' Abort on a dot that lms_chat() passes to the route function itself
+#'
+#' On the `"openresponses"` route, `lms_chat()` passes `system_prompt` as
+#' `instructions`. On the `"openai"` route, it builds `messages` from
+#' `system_prompt` and `input`. A dot with that exact name would reach the
+#' route function a second time, and R would fail with its own error. A
+#' shortened name, such as `instr`, goes to the `...` of the route function,
+#' because R matches the exact name first.
+#'
+#' @param dot_names The names of the `...` values, or `NULL`.
+#' @param api_type Character. The route, already matched.
+#' @return `dot_names`, invisibly.
+#' @noRd
+rlm_check_route_dots <- function(dot_names, api_type) {
+  arg <- switch(api_type, openresponses = "instructions", openai = "messages")
+  if (!is.null(arg) && arg %in% dot_names) {
+    hint <- switch(
+      arg,
+      instructions = "{.fn lms_chat} sets {.arg instructions} from {.arg system_prompt} on the {.val openresponses} route. Give the text as {.arg system_prompt}.",
+      messages = "{.fn lms_chat} builds {.arg messages} from {.arg system_prompt} and {.arg input} on the {.val openai} route. To send your own messages, call {.fn lms_chat_openai}."
+    )
+    cli::cli_abort(
+      c(
+        "{.arg {arg}} cannot be given in {.arg ...} on the {.val {api_type}} route.",
+        "i" = hint
+      ),
+      call = NULL
+    )
+  }
+  invisible(dot_names)
 }
 
 #' Create a base request for the LM Studio API

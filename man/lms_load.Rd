@@ -20,7 +20,9 @@ lms_load(
 }
 \arguments{
 \item{model}{Character. Unique identifier for the model to load. Must be
-one name, given as a single string.}
+one name, given as a single string. The string must be valid in its
+declared encoding and not marked \code{"bytes"}. A class, names, and the S4
+bit are removed before the name is sent.}
 
 \item{context_length}{Integer. Maximum number of tokens that the model will
 consider.}
@@ -64,7 +66,9 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 }
 \value{
 Invisibly returns a character string of the loaded model identifier
-upon success. If \code{echo_load_config = TRUE}, it instead invisibly
+upon success, also when the model was already loaded. It is a plain
+string, with no class, names, or S4 bit. If \code{echo_load_config = TRUE}
+and this call loads the model, it instead invisibly
 returns a list containing the model's detailed load configuration.
 }
 \description{
@@ -80,8 +84,11 @@ or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
+an \code{instructions} or \code{messages} in the \code{...} of \code{\link[=lms_chat]{lms_chat()}} or
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} on the route where \code{\link[=lms_chat]{lms_chat()}} sets it, or a name, id,
+or \code{type} string that is not valid in its encoding or is marked as bytes,
 aborts
 with an argument message and no condition class even when the server is
 down. A condition of class

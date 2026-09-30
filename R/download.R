@@ -2,7 +2,9 @@
 #'
 #' @param model Character. The model to download. Accepts model catalog
 #'   identifiers (e.g., "openai/gpt-oss-20b") and exact Hugging Face links.
-#'   Must be one name, given as a single string.
+#'   Must be one name, given as a single string. The string must be valid in
+#'   its declared encoding and not marked `"bytes"`. A class, names, and the
+#'   S4 bit are removed before the name is sent.
 #' @param quantization Character. Optional. Quantization level of the model to
 #'   download (e.g., "Q4_K_M"). Only supported for Hugging Face links.
 #' @param host Character. The host address of the local server. Defaults to
@@ -46,7 +48,7 @@ lms_download <- function(
   ...,
   token = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
 
   stop_if_no_server(host)
 
@@ -163,7 +165,9 @@ rlm_abort_download_failed <- function(resp, job_id) {
 #' Get the status of a download job
 #'
 #' @param job_id Character. The unique identifier for the download job. Must be
-#'   one id, given as a single string.
+#'   one id, given as a single string. The string must be valid in its declared
+#'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+#'   removed before the id is sent.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -195,7 +199,7 @@ lms_download_status <- function(
   host = "http://localhost:1234",
   token = NULL
 ) {
-  rlm_check_id(job_id, "job_id")
+  job_id <- rlm_check_id(job_id, "job_id")
 
   stop_if_no_server(host)
 

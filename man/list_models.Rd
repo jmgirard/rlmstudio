@@ -20,9 +20,10 @@ included, aborts before the check for a running server.}
 
 \item{type}{Character vector. The types of models to include. Defaults to
 \code{c("llm", "embedding")}. It must hold one or more elements, and no
-element can be \code{NA}, empty, or whitespace only. Any other value, \code{NULL}
-and a factor included, aborts before the check for a running server. A
-type that no model has, such as \code{"vlm"}, matches nothing.}
+element can be \code{NA}, empty, or whitespace only. Each element must be
+valid in its declared encoding and not marked \code{"bytes"}. Any other value,
+\code{NULL} and a factor included, aborts before the check for a running
+server. A type that no model has, such as \code{"vlm"}, matches nothing.}
 
 \item{detailed}{\code{TRUE} or \code{FALSE}. Show all information about each model.
 Defaults to \code{FALSE}. Any other value, \code{NULL} and \code{NA} included,
@@ -62,8 +63,11 @@ or \code{batch_size}, a bad
 \code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
 argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
+an \code{instructions} or \code{messages} in the \code{...} of \code{\link[=lms_chat]{lms_chat()}} or
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} on the route where \code{\link[=lms_chat]{lms_chat()}} sets it, or a name, id,
+or \code{type} string that is not valid in its encoding or is marked as bytes,
 aborts
 with an argument message and no condition class even when the server is
 down. A condition of class

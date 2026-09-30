@@ -5,7 +5,9 @@
 #' `batch_size`, one request per batch, in the order given.
 #'
 #' @param model Character. The loaded embedding model name. Must be one name,
-#'   given as a single string.
+#'   given as a single string. The string must be valid in its declared
+#'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+#'   removed before the name is sent.
 #' @param input Character. The texts to embed. A vector of length `n` returns
 #'   `n` embeddings, in the order given. Must hold at least one value and no
 #'   missing values.
@@ -111,7 +113,7 @@ lms_embed <- function(
   batch_size = 100,
   quiet = NULL
 ) {
-  rlm_check_id(model, "model")
+  model <- rlm_check_id(model, "model")
   rlm_check_text(input, "input")
   rlm_check_ttl(ttl)
   rlm_check_batch_size(batch_size)
