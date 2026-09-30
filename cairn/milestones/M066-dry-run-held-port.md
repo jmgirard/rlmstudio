@@ -1,6 +1,6 @@
 # M066: A test that reads a request survives a dry-run port that another program holds
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -35,7 +35,7 @@ a candidate row. The package code does not change.
 
 ## Acceptance criteria
 
-- [x] AC1: If another listener holds the first dry-run port on 127.0.0.1,
+- [ ] AC1: If another listener holds the first dry-run port on 127.0.0.1,
       `request_target()` still returns the sent method, path, and body. That
       function is in `tests/testthat/helper-mock-http.R`. A test in
       `tests/testthat/test-mock-http-helper.R` holds such a listener.
@@ -47,7 +47,7 @@ a candidate row. The package code does not change.
 - [x] AC3: Each line that `grep -rn "req_dry_run(" tests/testthat` returns is
       a comment or the one call inside the shared dry-run helper. That helper
       is in `tests/testthat/helper-mock-http.R`.
-- [ ] AC4: `devtools::test()` reports 0 failed and 0 errors.
+- [x] AC4: `devtools::test()` reports 0 failed and 0 errors.
       `devtools::check()` reports 0 errors, 0 warnings, and 0 notes.
 
 ## Coverage
@@ -90,6 +90,7 @@ a candidate row. The package code does not change.
 - 2026-09-30: claim audit: not owed — internal tier
 - 2026-09-30: all tasks done. Status set to review. This is the unnamed-error candidate row.
 - 2026-09-30: review started. AC1 to AC3 verified. AC4 run, the document() check, and three reviewers are still running (checkpoint, review not done).
+- 2026-09-30: review return 1 (defect). AC1 fails. A listener on 127.0.0.1 that resets the connection, sends a non-HTTP banner, or never replies makes `request_target()` stop or hang with no retry. Status set to in-progress. See the Review section for the probe and the repair.
 
 ## Decisions
 
@@ -100,3 +101,17 @@ a candidate row. The package code does not change.
 - AC1 evidence (2026-09-30): `test_file("test-mock-http-helper.R")` passed. The held-port test and the bind-error test got POST, the path, and the body, with 2 tries each. In a scratch copy with 1 try, both tests stopped with the AC2 message, so the retry is what makes them pass.
 - AC2 evidence (2026-09-30): the all-tries test passed with 5 tries. It asserts "received no request", "another program", and no "must be a raw vector". In the 1-try scratch copy, the stop message read "The dry run received no request in 1 tries. Another program probably listens on 127.0.0.1 at the port that curl::curl_echo() picked."
 - AC3 evidence (2026-09-30): the grep returned 5 lines. Four are comments at `helper-mock-http.R` lines 88, 102, 177, and 179. One is the call at line 192, inside `request_dry_run()`.
+- AC4 evidence (2026-09-30): `devtools::test()` gave 0 failed, 0 errors, 3 skipped (no local LM Studio server), 19383 passed. `devtools::check()` with the API token gave 0 errors, 0 warnings, 0 notes.
+- Gate (2026-09-30): `cairn_validate.py` passed every check. `devtools::document()` left no diff. The branch changes nothing in `R/`, `man/`, `NEWS.md`, or the README. The repo has no pkgdown site. No changelog entry is owed.
+- AC1 fails (2026-09-30): the diff-bug reviewer found that a listener on the held port that is not an HTTP server defeats the retry. A review probe held the first port with a Python listener that closes each connection. `request_target()` stopped on try 1 with "Failure when receiving data from the peer [127.0.0.1]: Recv failure: Connection reset by peer". The reviewer saw "Received HTTP/0.9 when not allowed" from a listener that sends an SSH banner. A listener that never replies makes `request_target()` wait with no limit. AC1 names any listener, so AC1 fails, and its tick is removed.
+- Repair found by probe (2026-09-30): with `httr2::req_timeout(3)` on the request, the silent listener gives "Timeout was reached [127.0.0.1]" after 3 seconds. Each of the three cases is then a curl error that names `[127.0.0.1]`, the echo host. A retry on each dry-run error whose message names that host covers them. The error source decides that rule, not a list of known cases. So this is a defect return and not a criterion amendment.
+- Findings not yet triaged (2026-09-30). They go to the next merge gate, most severe first.
+  - Diff-bug (2): a silent listener hangs `request_target()` and the five local reads. In a probe, the 30 s limit in `request_body_text()` fired inside an httpuv callback. That halted Rscript.
+  - Diff-bug (3): no run on Windows covers the forced-port tests. The `tries$n == 2L` result there is unverified.
+  - Diff-bug (4): each failed bind prints "createTcpServer: address already in use" to stderr.
+  - Diff-bug nits: `request_body_text()` calls `require_httpuv()` twice. With `tries = 1`, the stop message reads "1 tries".
+  - History (1): each retry adds one `sample()` draw in curl's `find_port()`. The shared port helpers were made seed-safe on purpose.
+  - History (2): the new tests mock curl's private `find_port`. A curl rename makes them fail loudly.
+  - History (3): the helper matches "Failed to create server" exactly. It re-raises a reworded httpuv error.
+  - History (4): the same double `require_httpuv()` call.
+  - Prior-review: no conflict with earlier reviews. It noted that the new test names a local variable `message`.
