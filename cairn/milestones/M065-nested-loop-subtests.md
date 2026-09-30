@@ -1,6 +1,6 @@
 # M065: An error in one test-loop pass no longer stops the later passes
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -91,6 +91,22 @@ defines top-level blocks already gives one block per pass.
       passed subtests.
 - [x] T6: Run the sweep, `devtools::test()`, and `devtools::check()`. If
       `check()` gives a note, run it on a42a1ab to compare.
+- [ ] T7: (review O1, O2) A parent block can hold an expectation that
+      runs before or between its nested subtests. Move each such
+      expectation into its own nested subtest or after the loops. If a
+      wrapped body cannot raise, undo that wrap. Plant a wrong value at
+      `test-store.R:69`, and make sure that
+      `test_dir(stop_on_failure = TRUE)` stops.
+- [ ] T8: (review O7) Make `loop-sweep.R` report each `expect_*()` call
+      that a parent block runs before or between its nested `test_that()`
+      calls. Show rows at the commit before T7, and no rows after T7.
+- [ ] T9: (review O3, O4, B2) In `test-arg-guards.R`, give distinct
+      subtest names to three sets of loops. The first is the two `cases`
+      loops near `:680` and `:698`. The second is the loop pair in the
+      `empty_rows()` test near `:2500`. The third is the "a request of"
+      subtests near `:1048`.
+- [ ] T10: Rerun the sweep, the AC2 and AC3 plants, `devtools::test()`,
+      and `devtools::check()`. Then set the status to review.
 
 ## Work log
 
@@ -108,6 +124,8 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: T6 done. The sweep prints 290 rows on the branch and no `flat` row in scope, and no triple from the plan commit is missing. The first full `devtools::test()` gave 1 error at `test-arg-guards.R:1986`, `rawToChar(out$body)` "argument 'x' must be a raw vector" inside the dry run. That is the failure the `list_instances()` candidate row records at `test-ttl.R` and `test-arg-guards.R:1810` on main. Three reruns of the file and a second full run were clean. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-30: claim audit: not owed, internal tier.
 - 2026-09-30: all tasks done, status set to review.
+- 2026-09-30: review returned M065 to in-progress, defect return 1. The maintainer judged review finding O1 a defect that blocks the merge. A parent expectation before or between nested subtests no longer fails `R CMD check`. T7 to T10 hold the requested changes.
+- 2026-09-30: correction of the 2026-09-30 line on the five files that counted fewer expectations. `R CMD check` does not catch a failure that a parent block records before its nested subtests. The reporter prints FAIL 1, but `test_check()` does not stop (review O1).
 - 2026-09-30: review checkpoint (in progress). AC1 to AC4 evidence recorded and ticked. `devtools::test()` gave 0 failed and 0 errors. `devtools::check()` and the Opus reviewer are still running.
 
 ## Decisions
@@ -139,3 +157,15 @@ Findings come from three fresh reviewers: Opus diff (O), Sonnet history (B), and
 - P2: same as B1, for LESSONS line 44.
 - P3: the hand-wrapped lines in `test-arg-guards.R` were not run through Air (M056 O1). Not verified.
 - P4: 8 added lines over 80 columns in other files. They are also long on main.
+
+Gate (2026-09-30): the maintainer declined the merge and sent M065 back to implement.
+
+- O1: fix now, as T7. It returns M065 to in-progress.
+- O2: fix now, in T7.
+- O3, O4, B2: fix now, as T9.
+- O7: fix now, as T8.
+- B1, P2: fix at the hygiene pass. The LESSONS line (M019) then says that a parent's results before its nested subtests are missing from `as.data.frame()`.
+- P1: fix at the hygiene pass. The `list_instances()` candidate row then records the 2026-09-30 recurrence at `test-arg-guards.R:1986`.
+- O5, O6, O8, B3, B4: noted. Each reviewer found no broken check.
+- P3: noted. No rule was shown broken.
+- P4: rejected. The lines are also long on main.
