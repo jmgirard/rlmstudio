@@ -53,7 +53,8 @@ breaks this rule. The rule does not read a column with another class,
 such as a \code{Date}, a factor, or a \code{POSIXlt} time. jsonlite writes a
 \code{POSIXlt} column of length one with its one value in each message,
 and the rule below reads that value in each row. A \code{Date} or factor
-column of a wrong length breaks the last rule.
+column of a wrong length breaks the last rule, unless an earlier rule
+refuses the data frame first.
 \item A data frame has no row in which every cell is \code{NA} or is a \code{NULL}
 cell of a list column. jsonlite leaves out an \code{NA} cell of another
 column and writes an \code{NA} or \code{NULL} list cell as \code{null}, so such a row
@@ -142,10 +143,10 @@ the parts of a \code{POSIXlt} value.
 If it cannot, the error gives the jsonlite message. For a data frame,
 jsonlite then writes each top-level column alone, in column order, as
 a data frame with the same row count. If a column fails, the error
-names the first that fails, on a line that reads, for a column \code{d}, "Column "d" is the
-first column that jsonlite cannot write on its own." A list that is
-not a data frame gets the jsonlite message alone. This rule is checked
-last.
+names the first that fails. For a column \code{d}, the line reads
+\verb{Column "d" is the first column that jsonlite cannot write on its own.}
+A list that is not a data frame gets the jsonlite message alone. This
+rule is checked last.
 }
 
 A list that is not a data frame is sent without its class attribute, and

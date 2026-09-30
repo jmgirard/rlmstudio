@@ -146,6 +146,7 @@ row.
 - 2026-09-30: the re-read of the corrected claims fixed two more sites: the `empty_rows()` note on length-1 classed columns and the NEWS sentence order. It also stated the zero-row edge of the recycling note.
 - 2026-09-30: T6 done. `devtools::test()`: 0 failed, 0 errors, 3 live skips. `devtools::check()`: 0 errors, 0 warnings, 0 notes. Status set to review.
 - 2026-09-30: review checkpoint. AC1 to AC4 evidence recorded and ticked. AC5 waits on the full `devtools::test()` run, and the three reviewers are running.
+- 2026-09-30: step-7 approval: m067-messages-column-faults approved for merge. Fix-now R1 to R4 landed before the push.
 
 ## Decisions
 
@@ -176,3 +177,7 @@ Independent review (2026-09-30): three fresh reviewers, the Opus diff lens and t
 - R12 (diff lens): the AC1 header and no-server-call checks sit in the shared loop and the parent. Proposed: noted, no change.
 - R13 (history lens): two `empty_rows()` branches cannot be reached through `rlm_check_messages()`, and the notes state that dependency. Proposed: reject, internal helper.
 - R14 (history lens): tests cover `Date` and factor. The reviewer's probes of `POSIXct`, `difftime`, `table`, and a classed list gave the column line with no warning. Proposed: noted, no change.
+
+Gate triage (2026-09-30): the maintainer accepted every proposed disposition. R1 to R4 are fixed on the branch. R5 and R6 become candidate rows at hygiene. R7 to R14 stand as rejected or noted, with the reasons above.
+
+- Fix-now evidence (2026-09-30): R1 adds "a classed column with a wrong length is not empty in any row". In a scratch copy, a planted "empty" reading turned this test red and no other test. R2 and R4 rewrite the help, and the Rd shows the column line as code. R3 names a `Date` column in the NEWS example. The arg-guard tests then gave 1041 tests, 0 failed, 0 errors. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.

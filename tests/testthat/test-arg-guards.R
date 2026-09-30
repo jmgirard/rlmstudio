@@ -2010,6 +2010,36 @@ test_that("a failed trial write of a data frame names the first column that fail
   expect_identical(probe$calls, 0L)
 })
 
+# The empty-row rule reads a classed column of a wrong length other than 1 as
+# not empty in each row. So a row whose other cells are NA is not empty, and
+# the frame reaches the trial write. A reading of the column as empty would
+# give the empty-row detail instead.
+test_that("a classed column with a wrong length is not empty in any row", {
+  probe <- local_counting_probe()
+  value <- df_of_rows(
+    2L,
+    role = c("user", NA),
+    x = as.Date(c("2026-01-01", "2026-01-02", "2026-01-03"))
+  )
+  out <- chat_openai_outcome(value)
+  expect_identical(out$n_warnings, 0L)
+  expect_true(
+    startsWith(conditionMessage(out$error), messages_headers[["value"]])
+  )
+  expect_match(
+    conditionMessage(out$error),
+    messages_rule_details[["rule10"]],
+    fixed = TRUE
+  )
+  expect_no_match(
+    conditionMessage(out$error),
+    messages_rule_details[["rule6"]],
+    fixed = TRUE
+  )
+  expect_identical(column_line_names(conditionMessage(out$error)), "x")
+  expect_identical(probe$calls, 0L)
+})
+
 # Each kind below is neither an atomic vector, a list, nor NULL. The last
 # five carry a class set by hand. jsonlite writes each of those five as
 # printed text or null, so the trial write alone does not refuse them. The

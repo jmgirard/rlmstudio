@@ -1127,9 +1127,9 @@ has_bad_name <- function(value) {
 #' The row-count rule runs next, before the empty-row rule. jsonlite cannot
 #' write a column whose row count differs from the data frame, and its
 #' message names no column. `empty_rows()` would recycle a data-frame column
-#' whose row count differs and is not zero. For a 3-row data-frame column in a 2-row data
-#' frame, R gives a warning. `wrong_row_count()` states which columns the rule
-#' reads.
+#' whose row count differs and is not zero. For a 3-row data-frame column in
+#' a 2-row data frame, R gives a warning. `wrong_row_count()` states which
+#' columns the rule reads.
 #'
 #' @param value A data frame with at least one row.
 #' @return A one-sentence detail, or `NULL` when the value is usable.

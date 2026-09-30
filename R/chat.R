@@ -455,7 +455,8 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     such as a `Date`, a factor, or a `POSIXlt` time. jsonlite writes a
 #'     `POSIXlt` column of length one with its one value in each message,
 #'     and the rule below reads that value in each row. A `Date` or factor
-#'     column of a wrong length breaks the last rule.
+#'     column of a wrong length breaks the last rule, unless an earlier rule
+#'     refuses the data frame first.
 #'   * A data frame has no row in which every cell is `NA` or is a `NULL`
 #'     cell of a list column. jsonlite leaves out an `NA` cell of another
 #'     column and writes an `NA` or `NULL` list cell as `null`, so such a row
@@ -542,10 +543,10 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'     If it cannot, the error gives the jsonlite message. For a data frame,
 #'     jsonlite then writes each top-level column alone, in column order, as
 #'     a data frame with the same row count. If a column fails, the error
-#'     names the first that fails, on a line that reads, for a column `d`, "Column "d" is the
-#'     first column that jsonlite cannot write on its own." A list that is
-#'     not a data frame gets the jsonlite message alone. This rule is checked
-#'     last.
+#'     names the first that fails. For a column `d`, the line reads
+#'     `Column "d" is the first column that jsonlite cannot write on its own.`
+#'     A list that is not a data frame gets the jsonlite message alone. This
+#'     rule is checked last.
 #'
 #'   A list that is not a data frame is sent without its class attribute, and
 #'   each of its messages is sent without its class attribute. A class on a
