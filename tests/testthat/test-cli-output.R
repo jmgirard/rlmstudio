@@ -70,26 +70,28 @@ test_that("a failed run gives the exit code and quotes stderr first", {
     )
   )
   for (name in names(cli_callers)) {
-    for (case in names(cases)) {
-      res <- c(list(status = 2L), cases[[case]]$res)
-      got <- cli_failure(cli_callers[[name]], res)
-      label <- paste(name, case)
-      expect_true(
-        grepl(
-          paste(cli_whats[[name]], "Exit code: 2."),
-          got$message,
-          fixed = TRUE
-        ),
-        label = label
-      )
-      expect_cli_said(got$message, cases[[case]]$said, label)
-      if (case == "both") {
-        expect_false(
-          grepl("from stdout", got$message, fixed = TRUE),
+    test_that(name, {
+      for (case in names(cases)) {
+        res <- c(list(status = 2L), cases[[case]]$res)
+        got <- cli_failure(cli_callers[[name]], res)
+        label <- paste(name, case)
+        expect_true(
+          grepl(
+            paste(cli_whats[[name]], "Exit code: 2."),
+            got$message,
+            fixed = TRUE
+          ),
           label = label
         )
+        expect_cli_said(got$message, cases[[case]]$said, label)
+        if (case == "both") {
+          expect_false(
+            grepl("from stdout", got$message, fixed = TRUE),
+            label = label
+          )
+        }
       }
-    }
+    })
   }
 })
 
@@ -101,37 +103,41 @@ test_that("a failed run with no text gives the exit code alone", {
     list(status = 1L, stdout = "\f\u00a0", stderr = " \n\t")
   )
   for (name in names(cli_callers)) {
-    for (res in empties) {
-      got <- cli_failure(cli_callers[[name]], res)
-      expect_true(
-        grepl(
-          paste(cli_whats[[name]], "Exit code: 1."),
-          got$message,
-          fixed = TRUE
-        ),
-        label = name
-      )
-      expect_false(
-        grepl("The CLI said", got$message, fixed = TRUE),
-        label = name
-      )
-    }
+    test_that(name, {
+      for (res in empties) {
+        got <- cli_failure(cli_callers[[name]], res)
+        expect_true(
+          grepl(
+            paste(cli_whats[[name]], "Exit code: 1."),
+            got$message,
+            fixed = TRUE
+          ),
+          label = name
+        )
+        expect_false(
+          grepl("The CLI said", got$message, fixed = TRUE),
+          label = name
+        )
+      }
+    })
   }
 })
 
 test_that("the quoted text shows a byte that is not valid UTF-8 as <xx>", {
   stderr <- paste0("bad ", bytes(0xff), " here\n")
   for (name in names(cli_callers)) {
-    warnings <- 0L
-    got <- withCallingHandlers(
-      cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr)),
-      warning = function(w) {
-        warnings <<- warnings + 1L
-        invokeRestart("muffleWarning")
-      }
-    )
-    expect_cli_said(got$message, "bad <ff> here", name)
-    expect_identical(warnings, 0L, info = name)
+    test_that(name, {
+      warnings <- 0L
+      got <- withCallingHandlers(
+        cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr)),
+        warning = function(w) {
+          warnings <<- warnings + 1L
+          invokeRestart("muffleWarning")
+        }
+      )
+      expect_cli_said(got$message, "bad <ff> here", name)
+      expect_identical(warnings, 0L, info = name)
+    })
   }
 })
 
@@ -163,18 +169,20 @@ test_that("the quoted text has no ANSI escape sequences", {
     lone = "lone done"
   )
   for (name in names(cli_callers)) {
-    for (form in names(texts)) {
-      got <- cli_failure(
-        cli_callers[[name]],
-        list(status = 1, stderr = texts[[form]])
-      )
-      expect_cli_said(got$message, expected[[form]], paste(name, form))
-      expect_false(grepl("\033", got$message, fixed = TRUE), label = form)
-      expect_false(
-        grepl("lmstudio.ai", got$message, fixed = TRUE),
-        label = form
-      )
-    }
+    test_that(name, {
+      for (form in names(texts)) {
+        got <- cli_failure(
+          cli_callers[[name]],
+          list(status = 1, stderr = texts[[form]])
+        )
+        expect_cli_said(got$message, expected[[form]], paste(name, form))
+        expect_false(grepl("\033", got$message, fixed = TRUE), label = form)
+        expect_false(
+          grepl("lmstudio.ai", got$message, fixed = TRUE),
+          label = form
+        )
+      }
+    })
   }
 })
 
@@ -185,39 +193,47 @@ test_that("each whitespace run in the quoted text becomes one space", {
   # does not count as whitespace.
   stderr <- "line one\n\tline two\u00a0\u00a0end\r\n  "
   for (name in names(cli_callers)) {
-    got <- cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr))
-    expect_cli_said(got$message, "line one line two end", name)
+    test_that(name, {
+      got <- cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr))
+      expect_cli_said(got$message, "line one line two end", name)
+    })
   }
 })
 
 test_that("braces in the quoted text show as written and do not run", {
   for (name in names(cli_callers)) {
-    got <- cli_failure(
-      cli_callers[[name]],
-      list(status = 1, stderr = brace_probe)
-    )
-    expect_cli_said(got$message, brace_probe, name)
-    expect_false(grepl("EVALUATED", got$stdout, fixed = TRUE), label = name)
+    test_that(name, {
+      got <- cli_failure(
+        cli_callers[[name]],
+        list(status = 1, stderr = brace_probe)
+      )
+      expect_cli_said(got$message, brace_probe, name)
+      expect_false(grepl("EVALUATED", got$stdout, fixed = TRUE), label = name)
+    })
   }
 })
 
 test_that("a quoted text of more than 1000 characters keeps its last 1000", {
   stderr <- paste0(strrep("1", 500), strrep("2", 1000))
   for (name in names(cli_callers)) {
-    got <- cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr))
-    expect_identical(
-      cli_quoted_word(got$message),
-      paste0("…", strrep("2", 1000)),
-      info = name
-    )
+    test_that(name, {
+      got <- cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr))
+      expect_identical(
+        cli_quoted_word(got$message),
+        paste0("…", strrep("2", 1000)),
+        info = name
+      )
+    })
   }
 })
 
 test_that("a quoted text of exactly 1000 characters is not cut", {
   stderr <- strrep("3", 1000)
   for (name in names(cli_callers)) {
-    got <- cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr))
-    expect_identical(cli_quoted_word(got$message), stderr, info = name)
+    test_that(name, {
+      got <- cli_failure(cli_callers[[name]], list(status = 1, stderr = stderr))
+      expect_identical(cli_quoted_word(got$message), stderr, info = name)
+    })
   }
 })
 
@@ -263,18 +279,24 @@ test_that("lms_server_stop is a no-op when no server runs", {
     far = paste0("Error: The server is NOT RUNNING. ", strrep("5", 1500))
   )
   for (name in names(texts)) {
-    got <- stop_exit(
-      lms_server_stop(),
-      list(status = 1L, stdout = "", stderr = texts[[name]])
-    )
-    expect_null(got$error)
-    expect_match(
-      got$messages,
-      "server is already stopped",
-      fixed = TRUE,
-      info = name
-    )
-    expect_identical(got$value, list(value = 1L, visible = FALSE), info = name)
+    test_that(name, {
+      got <- stop_exit(
+        lms_server_stop(),
+        list(status = 1L, stdout = "", stderr = texts[[name]])
+      )
+      expect_null(got$error)
+      expect_match(
+        got$messages,
+        "server is already stopped",
+        fixed = TRUE,
+        info = name
+      )
+      expect_identical(
+        got$value,
+        list(value = 1L, visible = FALSE),
+        info = name
+      )
+    })
   }
 })
 
@@ -288,22 +310,24 @@ test_that("lms_daemon_stop keeps running when the GUI manages the daemon", {
     both = "not running, and part of LM Studio"
   )
   for (name in names(texts)) {
-    got <- stop_exit(
-      lms_daemon_stop(),
-      list(status = 1L, stdout = "", stderr = texts[[name]])
-    )
-    expect_null(got$error)
-    expect_match(
-      got$messages,
-      "managed by the LM Studio GUI",
-      fixed = TRUE,
-      info = name
-    )
-    expect_identical(
-      got$value,
-      list(value = FALSE, visible = FALSE),
-      info = name
-    )
+    test_that(name, {
+      got <- stop_exit(
+        lms_daemon_stop(),
+        list(status = 1L, stdout = "", stderr = texts[[name]])
+      )
+      expect_null(got$error)
+      expect_match(
+        got$messages,
+        "managed by the LM Studio GUI",
+        fixed = TRUE,
+        info = name
+      )
+      expect_identical(
+        got$value,
+        list(value = FALSE, visible = FALSE),
+        info = name
+      )
+    })
   }
 })
 
@@ -316,23 +340,25 @@ test_that("lms_daemon_stop is a no-op when no daemon runs", {
     stdout_only = NA_character_
   )
   for (name in names(texts)) {
-    res <- list(status = 1L, stdout = "", stderr = texts[[name]])
-    if (name == "stdout_only") {
-      res <- list(status = 1L, stdout = "not running\n", stderr = "")
-    }
-    got <- stop_exit(lms_daemon_stop(), res)
-    expect_null(got$error)
-    expect_match(
-      got$messages,
-      "daemon is already stopped",
-      fixed = TRUE,
-      info = name
-    )
-    expect_identical(
-      got$value,
-      list(value = TRUE, visible = FALSE),
-      info = name
-    )
+    test_that(name, {
+      res <- list(status = 1L, stdout = "", stderr = texts[[name]])
+      if (name == "stdout_only") {
+        res <- list(status = 1L, stdout = "not running\n", stderr = "")
+      }
+      got <- stop_exit(lms_daemon_stop(), res)
+      expect_null(got$error)
+      expect_match(
+        got$messages,
+        "daemon is already stopped",
+        fixed = TRUE,
+        info = name
+      )
+      expect_identical(
+        got$value,
+        list(value = TRUE, visible = FALSE),
+        info = name
+      )
+    })
   }
 })
 

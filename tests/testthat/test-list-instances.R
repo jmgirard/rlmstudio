@@ -326,14 +326,16 @@ test_that("list_models and lms_server_ready accept the bodies the two checks rej
   )
   local_mocked_bindings(is_server_running = function(...) TRUE)
   for (name in names(bodies)) {
-    cnd <- instances_raised_by(bodies[[name]])
-    expect_true(inherits(cnd, "rlmstudio_bad_response"), info = name)
+    test_that(name, {
+      cnd <- instances_raised_by(bodies[[name]])
+      expect_true(inherits(cnd, "rlmstudio_bad_response"), info = name)
 
-    local_request_recorder(mock_response(200L, bodies[[name]]))
-    expect_no_error(list_models(quiet = TRUE), message = name)
+      local_request_recorder(mock_response(200L, bodies[[name]]))
+      expect_no_error(list_models(quiet = TRUE), message = name)
 
-    local_request_recorder(mock_response(200L, bodies[[name]]))
-    expect_identical(lms_server_ready(), TRUE, info = name)
+      local_request_recorder(mock_response(200L, bodies[[name]]))
+      expect_identical(lms_server_ready(), TRUE, info = name)
+    })
   }
 })
 

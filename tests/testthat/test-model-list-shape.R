@@ -267,14 +267,16 @@ test_that("a model list with the wrong shape aborts the callers before any other
   )
   bad_list <- list_body(shape_object(model_fields(), drop = "key"))
   for (name in names(callers)) {
-    # One response only: a second request raises a plain error from the mock,
-    # which is not the class asserted here.
-    recorder <- local_request_sequence(list(mock_response(200L, bad_list)))
-    cnd <- shape_raised_by(callers[[name]]())
-    expect_true(inherits(cnd, "rlmstudio_bad_response"), info = name)
-    expect_match(conditionMessage(cnd), "API List Failed", fixed = TRUE, info = name)
-    expect_match(conditionMessage(cnd), "`key`", fixed = TRUE, info = name)
-    expect_identical(length(recorder$requests), 1L, info = name)
+    test_that(name, {
+      # One response only: a second request raises a plain error from the mock,
+      # which is not the class asserted here.
+      recorder <- local_request_sequence(list(mock_response(200L, bad_list)))
+      cnd <- shape_raised_by(callers[[name]]())
+      expect_true(inherits(cnd, "rlmstudio_bad_response"), info = name)
+      expect_match(conditionMessage(cnd), "API List Failed", fixed = TRUE, info = name)
+      expect_match(conditionMessage(cnd), "`key`", fixed = TRUE, info = name)
+      expect_identical(length(recorder$requests), 1L, info = name)
+    })
   }
 })
 

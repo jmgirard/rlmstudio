@@ -98,18 +98,20 @@ test_that("no context warning at or below the maximum, or with no context_length
     "below" = 4096
   )
   for (name in names(cases)) {
-    args <- list(list_reply(list_entry()))
-    if (!is.null(cases[[name]])) {
-      args$context_length <- cases[[name]]
-    }
-    res <- do.call(run_load, args)
-    expect_length(above_max(res$warnings), 0L)
-    expect_length(res$recorder$requests, 2L)
-    expect_identical(
-      request_target(res$recorder$requests[[2]])$path,
-      "/api/v1/models/load",
-      info = name
-    )
+    test_that(name, {
+      args <- list(list_reply(list_entry()))
+      if (!is.null(cases[[name]])) {
+        args$context_length <- cases[[name]]
+      }
+      res <- do.call(run_load, args)
+      expect_length(above_max(res$warnings), 0L)
+      expect_length(res$recorder$requests, 2L)
+      expect_identical(
+        request_target(res$recorder$requests[[2]])$path,
+        "/api/v1/models/load",
+        info = name
+      )
+    })
   }
 })
 
@@ -144,14 +146,16 @@ test_that("a model list with no maximum for the model gives no context warning",
     "no max_context_length column" = list_reply(list_entry(max = NULL))
   )
   for (name in names(lists)) {
-    res <- run_load(lists[[name]], context_length = 65536)
-    expect_length(above_max(res$warnings), 0L)
-    expect_length(res$recorder$requests, 2L)
-    expect_identical(
-      request_target(res$recorder$requests[[2]])$path,
-      "/api/v1/models/load",
-      info = name
-    )
+    test_that(name, {
+      res <- run_load(lists[[name]], context_length = 65536)
+      expect_length(above_max(res$warnings), 0L)
+      expect_length(res$recorder$requests, 2L)
+      expect_identical(
+        request_target(res$recorder$requests[[2]])$path,
+        "/api/v1/models/load",
+        info = name
+      )
+    })
   }
 })
 
@@ -197,38 +201,42 @@ test_that("a bad max_context_length also aborts list_instances() and lms_unload_
   )
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   for (name in names(callers)) {
-    recorder <- local_request_sequence(list(body))
-    err <- expect_error(
-      suppressMessages(callers[[name]]()),
-      class = "rlmstudio_bad_response"
-    )
-    expect_match(conditionMessage(err), "max_context_length", fixed = TRUE, info = name)
-    # The abort comes from the model list, before any unload is sent.
-    expect_length(recorder$requests, 1L)
+    test_that(name, {
+      recorder <- local_request_sequence(list(body))
+      err <- expect_error(
+        suppressMessages(callers[[name]]()),
+        class = "rlmstudio_bad_response"
+      )
+      expect_match(conditionMessage(err), "max_context_length", fixed = TRUE, info = name)
+      # The abort comes from the model list, before any unload is sent.
+      expect_length(recorder$requests, 1L)
+    })
   }
 })
 
 test_that("a max_context_length that is not a number or null is a bad response", {
   bad <- list(string = '"32768"', object = '{"value": 32768}')
   for (name in names(bad)) {
-    body <- list_reply(list_entry(max = bad[[name]]))
+    test_that(name, {
+      body <- list_reply(list_entry(max = bad[[name]]))
 
-    testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-    recorder <- local_request_sequence(list(body, load_ok()))
-    err <- expect_error(
-      suppressMessages(lms_load("a-model", context_length = 65536)),
-      class = "rlmstudio_bad_response"
-    )
-    expect_match(conditionMessage(err), "max_context_length", fixed = TRUE)
-    # The abort comes from the model list, before any load is sent.
-    expect_length(recorder$requests, 1L)
+      testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+      recorder <- local_request_sequence(list(body, load_ok()))
+      err <- expect_error(
+        suppressMessages(lms_load("a-model", context_length = 65536)),
+        class = "rlmstudio_bad_response"
+      )
+      expect_match(conditionMessage(err), "max_context_length", fixed = TRUE)
+      # The abort comes from the model list, before any load is sent.
+      expect_length(recorder$requests, 1L)
 
-    recorder <- local_request_sequence(list(body))
-    err <- expect_error(
-      list_models(quiet = TRUE),
-      class = "rlmstudio_bad_response"
-    )
-    expect_match(conditionMessage(err), "max_context_length", fixed = TRUE)
+      recorder <- local_request_sequence(list(body))
+      err <- expect_error(
+        list_models(quiet = TRUE),
+        class = "rlmstudio_bad_response"
+      )
+      expect_match(conditionMessage(err), "max_context_length", fixed = TRUE)
+    })
   }
 })
 
@@ -292,17 +300,19 @@ test_that("an overflow reply raises an API error with the server text", {
     )
   )
   for (name in names(cases)) {
-    case <- cases[[name]]
-    testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-    local_request_sequence(list(mock_response(case$status, case$body)))
-    err <- expect_error(case$call(), class = "rlmstudio_api_error")
-    expect_identical(err$status, case$status, info = name)
-    expect_match(
-      conditionMessage(err),
-      overflow_start,
-      fixed = TRUE,
-      info = name
-    )
+    test_that(name, {
+      case <- cases[[name]]
+      testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+      local_request_sequence(list(mock_response(case$status, case$body)))
+      err <- expect_error(case$call(), class = "rlmstudio_api_error")
+      expect_identical(err$status, case$status, info = name)
+      expect_match(
+        conditionMessage(err),
+        overflow_start,
+        fixed = TRUE,
+        info = name
+      )
+    })
   }
 })
 

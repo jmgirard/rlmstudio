@@ -95,19 +95,21 @@ test_that("a 200 body that does not parse raises rlmstudio_bad_response", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   withr::local_options(rlmstudio.quiet = TRUE)
   for (name in names(model_sites)) {
-    for (kind in names(unparseable_bodies)) {
-      info <- paste(name, kind)
-      case <- unparseable_bodies[[kind]]
-      local_request_sequence(list(
-        mock_response(200L, case$body, content_type = case$type)
-      ))
-      cnd <- raised_by(model_sites[[name]]$call())
-      expect_s3_class(cnd, "rlmstudio_bad_response")
-      expect_identical(cnd$status, 200L, info = info)
-      message <- conditionMessage(cnd)
-      expect_match(message, "did not parse as JSON", fixed = TRUE, info = info)
-      expect_match(message, "answering on this host", fixed = TRUE, info = info)
-    }
+    test_that(name, {
+      for (kind in names(unparseable_bodies)) {
+        info <- paste(name, kind)
+        case <- unparseable_bodies[[kind]]
+        local_request_sequence(list(
+          mock_response(200L, case$body, content_type = case$type)
+        ))
+        cnd <- raised_by(model_sites[[name]]$call())
+        expect_s3_class(cnd, "rlmstudio_bad_response")
+        expect_identical(cnd$status, 200L, info = info)
+        message <- conditionMessage(cnd)
+        expect_match(message, "did not parse as JSON", fixed = TRUE, info = info)
+        expect_match(message, "answering on this host", fixed = TRUE, info = info)
+      }
+    })
   }
 })
 
@@ -118,20 +120,22 @@ test_that("the condition holds no copy of the body text", {
   # condition built from its error would carry MARKER.
   body <- '{"status": "MARKER'
   for (name in names(model_sites)) {
-    local_request_sequence(list(mock_response(200L, body)))
-    cnd <- raised_by(model_sites[[name]]$call())
-    expect_s3_class(cnd, "rlmstudio_bad_response")
-    expect_no_match(conditionMessage(cnd), "MARKER", fixed = TRUE, info = name)
-    fields <- vapply(
-      unclass(cnd),
-      function(field) paste(deparse(field), collapse = "\n"),
-      character(1)
-    )
-    expect_identical(
-      names(fields)[grepl("MARKER", fields, fixed = TRUE)],
-      character(0),
-      info = name
-    )
+    test_that(name, {
+      local_request_sequence(list(mock_response(200L, body)))
+      cnd <- raised_by(model_sites[[name]]$call())
+      expect_s3_class(cnd, "rlmstudio_bad_response")
+      expect_no_match(conditionMessage(cnd), "MARKER", fixed = TRUE, info = name)
+      fields <- vapply(
+        unclass(cnd),
+        function(field) paste(deparse(field), collapse = "\n"),
+        character(1)
+      )
+      expect_identical(
+        names(fields)[grepl("MARKER", fields, fixed = TRUE)],
+        character(0),
+        info = name
+      )
+    })
   }
 })
 
@@ -143,14 +147,16 @@ test_that("a model list that does not parse aborts the functions that read it", 
     lms_unload_all = function() lms_unload_all()
   )
   for (name in names(callers)) {
-    recorder <- local_request_sequence(list(
-      mock_response(200L, "<html></html>", content_type = "text/html")
-    ))
-    cnd <- raised_by(callers[[name]]())
-    expect_s3_class(cnd, "rlmstudio_bad_response")
-    expect_match(conditionMessage(cnd), "API List Failed", fixed = TRUE, info = name)
-    # The model list is the only request, so the abort came from its body.
-    expect_identical(length(recorder$requests), 1L, info = name)
+    test_that(name, {
+      recorder <- local_request_sequence(list(
+        mock_response(200L, "<html></html>", content_type = "text/html")
+      ))
+      cnd <- raised_by(callers[[name]]())
+      expect_s3_class(cnd, "rlmstudio_bad_response")
+      expect_match(conditionMessage(cnd), "API List Failed", fixed = TRUE, info = name)
+      # The model list is the only request, so the abort came from its body.
+      expect_identical(length(recorder$requests), 1L, info = name)
+    })
   }
 })
 
@@ -160,14 +166,16 @@ test_that("valid JSON sent as text/plain reads as JSON", {
   # list_models() read its body by content before this change, so it is left
   # out: its comparison would pass either way.
   for (name in c("lms_load", "lms_download", "lms_download_status")) {
-    site <- model_sites[[name]]
-    results <- lapply(c("application/json", "text/plain"), function(type) {
-      local_request_sequence(list(
-        mock_response(200L, site$reply, content_type = type)
-      ))
-      site$call()
+    test_that(name, {
+      site <- model_sites[[name]]
+      results <- lapply(c("application/json", "text/plain"), function(type) {
+        local_request_sequence(list(
+          mock_response(200L, site$reply, content_type = type)
+        ))
+        site$call()
+      })
+      expect_identical(results[[2]], results[[1]], info = name)
     })
-    expect_identical(results[[2]], results[[1]], info = name)
   }
 })
 
@@ -199,15 +207,17 @@ test_that("a 200 body that names a file aborts and does not read the file", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   withr::local_options(rlmstudio.quiet = TRUE)
   for (name in names(ok_body_sites)) {
-    site <- ok_body_sites[[name]]
-    path <- local_reply_file(site$reply)
-    local_request_sequence(list(mock_response(200L, path)))
-    cnd <- raised_by(site$call())
-    expect_s3_class(cnd, "rlmstudio_bad_response")
-    expect_match(
-      conditionMessage(cnd), "did not parse as JSON",
-      fixed = TRUE, info = name
-    )
+    test_that(name, {
+      site <- ok_body_sites[[name]]
+      path <- local_reply_file(site$reply)
+      local_request_sequence(list(mock_response(200L, path)))
+      cnd <- raised_by(site$call())
+      expect_s3_class(cnd, "rlmstudio_bad_response")
+      expect_match(
+        conditionMessage(cnd), "did not parse as JSON",
+        fixed = TRUE, info = name
+      )
+    })
   }
 })
 
@@ -216,16 +226,18 @@ test_that("a 200 body that is a URL aborts and fetches nothing", {
   withr::local_options(rlmstudio.quiet = TRUE)
   counter <- local_url_counter()
   for (name in names(ok_body_sites)) {
-    for (body in url_bodies) {
-      info <- paste(name, body)
-      local_request_sequence(list(mock_response(200L, body)))
-      cnd <- raised_by(ok_body_sites[[name]]$call())
-      expect_s3_class(cnd, "rlmstudio_bad_response")
-      expect_match(
-        conditionMessage(cnd), "did not parse as JSON",
-        fixed = TRUE, info = info
-      )
-    }
+    test_that(name, {
+      for (body in url_bodies) {
+        info <- paste(name, body)
+        local_request_sequence(list(mock_response(200L, body)))
+        cnd <- raised_by(ok_body_sites[[name]]$call())
+        expect_s3_class(cnd, "rlmstudio_bad_response")
+        expect_match(
+          conditionMessage(cnd), "did not parse as JSON",
+          fixed = TRUE, info = info
+        )
+      }
+    })
   }
   expect_identical(counter$calls, 0L)
 })

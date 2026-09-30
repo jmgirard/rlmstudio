@@ -564,25 +564,27 @@ test_that("an error of any other class still aborts the batch unchanged", {
     )
   )
   for (name in names(raised)) {
-    calls <- 0L
-    testthat::local_mocked_bindings(
-      is_server_running = function(...) TRUE,
-      lms_chat = function(...) {
-        calls <<- calls + 1L
-        if (calls == 2L) {
-          stop(raised[[name]])
+    test_that(name, {
+      calls <- 0L
+      testthat::local_mocked_bindings(
+        is_server_running = function(...) TRUE,
+        lms_chat = function(...) {
+          calls <<- calls + 1L
+          if (calls == 2L) {
+            stop(raised[[name]])
+          }
+          "a reply"
         }
-        "a reply"
-      }
-    )
-    # tryCatch() rather than expect_error(), which adds a backtrace to the
-    # condition it catches and so would never return the one raised.
-    caught <- tryCatch(
-      lms_chat_batch("a-model", batch_inputs, format = "list", quiet = TRUE),
-      error = identity
-    )
-    expect_identical(caught, raised[[name]], info = name)
-    expect_identical(calls, 2L, info = name)
+      )
+      # tryCatch() rather than expect_error(), which adds a backtrace to the
+      # condition it catches and so would never return the one raised.
+      caught <- tryCatch(
+        lms_chat_batch("a-model", batch_inputs, format = "list", quiet = TRUE),
+        error = identity
+      )
+      expect_identical(caught, raised[[name]], info = name)
+      expect_identical(calls, 2L, info = name)
+    })
   }
 })
 
@@ -1089,19 +1091,21 @@ test_that("a dot that holds a symbol or a call reaches lms_chat() unevaluated", 
     native = list(api_type = "native", logprobs = TRUE)
   )
   for (name in names(values)) {
-    for (route in names(routes)) {
-      info <- paste(name, route)
-      seen$dots <- NULL
-      collect_warnings(do.call(
-        "lms_chat_batch",
-        c(
-          list("a-model", "hi", format = "list", quiet = TRUE),
-          routes[[route]],
-          list(foo = values[[name]])
-        ),
-        quote = TRUE
-      ))
-      expect_identical(seen$dots$foo, values[[name]], info = info)
-    }
+    test_that(name, {
+      for (route in names(routes)) {
+        info <- paste(name, route)
+        seen$dots <- NULL
+        collect_warnings(do.call(
+          "lms_chat_batch",
+          c(
+            list("a-model", "hi", format = "list", quiet = TRUE),
+            routes[[route]],
+            list(foo = values[[name]])
+          ),
+          quote = TRUE
+        ))
+        expect_identical(seen$dots$foo, values[[name]], info = info)
+      }
+    })
   }
 })

@@ -66,16 +66,19 @@ test_that("the exports that take store are the three chat functions", {
     },
     sort(getNamespaceExports("rlmstudio"))
   )
+  for (name in exports) {
+    test_that(name, {
+      fm <- formals(get(name, envir = asNamespace("rlmstudio")))
+      # After `...`, so a shortened name never matches it, and NULL by default.
+      expect_gt(match("store", names(fm)), match("...", names(fm)))
+      expect_null(fm$store)
+    })
+  }
+  # After the subtests, so testthat keeps a failure here in its results.
   expect_identical(
     exports,
     c("lms_chat", "lms_chat_native", "lms_chat_openresponses")
   )
-  for (name in exports) {
-    fm <- formals(get(name, envir = asNamespace("rlmstudio")))
-    # After `...`, so a shortened name never matches it, and NULL by default.
-    expect_gt(match("store", names(fm)), match("...", names(fm)))
-    expect_null(fm$store)
-  }
 })
 
 # The body field (AC1) --------------------------------------------------------
@@ -157,7 +160,9 @@ expect_store_shortened_sent <- function(name) {
 
 test_that("each function sends a shortened store name unchecked", {
   for (name in names(store_calls)) {
-    expect_store_shortened_sent(name)
+    test_that(name, {
+      expect_store_shortened_sent(name)
+    })
   }
 })
 
@@ -301,16 +306,18 @@ test_that("lms_chat_openai() sends a store in its dots unchecked", {
 
 test_that("store = NULL on the openai route sends no store field", {
   for (name in c("lms_chat", "lms_chat_batch")) {
-    jsons <- sent_store_bodies(name, "openai", store = NULL)
-    expect_identical(
-      length(jsons),
-      if (name == "lms_chat_batch") 2L else 1L,
-      info = name
-    )
-    for (json in jsons) {
-      expect_match(json, '"messages"', fixed = TRUE, info = name)
-      expect_no_match(json, '"store"', fixed = TRUE, info = name)
-    }
+    test_that(name, {
+      jsons <- sent_store_bodies(name, "openai", store = NULL)
+      expect_identical(
+        length(jsons),
+        if (name == "lms_chat_batch") 2L else 1L,
+        info = name
+      )
+      for (json in jsons) {
+        expect_match(json, '"messages"', fixed = TRUE, info = name)
+        expect_no_match(json, '"store"', fixed = TRUE, info = name)
+      }
+    })
   }
 })
 

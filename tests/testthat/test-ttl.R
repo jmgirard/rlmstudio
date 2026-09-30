@@ -54,18 +54,20 @@ send_with_ttl <- function(name, ...) {
 
 test_that("ttl = NULL sends no ttl field", {
   for (name in names(ttl_senders)) {
-    for (json in send_with_ttl(name)) {
-      expect_false(
-        "ttl" %in% names(jsonlite::parse_json(json)),
-        info = name
-      )
-    }
-    for (json in send_with_ttl(name, ttl = NULL)) {
-      expect_false(
-        "ttl" %in% names(jsonlite::parse_json(json)),
-        info = name
-      )
-    }
+    test_that(name, {
+      for (json in send_with_ttl(name)) {
+        expect_false(
+          "ttl" %in% names(jsonlite::parse_json(json)),
+          info = name
+        )
+      }
+      for (json in send_with_ttl(name, ttl = NULL)) {
+        expect_false(
+          "ttl" %in% names(jsonlite::parse_json(json)),
+          info = name
+        )
+      }
+    })
   }
 })
 
@@ -77,17 +79,19 @@ test_that("a ttl is sent as a JSON integer in each request", {
     lms_chat_batch = 2L
   )
   for (name in names(ttl_senders)) {
-    # 300 and 1e5 are doubles, 300L an integer, and the largest R integer is
-    # the upper end of the range.
-    for (value in list(300, 300L, 1e5, .Machine$integer.max)) {
-      jsons <- send_with_ttl(name, ttl = value)
-      expect_identical(length(jsons), expected_requests[[name]], info = name)
-      # The field must end after the digits, so that "ttl":3000 or
-      # "ttl":300.0 does not match "ttl":300.
-      field <- paste0('"ttl":', format(as.integer(value)), "[,}]")
-      for (json in jsons) {
-        expect_match(json, field, info = paste(name, field))
+    test_that(name, {
+      # 300 and 1e5 are doubles, 300L an integer, and the largest R integer is
+      # the upper end of the range.
+      for (value in list(300, 300L, 1e5, .Machine$integer.max)) {
+        jsons <- send_with_ttl(name, ttl = value)
+        expect_identical(length(jsons), expected_requests[[name]], info = name)
+        # The field must end after the digits, so that "ttl":3000 or
+        # "ttl":300.0 does not match "ttl":300.
+        field <- paste0('"ttl":', format(as.integer(value)), "[,}]")
+        for (json in jsons) {
+          expect_match(json, field, info = paste(name, field))
+        }
       }
-    }
+    })
   }
 })
