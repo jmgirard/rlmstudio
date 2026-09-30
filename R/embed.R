@@ -5,7 +5,9 @@
 #' `batch_size`, one request per batch, in the order given.
 #'
 #' @param model Character. The loaded embedding model name. Must be one name,
-#'   given as a single string.
+#'   given as a single string. The string must be valid in its declared
+#'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+#'   removed before the name is sent.
 #' @param input Character. The texts to embed. A vector of length `n` returns
 #'   `n` embeddings, in the order given. Must hold at least one value and no
 #'   missing values.

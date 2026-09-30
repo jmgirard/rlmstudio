@@ -29,6 +29,9 @@ argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
+an \code{instructions} or \code{messages} in the \code{...} of \code{\link[=lms_chat]{lms_chat()}} or
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} on the route where \code{\link[=lms_chat]{lms_chat()}} sets it, or a name, id,
+or \code{type} string that is not valid in its encoding or is marked as bytes,
 aborts
 with an argument message and no condition class even when the server is
 down. A condition of class

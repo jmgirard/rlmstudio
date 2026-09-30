@@ -1,7 +1,9 @@
 #' Load a model via REST API
 #'
 #' @param model Character. Unique identifier for the model to load. Must be
-#'   one name, given as a single string.
+#'   one name, given as a single string. The string must be valid in its
+#'   declared encoding and not marked `"bytes"`. A class, names, and the S4
+#'   bit are removed before the name is sent.
 #' @param context_length Integer. Maximum number of tokens that the model will
 #'   consider.
 #' @param eval_batch_size Integer. Number of input tokens to process together in
@@ -37,7 +39,8 @@
 #'   API](https://lmstudio.ai/docs/developer/rest/load)
 #'
 #' @return Invisibly returns a character string of the loaded model identifier
-#'   upon success. If \code{echo_load_config = TRUE}, it instead invisibly
+#'   upon success, also when the model was already loaded. It is a plain
+#'   string, with no class, names, or S4 bit. If \code{echo_load_config = TRUE}, it instead invisibly
 #'   returns a list containing the model's detailed load configuration.
 #'
 #' @inheritSection rlmstudio-conditions Server not running

@@ -19,6 +19,9 @@
 #' the `...` of a chat function, a `logprobs` in the `...` of
 #' [lms_chat_batch()] or [lms_chat_native()], or a value in the `...` of
 #' [lms_chat_batch()] that [lms_chat()] reads as an argument already given,
+#' an `instructions` or `messages` in the `...` of [lms_chat()] or
+#' [lms_chat_batch()] on the route where [lms_chat()] sets it, or a name, id,
+#' or `type` string that is not valid in its encoding or is marked as bytes,
 #' aborts
 #' with an argument message and no condition class even when the server is
 #' down. A condition of class

@@ -21,7 +21,9 @@ lms_chat(
 }
 \arguments{
 \item{model}{Character. The name of the loaded model. Must be one name,
-given as a single string.}
+given as a single string. The string must be valid in its declared
+encoding and not marked \code{"bytes"}. A class, names, and the S4 bit are
+removed before the name is sent.}
 
 \item{input}{Character. The user prompt to send to the model. A character
 vector must hold no missing values.}
@@ -46,7 +48,14 @@ aborts before the check for a running server.}
 \item{...}{Additional arguments passed to the selected API body.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
-package reads a whole reply and not a streamed one.}
+package reads a whole reply and not a streamed one.
+An \code{instructions} here with \code{api_type = "openresponses"}, the default,
+aborts before the request, because \code{lms_chat()} sets \code{instructions} from
+\code{system_prompt} on that route. A \code{messages} here with
+\code{api_type = "openai"} also aborts, because \code{lms_chat()} builds \code{messages}
+from \code{system_prompt} and \code{input} on that route. The message names the
+argument, and the abort has no condition class. Only these exact names
+abort. On the other routes, each goes into the request body.}
 
 \item{schema}{A JSON Schema that the reply must match, or \code{NULL}. It needs
 \code{api_type = "openai"}, and any other \code{api_type} aborts before the request.
@@ -60,7 +69,9 @@ request loads. The server loads a model that is not loaded yet when its
 just-in-time loading setting is on. A model that is already loaded keeps
 its idle time.}
 
-\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
+\item{previous_response_id}{One string, or \code{NULL}. The string must be valid
+in its declared encoding and not marked \code{"bytes"}. A class, names, and
+the S4 bit are removed before the id is sent. The id of a stored reply
 that this chat continues, such as the \code{response_id} attribute of an
 earlier reply. \code{NULL}, the default, starts a new thread. It needs
 \code{api_type = "native"} or \code{api_type = "openresponses"}. With
@@ -124,6 +135,9 @@ argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
+an \code{instructions} or \code{messages} in the \code{...} of \code{\link[=lms_chat]{lms_chat()}} or
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} on the route where \code{\link[=lms_chat]{lms_chat()}} sets it, or a name, id,
+or \code{type} string that is not valid in its encoding or is marked as bytes,
 aborts
 with an argument message and no condition class even when the server is
 down. A condition of class

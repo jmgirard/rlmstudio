@@ -8,7 +8,9 @@ lms_unload(model, host = "http://localhost:1234", ..., token = NULL)
 }
 \arguments{
 \item{model}{Character. Unique identifier (\code{instance_id}) of the model
-instance to unload. Must be one name, given as a single string.}
+instance to unload. Must be one name, given as a single string. The
+string must be valid in its declared encoding and not marked \code{"bytes"}.
+A class, names, and the S4 bit are removed before the name is sent.}
 
 \item{host}{Character. The host address of the local server. Defaults to
 "http://localhost:1234".}
@@ -21,7 +23,8 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 }
 \value{
 Invisibly returns a character string representing the unloaded
-\code{instance_id} upon success.
+\code{instance_id} upon success. It is a plain string, with no class,
+names, or S4 bit.
 }
 \description{
 Unload a model from memory via REST API
@@ -47,6 +50,9 @@ argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}
 the \code{...} of a chat function, a \code{logprobs} in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, or a value in the \code{...} of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} that \code{\link[=lms_chat]{lms_chat()}} reads as an argument already given,
+an \code{instructions} or \code{messages} in the \code{...} of \code{\link[=lms_chat]{lms_chat()}} or
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} on the route where \code{\link[=lms_chat]{lms_chat()}} sets it, or a name, id,
+or \code{type} string that is not valid in its encoding or is marked as bytes,
 aborts
 with an argument message and no condition class even when the server is
 down. A condition of class

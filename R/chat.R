@@ -5,7 +5,9 @@
 #' selected API type.
 #'
 #' @param model Character. The name of the loaded model. Must be one name,
-#'   given as a single string.
+#'   given as a single string. The string must be valid in its declared
+#'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+#'   removed before the name is sent.
 #' @param input Character. The user prompt to send to the model. A character
 #'   vector must hold no missing values.
 #' @param system_prompt Character. An optional system prompt to guide model
@@ -27,6 +29,13 @@
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
+#'   An `instructions` here with `api_type = "openresponses"`, the default,
+#'   aborts before the request, because `lms_chat()` sets `instructions` from
+#'   `system_prompt` on that route. A `messages` here with
+#'   `api_type = "openai"` also aborts, because `lms_chat()` builds `messages`
+#'   from `system_prompt` and `input` on that route. The message names the
+#'   argument, and the abort has no condition class. Only these exact names
+#'   abort. On the other routes, each goes into the request body.
 #' @param schema A JSON Schema that the reply must match, or `NULL`. It needs
 #'   `api_type = "openai"`, and any other `api_type` aborts before the request.
 #'   See [lms_chat_openai()] for its form and for what is returned.
@@ -37,7 +46,9 @@
 #'   request loads. The server loads a model that is not loaded yet when its
 #'   just-in-time loading setting is on. A model that is already loaded keeps
 #'   its idle time.
-#' @param previous_response_id One string, or `NULL`. The id of a stored reply
+#' @param previous_response_id One string, or `NULL`. The string must be valid
+#'   in its declared encoding and not marked `"bytes"`. A class, names, and
+#'   the S4 bit are removed before the id is sent. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
 #'   earlier reply. `NULL`, the default, starts a new thread. It needs
 #'   `api_type = "native"` or `api_type = "openresponses"`. With
@@ -168,7 +179,9 @@ lms_chat <- function(
 #' custom instructions.
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
-#'   single string.
+#'   single string. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
+#'   name is sent.
 #' @param input Character. The user prompt. A character vector must hold no
 #'   missing values.
 #' @param instructions Character. Optional system instructions.
@@ -188,7 +201,9 @@ lms_chat <- function(
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
-#' @param previous_response_id One string, or `NULL`. The id of a stored reply
+#' @param previous_response_id One string, or `NULL`. The string must be valid
+#'   in its declared encoding and not marked `"bytes"`. A class, names, and
+#'   the S4 bit are removed before the id is sent. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
 #'   earlier reply of this function or of [lms_chat_native()]. `NULL`, the
 #'   default, starts a new thread. `NA`, an empty string, a string of
@@ -350,7 +365,9 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' array format.
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
-#'   single string.
+#'   single string. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
+#'   name is sent.
 #' @param messages The messages to send. Give an unnamed list with one element
 #'   per message, such as `list(list(role = "user", content = "Hi"))`, or a
 #'   data frame with at least one row. A data frame is sent as one message per
@@ -1237,7 +1254,9 @@ with_response_id <- function(value, id) {
 #' Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
-#'   single string.
+#'   single string. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
+#'   name is sent.
 #' @param input Character. The user prompt. A character vector must hold no
 #'   missing values.
 #' @param system_prompt Character. Optional system prompt.
@@ -1257,7 +1276,9 @@ with_response_id <- function(value, id) {
 #'   be `TRUE`, `FALSE`, or `NULL`, and any other value aborts before the check
 #'   for a running server. The endpoint has no logprobs, so no `logprobs` field
 #'   goes into the request body, and a `TRUE` warns.
-#' @param previous_response_id One string, or `NULL`. The id of a stored reply
+#' @param previous_response_id One string, or `NULL`. The string must be valid
+#'   in its declared encoding and not marked `"bytes"`. A class, names, and
+#'   the S4 bit are removed before the id is sent. The id of a stored reply
 #'   that this chat continues, such as the `response_id` attribute of an
 #'   earlier reply of this function. `NULL`, the default, starts a new thread.
 #'   `NA`, an empty string, a string of whitespace only, a value that is not a
@@ -1604,7 +1625,9 @@ integer_or_na <- function(x) {
 #' Process a vector of inputs sequentially through LM Studio.
 #'
 #' @param model Character. The loaded model name. Must be one name, given as a
-#'   single string.
+#'   single string. The string must be valid in its declared encoding and not
+#'   marked `"bytes"`. A class, names, and the S4 bit are removed before the
+#'   name is sent.
 #' @param inputs Character vector. The prompts to process. Must hold at least
 #'   one value and no missing values.
 #' @param system_prompt Character. Optional system prompt.
@@ -1648,6 +1671,10 @@ integer_or_na <- function(x) {
 #'   the next unnamed argument, such as `system_prompt`. These aborts come
 #'   before every other check of `...` and before the check for a running
 #'   server.
+#'   An `instructions` here on the `"openresponses"` route, the default, and
+#'   a `messages` here on the `"openai"` route abort before the check for a
+#'   running server, with the message that [lms_chat()] gives. A
+#'   `previous_response_id` here follows the rules of [lms_chat()].
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.

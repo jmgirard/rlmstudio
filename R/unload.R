@@ -1,7 +1,9 @@
 #' Unload a model from memory via REST API
 #'
 #' @param model Character. Unique identifier (\code{instance_id}) of the model
-#'   instance to unload. Must be one name, given as a single string.
+#'   instance to unload. Must be one name, given as a single string. The
+#'   string must be valid in its declared encoding and not marked `"bytes"`.
+#'   A class, names, and the S4 bit are removed before the name is sent.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -21,7 +23,8 @@
 #'   API](https://lmstudio.ai/docs/developer/rest/unload)
 #'
 #' @return Invisibly returns a character string representing the unloaded
-#'   \code{instance_id} upon success.
+#'   \code{instance_id} upon success. It is a plain string, with no class,
+#'   names, or S4 bit.
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
