@@ -280,6 +280,23 @@ test_that("lms_chat_batch() refuses a store flag on the openai route", {
   expect_identical(probe$calls, 0L)
 })
 
+test_that("lms_chat_openai() sends a store in its dots unchecked", {
+  # It has no `store` argument, so the field goes to the server as any other
+  # dot (D-003), even a value that the three chat functions refuse.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  expect_false("store" %in% names(formals(lms_chat_openai)))
+  for (value in list(TRUE, "yes")) {
+    recorder <- local_request_recorder(mock_response(200L, openai_reply()))
+    lms_chat_openai(
+      "a-model",
+      list(list(role = "user", content = "hi")),
+      store = value
+    )
+    json <- request_body_text(recorder$requests[[1]])
+    expect_identical(jsonlite::parse_json(json)[["store"]], value)
+  }
+})
+
 test_that("store = NULL on the openai route sends no store field", {
   for (name in c("lms_chat", "lms_chat_batch")) {
     jsons <- sent_store_bodies(name, "openai", store = NULL)
