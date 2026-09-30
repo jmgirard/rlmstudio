@@ -281,10 +281,11 @@ lms_chat <- function(
 #'   `NA`, and so does a field whose name only starts with the one asked for,
 #'   such as `tokenX`. With `logprobs = TRUE`, the `logprobs` value of each
 #'   `"output_text"` part must follow seven rules, which the "Malformed
-#'   logprobs" section below lists. A value that breaks one raises `rlmstudio_bad_response`, and the
-#'   message names the first broken rule in the order the section below
-#'   gives. Parts of other types are not checked. With `logprobs = FALSE`, the value is not read, and the call
-#'   returns the text.
+#'   logprobs" section below lists. A value that breaks one raises
+#'   `rlmstudio_bad_response`, and the message names the first broken rule in
+#'   the order the section below gives. Parts of other types are not checked.
+#'   With `logprobs = FALSE`, the value is not read, and the call returns the
+#'   text.
 #'
 #'   With `simplify = TRUE`, the string or the `lms_chat_result` carries the
 #'   `id` field of the reply in a `response_id` attribute. Pass it as

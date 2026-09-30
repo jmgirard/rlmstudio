@@ -90,6 +90,8 @@ If a function raises `rlmstudio_bad_response` under a malformed-reply rule, itse
 - claim audit: 47 claims read, 1 corrected (R/conditions.R)
 - 2026-09-30: The claim audit found that the moved sentence "the other messages of the chat functions name `simplify = FALSE` ... with one exception" missed the mismatch and model-list lookup messages. The sentence now covers messages about the reply, and a new sentence names the two others. This is a change of meaning in moved text beyond T2's three kinds. The same reader re-read it as correct. AC1 to AC4 checks, `devtools::test()`, and `devtools::check()` were run again: all clean, 0 notes.
 - 2026-09-30: review evidence recorded for AC1 to AC7, all ticked. The consistency gate passed. Three fresh reviewers are running, and their findings are not yet triaged.
+- 2026-09-30: gate fixes F1 to F5 landed as docs and help text only. The checks for AC1 to AC4 and AC7 were run again, all clean.
+- step-7 approval: m064-malformed-section-split approved for merge
 
 ## Decisions
 
@@ -119,3 +121,5 @@ Independent review: three fresh reviewers (Opus diff-bug, Sonnet blame-history, 
 - F8 (diff-bug 5): each new section opens with "it", which names the class from "Malformed response". Every page puts that section right before the others. Proposed: reject, because the text moved whole and reads correctly in order.
 - F9 (blame-history 1): the removed cut-off sentence leaves the abort without a pointer to the warning. The "Cut-off reply" section keeps the pair. Proposed: reject, because the plan removes it on purpose.
 - F10 (blame-history 4, 5, 6, prior-review 2, 3): reports that the simplify sentence, the rule 5 split, and the lookup claim match the code and past decisions. No action.
+
+Gate triage (user choice at the merge chip): F1 to F5 fixed now, and F6 to F9 rejected for the reasons above. F1 and F5 reworded the NEWS entry. A review probe showed that `lms_chat()` aborts with the new candidate message, and that each failed element of `lms_chat_batch()` holds it. F2 reflowed the three lines. Other long lines in those files are also on `main`. F3 narrowed the note to a model list with the wrong shape and named `parse_ok_body()`, whose call sits before the shape check in `request_model_list()`. F4 added one sentence to "Malformed model list" with a link to `lms_chat_openai()`. After the fixes, `devtools::document()` was run and the checks were run again. AC1 gave 10 PASS, AC2 read 102 phrases with 0 unresolved, AC3 printed 0, and AC4 listed the same four files. `devtools::test()` gave FAIL 0 and PASS 20319. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.

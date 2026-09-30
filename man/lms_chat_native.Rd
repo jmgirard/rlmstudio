@@ -150,10 +150,11 @@ another shape, and so do \code{\link[=lms_unload_all]{lms_unload_all()}} and \co
 \code{force = TRUE}, which read that list. \code{\link[=lms_chat_openai]{lms_chat_openai()}} and
 \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it for such a model list too, with either
 setting of \code{simplify}, through the model lookup that a reply from another
-model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
-\code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their own with another
-shape, such as \code{{}}. A process that does not answer in HTTP gives an
-\code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_load]{lms_load()}},
+\code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their
+own with another shape, such as \code{{}}. A process that does not answer in
+HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the
+stronger test: it
 asks the host for a model list and reports \code{TRUE} only for a model list
 that \code{\link[=list_models]{list_models()}} can read.
 
@@ -286,11 +287,11 @@ not a JSON object. A body of \code{null} gets the message about its missing
 condition, or \code{NA} where the result is text, and the batch warns once and
 goes on. See the details of \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 
-A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}}
-about its reply also carries two more fields. A condition from the
-model-list lookup does not, as the "Reply from another model" section of
-\code{\link[=lms_chat_openai]{lms_chat_openai()}} says. The \code{content} field holds the reply content of the first choice,
-and the \code{finish_reason} field holds the finish reason of the first choice.
+A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} about its reply also carries two more
+fields. A condition from the model-list lookup does not, as the "Reply from
+another model" section of \code{\link[=lms_chat_openai]{lms_chat_openai()}} says. The \code{content} field
+holds the reply content of the first choice, and the \code{finish_reason} field
+holds the finish reason of the first choice.
 Both are \code{NULL} for a response with no \code{choices}. In the third case,
 \code{content} holds the value that was read, which is \code{NULL} for \code{null} or
 missing content. For the second, third, and fourth cases, the message names the

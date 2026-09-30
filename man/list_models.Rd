@@ -97,10 +97,11 @@ another shape, and so do \code{\link[=lms_unload_all]{lms_unload_all()}} and \co
 \code{force = TRUE}, which read that list. \code{\link[=lms_chat_openai]{lms_chat_openai()}} and
 \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it for such a model list too, with either
 setting of \code{simplify}, through the model lookup that a reply from another
-model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_load]{lms_load()}}, \code{\link[=lms_download]{lms_download()}}, and
-\code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their own with another
-shape, such as \code{{}}. A process that does not answer in HTTP gives an
-\code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the stronger test: it
+model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_load]{lms_load()}},
+\code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their
+own with another shape, such as \code{{}}. A process that does not answer in
+HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the
+stronger test: it
 asks the host for a model list and reports \code{TRUE} only for a model list
 that \code{\link[=list_models]{list_models()}} can read.
 
@@ -191,7 +192,10 @@ as an \code{rlmstudio_api_error} instead.
 
 \code{\link[=list_models]{list_models()}} also raises it for a status-200 model list with the wrong
 shape. \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE} raise it
-through \code{\link[=list_models]{list_models()}}. A model list must follow four rules. Each field is
+through \code{\link[=list_models]{list_models()}}. \code{\link[=lms_chat_openai]{lms_chat_openai()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}
+apply these rules to the model list of their model lookup, as the "Reply
+from another model" section of \code{\link[=lms_chat_openai]{lms_chat_openai()}} describes. A model list
+must follow four rules. Each field is
 read by its exact name, so a field named \code{keyX} does not stand in for
 \code{key}.
 \enumerate{

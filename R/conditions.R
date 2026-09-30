@@ -51,10 +51,11 @@
 #' `force = TRUE`, which read that list. [lms_chat_openai()] and
 #' [lms_chat_openresponses()] raise it for such a model list too, with either
 #' setting of `simplify`, through the model lookup that a reply from another
-#' model starts. [lms_chat()] raises it through them. [lms_load()], [lms_download()], and
-#' [lms_download_status()] raise it for a reply of their own with another
-#' shape, such as `{}`. A process that does not answer in HTTP gives an
-#' `httr2_failure` error. Use [lms_server_ready()] for the stronger test: it
+#' model starts. [lms_chat()] raises it through them. [lms_load()],
+#' [lms_download()], and [lms_download_status()] raise it for a reply of their
+#' own with another shape, such as `{}`. A process that does not answer in
+#' HTTP gives an `httr2_failure` error. Use [lms_server_ready()] for the
+#' stronger test: it
 #' asks the host for a model list and reports `TRUE` only for a model list
 #' that [list_models()] can read.
 #'
@@ -139,7 +140,10 @@
 #' @section Malformed model list:
 #' [list_models()] also raises it for a status-200 model list with the wrong
 #' shape. [lms_unload_all()] and [lms_load()] without `force = TRUE` raise it
-#' through [list_models()]. A model list must follow four rules. Each field is
+#' through [list_models()]. [lms_chat_openai()] and [lms_chat_openresponses()]
+#' apply these rules to the model list of their model lookup, as the "Reply
+#' from another model" section of [lms_chat_openai()] describes. A model list
+#' must follow four rules. Each field is
 #' read by its exact name, so a field named `keyX` does not stand in for
 #' `key`.
 #'
@@ -257,11 +261,11 @@
 #' condition, or `NA` where the result is text, and the batch warns once and
 #' goes on. See the details of [lms_chat_batch()].
 #'
-#' A condition from [lms_chat_openai()]
-#' about its reply also carries two more fields. A condition from the
-#' model-list lookup does not, as the "Reply from another model" section of
-#' [lms_chat_openai()] says. The `content` field holds the reply content of the first choice,
-#' and the `finish_reason` field holds the finish reason of the first choice.
+#' A condition from [lms_chat_openai()] about its reply also carries two more
+#' fields. A condition from the model-list lookup does not, as the "Reply from
+#' another model" section of [lms_chat_openai()] says. The `content` field
+#' holds the reply content of the first choice, and the `finish_reason` field
+#' holds the finish reason of the first choice.
 #' Both are `NULL` for a response with no `choices`. In the third case,
 #' `content` holds the value that was read, which is `NULL` for `null` or
 #' missing content. For the second, third, and fourth cases, the message names the

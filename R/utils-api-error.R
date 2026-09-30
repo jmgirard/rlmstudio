@@ -179,7 +179,9 @@ rlm_abort_bad_response <- function(
 #' `rlm_abort_bad_response()` does not apply to them. This hint names the kind
 #' of reply instead. The model-list lookup of `lms_chat_openai()` and
 #' `lms_chat_openresponses()` also aborts here, through
-#' `request_model_list()`, whatever the `simplify` of the chat call.
+#' `request_model_list()`, for a model list with the wrong shape, whatever the
+#' `simplify` of the chat call. A lookup body that does not parse as JSON
+#' aborts in `parse_ok_body()` instead.
 #'
 #' @param resp An httr2 response with status 200.
 #' @param label Character. The calling wrapper's own label.
