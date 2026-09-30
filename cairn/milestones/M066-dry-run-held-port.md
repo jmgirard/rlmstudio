@@ -52,10 +52,10 @@ a candidate row. The package code does not change.
 
 ## Coverage
 
-- AC1 → T1, T2
+- AC1 → T1, T2, T5, T6
 - AC2 → T1, T2
 - AC3 → T3
-- AC4 → T4
+- AC4 → T4, T7
 
 ## Tasks
 
@@ -75,6 +75,15 @@ a candidate row. The package code does not change.
       and `test-token.R`. Run the AC3 grep.
 - [x] T4: In a scratch copy, remove the retry and see the AC1 test go red.
       Then restore it. Run `devtools::test()` and `devtools::check()`.
+- [x] T5: Write an AC1 test first for a listener that never replies. Hold
+      the first port with `httpuv::startServer("127.0.0.1", port)` and a
+      handler that returns `NULL`. Run it against the current helper and
+      record the failure identity.
+- [x] T6: In `request_dry_run()`, give each try a 5-second timeout with
+      `httr2::req_timeout()`. Retry on any error of class `curl_error`, as
+      well as on the bind error. Update the helper comment.
+- [ ] T7: In a scratch copy, remove the `curl_error` retry and see the T5
+      test go red. Then run `devtools::test()` and `devtools::check()`.
 
 ## Work log
 
@@ -91,10 +100,14 @@ a candidate row. The package code does not change.
 - 2026-09-30: all tasks done. Status set to review. This is the unnamed-error candidate row.
 - 2026-09-30: review started. AC1 to AC3 verified. AC4 run, the document() check, and three reviewers are still running (checkpoint, review not done).
 - 2026-09-30: review return 1 (defect). AC1 fails. A listener on 127.0.0.1 that resets the connection, sends a non-HTTP banner, or never replies makes `request_target()` stop or hang with no retry. Status set to in-progress. See the Review section for the probe and the repair.
+- 2026-09-30: implement resumed. Minor amendment: added T5 to T7 for the review return, with Coverage lines. A probe showed that an httpuv handler that returns `NULL` never replies, so the T5 test needs no new package. Reset, banner, and timeout errors all have class `curl_error`.
+- 2026-09-30: T5 done. Against the old helper, the never-replies test gave no result after 20 seconds, and an alarm ended the run.
+- 2026-09-30: T6 done. `request_dry_run()` sets a 5-second timeout on each try and retries on any `curl_error`. The never-replies test passes with 2 tries. A probe with the reset and banner listeners got POST with 2 tries each. `devtools::test()`: 0 failed, 0 errors, 3 skipped.
 
 ## Decisions
 
 - 2026-09-30 (implement gate): If the dry run fails with httpuv's "Failed to create server" error, the shared dry-run helper also retries. That retry uses the same 5 tries and ends with the AC2 message. Linux, and probably Windows, is expected to refuse a bind to 0.0.0.0 on a port that 127.0.0.1 holds. On those systems, the forced-port tests get that error in place of an empty result. The helper catches no other error.
+- 2026-09-30 (review return): this entry narrows the one above. The shared dry-run helper also retries on any error of class `curl_error`. The dry run sends to the echo port alone, so a curl error means that the connection to that port failed. Each try gets a 5-second timeout, so a program that never replies ends the try. Five tries then fit inside the 30-second limit of `request_body_text()`. The helper still re-raises every other error.
 
 ## Review
 

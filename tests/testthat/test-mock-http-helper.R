@@ -134,6 +134,26 @@ test_that("request_target() reads a request when the echo server cannot bind the
   expect_identical(tries$n, 2L)
 })
 
+# An httpuv handler that returns NULL sends no reply, as a program that does
+# not speak HTTP can do. The dry run then ends with a curl error, which is the
+# third outcome the dry-run helper tries again on.
+test_that("request_target() reads a request when the program on the first dry-run port never replies", {
+  require_httpuv()
+  held <- free_port()
+  id <- httpuv::startServer("127.0.0.1", held, list(call = function(req) NULL))
+  withr::defer(httpuv::stopServer(id))
+  spare <- free_port(setdiff(20000:40000, held))
+  tries <- local_dry_run_ports(function(n) if (n == 1L) held else spare)
+  req <- httr2::request("http://localhost:1234/v1/models/load") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+
+  target <- request_target(req)
+
+  expect_identical(target$method, "POST")
+  expect_identical(target$body, list(model = "m"))
+  expect_identical(tries$n, 2L)
+})
+
 test_that("the dry-run helper names the cause when every try lands on a held port", {
   require_httpuv()
   held <- free_port()

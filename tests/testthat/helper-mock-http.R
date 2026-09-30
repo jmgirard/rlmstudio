@@ -181,17 +181,25 @@ request_body_text <- function(req, seconds = 30) {
 # an echo server on 0.0.0.0 at that port and sends the request to 127.0.0.1
 # there. A program that listens on 127.0.0.1 alone at that port does not stop
 # find_port(), and on macOS the echo server binds too. The request then goes
-# to that program, and the result holds no method, path, or body. If the echo
-# server cannot bind, the dry run stops with httpuv's "Failed to create
-# server". In both cases this helper tries again on a new port. After `tries`
-# tries, it stops and names the likely cause. No other error is caught.
-request_dry_run <- function(req, redact_headers = TRUE, tries = 5L) {
+# to that program. If it answers in HTTP, the result holds no method, path, or
+# body. If it closes the connection, sends text that is not HTTP, or never
+# replies, the dry run stops with a curl error. Each try gets `seconds`, so a
+# program that never replies ends the try with curl's timeout error. The dry
+# run sends to the echo port alone, so every curl error comes from that port.
+# If the echo server cannot bind, the dry run stops with httpuv's "Failed to
+# create server". In each case this helper tries again on a new port. After
+# `tries` tries, it stops and names the likely cause. No other error is
+# caught.
+request_dry_run <- function(req, redact_headers = TRUE, tries = 5L,
+                            seconds = 5) {
   require_httpuv()
+  req <- httr2::req_timeout(req, seconds)
   for (i in seq_len(tries)) {
     out <- tryCatch(
       httr2::req_dry_run(req, quiet = TRUE, redact_headers = redact_headers),
       error = function(cnd) {
-        if (!identical(conditionMessage(cnd), "Failed to create server")) {
+        if (!inherits(cnd, "curl_error") &&
+          !identical(conditionMessage(cnd), "Failed to create server")) {
           stop(cnd)
         }
         NULL
