@@ -77,6 +77,9 @@ reply in a \code{response_id} attribute. Pass it as \code{previous_response_id} 
 continue the thread. The string has no attribute when \code{response_id} is
 absent or is not one string. A reply sent with \code{store = FALSE} in \code{...}
 carries no \code{response_id}, so its string has no attribute.
+\code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} reads the attribute from the \code{id} field of its
+reply instead. An OpenResponses reply sent with \code{store = FALSE} still
+carries an \code{id}, so its value still carries the attribute.
 }
 \description{
 Direct interface to LM Studio's v1 Native endpoint. Optimized for stateful chats and hardware control.

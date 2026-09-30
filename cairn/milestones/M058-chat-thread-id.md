@@ -1,6 +1,6 @@
 # M058: Continue a chat thread by its reply id
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -89,7 +89,7 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - AC3 → T2, T6
 - AC4 → T3
 - AC5 → T3, T4
-- AC6 → T5
+- AC6 → T5, T8
 - AC7 → T7
 
 ## Tasks
@@ -127,6 +127,10 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - [x] T7: Run `devtools::check()` on a `git archive` of 30a743e and record its note headings.
       Then run `devtools::test()` and `devtools::check()` on the branch, with
       `RLMSTUDIO_API_TOKEN` set (M009 lesson).
+- [x] T8: Review return 1. On the `lms_chat_native()` page, state that the attribute of
+      `lms_chat_openresponses()` comes from the `id` field and that its `store = FALSE` reply
+      still carries one. On the `lms_chat_openresponses()` page, state the native field and
+      that a native `store = FALSE` reply carries none. Run `devtools::document()`.
 
 ## Work log
 
@@ -148,6 +152,10 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - 2026-09-29: claim audit: 131 claims read, 8 corrected — NEWS.md, R/chat.R, data-raw/record-thread-cassette.R, tests/testthat/test-thread.R
 - 2026-09-29: the claim audit found 14 testthat failure files in `tests/testthat/_problems/` that the T2 commit took in. They are removed, and `.gitignore` and `.Rbuildignore` now exclude that folder. After these fixes, the full suite gave 0 failures and 3 live skips.
 - 2026-09-29: review return 1 (defect). AC6 fails as written: `man/lms_chat_native.Rd` omits the OpenResponses `store = FALSE` fact and the `id` field, and `man/lms_chat_openresponses.Rd` omits the native ones. AC1 to AC5 and AC7 passed.
+- 2026-09-29: implement resumed after review return 1. Minor amendment: T8 added for the AC6 fix, and Coverage now maps AC6 to T5 and T8. No question gate, because the return names the fix.
+- 2026-09-29: T8 done. Two sentences each on the `lms_chat_native()` and `lms_chat_openresponses()` pages give the other route's reply field and `store = FALSE` fact. A second `devtools::document()` run left no diff. Full suite 0 failures, 3 live skips.
+- 2026-09-29: claim audit: 6 claims read, 0 corrected — R/chat.R
+- 2026-09-29: status review.
 
 ## Decisions
 

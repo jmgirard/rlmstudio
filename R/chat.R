@@ -230,7 +230,9 @@ lms_chat <- function(
 #'   `previous_response_id` to continue the thread. The value has no
 #'   attribute when `id` is absent or is not one string. A reply sent with
 #'   `store = FALSE` in `...` still carries an `id`, so its value still
-#'   carries the attribute.
+#'   carries the attribute. [lms_chat_native()] reads the attribute from the
+#'   `response_id` field of its reply instead. A native reply sent with
+#'   `store = FALSE` carries no `response_id`, so its value has no attribute.
 #'
 #'   With either setting of `simplify`, a reply from a model other than the
 #'   one asked for raises `rlmstudio_model_mismatch`. See the "Reply from
@@ -1285,6 +1287,9 @@ with_response_id <- function(value, id) {
 #'   continue the thread. The string has no attribute when `response_id` is
 #'   absent or is not one string. A reply sent with `store = FALSE` in `...`
 #'   carries no `response_id`, so its string has no attribute.
+#'   [lms_chat_openresponses()] reads the attribute from the `id` field of its
+#'   reply instead. An OpenResponses reply sent with `store = FALSE` still
+#'   carries an `id`, so its value still carries the attribute.
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
