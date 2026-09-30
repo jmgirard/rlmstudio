@@ -101,7 +101,7 @@ defines top-level blocks already gives one block per pass.
 - [x] T8: (review O7) Make `loop-sweep.R` report each `expect_*()` call
       that a parent block runs before or between its nested `test_that()`
       calls. Show rows at the commit before T7, and no rows after T7.
-- [ ] T9: (review O3, O4, B2) In `test-arg-guards.R`, give distinct
+- [x] T9: (review O3, O4, B2) In `test-arg-guards.R`, give distinct
       subtest names to three sets of loops. The first is the two `cases`
       loops near `:680` and `:698`. The second is the loop pair in the
       `empty_rows()` test near `:2500`. The third is the "a request of"
@@ -133,6 +133,7 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: T7 done. The T8 sweep found 21 parent expectations before a subtest at the pre-T7 head. Each moved after its loops or into its own subtest. The `other` loop at `test-arg-guards.R:1708` became one `expect_identical()` of the rules whose detail the message holds. The sweep then printed 0 such rows. A plant of `"planted"` in the export list of `test-store.R` stopped `test_dir(stop_on_failure = TRUE)` with "Test failures". Its diff showed `"planted"`. The same plant on the pre-T7 file did not stop. The five edited files ran 0 failed and 0 errors.
 - 2026-09-30: after T7, `devtools::test()` gave 0 failed, 0 errors, 3 skipped, and 19365 passed. The drop from 19707 is the `other` loop, now one check per probe, and parent passes that the results table no longer counts.
 - 2026-09-30: T8 done. `loop-sweep.R` adds rows with the status `before-subtest`, one per `expect_*()` call that a block runs before or between its nested `test_that()` calls. It skips calls inside a function literal. At 0b6d583, before T7, it prints 21 such rows, which hold every site that review O1 names. At d32ea11 it prints 0. Its other rows at 0b6d583 match the old script line for line. A scratch fixture of seven blocks gave rows for the three that hold an early call and none for the four that do not.
+- 2026-09-30: T9 done. In `test-arg-guards.R` the two `cases` loops now name their subtests "<label> in a data frame" and "<label> in a list and a vector". The request loop names "request <i> of <label>". The `empty_rows()` pair names "at top level" and "one level down". Before T9, `test_file()` gave 15 full test names twice. After it, 0 of 995. `devtools::test()` gave 0 failed, 0 errors, 3 skipped, and 19371 passed.
 
 ## Decisions
 

@@ -677,7 +677,7 @@ test_that("a schema property name that cannot name a column aborts before the se
     )
   )
   for (case in cases) {
-    test_that(case$label, {
+    test_that(paste(case$label, "in a data frame"), {
       err <- expect_error(
         batch(case$properties),
         class = "rlang_error",
@@ -698,7 +698,7 @@ test_that("a schema property name that cannot name a column aborts before the se
   # The list and vector formats keep the replies as parsed, so the same
   # schemas send their requests.
   for (case in cases) {
-    test_that(case$label, {
+    test_that(paste(case$label, "in a list and a vector"), {
       out <- batch(case$properties, "list")
       expect_identical(out, list(list(a = "x")), info = case$label)
       expect_warning(
@@ -1050,9 +1050,9 @@ for (name in stream_domain()) {
                   info = label
                 )
               })
-              for (req in recorder$requests) {
-                test_that(paste("a request of", label), {
-                  body <- request_target(req)$body
+              for (i in seq_along(recorder$requests)) {
+                test_that(paste("request", i, "of", label), {
+                  body <- request_target(recorder$requests[[i]])$body
                   if (is.null(value)) {
                     expect_false("stream" %in% names(body), info = label)
                   } else {
@@ -2525,10 +2525,11 @@ test_that("empty_rows() finds no empty row in a column that is not a vector", {
       )
       nested <- data.frame(role = NA_character_)
       nested$sub <- top
-      for (value in list(top, nested)) {
-        test_that(paste("columns", toString(names(value))), {
-          expect_no_warning(result <- empty_rows(value))
-          expect_identical(result, FALSE, info = label)
+      frames <- list("at top level" = top, "one level down" = nested)
+      for (where in names(frames)) {
+        test_that(where, {
+          expect_no_warning(result <- empty_rows(frames[[where]]))
+          expect_identical(result, FALSE, info = paste(label, where))
         })
       }
     })
