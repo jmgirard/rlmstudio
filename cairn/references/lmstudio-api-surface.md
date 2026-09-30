@@ -60,6 +60,17 @@ all.
   with `previous_response_id`. A caller who wants no stored thread sends
   `store: false`. The package now takes `previous_response_id` on the native
   and OpenResponses routes and returns the id in a `response_id` attribute.
+  On 2026-09-30, LM Studio 0.4.25+1 with google/gemma-3-1b gave these results
+  (M061). `/api/v1/chat` returned 200 for `store` true and false. The `true`
+  reply carried a `response_id`, and the `false` reply had no `response_id`
+  field, so there is no id to continue from. `/v1/responses` returned 200 for
+  both, and both replies carried an `id` and echoed `store`. A continuation
+  from the id of the `false` reply returned status 400 with the `code`
+  `"previous_response_not_found"`. Continuations from the id of a `true` reply
+  returned 200 on both routes. `/v1/chat/completions` returned 200 for `store`
+  true and false. It has no GET route for a stored completion, so nothing
+  showed that it keeps a reply. A `store` of `"yes"` returned status 400 with
+  the `code` `"invalid_type"` on `/api/v1/chat` and `/v1/responses`.
 - **Per-call statistics.** A `/api/v1/chat` response carries a `stats` object
   with `input_tokens`, `total_output_tokens`, `reasoning_output_tokens`,
   `tokens_per_second`, `time_to_first_token_seconds`, and
