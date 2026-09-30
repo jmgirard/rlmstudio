@@ -98,7 +98,7 @@ defines top-level blocks already gives one block per pass.
       one expectation with no loop. Plant a wrong value at
       `test-store.R:69`, and make sure that
       `test_dir(stop_on_failure = TRUE)` stops.
-- [ ] T8: (review O7) Make `loop-sweep.R` report each `expect_*()` call
+- [x] T8: (review O7) Make `loop-sweep.R` report each `expect_*()` call
       that a parent block runs before or between its nested `test_that()`
       calls. Show rows at the commit before T7, and no rows after T7.
 - [ ] T9: (review O3, O4, B2) In `test-arg-guards.R`, give distinct
@@ -131,6 +131,8 @@ defines top-level blocks already gives one block per pass.
 - 2026-09-30: implement resumed after defect return 1. Main had not moved. Question gate: if the four O2 wraps are undone, four `for (name in ` loops go back to `flat`, which AC1 forbids. The maintainer chose to keep the wraps and move the parent expectations after the loops. T7's undo clause now applies only to inner loops in `test-arg-guards.R`, as one expectation with no loop.
 - 2026-09-30: a scratch file under testthat 3.3.2 showed which parent results the `test_file()` data frame keeps. It drops passes before and after the nested subtests, and failures before or between them. It keeps a failure after the last subtest.
 - 2026-09-30: T7 done. The T8 sweep found 21 parent expectations before a subtest at the pre-T7 head. Each moved after its loops or into its own subtest. The `other` loop at `test-arg-guards.R:1708` became one `expect_identical()` of the rules whose detail the message holds. The sweep then printed 0 such rows. A plant of `"planted"` in the export list of `test-store.R` stopped `test_dir(stop_on_failure = TRUE)` with "Test failures". Its diff showed `"planted"`. The same plant on the pre-T7 file did not stop. The five edited files ran 0 failed and 0 errors.
+- 2026-09-30: after T7, `devtools::test()` gave 0 failed, 0 errors, 3 skipped, and 19365 passed. The drop from 19707 is the `other` loop, now one check per probe, and parent passes that the results table no longer counts.
+- 2026-09-30: T8 done. `loop-sweep.R` adds rows with the status `before-subtest`, one per `expect_*()` call that a block runs before or between its nested `test_that()` calls. It skips calls inside a function literal. At 0b6d583, before T7, it prints 21 such rows, which hold every site that review O1 names. At d32ea11 it prints 0. Its other rows at 0b6d583 match the old script line for line. A scratch fixture of seven blocks gave rows for the three that hold an early call and none for the four that do not.
 
 ## Decisions
 
