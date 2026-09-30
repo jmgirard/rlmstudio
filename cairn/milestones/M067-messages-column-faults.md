@@ -1,13 +1,13 @@
 # M067: A messages data frame with a wrong-length or unwritable column gets a message that names the fault
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** user-facing — the change is the error text of the exported `lms_chat_openai()`
-- **Branch/PR:** —
+- **Branch/PR:** m067-messages-column-faults
 
 ## Goal
 
@@ -135,6 +135,7 @@ row.
 - 2026-09-30: criteria audit (full mode, fresh Opus reader, two passes). Pass 1: AC1 refused a length-1 `POSIXlt` that works today. The `NA` matrix frame was unstated. Probes missed shapes, among them a 1-d array of length 1 that gives a raw R error. AC2 and AC3 promised past their probes. Pass 2: `empty_rows()` needed a stated reading of wrong-length columns, and the Facts undercounted the warning probes. Each finding was fixed before the gate.
 - 2026-09-30: plan gate chose a row-count rule over plain and `"AsIs"` columns over one over every column by `length()`. The wider rule refuses a length-1 `POSIXlt` that is sent today. Falsified by a report that such a column sent a wrong value, or a classed wrong-length column whose column line a user misreads.
 - 2026-09-30: plan gate chose naming the first column that fails a lone write over keeping the jsonlite text alone. Falsified by a data frame whose write fails while each column writes alone.
+- 2026-09-30: implement started on branch m067-messages-column-faults. The question gate chose an info line for AC3. Its text is `Column {.val {name}} is the first column that jsonlite cannot write on its own.` The name is quoted, as model names are in other errors.
 
 ## Decisions
 

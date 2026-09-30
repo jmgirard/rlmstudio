@@ -9,7 +9,7 @@ _Last hygiene check: 2026-09-30 (M066 done, M063 row pruned, Linux retry-test ro
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M067 | A messages data frame with a wrong-length or unwritable column gets a message that names the fault | planned | none | normal | milestones/M067-messages-column-faults.md |
+| M067 | A messages data frame with a wrong-length or unwritable column gets a message that names the fault | in-progress | none | normal | milestones/M067-messages-column-faults.md |
 | M066 | A test that reads a request survives a dry-run port that another program holds | done | none | high | milestones/archive/M066-dry-run-held-port.md |
 | M065 | An error in one test-loop pass no longer stops the later passes | done | none | normal | milestones/archive/M065-nested-loop-subtests.md |
 | M064 | Each help page shows the malformed-reply rules that its function applies | done | none | normal | milestones/archive/M064-malformed-section-split.md |
