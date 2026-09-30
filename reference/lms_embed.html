@@ -83,10 +83,11 @@ missing values.</p></dd>
 
 
 <dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, the default, returns a numeric matrix
-with one row per input. Any other value returns a list with one element
-per request: the parsed response body, unchanged, or the condition of a
-request that failed.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. If <code>TRUE</code>, the default, returns a
+numeric matrix with one row per input. <code>FALSE</code> returns a list with one
+element per request: the parsed response body, unchanged, or the
+condition of a request that failed. Any other value, <code>NULL</code> and <code>NA</code>
+included, aborts before the check for a running server.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -119,10 +120,13 @@ least as large as <code>length(input)</code> sends every text in one request.</p
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p>Logical or <code>NULL</code>. Whether to suppress the progress bar. <code>NULL</code>
-reads the <code>rlmstudio.quiet</code> option. The bar shows only when the call sends
-more than one request. <code>quiet</code> does not suppress the warning about failed
-inputs.</p></dd>
+<dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>, the default. <code>NULL</code> follows the
+<code>rlmstudio.quiet</code> option. <code>TRUE</code> starts no progress bar, and <code>FALSE</code> starts
+one, also when the option is <code>TRUE</code>. cli draws a started bar only after a
+delay, two seconds by default. A bar starts only when the
+call sends more than one request. Any other value, <code>NA</code> included, aborts before the
+check for a running server. <code>quiet</code> does not suppress the warning about
+failed inputs.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -184,9 +188,10 @@ split it into pieces before the call. Or unload the model with
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
 <code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
-<code>type</code> or <code>quiet</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>loaded</code>
-or <code>detailed</code> of <code><a href="list_models.html">list_models()</a></code>, or a <code>stream</code> in the <code>...</code> of a chat
-function, aborts
+<code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
+argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
+the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A

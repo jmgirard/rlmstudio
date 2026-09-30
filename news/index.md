@@ -2,6 +2,89 @@
 
 ## rlmstudio (development version)
 
+- Each `TRUE` or `FALSE` argument now takes only `TRUE` or `FALSE`. Any
+  other value aborts with a message that names the argument, and the
+  abort has no condition class. It aborts before the check for a running
+  server and sends no request. A function that makes no such check
+  aborts before the `lms` CLI runs. A named `TRUE`, or a `TRUE` or
+  `FALSE` in a one-by-one matrix, still passes.
+
+  - `simplify` of
+    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+    [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+    [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+    and
+    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+    now aborts on any other value. So does `logprobs` of
+    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+    [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+    and
+    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md).
+    So do `echo_load_config` and `force` of
+    [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
+    and `force` of
+    [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md).
+    So do `json`, `verbose`, and `quiet` of
+    [`lms_server_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_status.md).
+    Before, each read any value other than `TRUE` as `FALSE`, so `NA`,
+    `"yes"`, `1`, and `NULL` acted as `FALSE`.
+  - `flash_attention` and `offload_kv_cache_to_gpu` of
+    [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+    must be `TRUE`, `FALSE`, or `NULL`. Before, the function sent the
+    result of [`as.logical()`](https://rdrr.io/r/base/logical.html) for
+    any value. So `1` and `"true"` were sent as `true`, `NA` and `"yes"`
+    as `null`, and `c(TRUE, FALSE)` as an array.
+  - A `logprobs` in the `...` of
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    must be `TRUE` or `FALSE`, also under a shortened name such as
+    `log`. Before, any other value acted as `FALSE`.
+  - Each element of the `...` of
+    [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
+    named exactly `logprobs` must be `TRUE`, `FALSE`, or `NULL`. None of
+    them goes into the request body, and a `TRUE` still warns. Before,
+    only a first `logprobs` of `TRUE` was dropped, and a value such as
+    `FALSE` or `"yes"` went into the request body. A longer name such as
+    `logprobs_x` no longer warns, and it goes to the server as any other
+    field does.
+
+- `quiet` of
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
+  and
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now defaults to `NULL`, as in
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md).
+  `NULL` follows the `rlmstudio.quiet` option. `TRUE` hides the messages
+  and starts no progress bar. `FALSE` prints the messages and starts the
+  bar, and the option does not change that. Before, with the option
+  `TRUE`, `quiet = FALSE` in
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+  and
+  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+  still hid their messages. With the option `TRUE`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  now starts no progress bar by default. Before, its default
+  `quiet = FALSE` started the bar whatever the option said.
+
+  - `quiet` of
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    and
+    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+    must now be `TRUE`, `FALSE`, or `NULL`. Before, any other value
+    acted as `FALSE`.
+  - If `quiet` or the option is `TRUE`, the warnings about failed
+    inputs, cut-off replies, and a vector format that returns a list
+    still show.
+  - The option does not change `quiet` of
+    [`lms_server_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_status.md),
+    which passes `--quiet` to the `lms` CLI.
+  - The
+    [`?rlmstudio`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-package.md)
+    help page now describes the `rlmstudio.quiet` option. Before, the
+    entry did not reach the page.
+
 - The hint in a 401 or 403 abort message now matches the request that
   was sent. If the request carried a token, the hint says that the
   server rejected it. If not, the hint names `RLMSTUDIO_API_TOKEN`.
@@ -91,9 +174,8 @@
     element can be `NA`, empty, or whitespace only. A factor aborts. A
     type that no model has, such as `"vlm"`, still returns an empty data
     frame and a message.
-  - `quiet` must be `TRUE`, `FALSE`, or `NULL`. `NULL` is new. If the
-    `rlmstudio.quiet` option is not `TRUE`, `NULL` prints the message,
-    as `FALSE` does.
+  - `quiet` must be `TRUE`, `FALSE`, or `NULL`. `NULL` is new. The entry
+    above on the `quiet` default says what each value does.
   - `loaded` and `detailed` must be `TRUE` or `FALSE`.
 
 - With `api_type = "openai"`, an object `schema`,
@@ -127,9 +209,10 @@
   `id`, `key`, `type`, and `display_name`. Each field of the load
   configuration of an instance, such as `context_length`, gets a column
   of its own. With no loaded instance of a type in `type`, it returns a
-  zero-row data frame with the four columns. Unless `quiet = TRUE` or
-  the `rlmstudio.quiet` option is `TRUE`, it also prints a message. It
-  does not include four fields that `lms ps --json` reports. They are
+  zero-row data frame with the four columns. It also prints a message,
+  which `quiet` controls as in
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md).
+  It does not include four fields that `lms ps --json` reports. They are
   the generation status, the queued requests, the ttl, and the last-used
   time.
 

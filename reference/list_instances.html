@@ -55,7 +55,7 @@ that <code><a href="list_models.html">list_models()</a></code> reads, so it hono
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">list_instances</span><span class="op">(</span></span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"llm"</span>, <span class="st">"embedding"</span><span class="op">)</span>,</span>
-<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  host <span class="op">=</span> <span class="st">"http://localhost:1234"</span>,</span>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -74,9 +74,9 @@ type that no model has, such as <code>"vlm"</code>, matches nothing.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>. If <code>TRUE</code>, suppresses the
-message printed when no instance is found. <code>FALSE</code> and <code>NULL</code> print it
-unless the <code>rlmstudio.quiet</code> option is <code>TRUE</code>. Defaults to <code>FALSE</code>.
+<dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>, the default. <code>NULL</code> follows the
+<code>rlmstudio.quiet</code> option. <code>TRUE</code> hides the message printed when no
+instance is found, and <code>FALSE</code> prints it, also when the option is <code>TRUE</code>.
 Any other value, <code>NA</code> included, aborts before the check for a running
 server. Does not suppress the abort raised when the server is not
 running.</p></dd>
@@ -98,7 +98,7 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
 whose type is in <code>type</code>, with the columns that the "Columns" section
 describes. If there is no such instance, it returns a <code>data.frame</code>
 with zero rows and the four character columns, invisibly, and prints a
-message unless <code>quiet = TRUE</code> or the <code>rlmstudio.quiet</code> option is <code>TRUE</code>.</p>
+message that <code>quiet</code> controls.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -145,9 +145,10 @@ object or array, gives a list-column. It holds each value as
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
 <code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
-<code>type</code> or <code>quiet</code> of <code><a href="list_models.html">list_models()</a></code> or <code>list_instances()</code>, a bad <code>loaded</code>
-or <code>detailed</code> of <code><a href="list_models.html">list_models()</a></code>, or a <code>stream</code> in the <code>...</code> of a chat
-function, aborts
+<code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code>list_instances()</code>, a bad <code>TRUE</code> or <code>FALSE</code>
+argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
+the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A

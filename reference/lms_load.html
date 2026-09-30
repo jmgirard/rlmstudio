@@ -79,7 +79,10 @@ a single batch during evaluation.</p></dd>
 
 
 <dt id="arg-flash-attention">flash_attention<a class="anchor" aria-label="anchor" href="#arg-flash-attention"></a></dt>
-<dd><p>Logical. Whether to optimize attention computation.</p></dd>
+<dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>. Whether to optimize
+attention computation. <code>NULL</code>, the default, leaves the field out of the
+request. Any other value, <code>NA</code> and <code>"true"</code> included, aborts before the
+check for a running server.</p></dd>
 
 
 <dt id="arg-num-experts">num_experts<a class="anchor" aria-label="anchor" href="#arg-num-experts"></a></dt>
@@ -88,20 +91,25 @@ models.</p></dd>
 
 
 <dt id="arg-offload-kv-cache-to-gpu">offload_kv_cache_to_gpu<a class="anchor" aria-label="anchor" href="#arg-offload-kv-cache-to-gpu"></a></dt>
-<dd><p>Logical. Whether KV cache is offloaded to GPU
-memory.</p></dd>
+<dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>. Whether KV cache
+is offloaded to GPU memory. <code>NULL</code>, the default, leaves the field out of
+the request. Any other value, <code>NA</code> and <code>"true"</code> included, aborts before
+the check for a running server.</p></dd>
 
 
 <dt id="arg-echo-load-config">echo_load_config<a class="anchor" aria-label="anchor" href="#arg-echo-load-config"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, echoes the final load
-configuration in the response.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. If <code>TRUE</code>, echoes the final
+load configuration in the response. Any other value, <code>NULL</code> and <code>NA</code>
+included, aborts before the check for a running server.</p></dd>
 
 
 <dt id="arg-force">force<a class="anchor" aria-label="anchor" href="#arg-force"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, bypasses the check for currently loaded
-models and requests a new instance from the server. Note that this does not
-overwrite or replace the existing model; it loads a second concurrent
-instance into VRAM. Defaults to <code>FALSE</code>.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. If <code>TRUE</code>, bypasses the check for
+currently loaded models and requests a new instance from the server. Note
+that this does not overwrite or replace the existing model; it loads a
+second concurrent instance into VRAM. Defaults to <code>FALSE</code>. Any other
+value, <code>NULL</code> and <code>NA</code> included, aborts before the check for a running
+server.</p></dd>
 
 
 <dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
@@ -134,9 +142,10 @@ returns a list containing the model's detailed load configuration.</p>
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
 <code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
-<code>type</code> or <code>quiet</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>loaded</code>
-or <code>detailed</code> of <code><a href="list_models.html">list_models()</a></code>, or a <code>stream</code> in the <code>...</code> of a chat
-function, aborts
+<code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
+argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
+the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A

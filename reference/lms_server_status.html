@@ -60,15 +60,21 @@ including whether it is running and its configuration.</p>
 
 
 <dl><dt id="arg-json">json<a class="anchor" aria-label="anchor" href="#arg-json"></a></dt>
-<dd><p>Logical. Output the status in machine-readable JSON format.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. Output the status in machine-readable JSON
+format. Any other value, <code>NULL</code> and <code>NA</code> included, aborts before the <code>lms</code>
+CLI runs.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>Logical. Enable detailed logging output.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. Enable detailed logging output. Any other
+value, <code>NULL</code> and <code>NA</code> included, aborts before the <code>lms</code> CLI runs.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p>Logical. Suppress all logging output.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. <code>TRUE</code> passes <code>--quiet</code> to the <code>lms</code> CLI,
+which suppresses all logging output. The <code>rlmstudio.quiet</code> option does not
+change it. Any other value, <code>NULL</code> and <code>NA</code> included, aborts before the
+<code>lms</code> CLI runs.</p></dd>
 
 
 <dt id="arg-log-level">log_level<a class="anchor" aria-label="anchor" href="#arg-log-level"></a></dt>

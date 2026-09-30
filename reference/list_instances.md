@@ -12,7 +12,7 @@ reads, so it honors `host` and `token`.
 ``` r
 list_instances(
   type = c("llm", "embedding"),
-  quiet = FALSE,
+  quiet = NULL,
   host = "http://localhost:1234",
   token = NULL
 )
@@ -30,11 +30,12 @@ list_instances(
 
 - quiet:
 
-  `TRUE`, `FALSE`, or `NULL`. If `TRUE`, suppresses the message printed
-  when no instance is found. `FALSE` and `NULL` print it unless the
-  `rlmstudio.quiet` option is `TRUE`. Defaults to `FALSE`. Any other
-  value, `NA` included, aborts before the check for a running server.
-  Does not suppress the abort raised when the server is not running.
+  `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+  `rlmstudio.quiet` option. `TRUE` hides the message printed when no
+  instance is found, and `FALSE` prints it, also when the option is
+  `TRUE`. Any other value, `NA` included, aborts before the check for a
+  running server. Does not suppress the abort raised when the server is
+  not running.
 
 - host:
 
@@ -52,8 +53,8 @@ list_instances(
 A `data.frame` with one row per loaded instance of a model whose type is
 in `type`, with the columns that the "Columns" section describes. If
 there is no such instance, it returns a `data.frame` with zero rows and
-the four character columns, invisibly, and prints a message unless
-`quiet = TRUE` or the `rlmstudio.quiet` option is `TRUE`.
+the four character columns, invisibly, and prints a message that `quiet`
+controls.
 
 ## Details
 
@@ -112,18 +113,21 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
 `model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`, or
-`batch_size`, a bad `type` or `quiet` of
+`batch_size`, a bad `type` of
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-or `list_instances()`, a bad `loaded` or `detailed` of
-[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-or a `stream` in the `...` of a chat function, aborts with an argument
-message and no condition class even when the server is down. A condition
-of class `rlmstudio_no_server` is raised when that connection cannot be
-opened. A refused connection raises it. So do an address the package
-cannot parse and a hostname that does not resolve. An address that
-neither accepts nor refuses the connection also raises it. That case
-waits for the operating system to give up, which can take a minute.
-Start the server with
+or `list_instances()`, a bad `TRUE` or `FALSE` argument such as
+`simplify`, `logprobs`, `quiet`, or `force`, a `stream` in the `...` of
+a chat function, or a `logprobs` in the `...` of
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+or
+[`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+aborts with an argument message and no condition class even when the
+server is down. A condition of class `rlmstudio_no_server` is raised
+when that connection cannot be opened. A refused connection raises it.
+So do an address the package cannot parse and a hostname that does not
+resolve. An address that neither accepts nor refuses the connection also
+raises it. That case waits for the operating system to give up, which
+can take a minute. Start the server with
 [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
 or give `host` the address that your server listens on.
 

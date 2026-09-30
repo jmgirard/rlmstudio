@@ -14,12 +14,13 @@ lms_daemon_stop(force = FALSE)
 
 - force:
 
-  Logical. If `TRUE`, attempts to stop the local server before shutting
-  down the daemon. The daemon cannot be stopped while the server is
-  actively running. Defaults to `FALSE`. If no server is running, the
-  message of
+  `TRUE` or `FALSE`. If `TRUE`, attempts to stop the local server before
+  shutting down the daemon. The daemon cannot be stopped while the
+  server is actively running. Defaults to `FALSE`. If no server is
+  running, the message of
   [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md)
-  says so.
+  says so. Any other value, `NULL` and `NA` included, aborts before the
+  `lms` CLI runs.
 
 ## Value
 

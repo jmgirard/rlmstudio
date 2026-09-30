@@ -18,15 +18,21 @@ lms_server_status(
 
 - json:
 
-  Logical. Output the status in machine-readable JSON format.
+  `TRUE` or `FALSE`. Output the status in machine-readable JSON format.
+  Any other value, `NULL` and `NA` included, aborts before the `lms` CLI
+  runs.
 
 - verbose:
 
-  Logical. Enable detailed logging output.
+  `TRUE` or `FALSE`. Enable detailed logging output. Any other value,
+  `NULL` and `NA` included, aborts before the `lms` CLI runs.
 
 - quiet:
 
-  Logical. Suppress all logging output.
+  `TRUE` or `FALSE`. `TRUE` passes `--quiet` to the `lms` CLI, which
+  suppresses all logging output. The `rlmstudio.quiet` option does not
+  change it. Any other value, `NULL` and `NA` included, aborts before
+  the `lms` CLI runs.
 
 - log_level:
 

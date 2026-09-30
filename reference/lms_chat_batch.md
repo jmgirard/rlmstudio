@@ -12,7 +12,7 @@ lms_chat_batch(
   format = c("vector", "list", "data.frame"),
   host = "http://localhost:1234",
   simplify = TRUE,
-  quiet = FALSE,
+  quiet = NULL,
   ...,
   token = NULL
 )
@@ -44,20 +44,31 @@ lms_chat_batch(
 
 - simplify:
 
-  Logical. If TRUE, parses outputs.
+  `TRUE` or `FALSE`. If `TRUE`, parses outputs. Any other value, `NULL`
+  and `NA` included, aborts before the check for a running server.
 
 - quiet:
 
-  Logical. Whether to suppress the progress bar.
+  `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+  `rlmstudio.quiet` option. `TRUE` starts no progress bar, and `FALSE`
+  starts one, also when the option is `TRUE`. cli draws a started bar
+  only after a delay, two seconds by default. Any other value, `NA`
+  included, aborts before the check for a running server. `quiet` does
+  not hide the warnings about failed inputs, cut-off replies, or a
+  vector format that returns a list.
 
 - ...:
 
   Additional arguments passed to `lms_chat`, such as `api_type`,
   `logprobs`, `schema`, or `ttl`. A `schema`, a `ttl`, and the
-  `api_type` that each needs are checked before the first call. The
-  package checks a `stream` here. A `stream` other than `FALSE` or
-  `NULL` aborts before the call checks for a running server, because the
-  package reads a whole reply and not a streamed one.
+  `api_type` that each needs are checked before the first call. A
+  `logprobs` here, or a shortened name that
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  reads as `logprobs`, must be `TRUE` or `FALSE`. Any other value,
+  `NULL` and `NA` included, aborts before the check for a running
+  server. The package checks a `stream` here. A `stream` other than
+  `FALSE` or `NULL` aborts before the call checks for a running server,
+  because the package reads a whole reply and not a streamed one.
 
 - token:
 
@@ -233,20 +244,21 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in `host` before they send the request. A
 function that checks its own arguments does that first, so a bad
 `model`, `job_id`, `input`, `inputs`, `messages`, `schema`, `ttl`, or
-`batch_size`, a bad `type` or `quiet` of
+`batch_size`, a bad `type` of
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 or
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
-a bad `loaded` or `detailed` of
-[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-or a `stream` in the `...` of a chat function, aborts with an argument
-message and no condition class even when the server is down. A condition
-of class `rlmstudio_no_server` is raised when that connection cannot be
-opened. A refused connection raises it. So do an address the package
-cannot parse and a hostname that does not resolve. An address that
-neither accepts nor refuses the connection also raises it. That case
-waits for the operating system to give up, which can take a minute.
-Start the server with
+a bad `TRUE` or `FALSE` argument such as `simplify`, `logprobs`,
+`quiet`, or `force`, a `stream` in the `...` of a chat function, or a
+`logprobs` in the `...` of `lms_chat_batch()` or
+[`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+aborts with an argument message and no condition class even when the
+server is down. A condition of class `rlmstudio_no_server` is raised
+when that connection cannot be opened. A refused connection raises it.
+So do an address the package cannot parse and a hostname that does not
+resolve. An address that neither accepts nor refuses the connection also
+raises it. That case waits for the operating system to give up, which
+can take a minute. Start the server with
 [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
 or give `host` the address that your server listens on.
 

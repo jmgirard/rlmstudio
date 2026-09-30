@@ -26,7 +26,8 @@ lms_server_start(
 - cors:
 
   Logical. Enable CORS support for web application development. Must be
-  `TRUE` or `FALSE`. Defaults to `FALSE`.
+  `TRUE` or `FALSE`. Defaults to `FALSE`. Any other value, `NULL` and
+  `NA` included, aborts before the `lms` CLI runs.
 
 - wait:
 

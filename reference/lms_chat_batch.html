@@ -51,7 +51,7 @@
 <span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"vector"</span>, <span class="st">"list"</span>, <span class="st">"data.frame"</span><span class="op">)</span>,</span>
 <span>  host <span class="op">=</span> <span class="st">"http://localhost:1234"</span>,</span>
 <span>  simplify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -84,17 +84,28 @@ one value and no missing values.</p></dd>
 
 
 <dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>
-<dd><p>Logical. If TRUE, parses outputs.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. If <code>TRUE</code>, parses outputs. Any other
+value, <code>NULL</code> and <code>NA</code> included, aborts before the check for a running
+server.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p>Logical. Whether to suppress the progress bar.</p></dd>
+<dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code>, the default. <code>NULL</code> follows the
+<code>rlmstudio.quiet</code> option. <code>TRUE</code> starts no progress bar, and <code>FALSE</code>
+starts one, also when the option is <code>TRUE</code>. cli draws a started bar only
+after a delay, two seconds by default. Any other value, <code>NA</code> included,
+aborts before the check for a running server. <code>quiet</code> does not hide the warnings
+about failed inputs, cut-off replies, or a vector format that returns a
+list.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to <code>lms_chat</code>, such as <code>api_type</code>,
 <code>logprobs</code>, <code>schema</code>, or <code>ttl</code>. A <code>schema</code>, a <code>ttl</code>, and the <code>api_type</code>
 that each needs are checked before the first call.
+A <code>logprobs</code> here, or a shortened name that <code><a href="lms_chat.html">lms_chat()</a></code> reads as
+<code>logprobs</code>, must be <code>TRUE</code> or <code>FALSE</code>. Any other value, <code>NULL</code> and <code>NA</code>
+included, aborts before the check for a running server.
 The package checks a <code>stream</code> here. A <code>stream</code> other than <code>FALSE</code> or
 <code>NULL</code> aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.</p></dd>
@@ -231,9 +242,10 @@ unchanged.</p>
 hostname and port named in <code>host</code> before they send the request. A function
 that checks its own arguments does that first, so a bad <code>model</code>, <code>job_id</code>,
 <code>input</code>, <code>inputs</code>, <code>messages</code>, <code>schema</code>, <code>ttl</code>, or <code>batch_size</code>, a bad
-<code>type</code> or <code>quiet</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>loaded</code>
-or <code>detailed</code> of <code><a href="list_models.html">list_models()</a></code>, or a <code>stream</code> in the <code>...</code> of a chat
-function, aborts
+<code>type</code> of <code><a href="list_models.html">list_models()</a></code> or <code><a href="list_instances.html">list_instances()</a></code>, a bad <code>TRUE</code> or <code>FALSE</code>
+argument such as <code>simplify</code>, <code>logprobs</code>, <code>quiet</code>, or <code>force</code>, a <code>stream</code> in
+the <code>...</code> of a chat function, or a <code>logprobs</code> in the <code>...</code> of
+<code>lms_chat_batch()</code> or <code><a href="lms_chat_native.html">lms_chat_native()</a></code>, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 <code>rlmstudio_no_server</code> is raised when that connection cannot be opened. A

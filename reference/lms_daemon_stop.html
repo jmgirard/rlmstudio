@@ -55,10 +55,11 @@ you are completely finished using LM Studio in headless mode.</p>
 
 
 <dl><dt id="arg-force">force<a class="anchor" aria-label="anchor" href="#arg-force"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, attempts to stop the local server before
-shutting down the daemon. The daemon cannot be stopped while the server
-is actively running. Defaults to <code>FALSE</code>. If no server is running, the
-message of <code><a href="lms_server_stop.html">lms_server_stop()</a></code> says so.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. If <code>TRUE</code>, attempts to stop the local server
+before shutting down the daemon. The daemon cannot be stopped while the
+server is actively running. Defaults to <code>FALSE</code>. If no server is running,
+the message of <code><a href="lms_server_stop.html">lms_server_stop()</a></code> says so. Any other value, <code>NULL</code> and
+<code>NA</code> included, aborts before the <code>lms</code> CLI runs.</p></dd>
 
 </dl></div>
     <div class="section level2">
