@@ -7,10 +7,11 @@
 lms_daemon_stop(force = FALSE)
 }
 \arguments{
-\item{force}{Logical. If \code{TRUE}, attempts to stop the local server before
-shutting down the daemon. The daemon cannot be stopped while the server
-is actively running. Defaults to \code{FALSE}. If no server is running, the
-message of \code{\link[=lms_server_stop]{lms_server_stop()}} says so.}
+\item{force}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, attempts to stop the local server
+before shutting down the daemon. The daemon cannot be stopped while the
+server is actively running. Defaults to \code{FALSE}. If no server is running,
+the message of \code{\link[=lms_server_stop]{lms_server_stop()}} says so. Any other value, \code{NULL} and
+\code{NA} included, aborts before the \code{lms} CLI runs.}
 }
 \value{
 Invisibly returns \code{TRUE} if the daemon stopped or was not

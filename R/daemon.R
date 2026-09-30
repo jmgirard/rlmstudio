@@ -112,10 +112,11 @@ build_args_daemon_down <- function() {
 #' This function then returns `FALSE`, and the daemon keeps running. In this
 #' scenario, you must close the desktop application manually.
 #'
-#' @param force Logical. If `TRUE`, attempts to stop the local server before
-#'   shutting down the daemon. The daemon cannot be stopped while the server
-#'   is actively running. Defaults to `FALSE`. If no server is running, the
-#'   message of [lms_server_stop()] says so.
+#' @param force `TRUE` or `FALSE`. If `TRUE`, attempts to stop the local server
+#'   before shutting down the daemon. The daemon cannot be stopped while the
+#'   server is actively running. Defaults to `FALSE`. If no server is running,
+#'   the message of [lms_server_stop()] says so. Any other value, `NULL` and
+#'   `NA` included, aborts before the `lms` CLI runs.
 #'
 #' @return Invisibly returns `TRUE` if the daemon stopped or was not
 #'   running, and `FALSE` if the LM Studio GUI manages it.
@@ -126,6 +127,8 @@ build_args_daemon_down <- function() {
 #' lms_daemon_stop(force = TRUE)
 #' }
 lms_daemon_stop <- function(force = FALSE) {
+  rlm_check_flag(force, "force")
+
   if (isTRUE(force)) {
     tryCatch(lms_server_stop(), error = function(e) NULL)
   }

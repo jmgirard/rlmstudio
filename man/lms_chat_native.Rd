@@ -25,13 +25,19 @@ missing values.}
 
 \item{host}{Character. Server URL.}
 
-\item{simplify}{Logical. If TRUE, parses output to text.}
+\item{simplify}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, parses output to text. Any
+other value, \code{NULL} and \code{NA} included, aborts before the check for a
+running server.}
 
 \item{...}{Additional API arguments. This endpoint rejects a \code{ttl} field
 with status 400, which raises \code{rlmstudio_api_error}.
 The package checks a \code{stream} here. A \code{stream} other than \code{FALSE} or
 \code{NULL} aborts before the call checks for a running server, because the
-package reads a whole reply and not a streamed one.}
+package reads a whole reply and not a streamed one.
+The package also checks each element named exactly \code{logprobs}. It must
+be \code{TRUE}, \code{FALSE}, or \code{NULL}, and any other value aborts before the check
+for a running server. The endpoint has no logprobs, so no \code{logprobs} field
+goes into the request body, and a \code{TRUE} warns.}
 
 \item{token}{Character or \code{NULL}. An API token for a server that requires
 authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
@@ -60,9 +66,10 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
-\code{type} or \code{quiet} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{loaded}
-or \code{detailed} of \code{\link[=list_models]{list_models()}}, or a \code{stream} in the \code{...} of a chat
-function, aborts
+\code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
+argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
+the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

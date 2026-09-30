@@ -645,9 +645,14 @@ test_that("a batch keeps going past a message that is not an object", {
 })
 
 test_that("the failed reply warning ignores quiet", {
-  # quiet = TRUE is what batch_with_sequence() passes. The option is the other
-  # way to silence the package, so it is set here with quiet left at FALSE.
+  # With the option on, `quiet = NULL` reads the option and hides the bar,
+  # `quiet = FALSE` decides over it, and `quiet = TRUE` hides the bar too. The
+  # warning shows in each case.
   withr::local_options(rlmstudio.quiet = TRUE)
+  expect_warning(
+    batch_with_sequence(invalid_valid_invalid(), "list", quiet = NULL),
+    "positions 1 and 3"
+  )
   expect_warning(
     batch_with_sequence(invalid_valid_invalid(), "list", quiet = FALSE),
     "positions 1 and 3"

@@ -26,10 +26,11 @@ missing values.}
 
 \item{host}{Character. Server URL.}
 
-\item{simplify}{Logical. If \code{TRUE}, the default, returns a numeric matrix
-with one row per input. Any other value returns a list with one element
-per request: the parsed response body, unchanged, or the condition of a
-request that failed.}
+\item{simplify}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, the default, returns a
+numeric matrix with one row per input. \code{FALSE} returns a list with one
+element per request: the parsed response body, unchanged, or the
+condition of a request that failed. Any other value, \code{NULL} and \code{NA}
+included, aborts before the check for a running server.}
 
 \item{...}{Additional fields for the request body. LM Studio ignores a
 field it does not recognize, and two OpenAI fields are worth naming for
@@ -52,10 +53,13 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 most texts that one request carries. The default is 100. A value at
 least as large as \code{length(input)} sends every text in one request.}
 
-\item{quiet}{Logical or \code{NULL}. Whether to suppress the progress bar. \code{NULL}
-reads the \code{rlmstudio.quiet} option. The bar shows only when the call sends
-more than one request. \code{quiet} does not suppress the warning about failed
-inputs.}
+\item{quiet}{\code{TRUE}, \code{FALSE}, or \code{NULL}, the default. \code{NULL} follows the
+\code{rlmstudio.quiet} option. \code{TRUE} starts no progress bar, and \code{FALSE} starts
+one, also when the option is \code{TRUE}. cli draws a started bar only after a
+delay, two seconds by default. A bar starts only when the
+call sends more than one request. Any other value, \code{NA} included, aborts before the
+check for a running server. \code{quiet} does not suppress the warning about
+failed inputs.}
 }
 \value{
 If \code{simplify = FALSE}, a list with one element per request, in
@@ -120,9 +124,10 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
-\code{type} or \code{quiet} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{loaded}
-or \code{detailed} of \code{\link[=list_models]{list_models()}}, or a \code{stream} in the \code{...} of a chat
-function, aborts
+\code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
+argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
+the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

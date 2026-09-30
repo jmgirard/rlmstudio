@@ -6,17 +6,25 @@
 #'   consider.
 #' @param eval_batch_size Integer. Number of input tokens to process together in
 #'   a single batch during evaluation.
-#' @param flash_attention Logical. Whether to optimize attention computation.
+#' @param flash_attention `TRUE`, `FALSE`, or `NULL`. Whether to optimize
+#'   attention computation. `NULL`, the default, leaves the field out of the
+#'   request. Any other value, `NA` and `"true"` included, aborts before the
+#'   check for a running server.
 #' @param num_experts Integer. Number of experts to use during inference for MoE
 #'   models.
-#' @param offload_kv_cache_to_gpu Logical. Whether KV cache is offloaded to GPU
-#'   memory.
-#' @param echo_load_config Logical. If \code{TRUE}, echoes the final load
-#'   configuration in the response.
-#' @param force Logical. If \code{TRUE}, bypasses the check for currently loaded
-#'   models and requests a new instance from the server. Note that this does not
-#'   overwrite or replace the existing model; it loads a second concurrent
-#'   instance into VRAM. Defaults to \code{FALSE}.
+#' @param offload_kv_cache_to_gpu `TRUE`, `FALSE`, or `NULL`. Whether KV cache
+#'   is offloaded to GPU memory. `NULL`, the default, leaves the field out of
+#'   the request. Any other value, `NA` and `"true"` included, aborts before
+#'   the check for a running server.
+#' @param echo_load_config `TRUE` or `FALSE`. If \code{TRUE}, echoes the final
+#'   load configuration in the response. Any other value, `NULL` and `NA`
+#'   included, aborts before the check for a running server.
+#' @param force `TRUE` or `FALSE`. If \code{TRUE}, bypasses the check for
+#'   currently loaded models and requests a new instance from the server. Note
+#'   that this does not overwrite or replace the existing model; it loads a
+#'   second concurrent instance into VRAM. Defaults to \code{FALSE}. Any other
+#'   value, `NULL` and `NA` included, aborts before the check for a running
+#'   server.
 #' @param host Character. The host address of the local server. Defaults to
 #'   "http://localhost:1234".
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -63,6 +71,14 @@ lms_load <- function(
   token = NULL
 ) {
   rlm_check_id(model, "model")
+  rlm_check_flag(flash_attention, "flash_attention", null_ok = TRUE)
+  rlm_check_flag(
+    offload_kv_cache_to_gpu,
+    "offload_kv_cache_to_gpu",
+    null_ok = TRUE
+  )
+  rlm_check_flag(echo_load_config, "echo_load_config")
+  rlm_check_flag(force, "force")
 
   stop_if_no_server(host)
 
@@ -89,7 +105,9 @@ lms_load <- function(
     }
   }
 
-  # 1. Build the explicit body based on current known parameters
+  # 1. Build the explicit body based on current known parameters. `isTRUE()`
+  # sends each of the two load settings as a plain `true` or `false`, with no
+  # names or dims.
   body <- list(
     model = model,
     context_length = if (!is.null(context_length)) {
@@ -103,13 +121,13 @@ lms_load <- function(
       NULL
     },
     flash_attention = if (!is.null(flash_attention)) {
-      as.logical(flash_attention)
+      isTRUE(flash_attention)
     } else {
       NULL
     },
     num_experts = if (!is.null(num_experts)) as.integer(num_experts) else NULL,
     offload_kv_cache_to_gpu = if (!is.null(offload_kv_cache_to_gpu)) {
-      as.logical(offload_kv_cache_to_gpu)
+      isTRUE(offload_kv_cache_to_gpu)
     } else {
       NULL
     },

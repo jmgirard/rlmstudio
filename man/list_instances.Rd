@@ -6,7 +6,7 @@
 \usage{
 list_instances(
   type = c("llm", "embedding"),
-  quiet = FALSE,
+  quiet = NULL,
   host = "http://localhost:1234",
   token = NULL
 )
@@ -18,9 +18,9 @@ element can be \code{NA}, empty, or whitespace only. Any other value, \code{NULL
 and a factor included, aborts before the check for a running server. A
 type that no model has, such as \code{"vlm"}, matches nothing.}
 
-\item{quiet}{\code{TRUE}, \code{FALSE}, or \code{NULL}. If \code{TRUE}, suppresses the
-message printed when no instance is found. \code{FALSE} and \code{NULL} print it
-unless the \code{rlmstudio.quiet} option is \code{TRUE}. Defaults to \code{FALSE}.
+\item{quiet}{\code{TRUE}, \code{FALSE}, or \code{NULL}, the default. \code{NULL} follows the
+\code{rlmstudio.quiet} option. \code{TRUE} hides the message printed when no
+instance is found, and \code{FALSE} prints it, also when the option is \code{TRUE}.
 Any other value, \code{NA} included, aborts before the check for a running
 server. Does not suppress the abort raised when the server is not
 running.}
@@ -36,7 +36,7 @@ A \code{data.frame} with one row per loaded instance of a model
 whose type is in \code{type}, with the columns that the "Columns" section
 describes. If there is no such instance, it returns a \code{data.frame}
 with zero rows and the four character columns, invisibly, and prints a
-message unless \code{quiet = TRUE} or the \code{rlmstudio.quiet} option is \code{TRUE}.
+message that \code{quiet} controls.
 }
 \description{
 Retrieves the loaded model instances on the server via the LM Studio REST
@@ -96,9 +96,10 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
-\code{type} or \code{quiet} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{loaded}
-or \code{detailed} of \code{\link[=list_models]{list_models()}}, or a \code{stream} in the \code{...} of a chat
-function, aborts
+\code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
+argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
+the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

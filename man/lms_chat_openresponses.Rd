@@ -26,10 +26,13 @@ missing values.}
 
 \item{host}{Character. Server URL.}
 
-\item{logprobs}{Logical. Whether to return token probabilities.}
+\item{logprobs}{\code{TRUE} or \code{FALSE}. Whether to return token probabilities.
+Any other value, \code{NULL} and \code{NA} included, aborts before the check for a
+running server.}
 
-\item{simplify}{Logical. If TRUE, parses output to text and dataframe. If
-FALSE, returns raw list.}
+\item{simplify}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, parses output to text and
+dataframe. If \code{FALSE}, returns raw list. Any other value, \code{NULL} and \code{NA}
+included, aborts before the check for a running server.}
 
 \item{...}{Additional API arguments (e.g., top_logprobs, temperature). This
 endpoint accepts a \code{ttl} field and ignores it. The model keeps the idle
@@ -81,9 +84,10 @@ Functions that call the LM Studio REST API open a TCP connection to the
 hostname and port named in \code{host} before they send the request. A function
 that checks its own arguments does that first, so a bad \code{model}, \code{job_id},
 \code{input}, \code{inputs}, \code{messages}, \code{schema}, \code{ttl}, or \code{batch_size}, a bad
-\code{type} or \code{quiet} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{loaded}
-or \code{detailed} of \code{\link[=list_models]{list_models()}}, or a \code{stream} in the \code{...} of a chat
-function, aborts
+\code{type} of \code{\link[=list_models]{list_models()}} or \code{\link[=list_instances]{list_instances()}}, a bad \code{TRUE} or \code{FALSE}
+argument such as \code{simplify}, \code{logprobs}, \code{quiet}, or \code{force}, a \code{stream} in
+the \code{...} of a chat function, or a \code{logprobs} in the \code{...} of
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_chat_native]{lms_chat_native()}}, aborts
 with an argument message and no condition class even when the server is
 down. A condition of class
 \code{rlmstudio_no_server} is raised when that connection cannot be opened. A

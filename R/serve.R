@@ -39,7 +39,8 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'   whole number from 1 to 65535, given as a number and not as an array or a
 #'   string. `NULL`, the default, lets LM Studio use the last used port.
 #' @param cors Logical. Enable CORS support for web application development.
-#'   Must be `TRUE` or `FALSE`. Defaults to `FALSE`.
+#'   Must be `TRUE` or `FALSE`. Defaults to `FALSE`. Any other value, `NULL`
+#'   and `NA` included, aborts before the `lms` CLI runs.
 #' @param wait Numeric. How many seconds to keep asking the REST API whether
 #'   it is ready. Defaults to 10. With `wait = 0` the function sends no
 #'   readiness request and returns as soon as the CLI does. A `wait` that is
@@ -498,9 +499,15 @@ build_args_server_status <- function(
 #' Displays the current status of the LM Studio local server via the CLI,
 #' including whether it is running and its configuration.
 #'
-#' @param json Logical. Output the status in machine-readable JSON format.
-#' @param verbose Logical. Enable detailed logging output.
-#' @param quiet Logical. Suppress all logging output.
+#' @param json `TRUE` or `FALSE`. Output the status in machine-readable JSON
+#'   format. Any other value, `NULL` and `NA` included, aborts before the `lms`
+#'   CLI runs.
+#' @param verbose `TRUE` or `FALSE`. Enable detailed logging output. Any other
+#'   value, `NULL` and `NA` included, aborts before the `lms` CLI runs.
+#' @param quiet `TRUE` or `FALSE`. `TRUE` passes `--quiet` to the `lms` CLI,
+#'   which suppresses all logging output. The `rlmstudio.quiet` option does not
+#'   change it. Any other value, `NULL` and `NA` included, aborts before the
+#'   `lms` CLI runs.
 #' @param log_level Character. The level of logging to use (e.g., "info",
 #'   "debug").
 #'
@@ -532,6 +539,10 @@ lms_server_status <- function(
   quiet = FALSE,
   log_level = NULL
 ) {
+  rlm_check_flag(json, "json")
+  rlm_check_flag(verbose, "verbose")
+  rlm_check_flag(quiet, "quiet")
+
   logging_flags <- sum(c(isTRUE(verbose), isTRUE(quiet), !is.null(log_level)))
   if (logging_flags > 1) {
     cli::cli_warn("Only one logging control flag can be used at a time.")

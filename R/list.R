@@ -14,9 +14,9 @@
 #' @param detailed `TRUE` or `FALSE`. Show all information about each model.
 #'   Defaults to \code{FALSE}. Any other value, `NULL` and `NA` included,
 #'   aborts before the check for a running server.
-#' @param quiet `TRUE`, `FALSE`, or `NULL`. If \code{TRUE}, suppresses
-#'   informative console messages. `FALSE` and `NULL` print them unless the
-#'   `rlmstudio.quiet` option is `TRUE`. Defaults to \code{FALSE}. Any other
+#' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+#'   `rlmstudio.quiet` option. `TRUE` hides the message printed when no model
+#'   is found, and `FALSE` prints it, also when the option is `TRUE`. Any other
 #'   value, `NA` included, aborts before the check for a running server. Does
 #'   not suppress the abort raised when the server is not running.
 #' @param host Character. The host address of the local server.
@@ -60,7 +60,7 @@ list_models <- function(
   loaded = FALSE,
   type = c("llm", "embedding"),
   detailed = FALSE,
-  quiet = FALSE,
+  quiet = NULL,
   host = "http://localhost:1234",
   token = NULL
 ) {
@@ -75,9 +75,11 @@ list_models <- function(
   body <- got$body
 
   if (length(body[["models"]]) == 0) {
-    if (!is_quiet(quiet)) {
-      rlm_inform(c("i" = "No models found on host {.url {host}}."))
-    }
+    # `quiet` goes in, so that `FALSE` overrides the option (D-028).
+    rlm_inform(
+      c("i" = "No models found on host {.url {host}}."),
+      quiet = quiet
+    )
     return(invisible(data.frame()))
   }
 
@@ -110,11 +112,12 @@ list_models <- function(
   }
 
   if (nrow(df) == 0) {
-    if (!is_quiet(quiet)) {
-      rlm_inform(c(
+    rlm_inform(
+      c(
         "!" = "No models found matching criteria: loaded = {.val {loaded}}, type = {.val {type}}."
-      ))
-    }
+      ),
+      quiet = quiet
+    )
     return(invisible(data.frame()))
   }
 
@@ -193,9 +196,9 @@ list_models <- function(
 #'   element can be `NA`, empty, or whitespace only. Any other value, `NULL`
 #'   and a factor included, aborts before the check for a running server. A
 #'   type that no model has, such as `"vlm"`, matches nothing.
-#' @param quiet `TRUE`, `FALSE`, or `NULL`. If \code{TRUE}, suppresses the
-#'   message printed when no instance is found. `FALSE` and `NULL` print it
-#'   unless the `rlmstudio.quiet` option is `TRUE`. Defaults to \code{FALSE}.
+#' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+#'   `rlmstudio.quiet` option. `TRUE` hides the message printed when no
+#'   instance is found, and `FALSE` prints it, also when the option is `TRUE`.
 #'   Any other value, `NA` included, aborts before the check for a running
 #'   server. Does not suppress the abort raised when the server is not
 #'   running.
@@ -212,7 +215,7 @@ list_models <- function(
 #'   whose type is in `type`, with the columns that the "Columns" section
 #'   describes. If there is no such instance, it returns a \code{data.frame}
 #'   with zero rows and the four character columns, invisibly, and prints a
-#'   message unless `quiet = TRUE` or the `rlmstudio.quiet` option is `TRUE`.
+#'   message that `quiet` controls.
 #'
 #' @inheritSection rlmstudio-conditions Server not running
 #' @inheritSection rlmstudio-conditions API failure
@@ -233,7 +236,7 @@ list_models <- function(
 #' }
 list_instances <- function(
   type = c("llm", "embedding"),
-  quiet = FALSE,
+  quiet = NULL,
   host = "http://localhost:1234",
   token = NULL
 ) {
@@ -271,11 +274,13 @@ list_instances <- function(
   }
 
   if (length(rows) == 0) {
-    if (!is_quiet(quiet)) {
-      rlm_inform(c(
+    # `quiet` goes in, so that `FALSE` overrides the option (D-028).
+    rlm_inform(
+      c(
         "i" = "No loaded model instances of type {.val {type}} found on host {.url {host}}."
-      ))
-    }
+      ),
+      quiet = quiet
+    )
     return(invisible(data.frame(
       id = character(),
       key = character(),

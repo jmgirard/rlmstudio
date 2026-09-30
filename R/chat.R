@@ -17,10 +17,12 @@
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param api_type Character. The LM Studio API endpoint to use. Options are
 #'   "openresponses" (default), "openai", or "native".
-#' @param logprobs Logical. Whether to return the log probabilities of the
-#'   generated tokens. Default is FALSE.
-#' @param simplify Logical. If TRUE, extracts the core text response. Default is
-#'   TRUE.
+#' @param logprobs `TRUE` or `FALSE`. Whether to return the log probabilities
+#'   of the generated tokens. Default is `FALSE`. Any other value, `NULL` and
+#'   `NA` included, aborts before the check for a running server.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, extracts the core text
+#'   response. Default is `TRUE`. Any other value, `NULL` and `NA` included,
+#'   aborts before the check for a running server.
 #' @param ... Additional arguments passed to the selected API body.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
@@ -79,6 +81,8 @@ lms_chat <- function(
   rlm_check_schema_route(schema, api_type)
   rlm_check_ttl(ttl)
   rlm_check_ttl_route(ttl, api_type)
+  rlm_check_flag(logprobs, "logprobs")
+  rlm_check_flag(simplify, "simplify")
 
   if (api_type == "openresponses") {
     return(lms_chat_openresponses(
@@ -145,9 +149,12 @@ lms_chat <- function(
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param logprobs Logical. Whether to return token probabilities.
-#' @param simplify Logical. If TRUE, parses output to text and dataframe. If
-#'   FALSE, returns raw list.
+#' @param logprobs `TRUE` or `FALSE`. Whether to return token probabilities.
+#'   Any other value, `NULL` and `NA` included, aborts before the check for a
+#'   running server.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses output to text and
+#'   dataframe. If `FALSE`, returns raw list. Any other value, `NULL` and `NA`
+#'   included, aborts before the check for a running server.
 #' @param ... Additional API arguments (e.g., top_logprobs, temperature). This
 #'   endpoint accepts a `ttl` field and ignores it. The model keeps the idle
 #'   time that the server sets.
@@ -198,6 +205,8 @@ lms_chat_openresponses <- function(
 ) {
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
+  rlm_check_flag(logprobs, "logprobs")
+  rlm_check_flag(simplify, "simplify")
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
@@ -403,9 +412,12 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param logprobs Logical. Whether to request logprobs (currently stubbed by LM
-#'   Studio).
-#' @param simplify Logical. If TRUE, parses output to text.
+#' @param logprobs `TRUE` or `FALSE`. Whether to request logprobs (currently
+#'   stubbed by LM Studio). Any other value, `NULL` and `NA` included, aborts
+#'   before the check for a running server.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses output to text. Any
+#'   other value, `NULL` and `NA` included, aborts before the check for a
+#'   running server.
 #' @param ... Additional API arguments. A `response_format` here cannot be
 #'   combined with `schema`.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
@@ -491,6 +503,8 @@ lms_chat_openai <- function(
   rlm_check_messages(messages)
   rlm_check_schema(schema, ...names())
   rlm_check_ttl(ttl)
+  rlm_check_flag(logprobs, "logprobs")
+  rlm_check_flag(simplify, "simplify")
   rlm_check_stream(list(...))
 
   stop_if_no_server(host)
@@ -1147,12 +1161,18 @@ is_one_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param simplify Logical. If TRUE, parses output to text.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses output to text. Any
+#'   other value, `NULL` and `NA` included, aborts before the check for a
+#'   running server.
 #' @param ... Additional API arguments. This endpoint rejects a `ttl` field
 #'   with status 400, which raises `rlmstudio_api_error`.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
+#'   The package also checks each element named exactly `logprobs`. It must
+#'   be `TRUE`, `FALSE`, or `NULL`, and any other value aborts before the check
+#'   for a running server. The endpoint has no logprobs, so no `logprobs` field
+#'   goes into the request body, and a `TRUE` warns.
 #' @return If \code{simplify = FALSE}, returns a list representing the raw JSON
 #'   response. A status-200 body that does not parse as JSON raises
 #'   `rlmstudio_bad_response` with either setting of `simplify`. The body can
@@ -1180,22 +1200,32 @@ lms_chat_native <- function(
 ) {
   rlm_check_id(model, "model")
   rlm_check_no_na(input, "input")
-  rlm_check_stream(list(...))
+  rlm_check_flag(simplify, "simplify")
+  dots <- list(...)
+  rlm_check_stream(dots)
+  # The endpoint has no logprobs, so each element named exactly `logprobs` is
+  # checked as a flag and then dropped (D-029).
+  # `%in%` over `names()` would give a length-0 result for unnamed dots.
+  is_logprobs <- vapply(
+    seq_along(dots),
+    function(i) identical(names(dots)[i], "logprobs"),
+    logical(1)
+  )
+  for (value in dots[is_logprobs]) {
+    rlm_check_flag(value, "logprobs", null_ok = TRUE)
+  }
 
   stop_if_no_server(host)
 
   body <- list(model = model, input = input, system_prompt = system_prompt)
   body <- Filter(Negate(is.null), body)
 
-  # Check if user tried to pass logprobs in dots and warn them
-  dots <- list(...)
-  if (isTRUE(dots$logprobs)) {
+  if (any(vapply(dots[is_logprobs], isTRUE, logical(1)))) {
     cli::cli_warn(
       "The native API does not support logprobs. Ignoring argument."
     )
-    dots$logprobs <- NULL
   }
-  body <- utils::modifyList(body, dots)
+  body <- utils::modifyList(body, dots[!is_logprobs])
 
   req <- lms_client(host, token = token) |>
     httr2::req_url_path("api/v1/chat") |>
@@ -1467,11 +1497,22 @@ integer_or_na <- function(x) {
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param simplify Logical. If TRUE, parses outputs.
-#' @param quiet Logical. Whether to suppress the progress bar.
+#' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses outputs. Any other
+#'   value, `NULL` and `NA` included, aborts before the check for a running
+#'   server.
+#' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
+#'   `rlmstudio.quiet` option. `TRUE` starts no progress bar, and `FALSE`
+#'   starts one, also when the option is `TRUE`. cli draws a started bar only
+#'   after a delay, two seconds by default. Any other value, `NA` included,
+#'   aborts before the check for a running server. `quiet` does not hide the warnings
+#'   about failed inputs, cut-off replies, or a vector format that returns a
+#'   list.
 #' @param ... Additional arguments passed to `lms_chat`, such as `api_type`,
 #'   `logprobs`, `schema`, or `ttl`. A `schema`, a `ttl`, and the `api_type`
 #'   that each needs are checked before the first call.
+#'   A `logprobs` here, or a shortened name that [lms_chat()] reads as
+#'   `logprobs`, must be `TRUE` or `FALSE`. Any other value, `NULL` and `NA`
+#'   included, aborts before the check for a running server.
 #'   The package checks a `stream` here. A `stream` other than `FALSE` or
 #'   `NULL` aborts before the call checks for a running server, because the
 #'   package reads a whole reply and not a streamed one.
@@ -1617,7 +1658,7 @@ lms_chat_batch <- function(
   format = c("vector", "list", "data.frame"),
   host = "http://localhost:1234",
   simplify = TRUE,
-  quiet = FALSE,
+  quiet = NULL,
   ...,
   token = NULL
 ) {
@@ -1644,6 +1685,13 @@ lms_chat_batch <- function(
   # The raw dots, because `args` keeps only the first of two same-named
   # values. No `lms_chat()` argument starts with `stream`, so the names match.
   rlm_check_stream(list(...))
+  rlm_check_flag(simplify, "simplify")
+  rlm_check_flag(quiet, "quiet", null_ok = TRUE)
+  # A name test, not `args[["logprobs"]]`, which is `NULL` for an absent name
+  # and for a `logprobs = NULL` alike. `lms_chat()` refuses `NULL` there.
+  if ("logprobs" %in% names(args)) {
+    rlm_check_flag(args[["logprobs"]], "logprobs")
+  }
 
   # An argument fault, so it aborts before the server probe (D-008) and before
   # any request is sent.

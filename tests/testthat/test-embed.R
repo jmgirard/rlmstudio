@@ -883,6 +883,12 @@ test_that("the failed-inputs warning shows when the call is quiet", {
     lms_embed("test-embed", paste("text", 1:3), batch_size = 2),
     "1 input failed, at position 3."
   )
+
+  local_request_sequence(list(batch_reply(1:2), error_reply(500L)))
+  expect_warning(
+    lms_embed("test-embed", paste("text", 1:3), batch_size = 2, quiet = TRUE),
+    "1 input failed, at position 3."
+  )
 })
 
 test_that("when every batch fails, the call aborts with the first failure", {
