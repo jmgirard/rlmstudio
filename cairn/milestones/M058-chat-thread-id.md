@@ -156,6 +156,8 @@ OpenAI route gets no argument. A shortened name in `...`, such as
 - 2026-09-29: T8 done. Two sentences each on the `lms_chat_native()` and `lms_chat_openresponses()` pages give the other route's reply field and `store = FALSE` fact. A second `devtools::document()` run left no diff. Full suite 0 failures, 3 live skips.
 - 2026-09-29: claim audit: 6 claims read, 0 corrected — R/chat.R
 - 2026-09-29: status review.
+- 2026-09-29: review pass 2. AC1 to AC7 passed. The user accepted the triage of 24 findings, and the fix-now work landed in c60dbd1.
+- 2026-09-29: step-7 approval: m058-chat-thread-id approved for merge
 
 ## Decisions
 
