@@ -194,6 +194,55 @@ test_that("a logprobs data-frame batch sends top_logprobs and temperature with e
   expect_identical(out$logprobs[[2]]$candidate_token, c("2", "4"))
 })
 
+test_that("a logprobs data-frame batch on the openai route has a NULL logprobs cell in each row", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  # Each reply carries a logprobs field in the OpenAI shape, so a NULL cell
+  # comes from the package and not from a reply with no logprobs.
+  reply <- function(digit) {
+    mock_response(200L, sprintf(
+      paste0(
+        '{"id": "chatcmpl-1", "object": "chat.completion", "choices": [',
+        '{"index": 0, "message": {"role": "assistant", "content": "%s"}, ',
+        '"logprobs": {"content": [{"token": "%s", "logprob": -0.1, ',
+        '"top_logprobs": [{"token": "%s", "logprob": -0.1}]}]}, ',
+        '"finish_reason": "stop"}]}'
+      ),
+      digit, digit, digit
+    ))
+  }
+  recorder <- local_request_sequence(list(reply("3"), reply("2")))
+
+  digits <- lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = "data.frame",
+    api_type = "openai",
+    logprobs = TRUE,
+    top_logprobs = 10,
+    quiet = TRUE
+  )
+
+  expect_identical(
+    request_target(recorder$requests[[1]])[["path"]],
+    "/v1/chat/completions"
+  )
+  expect_identical(digits$output, c("3", "2"))
+  expect_true(is.list(digits$logprobs))
+  expect_null(digits$logprobs[[1]])
+  expect_null(digits$logprobs[[2]])
+
+  # The score loop of the vignette skips every row.
+  score <- rep(NA_real_, nrow(digits))
+  for (i in seq_len(nrow(digits))) {
+    candidates <- digits$logprobs[[i]]
+    if (is.null(candidates)) {
+      next
+    }
+    score[i] <- lms_score_expected(candidates, scale = 1:5)$expected_value
+  }
+  expect_identical(score, c(NA_real_, NA_real_))
+})
+
 test_that("a schema batch on the openai route asks the default local host and adds the fields as columns", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   schema <- list(

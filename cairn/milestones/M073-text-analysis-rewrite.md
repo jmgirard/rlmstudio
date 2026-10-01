@@ -106,7 +106,7 @@ conversations are M074.
       `context_length`. Rewrite the context-length sentence to match the
       live probe in the Review section. Back each new claim with a test or
       a probe.
-- [ ] T8: Fix the other prose findings that the Review section marks T8,
+- [x] T8: Fix the other prose findings that the Review section marks T8,
       re-knit from a clean start, and re-run the AC1 to AC4 checks.
 - [ ] T9: Nest the two flat loops of `test-vignette-claims.R` one
       `test_that()` per pass, and add a direct test that a successful
@@ -136,6 +136,8 @@ conversations are M074.
 - 2026-10-01: rewrapped the AC3 line breaks with no change of words. A line that started with a four-backtick code span made `cairn_validate` read an open code fence, and count the rest of the file against the plan cap.
 - 2026-10-01: implement resumed after the return. Question gate: for a model that is already loaded, the prose says what to do, and no code unloads it. The summary chunk calls `trimws()`.
 - 2026-10-01: T7 rewrote the context-length sentence to "the most tokens that a prompt to it can hold". It added an unload-first paragraph before the load chunk. It gave the unload step before a larger `context_length`. Backing: long-prompts:127 (no load request for a loaded model), unload:16, and load:11. A live probe loaded at 512. A second load at 1024 left 512, and an unload and a load gave 1024.
+- 2026-10-01: T8 fixed the prose findings. The logprobs section says to leave `api_type` at its default. A new vignette-claims test backs it, and a plant of a logprobs frame on the openai route turned it red. The summary chunk prints the raw second reply and calls `trimws()`. The server and load glosses moved to the intro, and "at each step" before the step gloss is gone. Two lines were rewrapped.
+- 2026-10-01: T8 embedding prose says that the sixth review fits. A live probe added a sentence to the end of a text. It changed the embedding of the 200-sentence text and left a 400-sentence text the same. A clean re-knit changed only the `trimws()` lines. AC1 to AC4 checks pass on 169 purled lines and 393 source lines, and their plants turn red. Suite: 19,770 expectations, 0 failed, 3 live skips.
 
 ## Decisions
 

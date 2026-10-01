@@ -19,6 +19,10 @@ runs on your own computer. You start from a data frame of short reviews.
 You end with new columns that hold a summary, a sentiment label, a star
 rating, a score, and a similarity for each review.
 
+R sends its requests to a local server, a program of LM Studio on your
+computer. Loading a model reads it from disk into memory, so that the
+server can use it.
+
 `vignette("getting-started")` covers the steps that come first: installing
 LM Studio, starting the server, and downloading `google/gemma-3-1b`. This
 vignette also uses `text-embedding-nomic-embed-text-v1.5`, a model that
@@ -40,9 +44,6 @@ old_options <- options(rlmstudio.quiet = TRUE)
 ```
 
 ## Start the server and load the model
-
-R sends its requests to a local server, a program of LM Studio on your
-computer. Loading a model reads it from disk into memory.
 
 A model reads and writes text in tokens. A token is a short piece of text,
 such as a word, a part of a word, or a digit. The context length of a
@@ -101,12 +102,12 @@ the same system prompt. A system prompt is a set of instructions that the
 model gets with each text. With `format = "data.frame"`, the function
 returns one row for each text, in the order of the texts. The `input`
 column holds the text, and the `output` column holds the reply. The other
-columns hold an id for each reply and
-counts of the tokens that went in and came out.
+columns hold an id for each reply and counts of the tokens that went in
+and came out.
 
 Each chat call in this vignette sets `temperature = 0`. The temperature
 sets how much chance goes into the choice of each token. At 0, the model
-takes its most likely token at each step.
+takes its most likely token each time.
 
 The batch below warns that the sixth input failed. The section "When an
 input fails" explains why.
@@ -124,14 +125,19 @@ summaries <- lms_chat_batch(
 # The columns of the result
 names(summaries)
 
-# Add the replies to the data frame as a new column
-reviews$summary <- summaries$output
+# The second reply as the model wrote it
+summaries$output[2]
+
+# Remove the spaces and line breaks at the start and end of each reply,
+# and add the replies to the data frame as a new column
+reviews$summary <- trimws(summaries$output)
 reviews[, c("id", "summary")]
 ```
 
 The model does not always follow the system prompt. Here, the second
-summary holds `**` marks, which make text bold in Markdown, and a line
-break, `\n`. `trimws()` removes the line break.
+reply holds `**` marks, which make text bold in Markdown. It also ends
+with a space and a line break, `\n`, which `trimws()` removed from the
+column.
 
 ## Labels and ratings as columns
 
@@ -194,9 +200,9 @@ of the replies before you rely on them.
 
 A star rating is one whole number. A score from token probabilities uses
 the probability of each possible rating instead. When the model writes the
-first token of its reply, it gives each candidate token a probability. A log probability is
-the natural log of that probability. It is 0 for a probability of 1, and
-more negative for a less likely token.
+first token of its reply, it gives each candidate token a probability. A
+log probability is the natural log of that probability. It is 0 for a
+probability of 1, and more negative for a less likely token.
 
 With `logprobs = TRUE`, the data frame from `lms_chat_batch()` gets a
 `logprobs` column. A step is one token of the reply. Each cell holds a
@@ -204,6 +210,10 @@ data frame of the candidate tokens at each step of the reply, and its
 `step` column numbers the steps from 1.
 `top_logprobs = 10` asks LM Studio for the 10 most likely candidates at
 each step.
+
+Leave `api_type` at its default for this batch. With `api_type = "openai"`,
+each cell of the `logprobs` column is `NULL`, so the loop below would skip
+every row.
 
 ```{r logprobs}
 # Ask for a one-digit rating, with the log probabilities
@@ -338,10 +348,11 @@ the matrix. The first review, about slow service, is the closest to the
 query. Even unrelated texts get a similarity well above 0 here, so compare
 the values with each other, not with 0.
 
-The sixth review gets a similarity too, with no warning. The embedding
-model has its own context length, 2,048 tokens here, as the section "The
-loaded models" shows. For a text longer than that, LM Studio embeds only
-the start of the text and gives no warning.
+The sixth review gets a similarity too. The embedding model has its own
+context length, 2,048 tokens here, as the section "The loaded models"
+shows. The sixth review fits in it, so its embedding stands for the whole
+text. For a text longer than that, LM Studio embeds only the start of the
+text and gives no warning.
 
 ## All the results
 
