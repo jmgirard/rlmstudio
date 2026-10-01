@@ -58,7 +58,7 @@ lms_ready
 
 ```{r models-before, include=FALSE}
 # The ids of the instances that were loaded before this vignette. The
-# teardown unloads only the instances that this vignette loaded.
+# teardown reads them to choose what to unload.
 loaded_ids <- function() {
   loaded <- list_models(loaded = TRUE, detailed = TRUE, quiet = TRUE)
   ids <- lapply(loaded$loaded_instances, function(x) x[["id"]])
@@ -77,8 +77,8 @@ if (lms_ready) {
 
 `lms_load()` prints messages while it loads a model, and `lms_chat_batch()`
 shows a progress bar while a batch runs. Set the `rlmstudio.quiet` option to
-`TRUE` to hide both. The warning that a batch gives about failed inputs
-still shows. This vignette sets the option here and sets it back before the
+`TRUE` to hide both. Some warnings still show, such as the warning that a
+batch gives about failed inputs. This vignette sets the option here and sets it back before the
 teardown.
 
 ```{r quiet}
@@ -96,12 +96,15 @@ lms_load(model)
 input, the reply text in `output`, the id of the reply, and three token
 counts.
 
-```{r batch, eval=chat_ready}
+```{r reviews}
 reviews <- c(
   "The food was great but the service was slow.",
   "Terrible. Never again.",
   "Best pizza in town, and the staff were friendly."
 )
+```
+
+```{r batch, eval=chat_ready}
 summaries <- lms_chat_batch(
   model,
   reviews,
@@ -126,7 +129,8 @@ summaries[, c("input", "output")]
 
 ## Structured output as columns
 
-A `schema` goes to the server as a JSON schema that the reply must match. On
+A `schema` goes to the server as a JSON schema that the reply must match. It
+needs `api_type = "openai"`, and the call aborts on any other route. On
 `api_type = "openai"`, a data-frame batch with an object schema adds one
 column per top-level property of the schema. A `"string"` property gives a
 character column, and an `"integer"` property gives an integer column.
@@ -169,7 +173,8 @@ replies before you rely on them.
 ## A rating scored from token probabilities
 
 A model that answers with one digit picks that digit from several
-candidates. With `logprobs = TRUE`, `lms_chat()` returns an object that
+candidates. With `logprobs = TRUE` on the default route, `lms_chat()`
+returns an object that
 holds the reply text and a data frame of log probabilities, if the reply
 carries them. The data frame lists the candidate tokens at each step of the
 reply. The `top_logprobs` and `temperature` fields go into the request body.
@@ -243,7 +248,7 @@ round(unit %*% t(unit), 2)
 hold the instance id, the model key, the model type, the display name, and
 the load configuration of the instance.
 
-```{r instances, eval=lms_ready}
+```{r instances, eval=chat_ready || embed_ready}
 instances <- list_instances()
 instances[, c("id", "type", "context_length")]
 #>                                     id      type context_length
@@ -258,8 +263,9 @@ instances[, c("id", "type", "context_length")]
 options(old_options)
 ```
 
-`lms_unload_all()` unloads every loaded model instance. When this vignette
-is built with the server stopped and no model loaded, it calls
+`lms_unload_all()` unloads every loaded model instance. The two cases below
+hold on a host where the LM Studio desktop app runs the daemon. When this
+vignette is built with the server stopped and no model loaded, it calls
 `lms_unload_all()` and then stops the server. When it is built with the
 server running and `google/gemma-3-1b` loaded, it unloads only the
 instances that it loaded, and it leaves the server running.

@@ -16,19 +16,26 @@ claim_messages <- function(expr) {
 
 test_that("lms_load() prints its messages, and the quiet option hides them", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  # The messages of one load, and the number of requests that it sent.
   load_messages <- function(option) {
     withr::local_options(rlmstudio.quiet = option)
-    local_request_sequence(list(
+    recorder <- local_request_sequence(list(
       mock_response(200L, '{"models": []}'),
       mock_response(200L, '{"status": "loaded"}')
     ))
-    claim_messages(lms_load("a-model"))
+    shown <- claim_messages(lms_load("a-model"))
+    list(shown = shown, requests = length(recorder$requests))
   }
 
-  shown <- load_messages(FALSE)
-  expect_true(any(grepl("Loading model", shown, fixed = TRUE)))
-  expect_true(any(grepl("loaded and verified", shown, fixed = TRUE)))
-  expect_identical(load_messages(TRUE), character())
+  loud <- load_messages(FALSE)
+  expect_true(any(grepl("Loading model", loud$shown, fixed = TRUE)))
+  expect_true(any(grepl("loaded and verified", loud$shown, fixed = TRUE)))
+  expect_identical(loud$requests, 2L)
+
+  # The quiet load still sends both requests.
+  quiet <- load_messages(TRUE)
+  expect_identical(quiet$shown, character())
+  expect_identical(quiet$requests, 2L)
 })
 
 test_that("lms_chat_batch() sends each input as its own request, one row each", {
@@ -47,11 +54,11 @@ test_that("lms_chat_batch() sends each input as its own request, one row each", 
   expect_length(recorder$requests, 3L)
   targets <- lapply(recorder$requests, request_target)
   expect_identical(
-    vapply(targets, function(t) t$path, character(1)),
+    vapply(targets, function(t) t[["path"]], character(1)),
     rep("/v1/responses", 3L)
   )
   expect_identical(
-    vapply(targets, function(t) t$body$input, character(1)),
+    vapply(targets, function(t) t[["body"]][["input"]], character(1)),
     inputs
   )
   expect_identical(nrow(out), 3L)
@@ -90,9 +97,11 @@ test_that("lms_chat() on the default route sends the dots and lists the candidat
   )
 
   sent <- request_target(recorder$requests[[1]])
-  expect_identical(sent$path, "/v1/responses")
-  expect_identical(sent$body$top_logprobs, 10L)
-  expect_identical(sent$body$temperature, 0L)
+  # A parse of the body cannot tell 10 from 10L, so the values are compared
+  # with expect_equal().
+  expect_identical(sent[["path"]], "/v1/responses")
+  expect_equal(sent[["body"]][["top_logprobs"]], 10)
+  expect_equal(sent[["body"]][["temperature"]], 0)
 
   expect_s3_class(res, "lms_chat_result")
   expect_identical(res$text, "3\n")
@@ -113,7 +122,7 @@ test_that("lms_chat() on the default route sends the dots and lists the candidat
   expect_identical(without_response_id(res), "3")
 })
 
-test_that("lms_score_expected() reads the first step, keeps the scale, and rescales", {
+test_that("lms_score_expected() reads the rows of the first step token, keeps the scale, and rescales", {
   # The first step holds "3", "4", a number outside the scale, and a newline.
   # A later step with another token holds a "5", which must not count. A
   # later step with the same token as the first row counts with it.
