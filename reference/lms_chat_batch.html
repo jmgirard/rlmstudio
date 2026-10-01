@@ -115,7 +115,13 @@ returns a list, or a <code>logprobs = TRUE</code> that the <code>"native"</code>
 <code>schema</code>, a <code>ttl</code>, a <code>previous_response_id</code>, a <code>store</code>, and the
 <code>api_type</code> that each needs are checked before the first call. A
 <code>previous_response_id</code> goes to every call, so each input continues the
-same stored reply.
+same stored reply. It can be an earlier reply of <code><a href="lms_chat.html">lms_chat()</a></code> itself,
+and the <code>response_id</code> attribute of that reply is sent, by the rules of
+<code><a href="lms_chat.html">lms_chat()</a></code>. A reply that came back with no id goes out as its own text,
+and each input then fails with status 400, unless that text breaks the
+id rules of <code><a href="lms_chat.html">lms_chat()</a></code> and aborts first. The character vector of
+<code>format = "vector"</code> and the <code>output</code> column of <code>format = "data.frame"</code>
+carry no attribute, as described below.
 A <code>store</code> here goes to <code><a href="lms_chat.html">lms_chat()</a></code> for every call, and it is checked
 there by the rules of <code><a href="lms_chat.html">lms_chat()</a></code>. It must be <code>TRUE</code>, <code>FALSE</code>, or
 <code>NULL</code>, and <code>NULL</code>, the default, sends no <code>store</code> field. Any other value,

@@ -29,7 +29,7 @@ lms_server_start(wait = 30)
 # Load the model
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [6.8s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [7s]
 #> 
 ```
 
@@ -76,19 +76,19 @@ prompt <- "Name one color. Answer with one word."
 
 # The default route
 lms_chat(model, prompt)
-#> [1] "Blue \n\nLet me know if you’d like to try another one!"
+#> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_3169da6950b1cbe551bfc4d286e47ef670a6b877a2929cb4"
+#> [1] "resp_5066d9297e26c824a491b3e4c77f6979dc03a5c42368de44"
 
 # The OpenAI route
 lms_chat(model, prompt, api_type = "openai")
-#> [1] "Blue \n\nLet me know if you want another one! 😊"
+#> [1] "Blue."
 
 # The native route of LM Studio
 lms_chat(model, prompt, api_type = "native")
-#> [1] "Blue."
+#> [1] "Blue \n\nLet me know if you’d like another! 😊"
 #> attr(,"response_id")
-#> [1] "resp_9da891b8318bfb984ffebdc946b209b072c8b2a9313f386f"
+#> [1] "resp_c1e28f0cbf43fe854f818ca209cb099f45b83b27019da035"
 ```
 
 Each call returns the text of the reply. An attribute is a named value
@@ -121,7 +121,7 @@ to 0.
 lms_chat(model, prompt, temperature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_9a99ecc7f42d27412d569162c0d3b10c993028b5e276bfe5"
+#> [1] "resp_c9f944bff12f24d21faf78c9177fb06bbd3f01316085bd29"
 ```
 
 The package checks a few option names. For example, it stops with an
@@ -143,7 +143,7 @@ reply with no error.
 lms_chat(model, prompt, temprature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_b4b9fc0e84f741f81b3d20e0dfdb261a06eec2b14387ec06"
+#> [1] "resp_4c0666a67b6255e8d5257d9e640bfad8abf73265a8d99b8a"
 ```
 
 So a misspelled option can go unnoticed. A later section shows how to
@@ -153,9 +153,11 @@ the native route does with the same call.
 ## A follow-up question
 
 On the default route and the native route, the text of a reply carries
-its response id in the `response_id` attribute. Pass that id as
-`previous_response_id` in your next call, and the server sends the
-earlier prompt and reply to the model with your new prompt.
+its response id in the `response_id` attribute. Pass the reply itself as
+`previous_response_id` in your next call. The package sends the id from
+the attribute, and the server sends the earlier prompt and reply to the
+model with your new prompt. The id string from
+`attr(first, "response_id")` also works.
 
 Each call below sets `temperature = 0`, as in the section “Request
 options”.
@@ -171,18 +173,18 @@ first <- lms_chat(
 first
 #> [1] "OK."
 #> attr(,"response_id")
-#> [1] "resp_875960d1ee2a1db54f551382b24539156f08e0643273d597"
+#> [1] "resp_f672645b0ad63014ef56aefe5192cdf668c183b7d25e8b11"
 
 # Ask about the fact in a follow-up
 lms_chat(
   model,
   "What is my favorite color? Answer with one word.",
-  previous_response_id = attr(first, "response_id"),
+  previous_response_id = first,
   temperature = 0
 )
 #> [1] "Green."
 #> attr(,"response_id")
-#> [1] "resp_95005004e6bc726f24721725992573ac12c20c209368aacd"
+#> [1] "resp_82acfecf7433013b5e0d59d4e3faa5e72f50e5c829dd2dc3"
 
 # Ask the same question with no response id
 lms_chat(
@@ -192,12 +194,12 @@ lms_chat(
 )
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_1fa467b66737cf60f600f4f0f2992852629345cc96a592a4"
+#> [1] "resp_14051c9228f825971a587f4aa8f49c6317b7014864f954a3"
 ```
 
-With the response id, the model answered from the first prompt. With no
-response id, the model did not see the first prompt, and its answer was
-a guess.
+With the first reply as `previous_response_id`, the model answered from
+the first prompt. With no response id, the model did not see the first
+prompt, and its answer was a guess.
 
 The OpenAI route has no response id. With `api_type = "openai"`,
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
@@ -404,7 +406,7 @@ chat_or_na <- function(...) {
 chat_or_na(model, prompt, temperature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_925948b4d3b1994cb973e05c24e0c62dd2756e0aaa65ad17"
+#> [1] "resp_2fd1ff476cd266f2d824b0e18a5dd71d2cb7ff45b529159e"
 ```
 
 The first call below goes to port 1, where no server runs. The other
@@ -456,7 +458,7 @@ stops the server even if it ran before this vignette.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [412ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [548ms]
 #> 
 
 # Stop the local server

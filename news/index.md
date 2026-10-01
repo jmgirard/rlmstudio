@@ -2,6 +2,35 @@
 
 ## rlmstudio (development version)
 
+- `previous_response_id` now takes the earlier reply itself. With
+  `first <- lms_chat(...)`, pass `previous_response_id = first` to
+  continue the thread. This holds for
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  and the `...` of
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
+  A value that carries a `response_id` attribute sends that attribute as
+  a plain string in place of the value. A string reply and an
+  `lms_chat_result` both work, and the id string from
+  `attr(first, "response_id")` still works.
+
+  - The attribute follows the rules of the id string. A bad attribute
+    aborts before the check for a running server, with a message that
+    names `previous_response_id` and its `response_id` attribute. With
+    `api_type = "openai"`,
+    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+    and
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    still refuse such a value, as they refuse a string.
+  - A value with no `response_id` attribute is sent as the id itself, as
+    before. So a reply that came back with no id goes out as its own
+    text, and the server answers with status 400. An example is a native
+    reply sent with `store = FALSE`. A reply text that is empty or holds
+    only whitespace aborts before the request, as such an id does. The
+    character vector of `lms_chat_batch(format = "vector")` and the
+    `output` column of its data frame carry no attribute.
+
 - A new vignette,
   [`vignette("chat-options")`](https://jmgirard.github.io/rlmstudio/articles/chat-options.md),
   shows how to control a chat from an R script. A table compares the

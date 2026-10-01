@@ -103,19 +103,37 @@ lms_chat(
 
 - previous_response_id:
 
-  One string, or `NULL`. The id of a stored reply that this chat
-  continues, such as the `response_id` attribute of an earlier reply.
-  The string must be valid in its declared encoding and not marked
-  `"bytes"`. A class, names, and the S4 bit are removed before the id is
-  sent. `NULL`, the default, starts a new thread. It needs
-  `api_type = "native"` or `api_type = "openresponses"`. With
-  `api_type = "openai"`, a string aborts before the request, because the
-  OpenAI chat endpoint keeps no thread. `NA`, an empty string, a string
-  of whitespace only, a value that is not a string, and more or fewer
-  than one string abort before the check for a running server. Only this
-  exact name is checked. A shortened name, such as `previous`, goes into
-  the request body unchecked, under the name you wrote. An id that the
-  server does not hold raises `rlmstudio_api_error` with status 400.
+  One string, a value that carries a `response_id` attribute, or `NULL`.
+  It names the stored reply that this chat continues. Pass the earlier
+  reply itself, such as `first` after `first <- lms_chat(...)`, or its
+  id, `attr(first, "response_id")`. A value that carries a `response_id`
+  attribute sends that attribute in place of the value, also when the
+  value is a list or is itself an id. Only that exact attribute name is
+  read. A value with no such attribute is sent as the id itself. So a
+  reply that came back with no id, such as a native reply sent with
+  `store = FALSE`, goes out as its own text, and the call raises
+  `rlmstudio_api_error` with status 400. A reply text that breaks the id
+  rules below, such as an empty text or a text of whitespace only,
+  aborts before the request, as such an id does. The character vector
+  that
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  returns with `format = "vector"` and the `output` column of its data
+  frame carry no attribute. The data frame holds the ids in its
+  `response_id` column.
+
+  The id, the attribute when there is one, must be valid in its declared
+  encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+  removed before the id is sent. `NULL`, the default, starts a new
+  thread. It needs `api_type = "native"` or
+  `api_type = "openresponses"`. With `api_type = "openai"`, an id or a
+  value that carries one aborts before the request, because the OpenAI
+  chat endpoint keeps no thread. As the id, `NA`, an empty string, a
+  string of whitespace only, a value that is not a string, and more or
+  fewer than one string abort before the check for a running server. For
+  an attribute, the message names the attribute. Only this exact
+  argument name is checked. A shortened name, such as `previous`, goes
+  into the request body unchecked, under the name you wrote. An id that
+  the server does not hold raises `rlmstudio_api_error` with status 400.
 
 - store:
 
@@ -155,11 +173,12 @@ Depending on the arguments provided:
 
 With `simplify = TRUE` and `api_type = "native"` or
 `api_type = "openresponses"`, the value carries the id of the reply in a
-`response_id` attribute. Pass it as `previous_response_id` to continue
-the thread. The id is the `response_id` field of a native reply and the
-`id` field of an OpenResponses reply. The value has no attribute when
-that field is absent or is not one string. With `api_type = "openai"`,
-or with `simplify = FALSE`, the value has no `response_id` attribute.
+`response_id` attribute. Pass the value itself as `previous_response_id`
+to continue the thread, and the attribute is sent. The id is the
+`response_id` field of a native reply and the `id` field of an
+OpenResponses reply. The value has no attribute when that field is
+absent or is not one string. With `api_type = "openai"`, or with
+`simplify = FALSE`, the value has no `response_id` attribute.
 
 A native reply sent with `store = FALSE` has no `response_id` field, so
 its value has no attribute. An OpenResponses reply sent with

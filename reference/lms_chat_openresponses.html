@@ -118,19 +118,35 @@ package reads a whole reply and not a streamed one.</p></dd>
 
 
 <dt id="arg-previous-response-id">previous_response_id<a class="anchor" aria-label="anchor" href="#arg-previous-response-id"></a></dt>
-<dd><p>One string, or <code>NULL</code>. The id of a stored reply
-that this chat continues, such as the <code>response_id</code> attribute of an
-earlier reply of this function or of <code><a href="lms_chat_native.html">lms_chat_native()</a></code>. The string must
-be valid in its declared encoding and not marked <code>"bytes"</code>. A class,
-names, and the S4 bit are removed before the id is sent. <code>NULL</code>, the
-default, starts a new thread. <code>NA</code>, an empty string, a string of
-whitespace only, a value that is not a string, and more or fewer than one
-string abort before the check for a running server. Only this exact name
-is checked. A shortened name, such as <code>previous</code>, goes into the request
-body unchecked, under the name you wrote. An id that the server does not
-hold raises <code>rlmstudio_api_error</code> with status 400 and the <code>code</code>
+<dd><p>One string, a value that carries a
+<code>response_id</code> attribute, or <code>NULL</code>. It names the stored reply that this
+chat continues. Pass an earlier reply of this function or of
+<code><a href="lms_chat_native.html">lms_chat_native()</a></code> itself, such as <code>first</code>, or its id,
+<code>attr(first, "response_id")</code>. A value that carries a <code>response_id</code>
+attribute sends that attribute in place of the value, also when the
+value is a list or is itself an id. Only that exact attribute name is
+read. A value with no such attribute is sent as the id itself. So a
+reply that came back with no id, such as a native reply sent with
+<code>store = FALSE</code>, goes out as its own text, and the call raises
+<code>rlmstudio_api_error</code> with status 400. A reply text that breaks the id
+rules below, such as an empty text or a text of whitespace only, aborts
+before the request, as such an id does. The character vector that
+<code><a href="lms_chat_batch.html">lms_chat_batch()</a></code> returns with <code>format = "vector"</code> and the <code>output</code>
+column of its data frame carry no attribute. The data frame holds the
+ids in its <code>response_id</code> column.</p>
+<p>The id, the attribute when there is one, must be valid in its declared
+encoding and not marked <code>"bytes"</code>. A class, names, and the S4 bit are
+removed before the id is sent. <code>NULL</code>, the default, starts a new thread.
+As the id, <code>NA</code>, an empty string, a string of whitespace only, a value
+that is not a string, and more or fewer than one string abort before the
+check for a running server. For an attribute, the message names the
+attribute. Only this exact argument name is checked. A shortened name,
+such as <code>previous</code>, goes into the request body unchecked, under the name
+you wrote. An id that the server does not hold raises
+<code>rlmstudio_api_error</code> with status 400 and the <code>code</code>
 <code>"previous_response_not_found"</code>. <code><a href="lms_chat.html">lms_chat()</a></code> and <code><a href="lms_chat_batch.html">lms_chat_batch()</a></code>
-refuse a string with <code>api_type = "openai"</code>, because the OpenAI chat
+refuse an id or a value that carries one with <code>api_type = "openai"</code>,
+because the OpenAI chat
 endpoint keeps no thread. <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> has no such argument. A
 <code>previous_response_id</code> in its <code>...</code> goes into the request body
 unchecked, and the endpoint ignores it.</p></dd>
@@ -186,8 +202,9 @@ the order the section below gives. Parts of other types are not checked.
 With <code>logprobs = FALSE</code>, the value is not read, and the call returns the
 text.</p>
 <p>With <code>simplify = TRUE</code>, the string or the <code>lms_chat_result</code> carries the
-<code>id</code> field of the reply in a <code>response_id</code> attribute. Pass it as
-<code>previous_response_id</code> to continue the thread. The value has no
+<code>id</code> field of the reply in a <code>response_id</code> attribute. Pass the value
+itself as <code>previous_response_id</code> to continue the thread, and the
+attribute is sent. The value has no
 attribute when <code>id</code> is absent or is not one string. A reply sent with
 <code>store = FALSE</code> still has an <code>id</code>, so its value carries the attribute,
 but the server does not hold that reply. A later call of this function

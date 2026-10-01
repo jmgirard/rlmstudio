@@ -67,7 +67,18 @@ lms_chat_batch(
   `schema`, a `ttl`, a `previous_response_id`, a `store`, and the
   `api_type` that each needs are checked before the first call. A
   `previous_response_id` goes to every call, so each input continues the
-  same stored reply. A `store` here goes to
+  same stored reply. It can be an earlier reply of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  itself, and the `response_id` attribute of that reply is sent, by the
+  rules of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md).
+  A reply that came back with no id goes out as its own text, and each
+  input then fails with status 400, unless that text breaks the id rules
+  of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  and aborts first. The character vector of `format = "vector"` and the
+  `output` column of `format = "data.frame"` carry no attribute, as
+  described below. A `store` here goes to
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
   for every call, and it is checked there by the rules of
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md).

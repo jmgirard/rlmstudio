@@ -65,23 +65,40 @@ lms_chat_native(
 
 - previous_response_id:
 
-  One string, or `NULL`. The id of a stored reply that this chat
-  continues, such as the `response_id` attribute of an earlier reply of
-  this function. The string must be valid in its declared encoding and
-  not marked `"bytes"`. A class, names, and the S4 bit are removed
-  before the id is sent. `NULL`, the default, starts a new thread. `NA`,
-  an empty string, a string of whitespace only, a value that is not a
-  string, and more or fewer than one string abort before the check for a
-  running server. Only this exact name is checked. A shortened name,
-  such as `previous`, goes into the request body unchecked, under the
-  name you wrote. An id that the server does not hold raises
-  `rlmstudio_api_error` with status 400 and the `code`
+  One string, a value that carries a `response_id` attribute, or `NULL`.
+  It names the stored reply that this chat continues. Pass an earlier
+  reply of this function itself, such as `first`, or its id,
+  `attr(first, "response_id")`. A value that carries a `response_id`
+  attribute sends that attribute in place of the value, also when the
+  value is a list or is itself an id. Only that exact attribute name is
+  read. A value with no such attribute is sent as the id itself. So a
+  reply that came back with no id, such as a reply of this function sent
+  with `store = FALSE`, goes out as its own text, and the call raises
+  `rlmstudio_api_error` with status 400. A reply text that breaks the id
+  rules below, such as an empty text or a text of whitespace only,
+  aborts before the request, as such an id does. The character vector
+  that
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  returns with `format = "vector"` and the `output` column of its data
+  frame carry no attribute. The data frame holds the ids in its
+  `response_id` column.
+
+  The id, the attribute when there is one, must be valid in its declared
+  encoding and not marked `"bytes"`. A class, names, and the S4 bit are
+  removed before the id is sent. `NULL`, the default, starts a new
+  thread. As the id, `NA`, an empty string, a string of whitespace only,
+  a value that is not a string, and more or fewer than one string abort
+  before the check for a running server. For an attribute, the message
+  names the attribute. Only this exact argument name is checked. A
+  shortened name, such as `previous`, goes into the request body
+  unchecked, under the name you wrote. An id that the server does not
+  hold raises `rlmstudio_api_error` with status 400 and the `code`
   `"invalid_value"`.
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
   and
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  refuse a string with `api_type = "openai"`, because the OpenAI chat
-  endpoint keeps no thread.
+  refuse an id or a value that carries one with `api_type = "openai"`,
+  because the OpenAI chat endpoint keeps no thread.
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
   has no such argument. A `previous_response_id` in its `...` goes into
   the request body unchecked, and the endpoint ignores it.
@@ -124,11 +141,12 @@ calls, are skipped. A reply with no readable answer text raises
 `rlmstudio_bad_response`, as described below.
 
 With `simplify = TRUE`, the string carries the `response_id` field of
-the reply in a `response_id` attribute. Pass it as
-`previous_response_id` to continue the thread. The string has no
-attribute when `response_id` is absent or is not one string. A reply
-sent with `store = FALSE` has no `response_id` field, so its string has
-no attribute, and there is no id to continue from.
+the reply in a `response_id` attribute. Pass the string itself as
+`previous_response_id` to continue the thread, and the attribute is
+sent. The string has no attribute when `response_id` is absent or is not
+one string. A reply sent with `store = FALSE` has no `response_id`
+field, so its string has no attribute, and there is no id to continue
+from.
 [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
 reads the attribute from the `id` field of its reply instead. An
 OpenResponses reply sent with `store = FALSE` still has an `id`, so its
