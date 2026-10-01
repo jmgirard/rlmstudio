@@ -1,6 +1,7 @@
-# Tests for claims that `vignettes/text-analysis.Rmd` and
-# `vignettes/getting-started.Rmd` make about package functions, where no other
-# test checked the claim.
+# Tests for claims that `vignettes/text-analysis.Rmd`,
+# `vignettes/getting-started.Rmd`, and `vignettes/headless-config.Rmd` make
+# about package functions. Some of them repeat a check that another test file
+# makes.
 
 # The messages that `expr` gives, as text, with each one muffled.
 claim_messages <- function(expr) {
@@ -261,4 +262,256 @@ test_that("lms_chat_batch() sends the system prompt with each input and returns 
     rep("Answer with one word.", 3L)
   )
   expect_identical(out, c("Apple", "Blue", "Mars"))
+})
+
+# Claims of `vignettes/headless-config.Rmd`.
+
+# Run a headless install with `interactive()`, the consent answer, and
+# RLMSTUDIO_ALLOW_INSTALL set as given. `lms_found` is what `has_lms()`
+# returns. The installer is a stub, so no install runs. Returns what the call
+# showed, the installer calls, and the number of consent questions.
+consent_install <- function(interactive, answer = NA, allow = NA, lms_found = FALSE) {
+  if (is.na(allow)) {
+    withr::local_envvar(RLMSTUDIO_ALLOW_INSTALL = NA)
+  } else {
+    withr::local_envvar(RLMSTUDIO_ALLOW_INSTALL = allow)
+  }
+  local_mocked_bindings(has_lms = function() lms_found)
+  asked <- 0L
+  local_mocked_bindings(
+    askYesNo = function(...) {
+      asked <<- asked + 1L
+      answer
+    },
+    .package = "utils"
+  )
+  # The package binding of `interactive`, which R/setup.R keeps for this mock.
+  local_mocked_bindings(interactive = function() interactive)
+  local_mocked_bindings(
+    Sys.which = function(...) "/usr/bin/curl",
+    Sys.info = function(...) c(sysname = "Linux"),
+    .package = "base"
+  )
+  runs <- list()
+  local_mocked_bindings(
+    run = function(command, args, ...) {
+      runs[[length(runs) + 1L]] <<- list(command = command, args = args)
+      list(status = 0L, stdout = "", stderr = NULL)
+    },
+    .package = "processx"
+  )
+  shown <- capture_shown(install_lmstudio(method = "headless"))
+  list(shown = shown, runs = runs, asked = asked)
+}
+
+test_that("install_lmstudio() with the headless method runs the LM Studio install script", {
+  res <- consent_install(interactive = TRUE, answer = TRUE)
+  expect_null(res$shown$error)
+  expect_length(res$runs, 1L)
+  expect_identical(res$runs[[1]]$command, "bash")
+  expect_match(
+    res$runs[[1]]$args[2],
+    "curl -fsSL https://lmstudio.ai/install.sh | bash",
+    fixed = TRUE
+  )
+})
+
+test_that("install_lmstudio() at the console asks first and installs only on yes", {
+  yes <- consent_install(interactive = TRUE, answer = TRUE)
+  expect_identical(yes$asked, 1L)
+  expect_length(yes$runs, 1L)
+
+  no <- consent_install(interactive = TRUE, answer = FALSE)
+  expect_identical(no$asked, 1L)
+  expect_length(no$runs, 0L)
+  expect_match(conditionMessage(no$shown$error), "Installation cancelled by user.", fixed = TRUE)
+
+  # A closed question, NA, is not a yes either.
+  closed <- consent_install(interactive = TRUE, answer = NA)
+  expect_length(closed$runs, 0L)
+  expect_match(conditionMessage(closed$shown$error), "Installation cancelled by user.", fixed = TRUE)
+
+  # At the console, the variable does not skip the question.
+  allowed <- consent_install(interactive = TRUE, answer = FALSE, allow = "true")
+  expect_identical(allowed$asked, 1L)
+  expect_length(allowed$runs, 0L)
+})
+
+test_that("install_lmstudio() in a script stops unless RLMSTUDIO_ALLOW_INSTALL is true", {
+  unset <- consent_install(interactive = FALSE)
+  expect_identical(unset$asked, 0L)
+  expect_length(unset$runs, 0L)
+  expect_match(
+    conditionMessage(unset$shown$error),
+    "Installation requires an interactive session to grant permission.",
+    fixed = TRUE
+  )
+
+  allowed <- consent_install(interactive = FALSE, allow = "true")
+  expect_null(allowed$shown$error)
+  expect_identical(allowed$asked, 0L)
+  expect_length(allowed$runs, 1L)
+})
+
+test_that("install_lmstudio() installs nothing when lms 0.4.0 or later is found", {
+  local_mocked_bindings(
+    has_lms = function() TRUE,
+    check_lms_version = function(...) TRUE
+  )
+  local_mocked_bindings(
+    run = function(...) stop("The installer must not run."),
+    .package = "processx"
+  )
+  local_mocked_bindings(
+    browseURL = function(...) stop("The browser must not open."),
+    .package = "utils"
+  )
+
+  shown <- capture_shown(result <- install_lmstudio(method = "headless"))
+
+  expect_null(shown$error)
+  expect_true(result)
+})
+
+test_that("install_lmstudio() goes on to install when lms is older than 0.4.0", {
+  versions <- character()
+  local_mocked_bindings(check_lms_version = function(min_version, ...) {
+    versions <<- c(versions, min_version)
+    FALSE
+  })
+
+  older <- consent_install(interactive = FALSE, allow = "true", lms_found = TRUE)
+
+  expect_identical(versions, "0.4.0")
+  expect_null(older$shown$error)
+  expect_length(older$runs, 1L)
+})
+
+# Replace `lms_path()` and `processx::run()` in the calling test with stubs,
+# and return an environment whose `args` records the arguments of each `lms`
+# call. Each call succeeds, except that `daemon down` returns `daemon_down`.
+local_lms_calls <- function(daemon_down = list(status = 0L, stdout = "", stderr = ""),
+                            env = parent.frame()) {
+  local_mocked_bindings(lms_path = function() "lms", .env = env)
+  calls <- new.env()
+  calls$args <- list()
+  local_mocked_bindings(
+    run = function(command, args, ...) {
+      calls$args[[length(calls$args) + 1L]] <- args
+      if (identical(args, c("daemon", "down"))) {
+        daemon_down
+      } else {
+        list(status = 0L, stdout = "", stderr = "")
+      }
+    },
+    .package = "processx",
+    .env = env
+  )
+  calls
+}
+
+test_that("lms_daemon_status() returns the lines that lms status prints", {
+  calls <- local_lms_calls()
+  local_mocked_bindings(
+    run = function(command, args, ...) {
+      calls$args[[length(calls$args) + 1L]] <- args
+      list(status = 0L, stdout = "Server:  OFF \n\nModels: none\n", stderr = "")
+    },
+    .package = "processx"
+  )
+
+  res <- lms_daemon_status()
+
+  expect_identical(calls$args, list("status"))
+  expect_identical(res, c("Server:  OFF ", "Models: none"))
+})
+
+test_that("lms_daemon_stop() returns TRUE when the daemon stopped or was not running", {
+  local_lms_calls()
+  stopped <- NULL
+  capture_shown(stopped <- lms_daemon_stop())
+  expect_true(stopped)
+
+  local_lms_calls(
+    daemon_down = list(status = 1L, stdout = "", stderr = "The daemon is not running.")
+  )
+  not_running <- NULL
+  shown <- capture_shown(not_running <- lms_daemon_stop())
+  expect_true(not_running)
+  expect_match(shown$messages, "already stopped", fixed = TRUE)
+})
+
+test_that("lms_daemon_stop(force = TRUE) stops the server before the daemon", {
+  calls <- local_lms_calls()
+
+  capture_shown(lms_daemon_stop(force = TRUE))
+
+  expect_identical(calls$args, list(c("server", "stop"), c("daemon", "down")))
+})
+
+test_that("with_lms_daemon() starts the daemon, runs the code, and stops the server and the daemon", {
+  calls <- local_lms_calls()
+  ran <- NULL
+
+  shown <- capture_shown(value <- with_lms_daemon({
+    ran <- calls$args
+    "replies"
+  }))
+
+  expect_null(shown$error)
+  expect_identical(value, "replies")
+  # The code ran after the daemon started.
+  expect_identical(ran, list(c("daemon", "up")))
+  expect_identical(
+    calls$args,
+    list(c("daemon", "up"), c("server", "stop"), c("daemon", "down"))
+  )
+})
+
+test_that("with_lms_daemon() stops the server and the daemon when the code fails", {
+  calls <- local_lms_calls()
+
+  shown <- capture_shown(with_lms_daemon(stop("The code failed.")))
+
+  expect_match(conditionMessage(shown$error), "The code failed.", fixed = TRUE)
+  expect_identical(
+    calls$args,
+    list(c("daemon", "up"), c("server", "stop"), c("daemon", "down"))
+  )
+})
+
+test_that("a host argument sends the prompt to that computer", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(
+    mock_response(200L, output_body(responses_message(output_text(quoted("Hello")))))
+  )
+
+  lms_chat("a-model", input = "Say hello.", host = "http://192.168.1.20:1234")
+
+  sent <- request_target(recorder$requests[[1]])
+  expect_identical(sent[["host"]], "192.168.1.20:1234")
+  expect_identical(sent[["body"]][["input"]], "Say hello.")
+})
+
+test_that("lms_load(), lms_chat(), and lms_unload() take a host argument", {
+  fns <- list(lms_load = lms_load, lms_chat = lms_chat, lms_unload = lms_unload)
+  for (name in names(fns)) {
+    test_that(name, {
+      expect_identical(formals(fns[[name]])[["host"]], "http://localhost:1234")
+    })
+  }
+})
+
+test_that("a host argument sends the readiness request to that computer", {
+  asked <- NULL
+  local_mocked_bindings(
+    req_perform = function(req, ...) {
+      asked <<- req$url
+      stop("No server here.")
+    },
+    .package = "httr2"
+  )
+
+  expect_false(lms_server_ready(host = "http://192.168.1.20:1234"))
+  expect_match(asked, "^http://192\\.168\\.1\\.20:1234/")
 })

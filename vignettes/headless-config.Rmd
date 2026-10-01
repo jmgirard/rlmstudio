@@ -1,240 +1,277 @@
 ---
-title: "Headless Configuration and Usage"
+title: "Using LM Studio Without the Desktop App"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Headless Configuration and Usage}
+  %\VignetteIndexEntry{Using LM Studio Without the Desktop App}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 
+
+A headless setup runs LM Studio with no desktop app and no window. You
+control it with commands only. You need a headless setup on a computer
+that has no screen, such as a Linux computer that you reach over a
+network. This vignette also covers a second case: R runs on your
+computer, and LM Studio runs on another one.
+
+`vignette("getting-started")` covers the steps that are the same with or
+without the desktop app: the server, the model list, the download, the
+load, and the chat. This vignette covers only what differs. Read
+`getting-started` first, but skip its install step, which opens a web
+browser. The next section replaces it.
+
+## Install the command-line tool
+
+LM Studio comes with a command-line tool called `lms`. Without the
+desktop app, you install `lms` and the rest of LM Studio from the command
+line. `install_lmstudio(method = "headless")` runs the LM Studio install
+script for your system. If `lms` is already installed, at version 0.4.0
+or later, the function installs nothing.
+
+The install writes files to your computer, so the function does not
+install without your consent. In R at the console, it asks you first, and
+it installs only if you answer yes. When R runs a script with no console,
+for example with `Rscript`, R cannot ask you. There, the function stops
+with an error, unless you set the environment variable
+`RLMSTUDIO_ALLOW_INSTALL` to `"true"` before the call. An environment
+variable is a named setting that programs read when they run. In R,
+`Sys.setenv(RLMSTUDIO_ALLOW_INSTALL = "true")` sets it.
+
+
+``` r
+# Install LM Studio without the desktop app. At the console, it asks you first.
+rlmstudio::install_lmstudio(method = "headless")
+```
+
+After the install, restart R. Then load the package and check that R can
+find `lms`.
+
+
 ``` r
 library(rlmstudio)
 
-model <- "google/gemma-3-1b"
-
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
-The `rlmstudio` package provides robust support for running LM Studio in completely headless environments. This is ideal for Linux servers, Docker containers, remote cloud instances, and automated CI/CD pipelines where a visual desktop application is unavailable or inconvenient.
-
-To operate without a GUI, LM Studio relies on a background process called the `llmster` daemon. This vignette will walk you through managing the daemon, starting the local server, and fully automating your local LLM workflows.
-
-## Setup and Installation
-
-If you are setting up a fresh remote server, you can use the package to download and install the LM Studio CLI automatically via the terminal. Run `install_lmstudio(method = "headless")` in your console to execute the automated installation script.
-
-
-``` r
-# Verify the CLI is available before proceeding
+# TRUE if R finds the lms tool
 has_lms()
+#> [1] TRUE
+
+# TRUE if the lms tool is version 0.4.0 or later
+check_lms_version()
+#> ✔ LM Studio CLI is using the modern architecture (0.4.0+).
 #> [1] TRUE
 ```
 
-## Step-by-Step Guide
+If `has_lms()` returns `FALSE`, find the full path of `lms` on your
+computer. Then set the environment variable `RLMSTUDIO_LMS_PATH` to that
+path, and the package uses it.
 
-### 1. Start the Background Daemon
+## Start the daemon
 
-Unlike the desktop version where opening the app initializes the backend engine, a headless environment requires you to start the engine manually. You must start the `llmster` daemon before attempting to load models or start the API server.
+A daemon is a program that runs in the background, with no window. The
+LM Studio daemon is called `llmster`. When the desktop app is open, the
+app does the work of the daemon. Without the desktop app, start the
+daemon yourself, before you start the server.
 
 
 ``` r
-# Start the headless engine in the background
+# Start the LM Studio daemon in the background
 lms_daemon_start()
 #> ✔ LM Studio daemon started in the background.
 ```
 
-### 2. Start the Local Server
-
-With the daemon running, you can now spin up the REST API server to accept HTTP requests. The CLI returns before the REST API answers, so `lms_server_start()` keeps asking the REST API whether it is ready and returns once it answers. A headless box is often the slow one, so allow it more than the default 10 seconds.
+`lms_daemon_status()` returns the lines that the command `lms status`
+prints, as text. They say, for example, whether the server is on. Where
+the output tells you to run `lms server start` in a terminal, the R
+function `lms_server_start()` of the next section runs that command for
+you.
 
 
 ``` r
-# Start the local server on the default port, and allow 30 seconds for it
-lms_server_start(wait = 30)
-#> ✔ LM Studio server started successfully on the default port.
+# What LM Studio reports about itself
+lms_daemon_status()
+#> [1] "Server:  OFF "                                      
+#> [2] "(i) To start the server, run the following command:"
+#> [3] "    lms server start"
 ```
 
-A wait that runs out raises a warning and returns, so on a headless box you
-still check that the server answers before you call it. `lms_server_ready()`
-asks the host for a model list. It reports `FALSE` for a port held by another
-process, for a server that is still coming up, and for a server that turned
-your token away.
+## Start the server
+
+You start the server as in `getting-started`. `lms_server_start()` waits
+until LM Studio answers, for about `wait` seconds. If the wait runs out,
+the function gives a warning, and your script goes on. On a computer that
+is slow to start the server, give a longer wait. Then call
+`lms_server_ready()`, which returns `TRUE` only when LM Studio answers.
 
 
 ``` r
+# Start the server, and wait about 60 seconds for it to answer
+lms_server_start(wait = 60)
+#> ✔ LM Studio server started successfully on the default port.
+
+# TRUE if LM Studio answers
 lms_server_ready()
 #> [1] TRUE
 ```
 
-### 3. Finding and Managing Models
+If the wait runs out, or if `lms_server_ready()` returns `FALSE`, LM Studio
+did not answer. One cause is that it needs more time. Another is that
+another program holds the port. A port is a number that picks one program
+on a computer, and LM Studio uses port 1234 by default. Another cause is
+that the server turned the request away. A server turns a request
+away when it requires an API token, a secret string that it checks with
+each request, and the request carries none. The next section shows how to
+send one.
 
-Because you do not have the GUI's visual search tool, you will need to know the Hugging Face repository or the LM Studio catalog identifier for the model you want to use.
+Now download, load, and chat with a model as `getting-started` shows. The
+calls are the same without the desktop app.
+
+## Use an API token
+
+An API token works like a password for the server. A server that
+requires one turns away each request that does not carry it. If you use
+a server that someone else runs, get the token from that person. The
+LM Studio documentation on
+[authentication](https://lmstudio.ai/docs/developer/core/authentication)
+shows how to turn on the token check and create tokens in the desktop
+app.
+
+The package reads the token from the environment variable
+`RLMSTUDIO_API_TOKEN`. To set it for every R session, put a line such as
+`RLMSTUDIO_API_TOKEN=your-token` in the file `.Renviron` in your home
+folder, and restart R. R reads that file when it starts. If the file does
+not exist, create it. Then each function that sends a request to the
+server sends the token with it.
+
+You can also pass a token to one call with the `token` argument. Every
+function that sends a request to the server has this argument. A `token`
+argument wins over the environment variable, so use it when one script
+talks to two servers with different tokens. The call below passes the
+token from the environment variable.
 
 
 ``` r
-# Download a model using its identifier
-job_id <- lms_download("qwen/qwen3-4b-2507")
-#> ℹ Initiating download for model: "qwen/qwen3-4b-2507"...
-#> ✔ Initiating download for model: "qwen/qwen3-4b-2507"... [1.3s]
-#> 
-#> ✔ Model "qwen/qwen3-4b-2507" is already downloaded.
-lms_download_status(job_id)
-#> 
-#> ── Download Job: "N/A"
-#> Status: already_downloaded
+# Pass the token to one call
+lms_server_ready(token = Sys.getenv("RLMSTUDIO_API_TOKEN"))
+#> [1] TRUE
 ```
 
+Do not type the token itself into your script. An error message in R can
+repeat the line of code that failed, and the token would then show on
+screen. Read it from the environment variable, as above.
 
+If the server turns a request away, the error message says so. If you sent
+no token, the message tells you to set `RLMSTUDIO_API_TOKEN` or to pass
+`token`. If you sent a token, the message says that the server rejected
+it.
 
-
-``` r
-# View all downloaded models
-models <- list_models()
-
-# Filter for unloaded text models
-unloaded_llms <- models |>
-  subset(type == "llm" & state == "unloaded")
-unloaded_llms
-#>      state type        display_name                        key architecture
-#> 1 unloaded  llm         Gemma 4 E4B         google/gemma-4-e4b       gemma4
-#> 2 unloaded  llm Gemma 4 26B A4B QAT google/gemma-4-26b-a4b-qat       gemma4
-#> 3 unloaded  llm       Qwen3 4B 2507         qwen/qwen3-4b-2507        qwen3
-#> 4 unloaded  llm          Gemma 3 1B          google/gemma-3-1b  gemma3_text
-#>   size_gb
-#> 1    6.39
-#> 2   14.57
-#> 3    2.12
-#> 4    0.72
-```
-
-### 4. Loading Models
-
-Allocate the model to your system's memory (RAM/VRAM) so it is ready for inference.
+When you are done for now, stop the server.
 
 
 ``` r
-# Load the model
-lms_load(model, flash_attention = TRUE)
-#> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.4s]
-#> 
-```
-
-### 5. Chatting
-
-Interact with the model exactly as you would in a desktop environment.
-
-
-``` r
-response <- lms_chat(
-  model = model,
-  input = "Provide just the str_extract() pattern to match all text after the third comma.",
-  system_prompt = "You are an expert R programmer familiar with the tidyverse."
-)
-
-cat(response)
-```
-
-````
-#> ```r
-#> str_extract(text, ".*[^,]*")
-#> ```
-#> 
-#> **Explanation:**
-#> 
-#> *   `str_extract()`:  This function from the `string` package in tidyverse is specifically designed for this task.
-#> *   `".*[^,]*"`: This is the pattern to match. Let's break it down:
-#>     *   `.*`: Matches any character (`.`) zero or more times (`*`). This effectively captures everything after the first comma.
-#>     *   `[^,]*`: Matches any character that is *not* a comma (`[^,]`).  This is the key to capturing everything after the third comma. The `^` inside the character class means "not".
-#> 
-#> **Example:**
-#> 
-#> Let's say your `text` is:
-#> 
-#> ```
-#> "Data.  Some values here!  Another one.  More details."
-#> ```
-#> 
-#> Then `str_extract("Data.  Some values here!  Another one.  More details.", ".*[^,]*")` would return:
-#> 
-#> ```
-#> "Some values here!  Another one.  More details."
-#> ```
-#> 
-#> **Important Considerations:**
-#> 
-#> *   This pattern works well when the third comma is the last element in a series.
-#> *  If there's no final comma, it will capture everything after the *first* comma.
-#> *   The `[^,]` character class is crucial for handling cases where there might be more than one comma in the input.
-#> 
-#> Would you like to see an example with a different text or more complex scenarios?
-````
-
-### 6. Teardown and Cleanup
-
-In a headless environment, managing your system resources is critical. When your script finishes, you should explicitly tear down the entire stack to free up memory and stop background processes.
-
-
-``` r
-# 1. Unload the model from memory
-lms_unload(model)
-#> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [521ms]
-#> 
-```
-
-
-``` r
-# 2. Stop the API server
+# Stop the server
 lms_server_stop()
 #> ✔ LM Studio server stopped successfully.
-
-# 3. Stop the background daemon
-lms_daemon_stop()
-#> ℹ The daemon is managed by the LM Studio GUI and will remain running.
 ```
 
-## Bonus: Pipeline Automation
+## Reach a server on another computer
 
-If you are writing a script that just needs to run a quick job and exit, managing the daemon state manually can be tedious. The `with_lms_daemon()` wrapper handles the setup and guaranteed teardown of the background engine automatically.
+LM Studio can run on another computer, such as one with a large graphics
+card, while you run R on your laptop. The host is the computer that runs
+LM Studio. The `host` argument gives its address, such as
+`"http://192.168.1.20:1234"`. That is the network address of the host,
+then a colon and the port of the server. The package asks port 1234 by
+default. By
+default, `host` is `"http://localhost:1234"`, which is your own computer.
+The person who manages the host can tell you its network address.
 
-This block starts its own server, so it asks again whether that server answers.
-The block calls `lms_unload()` only if the block loaded the model.
-On a host without the desktop app, the daemon stop on exit can also unload a
-model that was loaded before the block.
+The functions that run `lms`, such as `lms_daemon_start()` and
+`lms_server_start()`, act on the computer where R runs. So run them in R
+on the host. By default, the server answers only requests that come from
+the host itself. To let other computers reach it, set the environment
+variable `LMS_SERVER_HOST` to `"0.0.0.0"` before you start the server.
+The address `0.0.0.0` means every network address of the host.
 
 
 ``` r
-# The daemon will start, the code will run, and the daemon will stop on exit.
-results <- with_lms_daemon({
-  lms_server_start()
-
-  res <- NULL
-  if (lms_server_ready()) {
-    loaded_here <- !model %in% list_models(loaded = TRUE, quiet = TRUE)$key
-    lms_load(model)
-    res <- lms_chat(model, "Is the daemon running?")
-    if (loaded_here) {
-      lms_unload(model)
-    }
-  }
-
-  lms_server_stop()
-  res
-})
-#> ✔ LM Studio daemon started in the background.
-#> ✔ LM Studio server started successfully on the default port.
-#> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.7s]
-#> 
-#> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [519ms]
-#> 
-#> ✔ LM Studio server stopped successfully.
-#> ℹ The LM Studio server is already stopped.
-#> ℹ The daemon is managed by the LM Studio GUI and will remain running.
+# On the host: let other computers reach the server
+Sys.setenv(LMS_SERVER_HOST = "0.0.0.0")
+lms_server_start(wait = 60)
 ```
+
+Then any computer that can reach the host over the network can send
+requests to the server. If the network is not private, require an API
+token on the server. The LM Studio documentation shows how to turn on the
+token check only in the desktop app. On a host without the desktop app,
+keep the server on a private network that only computers you trust can
+reach. A firewall between the two computers can block the port.
+
+Your own computer needs the package, but not LM Studio. Pass the address
+of the host to each call with the `host` argument. Every function that
+sends a request to the server has this argument, for example
+`lms_load()`, `lms_chat()`, and `lms_unload()`. The package then sends
+your prompts to that computer. The model reads them there, and the
+replies come back to R.
+
+
+``` r
+# On your computer: the address of the host
+host <- "http://192.168.1.20:1234"
+
+# TRUE if the server on the host answers
+lms_server_ready(host = host)
+
+# Send one prompt to the model on the host
+reply <- lms_chat(
+  model = "google/gemma-3-1b",
+  input = "Say hello.",
+  host = host
+)
+```
+
+## Run a script with the daemon
+
+A script that runs on its own, for example every night, must start the
+daemon and stop it again. `with_lms_daemon()` does both. It starts the
+daemon, runs your code, and then stops the server and the daemon. It stops
+them even if your code fails with an error. It returns the value of your
+code.
+
+Take care on a computer that other people use. At the end,
+`with_lms_daemon()` stops the server and the daemon even if they ran
+before the call, so it can stop a server that someone else uses. If the
+desktop app is open, the daemon keeps running, as the next section says.
+
+
+``` r
+model <- "google/gemma-3-1b"
+
+replies <- with_lms_daemon({
+  lms_server_start(wait = 60)
+  lms_load(model)
+  out <- lms_chat_batch(
+    model = model,
+    inputs = c("Name a fruit.", "Name a color."),
+    system_prompt = "Answer with one word."
+  )
+  lms_unload(model)
+  out
+})
+
+# One reply for each prompt
+replies
+```
+
+## Stop the daemon
+
+When you no longer need LM Studio, stop the daemon with
+`lms_daemon_stop()`. It returns `TRUE` when the daemon stopped or was not
+running. Use `force = TRUE` to stop the server first.
+
+
+``` r
+# Stop the server, then the daemon
+lms_daemon_stop(force = TRUE)
+```
+
+If the desktop app is open, `lms_daemon_stop()` does not stop the daemon. The
+function returns `FALSE` and prints a message that says so.

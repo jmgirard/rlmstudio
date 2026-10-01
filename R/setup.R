@@ -238,3 +238,10 @@ install_lmstudio <- function(method = c("browser", "headless")) {
 
   return(invisible(TRUE))
 }
+
+# A binding that a test can replace with local_mocked_bindings(), so the
+# consent rules of install_lmstudio() can be tested. In the installed,
+# byte-compiled package, a call to the base interactive() is inlined, and a
+# mock of the base function never reaches it. A call skips a binding that is
+# not a function, so the package still calls the base interactive().
+interactive <- NULL
