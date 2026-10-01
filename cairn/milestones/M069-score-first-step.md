@@ -1,6 +1,6 @@
 # M069: lms_score_expected() reads the first step of a reply alone
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -143,6 +143,8 @@ in the DESIGN known issue.
 - 2026-09-30: implement done, status review.
 - 2026-09-30: review return 1 (defect): AC3 failed. The score test that replaced `test-vignette-claims.R:125` holds a `step` column, so it exercises the AC2 rule, not the no-`step` fallback the criterion names. Status in-progress. The other criteria passed, and the 13 reviewer findings in the Review section wait for triage.
 - 2026-09-30: T2 repair for the AC3 return. The score test at `test-vignette-claims.R:126` now uses a frame with no `step` column and the step tokens "3", "\n", "3", so it exercises the run fallback. With the old rule planted (every row with the first step token), it failed in the label, probability, expected value, SD, and entropy checks. `devtools::document()` gives no diff, and `devtools::test()` gives 0 failures and 3 skips.
+- 2026-09-30: claim audit: 62 claims read, 0 corrected — none
+- 2026-09-30: implement done after return 1, status review. The 13 reviewer findings of pass 1 still wait for triage at the review gate.
 
 ## Decisions
 
