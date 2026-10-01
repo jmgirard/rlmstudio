@@ -49,15 +49,15 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 
 ## Acceptance criteria
 
-- [ ] AC1: For each of `getting-started`, `headless-config`, and
+- [x] AC1: For each of `getting-started`, `headless-config`, and
       `text-analysis`, `vignettes/<name>.Rmd.orig` exists. A search of
       `vignettes/<name>.Rmd` finds no line that starts with ```` ```{r ````
       and no line that starts with `#> Error`.
-- [ ] AC2: Start on this machine with the LM Studio server stopped, no
+- [x] AC2: Start on this machine with the LM Studio server stopped, no
       model loaded, and `RLMSTUDIO_API_TOKEN` unset. Then
       `devtools::check()` gives 0 errors and 0 warnings. The server is
       still stopped after it.
-- [ ] AC3: `data-raw/knit-vignettes.R`, run on this machine, behaves as
+- [x] AC3: `data-raw/knit-vignettes.R`, run on this machine, behaves as
       follows in three cases. (a) The server runs at start. The script
       stops with a message that names the running server. (b) The server
       is stopped and a model is loaded at start. The script stops with a
@@ -67,11 +67,11 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
       a message that names the chunk. It writes no `.Rmd` for that source.
       It ends with the server stopped and no model listed by
       `lms ps --json`.
-- [ ] AC4: A search of the three `.Rmd.orig` sources finds no line that
+- [x] AC4: A search of the three `.Rmd.orig` sources finds no line that
       starts with `#>` and none of the phrases `vignette is built` or
       `the build`, ignoring case. The tarball that `R CMD build` writes
       holds no file whose name ends in `.Rmd.orig` (`tar -tzf`).
-- [ ] AC5: `devtools::document()` gives no diff, `devtools::test()` passes,
+- [x] AC5: `devtools::document()` gives no diff, `devtools::test()` passes,
       and `pkgdown::check_pkgdown()` passes.
 
 ## Coverage
@@ -125,3 +125,38 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 ## Decisions
 
 ## Review
+
+Review run 2026-09-30 on `m070-knit-ahead-vignettes` at 6335a55. `origin/main` did not move after the branch was cut.
+
+- AC1: all three `vignettes/<name>.Rmd.orig` sources exist. `grep -c` finds 0 lines starting with ```` ```{r ```` and 0 starting with `#> Error` in each knitted `.Rmd`. The same chunk search over the sources finds 10, 13, and 14 chunks, so the pattern matches when chunks are present.
+- AC2: the start state was `lms server status --json` with `running` false, `lms ps --json` empty, and no `RLMSTUDIO_API_TOKEN` in the environment. `env -u RLMSTUDIO_API_TOKEN Rscript -e 'devtools::check()'` gave 0 errors, 0 warnings, 0 notes, with the vignette rebuild OK. After the check, the server status still read `running` false and `lms ps --json` was empty.
+- AC3: (a) After `lms server start`, `Rscript data-raw/knit-vignettes.R` exited 1. Its message began "The LM Studio server is running." (b) The server was stopped and `lms ps --json` listed `google/gemma-3-1b`. The script exited 1 with "A model is loaded: google/gemma-3-1b." In (a) and (b), `git status --short vignettes/` was empty. (c) A scratch source outside the repo had a chunk `boom`. That chunk started the server, loaded `google/gemma-3-1b` (listed by `lms ps --json` inside the chunk), and called `stop("planted failure")`. The script exited 1 with "The chunk 'boom' of <path> failed: planted failure". It wrote no `scratch.Rmd`. After it, the server status read `running` false and `lms ps --json` was empty.
+- AC4: `grep -c '^#>'` finds 0 lines in each of the three `.Rmd.orig` sources, against 21, 72, and 47 in the knitted `.Rmd` files. A case-blind search for `vignette is built` or `the build` finds 0 lines in each source. `R CMD build` of the branch exited 0. `tar -tzf` of `rlmstudio_0.2.2.9000.tar.gz` lists 0 files ending in `.Rmd.orig` and lists the three `vignettes/<name>.Rmd` files.
+- AC5: `devtools::document()` left `git status` showing only this milestone file, so it gave no diff. `devtools::test()` gave 0 failed, 0 errors, 3 skipped, and 19671 passed expectations. `pkgdown::check_pkgdown()` printed "No problems found."
+
+Consistency gate:
+
+- `cairn_validate.py` exited 0, all checks passed. No DESIGN principle changed (the DESIGN diff adds three Conventions bullets), so `cairn_impact.py` did not run.
+- `devtools::document()` gave no diff (AC5). `pkgdown::check_pkgdown()` passed (AC5). `devtools::check()` gave 0 errors, 0 warnings, 0 notes (AC2).
+- README: the branch does not touch `README.Rmd` or `README.md`.
+- `.Rbuildignore`: the one new path type, `vignettes/*.Rmd.orig`, has an entry. `data-raw/` was already excluded.
+- NEWS.md: the branch adds no entry. No exported function changed. The readers of the two released vignettes see the same examples with knitted output, without the paragraphs about the build. The gate judged this not to need an entry, and the approval gate shows this judgment.
+
+Independent review: three fresh reviewers (Opus diff-bug, Sonnet blame-history, Sonnet prior-review). The PR-comment probe returned no comments. No finding shows an acceptance criterion failing. Findings merged across lenses, with the proposed disposition (decided at the approval gate):
+
+- F1 (diff-bug 1, blame 1): NEWS.md:69 and NEWS.md:214, two development-version entries, say two things that M070 removes. First, a vignette skips its REST examples at a server that does not answer. Second, the build restores the server and model state. Proposed: fix now.
+- F2 (diff-bug 2): NEWS.md has no entry for the knit-ahead build, and a check no longer needs LM Studio. This reverses the gate judgment above. Proposed: fix now, with F1.
+- F3 (diff-bug 3): `knit_source()` knits in its own frame, so a chunk that assigns `temp` or `target` changes the copy. `file.copy()` is not checked. Proposed: fix now.
+- F4 (diff-bug 4): the clean-start check runs once. A vignette whose teardown leaves the server running makes the next source start from that state. Proposed: fix now, with a teardown after each source.
+- F5 (diff-bug 5, blame 3, prior 2): on a headless host, the `finally` clause does not stop the daemon, and `lms ps --json` with the daemon down possibly gives no JSON. Not tested. Proposed: follow-up in the `lms daemon up` candidate row.
+- F6 (diff-bug 6): a chunk warning is knitted as `#> Warning` with exit 0. Proposed: follow-up candidate row.
+- F7 (diff-bug 7, blame 6, prior 1): the knitted headless-config shows desktop output ("managed by the LM Studio GUI and will remain running"), the author's model list, and a wrong `str_extract()` reply. Proposed: noted, the M072 work log holds two of the three. Add the model list there.
+- F8 (diff-bug 8): the download chunks show "already downloaded", next to prose about a download. Proposed: follow-up in the M071 and M072 work logs.
+- F9 (diff-bug 9, blame 5): the shipped sources break the new DESIGN word and code lists. Proposed: reject, because the plan puts the rewrites in M071 to M073.
+- F10 (diff-bug 10): LESSONS M009 says `collapse = TRUE` puts code and output in one block, but output with backticks goes to a separate block (headless-config.Rmd:142). Proposed: fix now.
+- F11 (diff-bug 11): prose cuts beyond the named list (the `lms_ready` sentence, the REST stop paragraphs). Proposed: reject, because they described the removed gates and the work log names them.
+- F12 (diff-bug 12): a `lms ps` entry with no `identifier` or `modelKey` gives an unclear error. A failure outside a chunk is named with the last chunk label. Proposed: reject, edge cases that leave no state.
+- F13 (diff-bug 13, blame 7): hidden chunks leave blank lines, and the setup chunk shows as inert code. Proposed: reject, cosmetic.
+- F14 (blame 2, prior 4): nothing re-knits before a release or compares `.Rmd` with `.Rmd.orig`, so output can go stale. Proposed: follow-up in the release walk candidate row.
+- F15 (blame 4): text-analysis now ends with an unconditional `lms_unload_all()` with no warning to the reader. Proposed: follow-up in the M073 work log.
+- F16 (prior 3): the `lms daemon up` candidate row still describes the removed gate chunks. Proposed: noted, M072 has a task that narrows the row.
