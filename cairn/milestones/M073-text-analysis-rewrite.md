@@ -55,8 +55,8 @@ conversations are M074.
       DESIGN.md code list finds no match. A search of the source for
       `` `r `` finds no inline R expression.
 - [x] AC3: A case-blind search for each entry of the DESIGN.md prose list
-      finds no match. It runs over every line of the source outside its
-      ```` ```{r} ```` chunks, with the YAML header and inline code.
+      finds no match. It runs over every line of the source outside its ```` ```{r} ````
+      chunks, with the YAML header and inline code.
 - [x] AC4: Each of these terms is explained in plain words at or before
       its first use in prose or in a code comment of the knitted vignette:
       token, log probability, expected value, JSON schema, embedding, and
@@ -133,6 +133,7 @@ conversations are M074.
 - 2026-10-01: the 7 corrections. Prose: the `input` column, the embedding cut without warning, the unbacked "comes with LM Studio", the package label in the error, and the list that `lms_score_expected()` returns. Tests: a 400 mock on the openai route, and a test name. The same reader re-read all 7 as OK. Re-knit gave the same output lines, and the suite gave 1953 tests with 0 failed.
 - 2026-10-01: status set to review.
 - 2026-10-01: review returned the milestone, defect return 1. AC5 failed: a live probe gave a 299-token reply under a 128-token context, against the vignette sentence "your prompt and its reply together". Review send-back added T7 to T9 for the fix-now findings in the Review section, and mapped AC5 to T7 and T9. Status set to in-progress.
+- 2026-10-01: rewrapped the AC3 line breaks with no change of words. A line that started with a four-backtick code span made `cairn_validate` read an open code fence, and count the rest of the file against the plan cap.
 
 ## Decisions
 
