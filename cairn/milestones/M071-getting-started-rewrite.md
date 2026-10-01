@@ -118,7 +118,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: ledger 16, model: a reply does not always follow the system prompt. Live: the first T3 knit asked for one word and got "Apple" with an emoji.
 - 2026-09-30: T6 NEWS entry added. `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. With the server stopped and the token unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-30: claim audit: 42 claims read, 2 corrected — vignettes/getting-started.Rmd.orig, vignettes/getting-started.Rmd
-- 2026-09-30: claim audit detail: "reads before your prompt" became "gets with your prompt", which the re-read found holds. The batch caution now says that a reply can carry extra spaces, which holds. Its clause that a model does not always follow its system prompt rests on ledger 16 alone, which the re-read could not check from the files. Re-knitted clean.
+- 2026-09-30: claim audit detail: "reads before your prompt" became "gets with your prompt", which the re-read found holds. The batch caution now says that a reply can carry extra spaces, which holds. Its clause that a model does not always follow its system prompt rests on ledger 16 alone, and the re-read found no support for it in the files. Re-knitted clean.
 - 2026-09-30: status set to review.
 
 ## Decisions
