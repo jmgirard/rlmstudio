@@ -114,7 +114,7 @@ in the DESIGN known issue.
       unsummed rule and see the test go red.
 - [x] T4: In `print.lms_chat_result()` (`R/chat_oop.R:78`), count steps as
       AC5 states. Add the test of AC5.
-- [ ] T5: Run the AC6 grep and fix each site it lists, including the
+- [x] T5: Run the AC6 grep and fix each site it lists, including the
       copied rule in the live test at `test-chat.R:47`. Update the roxygen
       of `lms_score_expected()`, with `step` in its example, and of
       `lms_chat_openresponses()`. Knit the logprobs and score chunks of
@@ -137,6 +137,7 @@ in the DESIGN known issue.
 - 2026-09-30: T2 done. `first_step_rows()` in `R/score.R` reads step 1 by `step`, or the first run of `step_token`. With the old rule planted, the three new `test-score.R` tests and the replaced vignette-claims score test fail. A run-only plant fails the AC2 frames, and a consecutive-step plant fails the out-of-order frame. `devtools::test()` clean.
 - 2026-09-30: T3 done. `lms_score_expected()` sums the candidates of one label in order of first appearance. On the unsummed code, the new test failed in the label, probability, and entropy checks and passed in the expected value and SD checks. `devtools::test()` clean.
 - 2026-09-30: T4 done. `print.lms_chat_result()` counts distinct `step` values, or runs of `step_token` with no `step` column. The new `test-chat.R` print test showed 2 steps on the old code in both cases and 3 now. `devtools::test()` clean.
+- 2026-09-30: T5 done. The AC6 grep listed 10 files. The live test at `test-chat.R:47` now calls `lms_score_expected()` in place of its copy of the old rule. The help of `lms_score_expected()` and `lms_chat_openresponses()`, the vignette, NEWS, and a DESIGN Conventions line on the score oracles follow. The vignette logprobs and score output was re-run against LM Studio with `google/gemma-3-1b`, which gave an expected value of 3.348005 where the old paste had 3.342552. `devtools::document()` gives no diff, and `devtools::test()` is clean.
 
 ## Decisions
 

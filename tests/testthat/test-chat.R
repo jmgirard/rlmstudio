@@ -44,20 +44,12 @@ test_that("Full Integration: Download, Load, and Rate", {
       return(NA_real_)
     }
 
-    candidates <- lp_df[lp_df$step_token == lp_df$step_token[1], ]
-
-    nums <- suppressWarnings(as.numeric(candidates$candidate_token))
-    valid <- !is.na(nums) & nums %in% 1:5
-
-    if (!any(valid)) {
-      return(NA_real_)
-    }
-
-    vals <- nums[valid]
-    probs <- exp(candidates$candidate_logprob[valid])
-    probs <- probs / sum(probs)
-
-    sum(vals * probs)
+    # lms_score_expected() reads the rows of the first step, and aborts when
+    # no candidate of that step is in the scale.
+    tryCatch(
+      lms_score_expected(lp_df, scale = 1:5)$expected_value,
+      error = function(e) NA_real_
+    )
   })
 
   expect_true(all(

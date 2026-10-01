@@ -276,8 +276,13 @@ lms_chat <- function(
 #'   answer text raises `rlmstudio_bad_response`, as described below.
 #'
 #'   The data frame has one row for each candidate in the `top_logprobs` of
-#'   each step, or one row with `NA` candidates for a step with none. Each
-#'   field is read by its exact name. A field that is `null` or absent gives
+#'   each step, or one row with `NA` candidates for a step with none. It has
+#'   five columns. `step_token` and `step_logprob` hold the token and the log
+#'   probability of the step. `candidate_token` and `candidate_logprob` hold
+#'   those of the candidate. `step` is an integer that numbers the steps from
+#'   1 in reply order, across all the parts. Each row of a step has the number
+#'   of that step, so two steps with the same token keep different numbers.
+#'   Each field is read by its exact name. A field that is `null` or absent gives
 #'   `NA`, and so does a field whose name only starts with the one asked for,
 #'   such as `tokenX`. With `logprobs = TRUE`, the `logprobs` value of each
 #'   `"output_text"` part must follow seven rules, which the "Malformed
