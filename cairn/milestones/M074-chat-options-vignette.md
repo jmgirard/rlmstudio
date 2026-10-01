@@ -52,8 +52,8 @@ scoring are M073.
       DESIGN.md code list finds no match. A search of the source for
       `` `r `` finds no inline R expression.
 - [x] AC3: A case-blind search for each entry of the DESIGN.md prose list
-      finds no match. It runs over every line of the source outside its
-      ```` ```{r} ```` chunks, with the YAML header and inline code.
+      finds no match. It runs over every line of the source outside
+      its ```` ```{r} ```` chunks, with the YAML header and inline code.
 - [x] AC4: Each of these terms is explained in plain words at or before
       its first use in prose or in a code comment of the knitted vignette:
       route, request option, response id, conversation history, raw reply,
@@ -137,6 +137,7 @@ scoring are M073.
 - 2026-10-01: after the audit, a re-knit from a clean start passes the T3 checks, and the source scan passes the AC2 and AC3 checks.
 - 2026-10-01: all tasks done. `devtools::test()`: 0 failed, 0 errors, 3 live skips. Status set to review.
 - 2026-10-01: review return 1 (defect): AC5 fails on F1, the false sentence "The package does not check the names of request options". At the gate the user chose to send it back and fix F1 to F9 as T7 to T10. F10 to F12 are rejected for the reasons in the Review section. AC5 is unticked. Status set to in-progress.
+- 2026-10-01: AC3 rewrapped so that no line starts with a quoted fence. The words are unchanged. `cairn_validate.py` read that line as an open code fence and counted the Review section as plan lines.
 
 ## Decisions
 
