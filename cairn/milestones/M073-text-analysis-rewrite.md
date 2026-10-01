@@ -93,7 +93,7 @@ conversations are M074.
       the knitted file for error lines and for the output lines of AC1.
       Check that the small-model example in the prose matches the knitted
       output, and fix the prose on each re-knit where it does not.
-- [ ] T4: Spawn a fresh reader with the persona of a researcher who knows
+- [x] T4: Spawn a fresh reader with the persona of a researcher who knows
       R and wants to rate texts. It reads the knitted vignette and lists
       each step that it cannot follow and each term used before it is
       explained. Fix each item, or log why not, and re-knit.
@@ -111,6 +111,8 @@ conversations are M074.
 - 2026-10-01: T1 probe, gemma-3-1b, OpenResponses route, data-frame batch with `logprobs = TRUE` and `top_logprobs = 10`. Columns: input, output, logprobs, response_id, and three token counts. The `logprobs` column is a list. Each scored row holds a data frame of 20 rows with `step_token`, `step_logprob`, `candidate_token`, `candidate_logprob`, and `step`. A text of about 1,800 tokens under a 1,024-token context failed alone with `NA` output, `NULL` logprobs, and one warning. Its condition was `rlmstudio_api_error`, status 500, "tokens to keep ... greater than the context length". `lms_score_expected()` scored each of the 3 other rows. Default context is 8192, and the embedding model's is 2048 and embedded the long text.
 - 2026-10-01: T2 source rewritten to the Scope outline, with six reviews, a `for` loop for scores, and a `cosine_similarity()` helper. Purled code holds the 10 AC1 strings, and the AC2 patterns, inline R, and AC3 words find no match.
 - 2026-10-01: T3 knitted 3 times from a clean start, with the same output each time. No chunk header or `#> Error` line. The 6 chunks that call the batch, score, or embed functions each end with `#>` lines. A plant that removes them turns the check red. New prose names what the output shows. Examples are the reply "3\n", the `**` summary, and the 5 stars of "Terrible". Others are a score below 2 beside 5 stars, and the review closest to the query. Dropped a claim that a new run gives the same replies, because the T1 scores differed from the knit.
+- 2026-10-01: T4 fresh Opus reader (researcher persona) listed 21 steps and 9 unexplained terms. Fixed: a wrong claim that a schema batch puts `NA` in `output`, where it holds the error. Also fixed: `api_type = "openai"`, schema keywords, and "how sure", which no output showed. Glossed: step, server, load, request, reply columns, `**`, 768 columns, and the similarity baseline. Also fixed: a wrong section pointer, model instance, `llm`, model key, and the server stop. Re-knit gave the same output lines.
+- 2026-10-01: T4 items not fixed. Tokens per character, a good `context_length`, its default, memory cost, and how to reload with a larger one are machine-dependent or unprobed. The blank candidate's identity is unverified. Which measure to prefer is the researcher's call. A successful list element, JSON itself, and condition class names stay out to keep the steps short.
 
 ## Decisions
 
