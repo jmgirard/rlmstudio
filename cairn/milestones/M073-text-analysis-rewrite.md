@@ -87,7 +87,7 @@ conversations are M074.
       with `logprobs = TRUE` and `top_logprobs`, and log the shape of its
       `logprobs` column, a failed input included. Show that
       `lms_score_expected()` scores each non-failed row.
-- [ ] T2: Rewrite the source to the outline in Scope. Keep each code chunk
+- [x] T2: Rewrite the source to the outline in Scope. Keep each code chunk
       short, with a comment that says what it does.
 - [ ] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
       the knitted file for error lines and for the output lines of AC1.
@@ -109,6 +109,7 @@ conversations are M074.
 - 2026-10-01: implement started on branch m073-text-analysis-rewrite.
 - 2026-10-01: question gate. A long review fails because the model loads with `context_length = 1024`. The similarity column compares each review to one query sentence. The long review stays in every step.
 - 2026-10-01: T1 probe, gemma-3-1b, OpenResponses route, data-frame batch with `logprobs = TRUE` and `top_logprobs = 10`. Columns: input, output, logprobs, response_id, and three token counts. The `logprobs` column is a list. Each scored row holds a data frame of 20 rows with `step_token`, `step_logprob`, `candidate_token`, `candidate_logprob`, and `step`. A text of about 1,800 tokens under a 1,024-token context failed alone with `NA` output, `NULL` logprobs, and one warning. Its condition was `rlmstudio_api_error`, status 500, "tokens to keep ... greater than the context length". `lms_score_expected()` scored each of the 3 other rows. Default context is 8192, and the embedding model's is 2048 and embedded the long text.
+- 2026-10-01: T2 source rewritten to the Scope outline, with six reviews, a `for` loop for scores, and a `cosine_similarity()` helper. Purled code holds the 10 AC1 strings, and the AC2 patterns, inline R, and AC3 words find no match.
 
 ## Decisions
 
