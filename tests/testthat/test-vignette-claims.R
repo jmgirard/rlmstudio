@@ -194,7 +194,7 @@ test_that("a logprobs data-frame batch sends top_logprobs and temperature with e
   expect_identical(out$logprobs[[2]]$candidate_token, c("2", "4"))
 })
 
-test_that("a schema batch on the openai route asks the given host and adds the fields as columns", {
+test_that("a schema batch on the openai route asks the default local host and adds the fields as columns", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   schema <- list(
     type = "object",
@@ -238,11 +238,12 @@ test_that("a schema data frame keeps the error of a failed input in its output c
     type = "object",
     properties = list(sentiment = list(type = "string"))
   )
-  # The second input fails with status 500, as a prompt longer than the
-  # context length did on a live server. The third still gets its reply.
+  # The second input fails with status 400, as a prompt longer than the
+  # context length did on this route of a live server (see the lms_load()
+  # help). The third still gets its reply.
   local_request_sequence(list(
     mock_response(200L, completion_body(quoted('{"sentiment": "positive"}'))),
-    mock_response(500L, '{"error": {"message": "too many tokens"}}'),
+    mock_response(400L, '{"error": {"message": "too many tokens"}}'),
     mock_response(200L, completion_body(quoted('{"sentiment": "negative"}')))
   ))
 
@@ -259,7 +260,7 @@ test_that("a schema data frame keeps the error of a failed input in its output c
   expect_identical(out$sentiment, c("positive", NA, "negative"))
   expect_true(is.list(out$output))
   expect_s3_class(out$output[[2]], "rlmstudio_api_error")
-  expect_identical(out$output[[2]]$status, 500L)
+  expect_identical(out$output[[2]]$status, 400L)
   expect_identical(out$output[[3]], list(sentiment = "negative"))
   expect_length(res$warnings, 1L)
   shown <- conditionMessage(res$warnings[[1]])

@@ -22,8 +22,8 @@ rating, a score, and a similarity for each review.
 `vignette("getting-started")` covers the steps that come first: installing
 LM Studio, starting the server, and downloading `google/gemma-3-1b`. This
 vignette also uses `text-embedding-nomic-embed-text-v1.5`, a model that
-comes with LM Studio and turns text into numbers. A later section
-explains it.
+turns text into numbers. A later section explains it. If `list_models()`
+does not list it, download it as `vignette("getting-started")` shows.
 
 ## Hide the progress messages
 
@@ -95,8 +95,9 @@ nchar(reviews$text)
 `lms_chat_batch()` sends each text to the model as its own request, with
 the same system prompt. A system prompt is a set of instructions that the
 model gets with each text. With `format = "data.frame"`, the function
-returns one row for each text, in the order of the texts. The `output`
-column holds the reply. The other columns hold an id for each reply and
+returns one row for each text, in the order of the texts. The `input`
+column holds the text, and the `output` column holds the reply. The other
+columns hold an id for each reply and
 counts of the tokens that went in and came out.
 
 Each chat call in this vignette sets `temperature = 0`. The temperature
@@ -230,9 +231,10 @@ probability. The `\n` after it is a line break.
 the candidates whose token is a number in `scale`, so that a token such as
 `**` above does not count. It adds up the probabilities of candidates that
 give the same number, such as `"3"` and `" 3"` with a space. It then
-scales the probabilities to sum to 1. It returns the expected value, the average of
-the numbers, each weighted by its probability. The expected value is a
-score that can fall between two whole numbers.
+scales the probabilities to sum to 1. It returns a list. Its
+`expected_value` element holds the expected value, the average of the
+numbers, each weighted by its probability. The expected value is a score
+that can fall between two whole numbers.
 
 A `for` loop runs the function on each row. A failed input has no
 candidates, so the loop skips it, and its score stays `NA`.
@@ -269,7 +271,8 @@ gave `NA` for the sixth review.
 
 With `format = "list"`, each element of the result holds the reply, or the
 error of an input that failed. Use it to read why an input failed. The
-message below comes from LM Studio.
+text after `OpenResponses Failed:` in the message below comes from
+LM Studio.
 
 ```{r failed}
 # Send the long review again, and keep the error
@@ -329,9 +332,10 @@ the matrix. The first review, about slow service, is the closest to the
 query. Even unrelated texts get a similarity well above 0 here, so compare
 the values with each other, not with 0.
 
-The sixth review gets a similarity too. The embedding model has its own
-context length, 2,048 tokens here, as the section "The loaded models"
-shows.
+The sixth review gets a similarity too, with no warning. The embedding
+model has its own context length, 2,048 tokens here, as the section "The
+loaded models" shows. For a text longer than that, LM Studio embeds only
+the start of the text and gives no warning.
 
 ## All the results
 

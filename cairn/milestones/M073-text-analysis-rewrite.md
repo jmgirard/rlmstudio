@@ -1,6 +1,6 @@
 # M073: The text-analysis vignette scores a data frame of texts in plain code
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
@@ -119,6 +119,9 @@ conversations are M074.
 - 2026-10-01: T5 ledger, part 4. `lms_embed()` rows in order: embed:129. `list_instances()` rows and config columns: list-instances:62, list-instances:170. `lms_unload_all()` unloads each instance: unload:165. `lms_unload()` by id: unload:16. LM Studio claims rest on the knitted output: the top candidate, the 10 candidates, the context-length error, and the 2048 embedding context.
 - 2026-10-01: T5 added 3 tests to `test-vignette-claims.R`. Plants in a scratch `R/chat.R` turned each red on its own expectation: dropped dots failed `top_logprobs`, a fixed host failed the host check, and a failure slot of `NA` failed the condition check. Suite: 1953 tests, 0 failed, 3 live skips.
 - 2026-10-01: T6 rewrote the existing development NEWS entry for `vignette("text-analysis")`, which was never released, in place of a second entry. `document()` gave no diff, and `check_pkgdown()` found no problems. With the server stopped and the token unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- 2026-10-01: claim audit: 74 claims read, 7 corrected — vignettes/text-analysis.Rmd.orig, vignettes/text-analysis.Rmd, tests/testthat/test-vignette-claims.R
+- 2026-10-01: the 7 corrections. Prose: the `input` column, the embedding cut without warning, the unbacked "comes with LM Studio", the package label in the error, and the list that `lms_score_expected()` returns. Tests: a 400 mock on the openai route, and a test name. The same reader re-read all 7 as OK. Re-knit gave the same output lines, and the suite gave 1953 tests with 0 failed.
+- 2026-10-01: status set to review.
 
 ## Decisions
 
