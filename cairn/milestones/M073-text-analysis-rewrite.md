@@ -42,7 +42,7 @@ conversations are M074.
 
 ## Acceptance criteria
 
-- [ ] AC1: The R code that `knitr::purl()` extracts from
+- [x] AC1: The R code that `knitr::purl()` extracts from
       `vignettes/text-analysis.Rmd.orig` holds each of these strings:
       `rlmstudio.quiet`, `lms_chat_batch(`, `format = "data.frame"`,
       `schema =`, `logprobs = TRUE`, `lms_score_expected(`, `for (`,
@@ -51,22 +51,22 @@ conversations are M074.
       with `#> Error`. The block of each chunk that calls
       `lms_chat_batch(`, `lms_score_expected(`, or `lms_embed(` holds a line
       that starts with `#>` after its last code line.
-- [ ] AC2: A search of that purled code for each regular expression in the
+- [x] AC2: A search of that purled code for each regular expression in the
       DESIGN.md code list finds no match. A search of the source for
       `` `r `` finds no inline R expression.
-- [ ] AC3: A case-blind search for each entry of the DESIGN.md prose list
+- [x] AC3: A case-blind search for each entry of the DESIGN.md prose list
       finds no match. It runs over every line of the source outside its
       ```` ```{r} ```` chunks, with the YAML header and inline code.
-- [ ] AC4: Each of these terms is explained in plain words at or before
+- [x] AC4: Each of these terms is explained in plain words at or before
       its first use in prose or in a code comment of the knitted vignette:
       token, log probability, expected value, JSON schema, embedding, and
       cosine similarity.
-- [ ] AC5: Take each prose sentence and each `#` comment line that states
+- [x] AC5: Take each prose sentence and each `#` comment line that states
       what a package function does with an argument, returns, or raises,
       beyond what its name says. A named test under `tests/testthat/`
       exercises that behavior. A sentence about what LM Studio itself does
       matches what a live call on this machine returned.
-- [ ] AC6: `NEWS.md` has an entry under the development-version heading
+- [x] AC6: `NEWS.md` has an entry under the development-version heading
       that names the rewritten vignette. `devtools::document()` gives no
       diff, `devtools::test()` passes, and `pkgdown::check_pkgdown()`
       passes. With the server stopped and `RLMSTUDIO_API_TOKEN` unset,
@@ -126,3 +126,10 @@ conversations are M074.
 ## Decisions
 
 ## Review
+
+- AC1 (2026-10-01, fresh): `knitr::purl()` of the source gives 165 lines, and each of the 10 strings is present. In the knitted file, no line starts with an unknitted chunk header. No line starts with `#> Error`. Six chunks call `lms_chat_batch(`, `lms_score_expected(`, or `lms_embed(`, at knitted lines 110, 163, 230, 284, 327, and 363. Each has a `#>` line after its last code line. A copy with the `#>` lines removed turned all 6 red.
+- AC2 (2026-10-01, fresh): each of the 16 regular expressions of the DESIGN.md code list matched 0 of the 165 purled lines. A search of the source for `` `r `` found 0 lines. Planted `lapply(` and `\(x)` lines matched their patterns.
+- AC3 (2026-10-01, fresh): the source has 376 lines and 13 chunks, with 13 openers and 13 closers. The 197 lines outside the chunks include the YAML header and the inline code. A case-blind search for each of the 14 entries of the DESIGN.md prose list matched 0 of them. A planted line with a capitalized list entry matched.
+- AC4 (2026-10-01, fresh read of the knitted file): a case-blind search found the first use of each term, and the defining sentence is at that line. Token: line 43, "a short piece of text". JSON schema: line 147, "a description of the fields". Log probability: line 218, "the natural log of that probability". Expected value: line 276, "the average of the numbers, each weighted by its probability". Embedding: line 350, "a list of numbers that stands for the meaning". Cosine similarity: line 355, "measures how close two embeddings are". The only earlier match of any term is the model key at line 19. That key is an identifier, and the line says the model turns text into numbers.
+- AC5 (2026-10-01, fresh): the 23 `file:line` references of the T5 ledger were read in the current tree. 21 land on a `test_that()` header whose name states the claimed behavior. `arg-guards:559` lands inside the generated test of line 557, "a schema on a route other than openai aborts". `vignette-claims:242` drifted after T5 added tests, and the claim it backed (system prompt with each input, replies in order) is now at line 355. A re-read of the knitted prose found 2 claims that the ledger does not name. For `lms_score_expected()` returning a list with `expected_value`, `test-score.R` asserts `res$expected_value` at lines 15, 37, 56, 96, and 132. For `lms_server_stop()` stopping a server that ran before, `vignette-claims:557` asserts that it sends `server stop` with no condition. The LM Studio claims match the knitted output (top candidate `3`, the context-length error text, the 2,048 embedding context). `devtools::test()`: 19,764 expectations, 0 failed, 0 errors, 3 live skips.
+- AC6 (2026-10-01, fresh): `NEWS.md` has an entry under "rlmstudio (development version)" that names `vignette("text-analysis")` and describes the rewrite. `devtools::document()` left `git status` with no change outside this file. `devtools::test()` passed, as AC5 records. `pkgdown::check_pkgdown()` found no problems. `lms server status` said the server was not running, and no model was loaded. With `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
