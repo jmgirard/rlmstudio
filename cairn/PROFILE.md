@@ -70,6 +70,7 @@ rules in tracking-rules:
 Followed by `/cairn-release` — a CRAN release walk (never self-submits):
 - Version decision (patch/minor/major) from the declared changelog; pre-1.0 conventions per DESIGN.md.
 - Changelog consolidation (the declared file): retitle the dev heading to the version; group entries; prune noise.
+- Live run first: the four steps of `data-raw/README.md` (server start, live tests, cassettes, vignette knit).
 - Full local verification: `devtools::document()` (no diff), `devtools::test()`
   and `devtools::check()` clean, `devtools::build_readme()`, `pkgdown::check_pkgdown()`,
   `urlchecker::url_check()`.

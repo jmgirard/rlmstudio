@@ -12,12 +12,19 @@
 #   Rscript data-raw/knit-vignettes.R
 #   Rscript data-raw/knit-vignettes.R vignettes/getting-started.Rmd.orig
 #
-# With no arguments, it knits every vignettes/*.Rmd.orig file.
+# With no arguments, it knits every vignettes/*.Rmd.orig file. The last line
+# of each knitted .Rmd holds the MD5 sum of its source, and
+# tests/testthat/test-vignette-knit.R fails for a source that changed after
+# its knit.
 #
 # The script refuses to start if the server runs or a model is loaded. After
 # each source, it unloads every model and stops the server, so each vignette
 # starts from the same clean state. A chunk error stops the knit, and the
-# .Rmd of that source is left as it was. The sources after the failing one
+# .Rmd of that source is left as it was. A chunk warning does the same,
+# unless the chunk sets the option expect_warning = TRUE. That option keeps
+# the warning in the output. A chunk with warning = FALSE hides its warning,
+# and a chunk with warning = NA sends it to the console. In both cases the
+# knit goes on. The sources after the failing one
 # are not knitted, and the sources before it keep their new output. Whatever
 # happens, the script unloads every model and stops the server before it
 # exits.
@@ -107,6 +114,18 @@ knit_source <- function(source) {
   old_wd <- setwd(dirname(source))
   on.exit(setwd(old_wd), add = TRUE)
   knitr::opts_chunk$set(error = FALSE)
+  # knit() sets the markdown output hooks only while every hook is at its
+  # default, so set them here before the warning hook wraps one of them.
+  knitr::render_markdown()
+  on.exit(knitr::knit_hooks$restore(), add = TRUE)
+  warned <- character()
+  markdown_warning <- knitr::knit_hooks$get("warning")
+  knitr::knit_hooks$set(warning = function(x, options) {
+    if (!isTRUE(options$expect_warning)) {
+      warned <<- c(warned, options$label)
+    }
+    markdown_warning(x, options)
+  })
   withCallingHandlers(
     knitr::knit(
       basename(source),
@@ -124,6 +143,28 @@ knit_source <- function(source) {
     }
   )
   setwd(old_wd)
+  warned <- unique(warned)
+  if (length(warned) == 1) {
+    stop(
+      "The chunk '", warned, "' of ", source, " gave a warning, and the ",
+      "chunk does not set expect_warning = TRUE.",
+      call. = FALSE
+    )
+  }
+  if (length(warned) > 1) {
+    stop(
+      "The chunks '", paste(warned, collapse = "', '"), "' of ", source,
+      " gave warnings, and these chunks do not set expect_warning = TRUE.",
+      call. = FALSE
+    )
+  }
+  # The last line holds the MD5 sum of the source. A test compares it with
+  # the source, so an edit to the source without a new knit fails the test.
+  cat(
+    "\n<!-- Knitted from ", basename(source), " with MD5 ",
+    unname(tools::md5sum(source)), ". -->\n",
+    file = temp, append = TRUE, sep = ""
+  )
   if (!file.copy(temp, target, overwrite = TRUE)) {
     stop("Could not copy the knitted ", source, " to ", target, ".", call. = FALSE)
   }
