@@ -55,6 +55,8 @@ A pull request runs only the CI jobs that the package can turn red, each job onc
 - 2026-10-01: T4 done. The DESIGN Platforms line names both check workflows. The headless Known issues line was rewritten rather than deleted, because CI still runs no live-server test, and it is marked `corrected M078`. The M002 lesson names the new job.
 - 2026-10-01: claim audit: not owed — internal tier.
 - 2026-10-01: verify. No R file changed. The T2 `rcmdcheck` run gave 0 errors, 0 warnings, and `[ FAIL 0 | WARN 0 | SKIP 7 | PASS 20216 ]`. Status set to review.
+- 2026-10-01: review gate: findings triaged, six fixed on the branch (R1, R4, R5, R6, R8, R9), and R13 filed as a candidate row.
+- step-7 approval: m078-ci-gate-setup approved for merge
 
 ## Decisions
 
@@ -86,3 +88,4 @@ Independent review, three fresh lenses: diff-bug (Opus), blame-history (Sonnet),
 - R13 (diff): a manual `pkgdown.yaml` run on a non-default branch deploys that branch's site to `gh-pages`. This predates the branch. Proposed: follow-up candidate row.
 - R14 (blame): `test-source-tree.yaml` push is now limited to `main` or `master`, so a branch push with no PR gets no run. Proposed: reject. AC3 asks for it.
 - R15 (blame): the old `test-headless` check name is gone, and nothing outside the archive uses it. Proposed: noted.
+- Triage: the gate accepted every proposed disposition. Fixed on the branch: R1, R4, R5, R6, R8, R9. R7 is read after the merge. R13 is a candidate row. Rejected or noted: R2, R3, R10, R11, R12, R14, R15. After the fixes, the AC4 script again printed TRUE in every cell, and the edited helper parses.

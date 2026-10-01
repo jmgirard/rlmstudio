@@ -1,10 +1,10 @@
 # R CMD check on R-devel, kept off pull requests.
 #
 # R-devel changes from day to day, and a break there can come from R itself
-# rather than from this package. On a pull request such a break turned the
-# checks red and blocked every merge, so R-devel runs here instead: once a
-# week, on each push to the default branch, and on a manual start. The
-# pull-request matrix lives in R-CMD-check.yaml.
+# rather than from this package. On a pull request such a break would turn the
+# checks red and block every merge, so R-devel runs here instead: once a week,
+# on a push to the default branch that changes more than cairn/, and on a
+# manual start. The pull-request matrix lives in R-CMD-check.yaml.
 #
 # On a red run, read the log. If the package caused the failure, fix it in a
 # hotfix. If R-devel caused it, leave it until R-devel changes.

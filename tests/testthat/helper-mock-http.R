@@ -104,7 +104,7 @@ local_mock_perform <- function(respond, .env) {
 # test rather than failing it. Under CI httpuv is expected to be there, so a
 # skip would let every assertion that reads a request pass by not running, and
 # nobody would see it. The check workflows install Suggests, which lists
-# httpuv; the headless workflow gets it through devtools instead, so a change
+# httpuv; the source-tree tests workflow gets it through devtools instead, so a change
 # to either one can take it away silently. Failing is what makes that visible.
 # Returns one of "run", "fail", or "skip".
 #

@@ -20,7 +20,7 @@ Elicited by `/design-interview` on 2026-09-17 (Phase 1). Seeded by cairn-init fr
 
 ### Platforms
 
-- macOS, Linux, and Windows are all commitments. A reproducible bug on any of them blocks a release. CI runs R CMD check on all three on each pull request (`.github/workflows/R-CMD-check.yaml`), with R release and oldrel-1 on Ubuntu. R-devel runs on Ubuntu weekly and on each push to `main`, never on a pull request (`.github/workflows/R-devel-check.yaml`, D-040). (corrected M002, M078)
+- macOS, Linux, and Windows are all commitments. A reproducible bug on any of them blocks a release. CI runs R CMD check on all three on each pull request (`.github/workflows/R-CMD-check.yaml`), with R release and oldrel-1 on Ubuntu. R-devel runs on Ubuntu weekly, on a manual start, and on a push to `main` that changes more than `cairn/`. It never runs on a pull request (`.github/workflows/R-devel-check.yaml`, D-040). (corrected M002, M078)
 
 ### Stability and release
 
