@@ -75,10 +75,11 @@ if (lms_ready) {
 
 ## Quiet output
 
-The package prints a message for most steps, such as a model load, and it
+`lms_load()` prints messages while it loads a model, and `lms_chat_batch()`
 shows a progress bar while a batch runs. Set the `rlmstudio.quiet` option to
-`TRUE` to hide these messages and progress bars. Warnings still show. This
-vignette sets the option here and sets it back before the teardown.
+`TRUE` to hide both. The warning that a batch gives about failed inputs
+still shows. This vignette sets the option here and sets it back before the
+teardown.
 
 ```{r quiet}
 old_options <- options(rlmstudio.quiet = TRUE)
@@ -125,7 +126,7 @@ summaries[, c("input", "output")]
 
 ## Structured output as columns
 
-A JSON schema asks the model for a reply in a fixed shape. On
+A `schema` goes to the server as a JSON schema that the reply must match. On
 `api_type = "openai"`, a data-frame batch with an object schema adds one
 column per top-level property of the schema. A `"string"` property gives a
 character column, and an `"integer"` property gives an integer column.
@@ -169,9 +170,9 @@ replies before you rely on them.
 
 A model that answers with one digit picks that digit from several
 candidates. With `logprobs = TRUE`, `lms_chat()` returns an object that
-holds the reply text and a data frame of log probabilities. The data frame
-has one row per candidate token at each step of the reply. The
-`top_logprobs` and `temperature` arguments go into the request body.
+holds the reply text and a data frame of log probabilities, if the reply
+carries them. The data frame lists the candidate tokens at each step of the
+reply. The `top_logprobs` and `temperature` fields go into the request body.
 
 ```{r logprobs, eval=chat_ready}
 rating <- lms_chat(
@@ -194,9 +195,10 @@ head(rating$logprobs, 3)
 #> 3          3     -0.34375               5         -2.750000
 ```
 
-`lms_score_expected()` reads the candidates of the first step. It keeps the
-candidates whose token is a number in `scale`, and it scales their
-probabilities to sum to 1. It returns the expected value, the weighted
+`lms_score_expected()` reads the rows whose `step_token` equals that of the
+first row. In the reply above, those rows hold the candidates for the digit.
+It keeps the candidates whose token is a number in `scale`, and it scales
+their probabilities to sum to 1. It returns the expected value, the weighted
 standard deviation, the entropy in bits, and the probability of each label.
 
 ```{r score, eval=chat_ready}
