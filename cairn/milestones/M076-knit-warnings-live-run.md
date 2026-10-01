@@ -90,7 +90,7 @@ other candidate rows stay as they are.
       fail that source as a chunk error does, so the `.Rmd` is not copied.
       Update the header comment. The script refuses a running server or a
       loaded model (LESSONS M009 and M070).
-- [ ] T2: Mark the 4 warning chunks of `vignettes/text-analysis.Rmd.orig`
+- [x] T2: Mark the 4 warning chunks of `vignettes/text-analysis.Rmd.orig`
       with `expect_warning = TRUE`. Their `.Rmd` output holds `#> Warning` at
       lines 130, 208, 263, and 354. Run AC1 and AC2 on a scratch source in a
       temp directory. Log the exit codes and the message.
@@ -122,6 +122,7 @@ other candidate rows stay as they are.
 - 2026-10-01: plan gate kept one milestone over a split into knit work and live-run work, because the live run re-knits the vignettes. Falsified by an implement phase that needs more than three sittings for both parts.
 - 2026-10-01: implement started on branch m076-knit-warnings-live-run. No question gate: nothing was open. The stamp is an HTML comment line at the end of the `.Rmd`, and the test goes in a new `test-vignette-knit.R`.
 - 2026-10-01: T1 done. `knit_source()` calls `knitr::render_markdown()` before it wraps the warning hook, because `knit()` sets the markdown hooks only while all hooks are at their defaults. A scratch run with `warning = FALSE` showed no warning on the console, so the header comment says the option hides it.
+- 2026-10-01: T2 done. Marked chunks `summaries`, `schema`, `logprobs`, and `failed`. Scratch source in the session scratch directory with the vignette setup chunk: an unmarked `warning()` chunk exits 1 with "The chunk 'noisy' of <path> gave a warning, and the chunk does not set expect_warning = TRUE.", the target absent stays absent and a present target keeps its MD5. With `expect_warning = TRUE` it exits 0 and the `.Rmd` holds `#> Warning: planted warning`.
 
 ## Decisions
 

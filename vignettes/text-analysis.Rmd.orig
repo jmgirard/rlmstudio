@@ -118,7 +118,7 @@ takes its most likely token each time.
 The batch below warns that the sixth input failed. The section "When an
 input fails" explains why.
 
-```{r summaries}
+```{r summaries, expect_warning = TRUE}
 # Ask for a short summary of each review
 summaries <- lms_chat_batch(
   model,
@@ -161,7 +161,7 @@ an integer column.
 The schema below asks for two fields. `sentiment` must be one of three
 labels, and `stars` must be a whole number.
 
-```{r schema}
+```{r schema, expect_warning = TRUE}
 # The reply is an object with named fields. `properties` gives the type
 # of each field, `enum` lists the labels allowed, and `required` names
 # the fields that each reply must hold.
@@ -219,7 +219,7 @@ Leave `api_type` at its default for this batch. With `api_type = "openai"`,
 each cell of the `logprobs` column is `NULL`, so the loop below would skip
 every row.
 
-```{r logprobs}
+```{r logprobs, expect_warning = TRUE}
 # Ask for a one-digit rating, with the log probabilities
 digits <- lms_chat_batch(
   model,
@@ -292,7 +292,7 @@ error of an input that failed. Use it to read why an input failed. The
 text after `OpenResponses Failed:` in the message below comes from
 LM Studio.
 
-```{r failed}
+```{r failed, expect_warning = TRUE}
 # Send the long review again, and keep the error
 failed <- lms_chat_batch(
   model,
