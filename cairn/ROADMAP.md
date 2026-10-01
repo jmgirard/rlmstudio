@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-01 (M072 done, M069 row pruned, `lms daemon up` row moved to DESIGN Known issues)_
+_Last hygiene check: 2026-10-01 (M073 done, M070 row pruned, logprobs-column scoring row added)_
 
 ## Milestones
 
@@ -9,11 +9,10 @@ _Last hygiene check: 2026-10-01 (M072 done, M069 row pruned, `lms daemon up` row
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M073 | The text-analysis vignette scores a data frame of texts in plain code | review | M070 | normal | milestones/M073-text-analysis-rewrite.md |
 | M074 | A vignette shows chat options, conversations, and errors in scripts | planned | M070 | normal | milestones/M074-chat-options-vignette.md |
+| M073 | The text-analysis vignette scores a data frame of texts in plain code | done | M070 | normal | milestones/archive/M073-text-analysis-rewrite.md |
 | M072 | The headless vignette covers what differs without the desktop app | done | M070 | normal | milestones/archive/M072-headless-vignette-rewrite.md |
 | M071 | The getting-started vignette reads plainly and covers a first run | done | M070 | normal | milestones/archive/M071-getting-started-rewrite.md |
-| M070 | The vignettes are knitted ahead of time from a live LM Studio | done | none | normal | milestones/archive/M070-knit-ahead-vignettes.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -26,6 +25,7 @@ _Last hygiene check: 2026-10-01 (M072 done, M069 row pruned, `lms daemon up` row
 - Three gaps in the number rule of `lms_chat_openai()`. First, it passes a `messages` field that is a list with the class `"json"` or `"scalar"` and holds `NA_real_`. jsonlite writes that number as `"NA"`. The rule skips a classed list that jsonlite does not write as a plain list. Second, it passes a classed number that jsonlite writes as a string. Examples are `jsonlite::unbox(NA_real_)` and an S4 number, sent as `"NA"`, and `as.POSIXct(Inf)`, sent as `"Inf"`. M045 reads numbers with no class or the class `"AsIs"` alone. Promote on a user who sends such a number. Third, the rule writes a classed list twice at each level, so a deep stack is slow. 100 nested `c("foo", "list")` levels took 2.1 s, against 0.03 s for the write. Promote on a real `messages` value that the check makes slow, added 2026-09-28, M045 claim-audit re-read and review findings O1 to O4 and O8 (rows merged M050)
 - Test loops that `cairn/tools/loop-sweep.R` still prints as `flat` after M065. At the M065 plan commit, 192 such rows sat in 34 files. The inner loops that the M065 wraps expose outside `test-arg-guards.R` join them. An error in one pass ends the block and hides the later passes. Wrap each body in a nested `test_that()`, as M065 does (D-038). Promote on a run where one of these loops hid passes after an error, added 2026-09-29, M056 plan gate, narrowed at the M065 plan gate
 - `lms_embed()` warns for a text longer than the loaded context, or splits the text and combines the piece vectors. M048 documents the cut instead, because LM Studio 0.4.25+1 has no tokenize endpoint and reports 0 tokens. Promote on an LM Studio reply or endpoint that gives a token count. A user who needs one vector for a long document is the other trigger, added 2026-09-28, M047 and M048 plan gates
+- A function that scores the whole `logprobs` column of a batch in one call, with `NA` for a failed row. The `for` loop of `vignette("text-analysis")` stops on a row with no candidate in `scale` or with zero rows. The rescale also hides how much probability fell outside the scale. Promote on a reader whose loop stops on such a row, added 2026-10-01, M073 review findings D6, D7, and D14
 - The failed-inputs warning of `lms_embed()` names each failed position. A failed batch fails a run of consecutive positions, so 400 failures give a warning of 400 numbers. Give runs as ranges, such as "1 to 100". Promote on a user who finds the warning too long to read, added 2026-09-28, M047 review finding O11
 - Three follow-ups to the schema property columns of `lms_chat_batch()`. First, a property named `logprobs` is not reserved. With `logprobs = FALSE`, it gives a `logprobs` column that holds the model field, the name of the list-column of a `logprobs = TRUE` frame. Second, a nullable property written as `anyOf` or `oneOf`, or an `enum` with no `type`, gives a list-column. Promote on a user whose generated schema needs a typed column there. Third, `test-server-ready.R:170` failed once in a full `devtools::test()` run, in the option case, and 4 later runs passed. If it fails again, promote it, added 2026-09-29, M051 review findings O1, O3, and R1
 - A RoPE or YaRN setting on `lms_load()`, for a context above the trained maximum. On 2026-09-30, `/api/v1/models/load` answered 400 `unrecognized_keys` to `rope_frequency_scale`, and `lms load` has no rope flag. Only the SDK websocket protocol has `ropeFrequencyBase` and `ropeFrequencyScale`. Promote once the load endpoint or `lms load` accepts a rope setting, added 2026-09-30, M063 plan gate

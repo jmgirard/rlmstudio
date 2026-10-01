@@ -183,7 +183,11 @@ all.
   `/api/v1/chat` answered status 500 with the same object, its keys in the
   order `message`, `type`, `code`, `param`. `/v1/chat/completions` answered
   status 400 with `{"error":"<the same text>"}`, the text as a string in
-  `error` — observed 2026-09-30.
+  `error` — observed 2026-09-30. The limit holds for the prompt alone. With
+  the model loaded at `context_length` 128, a 28-token prompt on
+  `/v1/responses` got a 299-token reply under `max_output_tokens` 300, and a
+  58-token prompt got a reply. A prompt of about 220 tokens failed with the
+  text above (M073) — observed 2026-10-01.
 
 ## CLI commands the package does not wrap
 
