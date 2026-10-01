@@ -284,8 +284,9 @@ consent_install <- function(interactive, answer = NA, allow = NA) {
     },
     .package = "utils"
   )
+  # The package binding of `interactive`, which R/setup.R keeps for this mock.
+  local_mocked_bindings(interactive = function() interactive)
   local_mocked_bindings(
-    interactive = function() interactive,
     Sys.which = function(...) "/usr/bin/curl",
     Sys.info = function(...) c(sysname = "Linux"),
     .package = "base"

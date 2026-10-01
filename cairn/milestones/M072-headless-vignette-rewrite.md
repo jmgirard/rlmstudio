@@ -97,7 +97,7 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
       Narrow the `lms daemon up` candidate row: the vignette no longer
       stops a daemon during a package check.
-- [ ] T6: Add the NEWS entry and run the checks of AC7.
+- [x] T6: Add the NEWS entry and run the checks of AC7.
 
 ## Work log
 
@@ -112,6 +112,7 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
 - 2026-09-30: T5 ledger, daemon and server. `llmster`: `lms daemon --help`. The desktop app runs the daemon, and a stop then gives `FALSE` and a message: T1 probe and `lms_daemon_stop exits gracefully when managed by GUI`. Status lines of `lms status`: `lms_daemon_status() returns the lines that lms status prints` and the T2 probe. `lms_server_start()` runs `lms server start`: `build_args_server_start constructs correct arguments`. Wait and warning: `lms_server_start warns rather than aborts when the wait runs out`. Ready TRUE only on an answer, FALSE on a 401: `test-server-ready.R`.
 - 2026-09-30: T5 ledger, token and host. Token sent from the variable, the argument on every request function, the argument winning, the two messages: `test-token.R`, `test-token-wrappers.R`, `test-token-rejected.R`. Desktop-only token setup: the authentication page, read 2026-09-30. Default `localhost:1234`: `list_models() asks localhost:1234 by default`. `host` on load, chat, unload: `lms_load(), lms_chat(), and lms_unload() take a host argument`. Prompt to the host: `a host argument sends the prompt to that computer`. Default bind and `0.0.0.0`: T1 probe.
 - 2026-09-30: T5 ledger, script and stop. `with_lms_daemon()` starts, runs, stops server and daemon, returns the value, also on error and on a running daemon: the two `with_lms_daemon()` tests of `test-vignette-claims.R`. `lms_daemon_stop()` TRUE when stopped or not running, `force = TRUE` stops the server first: the two `lms_daemon_stop()` tests there. A plant that skipped the console question with the variable set, and a plant that skipped the teardown on error, each failed one new test. The `lms daemon up` row is narrowed and the vignette lesson corrected. `devtools::test()`: 0 failures, 0 errors, 3 skips.
+- 2026-09-30: T6 NEWS entry added. The first `devtools::check()` failed 10 expectations of the consent tests. In the byte-compiled package, the base `interactive()` call is inlined, so the base mock never reached it. `R/setup.R` gained a package binding `interactive <- NULL` that the tests mock. With the server stopped and the token unset, `devtools::document()` gave no diff, `pkgdown::check_pkgdown()` found no problems, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 0 failures, 0 errors, 3 skips.
 
 ## Decisions
 
