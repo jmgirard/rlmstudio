@@ -114,7 +114,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
       In the work log, list each behavior sentence with the test that
       exercises it. Where none does, add a test, and log a change to package
       code that makes the test fail.
-- [ ] T6: Add the NEWS entry.
+- [x] T6: Add the NEWS entry.
 - [ ] T7: Run `devtools::document()`, `devtools::test()`,
       `pkgdown::check_pkgdown()`, and `devtools::check()` with the token
       set.
@@ -135,6 +135,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 - 2026-09-30: T5 ledger, schema and logprobs. "A `schema` goes to the server": test-chat-schema.R "a schema is sent as the documented response_format" and "lms_chat() forwards a schema on the openai route". "One column per top-level property": "a schema data frame adds one column per property after the reply columns". "String gives character, integer gives integer": "a property column's type follows the property type". The `lms_chat()` logprobs object, "if the reply carries them", "lists the candidate tokens at each step", and "fields go into the request body": new "lms_chat() on the default route sends the dots and lists the candidates".
 - 2026-09-30: T5 ledger, score, embed, instances, teardown. The four `lms_score_expected()` sentences: new "lms_score_expected() reads the first step, keeps the scale, and rescales", beside test-score.R. "One row per input text, in the order given": test-embed.R "three inputs answered in order give three rows in order" and "three inputs answered out of order are placed by index". `list_instances()`: test-list-instances.R "list_instances returns one row per loaded instance of a listed type" and "each configuration field gets a column, in order of first appearance". "`lms_unload_all()` unloads every loaded model instance" and its chunk comment: test-unload.R "lms_unload_all unloads each reported instance in order and forwards dots". Sentences about the model, LM Studio, or this vignette's own build are not about a package function.
 - 2026-09-30: T5 narrowed four vignette sentences to what the code does. The quiet paragraph names `lms_load()` and the batch bar. For a reply with log probabilities, the logprobs object holds a frame, and plain text otherwise. The frame lists candidates at each step. `lms_score_expected()` reads the rows whose `step_token` equals that of the first row. Eight plants each turned a new test red and were restored: progress step ignores quiet, batch sends the first input every time, openresponses drops the dots, logprobs frame keeps one step. The score plants were no rescale, a number outside `scale` kept, every step read, and entropy in nats.
+- 2026-09-30: T6 added the NEWS entry under the development-version heading. It names the vignette and the seven AC4 features.
 
 ## Decisions
 
