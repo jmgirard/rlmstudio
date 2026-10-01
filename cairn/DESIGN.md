@@ -20,7 +20,7 @@ Elicited by `/design-interview` on 2026-09-17 (Phase 1). Seeded by cairn-init fr
 
 ### Platforms
 
-- macOS, Linux, and Windows are all commitments. A reproducible bug on any of them blocks a release. CI runs R CMD check on all three (`.github/workflows/R-CMD-check.yaml`), with three R versions on Ubuntu. (corrected M002)
+- macOS, Linux, and Windows are all commitments. A reproducible bug on any of them blocks a release. CI runs R CMD check on all three on each pull request (`.github/workflows/R-CMD-check.yaml`), with R release and oldrel-1 on Ubuntu. R-devel runs on Ubuntu weekly and on each push to `main`, never on a pull request (`.github/workflows/R-devel-check.yaml`, D-040). (corrected M002, M078)
 
 ### Stability and release
 
@@ -89,7 +89,7 @@ Disposition of the Phase 1 banked list: items 1, 2, 3, 7, and 8 became GP2, GP1,
 
 Recorded 2026-09-17 at the design interview.
 
-- The headless CI job (`.github/workflows/test-headless.yaml`) installs no LM Studio. It runs only the tests that do not need a server.
+- No CI job installs LM Studio, so CI runs no test that needs a live server. The source-tree job (`.github/workflows/test-source-tree.yaml`) runs `devtools::test()`, and its live tests skip there. (corrected M078)
 - `lms_chat_openai()` returns `NULL` logprobs because LM Studio stubs them on that endpoint. Only the OpenResponses endpoint yields the logprobs data frame that `lms_score_expected()` consumes.
 - The macOS check job reads every package from Posit Package Manager, which `R-CMD-check.yaml` sets as both the RSPM and the CRAN repo. That job therefore has no second source if Package Manager is down, and it loses the CRAN source-Archive fallback that the Ubuntu and Windows jobs keep. Accepted 2026-09-20 (M011) for as long as the zstd workaround stands.
 - The daemon functions, `data-raw/knit-vignettes.R`, and the headless claims of `vignette("headless-config")` were probed only on macOS with the desktop app open. Accepted 2026-10-01 (M072), with no headless host on hand. On a headless host such as Linux, probe five things. First, whether `lms daemon up` returns before the daemon runs. If it does, `lms_daemon_start()` needs a wait. Second, whether a daemon stop also unloads a loaded model. Third, whether the daemon must run before the server starts. Fourth, whether `LMS_SERVER_HOST` must be set before the daemon starts, and whether it changes a server that already runs. Fifth, whether the knit script works there. Its clean-start check parses `lms ps --json` and `lms server status --json`, which possibly give no JSON while the daemon is down. Sources: M016, M055 review O1 and O3, M070 review F5, M072 review finding 4.
