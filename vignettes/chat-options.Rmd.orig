@@ -105,9 +105,9 @@ chance goes into the choice of each token. The call below sets it to 0.
 lms_chat(model, prompt, temperature = 0)
 ```
 
-The package checks a few option names. It stops with an error on a
-`stream` other than `FALSE` or `NULL`, because it reads a whole reply and
-not one sent in parts. It also stops on `instructions` on the default
+The package checks a few option names. For example, it stops with an error
+on a `stream` other than `FALSE` or `NULL`, because it reads a whole reply
+and not one sent in parts. It also stops on `instructions` on the default
 route and on `messages` on the OpenAI route, because `lms_chat()` fills
 those fields itself. A misspelled name goes to the server with no check by
 the package.

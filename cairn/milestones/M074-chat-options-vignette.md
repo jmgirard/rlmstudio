@@ -1,6 +1,6 @@
 # M074: A vignette shows chat options, conversations, and errors in scripts
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
@@ -148,6 +148,8 @@ scoring are M073.
 - 2026-10-01: T10: re-knit from a clean start. The output shows "Green." with the id, "Blue." without it, "GREEN!", and raw temperatures 0 and 0.8. All four error calls return `NA` with their message.
 - 2026-10-01: T10 AC1 to AC3: purl gives 166 lines with all 10 strings. The knit has no `{r` fence and no `#> Error` line. All 9 chat blocks have a `#>` line after the last code line. The 16 code patterns and 14 prose words find 0 hits, and a plant of each matches.
 - 2026-10-01: T10 AC6: `document()` gives no diff, and `check_pkgdown()` finds no problems. With the server stopped and the token unset, `devtools::check()` gives 0 errors, 0 warnings, and 0 notes.
+- 2026-10-01: claim audit: 46 claims read, 1 corrected — vignettes/chat-options.Rmd.orig, vignettes/chat-options.Rmd. The checked option names read as a full list but left out `response_format` with `schema`, so the list now opens with "For example". The same reader re-read it and found that it holds.
+- 2026-10-01: after the audit, a re-knit passes the T10 scans with the same live answers. All tasks done. Status set to review.
 
 ## Decisions
 

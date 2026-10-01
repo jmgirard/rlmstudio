@@ -37,7 +37,7 @@ lms_server_start(wait = 30)
 # Load the model
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [7.8s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [6.4s]
 #> 
 ```
 
@@ -78,17 +78,17 @@ prompt <- "Name one color. Answer with one word."
 lms_chat(model, prompt)
 #> [1] "Blue \n\nLet me know if you’d like to try another one!"
 #> attr(,"response_id")
-#> [1] "resp_f4609ff6bacc0e89f12180941405e75205b7422cef19a9ee"
+#> [1] "resp_90fb7a4d5c2c9e2bbcbefa569ef2518dc0aed1a56297c87d"
 
 # The OpenAI route
 lms_chat(model, prompt, api_type = "openai")
-#> [1] "Blue."
+#> [1] "Blue \n\n"
 
 # The native route of LM Studio
 lms_chat(model, prompt, api_type = "native")
-#> [1] "Blue \n\nLet me know if you’d like to try another one!"
+#> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_6d2ca95869bf472957b4e66ff38fb62b54325b701cbbaa2c"
+#> [1] "resp_eddc8f252453b6892d7d43536a30e96c75be9c733b2036f2"
 ```
 
 Each call returns the text of the reply. On the default route and the
@@ -114,12 +114,12 @@ chance goes into the choice of each token. The call below sets it to 0.
 lms_chat(model, prompt, temperature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_30b731ede2844086e7846a14688801bdbb6029c07b49ca8d"
+#> [1] "resp_86e55983c032ab8d2ddfa44dbfeb1896cca35ac4e92ff19a"
 ```
 
-The package checks a few option names. It stops with an error on a
-`stream` other than `FALSE` or `NULL`, because it reads a whole reply and
-not one sent in parts. It also stops on `instructions` on the default
+The package checks a few option names. For example, it stops with an error
+on a `stream` other than `FALSE` or `NULL`, because it reads a whole reply
+and not one sent in parts. It also stops on `instructions` on the default
 route and on `messages` on the OpenAI route, because `lms_chat()` fills
 those fields itself. A misspelled name goes to the server with no check by
 the package.
@@ -133,9 +133,9 @@ with no error.
 ``` r
 # "temprature" is not an option that the server knows
 lms_chat(model, prompt, temprature = 0)
-#> [1] "Blue."
+#> [1] "Blue \n\nLet me know if you’d like to try another one!"
 #> attr(,"response_id")
-#> [1] "resp_675fb52fb6eb945ba310c58f4943f8cd57906cec63d31e4c"
+#> [1] "resp_6464bf367d3c423b364a0a72d0afdbb69cc8315d02099db7"
 ```
 
 So a misspelled option can go unnoticed. A later section shows how to see
@@ -163,7 +163,7 @@ first <- lms_chat(
 first
 #> [1] "OK."
 #> attr(,"response_id")
-#> [1] "resp_61f551a455823868c109813e879e2c7e66c7da76028abcde"
+#> [1] "resp_ca9fe4cb837a979e0d549758108a20bba0c33479601b67f0"
 
 # Ask about the fact in a follow-up
 lms_chat(
@@ -174,7 +174,7 @@ lms_chat(
 )
 #> [1] "Green."
 #> attr(,"response_id")
-#> [1] "resp_ceb0332f341aa37becadc6f2c64acffb476aa939b8a530ee"
+#> [1] "resp_3bad28c0896d471215f4a02e424889afca86a1616b21a5e0"
 
 # Ask the same question with no response id
 lms_chat(
@@ -184,7 +184,7 @@ lms_chat(
 )
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_379b077f5f5a987b589003ff3788f2a2f64ae0e67b3db756"
+#> [1] "resp_26d70463394db25923a2744cb368f4f643bb8863e26a9de5"
 ```
 
 With the response id, the model answered from the first prompt. With no
@@ -379,7 +379,7 @@ chat_or_na <- function(...) {
 chat_or_na(model, prompt, temperature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_fe4557591e3febd06615c5b345024e28407f52fa4d4b922f"
+#> [1] "resp_488f8b000ca24e306bac76a52ce3f37bfcf0d9c81772dbfb"
 ```
 
 The first call below goes to port 1, where no server runs. The other calls
@@ -427,7 +427,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [503ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [508ms]
 #> 
 
 # Stop the local server
