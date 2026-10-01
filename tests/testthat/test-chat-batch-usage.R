@@ -371,6 +371,7 @@ test_that("a lost server keeps what the results field held before", {
       expect_s3_class(x, "lms_chat_result")
       expect_identical(x$text, "reply 1")
       expect_identical(x$logprobs$step_token, "r")
+      expect_identical(x$logprobs$step, 1L)
       expect_identical(attr(x, "response_id"), "id_1")
     }),
     list(s = usage_settings[[5]], check = function(x) expect_identical(x, list(score = 1L)))

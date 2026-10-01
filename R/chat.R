@@ -276,8 +276,13 @@ lms_chat <- function(
 #'   answer text raises `rlmstudio_bad_response`, as described below.
 #'
 #'   The data frame has one row for each candidate in the `top_logprobs` of
-#'   each step, or one row with `NA` candidates for a step with none. Each
-#'   field is read by its exact name. A field that is `null` or absent gives
+#'   each step, or one row with `NA` candidates for a step with none. It has
+#'   five columns. `step_token` and `step_logprob` hold the token and the log
+#'   probability of the step. `candidate_token` and `candidate_logprob` hold
+#'   those of the candidate. `step` is an integer that numbers the steps from
+#'   1 in reply order, across all the parts. Each row of a step has the number
+#'   of that step, so two steps with the same token keep different numbers.
+#'   Each field is read by its exact name. A field that is `null` or absent gives
 #'   `NA`, and so does a field whose name only starts with the one asked for,
 #'   such as `tokenX`. With `logprobs = TRUE`, the `logprobs` value of each
 #'   `"output_text"` part must follow seven rules, which the "Malformed
@@ -1258,17 +1263,19 @@ check_part_logprobs <- function(resp, parts, label) {
 #'
 #' One row per candidate of each step, or one row with `NA` candidates for a
 #' step with no candidates. A field that is absent or `null` gives `NA`.
-#' Fields are read by exact name with `[[`.
+#' Fields are read by exact name with `[[`. The `step` column numbers the
+#' steps from 1 in reply order, so two steps with the same token stay apart.
 #'
 #' @param steps The steps of every `output_text` part in order, already
 #'   checked by `check_part_logprobs()`.
 #' @return A data frame with the columns `step_token`, `step_logprob`,
-#'   `candidate_token`, and `candidate_logprob`.
+#'   `candidate_token`, `candidate_logprob`, and `step`.
 #'
 #' @noRd
 logprobs_frame <- function(steps) {
   or_na <- function(x, na) if (is.null(x)) na else x
-  rows <- lapply(steps, function(step) {
+  rows <- lapply(seq_along(steps), function(i) {
+    step <- steps[[i]]
     candidates <- step[["top_logprobs"]]
     if (length(candidates) == 0L) {
       candidates <- list(NULL)
@@ -1286,6 +1293,7 @@ logprobs_frame <- function(steps) {
         candidates,
         \(cand) or_na(cand[["logprob"]], NA_real_)
       )),
+      step = i,
       stringsAsFactors = FALSE
     )
   })

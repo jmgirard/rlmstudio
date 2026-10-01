@@ -44,20 +44,18 @@ test_that("Full Integration: Download, Load, and Rate", {
       return(NA_real_)
     }
 
-    candidates <- lp_df[lp_df$step_token == lp_df$step_token[1], ]
-
-    nums <- suppressWarnings(as.numeric(candidates$candidate_token))
-    valid <- !is.na(nums) & nums %in% 1:5
-
-    if (!any(valid)) {
-      return(NA_real_)
-    }
-
-    vals <- nums[valid]
-    probs <- exp(candidates$candidate_logprob[valid])
-    probs <- probs / sum(probs)
-
-    sum(vals * probs)
+    # lms_score_expected() reads the rows of the first step, and aborts when
+    # no candidate of that step is in the scale. Only that abort becomes NA,
+    # so any other error keeps its message.
+    tryCatch(
+      lms_score_expected(lp_df, scale = 1:5)$expected_value,
+      error = function(e) {
+        if (!grepl("No tokens in the top candidates", conditionMessage(e), fixed = TRUE)) {
+          stop(e)
+        }
+        NA_real_
+      }
+    )
   })
 
   expect_true(all(
@@ -336,6 +334,36 @@ test_that("lms_chat_openresponses takes logprobs from every output_text part in 
   expect_identical(res$logprobs$step_token, "b")
 })
 
+test_that("lms_chat_openresponses numbers the logprobs steps across output_text parts", {
+  # Part 1 holds step 1 with two candidates and step 2 with none. Part 2
+  # holds no logprobs. Part 3 holds step 3 with three candidates.
+  body <- output_body(responses_message(
+    output_text(quoted("ab"), json_array(
+      step_json(quoted("a"), "-0.1", json_array(
+        candidate_json(quoted("a"), "-0.1"),
+        candidate_json(quoted("x"), "-3")
+      )),
+      step_json(quoted("b"), "-0.2")
+    )),
+    output_text(quoted("-")),
+    output_text(quoted("c"), json_array(
+      step_json(quoted("c"), "-0.3", json_array(
+        candidate_json(quoted("c"), "-0.3"),
+        candidate_json(quoted("y"), "-2"),
+        candidate_json(quoted("z"), "-4")
+      ))
+    ))
+  ))
+  res <- call_with_body(lms_chat_openresponses, body, logprobs = TRUE)
+  expect_identical(
+    names(res$logprobs),
+    c("step_token", "step_logprob", "candidate_token", "candidate_logprob", "step")
+  )
+  expect_identical(res$logprobs$step_token, c("a", "a", "b", "c", "c", "c"))
+  expect_identical(res$logprobs$candidate_token, c("a", "x", NA, "c", "y", "z"))
+  expect_identical(res$logprobs$step, c(1L, 1L, 2L, 3L, 3L, 3L))
+})
+
 # The message for each rule a `logprobs` value can break. They are written out
 # here, apart from the code, so a test fails if the code names the wrong rule.
 logprobs_rule_messages <- c(
@@ -516,6 +544,7 @@ test_that("a null logprobs value and an empty object step are readable", {
       step_logprob = NA_real_,
       candidate_token = NA_character_,
       candidate_logprob = NA_real_,
+      step = 1L,
       stringsAsFactors = FALSE
     )
   )
@@ -571,12 +600,14 @@ test_that("lms_chat_openresponses reads logprobs fields by their exact names", {
     body <- output_body(responses_message(output_text(quoted("a"), logprobs)))
     call_with_body(lms_chat_openresponses, body, logprobs = TRUE)$logprobs
   }
-  frame <- function(step_token, step_logprob, candidate_token, candidate_logprob) {
+  frame <- function(step_token, step_logprob, candidate_token, candidate_logprob,
+                    step = 1L) {
     data.frame(
       step_token = step_token,
       step_logprob = step_logprob,
       candidate_token = candidate_token,
       candidate_logprob = candidate_logprob,
+      step = step,
       stringsAsFactors = FALSE
     )
   }
@@ -591,7 +622,10 @@ test_that("lms_chat_openresponses reads logprobs fields by their exact names", {
       )),
       step_json(quoted("z"), "-1")
     )),
-    frame(c("x", "x", "z"), c(-0.25, -0.25, -1), c("x", "y", NA), c(-0.25, -2, NA))
+    frame(
+      c("x", "x", "z"), c(-0.25, -0.25, -1), c("x", "y", NA), c(-0.25, -2, NA),
+      step = c(1L, 1L, 2L)
+    )
   )
 
   # A field whose name only starts with the one asked for is not read.
@@ -630,7 +664,8 @@ test_that("lms_chat_openresponses reads logprobs fields by their exact names", {
       rep(NA_character_, 3),
       rep(NA_real_, 3),
       rep(NA_character_, 3),
-      rep(NA_real_, 3)
+      rep(NA_real_, 3),
+      step = c(1L, 2L, 2L)
     )
   )
 })
@@ -668,4 +703,33 @@ test_that("print() shows reply text with braces and does not run it", {
   expect_null(shown$error)
   expect_match(shown$messages, brace_probe, fixed = TRUE)
   expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
+})
+
+test_that("print() counts the steps of a reply whose steps 1 and 3 share a token", {
+  withr::local_options(rlmstudio.quiet = FALSE)
+  # Three steps with the tokens "3", "\n", and "3", two candidates each.
+  with_step <- data.frame(
+    step_token = rep(c("3", "\n", "3"), each = 2),
+    step_logprob = -0.5,
+    candidate_token = c("3", "4", "\n", " ", "3", "2"),
+    candidate_logprob = -1,
+    step = rep(1:3, each = 2),
+    stringsAsFactors = FALSE
+  )
+  frames <- list(
+    "a step column" = with_step,
+    "no step column" = with_step[setdiff(names(with_step), "step")]
+  )
+  for (case in names(frames)) {
+    result <- new_lms_chat_result(text = "3\n3", logprobs = frames[[case]])
+    shown <- capture_shown(print(result))
+    expect_null(shown$error, info = case)
+    expect_match(
+      shown$messages,
+      "Includes log probabilities for 3 token steps",
+      fixed = TRUE,
+      all = FALSE,
+      info = case
+    )
+  }
 })

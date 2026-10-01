@@ -15,13 +15,32 @@ lms_score_expected(lp_df, scale = 1:5)
 A named list containing three numeric elements
 (\code{expected_value}, \code{weighted_sd}, \code{entropy}) and a
 \code{data.frame} named \code{probabilities} with columns \code{label} and
-\code{prob}. Returns \code{NULL} if the input dataframe is empty or
-invalid.
+\code{prob}. \code{probabilities} has one row per label, in the order in
+which each label first appears, and \code{entropy} is computed over these
+rows. Returns \code{NULL} if \code{lp_df} is \code{NULL} or has no rows.
+Aborts if no candidate of the first step is in \code{scale}.
 }
 \description{
 Takes a logprobs dataframe (from an \code{lms_chat_result}) and calculates
 the weighted average score, normalized probabilities, and uncertainty
-metrics.
+metrics for the first step of the reply, where the rating is.
+}
+\details{
+The function reads the rows of the first step only. If \code{lp_df} has a
+\code{step} column and its first value is not \code{NA}, these are the rows
+whose \code{step} equals that value, wherever they sit in the frame. A later
+step with the same token as the first step does not count. Otherwise, these
+are the first run of consecutive rows whose \code{step_token} is identical
+to that of the first row, with \code{NA} equal to \code{NA}. In that case,
+with no \code{step} column or a first \code{step} of \code{NA}, two
+adjacent steps with the same token count as one step. Both rules start from
+the first row, so keep the rows in reply order: a sorted frame can start
+with a later step.
+
+Of those rows, the function keeps the candidates whose token, read as a
+number, is in \code{scale}. Candidates that give the same label, such as
+\code{"3"}, \code{" 3"}, and \code{"3.0"}, are summed into one label. The
+probabilities of the labels are then scaled to sum to 1.
 }
 \examples{
 # Create a sample logprobs dataframe representing a model's generation step
@@ -30,6 +49,7 @@ mock_logprobs <- data.frame(
   step_logprob = rep(0, 3),
   candidate_token = c("4", "5", "3"),
   candidate_logprob = c(-0.105, -2.302, -3.506),
+  step = rep(1L, 3),
   stringsAsFactors = FALSE
 )
 

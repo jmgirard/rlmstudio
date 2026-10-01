@@ -95,8 +95,13 @@ If no part carries them, it returns the string. A reply with no readable
 answer text raises \code{rlmstudio_bad_response}, as described below.
 
 The data frame has one row for each candidate in the \code{top_logprobs} of
-each step, or one row with \code{NA} candidates for a step with none. Each
-field is read by its exact name. A field that is \code{null} or absent gives
+each step, or one row with \code{NA} candidates for a step with none. It has
+five columns. \code{step_token} and \code{step_logprob} hold the token and the log
+probability of the step. \code{candidate_token} and \code{candidate_logprob} hold
+those of the candidate. \code{step} is an integer that numbers the steps from
+1 in reply order, across all the parts. Each row of a step has the number
+of that step, so two steps with the same token keep different numbers.
+Each field is read by its exact name. A field that is \code{null} or absent gives
 \code{NA}, and so does a field whose name only starts with the one asked for,
 such as \code{tokenX}. With \code{logprobs = TRUE}, the \code{logprobs} value of each
 \code{"output_text"} part must follow seven rules, which the "Malformed

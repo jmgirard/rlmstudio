@@ -177,7 +177,8 @@ candidates. With `logprobs = TRUE` on the default route, `lms_chat()`
 returns an object that
 holds the reply text and a data frame of log probabilities, if the reply
 carries them. The data frame lists the candidate tokens at each step of the
-reply. The `top_logprobs` and `temperature` fields go into the request body.
+reply, and its `step` column numbers the steps from 1. The `top_logprobs` and
+`temperature` fields go into the request body.
 
 ```{r logprobs, eval=chat_ready}
 rating <- lms_chat(
@@ -194,29 +195,34 @@ rating <- lms_chat(
 rating$text
 #> [1] "3\n"
 head(rating$logprobs, 3)
-#>   step_token step_logprob candidate_token candidate_logprob
-#> 1          3     -0.34375               3         -0.343750
-#> 2          3     -0.34375               4         -1.546875
-#> 3          3     -0.34375               5         -2.750000
+#>   step_token step_logprob candidate_token candidate_logprob step
+#> 1          3     -0.34375               3          -0.34375    1
+#> 2          3     -0.34375               4          -1.53125    1
+#> 3          3     -0.34375               5          -2.71875    1
 ```
 
-`lms_score_expected()` reads the rows whose `step_token` equals that of the
-first row. In the reply above, those rows hold the candidates for the digit.
-It keeps the candidates whose token is a number in `scale`, and it scales
-their probabilities to sum to 1. It returns the expected value, the weighted
-standard deviation, the entropy in bits, and the probability of each label.
+`lms_score_expected()` reads the rows of the first step, the rows whose
+`step` equals that of the first row. In the reply above, those rows hold the
+candidates for the digit. A later step with the same token does not count.
+For a data frame with no `step` column, or whose first `step` is `NA`, it
+reads the first run of rows with the same `step_token` as the first row. It
+keeps the candidates whose
+token is a number in `scale`, and it adds up the candidates that give the
+same label, such as `"3"` and `" 3"`. It then scales the probabilities to sum
+to 1. It returns the expected value, the weighted standard deviation, the
+entropy in bits, and the probability of each label.
 
 ```{r score, eval=chat_ready}
 score <- lms_score_expected(rating$logprobs, scale = 1:5)
 score$expected_value
-#> [1] 3.342552
+#> [1] 3.348005
 score$probabilities
 #>   label         prob
-#> 1     3 0.7176032364
-#> 2     4 0.2154635645
-#> 3     5 0.0646938939
-#> 4     2 0.0021793830
-#> 5     1 0.0000599222
+#> 1     3 7.136382e-01
+#> 2     4 2.176473e-01
+#> 3     5 6.637869e-02
+#> 4     2 2.271354e-03
+#> 5     1 6.443335e-05
 ```
 
 ## Embeddings
