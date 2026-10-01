@@ -1,0 +1,99 @@
+# M071: The getting-started vignette reads plainly and covers a first run
+
+- **Status:** planned
+- **Priority:** normal
+- **Depends on:** M070
+- **Driving RR:** —
+- **Principles touched:** —
+- **Resolves:** —
+- **Surface tier:** user-facing — the first vignette that a new user reads
+- **Branch/PR:** —
+
+## Goal
+
+A researcher who knows R but has not run a local model can follow
+`getting-started` from installing LM Studio to a first batch of replies.
+
+## Scope
+
+**In:** A rewrite of `vignettes/getting-started.Rmd.orig`, knitted by the
+M070 script. It speaks to the reader as "you". Each section says what the
+step is for before its code. It covers: what LM Studio and a local model
+are, a check that LM Studio is there (`has_lms()`, `check_lms_version()`),
+starting the server and checking that it answers, finding models
+(`list_models()`), downloading one, loading it, one chat with a system
+prompt, a small batch with `lms_chat_batch()`, and cleaning up. One short
+paragraph points users without the desktop app to `headless-config`. The
+code and prose follow the vignette rules in DESIGN.md Conventions (M070). A
+NEWS entry.
+
+**Out:** Headless and remote use is M072. Batch scoring, structured output,
+and embeddings are M073. Routes, conversations, and errors are M074.
+
+## Acceptance criteria
+
+- [ ] AC1: The R code that `knitr::purl()` extracts from
+      `vignettes/getting-started.Rmd.orig` holds each of these strings:
+      `has_lms(`, `check_lms_version(`, `lms_server_start(`,
+      `lms_server_ready(`, `list_models(`, `lms_download(`, `lms_load(`,
+      `lms_chat(`, `system_prompt =`, `lms_chat_batch(`, `lms_unload(`, and
+      `lms_server_stop(`. The source holds the text `headless-config`. In
+      the knitted `vignettes/getting-started.Rmd`, no line starts with
+      ```` ```{r ```` or with `#> Error`. The block of each chunk that calls
+      `list_models(`, `lms_chat(`, or `lms_chat_batch(` holds a line that
+      starts with `#>` after its last code line.
+- [ ] AC2: A search of that purled code for each regular expression in the
+      DESIGN.md code list finds no match. A search of the source for
+      `` `r `` finds no inline R expression.
+- [ ] AC3: A case-blind search for each entry of the DESIGN.md prose list
+      finds no match. It runs over every line of the source outside its
+      ```` ```{r} ```` chunks, with the YAML header and inline code.
+- [ ] AC4: Each of these terms is explained in plain words at or before
+      its first use in prose or in a code comment of the knitted vignette:
+      large language model, local server, model key, loading a model,
+      system prompt, and batch.
+- [ ] AC5: Take each prose sentence and each `#` comment line that states
+      what a package function does with an argument, returns, or raises,
+      beyond what its name says. A named test under `tests/testthat/`
+      exercises that behavior. A sentence about what LM Studio itself does
+      matches what a live call on this machine returned.
+- [ ] AC6: `NEWS.md` has an entry under the development-version heading
+      that names the rewritten vignette. `devtools::document()` gives no
+      diff, `devtools::test()` passes, and `pkgdown::check_pkgdown()`
+      passes. With the server stopped and `RLMSTUDIO_API_TOKEN` unset,
+      `devtools::check()` gives 0 errors and 0 warnings.
+
+## Coverage
+
+- AC1 → T1, T2, T3
+- AC2 → T2
+- AC3 → T2, T4
+- AC4 → T2, T4
+- AC5 → T1, T5
+- AC6 → T6
+
+## Tasks
+
+- [ ] T1: Probe the live calls that the outline needs, on this machine, and
+      log what each returns: `check_lms_version()`, `list_models()`, and a
+      three-input `lms_chat_batch()` on `google/gemma-3-1b`.
+- [ ] T2: Rewrite the source to the outline in Scope. Keep each code chunk
+      short, with a comment that says what it does.
+- [ ] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
+      the knitted file for error lines and for the output lines of AC1.
+- [ ] T4: Spawn a fresh reader with the persona of a researcher who knows
+      R and has not used a language model API. It reads the knitted
+      vignette and lists each step that it cannot follow and each term used
+      before it is explained. Fix each item, or log why not, and re-knit.
+- [ ] T5: List the claims of AC5 with the test or probe that backs each, as
+      a ledger in the work log. Add tests to
+      `tests/testthat/test-vignette-claims.R` where none covers a claim.
+- [ ] T6: Add the NEWS entry and run the checks of AC6.
+
+## Work log
+
+- 2026-09-30: created by /milestone-plan.
+
+## Decisions
+
+## Review
