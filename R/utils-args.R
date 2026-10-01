@@ -379,16 +379,36 @@ rlm_check_ttl_route <- function(ttl, api_type) {
 #' probe, for the reason `rlm_check_id()` states. `NULL` passes, because it
 #' starts a new thread.
 #'
+#' A value that carries a `response_id` attribute, such as the simplified
+#' reply of a thread route, stands for that attribute (D-039). The attribute
+#' is checked and sent in place of the value, so the caller can pass the
+#' reply itself. `exact = TRUE`, because `attr()` otherwise reads a longer
+#' name that starts with `response_id`.
+#'
 #' A string that passes comes back as a plain string, for the reason
 #' `rlm_check_id()` states.
 #'
 #' @param value The value the caller passed as `previous_response_id`.
-#' @return `NULL`, or `value` as a plain string, invisibly.
+#' @return `NULL`, or the id as a plain string, invisibly.
 #'
 #' @noRd
 rlm_check_response_id <- function(value) {
   if (is.null(value)) {
     return(invisible(value))
+  }
+  id <- attr(value, "response_id", exact = TRUE)
+  if (!is.null(id)) {
+    fault <- id_fault(id)
+    if (!is.null(fault)) {
+      cli::cli_abort(
+        c(
+          "The {.code response_id} attribute of {.arg previous_response_id} must be one response id, given as a single string.",
+          "x" = "{fault}"
+        ),
+        call = NULL
+      )
+    }
+    return(invisible(plain_string(id)))
   }
   fault <- id_fault(value)
   if (!is.null(fault)) {

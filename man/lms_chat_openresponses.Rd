@@ -48,19 +48,36 @@ The package checks a \code{stream} here. A \code{stream} other than \code{FALSE}
 \code{NULL} aborts before the call checks for a running server, because the
 package reads a whole reply and not a streamed one.}
 
-\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
-that this chat continues, such as the \code{response_id} attribute of an
-earlier reply of this function or of \code{\link[=lms_chat_native]{lms_chat_native()}}. The string must
-be valid in its declared encoding and not marked \code{"bytes"}. A class,
-names, and the S4 bit are removed before the id is sent. \code{NULL}, the
-default, starts a new thread. \code{NA}, an empty string, a string of
-whitespace only, a value that is not a string, and more or fewer than one
-string abort before the check for a running server. Only this exact name
-is checked. A shortened name, such as \code{previous}, goes into the request
-body unchecked, under the name you wrote. An id that the server does not
-hold raises \code{rlmstudio_api_error} with status 400 and the \code{code}
+\item{previous_response_id}{One string, a value that carries a
+\code{response_id} attribute, or \code{NULL}. It names the stored reply that this
+chat continues. Pass an earlier reply of this function or of
+\code{\link[=lms_chat_native]{lms_chat_native()}} itself, such as \code{first}, or its id,
+\code{attr(first, "response_id")}. A value that carries a \code{response_id}
+attribute sends that attribute in place of the value, also when the
+value is a list or is itself an id. Only that exact attribute name is
+read. A value with no such attribute is sent as the id itself. So a
+reply that came back with no id, such as a native reply sent with
+\code{store = FALSE}, goes out as its own text, and the call raises
+\code{rlmstudio_api_error} with status 400. A reply text that breaks the id
+rules below, such as an empty text or a text of whitespace only, aborts
+before the request, as such an id does. The character vector that
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} returns with \code{format = "vector"} and the \code{output}
+column of its data frame carry no attribute. The data frame holds the
+ids in its \code{response_id} column.
+
+The id, the attribute when there is one, must be valid in its declared
+encoding and not marked \code{"bytes"}. A class, names, and the S4 bit are
+removed before the id is sent. \code{NULL}, the default, starts a new thread.
+As the id, \code{NA}, an empty string, a string of whitespace only, a value
+that is not a string, and more or fewer than one string abort before the
+check for a running server. For an attribute, the message names the
+attribute. Only this exact argument name is checked. A shortened name,
+such as \code{previous}, goes into the request body unchecked, under the name
+you wrote. An id that the server does not hold raises
+\code{rlmstudio_api_error} with status 400 and the \code{code}
 \code{"previous_response_not_found"}. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}}
-refuse a string with \code{api_type = "openai"}, because the OpenAI chat
+refuse an id or a value that carries one with \code{api_type = "openai"},
+because the OpenAI chat
 endpoint keeps no thread. \code{\link[=lms_chat_openai]{lms_chat_openai()}} has no such argument. A
 \code{previous_response_id} in its \code{...} goes into the request body
 unchecked, and the endpoint ignores it.}
@@ -112,8 +129,9 @@ With \code{logprobs = FALSE}, the value is not read, and the call returns the
 text.
 
 With \code{simplify = TRUE}, the string or the \code{lms_chat_result} carries the
-\code{id} field of the reply in a \code{response_id} attribute. Pass it as
-\code{previous_response_id} to continue the thread. The value has no
+\code{id} field of the reply in a \code{response_id} attribute. Pass the value
+itself as \code{previous_response_id} to continue the thread, and the
+attribute is sent. The value has no
 attribute when \code{id} is absent or is not one string. A reply sent with
 \code{store = FALSE} still has an \code{id}, so its value carries the attribute,
 but the server does not hold that reply. A later call of this function

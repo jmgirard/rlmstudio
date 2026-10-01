@@ -131,9 +131,11 @@ native route does with the same call.
 ## A follow-up question
 
 On the default route and the native route, the text of a reply carries its
-response id in the `response_id` attribute. Pass that id as
-`previous_response_id` in your next call, and the server sends the earlier
-prompt and reply to the model with your new prompt.
+response id in the `response_id` attribute. Pass the reply itself as
+`previous_response_id` in your next call. The package sends the id from
+the attribute, and the server sends the earlier prompt and reply to the
+model with your new prompt. The id string from `attr(first, "response_id")`
+also works.
 
 Each call below sets `temperature = 0`, as in the section "Request
 options".
@@ -151,7 +153,7 @@ first
 lms_chat(
   model,
   "What is my favorite color? Answer with one word.",
-  previous_response_id = attr(first, "response_id"),
+  previous_response_id = first,
   temperature = 0
 )
 
@@ -163,9 +165,9 @@ lms_chat(
 )
 ```
 
-With the response id, the model answered from the first prompt. With no
-response id, the model did not see the first prompt, and its answer was a
-guess.
+With the first reply as `previous_response_id`, the model answered from
+the first prompt. With no response id, the model did not see the first
+prompt, and its answer was a guess.
 
 The OpenAI route has no response id. With `api_type = "openai"`,
 `lms_chat()` stops with an error if you give `previous_response_id`.
