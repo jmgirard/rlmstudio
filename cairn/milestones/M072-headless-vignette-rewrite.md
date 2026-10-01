@@ -84,9 +84,9 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
       machine, where the desktop app runs the daemon, and log what each
       returns. Read `?rlmstudio_token` and `?install_lmstudio` for the
       token and consent rules that the prose states.
-- [ ] T2: Rewrite the source to the outline in Scope. Keep each code chunk
+- [x] T2: Rewrite the source to the outline in Scope. Keep each code chunk
       short, with a comment that says what it does.
-- [ ] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
+- [x] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
       the knitted file for error lines and for the output lines of AC1.
 - [ ] T4: Spawn a fresh reader with the persona of a researcher who knows
       R and runs a remote Linux server. It reads the knitted vignette and
@@ -105,6 +105,7 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
 - 2026-09-30: M070 claim audit handed two findings on the carried-over headless prose to this rewrite. First, the comments "Stop the background daemon" and "the daemon will stop on exit" sit above knitted output that says the GUI keeps the daemon running, because the knit runs on a desktop host. Second, the knitted `str_extract()` chat reply is a wrong pattern that the prose does not flag.
 - 2026-09-30: M070 review handed two findings to this rewrite. F7: the knitted model list shows every model on the author's machine. F8: the knit ran with the model on disk, so the download chunk shows "already downloaded" and no download job, next to prose about a download.
 - 2026-09-30: T1 probes on macOS with the desktop app, LM Studio 0.4.25+1. `lms_daemon_status()` runs `lms status` and returned the server lines ("Server:  OFF"). `lms_daemon_start()` returned 0. `lms_daemon_stop()` and the teardown of `with_lms_daemon()` returned `FALSE` with "managed by the LM Studio GUI". `lms server start` binds 127.0.0.1 by default. With `LMS_SERVER_HOST=0.0.0.0` set in R before `lms_server_start()`, it listened on all addresses. Then `lms_server_ready()` at the LAN address gave TRUE with the token and FALSE without it. The default start gave FALSE at the LAN address. `lms` has no command that creates an API token. Read `?rlmstudio_token` and the `install_lmstudio()` source.
+- 2026-09-30: T2 and T3 rewrote `headless-config.Rmd.orig` and knitted it from a clean start. With a model loaded and the server off, `lms status` printed only the server lines, so the prose claims the server state alone. A scratch check of AC1 to AC3 passed, and planted `lapply(`, `invisible(`, `simply`, and `seamless` lines each turned it red.
 
 ## Decisions
 
