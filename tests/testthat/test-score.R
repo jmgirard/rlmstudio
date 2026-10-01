@@ -135,8 +135,8 @@ expect_first_step_score <- function(res, info = NULL) {
 }
 
 test_that("lms_score_expected() reads the rows of the first step by the step column", {
-  # Each later row that the step column puts outside step 1 holds a "2" or a
-  # "5", which would move the score if it counted.
+  # Each later step with the token "3" holds a "2" or a "5", which would move
+  # the score if it counted. The newline step holds no number.
   frames <- list(
     # Steps 1 and 3 share the step token "3", with a newline step between.
     "steps 1 and 3 share a token" = score_frame(

@@ -17,8 +17,8 @@ A named list containing three numeric elements
 \code{data.frame} named \code{probabilities} with columns \code{label} and
 \code{prob}. \code{probabilities} has one row per label, in the order in
 which each label first appears, and \code{entropy} is computed over these
-rows. Returns \code{NULL} if the input dataframe is empty or
-invalid.
+rows. Returns \code{NULL} if \code{lp_df} is \code{NULL} or has no rows.
+Aborts if no candidate of the first step is in \code{scale}.
 }
 \description{
 Takes a logprobs dataframe (from an \code{lms_chat_result}) and calculates
@@ -31,9 +31,9 @@ The function reads the rows of the first step only. If \code{lp_df} has a
 whose \code{step} equals that value, wherever they sit in the frame. A later
 step with the same token as the first step does not count. Otherwise, these
 are the first run of consecutive rows whose \code{step_token} is identical
-to that of the first row, with \code{NA} equal to \code{NA}. Without a
-\code{step} column, two adjacent steps with the same token count as one
-step.
+to that of the first row, with \code{NA} equal to \code{NA}. In that case,
+with no \code{step} column or a first \code{step} of \code{NA}, two
+adjacent steps with the same token count as one step.
 
 Of those rows, the function keeps the candidates whose token, read as a
 number, is in \code{scale}. Candidates that give the same label, such as

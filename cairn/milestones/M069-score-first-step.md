@@ -1,6 +1,6 @@
 # M069: lms_score_expected() reads the first step of a reply alone
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -138,6 +138,9 @@ in the DESIGN known issue.
 - 2026-09-30: T3 done. `lms_score_expected()` sums the candidates of one label in order of first appearance. On the unsummed code, the new test failed in the label, probability, and entropy checks and passed in the expected value and SD checks. `devtools::test()` clean.
 - 2026-09-30: T4 done. `print.lms_chat_result()` counts distinct `step` values, or runs of `step_token` with no `step` column. The new `test-chat.R` print test showed 2 steps on the old code in both cases and 3 now. `devtools::test()` clean.
 - 2026-09-30: T5 done. The AC6 grep listed 10 files. The live test at `test-chat.R:47` now calls `lms_score_expected()` in place of its copy of the old rule. The help of `lms_score_expected()` and `lms_chat_openresponses()`, the vignette, NEWS, and a DESIGN Conventions line on the score oracles follow. The vignette logprobs and score output was re-run against LM Studio with `google/gemma-3-1b`, which gave an expected value of 3.348005 where the old paste had 3.342552. `devtools::document()` gives no diff, and `devtools::test()` is clean.
+- 2026-09-30: claim audit: 85 claims read, 3 corrected — tests/testthat/test-score.R, R/score.R, man/lms_score_expected.Rd
+- 2026-09-30: The first `devtools::check()` failed at the `headless-config.Rmd` build. LM Studio could not resolve `qwen/qwen3-4b-2507` and reported "Network connection failed". The branch does not touch that vignette. The failed build left the server running, and it was stopped by hand. The rerun gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-30: implement done, status review.
 
 ## Decisions
 
