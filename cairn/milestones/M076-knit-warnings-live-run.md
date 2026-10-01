@@ -1,13 +1,13 @@
 # M076: The vignette knit fails on an unmarked warning and stale output, and a release has live-run steps
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — dev scripts under `data-raw/`, a local-only test, and a tracking pointer. The re-knitted vignettes change only in live output.
-- **Branch/PR:** —
+- **Branch/PR:** m076-knit-warnings-live-run
 
 ## Goal
 
@@ -84,7 +84,7 @@ other candidate rows stay as they are.
 
 ## Tasks
 
-- [ ] T1: In `data-raw/knit-vignettes.R`, `knit_source()` near line 96, set
+- [x] T1: In `data-raw/knit-vignettes.R`, `knit_source()` near line 96, set
       a knitr `warning` output hook. If `options$expect_warning` is not TRUE,
       the hook records the warning and the chunk label. After the knit,
       fail that source as a chunk error does, so the `.Rmd` is not copied.
@@ -120,6 +120,8 @@ other candidate rows stay as they are.
 - 2026-10-01: plan gate chose to fail the knit on an unmarked warning over a list of warnings at the end with exit 0. A listed warning can still ship unnoticed. Falsified by a vignette that needs a warning in a chunk that cannot carry the option.
 - 2026-10-01: plan gate chose `data-raw/README.md` with a PROFILE pointer over steps in `cairn/PROFILE.md`, which is near its 120-line cap, and over a `data-raw/live-run.R` script. Falsified by a release whose live run skips a step that a script enforces.
 - 2026-10-01: plan gate kept one milestone over a split into knit work and live-run work, because the live run re-knits the vignettes. Falsified by an implement phase that needs more than three sittings for both parts.
+- 2026-10-01: implement started on branch m076-knit-warnings-live-run. No question gate: nothing was open. The stamp is an HTML comment line at the end of the `.Rmd`, and the test goes in a new `test-vignette-knit.R`.
+- 2026-10-01: T1 done. `knit_source()` calls `knitr::render_markdown()` before it wraps the warning hook, because `knit()` sets the markdown hooks only while all hooks are at their defaults. A scratch run with `warning = FALSE` showed no warning on the console, so the header comment says the option hides it.
 
 ## Decisions
 

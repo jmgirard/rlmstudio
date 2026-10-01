@@ -17,7 +17,10 @@
 # The script refuses to start if the server runs or a model is loaded. After
 # each source, it unloads every model and stops the server, so each vignette
 # starts from the same clean state. A chunk error stops the knit, and the
-# .Rmd of that source is left as it was. The sources after the failing one
+# .Rmd of that source is left as it was. A chunk warning does the same,
+# unless the chunk sets the option expect_warning = TRUE. That option keeps
+# the warning in the output. A chunk with warning = FALSE hides its warning,
+# and the knit goes on. The sources after the failing one
 # are not knitted, and the sources before it keep their new output. Whatever
 # happens, the script unloads every model and stops the server before it
 # exits.
@@ -107,6 +110,18 @@ knit_source <- function(source) {
   old_wd <- setwd(dirname(source))
   on.exit(setwd(old_wd), add = TRUE)
   knitr::opts_chunk$set(error = FALSE)
+  # knit() sets the markdown output hooks only while every hook is at its
+  # default, so set them here before the warning hook wraps one of them.
+  knitr::render_markdown()
+  on.exit(knitr::knit_hooks$restore(), add = TRUE)
+  warned <- character()
+  markdown_warning <- knitr::knit_hooks$get("warning")
+  knitr::knit_hooks$set(warning = function(x, options) {
+    if (!isTRUE(options$expect_warning)) {
+      warned <<- c(warned, options$label)
+    }
+    markdown_warning(x, options)
+  })
   withCallingHandlers(
     knitr::knit(
       basename(source),
@@ -124,6 +139,14 @@ knit_source <- function(source) {
     }
   )
   setwd(old_wd)
+  if (length(warned) > 0) {
+    stop(
+      "The chunk '", paste(unique(warned), collapse = "', '"), "' of ",
+      source, " gave a warning, and the chunk does not set ",
+      "expect_warning = TRUE.",
+      call. = FALSE
+    )
+  }
   if (!file.copy(temp, target, overwrite = TRUE)) {
     stop("Could not copy the knitted ", source, " to ", target, ".", call. = FALSE)
   }
