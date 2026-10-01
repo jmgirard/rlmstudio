@@ -1,6 +1,6 @@
 # M076: The vignette knit fails on an unmarked warning and stale output, and a release has live-run steps
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -35,21 +35,21 @@ other candidate rows stay as they are.
 
 ## Acceptance criteria
 
-- [ ] AC1: The scratch source is a `.Rmd.orig` file outside `vignettes/`.
+- [x] AC1: The scratch source is a `.Rmd.orig` file outside `vignettes/`.
       One of its chunks has default `warning` handling and raises a warning
       without `expect_warning = TRUE`. A `data-raw/knit-vignettes.R` run on
       it exits with status 1 and names the source and the chunk label in its
       message. The target `.Rmd` stays byte-identical to its state before the
       run. If it was absent before the run, it stays absent.
-- [ ] AC2: The AC1 scratch source gets `expect_warning = TRUE` on that
+- [x] AC2: The AC1 scratch source gets `expect_warning = TRUE` on that
       chunk. A `data-raw/knit-vignettes.R` run on it exits with status 0.
       The target `.Rmd` holds the warning on a `#> Warning` line.
-- [ ] AC3: LM Studio is installed, the server is stopped, and no model is
+- [x] AC3: LM Studio is installed, the server is stopped, and no model is
       loaded. `Rscript data-raw/knit-vignettes.R` with no argument then exits
       with status 0. After it, `vignettes/text-analysis.Rmd` holds a
       `#> Warning` line in the output of each chunk that its source marks
       `expect_warning = TRUE`.
-- [ ] AC4: Each `vignettes/<name>.Rmd` that the knit writes holds the MD5
+- [x] AC4: Each `vignettes/<name>.Rmd` that the knit writes holds the MD5
       sum of its `vignettes/<name>.Rmd.orig` source. A test that
       `devtools::test()` runs lists the sources from the package root, with
       `testthat::test_path("../../vignettes")`. It reports one failure for
@@ -129,7 +129,15 @@ other candidate rows stay as they are.
 - 2026-10-01: T6 done. `devtools::document()` gave no diff. `devtools::test()`: 0 failures, 3 skips, 19942 passes. `devtools::check()`: 0 errors, 0 warnings, 0 notes. In a scratch tree with no vignette source, the stale-knit test skips with "No vignette sources to compare."
 - 2026-10-01: claim audit: not owed — internal tier
 - 2026-10-01: all tasks done, status set to review.
+- 2026-10-01: review: AC1 to AC4 verified and ticked. AC5 fails as written on an empty, untracked `tests/testthat/_snaps` that each filtered `devtools::test()` run makes. The exclusion list "`fixtures` and `_problems`" is a hand list. So the repair narrows the promise to a procedure and does not add `_snaps` to the list (widening test). Status back to in-progress for this amendment alone.
+- 2026-10-01: amendment return: AC5 — "`git ls-tree -d --name-only HEAD tests/testthat/` lists the top-level directories under `tests/testthat/` that git tracks. The README names each of them, except `fixtures`."
 
 ## Decisions
 
 ## Review
+
+- AC1 evidence (2026-10-01): a fresh scratch source `probe.Rmd.orig` sat in the session scratch directory, outside `vignettes/`. Its chunk `loud-chunk` calls `warning()` with default handling. With no target, the run exited 1 and printed "The chunk 'loud-chunk' of <path>/probe.Rmd.orig gave a warning, and the chunk does not set expect_warning = TRUE." No `probe.Rmd` appeared. With a present target, the run exited 1 again, and the target MD5 stayed `97ed8315d42223266f7e00741409a6ad`.
+- AC2 evidence (2026-10-01): the same source with `expect_warning = TRUE` on `loud-chunk` exited 0. Line 10 of `probe.Rmd` reads `#> Warning: review probe warning`.
+- AC3 evidence (2026-10-01): `lms server status --json` gave `"running":false`, and `lms ps --json` gave `[]`. Then `Rscript data-raw/knit-vignettes.R` with no argument knitted all 4 sources and exited 0. `text-analysis.Rmd` holds `#> Warning` at lines 130, 208, 263, and 354. In order, these are the outputs of the chunks `summaries`, `schema`, `logprobs`, and `failed`. The source marks these 4 chunks, and no other, `expect_warning = TRUE`. The run changed only live replies, response ids, and timings. The review restored the committed output.
+- AC4 evidence (2026-10-01): the last line of each of the 4 committed `.Rmd` files holds the `md5` of its `.Rmd.orig`. All 4 pairs match. `tests/testthat/test-vignette-knit.R` lists the sources with `testthat::test_path("../../vignettes")`. On the branch, `devtools::test(filter = "vignette-knit")` gave 4 passes and 0 failures. Three plants each gave 1 failure and 3 passes, and each was restored. A byte added to `chat-options.Rmd.orig` gave "chat-options.Rmd.orig changed after its knit." The stamp line cut from `getting-started.Rmd` gave "The .Rmd of getting-started.Rmd.orig holds no source MD5 sum." A moved `text-analysis.Rmd` gave "text-analysis.Rmd.orig has no knitted .Rmd." In a scratch tree with an empty `vignettes/`, the test skipped with "No vignette sources to compare."
+- AC5 evidence (2026-10-01), not met as written: `list.dirs("tests/testthat", recursive = FALSE)` listed 12 directories, one of them an empty `_snaps`. The README table names the other 9, except `fixtures` and `_problems`, each with its recorder script or its remove-and-rerun command. It does not name `_snaps`. Git does not track `_snaps`, and `git ls-tree -d HEAD tests/testthat/` lists 10 directories without it. After `rmdir`, a filtered run such as `devtools::test(filter = "^list$")` made the empty `_snaps` again. The README uses such filtered runs in step 3. The other AC5 parts held. The model strings of the recorder scripts are `google/gemma-3-1b`, `text-embedding-nomic-embed-text-v1.5`, `qwen/qwen3-4b-2507`, and the case variant `Google/Gemma-3-1B`. The `skip_if_no_server()` blocks name `google/gemma-3-1b` and `text-embedding-nomic-embed-text-v1.5`, and the README names all 3 models. Its 4 step headings follow the AC5 order, and PROFILE line 73 points to it. AC6 was not run, and no reviewer was spawned. Review stopped at the return.
