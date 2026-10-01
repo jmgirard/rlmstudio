@@ -81,7 +81,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
       short, with a comment that says what it does.
 - [x] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
       the knitted file for error lines and for the output lines of AC1.
-- [ ] T4: Spawn a fresh reader with the persona of a researcher who knows
+- [x] T4: Spawn a fresh reader with the persona of a researcher who knows
       R and has not used a language model API. It reads the knitted
       vignette and lists each step that it cannot follow and each term used
       before it is explained. Fix each item, or log why not, and re-knit.
@@ -98,6 +98,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: T1 probe, live, gemma-3-1b on disk: `check_lms_version()` TRUE with the "modern architecture (0.4.0+)" message. `lms_server_ready()` FALSE before start and after stop, TRUE after start. `list_models()` gave 5 models, columns state, type, display_name, key, architecture, size_gb. `lms_download()` gave "already_downloaded", and `lms_download_status()` of it gave status "already_downloaded", job_id "N/A". A three-input `lms_chat_batch()` gave 3 strings, one per input.
 - 2026-09-30: T2 source rewritten to the Scope outline. The AC1 to AC3 search script finds every AC1 string, no code-list match, and no prose-list match. Run on the old source, it finds `repeat` and 4 prose words.
 - 2026-09-30: T3 knitted from a clean start (server stopped, no model loaded). The knit has no chunk header and no error line. The list_models, lms_chat, and lms_chat_batch blocks each end in output lines. A `trimws()` line was added after the batch, because the replies carry trailing spaces and line breaks.
+- 2026-09-30: T4 fresh Opus reader (R user, no LLM background) found each of the six AC4 terms explained at or before first prose use. It listed 6 hard steps and 8 unexplained terms. Fixed: prompt, command-line tool and CLI, localhost, the type and state columns, a new install with no models, job id, a model that does not follow its system prompt, headless and remote. Not fixed: the status word for a finished download (no live download job in this knit, per the gate, so AC5 bars naming it), why to restart R, and "port" (in output only). Re-knitted clean.
 
 ## Decisions
 

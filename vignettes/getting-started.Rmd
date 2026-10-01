@@ -10,15 +10,17 @@ vignette: >
 
 
 A large language model is a program that writes text in reply to text that
-you give it. LM Studio is a desktop app that downloads such models and runs
+you give it. The text that you give it is a prompt. LM Studio is a desktop app that downloads such models and runs
 them on your own computer. The rlmstudio package lets you control LM Studio
 from R. This vignette takes you from installing LM Studio to your first
 replies from a model.
 
 ## Install LM Studio
 
-LM Studio comes with a command-line tool called `lms`. The package uses
-`lms` to start and stop parts of LM Studio. If you do not have LM Studio
+LM Studio comes with a command-line tool called `lms`. A command-line tool
+is a program that you run by typing commands, and the messages of the
+package call it the CLI. The package uses `lms` to start and stop parts of
+LM Studio. If you do not have LM Studio
 yet, run `install_lmstudio(method = "browser")`. It opens the LM Studio
 download page in your web browser. After you install LM Studio, restart R.
 
@@ -46,6 +48,7 @@ on.
 R talks to LM Studio through a local server. A local server is a program
 on your own computer that answers requests from other programs, such as R.
 By default, the package sends its requests to `http://localhost:1234`.
+That is an address on your own computer.
 
 `lms_server_start()` starts the server. The server needs a few seconds
 before it answers, so the function waits for it. The `wait` argument sets
@@ -69,7 +72,9 @@ lms_server_ready()
 A model key is the name that you give R to choose a model, such as
 `"google/gemma-3-1b"`. `list_models()` shows the models that LM Studio
 has on your computer, one row for each model. The `key` column holds the
-model key.
+model key. In the `type` column, `llm` marks a large language model, the
+kind that you chat with. The `state` column says whether the model is in
+memory, which a later section explains.
 
 
 ``` r
@@ -89,8 +94,9 @@ list_models()
 #> 5         <NA>    0.08
 ```
 
-This vignette uses `google/gemma-3-1b`, a small model. Keep its key in a
-variable, so that each call below can use it.
+On a new install, you have no models yet, and the next section downloads
+one. This vignette uses `google/gemma-3-1b`, a small model. Keep its key in
+a variable, so that each call below can use it.
 
 
 ``` r
@@ -101,7 +107,7 @@ model <- "google/gemma-3-1b"
 
 `lms_download()` asks LM Studio to download a model. For a model that is
 already on your computer, it returns `"already_downloaded"`. For a new
-model, it returns a job id. Pass the job id to `lms_download_status()` to
+model, it returns a job id, a string that names the download. Pass the job id to `lms_download_status()` to
 see the status of the download. Call `lms_download_status()` again until
 the status says that the download finished.
 
@@ -113,7 +119,7 @@ the output shows the first case.
 # Download the model, or find that it is already on disk
 job_id <- lms_download(model)
 #> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [847ms]
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [1000ms]
 #> 
 #> ✔ Model "google/gemma-3-1b" is already downloaded.
 job_id
@@ -160,7 +166,7 @@ reply <- lms_chat(
 
 # Print the text of the reply
 cat(reply)
-#> “Welcome aboard! It’s great to have you as a new R user!”
+#> “Hi there, welcome to the world of R! Glad you’re here.”
 ```
 
 ## Send several prompts in one call
@@ -185,12 +191,15 @@ answers <- lms_chat_batch(
   system_prompt = "Answer with one word."
 )
 answers
-#> [1] "Apple 🍎\n" "Blue \n"    "Mars \n"
+#> [1] "Apple \n" "Blue"     "Mars"
 
 # Remove the spaces and line breaks around each reply
 trimws(answers)
-#> [1] "Apple 🍎" "Blue"     "Mars"
+#> [1] "Apple" "Blue"  "Mars"
 ```
+
+A model does not always follow its system prompt to the letter, so read
+the replies before you use them.
 
 `vignette("text-analysis")` shows how to get the replies of a batch as a
 data frame, with one row for each prompt.
@@ -205,7 +214,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [413ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [414ms]
 #> 
 
 # Stop the local server
@@ -215,6 +224,7 @@ lms_server_stop()
 
 ## Without the desktop app
 
-You can also run LM Studio on a computer that has no desktop app, such as
-a remote server. `vignette("headless-config")` shows how to install and
-use LM Studio that way.
+You can also run LM Studio without the desktop app, for example on a
+remote computer that you reach over a network. This is called a headless
+setup. `vignette("headless-config")` shows how to install and use LM Studio
+that way.
