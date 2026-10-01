@@ -26,8 +26,8 @@ LM Studio comes with a command-line tool called `lms`. A command-line tool
 is a program that you run by typing commands, and the messages of the
 package call it the CLI. The package uses `lms` to start and stop parts of
 LM Studio. If you do not have LM Studio yet, run
-`install_lmstudio(method = "browser")`. It opens the LM Studio download
-page in your web browser. After you install LM Studio, restart R.
+`rlmstudio::install_lmstudio(method = "browser")`. It opens the LM Studio
+download page in your web browser. After you install LM Studio, restart R.
 
 Load the package and check that R can find LM Studio.
 
@@ -52,13 +52,13 @@ By default, the package sends its requests to `http://localhost:1234`.
 That is an address on your own computer.
 
 `lms_server_start()` starts the server. Then it waits until LM Studio
-answers. The `wait` argument sets about how many seconds it waits at most.
-If the wait runs out, the function gives a warning, and your script goes
-on. So call `lms_server_ready()` next. It returns `TRUE` only when LM
-Studio answers.
+answers. The `wait` argument sets about how many seconds it waits. If the
+wait runs out, the function gives a warning, and your script goes on. So
+call `lms_server_ready()` next. It returns `TRUE` only when LM Studio
+answers.
 
 ```{r start-server}
-# Start the server, and wait about 30 seconds at most for it to answer
+# Start the server, and wait about 30 seconds for it to answer
 lms_server_start(wait = 30)
 
 # TRUE if LM Studio answers
@@ -82,8 +82,8 @@ list_models()
 On a new install, you have no model to chat with yet. LM Studio comes with
 an embedding model, a model that turns text into numbers and does not chat.
 The next section downloads a model that you can chat with. This vignette
-uses `google/gemma-3-1b`, a small model. Keep its key in
-a variable, so that each call below can use it.
+uses `google/gemma-3-1b`, a small model. Keep its key in a variable, so
+that each call below can use it.
 
 ```{r model}
 model <- "google/gemma-3-1b"

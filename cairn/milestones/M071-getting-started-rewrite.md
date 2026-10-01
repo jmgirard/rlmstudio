@@ -132,6 +132,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: the server was stopped and the token unset. `devtools::document()` gave no diff, and `pkgdown::check_pkgdown()` found no problems. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-30: status set to review.
 - 2026-09-30: review: the 10 lines above went under the Review section by mistake. They moved here unchanged.
+- 2026-09-30: step-7 approval: m071-getting-started-rewrite approved for merge, with the four gate fixes first.
 
 ## Decisions
 
@@ -152,3 +153,20 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - AC5 (2026-09-30, pass 2): Each of the 16 tests that the work-log ledger names exists by exact name. They sit in 5 files: `test-vignette-claims.R`, `test-setup.R`, `test-serve.R`, `test-server-ready.R`, and `test-load-download-shape.R`. Those 5 files ran with 0 failures, 0 errors, and 1443 passes. The ledger has a named test for each package claim of the source. One live run on this machine checked each LM Studio sentence. It started with the server stopped and no model loaded. `lms` sits at `~/.lmstudio/bin/lms`. `lms_server_start(wait = 30)` returned in 0.489 s with `lms_server_ready()` TRUE. `list_models()` gave the same 5 keys as `lms ls --json`, all "unloaded", with types "llm" and "embedding". The one bundled model file is the Nomic embedding model. A chat with it raised `rlmstudio_api_error`, and an embedding of "hello" gave a 1 x 768 matrix. `lms_download()` gave "already_downloaded". A chat with the unloaded gemma-3-1b took 6.586 s and left it "loaded", and a second chat took 0.231 s. `lms_load()` took 4.538 s and left it "loaded". With "Answer in one short sentence.", 4 of 5 replies held two sentences. With "Answer with one word.", 1 of 3 batches gave "Apple 🍎". In 2 of 3 batches, a reply held extra spaces or line breaks. `lms_unload()` left the model "unloaded", and `lms_server_ready()` was FALSE after the stop.
 - AC6 (2026-09-30, pass 2): `NEWS.md` has an entry under "# rlmstudio (development version)" that names `vignette("getting-started")` as rewritten. `lms server status` said "The server is not running", and the run had `RLMSTUDIO_API_TOKEN` unset. `devtools::document()` left `NAMESPACE`, `man/`, and `DESCRIPTION` with no change. `devtools::test()` gave 0 failures, 0 errors, 3 skips, and 19690 passes. `pkgdown::check_pkgdown()` found no problems. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - Gate (2026-09-30): `cairn_validate.py` passed every check, coverage complete included. No DESIGN.md principle changed, so the impact report did not run. `README.Rmd` and `README.md` last changed in the same commit, f8afdd1, and the branch touches neither. The added lines of `NEWS.md`, the vignettes, and the tests hold no milestone, criterion, or decision id. The branch adds no top-level file.
+- Reviewers (2026-09-30, pass 2): one Opus diff-bug reviewer and two Sonnet reviewers, for blame history and prior reviews. They reported 9, 7, and 4 findings. None shows a criterion failing. The PR-comment probe found no threads. Dispositions follow, from the gate.
+- Fix now: diff-bug 1, `install_lmstudio()` was offered before `library(rlmstudio)`. The text now calls `rlmstudio::install_lmstudio()`.
+- Fix now: diff-bug 9, a short line wrap. The paragraph is rewrapped.
+- Fix now: prior-review 1, "at most" overstated the `wait` budget, which the help calls not a hard cap. "at most" is gone from the prose and the comment.
+- Fix now: diff-bug 5, the NEWS entry said that the vignette explains each term at its first use, which no check enforces. It now says that the vignette explains terms such as model key and system prompt in plain words.
+- Follow-up: four gaps go to the ROADMAP row of the `lms_server_start()` help. Diff-bug 2 is to open LM Studio once after the install. Diff-bug 3 and blame 1 are the finished download status. Diff-bug 4 is a last-used port other than 1234. Blame 5 is how to find other model keys.
+- Follow-up: diff-bug 6, the `lms_server_ready()` help says that a fresh install has no models. It joins the same ROADMAP row.
+- Follow-up: blame 2, the vignette never names the API token. M072 covers the token in its scope.
+- Reject: blame 3, the clean-up stops the server and unloads the model with no guard. The M070 plan gate chose plain code over the M055 state chunks.
+- Reject: blame 4 and prior-review 4, the note that each chat starts a new conversation is gone. Conversations are M074 scope.
+- Reject: blame 6, `flash_attention = TRUE` is gone from the load. It was optional, and no decision asked for it.
+- Reject: blame 7, unqualified `local_mocked_bindings()` in four tests. It is a style point.
+- Reject: diff-bug 7, the reply carries a `response_id` attribute that the text does not name. The help documents it, and the vignette prints with `cat()`.
+- Reject: diff-bug 8, a test name is narrower than its body, and two batch tests overlap. No behavior is wrong.
+- Reject: prior-review 2, the chat test strips `response_id` before it compares. The claim is about the reply text.
+- Reject: prior-review 3, `trimws()` removes only some kinds of space. The text names only spaces and line breaks.
+- Gate fixes (2026-09-30): re-knitted clean, with 0 chunk headers and 0 error lines. The AC1 strings and output lines, the AC2 search, and the AC3 search gave the same results as above. The batch output still shows a reply with a line break.
