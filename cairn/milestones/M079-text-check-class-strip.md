@@ -58,7 +58,7 @@ A classed name, id, or type filter gets the check, the match, and the message of
 - [x] T4: In `test-chat-dot-clash.R`, read the value of each passing dot in every request body. Run the batch with `api =` as well, and add the `instr` test of AC4.
 - [x] T5: In `lms_chat()` (R/chat.R:155), move `rlm_check_route_dots()` after `rlm_check_schema()`. Add the six AC5 tests to `test-chat-dot-clash.R`.
 - [x] T6: Give a text fault the headline of AC6 in `rlm_check_id()` (R/utils-args.R:17) and in both headlines of `rlm_check_response_id()` (R/utils-args.R:395). Update the tests that expect the old headline, and add the AC6 tests, the attribute probes included.
-- [ ] T7: Fix the `check_reply_model()` comment on classed names (R/chat.R:917). Add NEWS.md entries for the type filter, the check order, and the headline. Run `devtools::document()`, `devtools::test()`, and `devtools::check()` with `RLMSTUDIO_API_TOKEN` set.
+- [x] T7: Fix the `check_reply_model()` comment on classed names (R/chat.R:917). Add NEWS.md entries for the type filter, the check order, and the headline. Run `devtools::document()`, `devtools::test()`, and `devtools::check()` with `RLMSTUDIO_API_TOKEN` set.
 
 ## Work log
 
@@ -73,7 +73,8 @@ A classed name, id, or type filter gets the check, the match, and the message of
 - 2026-10-01: T3 done. `plain_probes` holds the two trap classes, and `send_pair()` installs their methods. In a scratch copy with the `model` reassignment of `lms_chat_openai()` removed, its send test went red on "No method asJSON S3 class: foo", and with the trap probes alone on "No method asJSON S3 class: rlmTrap". `devtools::test()`: 0 failed, 3 skipped.
 - 2026-10-01: T4 done. The passing-dot test reads the dot value in every body, and the batch runs with `api_type =` and `api =`. In a scratch copy with a wrong expected `instructions` value, 10 body checks failed. `devtools::test()`: 0 failed, 3 skipped.
 - 2026-10-01: T5 done. `lms_chat()` runs `rlm_check_route_dots()` after `rlm_check_schema()`. Before the move, the three `lms_chat()` cases failed on the `instructions` headline, and the three batch cases passed. `devtools::test()`: 0 failed, 3 skipped.
-- 2026-10-01: T6 done. `id_fault()` marks a text fault with a `text_rule` attribute, and `rlm_check_id()` and both `rlm_check_response_id()` headlines read it. No existing test read the old headline for a text fault. The 14 AC6 tests failed before the fix. The headline tests read the `message` field of the error, because the full message wraps the attribute headline at 80 columns and `rlang` is not a declared dependency. `devtools::test()`: 0 failed, 3 skipped.
+- 2026-10-01: T6 done. `id_fault()` marks a text fault with a `text_rule` attribute, and `rlm_check_id()` and both `rlm_check_response_id()` headlines read it. No existing test read the old headline for a text fault. The 14 AC6 tests failed before the fix. The headline tests read the `message` field of the error. The full message wrapped the attribute headline in an `Rscript` run, and `rlang` is not a declared dependency. `devtools::test()`: 0 failed, 3 skipped.
+- 2026-10-01: T7 done. The `check_reply_model()` comment says that both callers pass the plain string. NEWS.md has three entries: the class strip with the type filter, the text headline, and the check order. `devtools::document()` gave no diff, `devtools::test()` with `RLMSTUDIO_API_TOKEN` set gave 0 failed and 3 skipped, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 

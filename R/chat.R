@@ -917,9 +917,11 @@ check_body_object <- function(resp, resp_data, label, ...) {
 #' any letter case (D-025). A reply with no `model` string is not checked.
 #' Fields are read with `[[`, because `$` would read a field whose name only
 #' starts with the one asked for. The asked name is compared as a plain
-#' string, because `identical()` also compares names, class, and the S4 bit,
-#' and a named, classed, or S4 string passes `rlm_check_id()`. `unclass()`
-#' keeps the S4 bit, and `[[` drops it.
+#' string, because `identical()` also compares names, class, and the S4 bit.
+#' Both callers reassign `model` to the plain string that `rlm_check_id()`
+#' returns, so it reaches this function with no class. `unclass(model)[[1]]`
+#' keeps the comparison plain for a caller that does not reassign.
+#' `unclass()` keeps the S4 bit, and `[[` drops it.
 #'
 #' Runs before the caller's `simplify` branch, so `simplify = FALSE` cannot
 #' return a reply from the wrong model.
