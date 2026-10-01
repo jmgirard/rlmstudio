@@ -1,13 +1,13 @@
 # M070: The vignettes are knitted ahead of time from a live LM Studio
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** user-facing — the vignettes that package users read
-- **Branch/PR:** —
+- **Branch/PR:** m070-knit-ahead-vignettes
 
 ## Goal
 
@@ -84,7 +84,7 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 
 ## Tasks
 
-- [ ] T1: Write `data-raw/knit-vignettes.R`. It reads the token from
+- [x] T1: Write `data-raw/knit-vignettes.R`. It reads the token from
       `RLMSTUDIO_API_TOKEN`, checks the clean start with
       `lms_server_ready()` and `lms ps --json`, knits each source with
       `knitr::knit()` and `error = FALSE`, and tears down in the `finally`
@@ -114,6 +114,7 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 - 2026-09-30: plan gate chose plain base R with a banned-pattern list over dplyr in Suggests, because it needs no dependency change; falsified by a rewrite that needs a banned pattern to stay readable, or by reader-pass reports that the base R code is hard to follow.
 - 2026-09-30: plan gate chose four vignettes (three rewrites and a new chat-options vignette) over a separate scoring vignette and over merging getting-started with headless-config; falsified by a reader pass that finds text-analysis too long to follow, or headless-config too thin to stand alone.
 - 2026-09-30: plan gate chose a plain, conversational prose register over strict Simple English; falsified by reader-pass reports of sentences too long or terms not explained.
+- 2026-09-30: T1 done. `data-raw/knit-vignettes.R` checks the clean start with `lms server status --json` as well as `lms_server_ready()`, because a token-guarded server with no token set reads as not ready. It knits to a temp file and copies on success. AC3 runs: (a) server running, exit 1 naming the server; (b) `google/gemma-3-1b` loaded, exit 1 naming it; (c) a scratch source that started the server, loaded the model (seen in `lms ps --json` inside the failing chunk), then called `stop()`: exit 1 naming chunk `boom`, no `.Rmd` written, server stopped, `lms ps --json` empty.
 
 ## Decisions
 
