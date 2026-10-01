@@ -67,9 +67,9 @@ path, and the package uses it.
 ## Start the daemon
 
 A daemon is a program that runs in the background, with no window. The
-LM Studio daemon is called `llmster`. When the desktop app is open, it
-runs the daemon for you. Without the desktop app, start the daemon
-yourself, before you start the server.
+LM Studio daemon is called `llmster`. When the desktop app is open, the
+app does the work of the daemon. Without the desktop app, start the
+daemon yourself, before you start the server.
 
 
 ``` r
@@ -112,8 +112,9 @@ lms_server_ready()
 #> [1] TRUE
 ```
 
-If `lms_server_ready()` returns `FALSE`, LM Studio did not answer in
-time, or the server turned the request away. A server turns a request
+If `lms_server_ready()` returns `FALSE`, one cause is that LM Studio did
+not answer in time. Another is that another program holds the port.
+Another is that the server turned the request away. A server turns a request
 away when it requires an API token, a secret string that it checks with
 each request, and the request carries none. The next section shows how to
 send one.
@@ -263,5 +264,5 @@ running. Use `force = TRUE` to stop the server first.
 lms_daemon_stop(force = TRUE)
 ```
 
-If the desktop app is open, it keeps the daemon running. Then
-`lms_daemon_stop()` returns `FALSE` and prints a message that says so.
+If the desktop app is open, `lms_daemon_stop()` does not stop it. The
+function returns `FALSE` and prints a message that says so.

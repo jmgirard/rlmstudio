@@ -1,6 +1,7 @@
 # Tests for claims that `vignettes/text-analysis.Rmd`,
 # `vignettes/getting-started.Rmd`, and `vignettes/headless-config.Rmd` make
-# about package functions, where no other test checked the claim.
+# about package functions. Some of them repeat a check that another test file
+# makes.
 
 # The messages that `expr` gives, as text, with each one muffled.
 claim_messages <- function(expr) {
@@ -372,9 +373,9 @@ test_that("install_lmstudio() installs nothing when lms 0.4.0 or later is found"
   expect_true(result)
 })
 
-# Run `code` with `processx::run()` replaced by a stub that records the
-# arguments of each `lms` call. The `server stop` and `daemon down` calls
-# succeed unless `daemon_down` gives another result.
+# Replace `lms_path()` and `processx::run()` in the calling test with stubs,
+# and return an environment whose `args` records the arguments of each `lms`
+# call. Each call succeeds, except that `daemon down` returns `daemon_down`.
 local_lms_calls <- function(daemon_down = list(status = 0L, stdout = "", stderr = ""),
                             env = parent.frame()) {
   local_mocked_bindings(lms_path = function() "lms", .env = env)
