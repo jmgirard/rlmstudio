@@ -23,7 +23,8 @@
 # .Rmd of that source is left as it was. A chunk warning does the same,
 # unless the chunk sets the option expect_warning = TRUE. That option keeps
 # the warning in the output. A chunk with warning = FALSE hides its warning,
-# and the knit goes on. The sources after the failing one
+# and a chunk with warning = NA sends it to the console. In both cases the
+# knit goes on. The sources after the failing one
 # are not knitted, and the sources before it keep their new output. Whatever
 # happens, the script unloads every model and stops the server before it
 # exits.
@@ -142,11 +143,18 @@ knit_source <- function(source) {
     }
   )
   setwd(old_wd)
-  if (length(warned) > 0) {
+  warned <- unique(warned)
+  if (length(warned) == 1) {
     stop(
-      "The chunk '", paste(unique(warned), collapse = "', '"), "' of ",
-      source, " gave a warning, and the chunk does not set ",
-      "expect_warning = TRUE.",
+      "The chunk '", warned, "' of ", source, " gave a warning, and the ",
+      "chunk does not set expect_warning = TRUE.",
+      call. = FALSE
+    )
+  }
+  if (length(warned) > 1) {
+    stop(
+      "The chunks '", paste(warned, collapse = "', '"), "' of ", source,
+      " gave warnings, and these chunks do not set expect_warning = TRUE.",
       call. = FALSE
     )
   }

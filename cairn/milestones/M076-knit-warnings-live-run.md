@@ -144,6 +144,7 @@ other candidate rows stay as they are.
 - 2026-10-01: claim audit: not owed — internal tier
 - 2026-10-01: amendment done, status set to review.
 - 2026-10-01: re-review: AC5 and AC6 verified and ticked, consistency gate clean. Three fresh reviewers spawned, findings pending.
+- 2026-10-01: step-7 approval: m076-knit-warnings-live-run approved for merge, with fixes D2, D7, and D9 applied first.
 
 ## Decisions
 
@@ -173,3 +174,4 @@ other candidate rows stay as they are.
   - B3: the stamp binds only the source bytes. Same as D5. Proposed: reject.
   - B4 and B5: the re-knit changed replies in `chat-options.Rmd` and `getting-started.Rmd`. No prose or test states the old text. Proposed: noted.
   - P1: the LESSONS M009 entry does not name the warning rule, the stamp, or the `render_markdown()` need. Proposed: write it at the post-merge lesson capture.
+- Gate triage (2026-10-01): the user accepted every proposed disposition. Fixed now: D2 in DESIGN line 58 and the script header, D7 in the script message, and D9 in PROFILE line 73. D1 and D3 went to one new candidate row. After the fixes, a scratch source with one unmarked warning chunk exited 1 with "The chunk 'only' of <path> gave a warning". A source with two such chunks exited 1 with "The chunks 'one', 'two' of <path> gave warnings". Neither run wrote a `.Rmd`. `devtools::test()` gave `[ FAIL 0 | WARN 0 | SKIP 3 | PASS 19942 ]`, and `cairn_validate.py` passed.
