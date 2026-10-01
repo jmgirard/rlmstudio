@@ -11,34 +11,36 @@ vignette: >
 
 A headless setup runs LM Studio with no desktop app and no window. You
 control it with commands only. You need a headless setup on a computer
-that has no screen, such as a Linux server that you reach over a network.
-This vignette also covers a second case: R runs on your computer, and
-LM Studio runs on another one.
+that has no screen, such as a Linux computer that you reach over a
+network. This vignette also covers a second case: R runs on your
+computer, and LM Studio runs on another one.
 
 `vignette("getting-started")` covers the steps that are the same with or
 without the desktop app: the server, the model list, the download, the
 load, and the chat. This vignette covers only what differs. Read
-`getting-started` first.
+`getting-started` first, but skip its install step, which opens a web
+browser. The next section replaces it.
 
 ## Install the command-line tool
 
 LM Studio comes with a command-line tool called `lms`. Without the
 desktop app, you install `lms` and the rest of LM Studio from the command
 line. `install_lmstudio(method = "headless")` runs the LM Studio install
-script for your system.
+script for your system. If `lms` is already installed, at version 0.4.0
+or later, the function installs nothing.
 
 The install writes files to your computer, so the function does not
 install without your consent. In R at the console, it asks you first, and
 it installs only if you answer yes. In a script, R cannot ask you. There,
 the function stops with an error, unless you set the environment variable
-`RLMSTUDIO_ALLOW_INSTALL` to `"true"` before the call. If `lms` is
-already installed, at version 0.4.0 or later, the function installs
-nothing.
+`RLMSTUDIO_ALLOW_INSTALL` to `"true"` before the call. An environment
+variable is a named setting that programs read when they run. In R,
+`Sys.setenv(RLMSTUDIO_ALLOW_INSTALL = "true")` sets it.
 
 
 ``` r
 # Install LM Studio without the desktop app. It asks you first.
-install_lmstudio(method = "headless")
+rlmstudio::install_lmstudio(method = "headless")
 ```
 
 After the install, restart R. Then load the package and check that R can
@@ -51,7 +53,16 @@ library(rlmstudio)
 # TRUE if R finds the lms tool
 has_lms()
 #> [1] TRUE
+
+# TRUE if the lms tool is version 0.4.0 or later
+check_lms_version()
+#> ✔ LM Studio CLI is using the modern architecture (0.4.0+).
+#> [1] TRUE
 ```
+
+If `has_lms()` returns `FALSE`, find the full path of `lms` on your
+computer. Then set the environment variable `RLMSTUDIO_LMS_PATH` to that
+path, and the package uses it.
 
 ## Start the daemon
 
@@ -68,7 +79,10 @@ lms_daemon_start()
 ```
 
 `lms_daemon_status()` returns the lines that the command `lms status`
-prints, as text. They say, for example, whether the server is on.
+prints, as text. They say, for example, whether the server is on. Where
+the output tells you to run `lms server start` in a terminal, the R
+function `lms_server_start()` of the next section runs that command for
+you.
 
 
 ``` r
@@ -98,9 +112,11 @@ lms_server_ready()
 #> [1] TRUE
 ```
 
-If `lms_server_ready()` returns `FALSE`, the server can require an API
-token, a secret string that it checks with each request. The next section
-shows how to send one.
+If `lms_server_ready()` returns `FALSE`, LM Studio did not answer in
+time, or the server turned the request away. A server turns a request
+away when it requires an API token, a secret string that it checks with
+each request, and the request carries none. The next section shows how to
+send one.
 
 Now download, load, and chat with a model as `getting-started` shows. The
 calls are the same without the desktop app.
@@ -108,18 +124,26 @@ calls are the same without the desktop app.
 ## Use an API token
 
 An API token works like a password for the server. A server that
-requires one turns away each request that does not carry it.
-If your server requires a token, get it from the person who runs the
-server.
+requires one turns away each request that does not carry it. If you use
+a server that someone else runs, get the token from that person. The
+LM Studio documentation on
+[authentication](https://lmstudio.ai/docs/developer/core/authentication)
+shows how to turn on the token check and create tokens in the desktop
+app.
 
 The package reads the token from the environment variable
-`RLMSTUDIO_API_TOKEN`. Put a line such as `RLMSTUDIO_API_TOKEN=your-token`
-in your `.Renviron` file, and restart R. Then each function that sends a
-request to the server sends the token with it.
+`RLMSTUDIO_API_TOKEN`. To set it for every R session, put a line such as
+`RLMSTUDIO_API_TOKEN=your-token` in the file `.Renviron` in your home
+folder, and restart R. R reads that file when it starts. If the file does
+not exist, create it. Then each function that sends a request to the
+server sends the token with it.
 
-You can also pass the token to one call with the `token` argument. Every
+You can also pass a token to one call with the `token` argument. Every
 function that sends a request to the server has this argument. A `token`
-argument wins over the environment variable.
+argument wins over the environment variable, so use it when one script
+talks to two servers with different tokens. The call below passes the
+same token that the package reads from the environment variable, so its
+result is the same as without the argument.
 
 
 ``` r
@@ -148,17 +172,21 @@ lms_server_stop()
 
 ## Reach a server on another computer
 
-LM Studio can run on another computer, such as a server with a large
-graphics card, while you run R on your laptop. The host is the computer
-that runs LM Studio. The `host` argument gives its address, such as
+LM Studio can run on another computer, such as one with a large graphics
+card, while you run R on your laptop. The host is the computer that runs
+LM Studio. The `host` argument gives its address, such as
 `"http://192.168.1.20:1234"`. That is the network address of the host,
-then a colon and the port of the server. By default, `host` is
-`"http://localhost:1234"`, which is your own computer.
+then a colon and the port of the server. A port is a number that picks
+one program on a computer, and the package asks port 1234 by default. By
+default, `host` is `"http://localhost:1234"`, which is your own computer.
+The person who manages the host can tell you its network address.
 
-By default, the server answers only requests that come from the host
-itself. To let other computers reach it, set the environment variable
-`LMS_SERVER_HOST` to `"0.0.0.0"` before you start the server. Run this
-code in R on the host.
+The functions that run `lms`, such as `lms_daemon_start()` and
+`lms_server_start()`, act on the computer where R runs. So run them in R
+on the host. By default, the server answers only requests that come from
+the host itself. To let other computers reach it, set the environment
+variable `LMS_SERVER_HOST` to `"0.0.0.0"` before you start the server.
+The address `0.0.0.0` means every network address of the host.
 
 
 ``` r
@@ -169,11 +197,15 @@ lms_server_start(wait = 60)
 
 Then any computer that can reach the host over the network can send
 requests to the server. If the network is not private, require an API
-token on the server.
+token on the server. A firewall between the two computers can block the
+port.
 
-On your own computer, pass the address of the host to each call with the
-`host` argument. The package then sends your prompts to that computer.
-The model reads them there, and the replies come back to R.
+Your own computer needs the package, but not LM Studio. Pass the address
+of the host to each call with the `host` argument. Every function that
+sends a request to the server has this argument, for example
+`lms_load()`, `lms_chat()`, and `lms_unload()`. The package then sends
+your prompts to that computer. The model reads them there, and the
+replies come back to R.
 
 
 ``` r
@@ -196,8 +228,8 @@ reply <- lms_chat(
 A script that runs on its own, for example every night, must start the
 daemon and stop it again. `with_lms_daemon()` does both. It starts the
 daemon, runs your code, and then stops the server and the daemon. It stops
-them even if your code fails with an error. It returns the value of your
-code.
+them even if your code fails with an error, and even if the daemon ran
+before the call. It returns the value of your code.
 
 
 ``` r
@@ -214,6 +246,9 @@ replies <- with_lms_daemon({
   lms_unload(model)
   out
 })
+
+# One reply for each prompt
+replies
 ```
 
 ## Stop the daemon
