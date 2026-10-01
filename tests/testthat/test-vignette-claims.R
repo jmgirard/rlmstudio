@@ -127,7 +127,7 @@ test_that("lms_score_expected() reads the first step, keeps the scale, and resca
 
   res <- lms_score_expected(lp_df, scale = 1:5)
 
-  # Kept: 3 (0.4), 4 (0.2), and 2 (0.2) from the row whose step token is "3".
+  # Kept: 3 (0.4), 4 (0.2), and 2 (0.2) from the rows whose step token is "3".
   # Rescaled to sum to 1: 0.5, 0.25, 0.25.
   expect_identical(names(res), c("expected_value", "weighted_sd", "entropy", "probabilities"))
   expect_identical(res$probabilities$label, c(3, 4, 2))

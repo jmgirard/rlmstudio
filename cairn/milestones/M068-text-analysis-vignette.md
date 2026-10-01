@@ -1,6 +1,6 @@
 # M068: A vignette shows batch chat, structured output, logprobs scores, and embeddings
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -141,6 +141,8 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 - re-audit: AC1 (full) — nothing. The reader found both halves reachable, and the string check passes in a build without LM Studio as commented code, with the marker render covering live output.
 - 2026-09-30: T4 closed under the amended AC1. Its task text now names the build-tangle check, a minor edit.
 - 2026-09-30: T7 checks. `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. `devtools::test()` gave 0 failed, 0 errors, and 3 live tests skipped with the server stopped. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes. It started from state (a), and `lms server status --json` and `lms ps --json` read the same before and after.
+- claim audit: 66 claims read, 1 corrected — tests/testthat/test-vignette-claims.R
+- 2026-09-30: the claim audit (fresh Opus reader) changed a score-test comment from "the row" to "the rows" whose step token is "3". It listed three claims that the repo cannot check: that LM Studio ships the nomic embedding model, and two general sentences about small models. T1 saw the model on disk with no download on this machine. Status set to review.
 
 ## Decisions
 
