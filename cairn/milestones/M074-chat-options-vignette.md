@@ -1,13 +1,13 @@
 # M074: A vignette shows chat options, conversations, and errors in scripts
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
 - **Principles touched:** GP3, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — a new vignette that package users read
-- **Branch/PR:** —
+- **Branch/PR:** m074-chat-options-vignette
 
 ## Goal
 
@@ -80,7 +80,7 @@ scoring are M073.
 
 ## Tasks
 
-- [ ] T1: Probe on this machine each call of the outline, and log what each
+- [x] T1: Probe on this machine each call of the outline, and log what each
       returns: the three routes, `temperature` and a misspelled option, a
       follow-up by `previous_response_id`, a `messages` data frame, a raw
       reply, a call to `host = "http://localhost:1"`, and an API error.
@@ -103,6 +103,15 @@ scoring are M073.
 ## Work log
 
 - 2026-09-30: created by /milestone-plan.
+- 2026-10-01: started by /milestone-implement on branch m074-chat-options-vignette.
+- 2026-10-01: question gate: the API error example is a misspelled model name, the options section shows `temperature` alone, and the title is "Chat Options, Conversations, and Errors".
+- 2026-10-01: T1 probe, `google/gemma-3-1b` at context 2048: all three routes reply. The openresponses and native replies carry a `response_id` attribute, and the openai reply has none.
+- 2026-10-01: T1 probe: the raw openresponses reply holds `temperature` 0 with `temperature = 0`, and 0.8 with a misspelled `temprature = 0`. The openai route also ignores `temprature`. The native route refuses it with `rlmstudio_api_error`, status 400, code `unrecognized_keys`.
+- 2026-10-01: T1 probe: at `temperature = 0`, a follow-up by `previous_response_id` to "My favorite color is green." answered "Green.". The same question with no id answered "Blue.". Both held in 4 of 4 runs on both routes. A name prompt gave unstable answers.
+- 2026-10-01: T1 probe: a four-row `messages` data frame with an assistant turn answered "Your favorite color is green." in 3 of 3 runs. The raw openresponses reply has 31 fields, among them `id`, `output`, `usage`, and `temperature`.
+- 2026-10-01: T1 probe: `host = "http://localhost:1"` raised `rlmstudio_no_server`. The model `google/gemma-3-1bb` raised `rlmstudio_model_mismatch` (status 200) on the openresponses and openai routes, and `rlmstudio_api_error` (status 404, code `model_not_found`) on native.
+- 2026-10-01: mini gate on the T1 finding: the error section catches the misspelled model on both routes, so it also handles `rlmstudio_model_mismatch`. Scope item 6 names two classes, and no criterion changes.
+- 2026-10-01: T2 note: `data-raw/knit-vignettes.R` knits every `vignettes/*.Rmd.orig` with no list, so T2 adds nothing to the script.
 
 ## Decisions
 
