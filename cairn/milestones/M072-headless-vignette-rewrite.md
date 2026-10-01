@@ -103,6 +103,7 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
 
 - 2026-09-30: created by /milestone-plan.
 - 2026-09-30: M070 claim audit handed two findings on the carried-over headless prose to this rewrite. First, the comments "Stop the background daemon" and "the daemon will stop on exit" sit above knitted output that says the GUI keeps the daemon running, because the knit runs on a desktop host. Second, the knitted `str_extract()` chat reply is a wrong pattern that the prose does not flag.
+- 2026-09-30: M070 review handed two findings to this rewrite. F7: the knitted model list shows every model on the author's machine. F8: the knit ran with the model on disk, so the download chunk shows "already downloaded" and no download job, next to prose about a download.
 
 ## Decisions
 

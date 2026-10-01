@@ -14,12 +14,13 @@
 #
 # With no arguments, it knits every vignettes/*.Rmd.orig file.
 #
-# The script refuses to start if the server runs or a model is loaded, so
-# each vignette starts from the same clean state. A chunk error stops the
-# knit, and the .Rmd of that source is left as it was. The sources after the
-# failing one are not knitted, and the sources before it keep their new
-# output. Whatever happens, the script unloads every model and stops the
-# server before it exits.
+# The script refuses to start if the server runs or a model is loaded. After
+# each source, it unloads every model and stops the server, so each vignette
+# starts from the same clean state. A chunk error stops the knit, and the
+# .Rmd of that source is left as it was. The sources after the failing one
+# are not knitted, and the sources before it keep their new output. Whatever
+# happens, the script unloads every model and stops the server before it
+# exits.
 #
 # The script needs pkgload and knitr. knitr is in Suggests. pkgload is a
 # development tool that only the data-raw scripts use, and this directory
@@ -90,8 +91,16 @@ if (length(models) > 0) {
   )
 }
 
+# Unload every model and stop the server.
+teardown <- function() {
+  system2(lms, c("unload", "--all"), stdout = FALSE, stderr = FALSE)
+  system2(lms, c("server", "stop"), stdout = FALSE, stderr = FALSE)
+}
+
 # Knit one source to a temporary file, and copy it over the .Rmd only when
 # the whole knit succeeded. A chunk error stops the knit with the chunk label.
+# The chunks run in a new environment, so a chunk cannot change the variables
+# of this function.
 knit_source <- function(source) {
   target <- sub("\\.orig$", "", source)
   temp <- tempfile(fileext = ".Rmd")
@@ -99,7 +108,12 @@ knit_source <- function(source) {
   on.exit(setwd(old_wd), add = TRUE)
   knitr::opts_chunk$set(error = FALSE)
   withCallingHandlers(
-    knitr::knit(basename(source), output = temp, quiet = TRUE),
+    knitr::knit(
+      basename(source),
+      output = temp,
+      quiet = TRUE,
+      envir = new.env(parent = globalenv())
+    ),
     error = function(e) {
       label <- knitr::opts_current$get("label")
       stop(
@@ -110,7 +124,9 @@ knit_source <- function(source) {
     }
   )
   setwd(old_wd)
-  file.copy(temp, target, overwrite = TRUE)
+  if (!file.copy(temp, target, overwrite = TRUE)) {
+    stop("Could not copy the knitted ", source, " to ", target, ".", call. = FALSE)
+  }
   message("Knitted ", source, " to ", target)
 }
 
@@ -118,6 +134,7 @@ failed <- FALSE
 tryCatch(
   for (source in sources) {
     knit_source(source)
+    teardown()
   },
   error = function(e) {
     message(conditionMessage(e))
@@ -126,8 +143,7 @@ tryCatch(
   finally = {
     # on.exit() never runs at the top level of Rscript, so the teardown
     # goes here. It runs after a chunk error too.
-    system2(lms, c("unload", "--all"), stdout = FALSE, stderr = FALSE)
-    system2(lms, c("server", "stop"), stdout = FALSE, stderr = FALSE)
+    teardown()
   }
 )
 if (failed) {

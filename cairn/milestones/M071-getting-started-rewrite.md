@@ -93,6 +93,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 ## Work log
 
 - 2026-09-30: created by /milestone-plan.
+- 2026-09-30: M070 review handed one finding (F8) to this rewrite. The knit ran with the model on disk, so the download chunk shows "already downloaded" and no download job, next to prose about a download.
 
 ## Decisions
 

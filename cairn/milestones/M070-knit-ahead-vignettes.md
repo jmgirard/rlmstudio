@@ -160,3 +160,12 @@ Independent review: three fresh reviewers (Opus diff-bug, Sonnet blame-history, 
 - F14 (blame 2, prior 4): nothing re-knits before a release or compares `.Rmd` with `.Rmd.orig`, so output can go stale. Proposed: follow-up in the release walk candidate row.
 - F15 (blame 4): text-analysis now ends with an unconditional `lms_unload_all()` with no warning to the reader. Proposed: follow-up in the M073 work log.
 - F16 (prior 3): the `lms daemon up` candidate row still describes the removed gate chunks. Proposed: noted, M072 has a task that narrows the row.
+
+Triage at the gate (2026-09-30): the maintainer accepted every proposed disposition.
+
+- Fixed now: F1 and F2. NEWS.md drops the two entries and adds one entry for the knit-ahead build. Its "Before" sentence was read from `v0.2.2:vignettes/getting-started.Rmd`, whose chunks run under `eval=lms_installed`.
+- Fixed now: F3 and F4. `knit_source()` knits in `new.env(parent = globalenv())` and stops when `file.copy()` fails. The loop calls `teardown()` after each source. A two-source scratch test discriminates. In source A, a chunk starts the server, loads `google/gemma-3-1b`, and sets `target`. Source B prints the server status and `lms ps --json`. The script at 881ad6d wrote A to `elsewhere.Rmd`, and B showed `running` true and the loaded model. The fixed script wrote `A.Rmd`, and B showed `running` false and `[]`. The AC3 cases (a), (b), and (c) gave the same results on the fixed script. Copies of the three sources in a scratch folder knitted with exit 0, with no chunk line and no error or warning text, and the server ended stopped with no model.
+- Fixed now: F10. LESSONS M009 now says that output with backticks goes to a separate block.
+- Follow-up: F5 in the `lms daemon up` candidate row. F6 and F14 in the release walk candidate row (one row, for the ROADMAP line cap). F7 and F8 in the M072 work log, F8 also in the M071 work log. F15 in the M073 work log.
+- Noted: F16 (M072 narrows the row).
+- Rejected: F9 (the plan puts the rewrites in M071 to M073), F11 (the cut prose described the removed gates), F12 (edge cases that leave no state), F13 (cosmetic).
