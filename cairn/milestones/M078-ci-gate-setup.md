@@ -1,13 +1,13 @@
 # M078: A pull request runs only the CI jobs that the package can turn red
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal, because no package user relies on the GitHub Actions workflows
-- **Branch/PR:** —
+- **Branch/PR:** m078-ci-gate-setup
 
 ## Goal
 
@@ -37,7 +37,7 @@ A pull request runs only the CI jobs that the package can turn red, each job onc
 
 ## Tasks
 
-- [ ] T1: Create `.github/workflows/R-devel-check.yaml` from the check job of `R-CMD-check.yaml`, with one `ubuntu-latest` R-devel config (`http-user-agent: release`) and the triggers of AC2. A header comment says why R-devel runs outside the PR gate and what to do on a red run (D-040). Remove the devel row from the `R-CMD-check.yaml` matrix (line 26).
+- [x] T1: Create `.github/workflows/R-devel-check.yaml` from the check job of `R-CMD-check.yaml`, with one `ubuntu-latest` R-devel config (`http-user-agent: release`) and the triggers of AC2. A header comment says why R-devel runs outside the PR gate and what to do on a red run (D-040). Remove the devel row from the `R-CMD-check.yaml` matrix (line 26).
 - [ ] T2: `git mv` `test-headless.yaml` to `test-source-tree.yaml`. Set the workflow name and job id of AC3, remove the `env` block, and add `branches: [main, master]` to `push`. Write the header comment from observed output. It names the test files whose `skip_if()` fires under R CMD check, read from a same-session run and not from this list. Today they are `test-name-faults.R:123`, `test-token-hint.R:102`, and `test-vignette-knit.R:25`.
 - [ ] T3: In all five workflow files, set `actions/checkout@v6`. Today `pkgdown.yaml`, `test-coverage.yaml`, and `test-headless.yaml` use `@v4`. Add `workflow_dispatch` where it is missing, and add the AC4 `concurrency` block to every file but `pkgdown.yaml`. Write the AC4 evidence script in the scratchpad, not the repo. R `yaml` reads the `on:` key as `TRUE`, so the script reads that name.
 - [ ] T4: Records. Correct the DESIGN Platforms line (`cairn/DESIGN.md:23`) to name R-devel's weekly workflow and the Ubuntu release and oldrel-1 PR rows. Delete the headless Known issues line (`cairn/DESIGN.md:92`), marked `corrected M078`. Rename the job in the M002 line of `cairn/LESSONS.md`. AC5 evidence exists only after the PR opens at the review gate (M011 lesson), and a red check there returns the milestone to implement.
@@ -48,6 +48,8 @@ A pull request runs only the CI jobs that the package can turn red, each job onc
 - 2026-10-01: criteria audit, reduced mode (internal tier), by a fresh Opus reader. Four criteria passed all three questions. Three fixes at the gate. AC5 now reads `gh pr checks --json` and counts only rows with a workflow. AC2 evidence adds the cron value and `runs-on`. The goal no longer counts four workflows.
 - 2026-10-01: plan gate chose a separate weekly R-devel workflow over an allowed-to-fail PR job, a still-blocking job, and no R-devel CI. An allowed-to-fail job can still show red in `gh pr checks`, and the other two keep merges waiting or lose early warning. Falsified by an R-devel break that the package caused and that reached a CRAN release before a weekly run showed it.
 - 2026-10-01: plan gate chose to rename and keep the headless job over deleting it or installing LM Studio in it. A delete leaves three source-reading test files with no CI run, and an install needs its own milestone. Falsified by a CI run where the source-tree job catches nothing that the check jobs miss across a release cycle.
+- 2026-10-01: implement started on branch `m078-ci-gate-setup`. No question gate, because the plan left nothing open. The weekly run is Monday 06:00 UTC.
+- 2026-10-01: T1 done. `R-devel-check.yaml` added, and the devel row removed from the `R-CMD-check.yaml` matrix. The parsed files show 4 matrix rows, and triggers `schedule` (`0 6 * * 1`), `push`, and `workflow_dispatch` on `ubuntu-latest` R-devel.
 
 ## Decisions
 
