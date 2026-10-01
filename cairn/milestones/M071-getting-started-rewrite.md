@@ -1,6 +1,6 @@
 # M071: The getting-started vignette reads plainly and covers a first run
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
@@ -140,3 +140,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: ledger 17, LM Studio: a chat with an unloaded model can load it, and the chat waits for the load. Live probe: `lms_server_ready()` was TRUE 0.004 s after the start returned. `lms_chat()` to an unloaded `google/gemma-3-1b` took 5.14 s and left it loaded, and a second chat took 0.18 s.
 - 2026-09-30: re-knitted clean: 0 chunk headers, 0 error lines. The AC2 search found 0 code hits and 0 inline R, with 3 of 3 hits on planted lines. The AC3 search found 0 prose hits over 116 of 193 lines. `devtools::test()`, run twice: 0 fail, 3 skip, 19690 pass. No file under R/ or tests/ changed since T5, which gave 19801.
 - 2026-09-30: the `lms_server_start()` help makes the same claim as the removed sentence. It is out of scope, so a candidate row in ROADMAP holds it.
+- 2026-09-30: claim audit: 54 claims read, 1 corrected — vignettes/getting-started.Rmd.orig, vignettes/getting-started.Rmd
+- 2026-09-30: claim audit detail: "On a new install, you have no models yet" was wrong. LM Studio ships an embedding model in `~/.lmstudio/.internal/bundled-models/`. The text now says that a new install has no model to chat with, and it names the embedding model. The re-read passed each of its 3 sentences with live calls. The reader also ran the start, chat, load, and batch claims live, and each matched. Re-knitted clean.
+- 2026-09-30: the server was stopped and the token unset. `devtools::document()` gave no diff, and `pkgdown::check_pkgdown()` found no problems. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-30: status set to review.
