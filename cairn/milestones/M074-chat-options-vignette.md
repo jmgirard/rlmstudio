@@ -153,6 +153,7 @@ scoring are M073.
 - 2026-10-01: review pass 2 started by /milestone-review. Fresh evidence for AC1 to AC6 is recorded, and the consistency gate passes. The diff reviewer is still running (checkpoint, review not finished).
 - 2026-10-01: review pass 2 gate: the user answered "decide for me", so the recommended option holds. G1 to G12 are fixed on the branch with no status change, G13 to G19 are rejected, and G20 is noted. Merge approval is asked again after the fixes.
 - 2026-10-01: gate fixes G1 to G12 landed. Four planted defects in a scratch copy turned only their own new test red. A live re-knit kept every LM Studio claim of the text.
+- 2026-10-01: step-7 approval: m074-chat-options-vignette approved for merge
 
 ## Decisions
 
