@@ -34,7 +34,7 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
 
 ## Acceptance criteria
 
-- [ ] AC1: The R code that `knitr::purl()` extracts from
+- [x] AC1: The R code that `knitr::purl()` extracts from
       `vignettes/headless-config.Rmd.orig` holds each of these strings:
       `install_lmstudio(method = "headless")`, `lms_daemon_start(`,
       `lms_daemon_status(`, `lms_daemon_stop(`, `lms_server_start(`,
@@ -44,25 +44,25 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
       or with `#> Error`. The block of the chunk that calls
       `lms_daemon_status(` holds a line that starts with `#>` after its last
       code line.
-- [ ] AC2: A search of that purled code for each regular expression in the
+- [x] AC2: A search of that purled code for each regular expression in the
       DESIGN.md code list finds no match. A search of the source for
       `` `r `` finds no inline R expression.
-- [ ] AC3: A case-blind search for each entry of the DESIGN.md prose list
+- [x] AC3: A case-blind search for each entry of the DESIGN.md prose list
       finds no match. It runs over every line of the source outside its
       ```` ```{r} ```` chunks, with the YAML header and inline code.
-- [ ] AC4: Each of these terms is explained in plain words at or before
+- [x] AC4: Each of these terms is explained in plain words at or before
       its first use in prose or in a code comment of the knitted vignette:
       headless, daemon, host, and API token.
-- [ ] AC5: The prose next to the `host =` chunk states that the input text
+- [x] AC5: The prose next to the `host =` chunk states that the input text
       goes to that machine. The prose next to `install_lmstudio()` states
       that it asks before it installs, unless `RLMSTUDIO_ALLOW_INSTALL` is
       set.
-- [ ] AC6: Take each prose sentence and each `#` comment line that states
+- [x] AC6: Take each prose sentence and each `#` comment line that states
       what a package function does with an argument, returns, or raises,
       beyond what its name says. A named test under `tests/testthat/`
       exercises that behavior. A sentence about what LM Studio itself does
       matches what a live call on this machine returned.
-- [ ] AC7: `NEWS.md` has an entry under the development-version heading
+- [x] AC7: `NEWS.md` has an entry under the development-version heading
       that names the rewritten vignette. `devtools::document()` gives no
       diff, `devtools::test()` passes, and `pkgdown::check_pkgdown()`
       passes. With the server stopped and `RLMSTUDIO_API_TOKEN` unset,
@@ -121,3 +121,13 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
 - 2026-09-30 (question gate): the remote section sets `LMS_SERVER_HOST` to `0.0.0.0` on the server machine before `lms_server_start()`. The other machine passes `host =`. `lms_server_start()` has no bind argument.
 
 ## Review
+
+Evidence gathered 2026-09-30 on the branch head 2245d56, which holds `origin/main`. The AC1 to AC3 checks ran from a scratch script outside the repo.
+
+- AC1: `knitr::purl()` of the source gave 70 code lines. All 9 strings are present, and neither `lms_download(` nor `list_models(` is. The knitted file has 0 lines that start with ```` ```{r ```` and 0 that start with `#> Error`. The chunk that calls `lms_daemon_status(` (knitted lines 88 to 94) has three `#>` lines after its code line.
+- AC2: the 16 DESIGN.md regular expressions over the 70 purled lines gave 0 matches. The source has 0 inline `` `r `` expressions. A planted `lapply(` chunk turned the check red.
+- AC3: the 14 DESIGN.md entries, case-blind, over 168 source lines outside the chunks (YAML and inline code kept) gave 0 matches. A planted line with `simply` and `seamless` turned the check red.
+- AC4: a read of the knitted file. "Headless" and "API token" are each explained in the sentence of their first use (lines 12 and 118). "Host" is explained in the sentence of its first use (line 177). "Daemon" is explained in the first sentence of running text that uses it (line 69). The heading "Start the daemon" (line 67) sits two lines above the daemon sentence. This review reads a heading as a title, not as prose.
+- AC5: next to the `host =` chunk, line 207 says that the package sends your prompts to that computer. Next to `install_lmstudio()`, lines 32 to 36 say that it asks first at the console and installs only on yes. They also say that in a script it stops unless `RLMSTUDIO_ALLOW_INSTALL` is `"true"`. `R/setup.R` lines 152 to 169 do the same.
+- AC6: the T5 ledger in the work log names a test or probe for each claim. The 11 named tests exist under `tests/testthat/`, and the suite passed (AC7). Live probes today, LM Studio 0.4.25+1 on macOS with the desktop app: `lms status` with the server off printed "Server:  OFF" and the `lms server start` hint, as knitted. A default `lms server start` listened on 127.0.0.1:1234. `LMS_SERVER_HOST=0.0.0.0` set in R before `lms_server_start()` gave a listener on `*:1234`. `lms daemon status --json` gave the desktop app's process with `isDaemon` false. Without the token, `lms_server_ready()` gave `FALSE` and `lms_server_start()` warned that the wait ran out, one of the causes the vignette lists.
+- AC7: `NEWS.md` line 3, under the development-version heading, names `vignette("headless-config")`. `devtools::document()` gave no diff. `devtools::test()` gave 0 failures, 0 errors, and 3 skips. `pkgdown::check_pkgdown()` found no problems. With the server stopped and `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
