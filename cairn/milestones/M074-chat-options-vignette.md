@@ -201,7 +201,7 @@ Independent review, pass 2, 2026-10-01: three fresh reviewers (diff, history, pr
 - G1 (diff 3): "A misspelled name goes to the server with no check by the package" is false for a short name. R matches it to an argument before the dots, so `sys = "x"` fills `system_prompt` and sends nothing under `sys`. Checked this session. Proposed: fix now, by narrowing the sentence to a name such as `temprature`.
 - G2 (diff 8): no test shows that `lms_chat()` checks the server at its own `host`. The test-chat.R no-server tests stub the check. Proposed: fix now, by a test that calls a port with no server and expects `rlmstudio_no_server`.
 - G3 (diff 1): the intro says that you catch the errors of a missing server or a failed reply. A server that stops during a request raises `httr2_failure` (R/conditions.R), which no handler catches. Proposed: fix now, by naming that case where the text says which errors still stop a loop.
-- G4 (diff 2): `chat_or_na()` prints "code ." when the `code` field is `NULL`, checked this session. The bullet does not say that the field can be `NULL`. Proposed: fix now, in the handler and the bullet, then re-knit.
+- G4 (diff 2): with a `NULL` `code` field, `chat_or_na()` prints "code .", checked this session. The bullet does not say that the field can be `NULL`. Proposed: fix now, in the handler and the bullet, then re-knit.
 - G5 (diff 4, prior 2): the option test is still named "as written", the wording that F2 removed. Proposed: fix now, by a rename. The nested-list merge of `utils::modifyList()` is rejected, because the vignette does not set a field that the package also sets.
 - G6 (history 1, prior 4): the log-probability cell "No" on openai reads as an LM Studio limit, but it is what the package returns. Proposed: fix now, by saying that the table shows what `lms_chat()` supports.
 - G7 (diff 5, history 3): the native-route test puts the other model only in `model_instance_id`, and the shared check reads `model`. Proposed: fix now, by a `model` field in the mock and a comment that names the decision.
@@ -211,7 +211,7 @@ Independent review, pass 2, 2026-10-01: three fresh reviewers (diff, history, pr
 - G11 (session, AC5 evidence): no test asserts that an argument error lacks the four classes. Proposed: fix now, by one assertion in an existing guard test.
 - G12 (diff 10, prior 8): the paragraph at source line 177 is wrapped short. Proposed: fix now. Long test titles are rejected, because main already has 45 such lines in that file.
 - G13 (diff 9): "the fields differ from route to route" rests on the T5 live probe, not on the knit. Proposed: reject, because AC5 accepts a live call.
-- G14 (history 5): the `stream` example can go stale if streaming is added. Proposed: reject, because streaming is a low candidate and would update the text.
+- G14 (history 5): if the package adds streaming, the `stream` example goes stale. Proposed: reject, because streaming is a low candidate, and that milestone updates the text.
 - G15 (history 6): the new tests repeat checks of other files. Proposed: reject, because the file header states that by design.
 - G16 (prior 3): the native warning test matches message text. Proposed: reject, as F11 was, because the warning has no class.
 - G17 (prior 5): the last NEWS sentence has no test. Proposed: reject, because the knit shows four failed calls that return `NA`.
