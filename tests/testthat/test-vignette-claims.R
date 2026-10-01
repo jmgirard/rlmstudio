@@ -155,6 +155,183 @@ test_that("lms_score_expected() without a step column reads the first run of the
   expect_equal(res$entropy, 0.9182958, tolerance = 1e-6)
 })
 
+test_that("a logprobs data-frame batch sends top_logprobs and temperature with each input", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  # Each reply carries two steps with two candidates each, so each cell is a
+  # data frame whose step column numbers the steps from 1.
+  reply <- function(digit) {
+    steps <- json_array(
+      step_json(
+        quoted(digit),
+        "-0.3",
+        json_array(candidate_json(quoted(digit), "-0.3"), candidate_json(quoted("4"), "-1.5"))
+      ),
+      step_json(
+        quoted("\n"),
+        "-0.1",
+        json_array(candidate_json(quoted("\n"), "-0.1"), candidate_json(quoted("/"), "-4"))
+      )
+    )
+    text <- quoted(paste0(digit, "\n"))
+    mock_response(200L, output_body(responses_message(output_text(text, steps))))
+  }
+  recorder <- local_request_sequence(list(reply("3"), reply("2")))
+
+  out <- lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = "data.frame",
+    logprobs = TRUE,
+    top_logprobs = 10,
+    temperature = 0,
+    quiet = TRUE
+  )
+
+  for (k in 1:2) {
+    test_that(paste("request", k), {
+      sent <- request_target(recorder$requests[[k]])
+      expect_identical(sent[["path"]], "/v1/responses")
+      expect_equal(sent[["body"]][["top_logprobs"]], 10)
+      expect_equal(sent[["body"]][["temperature"]], 0)
+    })
+  }
+  expect_length(recorder$requests, 2L)
+  expect_identical(out$output, c("3\n", "2\n"))
+  expect_true(is.list(out$logprobs))
+  expect_s3_class(out$logprobs[[2]], "data.frame")
+  expect_identical(out$logprobs[[2]]$step, c(1L, 1L, 2L, 2L))
+  expect_identical(out$logprobs[[2]]$candidate_token, c("2", "4", "\n", "/"))
+})
+
+test_that("a logprobs data-frame batch on the openai route has a NULL logprobs cell in each row", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  # Each reply carries a logprobs field in the OpenAI shape, so a NULL cell
+  # comes from the package and not from a reply with no logprobs.
+  reply <- function(digit) {
+    mock_response(200L, sprintf(
+      paste0(
+        '{"id": "chatcmpl-1", "object": "chat.completion", "choices": [',
+        '{"index": 0, "message": {"role": "assistant", "content": "%s"}, ',
+        '"logprobs": {"content": [{"token": "%s", "logprob": -0.1, ',
+        '"top_logprobs": [{"token": "%s", "logprob": -0.1}]}]}, ',
+        '"finish_reason": "stop"}]}'
+      ),
+      digit, digit, digit
+    ))
+  }
+  recorder <- local_request_sequence(list(reply("3"), reply("2")))
+
+  digits <- lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = "data.frame",
+    api_type = "openai",
+    logprobs = TRUE,
+    top_logprobs = 10,
+    quiet = TRUE
+  )
+
+  # Each request goes to the openai route and asks for log probabilities.
+  for (k in 1:2) {
+    test_that(paste("request", k), {
+      sent <- request_target(recorder$requests[[k]])
+      expect_identical(sent[["path"]], "/v1/chat/completions")
+      expect_true(sent[["body"]][["logprobs"]])
+      expect_equal(sent[["body"]][["top_logprobs"]], 10)
+    })
+  }
+  expect_length(recorder$requests, 2L)
+  expect_identical(digits$output, c("3", "2"))
+  expect_true(is.list(digits$logprobs))
+  expect_null(digits$logprobs[[1]])
+  expect_null(digits$logprobs[[2]])
+
+  # The score loop of the vignette skips every row.
+  score <- rep(NA_real_, nrow(digits))
+  for (i in seq_len(nrow(digits))) {
+    candidates <- digits$logprobs[[i]]
+    if (is.null(candidates)) {
+      next
+    }
+    score[i] <- lms_score_expected(candidates, scale = 1:5)$expected_value
+  }
+  expect_identical(score, c(NA_real_, NA_real_))
+})
+
+test_that("a schema batch on the openai route asks the default local host and adds the fields as columns", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  schema <- list(
+    type = "object",
+    properties = list(
+      sentiment = list(type = "string"),
+      stars = list(type = "integer")
+    )
+  )
+  recorder <- local_request_sequence(list(
+    mock_response(200L, completion_body(quoted('{"sentiment": "positive", "stars": 4}'))),
+    mock_response(200L, completion_body(quoted('{"sentiment": "negative", "stars": 1}')))
+  ))
+
+  out <- lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = "data.frame",
+    api_type = "openai",
+    schema = schema,
+    quiet = TRUE
+  )
+
+  for (k in 1:2) {
+    test_that(paste("request", k), {
+      sent <- request_target(recorder$requests[[k]])
+      expect_identical(sent[["host"]], "localhost:1234")
+      expect_identical(sent[["path"]], "/v1/chat/completions")
+      expect_identical(
+        sent[["body"]][["response_format"]][["json_schema"]][["schema"]][["type"]],
+        "object"
+      )
+    })
+  }
+  expect_identical(out$sentiment, c("positive", "negative"))
+  expect_identical(out$stars, c(4L, 1L))
+})
+
+test_that("a schema data frame keeps the error of a failed input in its output column", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  schema <- list(
+    type = "object",
+    properties = list(sentiment = list(type = "string"))
+  )
+  # The second input fails with status 400, as a prompt longer than the
+  # context length did on this route of a live server (see the lms_load()
+  # help). The third still gets its reply.
+  local_request_sequence(list(
+    mock_response(200L, completion_body(quoted('{"sentiment": "positive"}'))),
+    mock_response(400L, '{"error": {"message": "too many tokens"}}'),
+    mock_response(200L, completion_body(quoted('{"sentiment": "negative"}')))
+  ))
+
+  res <- collect_warnings(lms_chat_batch(
+    "a-model",
+    c("first", "second", "third"),
+    format = "data.frame",
+    api_type = "openai",
+    schema = schema,
+    quiet = TRUE
+  ))
+  out <- res$value
+
+  expect_identical(out$sentiment, c("positive", NA, "negative"))
+  expect_true(is.list(out$output))
+  expect_s3_class(out$output[[2]], "rlmstudio_api_error")
+  expect_identical(out$output[[2]]$status, 400L)
+  expect_identical(out$output[[3]], list(sentiment = "negative"))
+  expect_length(res$warnings, 1L)
+  shown <- conditionMessage(res$warnings[[1]])
+  expect_match(shown, "1 input failed, at position 2.", fixed = TRUE)
+  expect_match(shown, "rlmstudio_api_error", fixed = TRUE)
+})
+
 # Claims of `vignettes/getting-started.Rmd`.
 
 test_that("check_lms_version() is TRUE from version 0.4.0 and FALSE below it", {
@@ -447,6 +624,19 @@ test_that("lms_daemon_stop(force = TRUE) stops the server before the daemon", {
   capture_shown(lms_daemon_stop(force = TRUE))
 
   expect_identical(calls$args, list(c("server", "stop"), c("daemon", "down")))
+})
+
+test_that("lms_server_stop() sends server stop alone and reports the stop", {
+  calls <- local_lms_calls()
+
+  shown <- capture_shown(status <- withVisible(lms_server_stop()))
+
+  # One call, with no check of who started the server.
+  expect_identical(calls$args, list(c("server", "stop")))
+  expect_null(shown$error)
+  expect_match(shown$messages, "server stopped successfully", fixed = TRUE)
+  expect_identical(status$value, 0L)
+  expect_false(status$visible)
 })
 
 test_that("with_lms_daemon() starts the daemon, runs the code, and stops the server and the daemon", {

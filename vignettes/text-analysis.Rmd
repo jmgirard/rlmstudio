@@ -8,104 +8,178 @@ vignette: >
 ---
 
 
+
+This vignette shows you how to analyze a set of texts with a model that
+runs on your own computer. You start from a data frame of short reviews.
+You end with new columns that hold a summary, a sentiment label, a star
+rating, a score, and a similarity for each review.
+
+R sends its requests to a local server, a program of LM Studio on your
+computer. Loading a model reads it from disk into memory, so that the
+server can use it.
+
+`vignette("getting-started")` covers what comes first: installing
+LM Studio, starting the server, and downloading `google/gemma-3-1b`. This
+vignette also uses `text-embedding-nomic-embed-text-v1.5`, a model that
+turns text into numbers. A later section explains it. If `list_models()`
+does not list it, download it as `vignette("getting-started")` shows.
+
+## Hide the progress messages
+
+`lms_load()` prints messages while it loads a model, and `lms_chat_batch()`
+shows a progress bar while it works. Set the `rlmstudio.quiet` option to
+`TRUE` to hide them. A warning about inputs that failed still shows. Keep
+the old value of the option, so that you can set it back at the end.
+
+
 ``` r
 library(rlmstudio)
 
-model <- "google/gemma-3-1b"
-embed_model <- "text-embedding-nomic-embed-text-v1.5"
-
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
-This vignette shows how to use a local model to analyze a set of texts. It
-sends a batch of prompts and gets the replies back as a data frame. It asks
-for replies in a fixed shape, so that each field becomes a column. It turns
-the token probabilities of a one-digit rating into a score. It also turns
-texts into embedding vectors. The vignette `vignette("getting-started")`
-covers the steps that come first: installing LM Studio, starting the
-server, and downloading `google/gemma-3-1b`.
-
-## Start the server
-
-
-``` r
-lms_server_start(wait = 30)
-#> ✔ LM Studio server started successfully on the default port.
-lms_server_ready()
-#> [1] TRUE
-```
-
-## Quiet output
-
-`lms_load()` prints messages while it loads a model, and `lms_chat_batch()`
-shows a progress bar while a batch runs. Set the `rlmstudio.quiet` option to
-`TRUE` to hide both. Some warnings still show, such as the warning that a
-batch gives about failed inputs. This vignette sets the option here and sets it back before the
-teardown.
-
-
-``` r
+# Hide the messages and the progress bars, and keep the old value
 old_options <- options(rlmstudio.quiet = TRUE)
 ```
 
+## Start the server and load the model
+
+A model reads and writes text in tokens. A token is a short piece of text,
+such as a word, a part of a word, or a digit. A prompt is the text that
+you send to a model. The context length of a loaded model is the most
+tokens that a prompt to it can hold. When you chat with the model, a prompt
+with more tokens fails. The `context_length` argument of `lms_load()` sets
+it. This vignette loads the model with room for 1,024 tokens, so that one
+long review is too long. A later section shows what happens to that review.
+
+`lms_load()` keeps a model that is already loaded as it is, with its own
+context length. This vignette loads `google/gemma-3-1b` and
+`text-embedding-nomic-embed-text-v1.5`. Before you run it, start the
+server and call `list_instances()`. It lists each loaded copy of a model,
+with the key of the model in the `key` column. For each copy of one of
+these two models, call `lms_unload()` with the id from the `id` column.
+`lms_unload()` needs a running server. The section "The loaded models"
+shows the output of `list_instances()`.
+
 
 ``` r
-lms_load(model)
+model <- "google/gemma-3-1b"
+
+# Start the server, and wait up to about 30 seconds for it to answer
+lms_server_start(wait = 30)
+
+# Load the model with room for 1,024 tokens
+lms_load(model, context_length = 1024)
 ```
 
-## A batch of prompts as a data frame
+## The texts
 
-`lms_chat_batch()` sends each input as its own request. With
-`format = "data.frame"`, it returns one row per input. The row holds the
-input, the reply text in `output`, the id of the reply, and three token
-counts.
+Put your texts in a data frame with one row for each text. Here, the `id`
+column numbers the reviews, and the `text` column holds them. The sixth
+review repeats one sentence 200 times, to make it longer than the context
+length.
 
 
 ``` r
-reviews <- c(
-  "The food was great but the service was slow.",
-  "Terrible. Never again.",
-  "Best pizza in town, and the staff were friendly."
+long_review <- paste(
+  rep("The food was fine and the room was warm.", 200),
+  collapse = " "
 )
+
+reviews <- data.frame(
+  id = 1:6,
+  text = c(
+    "The food was great but the service was slow.",
+    "Terrible. Never again.",
+    "Best pizza in town, and the staff were friendly.",
+    "We waited an hour for a table, and the soup was cold.",
+    "A quiet place with good coffee. I will come back.",
+    long_review
+  )
+)
+
+# The number of characters in each review
+nchar(reviews$text)
+#> [1]   44   22   48   53   49 8199
 ```
+
+## A summary of each text
+
+`lms_chat_batch()` sends each text to the model as its own request, with
+the same system prompt. A system prompt is a set of instructions that the
+model gets with each text. With `format = "data.frame"`, the function
+returns one row for each text, in the order of the texts. The `input`
+column holds the text, and the `output` column holds the reply. The other
+columns hold an id for each reply and counts of the tokens that went in
+and came out.
+
+Each chat call in this vignette sets `temperature = 0`. The temperature
+sets how much chance goes into the choice of each token. At 0, the model
+takes its most likely token each time.
+
+The batch below warns that the sixth input failed. The section "When an
+input fails" explains why.
 
 
 ``` r
+# Ask for a short summary of each review
 summaries <- lms_chat_batch(
   model,
-  reviews,
+  reviews$text,
   system_prompt = "Summarize the review in five words or fewer.",
   format = "data.frame",
   temperature = 0
 )
+#> Warning: 1 input failed, at position 6.
+#> ℹ Each of those elements holds `NA`. Use `format = "list"` to keep the
+#>   conditions.
+
+# The columns of the result
 names(summaries)
 #> [1] "input"                   "output"                 
 #> [3] "response_id"             "input_tokens"           
 #> [5] "total_output_tokens"     "reasoning_output_tokens"
-summaries[, c("input", "output")]
-#>                                              input
-#> 1     The food was great but the service was slow.
-#> 2                           Terrible. Never again.
-#> 3 Best pizza in town, and the staff were friendly.
-#>                               output
-#> 1       Excellent, but slow service.
-#> 2 **A disappointing experience.** \n
-#> 3                   Excellent pizza!
+
+# The second reply as the model wrote it
+summaries$output[2]
+#> [1] "**A disappointing experience.** \n"
+
+# Remove the spaces and line breaks at the start and end of each reply,
+# and add the replies to the data frame as a new column
+reviews$summary <- trimws(summaries$output)
+reviews[, c("id", "summary")]
+#>   id                         summary
+#> 1  1    Excellent, but slow service.
+#> 2  2 **A disappointing experience.**
+#> 3  3                Excellent pizza!
+#> 4  4            Terrible experience.
+#> 5  5            Relaxing and lovely.
+#> 6  6                            <NA>
 ```
 
-## Structured output as columns
+A model can add text that you did not ask for. Here, the second reply
+holds `**` marks, which make text bold in Markdown. It also ends with a
+space and a line break, `\n`, which `trimws()` removed from the column.
 
-A `schema` goes to the server as a JSON schema that the reply must match. It
-needs `api_type = "openai"`, and the call aborts on any other route. On
-`api_type = "openai"`, a data-frame batch with an object schema adds one
-column per top-level property of the schema. A `"string"` property gives a
-character column, and an `"integer"` property gives an integer column.
+## Labels and ratings as columns
+
+You can ask for a reply in a fixed shape. A JSON schema is a description
+of the fields that a reply must hold and the type of each field. The
+`schema` argument sends it with each request.
+
+A schema needs `api_type = "openai"`. LM Studio answers requests in more
+than one format, and `api_type` picks the format. The `"openai"` format
+copies the one that OpenAI uses, but the request still goes to LM Studio
+on your computer. With a schema and `format = "data.frame"`,
+`lms_chat_batch()` adds one column for each field of the schema. A
+`"string"` field gives a character column, and an `"integer"` field gives
+an integer column.
+
+The schema below asks for two fields. `sentiment` must be one of three
+labels, and `stars` must be a whole number.
 
 
 ``` r
+# The reply is an object with named fields. `properties` gives the type
+# of each field, `enum` lists the labels allowed, and `required` names
+# the fields that each reply must hold.
 schema <- list(
   type = "object",
   properties = list(
@@ -117,9 +191,11 @@ schema <- list(
   ),
   required = list("sentiment", "stars")
 )
+
+# Ask for a label and a star rating for each review
 rated <- lms_chat_batch(
   model,
-  reviews,
+  reviews$text,
   system_prompt = paste(
     "Give the sentiment of the review, and rate it from 1 to 5 stars,",
     "where 1 is the worst and 5 is the best."
@@ -129,138 +205,274 @@ rated <- lms_chat_batch(
   schema = schema,
   temperature = 0
 )
-rated[, c("input", "sentiment", "stars")]
-#>                                              input sentiment stars
-#> 1     The food was great but the service was slow.     mixed     4
-#> 2                           Terrible. Never again.  negative     5
-#> 3 Best pizza in town, and the staff were friendly.  positive     5
+#> Warning: 1 input failed, at position 6.
+#> ℹ Each of those elements holds the <rlmstudio_api_error> or
+#>   <rlmstudio_bad_response> condition. A <rlmstudio_bad_response> keeps any
+#>   reply content in its content field.
+
+# Add the two fields to the data frame as new columns
+reviews$sentiment <- rated$sentiment
+reviews$stars <- rated$stars
+reviews[, c("id", "sentiment", "stars")]
+#>   id sentiment stars
+#> 1  1     mixed     4
+#> 2  2  negative     5
+#> 3  3  positive     5
+#> 4  4  negative     3
+#> 5  5  positive     5
+#> 6  6      <NA>    NA
 ```
 
-In this output, the model gave 5 stars to the negative review. A model as
-small as `google/gemma-3-1b` makes mistakes of this kind, so read its
-replies before you rely on them.
+A small model such as `google/gemma-3-1b` makes mistakes. In this output,
+it gave 5 stars to the second review, "Terrible. Never again." Read some
+of the replies before you rely on them.
 
-## A rating scored from token probabilities
+## A score from token probabilities
 
-A model that answers with one digit picks that digit from several
-candidates. With `logprobs = TRUE` on the default route, `lms_chat()`
-returns an object that
-holds the reply text and a data frame of log probabilities, if the reply
-carries them. The data frame lists the candidate tokens at each step of the
-reply, and its `step` column numbers the steps from 1. The `top_logprobs` and
-`temperature` fields go into the request body.
+A star rating is one whole number. A score from token probabilities uses
+the probability of each possible rating instead. When the model writes the
+first token of its reply, it gives each candidate token a probability. A
+log probability is the natural log of that probability. It is 0 for a
+probability of 1, and more negative for a less likely token.
+
+With `logprobs = TRUE`, the data frame from `lms_chat_batch()` gets a
+`logprobs` column. A step is one token of the reply. Each cell holds a
+data frame of the candidate tokens at each step of the reply, and its
+`step` column numbers the steps from 1. `top_logprobs = 10` asks LM Studio
+for the 10 most likely candidates at each step.
+
+Leave `api_type` at its default for this batch. With `api_type = "openai"`,
+each cell of the `logprobs` column is `NULL`, so the loop below would skip
+every row.
 
 
 ``` r
-rating <- lms_chat(
-  model = model,
-  input = paste(
+# Ask for a one-digit rating, with the log probabilities
+digits <- lms_chat_batch(
+  model,
+  reviews$text,
+  system_prompt = paste(
     "Rate how positive this review is from 1 to 5.",
-    "Answer with one digit only.",
-    "Review: The food was great but the service was slow."
+    "Answer with one digit only."
   ),
+  format = "data.frame",
   logprobs = TRUE,
   top_logprobs = 10,
   temperature = 0
 )
-rating$text
+#> Warning: 1 input failed, at position 6.
+#> ℹ Each of those elements holds `NA`. Use `format = "list"` to keep the
+#>   conditions.
+
+# The reply to the first review
+digits$output[1]
 #> [1] "3\n"
-head(rating$logprobs, 3)
-#>   step_token step_logprob candidate_token candidate_logprob step
-#> 1          3     -0.34375               3         -0.343750    1
-#> 2          3     -0.34375               4         -1.546875    1
-#> 3          3     -0.34375               5         -2.750000    1
+
+# The candidates for the first token of that reply
+first <- digits$logprobs[[1]]
+first[first$step == 1, c("candidate_token", "candidate_logprob")]
+#>    candidate_token candidate_logprob
+#> 1                3         -0.312500
+#> 2                4         -1.578125
+#> 3                5         -3.031250
+#> 4                2         -6.265625
+#> 5                1         -9.718750
+#> 6               **        -10.234375
+#> 7                         -13.562500
+#> 8                6        -14.203125
+#> 9               ★★        -14.640625
+#> 10             ★★★        -14.765625
 ```
 
-`lms_score_expected()` reads the rows of the first step, the rows whose
-`step` equals that of the first row. In the reply above, those rows hold the
-candidates for the digit. A later step with the same token does not count.
-For a data frame with no `step` column, or whose first `step` is `NA`, it
-reads the first run of rows with the same `step_token` as the first row. It
-keeps the candidates whose
-token is a number in `scale`, and it adds up the candidates that give the
-same label, such as `"3"` and `" 3"`. It then scales the probabilities to sum
-to 1. It returns the expected value, the weighted standard deviation, the
-entropy in bits, and the probability of each label.
+The first token of the reply, `3`, is the candidate with the highest log
+probability. The `\n` after it is a line break.
+
+`lms_score_expected()` reads the candidates of the first step. It keeps
+the candidates whose token is a number in `scale`, so that a token such as
+`**` above does not count. It adds up the probabilities of candidates that
+give the same number, such as `"3"` and `" 3"` with a space. It then
+scales the probabilities to sum to 1. It returns a list. Its
+`expected_value` element holds the expected value, the average of the
+numbers, each weighted by its probability. The expected value is a score
+that can fall between two whole numbers.
+
+A `for` loop runs the function on each row. A failed input has no
+candidates, so the loop skips it, and its score stays `NA`.
 
 
 ``` r
-score <- lms_score_expected(rating$logprobs, scale = 1:5)
-score$expected_value
-#> [1] 3.342552
-score$probabilities
-#>   label         prob
-#> 1     3 0.7176032364
-#> 2     4 0.2154635645
-#> 3     5 0.0646938939
-#> 4     2 0.0021793830
-#> 5     1 0.0000599222
+# Start with a column of NA, and fill in a score for each row
+reviews$score <- NA
+for (i in seq_len(nrow(digits))) {
+  candidates <- digits$logprobs[[i]]
+  if (is.null(candidates)) {
+    next
+  }
+  result <- lms_score_expected(candidates, scale = 1:5)
+  reviews$score[i] <- result$expected_value
+}
+
+reviews[, c("id", "stars", "score")]
+#>   id stars    score
+#> 1  1     4 3.304446
+#> 2  2     5 1.585227
+#> 3  3     5 4.995245
+#> 4  4     3 1.978156
+#> 5  5     5 4.990581
+#> 6  6    NA       NA
 ```
 
-## Embeddings
+The score of the second review is below 2, but its star rating is 5.
+The two came from separate requests with different system prompts. When
+two such measures disagree, read the text.
 
-`lms_embed()` turns each text into a vector of numbers. It returns a matrix
-with one row per input text, in the order given. LM Studio comes with the
-embedding model `text-embedding-nomic-embed-text-v1.5`.
+## When an input fails
+
+The sixth review needs more tokens than the 1,024 that the model has room
+for. `lms_chat_batch()` does not stop at an input that fails in this way.
+It gives a warning that names the position of each failed input, and it
+goes on to the next input. In the data frame, the row of a failed input
+holds `NA` in each column that comes from the reply, and `NULL` in the
+`logprobs` column. With a schema, the `output` column holds the error
+instead of `NA`, as the warning of that batch said. So each section above
+gave `NA` for the sixth review.
+
+With `format = "list"`, each element of the result holds the reply, or the
+error of an input that failed. Use it to read why an input failed. The
+text after `OpenResponses Failed:` in the message below comes from
+LM Studio.
 
 
 ``` r
+# Send the long review again, and keep the error
+failed <- lms_chat_batch(
+  model,
+  reviews$text[6],
+  format = "list",
+  temperature = 0
+)
+#> Warning: 1 input failed, at position 1.
+#> ℹ Each of those elements holds the <rlmstudio_api_error> or
+#>   <rlmstudio_bad_response> condition. A <rlmstudio_bad_response> keeps any
+#>   reply content in its content field.
+cat(conditionMessage(failed[[1]]))
+#> ✖ OpenResponses Failed: The number of tokens to keep from the initial
+#>   prompt is greater than the context length. Try to load the model with a
+#>   larger context length, or provide a shorter input
+```
+
+To keep such a text, shorten it, or give the model a larger context
+length. `lms_load()` keeps a loaded model as it is, so unload the model
+with `lms_unload(model)` first, and then load it again with a larger
+`context_length`.
+
+## Similarity between texts
+
+An embedding is a list of numbers that stands for the meaning of a text.
+An embedding model gives texts with close meanings embeddings that are
+close. `lms_embed()` returns a matrix with one row for each text, in the
+order of the texts.
+
+Cosine similarity measures how close two embeddings are. It runs from -1
+to 1, and a higher value means closer meanings. The helper function
+`cosine_similarity()` below computes it for two embeddings.
+
+The code below compares each review with one query, "The service was
+slow."
+
+
+``` r
+embed_model <- "text-embedding-nomic-embed-text-v1.5"
 lms_load(embed_model)
-texts <- c(reviews, "The stock market fell sharply today.")
-vectors <- lms_embed(embed_model, texts)
-dim(vectors)
-#> [1]   4 768
 
-# The cosine similarity of each pair of texts
-unit <- vectors / sqrt(rowSums(vectors^2))
-round(unit %*% t(unit), 2)
-#>      [,1] [,2] [,3] [,4]
-#> [1,] 1.00 0.37 0.56 0.47
-#> [2,] 0.37 1.00 0.36 0.44
-#> [3,] 0.56 0.36 1.00 0.34
-#> [4,] 0.47 0.44 0.34 1.00
+# One row of numbers for each review, and one for the query
+vectors <- lms_embed(embed_model, reviews$text)
+query <- lms_embed(embed_model, "The service was slow.")
+
+# The number of rows and the number of columns
+dim(vectors)
+#> [1]   6 768
+
+# The cosine similarity of two embeddings
+cosine_similarity <- function(a, b) {
+  sum(a * b) / sqrt(sum(a^2) * sum(b^2))
+}
+
+# Compare each review with the query
+reviews$similarity <- NA
+for (i in seq_len(nrow(reviews))) {
+  reviews$similarity[i] <- cosine_similarity(vectors[i, ], query[1, ])
+}
+
+reviews[, c("id", "summary", "similarity")]
+#>   id                         summary similarity
+#> 1  1    Excellent, but slow service.  0.8813357
+#> 2  2 **A disappointing experience.**  0.4035554
+#> 3  3                Excellent pizza!  0.4531046
+#> 4  4            Terrible experience.  0.5790481
+#> 5  5            Relaxing and lovely.  0.5259885
+#> 6  6                            <NA>  0.3849392
 ```
 
-## Loaded instances
+Each embedding of this model holds 768 numbers, one for each column of
+the matrix. The first review, about slow service, is the closest to the
+query. Even unrelated texts get a similarity well above 0 here, so compare
+the values with each other, not with 0.
 
-`list_instances()` returns one row per loaded model instance. The columns
-hold the instance id, the model key, the model type, the display name, and
-the load configuration of the instance.
+The sixth review gets a similarity too. The embedding model has its own
+context length, 2,048 tokens here, as the section "The loaded models"
+shows. The sixth review fits in it, so its embedding stands for the whole
+text. For a text longer than that, LM Studio embeds only the start of the
+text and gives no warning.
+
+## All the results
+
+Each section added columns to the same data frame. Here it is without the
+`text` column.
+
+
+``` r
+reviews[, names(reviews) != "text"]
+#>   id                         summary sentiment stars    score similarity
+#> 1  1    Excellent, but slow service.     mixed     4 3.304446  0.8813357
+#> 2  2 **A disappointing experience.**  negative     5 1.585227  0.4035554
+#> 3  3                Excellent pizza!  positive     5 4.995245  0.4531046
+#> 4  4            Terrible experience.  negative     3 1.978156  0.5790481
+#> 5  5            Relaxing and lovely.  positive     5 4.990581  0.5259885
+#> 6  6                            <NA>      <NA>    NA       NA  0.3849392
+```
+
+## The loaded models
+
+A model instance is one loaded copy of a model. `list_instances()` returns
+one row for each instance. Its columns include the id, the type, and the
+context length of each instance. In the `type` column, `llm` marks a model
+that you chat with, and `embedding` marks an embedding model.
 
 
 ``` r
 instances <- list_instances()
 instances[, c("id", "type", "context_length")]
 #>                                     id      type context_length
-#> 1                    google/gemma-3-1b       llm           8192
+#> 1                    google/gemma-3-1b       llm           1024
 #> 2 text-embedding-nomic-embed-text-v1.5 embedding           2048
 ```
 
-## Teardown
+## Clean up
+
+`lms_unload_all()` unloads every loaded model, including models that you
+loaded before you ran this vignette. To unload only the models of this
+vignette, call `lms_unload()` with the id of each one, such as
+`lms_unload(model)`, instead. `lms_server_stop()` stops the server, even if
+it ran before this vignette.
 
 
 ``` r
-# Set the option back to the value it had before this vignette
-options(old_options)
-```
-
-`lms_unload_all()` unloads every loaded model instance.
-
-
-``` r
+# Unload every loaded model
 lms_unload_all()
-#> ℹ Found 2 loaded model instances. Unloading now...
-#> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [557ms]
-#> 
-#> ℹ Unloading model: "text-embedding-nomic-embed-text-v1.5"...
-#> ✔ Model "text-embedding-nomic-embed-text-v1.5" unloaded successfully. [9ms]
-#> 
-#> ✔ All models unloaded successfully.
-```
 
-
-``` r
+# Set the option back to its old value, and stop the server
+options(old_options)
 lms_server_stop()
 #> ✔ LM Studio server stopped successfully.
 ```
