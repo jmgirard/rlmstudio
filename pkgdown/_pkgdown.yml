@@ -7,12 +7,9 @@ authors:
 template:
   bootstrap: 5
   bslib:
-    bootswatch: sandstone
+    preset: zephyr
     primary: "#4139C3"
-    link-color: "#4139C3"
-
-navbar:
-  bg: primary
+  light-switch: true
 
 development:
   mode: release

@@ -1,13 +1,13 @@
 # M075: The website has a light purple theme, a dark mode switch, and articles in reading order
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** user-facing — the public pkgdown website
-- **Branch/PR:** —
+- **Branch/PR:** m075-pkgdown-light-theme
 
 ## Goal
 
@@ -56,7 +56,7 @@ changes.
 
 ## Tasks
 
-- [ ] T1: In `pkgdown/_pkgdown.yml`, set the `template:` block to `bootstrap: 5`, `bslib: preset: zephyr`, `primary: "#4139C3"`, and `light-switch: true`. Remove `navbar: bg: primary`. Delete `pkgdown/extra.css`. If `bootswatch` stays beside `preset`, pkgdown warns "Multiple Bootstrap preset themes".
+- [x] T1: In `pkgdown/_pkgdown.yml`, set the `template:` block to `bootstrap: 5`, `bslib: preset: zephyr`, `primary: "#4139C3"`, and `light-switch: true`. Remove `navbar: bg: primary`. Delete `pkgdown/extra.css`. If `bootswatch` stays beside `preset`, pkgdown warns "Multiple Bootstrap preset themes".
 - [ ] T2: Add an `articles:` index to `pkgdown/_pkgdown.yml`. It has one section with `navbar: ~` and the four vignettes in the AC3 order. A comment states the rule: with no `navbar` key, pkgdown makes the Articles menu a plain link.
 - [ ] T3: In `.github/workflows/pkgdown.yaml`, add a step before the build that deletes `CLAUDE.md`. Its comment says that pkgdown renders every root `.md` file. Set `clean: true` on the deploy step.
 - [ ] T4: Run `pkgdown::init_site()` before an article build, because an article build does not refresh `deps/` after a theme change (circumplex lesson, M156). Build the site into a fresh scratch folder and record the AC1 to AC4 evidence. Do the AC6 build from a copy without `CLAUDE.md`. Run `pkgdown::check_pkgdown()`.
@@ -70,3 +70,5 @@ changes.
 - 2026-10-01: plan gate chose to fix the published `CLAUDE.md` here over a candidate row. Falsified by a `gh-pages` file that the build does not make and that must survive a deploy.
 - 2026-10-01: plan criteria audit (full mode, fresh Opus reader) returned 5 findings on AC1 to AC5, all fixed before the gate. AC3 needs `navbar: ~`. AC1 reads the `<nav>` start tag only. AC2 sets the light theme itself. AC4 searches stylesheet links only. AC3 drops `.Rmd`. It also found the published `CLAUDE.html`.
 - 2026-10-01: second audit pass (same reader, full mode) on AC6 and the revised AC1 to AC5 returned 2 findings, both fixed. AC6 named a post-merge effect, so it now names pre-merge evidence and the `gh-pages` listing moved to T5. AC2 compares the color trimmed.
+- 2026-10-01: implement started on branch `m075-pkgdown-light-theme`. The question gate was skipped, because the plan left no choice open.
+- 2026-10-01: T1 done. `_pkgdown.yml` uses the zephyr preset with `light-switch: true`, and `pkgdown/extra.css` is deleted. pkgdown 2.2.1, bslib 0.12.0.
