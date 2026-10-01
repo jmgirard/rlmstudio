@@ -1,5 +1,7 @@
 # rlmstudio (development version)
 
+* The `vignette("getting-started")` text is rewritten for a reader who knows R but has not run a local model. It explains terms such as model key and system prompt in plain words. It goes from installing LM Studio to a first batch of replies. It covers a check of the `lms` tool with `has_lms()` and `check_lms_version()`. It covers starting the server, checking that it answers, and finding models with `list_models()`. It also covers downloading, loading, one chat with a system prompt, a batch with `lms_chat_batch()`, and cleaning up. It points to `vignette("headless-config")` for use without the desktop app.
+
 * The vignettes now ship with output that was knitted ahead of time from a live LM Studio. A build or check of the package therefore runs no vignette code and never reaches LM Studio. Before, where `lms` was installed, a build of `getting-started` and `headless-config` ran their code against the local LM Studio. That code starts the server and loads a model. Elsewhere, the build showed the code with output pasted as comments.
 
 * The logprobs data frame has a new fifth and last column, `step`. This holds for `lms_chat_openresponses()`, for `lms_chat()` on its default route, and for each OpenResponses reply of `lms_chat_batch()`, with `logprobs = TRUE`. It is an integer that numbers the steps of the reply from 1, across all the `output_text` parts. Each row of a step carries the number of that step, so two steps with the same token keep different numbers. The four columns before it do not change.

@@ -1,5 +1,6 @@
-# Tests for claims that `vignettes/text-analysis.Rmd` makes about package
-# functions, where no other test checked the claim.
+# Tests for claims that `vignettes/text-analysis.Rmd` and
+# `vignettes/getting-started.Rmd` make about package functions, where no other
+# test checked the claim.
 
 # The messages that `expr` gives, as text, with each one muffled.
 claim_messages <- function(expr) {
@@ -151,4 +152,113 @@ test_that("lms_score_expected() without a step column reads the first run of the
   expect_equal(res$weighted_sd, sqrt(2 / 9))
   # Entropy in bits: -(2/3 log2 2/3 + 1/3 log2 1/3) = 0.9182958.
   expect_equal(res$entropy, 0.9182958, tolerance = 1e-6)
+})
+
+# Claims of `vignettes/getting-started.Rmd`.
+
+test_that("check_lms_version() is TRUE from version 0.4.0 and FALSE below it", {
+  local_mocked_bindings(lms_path = function() "lms")
+  # The result of one check, for a CLI that prints `stdout`.
+  version_check <- function(stdout) {
+    local_mocked_bindings(
+      run = function(...) list(status = 0, stdout = stdout, stderr = ""),
+      .package = "processx"
+    )
+    result <- NULL
+    claim_messages(result <- check_lms_version())
+    result
+  }
+
+  expect_true(version_check("lms version 0.4.0\n"))
+  expect_true(version_check("lms version 0.10.2\n"))
+  expect_false(version_check("lms version 0.3.9\n"))
+  # A CLI of the 0.4.0 architecture prints a commit line in place of a version.
+  expect_true(version_check("CLI commit: 1a2b3c\n"))
+})
+
+test_that("install_lmstudio() with the browser method opens the download page", {
+  local_mocked_bindings(has_lms = function() FALSE)
+  opened <- character()
+  local_mocked_bindings(
+    browseURL = function(url, ...) opened <<- c(opened, url),
+    .package = "utils"
+  )
+
+  claim_messages(install_lmstudio(method = "browser"))
+
+  expect_identical(opened, "https://lmstudio.ai/download")
+})
+
+test_that("list_models() asks localhost:1234 by default and gives one row per model", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  model <- function(key) {
+    shape_object(c(
+      type = '"llm"',
+      key = quoted(key),
+      display_name = quoted(toupper(key)),
+      size_bytes = "1073741824",
+      max_context_length = "32768",
+      loaded_instances = "[]"
+    ))
+  }
+  body <- shape_object(c(models = shape_array(c(model("a/one"), model("b/two")))))
+  recorder <- local_request_recorder(mock_response(200L, body))
+
+  res <- list_models(quiet = TRUE)
+
+  sent <- request_target(recorder$requests[[1]])
+  expect_identical(sent[["host"]], "localhost:1234")
+  expect_identical(sent[["path"]], "/api/v1/models")
+  expect_identical(nrow(res), 2L)
+  expect_identical(res$key, c("a/one", "b/two"))
+})
+
+test_that("lms_download_status() of already_downloaded reports that status and sends no request", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_no_request_allowed()
+
+  res <- lms_download_status("already_downloaded")
+
+  expect_s3_class(res, "lms_download_status")
+  expect_identical(res$status, "already_downloaded")
+})
+
+test_that("lms_chat() sends the input and the system prompt and returns the reply text", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(
+    mock_response(200L, output_body(responses_message(output_text(quoted("Hello")))))
+  )
+
+  reply <- lms_chat("a-model", input = "Say hello.", system_prompt = "Be brief.")
+
+  sent <- request_target(recorder$requests[[1]])
+  expect_identical(sent[["path"]], "/v1/responses")
+  expect_identical(sent[["body"]][["input"]], "Say hello.")
+  expect_identical(sent[["body"]][["instructions"]], "Be brief.")
+  expect_identical(without_response_id(reply), "Hello")
+})
+
+test_that("lms_chat_batch() sends the system prompt with each input and returns the replies in order", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  inputs <- c("Name a fruit.", "Name a color.", "Name a planet.")
+  reply <- function(text) {
+    mock_response(200L, output_body(responses_message(output_text(quoted(text)))))
+  }
+  recorder <- local_request_sequence(list(reply("Apple"), reply("Blue"), reply("Mars")))
+
+  out <- lms_chat_batch(
+    "a-model",
+    inputs,
+    system_prompt = "Answer with one word.",
+    quiet = TRUE
+  )
+
+  expect_length(recorder$requests, 3L)
+  bodies <- lapply(recorder$requests, function(r) request_target(r)[["body"]])
+  expect_identical(vapply(bodies, function(b) b[["input"]], character(1)), inputs)
+  expect_identical(
+    vapply(bodies, function(b) b[["instructions"]], character(1)),
+    rep("Answer with one word.", 3L)
+  )
+  expect_identical(out, c("Apple", "Blue", "Mars"))
 })
