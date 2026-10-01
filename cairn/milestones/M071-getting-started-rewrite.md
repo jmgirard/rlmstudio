@@ -1,13 +1,13 @@
 # M071: The getting-started vignette reads plainly and covers a first run
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** user-facing — the first vignette that a new user reads
-- **Branch/PR:** —
+- **Branch/PR:** m071-getting-started-rewrite
 
 ## Goal
 
@@ -74,7 +74,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 
 ## Tasks
 
-- [ ] T1: Probe the live calls that the outline needs, on this machine, and
+- [x] T1: Probe the live calls that the outline needs, on this machine, and
       log what each returns: `check_lms_version()`, `list_models()`, and a
       three-input `lms_chat_batch()` on `google/gemma-3-1b`.
 - [ ] T2: Rewrite the source to the outline in Scope. Keep each code chunk
@@ -94,7 +94,12 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 
 - 2026-09-30: created by /milestone-plan.
 - 2026-09-30: M070 review handed one finding (F8) to this rewrite. The knit ran with the model on disk, so the download chunk shows "already downloaded" and no download job, next to prose about a download.
+- 2026-09-30: implement started on branch m071-getting-started-rewrite. Gate answered (see Decisions).
+- 2026-09-30: T1 probe, live, gemma-3-1b on disk: `check_lms_version()` TRUE with the "modern architecture (0.4.0+)" message. `lms_server_ready()` FALSE before start and after stop, TRUE after start. `list_models()` gave 5 models, columns state, type, display_name, key, architecture, size_gb. `lms_download()` gave "already_downloaded", and `lms_download_status()` of it gave status "already_downloaded", job_id "N/A". A three-input `lms_chat_batch()` gave 3 strings, one per input.
 
 ## Decisions
+
+- 2026-09-30 (gate): The model stays on disk for the knit. The download text says that `lms_download()` returns "already_downloaded" for a model on disk and a job id for a new download. The knitted output shows the first case. This answers finding F8.
+- 2026-09-30 (gate): The vignette shows no loop that waits for a download. The text tells the reader to call `lms_download_status()` with the job id until the download ends.
 
 ## Review
