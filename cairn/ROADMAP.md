@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-01 (M075 done, M072 row pruned, no lesson changes)_
+_Last hygiene check: 2026-10-01 (M076 done, M073 row pruned, lessons M009 and M011 extended)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-10-01 (M075 done, M072 row pruned, no lesson changes)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M076 | The vignette knit fails on an unmarked warning and stale output, and a release has live-run steps | review | — | normal | milestones/M076-knit-warnings-live-run.md |
+| M076 | The vignette knit fails on an unmarked warning and stale output, and a release has live-run steps | done | — | normal | milestones/archive/M076-knit-warnings-live-run.md |
 | M075 | The website has a light purple theme, a dark mode switch, and articles in reading order | done | — | normal | milestones/archive/M075-pkgdown-light-theme.md |
 | M074 | A vignette shows chat options, conversations, and errors in scripts | done | M070 | normal | milestones/archive/M074-chat-options-vignette.md |
-| M073 | The text-analysis vignette scores a data frame of texts in plain code | done | M070 | normal | milestones/archive/M073-text-analysis-rewrite.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
