@@ -1,13 +1,13 @@
 # M073: The text-analysis vignette scores a data frame of texts in plain code
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — the vignette for the package's core use
-- **Branch/PR:** —
+- **Branch/PR:** m073-text-analysis-rewrite
 
 ## Goal
 
@@ -83,7 +83,7 @@ conversations are M074.
 
 ## Tasks
 
-- [ ] T1: Probe on this machine a data-frame batch on the default route
+- [x] T1: Probe on this machine a data-frame batch on the default route
       with `logprobs = TRUE` and `top_logprobs`, and log the shape of its
       `logprobs` column, a failed input included. Show that
       `lms_score_expected()` scores each non-failed row.
@@ -106,6 +106,9 @@ conversations are M074.
 
 - 2026-09-30: created by /milestone-plan.
 - 2026-09-30: M070 review handed one finding (F15) to this rewrite. The vignette now ends with a plain `lms_unload_all()`, which also unloads models that the reader loaded before. M068 had kept those models. The prose gives no warning.
+- 2026-10-01: implement started on branch m073-text-analysis-rewrite.
+- 2026-10-01: question gate. A long review fails because the model loads with `context_length = 1024`. The similarity column compares each review to one query sentence. The long review stays in every step.
+- 2026-10-01: T1 probe, gemma-3-1b, OpenResponses route, data-frame batch with `logprobs = TRUE` and `top_logprobs = 10`. Columns: input, output, logprobs, response_id, and three token counts. The `logprobs` column is a list. Each scored row holds a data frame of 20 rows with `step_token`, `step_logprob`, `candidate_token`, `candidate_logprob`, and `step`. A text of about 1,800 tokens under a 1,024-token context failed alone with `NA` output, `NULL` logprobs, and one warning. Its condition was `rlmstudio_api_error`, status 500, "tokens to keep ... greater than the context length". `lms_score_expected()` scored each of the 3 other rows. Default context is 8192, and the embedding model's is 2048 and embedded the long text.
 
 ## Decisions
 

@@ -9,7 +9,7 @@ _Last hygiene check: 2026-10-01 (M072 done, M069 row pruned, `lms daemon up` row
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M073 | The text-analysis vignette scores a data frame of texts in plain code | planned | M070 | normal | milestones/M073-text-analysis-rewrite.md |
+| M073 | The text-analysis vignette scores a data frame of texts in plain code | in-progress | M070 | normal | milestones/M073-text-analysis-rewrite.md |
 | M074 | A vignette shows chat options, conversations, and errors in scripts | planned | M070 | normal | milestones/M074-chat-options-vignette.md |
 | M072 | The headless vignette covers what differs without the desktop app | done | M070 | normal | milestones/archive/M072-headless-vignette-rewrite.md |
 | M071 | The getting-started vignette reads plainly and covers a first run | done | M070 | normal | milestones/archive/M071-getting-started-rewrite.md |
