@@ -3,6 +3,25 @@
 ## rlmstudio (development version)
 
 - The
+  [`vignette("headless-config")`](https://jmgirard.github.io/rlmstudio/articles/headless-config.md)
+  text is rewritten, under the new title “Using LM Studio Without the
+  Desktop App”. It covers only what differs from
+  [`vignette("getting-started")`](https://jmgirard.github.io/rlmstudio/articles/getting-started.md).
+  It shows the headless install with
+  `install_lmstudio(method = "headless")` and says when that function
+  asks before it installs. It covers the daemon with
+  [`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_start.md),
+  [`lms_daemon_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_status.md),
+  and
+  [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md),
+  and a script wrapped in
+  [`with_lms_daemon()`](https://jmgirard.github.io/rlmstudio/reference/with_lms_daemon.md).
+  A new section covers a server that requires an API token, with
+  `RLMSTUDIO_API_TOKEN` and the `token` argument. Another covers a
+  server on another computer, with the `LMS_SERVER_HOST` environment
+  variable on that computer and the `host` argument in R.
+
+- The
   [`vignette("getting-started")`](https://jmgirard.github.io/rlmstudio/articles/getting-started.md)
   text is rewritten for a reader who knows R but has not run a local
   model. It explains terms such as model key and system prompt in plain
