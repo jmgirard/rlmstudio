@@ -1501,8 +1501,13 @@ rlm_check_one_prompt <- function(value, arg) {
 #' unknown name passes and matches nothing. A value that is not a usable type
 #' name, such as a number or an empty string, aborts.
 #'
+#' A filter that passes comes back as a plain character vector, with no
+#' attributes and no S4 bit. `%in%` reads a classed value through its
+#' `as.character()` method, so a caller that matches the filter reassigns it
+#' (D-041).
+#'
 #' @param value The value the caller passed as `type`.
-#' @return `value`, invisibly.
+#' @return `value` as a plain character vector, invisibly.
 #'
 #' @noRd
 rlm_check_type <- function(value) {
@@ -1516,7 +1521,9 @@ rlm_check_type <- function(value) {
       call = NULL
     )
   }
-  invisible(value)
+  plain <- strip_class(value)
+  attributes(plain) <- NULL
+  invisible(plain)
 }
 
 #' Which rule did this model type filter break?
