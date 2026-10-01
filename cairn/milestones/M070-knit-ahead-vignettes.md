@@ -102,7 +102,7 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
       which says a check reads the local LM Studio state. Narrow the
       candidate row on the two hazards of a live vignette build to what the
       script still has.
-- [ ] T5: Stop the server, unset the token, and run `devtools::check()`.
+- [x] T5: Stop the server, unset the token, and run `devtools::check()`.
       Run `devtools::document()`, `devtools::test()`, and
       `pkgdown::check_pkgdown()`.
 
@@ -118,6 +118,7 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 - 2026-09-30: T2 done. The three vignettes moved to `.Rmd.orig` by `git mv`. The gate variables, hidden state chunks, `eval` gates, pasted `#>` lines, and build paragraphs went. With `lms_ready` gone, the two `lms_ready <- lms_server_ready()` chunks print `lms_server_ready()` directly. The text-analysis teardown is one `lms_unload_all()` chunk. The hidden download-wait chunks stay for M071 and M072.
 - 2026-09-30: T3 done. From a clean start (server stopped, `lms ps --json` empty), the script knitted all three sources, exit 0, and ended clean. The knitted `.Rmd` files hold no ```` ```{r ```` line and no `Error` or `Warning` text. Each chunk that printed shows `#>` lines. The text-analysis schema batch again gave 5 stars to "Terrible. Never again.", so its prose still matches.
 - 2026-09-30: T4 done. `.Rbuildignore` excludes `^vignettes/.*\.Rmd\.orig$`. DESIGN Conventions has three vignette bullets: the knit-ahead build, the prose register and word list, and the code list, both lists verbatim from Scope. LESSONS M009 corrected in place. The live-build hazards row narrowed to the `lms_server_status(json = TRUE)` stderr parse: the vignettes no longer call it, and the script's `finally` teardown ends the failed-chunk hazard.
+- 2026-09-30: T5 done. With the server stopped, no model loaded, and `RLMSTUDIO_API_TOKEN` unset (`env -u`), `devtools::check()` gave 0 errors, 0 warnings, 0 notes, and the server stayed stopped. The `pkgbuild::build()` tarball lists no `.Rmd.orig`. `devtools::document()` left no diff, `pkgdown::check_pkgdown()` found no problems, and `devtools::test()` gave 0 failed, 0 errors, 3 skipped.
 
 ## Decisions
 
