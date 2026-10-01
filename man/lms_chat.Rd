@@ -74,17 +74,31 @@ request loads. The server loads a model that is not loaded yet when its
 just-in-time loading setting is on. A model that is already loaded keeps
 its idle time.}
 
-\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
-that this chat continues, such as the \code{response_id} attribute of an
-earlier reply. The string must be valid in its declared encoding and not
-marked \code{"bytes"}. A class, names, and the S4 bit are removed before the id
-is sent. \code{NULL}, the default, starts a new thread. It needs
-\code{api_type = "native"} or \code{api_type = "openresponses"}. With
-\code{api_type = "openai"}, a string aborts before the request, because the
-OpenAI chat endpoint keeps no thread. \code{NA}, an empty string, a string of
-whitespace only, a value that is not a string, and more or fewer than one
-string abort before the check for a running server. Only this exact name
-is checked. A shortened name, such as \code{previous}, goes into the request
+\item{previous_response_id}{One string, a value that carries a
+\code{response_id} attribute, or \code{NULL}. It names the stored reply that this
+chat continues. Pass the earlier reply itself, such as \code{first} after
+\code{first <- lms_chat(...)}, or its id, \code{attr(first, "response_id")}. A
+value that carries a \code{response_id} attribute sends that attribute in
+place of the value, also when the value is a list or is itself an id.
+Only that exact attribute name is read. A value with no such attribute
+is sent as the id itself. So a reply that came back with no id, such as
+a native reply sent with \code{store = FALSE}, goes out as its own text, and
+the call raises \code{rlmstudio_api_error} with status 400. The character
+vector that \code{\link[=lms_chat_batch]{lms_chat_batch()}} returns with \code{format = "vector"} and the
+\code{output} column of its data frame carry no attribute. The data frame
+holds the ids in its \code{response_id} column.
+
+The id, the attribute when there is one, must be valid in its declared
+encoding and not marked \code{"bytes"}. A class, names, and the S4 bit are
+removed before the id is sent. \code{NULL}, the default, starts a new thread.
+It needs \code{api_type = "native"} or \code{api_type = "openresponses"}. With
+\code{api_type = "openai"}, an id aborts before the request, because the
+OpenAI chat endpoint keeps no thread. As the id, \code{NA}, an empty string, a
+string of whitespace only, a value that is not a string, and more or
+fewer than one string abort before the check for a running server. For
+an attribute, the message names the attribute. Only this exact argument
+name is
+checked. A shortened name, such as \code{previous}, goes into the request
 body unchecked, under the name you wrote. An id that the server does not
 hold raises \code{rlmstudio_api_error} with status 400.}
 
@@ -115,8 +129,8 @@ Depending on the arguments provided:
 
 With \code{simplify = TRUE} and \code{api_type = "native"} or
 \code{api_type = "openresponses"}, the value carries the id of the reply in a
-\code{response_id} attribute. Pass it as \code{previous_response_id} to continue the
-thread. The id is the \code{response_id} field of a native reply and the \code{id}
+\code{response_id} attribute. Pass the value itself as \code{previous_response_id}
+to continue the thread, and the attribute is sent. The id is the \code{response_id} field of a native reply and the \code{id}
 field of an OpenResponses reply. The value has no attribute when that
 field is absent or is not one string. With \code{api_type = "openai"}, or
 with \code{simplify = FALSE}, the value has no \code{response_id} attribute.

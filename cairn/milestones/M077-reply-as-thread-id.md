@@ -45,7 +45,7 @@ A user continues a stored chat thread with `previous_response_id = first`, where
 
 - [x] T1: Write the AC1 to AC4 tests in `tests/testthat/test-thread.R` first, and see the new ones fail. Reuse `thread_bad_values` (line 173) and `thread_routes` (line 39) for AC3.
 - [x] T2: In `rlm_check_response_id()` (`R/utils-args.R`, near line 395), read `attr(value, "response_id", exact = TRUE)`. When it is not `NULL`, check it with `id_fault()` under a message that names the attribute, and return its plain string. `lms_chat()` keeps passing the raw value to its delegates (`R/chat.R:146`), so the existing delegate test stays as it is. The batch check at `R/chat.R:2004` is not changed. Run the profile's verify slot.
-- [ ] T3: Update the `previous_response_id` roxygen of the four functions (`R/chat.R:53`, `:239`, `:1382`, `:1771`) and the `@return` text that says to pass the attribute. Run `devtools::document()`. Add the NEWS entry.
+- [x] T3: Update the `previous_response_id` roxygen of the four functions (`R/chat.R:53`, `:239`, `:1382`, `:1771`) and the `@return` text that says to pass the attribute. Run `devtools::document()`. Add the NEWS entry.
 - [ ] T4: Edit the `follow-up` chunk and its prose in `vignettes/chat-options.Rmd.orig`. Knit with `data-raw/knit-vignettes.R` against a live LM Studio, with the token as the user memory names it. Restore the other vignettes with `git checkout --` (LESSONS, M009). Match the prose after the chunk to the output. Run `devtools::test()`.
 
 ## Work log
@@ -57,6 +57,7 @@ A user continues a stored chat thread with `previous_response_id = first`, where
 - 2026-10-01: implement started on branch m077-reply-as-thread-id. No question gate, because the plan left only the abort wording open and AC3 fixes what it names.
 - 2026-10-01: T1 done. Ten new tests in `test-thread.R`. Nine fail before T2, and the reply with no id passes, as AC4 expects.
 - 2026-10-01: T2 done. `rlm_check_response_id()` reads the attribute with `exact = TRUE` and returns it as a plain string. A planted `exact = FALSE` and a planted raw return each fail the three function tests. `devtools::test()`: 1993 tests, 0 failed, 0 errors, 3 skipped.
+- 2026-10-01: T3 done. The `previous_response_id` help of the three functions, the batch `...` help, and the three `@return` texts say to pass the reply. NEWS entry added. `devtools::document()` rewrote the four Rd files. No test reads them.
 
 ## Decisions
 

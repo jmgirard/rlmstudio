@@ -46,14 +46,27 @@ be \code{TRUE}, \code{FALSE}, or \code{NULL}, and any other value aborts before 
 for a running server. The endpoint has no logprobs, so no \code{logprobs} field
 goes into the request body, and a \code{TRUE} warns.}
 
-\item{previous_response_id}{One string, or \code{NULL}. The id of a stored reply
-that this chat continues, such as the \code{response_id} attribute of an
-earlier reply of this function. The string must be valid in its declared
+\item{previous_response_id}{One string, a value that carries a
+\code{response_id} attribute, or \code{NULL}. It names the stored reply that this
+chat continues. Pass an earlier reply of this function itself, such as
+\code{first}, or its id, \code{attr(first, "response_id")}. A value that carries a
+\code{response_id} attribute sends that attribute in place of the value, also
+when the value is a list or is itself an id. Only that exact attribute
+name is read. A value with no such attribute is sent as the id itself.
+So a reply that came back with no id, such as a reply of this function
+sent with \code{store = FALSE}, goes out as its own text, and the call raises
+\code{rlmstudio_api_error} with status 400. The character vector that
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} returns with \code{format = "vector"} and the \code{output}
+column of its data frame carry no attribute. The data frame holds the
+ids in its \code{response_id} column.
+
+The id, the attribute when there is one, must be valid in its declared
 encoding and not marked \code{"bytes"}. A class, names, and the S4 bit are
 removed before the id is sent. \code{NULL}, the default, starts a new thread.
-\code{NA}, an empty string, a string of whitespace only, a value that is not a
-string, and more or fewer than one string abort before the check for a
-running server. Only this exact name is checked. A shortened name, such
+As the id, \code{NA}, an empty string, a string of whitespace only, a value
+that is not a string, and more or fewer than one string abort before the
+check for a running server. For an attribute, the message names the
+attribute. Only this exact argument name is checked. A shortened name, such
 as \code{previous}, goes into the request body unchecked, under the name you
 wrote. An id that the server does not hold raises \code{rlmstudio_api_error}
 with status 400 and the \code{code} \code{"invalid_value"}. \code{\link[=lms_chat]{lms_chat()}} and
@@ -92,8 +105,9 @@ reasoning and tool calls, are skipped. A reply with no readable answer
 text raises \code{rlmstudio_bad_response}, as described below.
 
 With \code{simplify = TRUE}, the string carries the \code{response_id} field of the
-reply in a \code{response_id} attribute. Pass it as \code{previous_response_id} to
-continue the thread. The string has no attribute when \code{response_id} is
+reply in a \code{response_id} attribute. Pass the string itself as
+\code{previous_response_id} to continue the thread, and the attribute is
+sent. The string has no attribute when \code{response_id} is
 absent or is not one string. A reply sent with \code{store = FALSE} has no
 \code{response_id} field, so its string has no attribute, and there is no id
 to continue from. \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} reads the attribute from the
