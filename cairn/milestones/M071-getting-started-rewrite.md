@@ -85,7 +85,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
       R and has not used a language model API. It reads the knitted
       vignette and lists each step that it cannot follow and each term used
       before it is explained. Fix each item, or log why not, and re-knit.
-- [ ] T5: List the claims of AC5 with the test or probe that backs each, as
+- [x] T5: List the claims of AC5 with the test or probe that backs each, as
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
 - [ ] T6: Add the NEWS entry and run the checks of AC6.
@@ -98,7 +98,24 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: T1 probe, live, gemma-3-1b on disk: `check_lms_version()` TRUE with the "modern architecture (0.4.0+)" message. `lms_server_ready()` FALSE before start and after stop, TRUE after start. `list_models()` gave 5 models, columns state, type, display_name, key, architecture, size_gb. `lms_download()` gave "already_downloaded", and `lms_download_status()` of it gave status "already_downloaded", job_id "N/A". A three-input `lms_chat_batch()` gave 3 strings, one per input.
 - 2026-09-30: T2 source rewritten to the Scope outline. The AC1 to AC3 search script finds every AC1 string, no code-list match, and no prose-list match. Run on the old source, it finds `repeat` and 4 prose words.
 - 2026-09-30: T3 knitted from a clean start (server stopped, no model loaded). The knit has no chunk header and no error line. The list_models, lms_chat, and lms_chat_batch blocks each end in output lines. A `trimws()` line was added after the batch, because the replies carry trailing spaces and line breaks.
-- 2026-09-30: T4 fresh Opus reader (R user, no LLM background) found each of the six AC4 terms explained at or before first prose use. It listed 6 hard steps and 8 unexplained terms. Fixed: prompt, command-line tool and CLI, localhost, the type and state columns, a new install with no models, job id, a model that does not follow its system prompt, headless and remote. Not fixed: the status word for a finished download (no live download job in this knit, per the gate, so AC5 bars naming it), why to restart R, and "port" (in output only). Re-knitted clean.
+- 2026-09-30: T4 fresh Opus reader (R user, no LLM background) found each of the six AC4 terms explained at or before first prose use. It listed 6 hard steps and 8 unexplained terms. Fixed: prompt, CLI, localhost, the type and state columns, a new install with no models, and job id. Also fixed: a model that ignores its system prompt, and headless. Not fixed: the status word for a finished download, because the knit has no live download job and AC5 bars a claim with no live check. Also not fixed: why to restart R, and "port", which shows in output only. Re-knitted clean.
+- 2026-09-30: T5 added 6 tests to `test-vignette-claims.R`. With `>=` changed to `>` in `check_lms_version()`, the version test failed. With the download URL changed, the browser test failed. Code restored. `devtools::test()`: 0 fail, 3 skip, 19801 pass.
+- 2026-09-30: T5 fix: `lms_server_start()` docs say the `wait` limit is not hard, so the prose says "about", and "a few seconds" became "does not answer at once". Re-knitted clean.
+- 2026-09-30: ledger 1: `install_lmstudio(method = "browser")` opens the download page. Test: "install_lmstudio() with the browser method opens the download page" (new).
+- 2026-09-30: ledger 2: `has_lms()` is TRUE if R finds lms. Tests: "has_lms is TRUE when lms sits on the PATH", "has_lms is FALSE when no lookup finds the CLI".
+- 2026-09-30: ledger 3: `check_lms_version()` is TRUE for 0.4.0 or later. Test: "check_lms_version() is TRUE from version 0.4.0 and FALSE below it" (new).
+- 2026-09-30: ledger 4: requests go to localhost:1234 by default. Ledger 8: `list_models()` gives one row per model with a key column. Test: "list_models() asks localhost:1234 by default and gives one row per model" (new).
+- 2026-09-30: ledger 5: `lms_server_start()` waits about `wait` seconds. Tests: "wait_for_server starts no request after the budget passes", "lms_server_start returns quietly once the server answers".
+- 2026-09-30: ledger 6: a wait that runs out warns, and the script goes on. Test: "lms_server_start warns rather than aborts when the wait runs out".
+- 2026-09-30: ledger 7: `lms_server_ready()` is TRUE only when LM Studio answers. Tests: "a 200 whose body carries a model list is ready", "a port held by something else passes the TCP probe and fails here", "a closed port is not ready".
+- 2026-09-30: ledger 9: `lms_download()` gives "already_downloaded" or a job id. Test: "a download reply that passes the rules returns the job id or already_downloaded".
+- 2026-09-30: ledger 10: `lms_download_status()` of "already_downloaded" reports that status. Test: "lms_download_status() of already_downloaded reports that status and sends no request" (new).
+- 2026-09-30: ledger 11: `lms_chat()` sends `input` and `system_prompt` and returns the reply text. Test: "lms_chat() sends the input and the system prompt and returns the reply text" (new).
+- 2026-09-30: ledger 12: `lms_chat_batch()` sends each input alone with the same system prompt, replies in order. Tests: "lms_chat_batch() sends the system prompt with each input and returns the replies in order" (new), "lms_chat_batch() sends each input as its own request, one row each".
+- 2026-09-30: ledger 13, LM Studio: the model list holds models on disk, with state "unloaded" before a load and "loaded" after it. Gemma is type llm, and Nomic is type embedding. Live: T1 probe.
+- 2026-09-30: ledger 14, LM Studio: the server does not answer at once. Backed by the `lms_server_start()` docs, which say the CLI returns before the REST API answers. Live: T1 gave `lms_server_ready()` FALSE before the start.
+- 2026-09-30: ledger 15, LM Studio: a model on disk gives "already_downloaded". Live: T1 probe and each knit.
+- 2026-09-30: ledger 16, model: a reply does not always follow the system prompt. Live: the first T3 knit asked for one word and got "Apple" with an emoji.
 
 ## Decisions
 

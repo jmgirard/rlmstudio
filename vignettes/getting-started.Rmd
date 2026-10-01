@@ -10,19 +10,19 @@ vignette: >
 
 
 A large language model is a program that writes text in reply to text that
-you give it. The text that you give it is a prompt. LM Studio is a desktop app that downloads such models and runs
-them on your own computer. The rlmstudio package lets you control LM Studio
-from R. This vignette takes you from installing LM Studio to your first
-replies from a model.
+you give it. The text that you give it is a prompt. LM Studio is a desktop
+app that downloads such models and runs them on your own computer. The
+rlmstudio package lets you control LM Studio from R. This vignette takes
+you from installing LM Studio to your first replies from a model.
 
 ## Install LM Studio
 
 LM Studio comes with a command-line tool called `lms`. A command-line tool
 is a program that you run by typing commands, and the messages of the
 package call it the CLI. The package uses `lms` to start and stop parts of
-LM Studio. If you do not have LM Studio
-yet, run `install_lmstudio(method = "browser")`. It opens the LM Studio
-download page in your web browser. After you install LM Studio, restart R.
+LM Studio. If you do not have LM Studio yet, run
+`install_lmstudio(method = "browser")`. It opens the LM Studio download
+page in your web browser. After you install LM Studio, restart R.
 
 Load the package and check that R can find LM Studio.
 
@@ -50,15 +50,15 @@ on your own computer that answers requests from other programs, such as R.
 By default, the package sends its requests to `http://localhost:1234`.
 That is an address on your own computer.
 
-`lms_server_start()` starts the server. The server needs a few seconds
-before it answers, so the function waits for it. The `wait` argument sets
-the most seconds that it waits. If the wait runs out, the function gives a
-warning, and your script goes on. So call `lms_server_ready()` next. It
+`lms_server_start()` starts the server. The server does not answer at
+once, so the function waits for it. The `wait` argument sets about how many
+seconds it waits. If the wait runs out, the function gives a warning, and
+your script goes on. So call `lms_server_ready()` next. It
 returns `TRUE` only when LM Studio answers.
 
 
 ``` r
-# Start the server, and wait up to 30 seconds for it to answer
+# Start the server, and wait about 30 seconds at most for it to answer
 lms_server_start(wait = 30)
 #> ✔ LM Studio server started successfully on the default port.
 
@@ -107,9 +107,10 @@ model <- "google/gemma-3-1b"
 
 `lms_download()` asks LM Studio to download a model. For a model that is
 already on your computer, it returns `"already_downloaded"`. For a new
-model, it returns a job id, a string that names the download. Pass the job id to `lms_download_status()` to
-see the status of the download. Call `lms_download_status()` again until
-the status says that the download finished.
+model, it returns a job id, a string that names the download. Pass the job
+id to `lms_download_status()` to see the status of the download. Call
+`lms_download_status()` again until the status says that the download
+finished.
 
 When the output below was made, the model was already on the computer. So
 the output shows the first case.
@@ -119,7 +120,7 @@ the output shows the first case.
 # Download the model, or find that it is already on disk
 job_id <- lms_download(model)
 #> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [1000ms]
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [845ms]
 #> 
 #> ✔ Model "google/gemma-3-1b" is already downloaded.
 job_id
@@ -142,7 +143,7 @@ model must be loaded before it can answer. `lms_load()` loads the model.
 # Read the model into memory
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [4.4s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [4.3s]
 #> 
 ```
 
@@ -166,7 +167,7 @@ reply <- lms_chat(
 
 # Print the text of the reply
 cat(reply)
-#> “Hi there, welcome to the world of R! Glad you’re here.”
+#> Hello there, welcome to the world of R!
 ```
 
 ## Send several prompts in one call
@@ -191,7 +192,7 @@ answers <- lms_chat_batch(
   system_prompt = "Answer with one word."
 )
 answers
-#> [1] "Apple \n" "Blue"     "Mars"
+#> [1] "Apple "  "Blue \n" "Mars"
 
 # Remove the spaces and line breaks around each reply
 trimws(answers)
@@ -214,7 +215,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [414ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [401ms]
 #> 
 
 # Stop the local server
