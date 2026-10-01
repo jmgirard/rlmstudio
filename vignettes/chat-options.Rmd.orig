@@ -15,10 +15,10 @@ knitr::opts_chunk$set(
 ```
 
 This vignette shows you how to control a chat with a model from an R
-script. You pick the format of a request, set options that change how the
-model answers, and continue a conversation. You also read the whole reply
-of the server, and you catch errors, so that one failed call does not stop
-your script.
+script. You pick a route, the format in which R sends a request to
+LM Studio. You set request options, the settings that change how the model
+answers. You continue a conversation, read the whole reply of the server,
+and catch errors, so that one failed call does not stop your script.
 
 `vignette("getting-started")` covers what comes first: installing
 LM Studio, starting the server, and downloading `google/gemma-3-1b`.
@@ -42,9 +42,17 @@ lms_load(model)
 
 ## Three routes
 
-LM Studio answers chat requests in more than one format. In this vignette,
-a route is one of these formats. The `api_type` argument of `lms_chat()`
-picks the route. The routes differ in what they support:
+LM Studio answers chat requests in three formats, and each one is a route.
+OpenResponses and OpenAI are formats that other programs use too. The
+native format is LM Studio's own. On every route, the request goes to
+LM Studio on your computer. The `api_type` argument of `lms_chat()` picks
+the route.
+
+The routes differ in what they support. A response id is a name that the
+server gives to a reply that it keeps, so that a later call can continue
+from that reply. Log probabilities say how likely the model found each
+piece of its reply. A `schema` makes the reply follow a fixed shape. `ttl`
+sets how long a model stays loaded with no request.
 
 | `api_type` | Continue by response id | Log probabilities | `schema` and `ttl` |
 |---|---|---|---|
@@ -52,9 +60,11 @@ picks the route. The routes differ in what they support:
 | `"openai"` | No | No | Yes |
 | `"native"` | Yes | No | No |
 
-A later section explains the response id. Log probabilities and `schema`
-are in `vignette("text-analysis")`. `ttl` sets how long a model stays
-loaded with no request, and `?lms_chat` explains it.
+The default route covers most uses. Pick `"openai"` for a `schema`, a
+`ttl`, or a whole conversation in a data frame. The native route refuses an
+option name that it does not know, as the last section shows.
+`vignette("text-analysis")` shows log probabilities and a `schema`, and
+`?lms_chat` explains `ttl`.
 
 Here is the same prompt on each route. A prompt is the text that you send
 to the model.
@@ -77,10 +87,12 @@ native route, the text also carries a `response_id` attribute.
 
 ## Request options
 
-A request option is a field of the request that changes how the model
-answers. `lms_chat()` has no argument for most of them. You add each one
-to the call by its name, and `lms_chat()` sends it in the request as you
-wrote it.
+A request is made of fields. A field is one named value, such as the
+model name or the prompt. A request option is a field that changes how the
+model answers. `lms_chat()` has no argument for most of them. You add each
+one to the call by its name, and `lms_chat()` sends it in the request as
+you wrote it. The LM Studio developer documentation at
+<https://lmstudio.ai/docs/developer> lists the options of each route.
 
 The model writes its reply in tokens. A token is a short piece of text,
 such as a word or a part of a word. The `temperature` option sets how much
@@ -102,13 +114,12 @@ below misspells `temperature`, and it still returns a reply with no error.
 lms_chat(model, prompt, temprature = 0)
 ```
 
-So a misspelled option can go unnoticed. The section "The raw reply" shows
-how to see the temperature that the server used. The section "Errors in a
-script" shows what the native route does with the same call.
+So a misspelled option can go unnoticed. A later section shows how to see
+the temperature that the server used. The last section shows what the
+native route does with the same call.
 
 ## A follow-up question
 
-A response id is a name that the server gives to a reply that it keeps.
 On the default route and the native route, the text of a reply carries its
 response id in the `response_id` attribute. Pass that id as
 `previous_response_id` in your next call, and the server sends the earlier
@@ -152,8 +163,11 @@ The OpenAI route has no response id. With `api_type = "openai"`,
 ## A whole conversation
 
 Conversation history is the list of the earlier messages of a chat. On the
-OpenAI route, you send the whole history with each request.
-`lms_chat_openai()` takes it in its `messages` argument, as a data frame
+OpenAI route, the server keeps no history, so you send the whole history
+with each request. `lms_chat()` with `api_type = "openai"` sends a history
+of two messages at most: the system prompt and your prompt. To send a
+longer history, call `lms_chat_openai()`, the function behind that route.
+It takes the history in its `messages` argument, as a data frame
 with one row for each message. The `role` column says who wrote the
 message, and the `content` column holds the text. The roles are:
 
@@ -182,8 +196,8 @@ reply
 ```
 
 To continue the conversation, add the reply and your next prompt to the
-data frame as new rows, and send it again. `trimws()` removes the line
-break at the end of the reply.
+data frame as new rows, and send it again. A reply can start or end with
+spaces or line breaks, and `trimws()` removes them.
 
 ```{r history-next}
 # Add the reply and a new prompt as two rows
@@ -191,7 +205,7 @@ history <- rbind(
   history,
   data.frame(
     role = c("assistant", "user"),
-    content = c(trimws(reply), "Name a fruit of that color.")
+    content = c(trimws(reply), "Write my favorite color in capital letters.")
   )
 )
 
@@ -199,11 +213,16 @@ history <- rbind(
 lms_chat_openai(model, messages = history, temperature = 0)
 ```
 
+The new prompt does not name the color, so the model read it from the
+history.
+
 ## The raw reply
 
 The server sends its reply in JSON, a text format for data. The raw reply
-is that whole reply, read into R as a list. With `simplify = FALSE`,
-`lms_chat()` returns the raw reply in place of the text.
+is that whole reply, read into R as a list, with one element for each
+field. With `simplify = FALSE`, `lms_chat()` returns the raw reply in place
+of the text. The fields differ from route to route. On the default route,
+the text of the reply is inside the `output` field.
 
 ```{r raw}
 raw <- lms_chat(model, prompt, temperature = 0, simplify = FALSE)
@@ -234,7 +253,18 @@ used a temperature that the call did not set.
 When a call fails, R creates a condition, an object that describes the
 error. A condition class is a name that says what kind of error a
 condition is. `tryCatch()` can run different code for each condition
-class. The package uses these classes for a failed chat:
+class.
+
+Two more terms come up in these errors. The `host` argument of each chat
+function is the address of the server. Its default,
+`"http://localhost:1234"`, is port 1234 of your own computer. A port is a
+number that picks one program on a computer. With each reply, the server
+also sends an HTTP status, a number that says how the request went. A
+status of 400 or more is an error. 404 says that the server did not find
+what the request named, and 400 says that the request was wrong in another
+way.
+
+The package uses these classes for a failed chat:
 
 - `rlmstudio_no_server`: no server answers at the address in `host`.
 - `rlmstudio_api_error`: the server answered with an error. The `status`
@@ -294,7 +324,8 @@ chat_or_na(model, prompt, api_type = "native", temprature = 0)
 ```
 
 The native route refused the misspelled model name and the misspelled
-option. On the default route, the server did not refuse the misspelled
+option. The code `unrecognized_keys` says that the request held a field
+name that the server does not know. On the default route, the server did not refuse the misspelled
 model name. It answered with the model that was loaded, and the package
 raised `rlmstudio_model_mismatch` when it read the reply.
 

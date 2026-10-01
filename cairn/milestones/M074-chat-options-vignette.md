@@ -91,7 +91,7 @@ scoring are M073.
       list that `data-raw/knit-vignettes.R` knits.
 - [x] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
       the knitted file for error lines and for the output lines of AC1.
-- [ ] T4: Spawn a fresh reader with the persona of a researcher who knows
+- [x] T4: Spawn a fresh reader with the persona of a researcher who knows
       R and has run `getting-started`. It reads the knitted vignette and
       lists each step that it cannot follow and each term used before it is
       explained. Fix each item, or log why not, and re-knit.
@@ -114,6 +114,10 @@ scoring are M073.
 - 2026-10-01: T2 note: `data-raw/knit-vignettes.R` knits every `vignettes/*.Rmd.orig` with no list, so T2 adds nothing to the script.
 - 2026-10-01: T2: wrote `vignettes/chat-options.Rmd.orig` to the six-step outline. A scan of the source finds all ten AC1 strings, no AC2 code pattern, no inline R, and no AC3 prose word.
 - 2026-10-01: T3: the first knit left the chunk that defines `chat_or_na()` with `lms_chat(` and no `#>` line, and a scratch block checker flagged it. A working call now ends that chunk. The re-knit from a clean start has no `{r` fence and no `#> Error` line. All 9 blocks that call a chat function have a `#>` line after the last code line.
+- 2026-10-01: T4: a fresh Opus reader with the persona listed 9 steps and 12 terms. Route and request option were defined only after their headings, and response id and raw reply were used before their definition. All four are now defined at or before first use.
+- 2026-10-01: T4 fixes: the intro defines route and request option. Response id and the table columns are defined above the table, and a route choice follows it. Field, `host`, port, HTTP status, and `unrecognized_keys` are explained. The text says how `lms_chat_openai()` relates to the openai route. The `trimws()` sentence no longer claims a line break that the knit did not show.
+- 2026-10-01: T4 fixes: the prompt "Name a fruit of that color." gave "A mango!". It became "Write my favorite color in capital letters.", which gave "GREEN!", and one sentence states that. A pointer to <https://lmstudio.ai/docs/developer> was added. Its native chat page, read this session, lists `temperature`.
+- 2026-10-01: T4 not fixed: how long the server keeps a reply, which was not probed. Also the other fields of `names(raw)`, which the text does not use, and a list of error codes, which is out of scope. A re-knit from a clean start passes the T3 checks.
 
 ## Decisions
 
