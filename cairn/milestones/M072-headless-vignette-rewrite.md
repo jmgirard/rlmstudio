@@ -116,6 +116,7 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
 - 2026-09-30: claim audit: 62 claims read, 4 corrected — vignettes/headless-config.Rmd.orig, vignettes/headless-config.Rmd, tests/testthat/test-vignette-claims.R. Two vignette lines said that the desktop app runs the daemon, against the `isDaemon` false probe. Two test comments were wrong. The list of causes of a `FALSE` ready gained a held port. The same reader re-read the 5 spots once and found 0 wrong. Re-knitted, and the AC1 to AC3 check and the claim tests passed.
 - 2026-09-30: review gate: the user chose the proposed split. Ten findings fixed on the branch, one moved to the `lms daemon up` row at hygiene, two rejected, two noted. Re-knitted, and check, test, document, and pkgdown are clean.
 - 2026-09-30: review moved one line break in AC3, with the words unchanged. The line started with a four-backtick code span. `cairn_validate.py` read it as a code fence and counted the Review section as plan lines (156, cap 150).
+- 2026-09-30: step-7 approval: m072-headless-vignette-rewrite approved for merge. The user also chose to move the `lms daemon up` row to DESIGN.md Known issues at hygiene.
 
 ## Decisions
 
