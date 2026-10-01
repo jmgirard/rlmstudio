@@ -7,8 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-
-``` r
+```{r setup}
 library(rlmstudio)
 
 model <- "google/gemma-3-1b"
@@ -29,11 +28,9 @@ This package relies on the LM Studio CLI. If you do not have LM Studio installed
 
 For desktop users, you can run `install_lmstudio(method = "browser")` in your console to open the official download page.
 
-
-``` r
+```{r check-status}
 # Check if LM Studio is available on this system
 has_lms()
-#> [1] TRUE
 ```
 
 ## Step-by-Step Guide
@@ -42,11 +39,9 @@ has_lms()
 
 You have two options for starting the local server. You can open the LM Studio desktop application, navigate to the Developer or Local Server tab, and click "Start". Alternatively, you can start it directly from R. The CLI returns before the REST API answers, so `lms_server_start()` keeps asking the REST API whether it is ready and returns once it answers. The `wait` argument sets how many seconds it keeps asking, and defaults to 10.
 
-
-``` r
+```{r start-server}
 # Start the local server on the default port, and allow 30 seconds for it
 lms_server_start(wait = 30)
-#> ✔ LM Studio server started successfully on the default port.
 ```
 
 A wait that runs out raises a warning and returns rather than aborting, so
@@ -56,10 +51,8 @@ list and reports `TRUE` only for an answer LM Studio would give. It reports
 `FALSE` for a port held by another process and for a server that turns your
 token away.
 
-
-``` r
+```{r check-ready}
 lms_server_ready()
-#> [1] TRUE
 ```
 
 ### 2. Finding and Managing Models
@@ -68,34 +61,35 @@ The LM Studio GUI shines when it comes to discovering models. You can use its bu
 
 However, if you already know the exact identifier of the model you want, you can download it and manage your inventory directly from R.
 
-
-``` r
+```{r download}
 # Download a model using its identifier
 job_id <- lms_download(model)
-#> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [1s]
-#> 
-#> ✔ Model "google/gemma-3-1b" is already downloaded.
 
 lms_download_status(job_id)
-#> 
-#> ── Download Job: "N/A"
-#> Status: already_downloaded
 ```
 
-
+```{r wait, echo=FALSE}
+if (job_id != "already_downloaded") {
+  repeat {
+    res <- lms_download_status(job_id)
+    if (res[["status"]] %in% c("completed", "failed", "error", "paused")) {
+      break
+    }
+    Sys.sleep(3)
+  }
+  if (res[["status"]] != "completed") {
+    cli::cli_abort("Model download failed.")
+  }
+}
+```
 
 ### 3. Loading Models
 
 Before you can chat with a model, you must load it into system memory. We include the optional `flash_attention = TRUE` argument here, which speeds up processing and reduces memory usage on supported hardware.
 
-
-``` r
+```{r load}
 # Standard load
 lms_load(model, flash_attention = TRUE)
-#> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.9s]
-#> 
 ```
 
 ### 4. Chatting
@@ -108,8 +102,7 @@ Interact with the model by sending it text prompts. The `lms_chat()` function ta
 
 *Note:* By default, each call to `lms_chat()` starts a new conversation. The model does not remember earlier messages or context from your R script. To continue a conversation, pass the `response_id` attribute of the earlier reply as `previous_response_id`. This works on the default route, `api_type = "openresponses"`, and on `api_type = "native"`, but not on `api_type = "openai"`. See `?lms_chat` for details.
 
-
-``` r
+```{r simple-chat}
 response <- lms_chat(
   model = model,
   input = "Say hello!",
@@ -117,28 +110,18 @@ response <- lms_chat(
 )
 
 cat(response)
-#> Hello there, it’s a lovely day! 
-#> Let’s chat and have some play. 
-#> Say hello, it’s a joyful plea,
-#> Come on say hello, you see!
 ```
 
 ### 5. Teardown
 
 To free up memory and system resources when you are finished, it is best practice to unload your models and stop the local server. Closing the LM Studio GUI will also perform this cleanup if you forget.
 
-
-``` r
+```{r unload}
 # Unload the model
 lms_unload(model)
-#> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [560ms]
-#> 
 ```
 
-
-``` r
+```{r stop-server}
 # Stop the server
 lms_server_stop()
-#> ✔ LM Studio server stopped successfully.
 ```

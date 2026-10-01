@@ -20,3 +20,4 @@
 ^cairn$
 ^data-raw$
 ^CLAUDE\.md$
+^vignettes/.*\.Rmd\.orig$

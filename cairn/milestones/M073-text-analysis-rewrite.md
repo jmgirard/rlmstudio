@@ -105,6 +105,7 @@ conversations are M074.
 ## Work log
 
 - 2026-09-30: created by /milestone-plan.
+- 2026-09-30: M070 review handed one finding (F15) to this rewrite. The vignette now ends with a plain `lms_unload_all()`, which also unloads models that the reader loaded before. M068 had kept those models. The prose gives no warning.
 
 ## Decisions
 
