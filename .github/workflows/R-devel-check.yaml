@@ -1,0 +1,60 @@
+# R CMD check on R-devel, kept off pull requests.
+#
+# R-devel changes from day to day, and a break there can come from R itself
+# rather than from this package. On a pull request such a break would turn the
+# checks red and block every merge, so R-devel runs here instead: once a week,
+# on a push to the default branch that changes more than cairn/, and on a
+# manual start. The pull-request matrix lives in R-CMD-check.yaml.
+#
+# On a red run, read the log. If the package caused the failure, fix it in a
+# hotfix. If R-devel caused it, leave it until R-devel changes.
+#
+# GitHub turns off a scheduled workflow after 60 days with no repository
+# activity. Re-enable it on the Actions tab when that happens.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - 'cairn/**'
+  workflow_dispatch:
+
+name: R-devel-check.yaml
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  R-devel-check:
+    runs-on: ubuntu-latest
+
+    name: ubuntu-latest (devel)
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: devel
+          http-user-agent: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'

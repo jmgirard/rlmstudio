@@ -1,0 +1,41 @@
+# Runs the test suite with devtools::test() from the source tree, on Ubuntu.
+#
+# R CMD check runs the tests from the built package, where R/ and the
+# vignette sources are absent. Three test files read those sources and skip
+# there: test-name-faults.R, test-token-hint.R, and test-vignette-knit.R. This
+# job is the CI run in which they do not skip.
+#
+# It installs no LM Studio, so the tests that need a live server skip here too.
+name: Source-tree tests
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - 'cairn/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  source-tree-tests:
+    runs-on: ubuntu-latest
+    container: rocker/r2u:noble
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          apt-get install -y r-cran-devtools r-cran-processx r-cran-cli r-cran-httr2 r-cran-httptest2
+
+      - name: Run Tests
+        shell: Rscript {0}
+        run: |
+          devtools::test(stop_on_failure = TRUE)
