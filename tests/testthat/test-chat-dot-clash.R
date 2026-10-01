@@ -98,6 +98,16 @@ passing_cases <- list(
   )
 )
 
+# Each of `requests` must carry the dot of `case` with its value.
+expect_dot_sent <- function(requests, n, case, info) {
+  expect_identical(length(requests), n, info = info)
+  name <- names(case$dot)
+  for (req in requests) {
+    body <- jsonlite::parse_json(request_body_text(req))
+    expect_identical(body[[name]], case$dot[[name]], info = info)
+  }
+}
+
 test_that("the dot on another route is sent as a field, with no abort", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   for (case in passing_cases) {
@@ -106,21 +116,61 @@ test_that("the dot on another route is sent as a field, with no abort", {
     expect_no_error(
       do.call(lms_chat, c(list("a-model", "hi", api_type = case$route), case$dot))
     )
-    body <- jsonlite::parse_json(request_body_text(recorder$requests[[1]]))
-    expect_true(names(case$dot) %in% names(body), info = info)
+    expect_dot_sent(recorder$requests, 1L, case, paste("lms_chat() with", info))
 
-    recorder <- local_request_recorder(mock_response(200L, case$reply))
-    expect_no_error(
-      do.call(
-        lms_chat_batch,
-        c(
-          list("a-model", c("first", "second"), quiet = TRUE, api_type = case$route),
-          case$dot
+    # The batch takes the route in `...`, also under the shortened name `api`.
+    for (route_arg in c("api_type", "api")) {
+      route <- stats::setNames(list(case$route), route_arg)
+      recorder <- local_request_recorder(mock_response(200L, case$reply))
+      expect_no_error(
+        do.call(
+          lms_chat_batch,
+          c(list("a-model", c("first", "second"), quiet = TRUE), route, case$dot)
         )
       )
-    )
-    expect_identical(length(recorder$requests), 2L, info = info)
+      expect_dot_sent(
+        recorder$requests,
+        2L,
+        case,
+        paste("lms_chat_batch() with", info, "given as", route_arg)
+      )
+    }
   }
+})
+
+# R matches the exact name `instructions` first, so a shortened `instr` goes
+# to the `...` of `lms_chat_openresponses()` and not to `instructions`.
+test_that("a shortened instr dot is sent beside the system prompt", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  expect_both_fields <- function(requests, n, info) {
+    expect_identical(length(requests), n, info = info)
+    for (req in requests) {
+      json <- request_body_text(req)
+      expect_match(json, '"instructions":"S"', fixed = TRUE, info = info)
+      expect_match(json, '"instr":"Be brief."', fixed = TRUE, info = info)
+    }
+  }
+
+  recorder <- local_request_recorder(mock_response(200L, responses_reply()))
+  expect_no_error(lms_chat(
+    "a-model",
+    "hi",
+    system_prompt = "S",
+    api_type = "openresponses",
+    instr = "Be brief."
+  ))
+  expect_both_fields(recorder$requests, 1L, "lms_chat()")
+
+  recorder <- local_request_recorder(mock_response(200L, responses_reply()))
+  expect_no_error(lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    system_prompt = "S",
+    quiet = TRUE,
+    api_type = "openresponses",
+    instr = "Be brief."
+  ))
+  expect_both_fields(recorder$requests, 2L, "lms_chat_batch()")
 })
 
 # The arguments that lms_chat() passes by name to a route function, less its
