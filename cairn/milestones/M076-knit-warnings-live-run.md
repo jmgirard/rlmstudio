@@ -1,6 +1,6 @@
 # M076: The vignette knit fails on an unmarked warning and stale output, and a release has live-run steps
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -109,7 +109,7 @@ other candidate rows stay as they are.
       `cairn/PROFILE.md`, which has 108 of its 120 lines. Update DESIGN
       Conventions lines 54 and 58. `.Rbuildignore` already ignores
       `data-raw`.
-- [ ] T6: Run `devtools::document()`, `devtools::test()`, and
+- [x] T6: Run `devtools::document()`, `devtools::test()`, and
       `devtools::check()`. Record each NOTE. Nothing that users run changes,
       so NEWS gets no entry.
 
@@ -126,6 +126,9 @@ other candidate rows stay as they are.
 - 2026-10-01: T3 done. The stamp line is `<!-- Knitted from <name>.Rmd.orig with MD5 <sum>. -->`. Before the re-knit, the new test gave 4 failures, one per source. After it, the test passes 4. A planted space in `headless-config.Rmd.orig` gave 1 failure that names it. A moved `headless-config.Rmd` gave 1 failure that names it. Both were restored. Full `devtools::test()`: 0 failures, 3 skips, 19942 passes.
 - 2026-10-01: T4 done. With the server stopped and no model loaded, the full knit exited 0. `text-analysis.Rmd` keeps `#> Warning` in all 4 marked chunks. Besides the stamps and new response ids and timings, two outputs changed. In `chat-options.Rmd`, the default and OpenAI routes, with no temperature, now answer "Blue" plus a follow-up sentence. In `getting-started.Rmd`, the hello reply and the batch answers changed wording. No prose states the old text.
 - 2026-10-01: T5 done. `data-raw/README.md` maps 6 directories to recorder scripts and 3 to remove-and-rerun with an anchored `devtools::test()` filter. It names 3 models: `google/gemma-3-1b`, `qwen/qwen3-4b-2507`, and `text-embedding-nomic-embed-text-v1.5`. A run of `filter = "^list$"` ran `test-list.R` alone, with 6 passes. PROFILE has 109 lines. `cairn_validate` passes.
+- 2026-10-01: T6 done. `devtools::document()` gave no diff. `devtools::test()`: 0 failures, 3 skips, 19942 passes. `devtools::check()`: 0 errors, 0 warnings, 0 notes. In a scratch tree with no vignette source, the stale-knit test skips with "No vignette sources to compare."
+- 2026-10-01: claim audit: not owed — internal tier
+- 2026-10-01: all tasks done, status set to review.
 
 ## Decisions
 
