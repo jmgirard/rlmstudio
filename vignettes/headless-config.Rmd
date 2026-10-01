@@ -275,3 +275,5 @@ lms_daemon_stop(force = TRUE)
 
 If the desktop app is open, `lms_daemon_stop()` does not stop the daemon. The
 function returns `FALSE` and prints a message that says so.
+
+<!-- Knitted from headless-config.Rmd.orig with MD5 e72953945963185349e06c053fa5d998. -->

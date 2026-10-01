@@ -100,7 +100,7 @@ other candidate rows stay as they are.
       `R CMD check`, so the test skips on an empty source list (LESSONS
       M005). Plant a one-character source edit and see one failure that
       names that source. Then restore the source.
-- [ ] T4: Run the full live knit. It rewrites every vignette. Read each
+- [x] T4: Run the full live knit. It rewrites every vignette. Read each
       `.Rmd` diff and log any output change other than the stamp.
 - [ ] T5: Write `data-raw/README.md` from a same-session read of the tests
       and the recorder scripts (the derived-claims rule). It covers the
@@ -124,6 +124,7 @@ other candidate rows stay as they are.
 - 2026-10-01: T1 done. `knit_source()` calls `knitr::render_markdown()` before it wraps the warning hook, because `knit()` sets the markdown hooks only while all hooks are at their defaults. A scratch run with `warning = FALSE` showed no warning on the console, so the header comment says the option hides it.
 - 2026-10-01: T2 done. Marked chunks `summaries`, `schema`, `logprobs`, and `failed`. Scratch source in the session scratch directory with the vignette setup chunk: an unmarked `warning()` chunk exits 1 with "The chunk 'noisy' of <path> gave a warning, and the chunk does not set expect_warning = TRUE.", the target absent stays absent and a present target keeps its MD5. With `expect_warning = TRUE` it exits 0 and the `.Rmd` holds `#> Warning: planted warning`.
 - 2026-10-01: T3 done. The stamp line is `<!-- Knitted from <name>.Rmd.orig with MD5 <sum>. -->`. Before the re-knit, the new test gave 4 failures, one per source. After it, the test passes 4. A planted space in `headless-config.Rmd.orig` gave 1 failure that names it. A moved `headless-config.Rmd` gave 1 failure that names it. Both were restored. Full `devtools::test()`: 0 failures, 3 skips, 19942 passes.
+- 2026-10-01: T4 done. With the server stopped and no model loaded, the full knit exited 0. `text-analysis.Rmd` keeps `#> Warning` in all 4 marked chunks. Besides the stamps and new response ids and timings, two outputs changed. In `chat-options.Rmd`, the default and OpenAI routes, with no temperature, now answer "Blue" plus a follow-up sentence. In `getting-started.Rmd`, the hello reply and the batch answers changed wording. No prose states the old text.
 
 ## Decisions
 
