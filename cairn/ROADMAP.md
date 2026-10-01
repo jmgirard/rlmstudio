@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-30 (M070 done, M067 row pruned)_
+_Last hygiene check: 2026-09-30 (M071 done, M068 row pruned)_
 
 ## Milestones
 
@@ -9,13 +9,12 @@ _Last hygiene check: 2026-09-30 (M070 done, M067 row pruned)_
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M071 | The getting-started vignette reads plainly and covers a first run | review | M070 | normal | milestones/M071-getting-started-rewrite.md |
 | M072 | The headless vignette covers what differs without the desktop app | planned | M070 | normal | milestones/M072-headless-vignette-rewrite.md |
 | M073 | The text-analysis vignette scores a data frame of texts in plain code | planned | M070 | normal | milestones/M073-text-analysis-rewrite.md |
 | M074 | A vignette shows chat options, conversations, and errors in scripts | planned | M070 | normal | milestones/M074-chat-options-vignette.md |
+| M071 | The getting-started vignette reads plainly and covers a first run | done | M070 | normal | milestones/archive/M071-getting-started-rewrite.md |
 | M070 | The vignettes are knitted ahead of time from a live LM Studio | done | none | normal | milestones/archive/M070-knit-ahead-vignettes.md |
 | M069 | lms_score_expected() reads the first step of a reply alone | done | none | normal | milestones/archive/M069-score-first-step.md |
-| M068 | A vignette shows batch chat, structured output, logprobs scores, and embeddings | done | none | normal | milestones/archive/M068-text-analysis-vignette.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
