@@ -35,8 +35,9 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 
 ## Acceptance criteria
 
-- [ ] AC1: `knitr::purl()` of `vignettes/text-analysis.Rmd` gives R code that
-      contains each of these strings: `lms_chat_batch(`,
+- [ ] AC1: The R code that `devtools::build()` writes for the vignette,
+      `inst/doc/text-analysis.R` in the built tarball, contains each of
+      these strings: `lms_chat_batch(`,
       `format = "data.frame"`, `schema =`, `api_type = "openai"`,
       `logprobs = TRUE`, `lms_score_expected(`, `lms_embed(`,
       `list_instances(`, `lms_unload_all(`, and `rlmstudio.quiet`. Take a
@@ -105,9 +106,9 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
       the after-build list that is not in the before-build list. The prose
       names the condition for the `lms_unload_all()` chunk. If the build
       started the server, the build stops it.
-- [ ] T4: Render live in both starting states of AC2. Log the `running`
+- [x] T4: Render live in both starting states of AC2. Log the `running`
       field and the instance ids before and after each render. Run the
-      `knitr::purl()` check and the marker render of AC1. Paste the observed
+      build-tangle check and the marker render of AC1. Paste the observed
       output into the `#>` comments of the chunks, so that a site built
       without LM Studio still shows output.
 - [x] T5: Read the vignette prose and chunk comments one sentence at a time.
@@ -136,6 +137,9 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 - 2026-09-30: T5 ledger, score, embed, instances, teardown. The four `lms_score_expected()` sentences: new "lms_score_expected() reads the first step, keeps the scale, and rescales", beside test-score.R. "One row per input text, in the order given": test-embed.R "three inputs answered in order give three rows in order" and "three inputs answered out of order are placed by index". `list_instances()`: test-list-instances.R "list_instances returns one row per loaded instance of a listed type" and "each configuration field gets a column, in order of first appearance". "`lms_unload_all()` unloads every loaded model instance" and its chunk comment: test-unload.R "lms_unload_all unloads each reported instance in order and forwards dots". Sentences about the model, LM Studio, or this vignette's own build are not about a package function.
 - 2026-09-30: T5 narrowed four vignette sentences to what the code does. The quiet paragraph names `lms_load()` and the batch bar. For a reply with log probabilities, the logprobs object holds a frame, and plain text otherwise. The frame lists candidates at each step. `lms_score_expected()` reads the rows whose `step_token` equals that of the first row. Eight plants each turned a new test red and were restored: progress step ignores quiet, batch sends the first input every time, openresponses drops the dots, logprobs frame keeps one step. The score plants were no rescale, a number outside `scale` kept, every step read, and entropy in nats.
 - 2026-09-30: T6 added the NEWS entry under the development-version heading. It names the vignette and the seven AC4 features.
+- 2026-09-30: amendment at the mini gate, chosen by the user. AC1's first sentence now reads the `inst/doc/text-analysis.R` that `devtools::build()` writes. Before, it read a bare `knitr::purl()`, which drops the gated chunks. The chunk headers keep the pattern of the other two vignettes.
+- re-audit: AC1 (full) — nothing. The reader found both halves reachable, and the string check passes in a build without LM Studio as commented code, with the marker render covering live output.
+- 2026-09-30: T4 closed under the amended AC1. Its task text now names the build-tangle check, a minor edit.
 
 ## Decisions
 
