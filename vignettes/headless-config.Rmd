@@ -31,15 +31,16 @@ or later, the function installs nothing.
 
 The install writes files to your computer, so the function does not
 install without your consent. In R at the console, it asks you first, and
-it installs only if you answer yes. In a script, R cannot ask you. There,
-the function stops with an error, unless you set the environment variable
+it installs only if you answer yes. When R runs a script with no console,
+for example with `Rscript`, R cannot ask you. There, the function stops
+with an error, unless you set the environment variable
 `RLMSTUDIO_ALLOW_INSTALL` to `"true"` before the call. An environment
 variable is a named setting that programs read when they run. In R,
 `Sys.setenv(RLMSTUDIO_ALLOW_INSTALL = "true")` sets it.
 
 
 ``` r
-# Install LM Studio without the desktop app. It asks you first.
+# Install LM Studio without the desktop app. At the console, it asks you first.
 rlmstudio::install_lmstudio(method = "headless")
 ```
 
@@ -112,9 +113,11 @@ lms_server_ready()
 #> [1] TRUE
 ```
 
-If `lms_server_ready()` returns `FALSE`, one cause is that LM Studio did
-not answer in time. Another is that another program holds the port.
-Another is that the server turned the request away. A server turns a request
+If the wait runs out, or if `lms_server_ready()` returns `FALSE`, LM Studio
+did not answer. One cause is that it needs more time. Another is that
+another program holds the port. A port is a number that picks one program
+on a computer, and LM Studio uses port 1234 by default. Another cause is
+that the server turned the request away. A server turns a request
 away when it requires an API token, a secret string that it checks with
 each request, and the request carries none. The next section shows how to
 send one.
@@ -143,8 +146,7 @@ You can also pass a token to one call with the `token` argument. Every
 function that sends a request to the server has this argument. A `token`
 argument wins over the environment variable, so use it when one script
 talks to two servers with different tokens. The call below passes the
-same token that the package reads from the environment variable, so its
-result is the same as without the argument.
+token from the environment variable.
 
 
 ``` r
@@ -177,8 +179,8 @@ LM Studio can run on another computer, such as one with a large graphics
 card, while you run R on your laptop. The host is the computer that runs
 LM Studio. The `host` argument gives its address, such as
 `"http://192.168.1.20:1234"`. That is the network address of the host,
-then a colon and the port of the server. A port is a number that picks
-one program on a computer, and the package asks port 1234 by default. By
+then a colon and the port of the server. The package asks port 1234 by
+default. By
 default, `host` is `"http://localhost:1234"`, which is your own computer.
 The person who manages the host can tell you its network address.
 
@@ -198,8 +200,10 @@ lms_server_start(wait = 60)
 
 Then any computer that can reach the host over the network can send
 requests to the server. If the network is not private, require an API
-token on the server. A firewall between the two computers can block the
-port.
+token on the server. The LM Studio documentation shows how to turn on the
+token check only in the desktop app. On a host without the desktop app,
+keep the server on a private network that only computers you trust can
+reach. A firewall between the two computers can block the port.
 
 Your own computer needs the package, but not LM Studio. Pass the address
 of the host to each call with the `host` argument. Every function that
@@ -229,8 +233,13 @@ reply <- lms_chat(
 A script that runs on its own, for example every night, must start the
 daemon and stop it again. `with_lms_daemon()` does both. It starts the
 daemon, runs your code, and then stops the server and the daemon. It stops
-them even if your code fails with an error, and even if the daemon ran
-before the call. It returns the value of your code.
+them even if your code fails with an error. It returns the value of your
+code.
+
+Take care on a computer that other people use. At the end,
+`with_lms_daemon()` stops the server and the daemon even if they ran
+before the call, so it can stop a server that someone else uses. If the
+desktop app is open, the daemon keeps running, as the next section says.
 
 
 ``` r
@@ -264,5 +273,5 @@ running. Use `force = TRUE` to stop the server first.
 lms_daemon_stop(force = TRUE)
 ```
 
-If the desktop app is open, `lms_daemon_stop()` does not stop it. The
+If the desktop app is open, `lms_daemon_stop()` does not stop the daemon. The
 function returns `FALSE` and prints a message that says so.

@@ -267,16 +267,16 @@ test_that("lms_chat_batch() sends the system prompt with each input and returns 
 # Claims of `vignettes/headless-config.Rmd`.
 
 # Run a headless install with `interactive()`, the consent answer, and
-# RLMSTUDIO_ALLOW_INSTALL set as given. The installer is a stub, so no install
-# runs. Returns what the call showed, the installer calls, and the number of
-# consent questions.
-consent_install <- function(interactive, answer = NA, allow = NA) {
+# RLMSTUDIO_ALLOW_INSTALL set as given. `lms_found` is what `has_lms()`
+# returns. The installer is a stub, so no install runs. Returns what the call
+# showed, the installer calls, and the number of consent questions.
+consent_install <- function(interactive, answer = NA, allow = NA, lms_found = FALSE) {
   if (is.na(allow)) {
     withr::local_envvar(RLMSTUDIO_ALLOW_INSTALL = NA)
   } else {
     withr::local_envvar(RLMSTUDIO_ALLOW_INSTALL = allow)
   }
-  local_mocked_bindings(has_lms = function() FALSE)
+  local_mocked_bindings(has_lms = function() lms_found)
   asked <- 0L
   local_mocked_bindings(
     askYesNo = function(...) {
@@ -371,6 +371,20 @@ test_that("install_lmstudio() installs nothing when lms 0.4.0 or later is found"
 
   expect_null(shown$error)
   expect_true(result)
+})
+
+test_that("install_lmstudio() goes on to install when lms is older than 0.4.0", {
+  versions <- character()
+  local_mocked_bindings(check_lms_version = function(min_version, ...) {
+    versions <<- c(versions, min_version)
+    FALSE
+  })
+
+  older <- consent_install(interactive = FALSE, allow = "true", lms_found = TRUE)
+
+  expect_identical(versions, "0.4.0")
+  expect_null(older$shown$error)
+  expect_length(older$runs, 1L)
 })
 
 # Replace `lms_path()` and `processx::run()` in the calling test with stubs,
@@ -480,8 +494,11 @@ test_that("a host argument sends the prompt to that computer", {
 })
 
 test_that("lms_load(), lms_chat(), and lms_unload() take a host argument", {
-  for (fn in list(lms_load, lms_chat, lms_unload)) {
-    expect_identical(formals(fn)[["host"]], "http://localhost:1234")
+  fns <- list(lms_load = lms_load, lms_chat = lms_chat, lms_unload = lms_unload)
+  for (name in names(fns)) {
+    test_that(name, {
+      expect_identical(formals(fns[[name]])[["host"]], "http://localhost:1234")
+    })
   }
 })
 

@@ -114,6 +114,7 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
 - 2026-09-30: T5 ledger, script and stop. `with_lms_daemon()` starts, runs, stops server and daemon, returns the value, also on error and on a running daemon: the two `with_lms_daemon()` tests of `test-vignette-claims.R`. `lms_daemon_stop()` TRUE when stopped or not running, `force = TRUE` stops the server first: the two `lms_daemon_stop()` tests there. A plant that skipped the console question with the variable set, and a plant that skipped the teardown on error, each failed one new test. The `lms daemon up` row is narrowed and the vignette lesson corrected. `devtools::test()`: 0 failures, 0 errors, 3 skips.
 - 2026-09-30: T6 NEWS entry added. The first `devtools::check()` failed 10 expectations of the consent tests. In the byte-compiled package, the base `interactive()` call is inlined, so the base mock never reached it. `R/setup.R` gained a package binding `interactive <- NULL` that the tests mock. With the server stopped and the token unset, `devtools::document()` gave no diff, `pkgdown::check_pkgdown()` found no problems, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 0 failures, 0 errors, 3 skips.
 - 2026-09-30: claim audit: 62 claims read, 4 corrected — vignettes/headless-config.Rmd.orig, vignettes/headless-config.Rmd, tests/testthat/test-vignette-claims.R. Two vignette lines said that the desktop app runs the daemon, against the `isDaemon` false probe. Two test comments were wrong. The list of causes of a `FALSE` ready gained a held port. The same reader re-read the 5 spots once and found 0 wrong. Re-knitted, and the AC1 to AC3 check and the claim tests passed.
+- 2026-09-30: review gate: the user chose the proposed split. Ten findings fixed on the branch, one moved to the `lms daemon up` row at hygiene, two rejected, two noted. Re-knitted, and check, test, document, and pkgdown are clean.
 
 ## Decisions
 
@@ -131,3 +132,25 @@ Evidence gathered 2026-09-30 on the branch head 2245d56, which holds `origin/mai
 - AC5: next to the `host =` chunk, line 207 says that the package sends your prompts to that computer. Next to `install_lmstudio()`, lines 32 to 36 say that it asks first at the console and installs only on yes. They also say that in a script it stops unless `RLMSTUDIO_ALLOW_INSTALL` is `"true"`. `R/setup.R` lines 152 to 169 do the same.
 - AC6: the T5 ledger in the work log names a test or probe for each claim. The 11 named tests exist under `tests/testthat/`, and the suite passed (AC7). Live probes today, LM Studio 0.4.25+1 on macOS with the desktop app: `lms status` with the server off printed "Server:  OFF" and the `lms server start` hint, as knitted. A default `lms server start` listened on 127.0.0.1:1234. `LMS_SERVER_HOST=0.0.0.0` set in R before `lms_server_start()` gave a listener on `*:1234`. `lms daemon status --json` gave the desktop app's process with `isDaemon` false. Without the token, `lms_server_ready()` gave `FALSE` and `lms_server_start()` warned that the wait ran out, one of the causes the vignette lists.
 - AC7: `NEWS.md` line 3, under the development-version heading, names `vignette("headless-config")`. `devtools::document()` gave no diff. `devtools::test()` gave 0 failures, 0 errors, and 3 skips. `pkgdown::check_pkgdown()` found no problems. With the server stopped and `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+
+Consistency gate: `cairn_validate.py` passed every check. No DESIGN.md principle changed, so the impact report did not run. The toolchain checks are the AC7 results above. README.Rmd is not on the branch diff, and the branch adds no top-level file.
+
+Independent review: one Opus diff reviewer (14 findings), one Sonnet history reviewer (6), and one Sonnet prior-review reviewer (2, and the PR-comment probe found none). The list below merges the duplicates into 15 items. The user chose the proposed split at the gate.
+
+- 1 (diff 1, prior 1). DESIGN.md said that sources have no `eval` gates, against 5 `eval = FALSE` chunks that the plan called for. Fixed now: DESIGN.md allows a chunk that must not run in the knit.
+- 2 (diff 2). The advice to require a token on an exposed server cannot be followed on a host without the desktop app. Fixed now: the vignette says that the documentation shows the token check only in the desktop app, read again today, and advises a private network.
+- 3 (diff 3, history 1 and 2). The vignette offered the stop of a daemon that ran before the call as a benefit. Fixed now: a caution about a shared computer and the desktop app.
+- 4 (diff 4, history 4). Headless-only claims have only macOS probes. Follow-up: the `lms daemon up` candidate row, at the hygiene pass.
+- 5 (diff 5). No test showed that an older `lms` goes on to install. Fixed now: a new test. A plant that dropped the version check turned it red.
+- 6 (diff 6). The host loop had no nested `test_that()` per pass. Fixed now.
+- 7 (diff 7). The token example claimed the same result as without the argument. With the `rlmstudio.token` option set, that claim is false. Fixed now: the sentence is narrowed.
+- 8 (diff 8). "Port" came before its explanation. Fixed now: the explanation moved to its first use.
+- 9 (diff 9). The start warning on a server that needs a token was not explained. Fixed now: the cause paragraph also covers the warning.
+- 10 (diff 10). "In a script, R cannot ask you" was not exact. Fixed now: it names a script with no console, such as `Rscript`, and the chunk comment says "At the console".
+- 11 (diff 11). The AC5 wording does not match the code at the console. Rejected: the prose states both cases as the code does and meets AC5 as written.
+- 12 (diff 12, history 3, prior 2). The "it" in the stop sentence was unclear. Fixed now. The sentence that the app does the work of the daemon stays: today's daemon status gave the app's process.
+- 13 (diff 13). The vignette does not say that a stop without `force` can fail with the server on. Rejected: that LM Studio behavior is not verified.
+- 14 (diff 14, history 5). The `interactive <- NULL` binding. Noted: check gave 0 notes.
+- 15 (history 6). The corrected LESSONS line holds only while the knit never stops the daemon. Noted.
+
+After the fixes, the knit from a clean start changed prose only. The AC1 to AC3 checks passed again. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 0 failures, 0 errors, and 3 skips. `devtools::document()` gave no diff, and `pkgdown::check_pkgdown()` found no problems.
