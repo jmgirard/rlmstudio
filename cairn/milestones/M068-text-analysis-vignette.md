@@ -146,6 +146,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 - 2026-09-30: review gate: the user chose the proposed triage. F1 to F11 are fixed on the branch, F12 to F15 are follow-ups, and F16 to F24 are rejected. Merge approval is asked again after the evidence reruns.
 - 2026-09-30: correction to the T1 line (review finding F11). The embedding gate reads `list_models()` with its default types, not `list_models(type = "embedding")`.
 - 2026-09-30: review fix-now work. The vignette defines `reviews` in an ungated chunk (F1) and gates the instances chunk on `chat_ready || embed_ready` (F2). Its prose names the schema route (F3), the logprobs route (F4), and the desktop-app host (F5), and says that some warnings show past quiet (F7). The `models-before` comment no longer claims an unload rule (F6). The claim tests rename the score test (F8), count the load requests in both quiet cases (F9), and read body fields with `[[` (F10). A plant of a quiet early return in `lms_load()` turned the F9 test red. ROADMAP gained the F12 and F13 rows, and the F14 row now names three vignettes.
+- 2026-09-30: commit a0ceff6 left `ROADMAP.md` at 61 lines, over its cap. The F12 row merged into the F14 row as a second vignette build hazard, and the two `[low]` CI workflow rows merged. `ROADMAP.md` is at 59 lines, and `cairn_validate.py` passes.
 
 ## Decisions
 
