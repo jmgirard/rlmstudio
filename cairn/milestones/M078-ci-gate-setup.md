@@ -21,10 +21,10 @@ A pull request runs only the CI jobs that the package can turn red, each job onc
 
 ## Acceptance criteria
 
-- [ ] AC1: The `strategy.matrix.config` list of `.github/workflows/R-CMD-check.yaml` holds exactly four entries: `macos-latest` release, `windows-latest` release, `ubuntu-latest` release, and `ubuntu-latest` oldrel-1. Evidence: the list read from the parsed file.
-- [ ] AC2: A new workflow `.github/workflows/R-devel-check.yaml` runs `R CMD check` on `ubuntu-latest` with R-devel. Its triggers are a weekly `schedule`, `workflow_dispatch`, and `push` to `main` or `master`, and it has no `pull_request` trigger. Evidence: the trigger keys, the `schedule` cron value, the job's `runs-on`, and its R version, read from the parsed file.
-- [ ] AC3: `.github/workflows/test-headless.yaml` is renamed to `.github/workflows/test-source-tree.yaml`, with the workflow name `Source-tree tests` and the job id `source-tree-tests`. It sets no `RLMSTUDIO_TEST_HEADLESS` variable, and its `push` trigger is limited to `main` or `master`. A header comment states that it runs `devtools::test()` from the source tree and installs no LM Studio. Evidence: the parsed file, and `git grep -n RLMSTUDIO_TEST_HEADLESS -- ':!cairn'`, which returns no line.
-- [ ] AC4: Each file that `ls .github/workflows/*.yaml` lists parses as YAML, has a `workflow_dispatch` trigger, pins every `actions/checkout` step to `@v6`, and declares a `concurrency` group. In every file but `pkgdown.yaml`, the group is `${{ github.workflow }}-${{ github.ref }}` at workflow level, with `cancel-in-progress` true for pull requests only. `pkgdown.yaml` keeps its existing job-level group unchanged. Evidence: one R script that loops over that `ls` output and prints one row per file and property.
+- [x] AC1: The `strategy.matrix.config` list of `.github/workflows/R-CMD-check.yaml` holds exactly four entries: `macos-latest` release, `windows-latest` release, `ubuntu-latest` release, and `ubuntu-latest` oldrel-1. Evidence: the list read from the parsed file.
+- [x] AC2: A new workflow `.github/workflows/R-devel-check.yaml` runs `R CMD check` on `ubuntu-latest` with R-devel. Its triggers are a weekly `schedule`, `workflow_dispatch`, and `push` to `main` or `master`, and it has no `pull_request` trigger. Evidence: the trigger keys, the `schedule` cron value, the job's `runs-on`, and its R version, read from the parsed file.
+- [x] AC3: `.github/workflows/test-headless.yaml` is renamed to `.github/workflows/test-source-tree.yaml`, with the workflow name `Source-tree tests` and the job id `source-tree-tests`. It sets no `RLMSTUDIO_TEST_HEADLESS` variable, and its `push` trigger is limited to `main` or `master`. A header comment states that it runs `devtools::test()` from the source tree and installs no LM Studio. Evidence: the parsed file, and `git grep -n RLMSTUDIO_TEST_HEADLESS -- ':!cairn'`, which returns no line.
+- [x] AC4: Each file that `ls .github/workflows/*.yaml` lists parses as YAML, has a `workflow_dispatch` trigger, pins every `actions/checkout` step to `@v6`, and declares a `concurrency` group. In every file but `pkgdown.yaml`, the group is `${{ github.workflow }}-${{ github.ref }}` at workflow level, with `cancel-in-progress` true for pull requests only. `pkgdown.yaml` keeps its existing job-level group unchanged. Evidence: one R script that loops over that `ls` output and prints one row per file and property.
 - [ ] AC5: On this milestone's pull request, `gh pr checks --json name,workflow,state` lists seven rows with a non-empty `workflow`, each once and each passing. They are `macos-latest (release)`, `windows-latest (release)`, `ubuntu-latest (release)`, `ubuntu-latest (oldrel-1)`, `source-tree-tests`, `test-coverage`, and `pkgdown`. It lists no other row with a non-empty `workflow`.
 
 ## Coverage
@@ -59,3 +59,30 @@ A pull request runs only the CI jobs that the package can turn red, each job onc
 ## Decisions
 
 ## Review
+
+Evidence for AC1 to AC4 comes from one scratchpad script, `review-evidence.R`, run on 2026-10-01 at `8286f92`. It reads each workflow with `yaml::read_yaml()`.
+
+- AC1: the parsed `strategy.matrix.config` list has four rows: `macos-latest` release, `windows-latest` release, `ubuntu-latest` release, `ubuntu-latest` oldrel-1.
+- AC2: `R-devel-check.yaml` has the triggers `schedule`, `push` (branches `main`, `master`), and `workflow_dispatch`, and no `pull_request`. The cron value is `0 6 * * 1`. Its one job runs on `ubuntu-latest`, sets `r-version: devel`, and runs `check-r-package@v2`.
+- AC3: `test-headless.yaml` is gone, and `test-source-tree.yaml` has the name `Source-tree tests` and the one job id `source-tree-tests`. Its push branches are `main` and `master`. The header comment says it runs `devtools::test()` from the source tree and installs no LM Studio. `git grep -n RLMSTUDIO_TEST_HEADLESS -- ':!cairn'` printed nothing and exited 1.
+- AC4: the script looped over the 5 files that `ls .github/workflows/*.yaml` lists. Each file parsed, had `workflow_dispatch`, and had one `actions/checkout` step at `@v6`. The 4 files besides `pkgdown.yaml` had the workflow-level group with `cancel-in-progress` set to the pull-request test. `pkgdown.yaml` had no workflow-level group and its job-level group unchanged, and `git diff main..HEAD` on it shows only the checkout line. A run on copies with 3 planted faults printed FALSE in exactly those 3 cells. The faults were checkout v4 in `test-coverage.yaml`, no dispatch in `R-devel-check.yaml`, and cancel always in `test-source-tree.yaml`.
+- AC5: not yet verifiable. The PR opens only after the merge approval, so its checks are read at that step, before the merge.
+- Gate: `cairn_validate.py` passed every check (exit 0). No DESIGN principle changed, so `cairn_impact` was skipped. `devtools::document()` left no diff. `pkgdown::check_pkgdown()` found no problems. The branch changes no file under `R/`, `tests/`, or `vignettes/`, and no `README`, `NEWS.md`, `DESCRIPTION`, or `.Rbuildignore` file. No NEWS entry is owed, because no package user sees the change. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+
+Independent review, three fresh lenses: diff-bug (Opus), blame-history (Sonnet), prior-review (Sonnet). The PR-comment probe found no inline comments. Findings by rank, with the proposed disposition. The gate decides.
+
+- R1 (diff): the `R-devel-check.yaml` header says an R-devel break "turned the checks red and blocked every merge". No failed run in `gh run list` was red on R-devel alone. Proposed: fix now, reword it as a risk.
+- R2 (diff): each new workflow-level group keeps one running and one pending run. A third quick push to `main` cancels the pending run of the second. Proposed: reject. AC4 sets this group, and the newest run checks the newest tree.
+- R3 (diff): a manual `workflow_dispatch` run on a PR branch adds duplicate rows, or an R-devel row, to `gh pr checks`. Proposed: reject. It needs a deliberate manual start on a PR branch.
+- R4 (diff, prior-review): `cairn/LESSONS.md` M011 line says a non-Ubuntu fix cannot run before the PR exists. After this merge, `gh workflow run R-CMD-check.yaml --ref <branch>` can start it. Proposed: fix now, correct the lesson.
+- R5 (diff): `cairn/LESSONS.md` M005 line says a test that greps `R/` "skips on CI". The source-tree job runs it on CI. Proposed: fix now, correct the lesson.
+- R6 (diff): `tests/testthat/helper-mock-http.R:107` still says "the headless workflow". Proposed: fix now, a comment edit.
+- R7 (diff): the PR cannot test the pkgdown deploy step under `actions/checkout@v6`, because the deploy skips on pull requests. Proposed: follow-up inside this review, read the first `pkgdown` run on `main` after the merge.
+- R8 (diff): the `R-devel-check.yaml` header and `cairn/DESIGN.md:23` say R-devel runs "on each push", but a push that changes only `cairn/` files runs nothing. Proposed: fix now, reword both.
+- R9 (diff): `test-source-tree.yaml` has no `permissions: read-all`, and the other four files do. Proposed: fix now, add it.
+- R10 (diff, blame, prior-review): in `R-devel-check.yaml`, `cancel-in-progress` tests for a pull request, but the file has no `pull_request` trigger. Proposed: reject. AC4 requires the same block, and it does no harm.
+- R11 (diff): `actions/checkout@v7` exists. Proposed: reject. v6 has a release from the same day, and the Scope moves no version without a staleness report.
+- R12 (diff, blame): `R-devel-check.yaml` copies the check job instead of calling a shared one, and sets `use-public-rspm: true` against `always`. Proposed: reject. The plan chose a separate file, and the two values are the same on Ubuntu.
+- R13 (diff): a manual `pkgdown.yaml` run on a non-default branch deploys that branch's site to `gh-pages`. This predates the branch. Proposed: follow-up candidate row.
+- R14 (blame): `test-source-tree.yaml` push is now limited to `main` or `master`, so a branch push with no PR gets no run. Proposed: reject. AC3 asks for it.
+- R15 (blame): the old `test-headless` check name is gone, and nothing outside the archive uses it. Proposed: noted.
