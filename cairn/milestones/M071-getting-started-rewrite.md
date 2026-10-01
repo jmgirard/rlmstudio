@@ -1,6 +1,6 @@
 # M071: The getting-started vignette reads plainly and covers a first run
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
@@ -117,6 +117,9 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: ledger 15, LM Studio: a model on disk gives "already_downloaded". Live: T1 probe and each knit.
 - 2026-09-30: ledger 16, model: a reply does not always follow the system prompt. Live: the first T3 knit asked for one word and got "Apple" with an emoji.
 - 2026-09-30: T6 NEWS entry added. `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. With the server stopped and the token unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- 2026-09-30: claim audit: 42 claims read, 2 corrected — vignettes/getting-started.Rmd.orig, vignettes/getting-started.Rmd
+- 2026-09-30: claim audit detail: "reads before your prompt" became "gets with your prompt", which the re-read found holds. The batch caution now says that a reply can carry extra spaces, which holds. Its clause that a model does not always follow its system prompt rests on ledger 16 alone, which the re-read could not check from the files. Re-knitted clean.
+- 2026-09-30: status set to review.
 
 ## Decisions
 

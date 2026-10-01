@@ -123,7 +123,7 @@ lms_load(model)
 `lms_chat()` sends one prompt to the model and returns the reply as text.
 The `input` argument holds your prompt.
 
-A system prompt is a set of instructions that the model reads before your
+A system prompt is a set of instructions that the model gets with your
 prompt. Use it to set the role, the tone, or the length of the reply. The
 `system_prompt` argument of `lms_chat()` holds it.
 
@@ -165,8 +165,8 @@ answers
 trimws(answers)
 ```
 
-A model does not always follow its system prompt to the letter, so read
-the replies before you use them.
+A reply can carry extra spaces or line breaks, and a model does not always
+follow its system prompt. So read the replies before you use them.
 
 `vignette("text-analysis")` shows how to get the replies of a batch as a
 data frame, with one row for each prompt.
