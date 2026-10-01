@@ -1,6 +1,6 @@
 # M074: A vignette shows chat options, conversations, and errors in scripts
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
@@ -129,6 +129,9 @@ scoring are M073.
 - 2026-10-01: T5 probe: the raw openresponses reply holds the text "Blue." at `output[[1]]$content[[1]]$text`. The raw openai fields are `id`, `object`, `created`, `model`, `choices`, `usage`, `stats`, and `system_fingerprint`. The raw native fields are `model_instance_id`, `output`, `stats`, and `response_id`. So the fields differ by route.
 - 2026-10-01: T5: added 5 tests to `tests/testthat/test-vignette-claims.R`. A planted defect in a scratch copy turned each one red, and no other test. The plants were a wrong native path, a filter on unknown dots, a swapped system role, reversed message rows, and a changed native warning. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
 - 2026-10-01: T6: added the NEWS entry. `devtools::document()` gives no diff, and `pkgdown::check_pkgdown()` finds no problems. With the server stopped and `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gives 0 errors, 0 warnings, and 0 notes.
+- 2026-10-01: claim audit: 56 claims read, 2 corrected — vignettes/chat-options.Rmd.orig, vignettes/chat-options.Rmd. "The server keeps no history" on the openai route had no live evidence and now rests on the missing response id. The route advice no longer suggests that `lms_chat()` takes a data frame. The same reader re-read both and found that they hold.
+- 2026-10-01: after the audit, a re-knit from a clean start passes the T3 checks, and the source scan passes the AC2 and AC3 checks.
+- 2026-10-01: all tasks done. `devtools::test()`: 0 failed, 0 errors, 3 live skips. Status set to review.
 
 ## Decisions
 

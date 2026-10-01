@@ -36,7 +36,7 @@ lms_server_start(wait = 30)
 # Load the model
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [10.4s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [12.5s]
 #> 
 ```
 
@@ -60,8 +60,9 @@ sets how long a model stays loaded with no request.
 | `"openai"` | No | No | Yes |
 | `"native"` | Yes | No | No |
 
-The default route covers most uses. Pick `"openai"` for a `schema`, a
-`ttl`, or a whole conversation in a data frame. The native route refuses an
+The default route covers most uses. Pick `"openai"` for a `schema` or a
+`ttl`. The OpenAI route also takes a whole conversation in a data frame,
+through `lms_chat_openai()`, as a later section shows. The native route refuses an
 option name that it does not know, as the last section shows.
 `vignette("text-analysis")` shows log probabilities and a `schema`, and
 `?lms_chat` explains `ttl`.
@@ -77,7 +78,7 @@ prompt <- "Name one color. Answer with one word."
 lms_chat(model, prompt)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_a78e1f66a09ba2c801f9be3d16d859917ee8925120f8cf10"
+#> [1] "resp_f19eff3b800132ad9a3a244cc2c6eb5057193d46662d0715"
 
 # The OpenAI route
 lms_chat(model, prompt, api_type = "openai")
@@ -87,7 +88,7 @@ lms_chat(model, prompt, api_type = "openai")
 lms_chat(model, prompt, api_type = "native")
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_a1b7770d8cf3dbec436c55874d517d8455aa01ee1b5f4371"
+#> [1] "resp_3e95f9a04b71f11aa3ca7f41dd0c461df54d70d517759364"
 ```
 
 Each call returns the text of the reply. On the default route and the
@@ -113,7 +114,7 @@ likely token each time.
 lms_chat(model, prompt, temperature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_ea3d2f38fbff80759ddb0d3dc5703c36d36f365c3aa60d7c"
+#> [1] "resp_d67690d300df060ed830a4305bfa3cdc0e3bac430e77009c"
 ```
 
 The package does not check the names of request options. The server
@@ -127,7 +128,7 @@ below misspells `temperature`, and it still returns a reply with no error.
 lms_chat(model, prompt, temprature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_827afe39a4e6ab82af9becbb9faa2789308094f30136c0f7"
+#> [1] "resp_068319bf9758e7d8e3d3a938c02e425c5cc5aaf513da3478"
 ```
 
 So a misspelled option can go unnoticed. A later section shows how to see
@@ -155,7 +156,7 @@ first <- lms_chat(
 first
 #> [1] "OK."
 #> attr(,"response_id")
-#> [1] "resp_d83d4348d297e02df416ab059e76f1094e6cd233e94011cf"
+#> [1] "resp_480dbeca56ebcb17b9add1710829e2d9105b81e93e2ca9a6"
 
 # Ask about the fact in a follow-up
 lms_chat(
@@ -166,7 +167,7 @@ lms_chat(
 )
 #> [1] "Green."
 #> attr(,"response_id")
-#> [1] "resp_36b6a5e8f28c1c8931890e3d52382345ce60130fa77c213c"
+#> [1] "resp_fe108696b755afaf9c677a6d949e84d40f7b75a2b8602c05"
 
 # Ask the same question with no response id
 lms_chat(
@@ -176,7 +177,7 @@ lms_chat(
 )
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_53ca19c6dd37e5b5e1bd266942d88b4e414c4db1c2ddf20b"
+#> [1] "resp_f17cfbfbaf785e058a43f4eabf2dcfe79f366a450c9b9453"
 ```
 
 With the response id, the model answered from the first prompt. With no
@@ -189,7 +190,7 @@ The OpenAI route has no response id. With `api_type = "openai"`,
 ## A whole conversation
 
 Conversation history is the list of the earlier messages of a chat. On the
-OpenAI route, the server keeps no history, so you send the whole history
+OpenAI route, a reply has no response id, so you send the whole history
 with each request. `lms_chat()` with `api_type = "openai"` sends a history
 of two messages at most: the system prompt and your prompt. To send a
 longer history, call `lms_chat_openai()`, the function behind that route.
@@ -357,7 +358,7 @@ chat_or_na <- function(...) {
 chat_or_na(model, prompt, temperature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_a158bf9940b1d33afe497c6f63bdaa14c3731e01172c8f57"
+#> [1] "resp_a8637aa4197ca81ac3256e235f387abdce29353a77039eb3"
 ```
 
 The first call below goes to port 1, where no server runs. The other calls
@@ -402,7 +403,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [658ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [933ms]
 #> 
 
 # Stop the local server

@@ -60,8 +60,9 @@ sets how long a model stays loaded with no request.
 | `"openai"` | No | No | Yes |
 | `"native"` | Yes | No | No |
 
-The default route covers most uses. Pick `"openai"` for a `schema`, a
-`ttl`, or a whole conversation in a data frame. The native route refuses an
+The default route covers most uses. Pick `"openai"` for a `schema` or a
+`ttl`. The OpenAI route also takes a whole conversation in a data frame,
+through `lms_chat_openai()`, as a later section shows. The native route refuses an
 option name that it does not know, as the last section shows.
 `vignette("text-analysis")` shows log probabilities and a `schema`, and
 `?lms_chat` explains `ttl`.
@@ -163,7 +164,7 @@ The OpenAI route has no response id. With `api_type = "openai"`,
 ## A whole conversation
 
 Conversation history is the list of the earlier messages of a chat. On the
-OpenAI route, the server keeps no history, so you send the whole history
+OpenAI route, a reply has no response id, so you send the whole history
 with each request. `lms_chat()` with `api_type = "openai"` sends a history
 of two messages at most: the system prompt and your prompt. To send a
 longer history, call `lms_chat_openai()`, the function behind that route.
