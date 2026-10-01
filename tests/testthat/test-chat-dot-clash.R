@@ -112,8 +112,9 @@ expect_other_fault_first <- function(call, arg, info) {
   err <- tryCatch(call(), error = identity)
   expect_s3_class(err, "error")
   expect_identical(probe$calls, 0L, info = info)
-  headline <- cli::ansi_strip(conditionMessage(err))
-  headline <- strsplit(headline, "\n", fixed = TRUE)[[1]][[1]]
+  # The `message` field of the error holds the headline alone. The full
+  # message wraps at the width and adds the detail.
+  headline <- cli::ansi_strip(err[["message"]][[1]])
   expect_match(headline, paste0("^`", arg, "` must "), info = info)
   expect_no_match(headline, "instructions", fixed = TRUE, info = info)
 }

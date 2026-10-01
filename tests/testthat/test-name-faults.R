@@ -113,6 +113,45 @@ for (pair in names(name_pairs)) {
   })
 }
 
+# A text fault gets its own headline ----------------------------------------
+
+text_headline <- "must be a string of valid text"
+
+expect_text_headline <- function(call, value, name, info) {
+  probe <- local_counting_probe()
+  err <- tryCatch(call(value), error = identity)
+  expect_s3_class(err, "error")
+  expect_identical(probe$calls, 0L, info = info)
+  # The `message` field of the error holds the headline alone. The full
+  # message wraps at the width and adds the detail.
+  headline <- cli::ansi_strip(err[["message"]][[1]])
+  expect_match(headline, name, fixed = TRUE, info = info)
+  expect_match(headline, text_headline, fixed = TRUE, info = info)
+  expect_no_match(headline, "given as a single string", fixed = TRUE, info = info)
+}
+
+for (pair in grep("(type)", names(name_pairs), fixed = TRUE, invert = TRUE, value = TRUE)) {
+  test_that(paste0(pair, " gives a text fault the text headline"), {
+    skip_if_not(l10n_info()[["UTF-8"]], "needs a UTF-8 locale")
+    call <- name_pairs[[pair]]
+    arg <- pair_arg(pair)
+    for (p in text_probes) {
+      info <- paste(pair, "with", p$label)
+      expect_text_headline(call, p$value, paste0("`", arg, "`"), info)
+      if (arg == "previous_response_id") {
+        info <- paste(info, "in the response_id attribute")
+        value <- structure("a reply", response_id = p$value)
+        expect_text_headline(
+          call,
+          value,
+          "The `response_id` attribute of `previous_response_id`",
+          info
+        )
+      }
+    }
+  })
+}
+
 # A classed value gets the check of its plain form --------------------------
 
 methods::setClass("rlmTrapString", contains = "character")
