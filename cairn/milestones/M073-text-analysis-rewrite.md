@@ -198,3 +198,28 @@ conversations are M074.
 - AC5 live probes (2026-10-01, fresh, `google/gemma-3-1b` at `context_length = 128`): a prompt of 58 tokens got a reply. A prompt of 20 sentences failed alone, with the same "tokens to keep" message as the knit. A second load at 1024 left the instance at 128. An unload and a load gave 1024. The embedding model listed a 2,048-token context. A sentence added to the end of a 200-sentence text changed its embedding by up to 0.0073. The same sentence added to a 400-sentence text changed nothing, and no warning was given. The server was stopped and no model was loaded after each probe.
 - AC6 (2026-10-01, fresh): `NEWS.md` line 19 sits under "rlmstudio (development version)", the heading at line 1, and names `vignette("text-analysis")`. `devtools::document()` left no change outside this file. `devtools::test()` passed, as AC5 records. `pkgdown::check_pkgdown()` found no problems. `lms server status` said the server was not running. With `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 - Consistency gate (2026-10-01, pass 2): `cairn_validate.py` passed with exit 0, coverage complete included. `DESIGN.md` has no change on the branch, so `cairn_impact` was skipped. `document()` gave no diff, and `check_pkgdown()`, `check()`, and the NEWS entry pass (AC6). The branch touches no README, generated file, or new top-level file.
+- Pass-2 review lenses: D is the diff-bug lens (Opus), B the blame-history lens (Sonnet), and P the prior-review lens (Sonnet). P's GitHub probe found no review comments. All three found the pass-1 fix-now items fixed. No finding shows an acceptance criterion failing, so the status stays `review`. Dispositions below are proposed for the maintainer at the merge gate.
+- Proposed fix now, prose and re-knit: D1 and B3. The unload advice names the model key, but `lms_unload()` takes an instance id, and a copy loaded under another id stays loaded.
+- Proposed fix now, prose and re-knit: D2. Quiet hides the "already loaded" message, and the reader has no step to see what is loaded before the load chunk.
+- Proposed fix now, prose and re-knit: D3 and B1. An embedding model that is already loaded keeps its own context length, and "The sixth review fits in it" can then be false.
+- Proposed fix now, prose and re-knit: D4. "Step" means a token of the reply at source line 209, and a section of the vignette at lines 284 and 360.
+- Proposed fix now, prose and re-knit: D5. "The model does not always follow the system prompt" is shown with a reply of three words, which the prompt allows.
+- Proposed fix now, prose and re-knit: D6. Source line 211 is not rewrapped.
+- Proposed fix now, prose and re-knit: D7 and B4. "Prompt" alone is not glossed. "A prompt with more tokens fails" is said of every loaded model, but an embedding model cuts the text with no failure.
+- Proposed fix now, prose and re-knit: D12. Two phrases of the clean-up prose read awkwardly. Use "including" and "even" in their place.
+- Proposed fix now, tests: D8. The batch logprobs test has only one-step replies, so a constant `step` of 1 passes.
+- Proposed fix now, tests: D9. The openai `NULL` test does not assert that `logprobs = TRUE` reached the request.
+- Proposed follow-up: D14, the candidate row for a function that scores the whole `logprobs` column (pass-1 D6 and D7). It lands at hygiene.
+- Fixed: P1. The pass-2 AC5 evidence line named the drifted `vignette-claims:242` as read. The line is corrected. The T5 ledger is history and stays as written.
+- Proposed reject: D10. The mocked test shows that `server stop` goes out with no check of who started the server, which is the claim.
+- Proposed reject: D11, the two tests of the old vignette. Pass 1 rejected this as B9, and they still back package behavior.
+- Proposed reject: D13, "Markdown" and "JSON" are not glossed. A reader of an R Markdown vignette knows the first, and T4 left JSON out on purpose.
+- Proposed reject: D15. It repeats P1, and the ledger is history.
+- Proposed reject: B2, the thin margin of the sixth review. The live probe shows that it fits, and the prose says "here".
+- Proposed reject: B5. Pass 1 rejected it as B2.
+- Proposed reject: B6. The default route always gives a `logprobs` column, and the follow-up row covers the loop limits.
+- Proposed reject: B7. The prose already says that the sixth review gets a similarity.
+- Proposed reject: B8. Pass 1 rejected it as D10.
+- Proposed reject: P2, the embedding cut is not in the knit. AC5 accepts a live call on this machine, and the pass-2 probe shows it.
+- Proposed reject: P3. Pass 1 rejected it as P4 part 2.
+- Proposed reject: P4. It is a note, with no defect.
