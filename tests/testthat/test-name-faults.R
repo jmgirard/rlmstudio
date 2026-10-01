@@ -272,12 +272,16 @@ test_that("the pairs above are every call site of the three check helpers", {
 methods::setClass("rlmTestString", contains = "character")
 
 # Each probe holds the value "m". `as.character()` on the class "foo" returns
-# another value, so a plain string made by `as.character()` would show.
-plain_probes <- list(
-  "class foo" = structure("m", class = "foo"),
-  "I()" = I("m"),
-  "a name" = c(a = "m"),
-  "S4" = methods::new("rlmTestString", "m")
+# another value, so a plain string made by `as.character()` would show. The
+# two trap classes raise an error from any read that runs their methods.
+plain_probes <- c(
+  list(
+    "class foo" = structure("m", class = "foo"),
+    "I()" = I("m"),
+    "a name" = c(a = "m"),
+    "S4" = methods::new("rlmTestString", "m")
+  ),
+  lapply(trap_classes, function(make) make("m"))
 )
 
 # `one_loaded_llm` in test-list-args.R, with the key and the instance id "m".
@@ -397,6 +401,7 @@ send_pair <- function(pair, value) {
     "foo",
     function(x, ...) "other"
   )
+  local_trap_methods()
   recorder <- local_request_sequence(
     lapply(spec$replies, function(body) mock_response(200L, body))
   )
@@ -456,6 +461,7 @@ test_that("lms_load() and lms_unload() return the plain string", {
 
 test_that("lms_load() returns the plain string on the already-loaded path", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_trap_methods()
   for (label in names(plain_probes)) {
     recorder <- local_request_sequence(list(mock_response(200L, model_m_loaded)))
     out <- suppressMessages(lms_load(plain_probes[[label]]))
