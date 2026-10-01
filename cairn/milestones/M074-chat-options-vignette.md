@@ -99,8 +99,8 @@ scoring are M073.
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
 - [x] T6: Add the NEWS entry and run the checks of AC6.
-- [ ] T7: Fix the review findings F1, F2, F4, F6, F7, and F9 in the source. Name the dots that the package checks, and say that a `NULL` option is dropped. Limit the mismatch text to one loaded model and to the default and openai routes. Back or drop the temperature-0 sentence, and explain "system prompt" before its first use. Point to `?lms_chat` for `ttl`.
-- [ ] T8: Fix F3. Add an `rlmstudio_bad_response` handler to `chat_or_na()`, and say which errors still stop a loop. Narrow the intro and the NEWS entry to match.
+- [x] T7: Fix the review findings F1, F2, F4, F6, F7, and F9 in the source. Name the dots that the package checks, and say that a `NULL` option is dropped. Limit the mismatch text to one loaded model and to the default and openai routes. Back or drop the temperature-0 sentence, and explain "system prompt" before its first use. Point to `?lms_chat` for `ttl`.
+- [x] T8: Fix F3. Add an `rlmstudio_bad_response` handler to `chat_or_na()`, and say which errors still stop a loop. Narrow the intro and the NEWS entry to match.
 - [ ] T9: Fix F5 and F8. Give the openai part of the log-probability test a mock reply that carries log probabilities, or back the "No" cell with a live call. Rewrap the test header and the two long source lines.
 - [ ] T10: Re-knit from a clean start, and re-run the checks of AC1 to AC6.
 
@@ -138,6 +138,9 @@ scoring are M073.
 - 2026-10-01: all tasks done. `devtools::test()`: 0 failed, 0 errors, 3 live skips. Status set to review.
 - 2026-10-01: review return 1 (defect): AC5 fails on F1, the false sentence "The package does not check the names of request options". At the gate the user chose to send it back and fix F1 to F9 as T7 to T10. F10 to F12 are rejected for the reasons in the Review section. AC5 is unticked. Status set to in-progress.
 - 2026-10-01: AC3 rewrapped so that no line starts with a quoted fence. The words are unchanged. `cairn_validate.py` read that line as an open code fence and counted the Review section as plan lines.
+- 2026-10-01: resumed by /milestone-implement. No question gate: T9 takes the mock reply, and T7 drops the temperature-0 claim.
+- 2026-10-01: T7: the options text names the checked dots (`stream`, `instructions` on the default route, `messages` on openai) and says a `NULL` option is left out. "As you wrote it" and both temperature-0 claims are gone. "System prompt" is explained at its first use, and the `ttl` sentence is a pointer to `?lms_chat`. The mismatch text says "with one model loaded" and names the default and openai routes.
+- 2026-10-01: T8: `chat_or_na()` has an `rlmstudio_bad_response` handler after the mismatch handler, since the mismatch is also a bad response. The text says that other errors, such as a wrong argument, still stop a loop. The intro and the NEWS entry now name the four classes.
 
 ## Decisions
 
