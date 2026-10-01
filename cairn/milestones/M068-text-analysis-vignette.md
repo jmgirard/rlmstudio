@@ -35,7 +35,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 
 ## Acceptance criteria
 
-- [ ] AC1: The R code that `devtools::build()` writes for the vignette,
+- [x] AC1: The R code that `devtools::build()` writes for the vignette,
       `inst/doc/text-analysis.R` in the built tarball, contains each of
       these strings: `lms_chat_batch(`,
       `format = "data.frame"`, `schema =`, `api_type = "openai"`,
@@ -49,7 +49,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
       least one output line with that marker. The logprobs chunk calls `lms_chat()` on the
       default route with `top_logprobs`, `temperature = 0`, and a prompt
       that asks for one digit.
-- [ ] AC2: A live build keeps the state it found. On this macOS host, where
+- [x] AC2: A live build keeps the state it found. On this macOS host, where
       the LM Studio desktop app runs the daemon, a render of the vignette
       leaves two things as they were before the render. One is the `running`
       field of `lms server status --json`. The other is the set of loaded
@@ -58,19 +58,19 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
       (b), the server runs with `google/gemma-3-1b` loaded. The prose of the
       vignette about its teardown claims no starting state other than these
       two.
-- [ ] AC3: Take each prose sentence of the vignette, and each `#` comment
+- [x] AC3: Take each prose sentence of the vignette, and each `#` comment
       line in a chunk, that states what a package function does, takes, or
       returns. A named test under `tests/testthat/` exercises the behavior
       that it states. The domain is every prose sentence and every comment
       line, read one at a time. Where no test exercises a stated behavior,
       the milestone adds a test. The test checks each case that the
       sentence names, such as each property type, route, or format.
-- [ ] AC4: `NEWS.md` has an entry under the development-version heading. It
+- [x] AC4: `NEWS.md` has an entry under the development-version heading. It
       names the new vignette and each of the seven features of AC1:
       the data-frame batch, schema columns, logprobs scored by
       `lms_score_expected()`, `lms_embed()`, `list_instances()`,
       `lms_unload_all()`, and the `rlmstudio.quiet` option.
-- [ ] AC5: `devtools::document()` gives no diff, `devtools::test()` passes,
+- [x] AC5: `devtools::document()` gives no diff, `devtools::test()` passes,
       and `pkgdown::check_pkgdown()` passes. `devtools::check()` with
       `RLMSTUDIO_API_TOKEN` set gives 0 errors and 0 warnings on this
       machine, with the vignette built live from starting state (a) of AC2.
@@ -147,3 +147,39 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-09-30 on branch head b1455de, which contains `origin/main` (491e3a2).
+
+- AC1: `devtools::build()` from state (a) wrote a tarball whose `inst/doc/text-analysis.R` holds each of the 10 strings (1 or 2 times each). A live `knitr::knit()` ran from state (a) on a copy with `comment = "#M68#"`. All 6 chunks that call the five functions showed marker lines: batch 11, schema batch 4, score 7, embed 6, instances 3, unload-all 8. The source holds no `#M68#`. The logprobs chunk calls `lms_chat()` with no `api_type`, so it takes the default route. It sets `top_logprobs = 10` and `temperature = 0`, and its prompt says "Answer with one digit only." State read `running=False ids=[]` before and after each run.
+- AC2: state (a), the `devtools::build()` render above: `running=False ids=[]` before and after. State (b), a live `rmarkdown::render()` of the committed vignette: `running=True ids=['google/gemma-3-1b']` before and after. That render loaded the embedding model, and its unload-new chunk unloaded it. The teardown paragraph names only these two starting states.
+- AC3: the T5 ledger names 20 tests. Each exists by its exact name in the file that the ledger names. The review read the vignette sentence by sentence again and found no behavior sentence outside the ledger. The four new tests in `test-vignette-claims.R` check each case that their sentences name. They read the load messages and the quiet option, three requests and three rows, the sent dots and the candidates, and the four score fields with rescaling. All four pass in the AC5 test run.
+- AC4: the first entry under `# rlmstudio (development version)` names `vignette("text-analysis")` and the seven features. They are the `format = "data.frame"` batch, schema properties that become columns, `logprobs = TRUE` scored by `lms_score_expected()`, `lms_embed()`, `list_instances()`, `lms_unload_all()`, and `rlmstudio.quiet`. It names no milestone.
+- AC5: `devtools::document()` gave no diff. `devtools::test()` gave 0 failed, 0 errors, 3 skipped (live tests, server stopped), and 19615 passed. `pkgdown::check_pkgdown()` found no problems. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes. It started from state (a) and read `running=False ids=[]` before and after.
+- Consistency gate: `cairn_validate.py` passed (exit 0). No DESIGN principle changed, so `cairn_impact` was skipped. The branch does not touch README files or add top-level files. The NEWS entry is AC4. The document, pkgdown, and check results are AC5.
+
+Independent review: three fresh reviewers (Opus diff, Sonnet history, Sonnet prior review). The prior-review probe of GitHub PR comments returned none, so that lens read the archive and LESSONS. Findings, merged where two lenses agree, with the triage proposed at the gate:
+
+- F1 (diff 1), fix now: the embed chunk uses `reviews`, which only the chat-gated batch chunk defines. With the embedding model on disk and `google/gemma-3-1b` absent, the build stops with "object 'reviews' not found" and skips the teardown.
+- F2 (diff 2), fix now: the instances chunk runs on `lms_ready` alone. With nothing loaded, `list_instances()` returns four columns, and the `context_length` selection fails before the teardown.
+- F3 (diff 5), fix now: the schema prose does not say that a schema needs `api_type = "openai"`. Other routes abort, tested in `test-arg-guards.R` "a schema on a route other than openai aborts".
+- F4 (history 3), fix now: the logprobs prose does not name the default route. On the native and OpenAI routes, `lms_chat()` returns no logprobs frame.
+- F5 (prior 2, history 1), fix now: the teardown prose drops the host condition that the other two vignettes carry since M055.
+- F6 (diff 6), fix now: the `models-before` comment says the teardown unloads only what the build loaded. The `lms_unload_all()` branch unloads every instance.
+- F7 (diff 7, history 4), fix now: the quiet prose names one warning that shows past the option. Others also do.
+- F8 (diff 4, history 6, name part), fix now: the score test name says "reads the first step", but the test counts a later step with the same token.
+- F9 (diff 10), fix now: the quiet case of the `lms_load()` claim test does not check that both requests ran.
+- F10 (prior 5, history 7), fix now: the logprobs claim test reads body fields with `$` and pins `10L` and `0L` after a jsonlite parse. Read them with `[[` and `expect_equal()`.
+- F11 (diff 12), fix now: the T1 work-log line says the embedding gate reads `list_models(type = "embedding")`. The vignette reads `list_models()`. Corrected by a new work-log line.
+- F12 (diff 3, prior 6), follow-up: if an earlier chunk fails, the teardown of a vignette does not run. A new candidate row covers the three vignettes.
+- F13 (diff 4, history 6, behavior part), follow-up: `lms_score_expected()` counts candidates from any later step whose token equals the first step token. This code predates the branch. A new candidate row.
+- F14 (prior 1), follow-up: the new vignette copies the server-status read of the M055 finding O2 row. That row is extended to name the third vignette.
+- F15 (history 2, LESSONS part), follow-up: LESSONS line 27 says "both vignettes". The hygiene pass corrects it.
+- F16 (history 1, third state), reject: a build that finds the server stopped and a model loaded takes the unload-new branch and stops the server, which keeps that state. AC2 bounds the prose to two states.
+- F17 (diff 8), reject: the claim audit listed the bundled-model sentence. T1 found the model on disk with no download, and `embed_ready` covers its absence.
+- F18 (diff 9), reject: the plan gate chose the pasted `#>` output with a live build.
+- F19 (diff 11), reject: the review evidence lands in the step-6 checkpoint commit.
+- F20 (prior 3), reject: the vignette sends the reader to `vignette("getting-started")` for the server start, and that vignette has the readiness paragraph.
+- F21 (prior 4), reject: the logprobs-less case claims the text alone, not the reply id.
+- F22 (history 2, NEWS part), reject: the older NEWS entry "teardown of both vignettes" describes its own change, which was true then.
+- F23 (history 5), reject: input truncation in `lms_embed()` is outside this vignette's scope. Its help page documents it.
+- F24 (history 8), reject: the work log records the `loaded_ids()` helper as a deliberate choice.
