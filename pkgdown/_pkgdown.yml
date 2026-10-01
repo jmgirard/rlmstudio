@@ -7,12 +7,11 @@ authors:
 template:
   bootstrap: 5
   bslib:
-    bootswatch: sandstone
+    preset: zephyr
     primary: "#4139C3"
-    link-color: "#4139C3"
-
-navbar:
-  bg: primary
+  # The light switch also drops the navbar background class, which keeps the
+  # navbar light. Without it, zephyr gives the navbar `bg-primary`.
+  light-switch: true
 
 development:
   mode: release
@@ -23,6 +22,17 @@ repo:
     source: https://github.com/jmgirard/rlmstudio/blob/HEAD/
     issue: https://github.com/jmgirard/rlmstudio/issues/
     user: https://github.com/jmgirard/
+
+articles:
+  # If no articles section has a `navbar` key, the Articles menu is a plain link.
+  # `navbar: ~` lists the articles in the menu, in this order, with no heading.
+  - title: All articles
+    navbar: ~
+    contents:
+      - getting-started
+      - chat-options
+      - text-analysis
+      - headless-config
 
 reference:
   - title: "Chat & Inference"

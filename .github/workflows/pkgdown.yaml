@@ -38,6 +38,12 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
+      # pkgdown renders root .md files as site pages (pkgdown:::package_mds()
+      # lists which) and does not read .Rbuildignore, so CLAUDE.md would
+      # otherwise become one.
+      - name: Remove CLAUDE.md before the build
+        run: rm -f CLAUDE.md
+
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
@@ -46,6 +52,6 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
-          clean: false
+          clean: true
           branch: gh-pages
           folder: docs
