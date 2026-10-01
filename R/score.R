@@ -34,8 +34,7 @@ lms_score_expected <- function(lp_df, scale = 1:5) {
 
   # 1. Isolate the first decision step (where the rating happens)
   # We assume the user followed instructions and the rating is the first token
-  first_step <- lp_df$step_token[1]
-  candidates <- lp_df[lp_df$step_token == first_step, ]
+  candidates <- lp_df[first_step_rows(lp_df), ]
 
   # 2. Extract and clean tokens
   # Convert tokens to numbers; non-numeric (like \n) become NA
@@ -77,4 +76,29 @@ lms_score_expected <- function(lp_df, scale = 1:5) {
       stringsAsFactors = FALSE
     )
   )
+}
+
+#' The rows of the first step of a logprobs frame
+#'
+#' With a `step` column whose first value is not `NA`, the rows whose `step`
+#' equals that value, wherever they sit. Otherwise the first run of
+#' consecutive rows whose `step_token` is identical to that of the first row,
+#' `NA` included, so two adjacent steps with the same token read as one.
+#'
+#' @param lp_df A logprobs data frame with at least one row.
+#' @return The row numbers of the first step.
+#'
+#' @noRd
+first_step_rows <- function(lp_df) {
+  step <- lp_df[["step"]]
+  if (!is.null(step) && !is.na(step[1])) {
+    return(which(step == step[1]))
+  }
+  tokens <- lp_df$step_token
+  same <- if (is.na(tokens[1])) {
+    is.na(tokens)
+  } else {
+    !is.na(tokens) & tokens == tokens[1]
+  }
+  seq_len(match(FALSE, same, nomatch = length(same) + 1L) - 1L)
 }

@@ -71,3 +71,111 @@ test_that("lms_score_expected aborts on no valid tokens", {
     "No tokens in the top candidates"
   )
 })
+
+# A logprobs frame from columns. `step` is left out when it is NULL.
+score_frame <- function(step_token, candidate_token, prob, step = NULL) {
+  lp_df <- data.frame(
+    step_token = step_token,
+    step_logprob = -0.5,
+    candidate_token = candidate_token,
+    candidate_logprob = log(prob),
+    stringsAsFactors = FALSE
+  )
+  if (!is.null(step)) {
+    lp_df$step <- step
+  }
+  lp_df
+}
+
+# The score of a first step that holds "3" at 0.6 and "4" at 0.2, the case
+# that every frame below is built to read. Rescaled to sum to 1, the
+# probabilities are 0.6 / 0.8 = 0.75 and 0.2 / 0.8 = 0.25.
+# Expected value: 3 * 0.75 + 4 * 0.25 = 3.25.
+# Weighted SD: sqrt(0.75 * (3 - 3.25)^2 + 0.25 * (4 - 3.25)^2)
+#   = sqrt(0.75 * 0.0625 + 0.25 * 0.5625) = sqrt(0.1875) = 0.4330127.
+# Entropy in bits: -(0.75 * log2(0.75) + 0.25 * log2(0.25))
+#   = 0.75 * 0.4150375 + 0.25 * 2 = 0.8112781.
+expect_first_step_score <- function(res, info = NULL) {
+  expect_identical(res$probabilities$label, c(3, 4), info = info)
+  expect_equal(res$probabilities$prob, c(0.75, 0.25), info = info)
+  expect_equal(res$expected_value, 3.25, info = info)
+  expect_equal(res$weighted_sd, 0.4330127, tolerance = 1e-6, info = info)
+  expect_equal(res$entropy, 0.8112781, tolerance = 1e-6, info = info)
+}
+
+test_that("lms_score_expected() reads the rows of the first step by the step column", {
+  # Each later row that the step column puts outside step 1 holds a "2" or a
+  # "5", which would move the score if it counted.
+  frames <- list(
+    # Steps 1 and 3 share the step token "3", with a newline step between.
+    "steps 1 and 3 share a token" = score_frame(
+      step_token = c("3", "3", "\n", "3", "3"),
+      candidate_token = c("3", "4", "\n", "2", "5"),
+      prob = c(0.6, 0.2, 0.9, 0.3, 0.1),
+      step = c(1L, 1L, 2L, 3L, 3L)
+    ),
+    # Steps 1 and 2 are adjacent and share the step token "3".
+    "steps 1 and 2 share a token" = score_frame(
+      step_token = c("3", "3", "3", "3"),
+      candidate_token = c("3", "4", "2", "5"),
+      prob = c(0.6, 0.2, 0.3, 0.1),
+      step = c(1L, 1L, 2L, 2L)
+    ),
+    # A row of step 1 comes after a row of step 2.
+    "a step 1 row after a step 2 row" = score_frame(
+      step_token = c("3", "3", "3"),
+      candidate_token = c("3", "2", "4"),
+      prob = c(0.6, 0.3, 0.2),
+      step = c(1L, 2L, 1L)
+    )
+  )
+  for (case in names(frames)) {
+    lp_df <- frames[[case]]
+    res <- lms_score_expected(lp_df, scale = 1:5)
+    expect_first_step_score(res, info = case)
+    # The rows of step 1 alone give the same result.
+    expect_identical(
+      res,
+      lms_score_expected(lp_df[lp_df$step == 1L, ], scale = 1:5),
+      info = case
+    )
+  }
+})
+
+test_that("lms_score_expected() reads the first run of a step token without a step column", {
+  # The step tokens run "3", "\n", "3". The last "3" rows hold a "2" and a
+  # "5" and do not count.
+  lp_df <- score_frame(
+    step_token = c("3", "3", "\n", "3", "3"),
+    candidate_token = c("3", "4", "\n", "2", "5"),
+    prob = c(0.6, 0.2, 0.9, 0.3, 0.1)
+  )
+  expect_first_step_score(lms_score_expected(lp_df, scale = 1:5))
+
+  # A first step token of NA: the run is the leading NA rows. The "3" row
+  # and the NA row after it do not count.
+  lp_df <- score_frame(
+    step_token = c(NA, NA, "3", NA),
+    candidate_token = c("3", "4", "2", "5"),
+    prob = c(0.6, 0.2, 0.3, 0.1)
+  )
+  expect_first_step_score(lms_score_expected(lp_df, scale = 1:5))
+})
+
+test_that("lms_score_expected() reads the first run of a step token when the first step is NA", {
+  # The step column is NA in the first row, so the run of the step token
+  # "3" in rows 1 and 2 counts, and the step column is not read.
+  lp_df <- score_frame(
+    step_token = c("3", "3", "\n", "3"),
+    candidate_token = c("3", "4", "\n", "2"),
+    prob = c(0.6, 0.2, 0.9, 0.3),
+    step = c(NA, 1L, 2L, 3L)
+  )
+  res <- lms_score_expected(lp_df, scale = 1:5)
+  expect_first_step_score(res)
+  # The same frame with no step column gives the same result.
+  expect_identical(
+    res,
+    lms_score_expected(lp_df[setdiff(names(lp_df), "step")], scale = 1:5)
+  )
+})

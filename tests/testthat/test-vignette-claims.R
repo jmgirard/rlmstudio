@@ -123,28 +123,31 @@ test_that("lms_chat() on the default route sends the dots and lists the candidat
   expect_identical(without_response_id(res), "3")
 })
 
-test_that("lms_score_expected() reads the rows of the first step token, keeps the scale, and rescales", {
-  # The first step holds "3", "4", a number outside the scale, and a newline.
-  # A later step with another token holds a "5", which must not count. A
-  # later step with the same token as the first row counts with it.
+test_that("lms_score_expected() reads the rows of the first step, keeps the scale, and rescales", {
+  # Step 1 holds "3", "4", a number outside the scale, and a newline. Step 2
+  # holds a "5" and step 3 a "2". Step 3 has the same token as step 1, and
+  # neither later step counts.
   lp_df <- data.frame(
     step_token = c("3", "3", "3", "3", "\n", "\n", "3"),
     step_logprob = c(-0.5, -0.5, -0.5, -0.5, -0.1, -0.1, -0.2),
     candidate_token = c("3", "4", "6", "\n", "\n", "5", "2"),
     candidate_logprob = log(c(0.4, 0.2, 0.1, 0.1, 0.9, 0.1, 0.2)),
+    step = c(1L, 1L, 1L, 1L, 2L, 2L, 3L),
     stringsAsFactors = FALSE
   )
 
   res <- lms_score_expected(lp_df, scale = 1:5)
 
-  # Kept: 3 (0.4), 4 (0.2), and 2 (0.2) from the rows whose step token is "3".
-  # Rescaled to sum to 1: 0.5, 0.25, 0.25.
+  # Kept: 3 (0.4) and 4 (0.2) from the rows of step 1.
+  # Rescaled to sum to 1: 0.4 / 0.6 = 2/3 and 0.2 / 0.6 = 1/3.
   expect_identical(names(res), c("expected_value", "weighted_sd", "entropy", "probabilities"))
-  expect_identical(res$probabilities$label, c(3, 4, 2))
-  expect_equal(res$probabilities$prob, c(0.5, 0.25, 0.25))
+  expect_identical(res$probabilities$label, c(3, 4))
+  expect_equal(res$probabilities$prob, c(2 / 3, 1 / 3))
   expect_equal(sum(res$probabilities$prob), 1)
-  expect_equal(res$expected_value, 3 * 0.5 + 4 * 0.25 + 2 * 0.25)
-  expect_equal(res$weighted_sd, sqrt(0.5 * 0 + 0.25 * 1 + 0.25 * 1))
-  # Entropy in bits: -(0.5 log2 0.5 + 2 * 0.25 log2 0.25) = 1.5.
-  expect_equal(res$entropy, 1.5, tolerance = 1e-6)
+  # Expected value: 3 * 2/3 + 4 * 1/3 = 10/3.
+  expect_equal(res$expected_value, 10 / 3)
+  # Weighted SD: sqrt(2/3 * (1/3)^2 + 1/3 * (2/3)^2) = sqrt(2/9).
+  expect_equal(res$weighted_sd, sqrt(2 / 9))
+  # Entropy in bits: -(2/3 log2 2/3 + 1/3 log2 1/3) = 0.9182958.
+  expect_equal(res$entropy, 0.9182958, tolerance = 1e-6)
 })

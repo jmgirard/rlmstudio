@@ -104,7 +104,7 @@ in the DESIGN known issue.
       Add `step` checks at `test-chat-batch.R:688` and
       `test-chat-batch-usage.R:373`. Update every `names()` check of the
       logprobs frame that `devtools::test()` then fails.
-- [ ] T2: In `lms_score_expected()` (`R/score.R:37`), read the first step
+- [x] T2: In `lms_score_expected()` (`R/score.R:37`), read the first step
       by `step`, with the run fallback of AC3. Add the tests of AC2 and AC3
       to `test-score.R`. Replace the score test at
       `test-vignette-claims.R:125`. Plant the old rule and see each new
@@ -134,6 +134,7 @@ in the DESIGN known issue.
 - 2026-09-30: plan gate put the sum of duplicate labels in this milestone over a separate candidate row, because it fixes the entropy of the same function; falsified by a user who needs each token spelling as its own row.
 - 2026-09-30: implement started on branch m069-score-first-step. Question gate skipped: the criteria fix the column, the step rule, the fallback, and the label sum.
 - 2026-09-30: T1 done. `logprobs_frame()` adds an integer `step` column last. The new `test-chat.R` test failed on the old code (no `step` column) and passes now. The batch checks, the four-column frame tests, and the vignette-claims names check carry `step`. `devtools::test()` clean.
+- 2026-09-30: T2 done. `first_step_rows()` in `R/score.R` reads step 1 by `step`, or the first run of `step_token`. With the old rule planted, the three new `test-score.R` tests and the replaced vignette-claims score test fail. A run-only plant fails the AC2 frames, and a consecutive-step plant fails the out-of-order frame. `devtools::test()` clean.
 
 ## Decisions
 
