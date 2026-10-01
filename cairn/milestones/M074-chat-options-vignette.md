@@ -98,7 +98,7 @@ scoring are M073.
 - [x] T5: List the claims of AC5 with the test or probe that backs each, as
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
-- [ ] T6: Add the NEWS entry and run the checks of AC6.
+- [x] T6: Add the NEWS entry and run the checks of AC6.
 
 ## Work log
 
@@ -128,6 +128,7 @@ scoring are M073.
 - 2026-10-01: T5 ledger, LM Studio claims: the knitted output shows each one. Those are the replies, the raw `temperature` of 0 and 0.8, the native refusals (400 `unrecognized_keys`, 404 `model_not_found`), the default-route mismatch, the follow-up "Green." against "Blue.", and "GREEN!".
 - 2026-10-01: T5 probe: the raw openresponses reply holds the text "Blue." at `output[[1]]$content[[1]]$text`. The raw openai fields are `id`, `object`, `created`, `model`, `choices`, `usage`, `stats`, and `system_fingerprint`. The raw native fields are `model_instance_id`, `output`, `stats`, and `response_id`. So the fields differ by route.
 - 2026-10-01: T5: added 5 tests to `tests/testthat/test-vignette-claims.R`. A planted defect in a scratch copy turned each one red, and no other test. The plants were a wrong native path, a filter on unknown dots, a swapped system role, reversed message rows, and a changed native warning. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
+- 2026-10-01: T6: added the NEWS entry. `devtools::document()` gives no diff, and `pkgdown::check_pkgdown()` finds no problems. With the server stopped and `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gives 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 
