@@ -1,6 +1,6 @@
 # M075: The website has a light purple theme, a dark mode switch, and articles in reading order
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -76,3 +76,5 @@ changes.
 - 2026-10-01: T3 done. The workflow removes `CLAUDE.md` before the build and deploys with `clean: true`. The comment matches `pkgdown:::package_mds()` in 2.2.1, read this session.
 - 2026-10-01: T4 done. `init_site()` then `build_site()` into a fresh scratch folder, with no preset warning. AC1: 0 of 46 navbar tags carry `bg-` or `data-bs-theme`, and the published `gh-pages` site flags 46 of 46. AC2: light link `#4139C3`, dark link `#8d88db` on `#212529` is 4.90:1. AC3: menu and `articles/index.html` both read getting-started, chat-options, text-analysis, headless-config, with no heading. AC4: no `extra.css` file or link in 147 link tags, and `gh-pages` has 46 such links. AC6: the build from a copy without `CLAUDE.md` writes no `CLAUDE*` file, and the build with it writes `CLAUDE.html`. `check_pkgdown()` prints "No problems found". `devtools::test()`: 0 failed, 0 errors, 3 skipped.
 - 2026-10-01: T5 runs after the merge, at `/milestone-review`. AC5 and AC6 also need the workflow run on the pull request, which review opens.
+- 2026-10-01: claim audit: 5 claims read, 2 corrected — .github/workflows/pkgdown.yaml, pkgdown/_pkgdown.yml
+- 2026-10-01: implement complete, status set to review. T5 stays open until after the merge, as the plan states.
