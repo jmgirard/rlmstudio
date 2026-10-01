@@ -1,0 +1,132 @@
+# M068: A vignette shows batch chat, structured output, logprobs scores, and embeddings
+
+- **Status:** planned
+- **Priority:** normal
+- **Depends on:** —
+- **Driving RR:** —
+- **Principles touched:** —
+- **Resolves:** —
+- **Surface tier:** user-facing — a vignette that package users read
+- **Branch/PR:** —
+
+## Goal
+
+A new vignette shows the text-analysis features that the two current
+vignettes leave out, built live against LM Studio as they are.
+
+## Scope
+
+**In:** A new `vignettes/text-analysis.Rmd`. It shows `lms_chat_batch()` with
+`format = "data.frame"`. It shows a `schema` whose properties become columns
+of a data-frame batch on `api_type = "openai"`. It shows `lms_chat()` with
+`logprobs = TRUE`, scored by `lms_score_expected()`. It also shows
+`lms_embed()`, `list_instances()`, `lms_unload_all()`, and the
+`rlmstudio.quiet` option. The chat model is `google/gemma-3-1b`, as in the
+other two vignettes. The embedding model is
+`text-embedding-nomic-embed-text-v1.5`, which LM Studio bundles. The build
+follows the pattern of `getting-started.Rmd`: chunks behind gates, the
+observed output pasted as `#>` comments, and a teardown that keeps the state
+it found (M055). If the build found no model loaded, `lms_unload_all()` runs.
+A NEWS entry.
+
+**Out:** A `previous_response_id` thread example stays as the existing note
+in `getting-started.Rmd`. The two current vignettes keep their content. A
+headless-host run of the teardown stays in the `lms daemon up` candidate row.
+
+## Acceptance criteria
+
+- [ ] AC1: `knitr::purl()` of `vignettes/text-analysis.Rmd` gives R code that
+      contains each of these strings: `lms_chat_batch(`,
+      `format = "data.frame"`, `schema =`, `api_type = "openai"`,
+      `logprobs = TRUE`, `lms_score_expected(`, `lms_embed(`,
+      `list_instances(`, `lms_unload_all(`, and `rlmstudio.quiet`. Take a
+      live render on this machine that starts with the server stopped and no
+      model loaded. The chunk option `comment` is set to a marker that the
+      source does not contain. Take each chunk that calls
+      `lms_chat_batch()`, `lms_score_expected()`, `lms_embed()`,
+      `list_instances()`, or `lms_unload_all()`. In that render, it shows at
+      least one output line with that marker. The logprobs chunk calls `lms_chat()` on the
+      default route with `top_logprobs`, `temperature = 0`, and a prompt
+      that asks for one digit.
+- [ ] AC2: A live build keeps the state it found. On this macOS host, where
+      the LM Studio desktop app runs the daemon, a render of the vignette
+      leaves two things as they were before the render. One is the `running`
+      field of `lms server status --json`. The other is the set of loaded
+      instance ids in `lms ps --json`. This holds for two starting states.
+      In state (a), the server is stopped and no model is loaded. In state
+      (b), the server runs with `google/gemma-3-1b` loaded. The prose of the
+      vignette about its teardown claims no starting state other than these
+      two.
+- [ ] AC3: Take each prose sentence of the vignette, and each `#` comment
+      line in a chunk, that states what a package function does, takes, or
+      returns. A named test under `tests/testthat/` exercises the behavior
+      that it states. The domain is every prose sentence and every comment
+      line, read one at a time. Where no test exercises a stated behavior,
+      the milestone adds a test. The test checks each case that the
+      sentence names, such as each property type, route, or format.
+- [ ] AC4: `NEWS.md` has an entry under the development-version heading. It
+      names the new vignette and each of the seven features of AC1:
+      the data-frame batch, schema columns, logprobs scored by
+      `lms_score_expected()`, `lms_embed()`, `list_instances()`,
+      `lms_unload_all()`, and the `rlmstudio.quiet` option.
+- [ ] AC5: `devtools::document()` gives no diff, `devtools::test()` passes,
+      and `pkgdown::check_pkgdown()` passes. `devtools::check()` with
+      `RLMSTUDIO_API_TOKEN` set gives 0 errors and 0 warnings on this
+      machine, with the vignette built live from starting state (a) of AC2.
+
+## Coverage
+
+- AC1 → T1, T2, T3, T4
+- AC2 → T2, T4
+- AC3 → T5
+- AC4 → T6
+- AC5 → T7
+
+## Tasks
+
+- [ ] T1: Probe the live server. Call `lms_download()` for the bundled
+      `text-embedding-nomic-embed-text-v1.5`, and `lms_embed()` on it. Call
+      `lms_chat()` on `google/gemma-3-1b` over the default route with
+      `logprobs = TRUE`, `top_logprobs`, `temperature = 0`, and a one-digit
+      prompt. Show that `lms_score_expected()` returns a list for that
+      reply. Run a schema data-frame batch over `api_type = "openai"`. Log
+      what each call returned. If a call fails, change the vignette's gates
+      before T2.
+- [ ] T2: Write `vignettes/text-analysis.Rmd` on the pattern of
+      `getting-started.Rmd`. Use the gates `lms_installed` and `lms_ready`,
+      and an embedding gate. Hidden chunks record the server state and the
+      loaded instance ids before the build. Sections cover the quiet option,
+      the data-frame batch, schema columns, logprobs scored by
+      `lms_score_expected()`, embeddings, and `list_instances()`. The
+      vignette sets `rlmstudio.quiet` back to its old value before the
+      teardown.
+- [ ] T3: Write the teardown. If the build found no model loaded,
+      `lms_unload_all()` runs. If not, the build unloads each instance in
+      the after-build list that is not in the before-build list. The prose
+      names the condition for the `lms_unload_all()` chunk. If the build
+      started the server, the build stops it.
+- [ ] T4: Render live in both starting states of AC2. Log the `running`
+      field and the instance ids before and after each render. Run the
+      `knitr::purl()` check and the marker render of AC1. Paste the observed
+      output into the `#>` comments of the chunks, so that a site built
+      without LM Studio still shows output.
+- [ ] T5: Read the vignette prose and chunk comments one sentence at a time.
+      In the work log, list each behavior sentence with the test that
+      exercises it. Where none does, add a test, and log a change to package
+      code that makes the test fail.
+- [ ] T6: Add the NEWS entry.
+- [ ] T7: Run `devtools::document()`, `devtools::test()`,
+      `pkgdown::check_pkgdown()`, and `devtools::check()` with the token
+      set.
+
+## Work log
+
+- 2026-09-30: created by /milestone-plan.
+- 2026-09-30: criteria audit (full mode, fresh Opus reader) returned 11 findings on AC1 to AC5. Each had one clear repair, fixed before the gate. AC1 got a purl name check, a comment marker for live output, and a fixed logprobs chunk. AC2 got instance ids, a teardown diff, and a bounded teardown claim. AC3 got chunk comments and failing plants for added tests. AC4 got named features, and AC5 got a named build state.
+- 2026-09-30: plan gate chose a gated live `lms_unload_all()` over never running it, because a live run checks the call and keeps the M055 state rule; falsified by a build that unloads a model it found loaded.
+- 2026-09-30: plan gate chose a live build with pasted `#>` output over a precomputed `.Rmd.orig` vignette, because it matches the two current vignettes; falsified by a reader or CRAN check that the doubled output or the live LM Studio need blocks.
+- 2026-09-30: plan gate added `lms_score_expected()` beside logprobs and left threads as the `getting-started.Rmd` note, because scoring is the package's core workflow; falsified by a user who needs a thread example to use `previous_response_id`.
+
+## Decisions
+
+## Review
