@@ -2,6 +2,23 @@
 
 ## rlmstudio (development version)
 
+- A new vignette,
+  [`vignette("chat-options")`](https://jmgirard.github.io/rlmstudio/articles/chat-options.md),
+  shows how to control a chat from an R script. A table compares the
+  three routes of
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  that `api_type` picks. The vignette covers a request option such as
+  `temperature`, and a misspelled option that the default route ignores.
+  It covers a follow-up question with `previous_response_id` and a whole
+  conversation as a `messages` data frame on
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
+  It shows the raw reply with `simplify = FALSE`. It also shows a
+  function that catches four condition classes with
+  [`tryCatch()`](https://rdrr.io/r/base/conditions.html):
+  `rlmstudio_no_server`, `rlmstudio_api_error`,
+  `rlmstudio_model_mismatch`, and `rlmstudio_bad_response`. A call that
+  fails with one of these classes then does not stop a script.
+
 - The
   [`vignette("headless-config")`](https://jmgirard.github.io/rlmstudio/articles/headless-config.md)
   text is rewritten, under the new title “Using LM Studio Without the

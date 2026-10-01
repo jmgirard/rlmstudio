@@ -2,6 +2,8 @@
 
 ### All vignettes
 
+- [Chat Options, Conversations, and
+  Errors](https://jmgirard.github.io/rlmstudio/articles/chat-options.md):
 - [Getting Started with LM Studio in
   R](https://jmgirard.github.io/rlmstudio/articles/getting-started.md):
 - [Using LM Studio Without the Desktop
