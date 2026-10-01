@@ -55,6 +55,9 @@ Observed in the code and agreed at the interview on 2026-09-17.
 - Oracle records for `lms_score_expected()` live as comments at the asserting tests in `tests/testthat/test-score.R`. Each comment gives the hand arithmetic. The step tests add a second oracle: the result is identical to the result for the rows of step 1 alone.
 - Code is formatted with Air (`air.toml`).
 - The changelog is `NEWS.md`. The site is pkgdown in release mode.
+- Vignettes are knitted ahead of time (M070). Each source is `vignettes/<name>.Rmd.orig`, with live code and no `eval` gates. `data-raw/knit-vignettes.R` knits it against a live LM Studio to `vignettes/<name>.Rmd`, which ships as plain markdown with its output. A vignette holds no inline R expression.
+- Vignette prose speaks to the reader as "you", says what a step is for before its code, and explains each term at its first use (M070). It uses none of these words or phrases, ignoring case: `seamless`, `robust`, `simply`, `powerful`, `excellent`, `shines`, `spin up`, `delve`, `comprehensive`, `leverage`, `best practice`, `worth noting`, `vignette is built`, `the build`.
+- Vignette R code is plain base R (M070). It uses none of these regular expressions: `\blapply\(`, `\bsapply\(`, `\bvapply\(`, `\bmapply\(`, `\bMap\(`, `\bReduce\(`, `\bFilter\(`, `\bdo\.call\(`, `\bunlist\(`, `\bsetdiff\(`, `\brepeat\b`, `\bsuppressWarnings\(`, `\binvisible\(`, `%\*%`, `\bt\(`, and `\\\(`.
 
 ## Design Principles
 
