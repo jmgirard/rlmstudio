@@ -151,6 +151,8 @@ scoring are M073.
 - 2026-10-01: claim audit: 46 claims read, 1 corrected — vignettes/chat-options.Rmd.orig, vignettes/chat-options.Rmd. The checked option names read as a full list but left out `response_format` with `schema`, so the list now opens with "For example". The same reader re-read it and found that it holds.
 - 2026-10-01: after the audit, a re-knit passes the T10 scans with the same live answers. All tasks done. Status set to review.
 - 2026-10-01: review pass 2 started by /milestone-review. Fresh evidence for AC1 to AC6 is recorded, and the consistency gate passes. The diff reviewer is still running (checkpoint, review not finished).
+- 2026-10-01: review pass 2 gate: the user answered "decide for me", so the recommended option holds. G1 to G12 are fixed on the branch with no status change, G13 to G19 are rejected, and G20 is noted. Merge approval is asked again after the fixes.
+- 2026-10-01: gate fixes G1 to G12 landed. Four planted defects in a scratch copy turned only their own new test red. A live re-knit kept every LM Studio claim of the text.
 
 ## Decisions
 
@@ -218,3 +220,16 @@ Independent review, pass 2, 2026-10-01: three fresh reviewers (diff, history, pr
 - G18 (prior 6): "checks a few option names" can read as a conflict with the rule that the package keeps no list of fields. Proposed: reject, because the text gives the reason for each checked name.
 - G19 (prior 9): the knit shows the model ignore "Answer with one word". Proposed: reject, because no claim depends on it.
 - G20 (history 7): the NEWS entry follows the form of its neighbors. Noted, no action.
+
+Gate decision on pass 2: the user left the choice to the session, so the proposed dispositions stand. G1 to G12 are fixed now, G13 to G19 are rejected for the reasons above, and G20 is noted.
+
+Gate fixes, evidence gathered 2026-10-01 after G1 to G12:
+
+- Vignette: G1 narrows the sentence to "A misspelled name such as `temprature`". G3 adds that `httr2_failure` also stops a loop, and the intro now says "some errors". G4 prints a code that is not `NULL` on its own line, and the bullet says that the code can be `NULL`. G6 says that the table shows what `lms_chat()` supports. G8 says "By default, the server keeps the reply". G9 adds that `lms_server_stop()` stops a server that ran before. G10 explains server, attribute, and handler at their first use. G12 rewraps two paragraphs.
+- Tests: G5 renames the option test. G7 adds a `model` field and a comment to the native mock. G2, G3, and G11 are three new tests in test-vignette-claims.R. "lms_chat() checks for a server at its own host and raises rlmstudio_no_server" covers G2. "a connection that fails after the server check raises httr2_failure, none of the four classes" covers G3. "a wrong argument aborts lms_chat() before any request, with none of the four classes" covers G11.
+- Plants in a scratch copy turned only their own test red. The first dropped `host` from the default-route server check. The second changed an `httr2_failure` to `rlmstudio_no_server`. The third gave the `stream` abort the class `rlmstudio_bad_response`. The fourth added the model check to the native route.
+- Re-knit from a clean start: the follow-up gave "Green." with the id and "Blue." without it. The raw temperatures were 0 and 0.8. The data frames gave "Your favorite color is green." and "GREEN!". Native gave 404 `model_not_found` and 400 `unrecognized_keys`, and the default route gave the mismatch. The re-knit also changed the output of `getting-started`, which was restored, because it is outside this milestone.
+- AC1 to AC3 after the fixes: purl gives 142 lines with all 10 strings. The knit has 445 lines, with no `{r` fence and no `#> Error` line. All 9 chat blocks have a `#>` line after the last code line. The 16 code patterns find 0 matches in the purled code. The 14 prose words find 0 matches in the 219 source lines outside the chunks. Each search matched its plant.
+- AC4 after the fixes: route is explained on line 14, request option on line 15, and response id on lines 52 and 53. Conversation history is explained on line 201, and condition class on line 315. Raw reply is explained on lines 267 and 268, below its heading on line 265.
+- AC5 after the fixes: the new claims are backed by named tests. The `NULL` code is backed by test-model-check.R "an API error carries the code string of the body, or NULL". The `httr2_failure` claim and the class of an argument error are backed by the two new tests above. The `lms_server_stop()` sentence is backed by "lms_server_stop() sends server stop alone and reports the stop". "By default, the server keeps the reply" is shown by the knitted follow-up, which sets no `store`.
+- AC6 after the fixes: `devtools::document()` changed no file. `devtools::test()` gave 19815 expectations in 49 files, with 0 failed, 0 errors, and 3 live skips. `pkgdown::check_pkgdown()` found no problems. With the server stopped and `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.

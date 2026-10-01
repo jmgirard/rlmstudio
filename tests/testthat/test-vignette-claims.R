@@ -766,7 +766,7 @@ test_that("lms_chat() returns log probabilities on the default route alone", {
   expect_null(native_body[["include"]])
 })
 
-test_that("lms_chat() sends a request option as written, a misspelled name included, on each route", {
+test_that("lms_chat() sends a request option under its name, a misspelled name included, and leaves out a NULL option, on each route", {
   bodies <- list(
     openresponses = responses_reply(),
     openai = openai_reply(),
@@ -796,7 +796,11 @@ test_that("lms_chat() sends a request option as written, a misspelled name inclu
 
 test_that("lms_chat() on the native route returns a reply from another model with no error", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  # The model check runs on two routes alone (D-025). A live native reply has
+  # no model field, but this one carries one, so a check that reads either
+  # field turns the test red.
   body <- json_object(
+    model = quoted("org/model-y"),
     model_instance_id = quoted("org/model-y"),
     output = json_array(native_message(quoted("Blue."))),
     stats = native_stats(),
@@ -810,6 +814,57 @@ test_that("lms_chat() on the native route returns a reply from another model wit
   # The native route sends no model-list request to check the model.
   expect_length(recorder$requests, 1L)
   expect_identical(request_target(recorder$requests[[1]])[["path"]], "/api/v1/chat")
+})
+
+test_that("lms_chat() checks for a server at its own host and raises rlmstudio_no_server", {
+  asked <- NULL
+  testthat::local_mocked_bindings(is_server_running = function(host, ...) {
+    asked <<- host
+    FALSE
+  })
+  recorder <- local_request_recorder(mock_response(200L, responses_reply()))
+
+  expect_error(
+    lms_chat("a-model", "hi", host = "http://localhost:1"),
+    class = "rlmstudio_no_server"
+  )
+  expect_identical(asked, "http://localhost:1")
+  expect_length(recorder$requests, 0L)
+})
+
+test_that("a connection that fails after the server check raises httr2_failure, none of the four classes", {
+  # The check passes, but nothing listens on port 1, so the request itself
+  # fails to connect, as it does for a server that stops during a request.
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  cnd <- expect_error(
+    lms_chat("a-model", "hi", host = "http://127.0.0.1:1"),
+    class = "httr2_failure"
+  )
+  four <- c(
+    "rlmstudio_no_server", "rlmstudio_api_error",
+    "rlmstudio_bad_response", "rlmstudio_model_mismatch"
+  )
+  expect_false(inherits(cnd, four))
+})
+
+test_that("a wrong argument aborts lms_chat() before any request, with none of the four classes", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_recorder(mock_response(200L, responses_reply()))
+  four <- c(
+    "rlmstudio_no_server", "rlmstudio_api_error",
+    "rlmstudio_bad_response", "rlmstudio_model_mismatch"
+  )
+  bad_calls <- list(
+    two_models = function() lms_chat(c("a", "b"), "hi"),
+    stream = function() lms_chat("a-model", "hi", stream = TRUE)
+  )
+  for (name in names(bad_calls)) {
+    test_that(name, {
+      cnd <- expect_error(bad_calls[[name]](), class = "rlang_error")
+      expect_false(inherits(cnd, four))
+    })
+  }
+  expect_length(recorder$requests, 0L)
 })
 
 test_that("lms_chat() on the openai route sends the system prompt and the prompt as its messages", {

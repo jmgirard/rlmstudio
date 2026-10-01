@@ -15,19 +15,19 @@ knitr::opts_chunk$set(
 ```
 
 This vignette shows you how to control a chat with a model from an R
-script. You pick a route, the format in which R sends a request to
-LM Studio. You set request options, the settings that change how the model
+script. The server is the program of LM Studio that answers the requests
+of R. You pick a route, the format in which R sends a request to the
+server. You set request options, the settings that change how the model
 answers. You continue a conversation and read the whole reply of the
-server. You also catch the errors that a missing server or a failed reply
-raises, so that such a call does not stop your script.
+server. You also catch some errors, such as a missing server or a refused
+request, so that such a call does not stop your script.
 
 `vignette("getting-started")` covers what comes first: installing
 LM Studio, starting the server, and downloading `google/gemma-3-1b`.
 
 ## Start the server and load the model
 
-The server is the program of LM Studio that answers the requests of R.
-Start it, and load the model into memory.
+Start the server, and load the model into memory.
 
 ```{r start}
 library(rlmstudio)
@@ -49,11 +49,12 @@ native format is LM Studio's own. On every route, the request goes to
 LM Studio on your computer. The `api_type` argument of `lms_chat()` picks
 the route.
 
-The routes differ in what they support. A response id is a name that the
-server gives to a reply that it keeps, so that a later call can continue
-from that reply. Log probabilities say how likely the model found each
-piece of its reply. A `schema` makes the reply follow a fixed shape.
-`?lms_chat` explains the `ttl` argument.
+The table below shows what `lms_chat()` supports on each route. A response
+id is a name that the server gives to a reply. By default, the server
+keeps the reply, so that a later call can continue from it. Log
+probabilities say how likely the model found each piece of its reply. A
+`schema` makes the reply follow a fixed shape. `?lms_chat` explains the
+`ttl` argument.
 
 | `api_type` | Continue by response id | Log probabilities | `schema` and `ttl` |
 |---|---|---|---|
@@ -83,8 +84,9 @@ lms_chat(model, prompt, api_type = "openai")
 lms_chat(model, prompt, api_type = "native")
 ```
 
-Each call returns the text of the reply. On the default route and the
-native route, the text also carries a `response_id` attribute.
+Each call returns the text of the reply. An attribute is a named value
+that R attaches to an object, and `attr()` reads it. On the default route
+and the native route, the text also carries a `response_id` attribute.
 
 ## Request options
 
@@ -109,8 +111,8 @@ The package checks a few option names. For example, it stops with an error
 on a `stream` other than `FALSE` or `NULL`, because it reads a whole reply
 and not one sent in parts. It also stops on `instructions` on the default
 route and on `messages` on the OpenAI route, because `lms_chat()` fills
-those fields itself. A misspelled name goes to the server with no check by
-the package.
+those fields itself. A misspelled name such as `temprature` goes to the
+server with no check by the package.
 
 The server checks the names, and the routes do not check them in the same
 way. On the default route, the server ignores a name that it does not
@@ -174,11 +176,11 @@ Conversation history is the list of the earlier messages of a chat. On the
 OpenAI route, a reply has no response id, so you send the whole history
 with each request. `lms_chat()` with `api_type = "openai"` sends a history
 of two messages at most: the system prompt, which is a set of instructions
-for the model, and your prompt. To send a
-longer history, call `lms_chat_openai()`, the function behind that route.
-It takes the history in its `messages` argument, as a data frame
-with one row for each message. The `role` column says who wrote the
-message, and the `content` column holds the text. The roles are:
+for the model, and your prompt. To send a longer history, call
+`lms_chat_openai()`, the function behind that route. It takes the history
+in its `messages` argument, as a data frame with one row for each message.
+The `role` column says who wrote the message, and the `content` column
+holds the text. The roles are:
 
 - `system`, for the system prompt.
 - `user`, for your prompts.
@@ -277,8 +279,8 @@ The package uses these classes for a failed chat:
 
 - `rlmstudio_no_server`: no server answers at the address in `host`.
 - `rlmstudio_api_error`: the server answered with an error. The `status`
-  field of the condition holds the HTTP status, and its `code` field holds
-  the error code that the server gave.
+  field of the condition holds the HTTP status. Its `code` field holds the
+  error code that the server gave, or `NULL` if the server gave none.
 - `rlmstudio_bad_response`: the server answered, but the package could
   not read the reply, for example a reply that is not JSON.
 - `rlmstudio_model_mismatch`: on the default route and the OpenAI route,
@@ -289,14 +291,16 @@ The package uses these classes for a failed chat:
 
 The function below calls `lms_chat()`. If the call works, the function
 returns the reply. If the call fails with one of these classes, the
-function prints a message and returns `NA`. `tryCatch()` runs the first
+function prints a message and returns `NA`. A handler is a function that
+`tryCatch()` runs for one condition class. `tryCatch()` runs the first
 handler whose class matches, so the handler for `rlmstudio_model_mismatch`
 comes before the handler for `rlmstudio_bad_response`.
 
 In a loop over many prompts, such a function keeps a failed call of these
 classes from stopping the loop. Other errors still stop it. For example,
 the package stops on a wrong argument before it sends the request, and
-that error has none of these classes.
+that error has none of these classes. A server that stops during a request
+raises an error of the class `httr2_failure`, which also stops the loop.
 
 ```{r chat-or-na}
 # Chat, and return NA with a message if the call fails
@@ -308,8 +312,10 @@ chat_or_na <- function(...) {
       NA_character_
     },
     rlmstudio_api_error = function(cnd) {
-      message("The server refused the call: status ", cnd$status,
-              ", code ", cnd$code, ".")
+      message("The server refused the call: status ", cnd$status, ".")
+      if (!is.null(cnd$code)) {
+        message("The error code is ", cnd$code, ".")
+      }
       NA_character_
     },
     rlmstudio_model_mismatch = function(cnd) {
@@ -357,7 +363,8 @@ reply.
 ## Clean up
 
 When you are done, unload the model to free its memory, and stop the
-server.
+server. `lms_server_stop()` stops the server even if it ran before this
+vignette.
 
 ```{r clean-up}
 # Remove the model from memory
