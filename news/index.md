@@ -87,20 +87,25 @@
 
 - A new vignette,
   [`vignette("text-analysis")`](https://jmgirard.github.io/rlmstudio/articles/text-analysis.md),
-  shows how to analyze a set of texts with a local model. It covers the
-  data-frame batch of
+  shows how to analyze a data frame of texts with a local model. Each
+  result goes back into the data frame as a column, in plain R code. It
+  covers a batch of summaries with
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  with `format = "data.frame"`. It covers a `schema` whose properties
-  become columns of a data-frame batch on `api_type = "openai"`. It
-  covers
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  with `logprobs = TRUE`, with the reply scored by
-  [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md).
-  It also covers
+  and `format = "data.frame"`. It covers a `schema` on
+  `api_type = "openai"` whose fields become a label column and a
+  star-rating column. It covers a batch with `logprobs = TRUE`, scored
+  row by row with
+  [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md)
+  in a `for` loop. It shows what a failed input looks like, with a text
+  longer than the context length. It covers the similarity of each text
+  to a query from
   [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+  through a short helper function. It also covers the `rlmstudio.quiet`
+  option,
   [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
+  and
   [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
-  and the `rlmstudio.quiet` option.
+  which also unloads models that were loaded before.
 
 - If a `messages` data frame holds a column whose row count differs from
   the row count of the data frame,
