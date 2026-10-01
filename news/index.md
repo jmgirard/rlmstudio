@@ -2,6 +2,23 @@
 
 ## rlmstudio (development version)
 
+- A new vignette,
+  [`vignette("text-analysis")`](https://jmgirard.github.io/rlmstudio/articles/text-analysis.md),
+  shows how to analyze a set of texts with a local model. It covers the
+  data-frame batch of
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  with `format = "data.frame"`. It covers a `schema` whose properties
+  become columns of a data-frame batch on `api_type = "openai"`. It
+  covers
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  with `logprobs = TRUE`, with the reply scored by
+  [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md).
+  It also covers
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
+  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
+  and the `rlmstudio.quiet` option.
+
 - If a `messages` data frame holds a column whose row count differs from
   the row count of the data frame,
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
