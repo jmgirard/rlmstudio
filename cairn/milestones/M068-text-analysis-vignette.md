@@ -1,13 +1,13 @@
 # M068: A vignette shows batch chat, structured output, logprobs scores, and embeddings
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** user-facing — a vignette that package users read
-- **Branch/PR:** —
+- **Branch/PR:** m068-text-analysis-vignette
 
 ## Goal
 
@@ -84,7 +84,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 
 ## Tasks
 
-- [ ] T1: Probe the live server. Call `lms_download()` for the bundled
+- [x] T1: Probe the live server. Call `lms_download()` for the bundled
       `text-embedding-nomic-embed-text-v1.5`, and `lms_embed()` on it. Call
       `lms_chat()` on `google/gemma-3-1b` over the default route with
       `logprobs = TRUE`, `top_logprobs`, `temperature = 0`, and a one-digit
@@ -126,6 +126,8 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 - 2026-09-30: plan gate chose a gated live `lms_unload_all()` over never running it, because a live run checks the call and keeps the M055 state rule; falsified by a build that unloads a model it found loaded.
 - 2026-09-30: plan gate chose a live build with pasted `#>` output over a precomputed `.Rmd.orig` vignette, because it matches the two current vignettes; falsified by a reader or CRAN check that the doubled output or the live LM Studio need blocks.
 - 2026-09-30: plan gate added `lms_score_expected()` beside logprobs and left threads as the `getting-started.Rmd` note, because scoring is the package's core workflow; falsified by a user who needs a thread example to use `previous_response_id`.
+- 2026-09-30: implement started on branch m068-text-analysis-vignette. Question gate skipped, because the plan left no choice open.
+- 2026-09-30: T1 live probe on LM Studio. `lms_download("text-embedding-nomic-embed-text-v1.5")` failed with "Invalid model name format", and the model was already listed by `list_models(type = "embedding")`. So the embedding gate reads that list and the vignette does not download it. `lms_embed()` on 3 texts returned a 3 x 768 matrix and loaded the model on demand. `lms_chat()` with logprobs on the default route returned an `lms_chat_result`, and `lms_score_expected()` returned a list with expected value 3.21. The data-frame batch returned 6 columns. The schema batch on the openai route added `sentiment` (character) and `rating` (integer). `lms_unload_all()` unloaded both instances, and the state ended as it started.
 
 ## Decisions
 
