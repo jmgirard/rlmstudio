@@ -163,8 +163,13 @@ text and a data frame of the probabilities of every such part, in order.
 If no part carries them, it returns the string. A reply with no readable
 answer text raises <code>rlmstudio_bad_response</code>, as described below.</p>
 <p>The data frame has one row for each candidate in the <code>top_logprobs</code> of
-each step, or one row with <code>NA</code> candidates for a step with none. Each
-field is read by its exact name. A field that is <code>null</code> or absent gives
+each step, or one row with <code>NA</code> candidates for a step with none. It has
+five columns. <code>step_token</code> and <code>step_logprob</code> hold the token and the log
+probability of the step. <code>candidate_token</code> and <code>candidate_logprob</code> hold
+those of the candidate. <code>step</code> is an integer that numbers the steps from
+1 in reply order, across all the parts. Each row of a step has the number
+of that step, so two steps with the same token keep different numbers.
+Each field is read by its exact name. A field that is <code>null</code> or absent gives
 <code>NA</code>, and so does a field whose name only starts with the one asked for,
 such as <code>tokenX</code>. With <code>logprobs = TRUE</code>, the <code>logprobs</code> value of each
 <code>"output_text"</code> part must follow seven rules, which the "Malformed

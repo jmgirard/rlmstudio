@@ -2,6 +2,43 @@
 
 ## rlmstudio (development version)
 
+- The logprobs data frame has a new fifth and last column, `step`. This
+  holds for
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
+  for
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  on its default route, and for each OpenResponses reply of
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  with `logprobs = TRUE`. It is an integer that numbers the steps of the
+  reply from 1, across all the `output_text` parts. Each row of a step
+  carries the number of that step, so two steps with the same token keep
+  different numbers. The four columns before it do not change.
+
+- [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md)
+  now scores the first step of the reply alone. Before, it read every
+  row whose `step_token` equaled that of the first row. So a later step
+  that repeated the first token added its candidates to the score.
+
+  - With a `step` column whose first value is not `NA`, it reads the
+    rows whose `step` equals that value, wherever they sit.
+  - With no `step` column, or a first `step` of `NA`, it reads the first
+    rows that share the `step_token` of the first row. It stops before
+    the first row with another token, and an `NA` token counts as the
+    same as an `NA` token. In such a frame, two adjacent steps with the
+    same token still count as one step.
+  - Candidates that give the same label, such as `"3"`, `" 3"`, and
+    `"3.0"`, now give one row of `probabilities`. That row holds the sum
+    of their probabilities. The rows come in the order in which each
+    label first appears. The `entropy` is computed over those rows. The
+    expected value and the weighted standard deviation do not change.
+  - With one label, the `entropy` is now 0. Before, it was a small
+    negative number, about -1.4e-09.
+
+- The print method of an `lms_chat_result` counts the steps of the
+  logprobs data frame by `step`. With no `step` column, it counts runs
+  of the same `step_token`. Before, it counted distinct step tokens, so
+  a reply with the steps “3”, “”, “3” showed 2 steps.
+
 - A new vignette,
   [`vignette("text-analysis")`](https://jmgirard.github.io/rlmstudio/articles/text-analysis.md),
   shows how to analyze a set of texts with a local model. It covers the
