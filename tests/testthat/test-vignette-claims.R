@@ -157,15 +157,23 @@ test_that("lms_score_expected() without a step column reads the first run of the
 
 test_that("a logprobs data-frame batch sends top_logprobs and temperature with each input", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-  # Each reply carries one step with two candidates, so each cell is a data
-  # frame whose step column starts at 1.
+  # Each reply carries two steps with two candidates each, so each cell is a
+  # data frame whose step column numbers the steps from 1.
   reply <- function(digit) {
-    steps <- json_array(step_json(
-      quoted(digit),
-      "-0.3",
-      json_array(candidate_json(quoted(digit), "-0.3"), candidate_json(quoted("4"), "-1.5"))
-    ))
-    mock_response(200L, output_body(responses_message(output_text(quoted(digit), steps))))
+    steps <- json_array(
+      step_json(
+        quoted(digit),
+        "-0.3",
+        json_array(candidate_json(quoted(digit), "-0.3"), candidate_json(quoted("4"), "-1.5"))
+      ),
+      step_json(
+        quoted("\n"),
+        "-0.1",
+        json_array(candidate_json(quoted("\n"), "-0.1"), candidate_json(quoted("/"), "-4"))
+      )
+    )
+    text <- quoted(paste0(digit, "\n"))
+    mock_response(200L, output_body(responses_message(output_text(text, steps))))
   }
   recorder <- local_request_sequence(list(reply("3"), reply("2")))
 
@@ -188,11 +196,11 @@ test_that("a logprobs data-frame batch sends top_logprobs and temperature with e
     })
   }
   expect_length(recorder$requests, 2L)
-  expect_identical(out$output, c("3", "2"))
+  expect_identical(out$output, c("3\n", "2\n"))
   expect_true(is.list(out$logprobs))
   expect_s3_class(out$logprobs[[2]], "data.frame")
-  expect_identical(out$logprobs[[2]]$step, c(1L, 1L))
-  expect_identical(out$logprobs[[2]]$candidate_token, c("2", "4"))
+  expect_identical(out$logprobs[[2]]$step, c(1L, 1L, 2L, 2L))
+  expect_identical(out$logprobs[[2]]$candidate_token, c("2", "4", "\n", "/"))
 })
 
 test_that("a logprobs data-frame batch on the openai route has a NULL logprobs cell in each row", {
@@ -223,10 +231,16 @@ test_that("a logprobs data-frame batch on the openai route has a NULL logprobs c
     quiet = TRUE
   )
 
-  expect_identical(
-    request_target(recorder$requests[[1]])[["path"]],
-    "/v1/chat/completions"
-  )
+  # Each request goes to the openai route and asks for log probabilities.
+  for (k in 1:2) {
+    test_that(paste("request", k), {
+      sent <- request_target(recorder$requests[[k]])
+      expect_identical(sent[["path"]], "/v1/chat/completions")
+      expect_true(sent[["body"]][["logprobs"]])
+      expect_equal(sent[["body"]][["top_logprobs"]], 10)
+    })
+  }
+  expect_length(recorder$requests, 2L)
   expect_identical(digits$output, c("3", "2"))
   expect_true(is.list(digits$logprobs))
   expect_null(digits$logprobs[[1]])

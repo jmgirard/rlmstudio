@@ -23,7 +23,7 @@ R sends its requests to a local server, a program of LM Studio on your
 computer. Loading a model reads it from disk into memory, so that the
 server can use it.
 
-`vignette("getting-started")` covers the steps that come first: installing
+`vignette("getting-started")` covers what comes first: installing
 LM Studio, starting the server, and downloading `google/gemma-3-1b`. This
 vignette also uses `text-embedding-nomic-embed-text-v1.5`, a model that
 turns text into numbers. A later section explains it. If `list_models()`
@@ -46,16 +46,21 @@ old_options <- options(rlmstudio.quiet = TRUE)
 ## Start the server and load the model
 
 A model reads and writes text in tokens. A token is a short piece of text,
-such as a word, a part of a word, or a digit. The context length of a
-loaded model is the most tokens that a prompt to it can hold. A prompt
+such as a word, a part of a word, or a digit. A prompt is the text that
+you send to a model. The context length of a loaded model is the most
+tokens that a prompt to it can hold. When you chat with the model, a prompt
 with more tokens fails. The `context_length` argument of `lms_load()` sets
 it. This vignette loads the model with room for 1,024 tokens, so that one
 long review is too long. A later section shows what happens to that review.
 
-If `google/gemma-3-1b` is already loaded, `lms_load()` keeps that copy as
-it is, with its own context length. In that case, call
-`lms_unload("google/gemma-3-1b")` after `lms_server_start()` and before
-`lms_load()`. `lms_unload()` needs a running server.
+`lms_load()` keeps a model that is already loaded as it is, with its own
+context length. This vignette loads `google/gemma-3-1b` and
+`text-embedding-nomic-embed-text-v1.5`. Before you run it, start the
+server and call `list_instances()`. It lists each loaded copy of a model,
+with the key of the model in the `key` column. For each copy of one of
+these two models, call `lms_unload()` with the id from the `id` column.
+`lms_unload()` needs a running server. The section "The loaded models"
+shows the output of `list_instances()`.
 
 ```{r start}
 model <- "google/gemma-3-1b"
@@ -135,10 +140,9 @@ reviews$summary <- trimws(summaries$output)
 reviews[, c("id", "summary")]
 ```
 
-The model does not always follow the system prompt. Here, the second
-reply holds `**` marks, which make text bold in Markdown. It also ends
-with a space and a line break, `\n`, which `trimws()` removed from the
-column.
+A model can add text that you did not ask for. Here, the second reply
+holds `**` marks, which make text bold in Markdown. It also ends with a
+space and a line break, `\n`, which `trimws()` removed from the column.
 
 ## Labels and ratings as columns
 
@@ -208,9 +212,8 @@ probability of 1, and more negative for a less likely token.
 With `logprobs = TRUE`, the data frame from `lms_chat_batch()` gets a
 `logprobs` column. A step is one token of the reply. Each cell holds a
 data frame of the candidate tokens at each step of the reply, and its
-`step` column numbers the steps from 1.
-`top_logprobs = 10` asks LM Studio for the 10 most likely candidates at
-each step.
+`step` column numbers the steps from 1. `top_logprobs = 10` asks LM Studio
+for the 10 most likely candidates at each step.
 
 Leave `api_type` at its default for this batch. With `api_type = "openai"`,
 each cell of the `logprobs` column is `NULL`, so the loop below would skip
@@ -281,7 +284,7 @@ It gives a warning that names the position of each failed input, and it
 goes on to the next input. In the data frame, the row of a failed input
 holds `NA` in each column that comes from the reply, and `NULL` in the
 `logprobs` column. With a schema, the `output` column holds the error
-instead of `NA`, as the warning of that batch said. So each step above
+instead of `NA`, as the warning of that batch said. So each section above
 gave `NA` for the sixth review.
 
 With `format = "list"`, each element of the result holds the reply, or the
@@ -357,7 +360,7 @@ text and gives no warning.
 
 ## All the results
 
-Each step added columns to the same data frame. Here it is without the
+Each section added columns to the same data frame. Here it is without the
 `text` column.
 
 ```{r results}
@@ -378,11 +381,11 @@ instances[, c("id", "type", "context_length")]
 
 ## Clean up
 
-`lms_unload_all()` unloads every loaded model, also models that you loaded
-before you ran this vignette. To unload only the models of this vignette,
-call `lms_unload()` with the id of each one, such as `lms_unload(model)`,
-instead. `lms_server_stop()` stops the server, also if it ran before this
-vignette.
+`lms_unload_all()` unloads every loaded model, including models that you
+loaded before you ran this vignette. To unload only the models of this
+vignette, call `lms_unload()` with the id of each one, such as
+`lms_unload(model)`, instead. `lms_server_stop()` stops the server, even if
+it ran before this vignette.
 
 ```{r clean-up}
 # Unload every loaded model

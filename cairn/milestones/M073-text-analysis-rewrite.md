@@ -142,6 +142,8 @@ conversations are M074.
 - 2026-10-01: claim audit: 96 claims read, 1 corrected — vignettes/text-analysis.Rmd.orig, vignettes/text-analysis.Rmd
 - 2026-10-01: the correction. The unload-first advice failed with no server, because `lms_unload()` aborts without one. The prose now says to call it after `lms_server_start()` and before `lms_load()`. The same reader re-read it as OK. A re-knit changed no output line, and the AC1 to AC3 checks pass.
 - 2026-10-01: status set to review.
+- 2026-10-01: review pass 2 found every criterion met. At the gate, the maintainer chose to fix the 10 proposed fix-now findings, then merge. The proposed follow-up and rejects stand as the Review section lists them.
+- step-7 approval: m073-text-analysis-rewrite approved for merge, after the fix-now work, a clean re-knit, and green checks. A failed check or a changed output line in the re-knit poses the chip again.
 
 ## Decisions
 
@@ -223,3 +225,9 @@ conversations are M074.
 - Proposed reject: P2, the embedding cut is not in the knit. AC5 accepts a live call on this machine, and the pass-2 probe shows it.
 - Proposed reject: P3. Pass 1 rejected it as P4 part 2.
 - Proposed reject: P4. It is a note, with no defect.
+- Gate triage (2026-10-01): the maintainer accepted the proposed dispositions and chose to fix first, then merge.
+- Fix-now done: D1, D2, D3, B1, B3. The load section says that `lms_load()` keeps a loaded model as it is. It tells the reader to call `list_instances()` after the server starts. Each copy of either model of the vignette is then unloaded by its id. Backing: `long-prompts:127`, `list-instances:62`, `unload:1`, and `unload:16`.
+- Fix-now done: D4, D5, D6, D7, B4, D12. "Step" now means only a token of the reply. The `**` sentence says that a model can add text that you did not ask for. Line 211 is rewrapped. "Prompt" is glossed. The failure sentence names chatting, and the clean-up prose uses "including" and "even".
+- Fix-now done: D8. The batch logprobs test replies with two steps. A plant of a constant step of 1 turned it red.
+- Fix-now done: D9. The openai test checks `logprobs` and `top_logprobs` in each request, one subtest each. A plant that dropped `logprobs` on the openai route turned both subtests red.
+- After the fixes (2026-10-01): three clean knits, the last after a rewrap. Each had the same `#>` lines as the knit at the gate. AC1 to AC4 pass again on 169 purled lines and a 478-line knit. The first prose use of "embedding" is its definition, and the other matches are the model key. `devtools::test()` passed with 0 failed and 3 live skips. `document()` gave no diff, and `check_pkgdown()` found no problems. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
