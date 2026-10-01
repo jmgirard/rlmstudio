@@ -1,6 +1,6 @@
 # M070: The vignettes are knitted ahead of time from a live LM Studio
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -119,6 +119,8 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 - 2026-09-30: T3 done. From a clean start (server stopped, `lms ps --json` empty), the script knitted all three sources, exit 0, and ended clean. The knitted `.Rmd` files hold no ```` ```{r ```` line and no `Error` or `Warning` text. Each chunk that printed shows `#>` lines. The text-analysis schema batch again gave 5 stars to "Terrible. Never again.", so its prose still matches.
 - 2026-09-30: T4 done. `.Rbuildignore` excludes `^vignettes/.*\.Rmd\.orig$`. DESIGN Conventions has three vignette bullets: the knit-ahead build, the prose register and word list, and the code list, both lists verbatim from Scope. LESSONS M009 corrected in place. The live-build hazards row narrowed to the `lms_server_status(json = TRUE)` stderr parse: the vignettes no longer call it, and the script's `finally` teardown ends the failed-chunk hazard.
 - 2026-09-30: T5 done. With the server stopped, no model loaded, and `RLMSTUDIO_API_TOKEN` unset (`env -u`), `devtools::check()` gave 0 errors, 0 warnings, 0 notes, and the server stayed stopped. The `pkgbuild::build()` tarball lists no `.Rmd.orig`. `devtools::document()` left no diff, `pkgdown::check_pkgdown()` found no problems, and `devtools::test()` gave 0 failed, 0 errors, 3 skipped.
+- 2026-09-30: claim audit: 96 claims read, 3 corrected — data-raw/knit-vignettes.R (the `loaded_models()` comment; the header on later sources after a failed chunk), vignettes/headless-config.Rmd.orig and .Rmd (cut a sentence that named the removed `lms_ready` value). The same reader re-read all three, and all hold. `%||%` was replaced by an `is.null()` fallback for R before 4.4. Two findings on carried-over headless prose went to the M072 work log. headless-config re-knitted from a clean start, exit 0, and the AC3 (b) case re-ran with the new `loaded_models()`.
+- 2026-09-30: all tasks done. Status set to review.
 
 ## Decisions
 

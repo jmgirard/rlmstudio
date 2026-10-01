@@ -79,7 +79,7 @@ Because you do not have the GUI's visual search tool, you will need to know the 
 # Download a model using its identifier
 job_id <- lms_download("qwen/qwen3-4b-2507")
 #> ℹ Initiating download for model: "qwen/qwen3-4b-2507"...
-#> ✔ Initiating download for model: "qwen/qwen3-4b-2507"... [1.2s]
+#> ✔ Initiating download for model: "qwen/qwen3-4b-2507"... [1.3s]
 #> 
 #> ✔ Model "qwen/qwen3-4b-2507" is already downloaded.
 lms_download_status(job_id)
@@ -120,7 +120,7 @@ Allocate the model to your system's memory (RAM/VRAM) so it is ready for inferen
 # Load the model
 lms_load(model, flash_attention = TRUE)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.9s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.4s]
 #> 
 ```
 
@@ -141,10 +141,37 @@ cat(response)
 
 ````
 #> ```r
-#> str_extract(text, ".*,3")
+#> str_extract(text, ".*[^,]*")
 #> ```
 #> 
-#> This is the simplest and most efficient way to accomplish this task using the tidyverse.  It directly extracts all text following the third comma in the input string.
+#> **Explanation:**
+#> 
+#> *   `str_extract()`:  This function from the `string` package in tidyverse is specifically designed for this task.
+#> *   `".*[^,]*"`: This is the pattern to match. Let's break it down:
+#>     *   `.*`: Matches any character (`.`) zero or more times (`*`). This effectively captures everything after the first comma.
+#>     *   `[^,]*`: Matches any character that is *not* a comma (`[^,]`).  This is the key to capturing everything after the third comma. The `^` inside the character class means "not".
+#> 
+#> **Example:**
+#> 
+#> Let's say your `text` is:
+#> 
+#> ```
+#> "Data.  Some values here!  Another one.  More details."
+#> ```
+#> 
+#> Then `str_extract("Data.  Some values here!  Another one.  More details.", ".*[^,]*")` would return:
+#> 
+#> ```
+#> "Some values here!  Another one.  More details."
+#> ```
+#> 
+#> **Important Considerations:**
+#> 
+#> *   This pattern works well when the third comma is the last element in a series.
+#> *  If there's no final comma, it will capture everything after the *first* comma.
+#> *   The `[^,]` character class is crucial for handling cases where there might be more than one comma in the input.
+#> 
+#> Would you like to see an example with a different text or more complex scenarios?
 ````
 
 ### 6. Teardown and Cleanup
@@ -156,7 +183,7 @@ In a headless environment, managing your system resources is critical. When your
 # 1. Unload the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [570ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [521ms]
 #> 
 ```
 
@@ -176,8 +203,7 @@ lms_daemon_stop()
 If you are writing a script that just needs to run a quick job and exit, managing the daemon state manually can be tedious. The `with_lms_daemon()` wrapper handles the setup and guaranteed teardown of the background engine automatically.
 
 This block starts its own server, so it asks again whether that server answers.
-The value measured earlier belongs to the server the teardown above has already
-stopped. The block calls `lms_unload()` only if the block loaded the model.
+The block calls `lms_unload()` only if the block loaded the model.
 On a host without the desktop app, the daemon stop on exit can also unload a
 model that was loaded before the block.
 
@@ -203,10 +229,10 @@ results <- with_lms_daemon({
 #> ✔ LM Studio daemon started in the background.
 #> ✔ LM Studio server started successfully on the default port.
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [6s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.7s]
 #> 
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [605ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [519ms]
 #> 
 #> ✔ LM Studio server stopped successfully.
 #> ℹ The LM Studio server is already stopped.

@@ -16,8 +16,10 @@
 #
 # The script refuses to start if the server runs or a model is loaded, so
 # each vignette starts from the same clean state. A chunk error stops the
-# knit, and the .Rmd of that source is left as it was. Whatever happens, the
-# script unloads every model and stops the server before it exits.
+# knit, and the .Rmd of that source is left as it was. The sources after the
+# failing one are not knitted, and the sources before it keep their new
+# output. Whatever happens, the script unloads every model and stops the
+# server before it exits.
 #
 # The script needs pkgload and knitr. knitr is in Suggests. pkgload is a
 # development tool that only the data-raw scripts use, and this directory
@@ -50,11 +52,20 @@ if (length(missing) > 0) {
 
 lms <- lms_path()
 
-# The model keys that `lms ps --json` lists as loaded.
+# The instance identifiers that `lms ps --json` lists as loaded, or the
+# model key of an instance that has no identifier.
 loaded_models <- function() {
   out <- system2(lms, c("ps", "--json"), stdout = TRUE, stderr = FALSE)
   ps <- jsonlite::parse_json(paste(out, collapse = "\n"))
-  vapply(ps, function(m) as.character(m[["identifier"]] %||% m[["modelKey"]]), "")
+  vapply(
+    ps,
+    function(m) {
+      id <- m[["identifier"]]
+      if (is.null(id)) id <- m[["modelKey"]]
+      as.character(id)
+    },
+    ""
+  )
 }
 
 # Whether `lms server status --json` reports the server as running.
