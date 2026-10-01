@@ -58,7 +58,9 @@ value is a list or is itself an id. Only that exact attribute name is
 read. A value with no such attribute is sent as the id itself. So a
 reply that came back with no id, such as a native reply sent with
 \code{store = FALSE}, goes out as its own text, and the call raises
-\code{rlmstudio_api_error} with status 400. The character vector that
+\code{rlmstudio_api_error} with status 400. A reply text that breaks the id
+rules below, such as an empty text or a text of whitespace only, aborts
+before the request, as such an id does. The character vector that
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} returns with \code{format = "vector"} and the \code{output}
 column of its data frame carry no attribute. The data frame holds the
 ids in its \code{response_id} column.
@@ -69,11 +71,13 @@ removed before the id is sent. \code{NULL}, the default, starts a new thread.
 As the id, \code{NA}, an empty string, a string of whitespace only, a value
 that is not a string, and more or fewer than one string abort before the
 check for a running server. For an attribute, the message names the
-attribute. Only this exact argument name is checked. A shortened name, such as \code{previous}, goes into the request
-body unchecked, under the name you wrote. An id that the server does not
-hold raises \code{rlmstudio_api_error} with status 400 and the \code{code}
+attribute. Only this exact argument name is checked. A shortened name,
+such as \code{previous}, goes into the request body unchecked, under the name
+you wrote. An id that the server does not hold raises
+\code{rlmstudio_api_error} with status 400 and the \code{code}
 \code{"previous_response_not_found"}. \code{\link[=lms_chat]{lms_chat()}} and \code{\link[=lms_chat_batch]{lms_chat_batch()}}
-refuse a string with \code{api_type = "openai"}, because the OpenAI chat
+refuse an id or a value that carries one with \code{api_type = "openai"},
+because the OpenAI chat
 endpoint keeps no thread. \code{\link[=lms_chat_openai]{lms_chat_openai()}} has no such argument. A
 \code{previous_response_id} in its \code{...} goes into the request body
 unchecked, and the endpoint ignores it.}

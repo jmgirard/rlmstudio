@@ -63,6 +63,8 @@ A user continues a stored chat thread with `previous_response_id = first`, where
 - 2026-10-01: the audit found no evidence for the AC6 claim of status 400 on a reply with no id. A live probe with google/gemma-3-1b sent a native `store = FALSE` reply, which had no attributes, as `previous_response_id`. The native route answered 400 with code `invalid_string`, and the OpenResponses route 400 with code `invalid_value`. The wording stays, and the same reader cleared it on re-read.
 - 2026-10-01: implement complete, status set to review. The style hook flags plan-owned and history text in this file and in NEWS.md that was there before. The branch adds one hit, the em dash of the fixed claim-audit line.
 - 2026-10-01: review started. AC1 to AC6 verified and ticked, and the consistency gate passed. Three fresh reviewers are running, and their findings are not yet triaged.
+- 2026-10-01: three reviewers reported 12 findings and no code bug. The gate accepted the recommended triage, and R1 to R3 are fixed on the branch.
+- 2026-10-01: step-7 approval: m077-reply-as-thread-id approved for merge
 
 ## Decisions
 
@@ -93,3 +95,5 @@ Independent review, 2026-10-01: three fresh reviewers (diff on Opus, history and
 - R10 (past reviews): no test reads the batch abort result in each format for a value that carries the attribute. Recommended: reject. The attribute is checked once at the top of the batch, before any format branch.
 - R11 (past reviews): NEWS does not say that `paste0()` drops the attribute, so the text then goes out as the id. Recommended: reject. The M058 NEWS entry names the functions that drop it, and the new entry says what a value with no attribute does.
 - R12 (diff): an S4 object with a slot named `response_id` has that slot read as the id. Recommended: reject. No package value is S4.
+
+Gate triage, 2026-10-01: the user accepted every recommended disposition. R1, R2, and R3 are fixed on the branch. The help of the three functions, the batch help, and NEWS now say that an empty or whitespace-only reply text aborts before the request. A load-all probe showed this for `""` and `"  \n "`, also through `lms_chat_batch()`. The rewrapped roxygen has no added line over 80 characters, and the OpenAI sentence names a value that carries an id. R5 is added to the M060 follow-up candidate row. The other eight are rejected with the reasons above. After the fixes, `devtools::document()` and `devtools::test()` gave 1993 tests, 0 failed, 0 errors, and 3 skipped.

@@ -60,6 +60,7 @@ all.
   with `previous_response_id`. A caller who wants no stored thread sends
   `store: false`. The package now takes `previous_response_id` on the native
   and OpenResponses routes and returns the id in a `response_id` attribute.
+  It also takes the reply itself and sends that attribute (corrected M077).
   On 2026-09-30, LM Studio 0.4.25+1 with google/gemma-3-1b gave these results
   (M061). `/api/v1/chat` returned 200 for `store` true and false. The `true`
   reply carried a `response_id`, and the `false` reply had no `response_id`

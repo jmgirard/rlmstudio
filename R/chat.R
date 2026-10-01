@@ -59,7 +59,9 @@
 #'   Only that exact attribute name is read. A value with no such attribute
 #'   is sent as the id itself. So a reply that came back with no id, such as
 #'   a native reply sent with `store = FALSE`, goes out as its own text, and
-#'   the call raises `rlmstudio_api_error` with status 400. The character
+#'   the call raises `rlmstudio_api_error` with status 400. A reply text that
+#'   breaks the id rules below, such as an empty text or a text of whitespace
+#'   only, aborts before the request, as such an id does. The character
 #'   vector that [lms_chat_batch()] returns with `format = "vector"` and the
 #'   `output` column of its data frame carry no attribute. The data frame
 #'   holds the ids in its `response_id` column.
@@ -68,15 +70,15 @@
 #'   encoding and not marked `"bytes"`. A class, names, and the S4 bit are
 #'   removed before the id is sent. `NULL`, the default, starts a new thread.
 #'   It needs `api_type = "native"` or `api_type = "openresponses"`. With
-#'   `api_type = "openai"`, an id aborts before the request, because the
-#'   OpenAI chat endpoint keeps no thread. As the id, `NA`, an empty string, a
-#'   string of whitespace only, a value that is not a string, and more or
-#'   fewer than one string abort before the check for a running server. For
-#'   an attribute, the message names the attribute. Only this exact argument
-#'   name is
-#'   checked. A shortened name, such as `previous`, goes into the request
-#'   body unchecked, under the name you wrote. An id that the server does not
-#'   hold raises `rlmstudio_api_error` with status 400.
+#'   `api_type = "openai"`, an id or a value that carries one aborts before
+#'   the request, because the OpenAI chat endpoint keeps no thread. As the
+#'   id, `NA`, an empty string, a string of whitespace only, a value that is
+#'   not a string, and more or fewer than one string abort before the check
+#'   for a running server. For an attribute, the message names the
+#'   attribute. Only this exact argument name is checked. A shortened name,
+#'   such as `previous`, goes into the request body unchecked, under the name
+#'   you wrote. An id that the server does not hold raises
+#'   `rlmstudio_api_error` with status 400.
 #' @param store `TRUE`, `FALSE`, or `NULL`. Whether the server stores the
 #'   reply, so that a later call can continue from its id. `NULL`, the
 #'   default, sends no `store` field, so the server default applies, and that
@@ -99,8 +101,9 @@
 #' With `simplify = TRUE` and `api_type = "native"` or
 #' `api_type = "openresponses"`, the value carries the id of the reply in a
 #' `response_id` attribute. Pass the value itself as `previous_response_id`
-#' to continue the thread, and the attribute is sent. The id is the `response_id` field of a native reply and the `id`
-#' field of an OpenResponses reply. The value has no attribute when that
+#' to continue the thread, and the attribute is sent. The id is the
+#' `response_id` field of a native reply and the `id` field of an
+#' OpenResponses reply. The value has no attribute when that
 #' field is absent or is not one string. With `api_type = "openai"`, or
 #' with `simplify = FALSE`, the value has no `response_id` attribute.
 #'
@@ -260,7 +263,9 @@ lms_chat <- function(
 #'   read. A value with no such attribute is sent as the id itself. So a
 #'   reply that came back with no id, such as a native reply sent with
 #'   `store = FALSE`, goes out as its own text, and the call raises
-#'   `rlmstudio_api_error` with status 400. The character vector that
+#'   `rlmstudio_api_error` with status 400. A reply text that breaks the id
+#'   rules below, such as an empty text or a text of whitespace only, aborts
+#'   before the request, as such an id does. The character vector that
 #'   [lms_chat_batch()] returns with `format = "vector"` and the `output`
 #'   column of its data frame carry no attribute. The data frame holds the
 #'   ids in its `response_id` column.
@@ -271,11 +276,13 @@ lms_chat <- function(
 #'   As the id, `NA`, an empty string, a string of whitespace only, a value
 #'   that is not a string, and more or fewer than one string abort before the
 #'   check for a running server. For an attribute, the message names the
-#'   attribute. Only this exact argument name is checked. A shortened name, such as `previous`, goes into the request
-#'   body unchecked, under the name you wrote. An id that the server does not
-#'   hold raises `rlmstudio_api_error` with status 400 and the `code`
+#'   attribute. Only this exact argument name is checked. A shortened name,
+#'   such as `previous`, goes into the request body unchecked, under the name
+#'   you wrote. An id that the server does not hold raises
+#'   `rlmstudio_api_error` with status 400 and the `code`
 #'   `"previous_response_not_found"`. [lms_chat()] and [lms_chat_batch()]
-#'   refuse a string with `api_type = "openai"`, because the OpenAI chat
+#'   refuse an id or a value that carries one with `api_type = "openai"`,
+#'   because the OpenAI chat
 #'   endpoint keeps no thread. [lms_chat_openai()] has no such argument. A
 #'   `previous_response_id` in its `...` goes into the request body
 #'   unchecked, and the endpoint ignores it.
@@ -1416,7 +1423,9 @@ store_field <- function(store) {
 #'   name is read. A value with no such attribute is sent as the id itself.
 #'   So a reply that came back with no id, such as a reply of this function
 #'   sent with `store = FALSE`, goes out as its own text, and the call raises
-#'   `rlmstudio_api_error` with status 400. The character vector that
+#'   `rlmstudio_api_error` with status 400. A reply text that breaks the id
+#'   rules below, such as an empty text or a text of whitespace only, aborts
+#'   before the request, as such an id does. The character vector that
 #'   [lms_chat_batch()] returns with `format = "vector"` and the `output`
 #'   column of its data frame carry no attribute. The data frame holds the
 #'   ids in its `response_id` column.
@@ -1427,12 +1436,13 @@ store_field <- function(store) {
 #'   As the id, `NA`, an empty string, a string of whitespace only, a value
 #'   that is not a string, and more or fewer than one string abort before the
 #'   check for a running server. For an attribute, the message names the
-#'   attribute. Only this exact argument name is checked. A shortened name, such
-#'   as `previous`, goes into the request body unchecked, under the name you
-#'   wrote. An id that the server does not hold raises `rlmstudio_api_error`
-#'   with status 400 and the `code` `"invalid_value"`. [lms_chat()] and
-#'   [lms_chat_batch()] refuse a string with `api_type = "openai"`, because
-#'   the OpenAI chat endpoint keeps no thread. [lms_chat_openai()] has no
+#'   attribute. Only this exact argument name is checked. A shortened name,
+#'   such as `previous`, goes into the request body unchecked, under the name
+#'   you wrote. An id that the server does not hold raises
+#'   `rlmstudio_api_error` with status 400 and the `code` `"invalid_value"`.
+#'   [lms_chat()] and [lms_chat_batch()] refuse an id or a value that carries
+#'   one with `api_type = "openai"`, because the OpenAI chat endpoint keeps
+#'   no thread. [lms_chat_openai()] has no
 #'   such argument. A `previous_response_id` in its `...` goes into the
 #'   request body unchecked, and the endpoint ignores it.
 #' @param store `TRUE`, `FALSE`, or `NULL`. Whether the server stores the
@@ -1817,7 +1827,8 @@ integer_or_na <- function(x) {
 #'   same stored reply. It can be an earlier reply of [lms_chat()] itself,
 #'   and the `response_id` attribute of that reply is sent, by the rules of
 #'   [lms_chat()]. A reply that came back with no id goes out as its own text,
-#'   and each input then fails with status 400. The character vector of
+#'   and each input then fails with status 400, unless that text breaks the
+#'   id rules of [lms_chat()] and aborts first. The character vector of
 #'   `format = "vector"` and the `output` column of `format = "data.frame"`
 #'   carry no attribute, as described below.
 #'   A `store` here goes to [lms_chat()] for every call, and it is checked

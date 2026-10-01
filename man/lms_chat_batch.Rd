@@ -51,7 +51,8 @@ returns a list, or a \code{logprobs = TRUE} that the \code{"native"} route ignor
 same stored reply. It can be an earlier reply of \code{\link[=lms_chat]{lms_chat()}} itself,
 and the \code{response_id} attribute of that reply is sent, by the rules of
 \code{\link[=lms_chat]{lms_chat()}}. A reply that came back with no id goes out as its own text,
-and each input then fails with status 400. The character vector of
+and each input then fails with status 400, unless that text breaks the
+id rules of \code{\link[=lms_chat]{lms_chat()}} and aborts first. The character vector of
 \code{format = "vector"} and the \code{output} column of \code{format = "data.frame"}
 carry no attribute, as described below.
 A \code{store} here goes to \code{\link[=lms_chat]{lms_chat()}} for every call, and it is checked

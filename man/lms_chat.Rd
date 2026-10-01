@@ -83,7 +83,9 @@ place of the value, also when the value is a list or is itself an id.
 Only that exact attribute name is read. A value with no such attribute
 is sent as the id itself. So a reply that came back with no id, such as
 a native reply sent with \code{store = FALSE}, goes out as its own text, and
-the call raises \code{rlmstudio_api_error} with status 400. The character
+the call raises \code{rlmstudio_api_error} with status 400. A reply text that
+breaks the id rules below, such as an empty text or a text of whitespace
+only, aborts before the request, as such an id does. The character
 vector that \code{\link[=lms_chat_batch]{lms_chat_batch()}} returns with \code{format = "vector"} and the
 \code{output} column of its data frame carry no attribute. The data frame
 holds the ids in its \code{response_id} column.
@@ -92,15 +94,15 @@ The id, the attribute when there is one, must be valid in its declared
 encoding and not marked \code{"bytes"}. A class, names, and the S4 bit are
 removed before the id is sent. \code{NULL}, the default, starts a new thread.
 It needs \code{api_type = "native"} or \code{api_type = "openresponses"}. With
-\code{api_type = "openai"}, an id aborts before the request, because the
-OpenAI chat endpoint keeps no thread. As the id, \code{NA}, an empty string, a
-string of whitespace only, a value that is not a string, and more or
-fewer than one string abort before the check for a running server. For
-an attribute, the message names the attribute. Only this exact argument
-name is
-checked. A shortened name, such as \code{previous}, goes into the request
-body unchecked, under the name you wrote. An id that the server does not
-hold raises \code{rlmstudio_api_error} with status 400.}
+\code{api_type = "openai"}, an id or a value that carries one aborts before
+the request, because the OpenAI chat endpoint keeps no thread. As the
+id, \code{NA}, an empty string, a string of whitespace only, a value that is
+not a string, and more or fewer than one string abort before the check
+for a running server. For an attribute, the message names the
+attribute. Only this exact argument name is checked. A shortened name,
+such as \code{previous}, goes into the request body unchecked, under the name
+you wrote. An id that the server does not hold raises
+\code{rlmstudio_api_error} with status 400.}
 
 \item{store}{\code{TRUE}, \code{FALSE}, or \code{NULL}. Whether the server stores the
 reply, so that a later call can continue from its id. \code{NULL}, the
@@ -130,8 +132,9 @@ Depending on the arguments provided:
 With \code{simplify = TRUE} and \code{api_type = "native"} or
 \code{api_type = "openresponses"}, the value carries the id of the reply in a
 \code{response_id} attribute. Pass the value itself as \code{previous_response_id}
-to continue the thread, and the attribute is sent. The id is the \code{response_id} field of a native reply and the \code{id}
-field of an OpenResponses reply. The value has no attribute when that
+to continue the thread, and the attribute is sent. The id is the
+\code{response_id} field of a native reply and the \code{id} field of an
+OpenResponses reply. The value has no attribute when that
 field is absent or is not one string. With \code{api_type = "openai"}, or
 with \code{simplify = FALSE}, the value has no \code{response_id} attribute.
 
