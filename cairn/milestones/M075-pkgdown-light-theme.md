@@ -79,6 +79,7 @@ changes.
 - 2026-10-01: claim audit: 5 claims read, 2 corrected — .github/workflows/pkgdown.yaml, pkgdown/_pkgdown.yml
 - 2026-10-01: implement complete, status set to review. T5 stays open until after the merge, as the plan states.
 - 2026-10-01: review started. No PR existed for the branch, and `origin/main` had not moved since the branch was cut.
+- 2026-10-01: step-7 approval: m075-pkgdown-light-theme approved for merge. Fix-now D1, D2, and D3 landed before the push.
 
 ## Review
 
@@ -108,3 +109,14 @@ Independent review (three fresh lenses, user-facing tier):
   - D3 `articles/index.html` shows "Articles" twice, as the page `<h1>` and as the section `<h3>`, because the one section has the title `Articles`.
   - D4 Zephyr colors the active tab label with raw `primary`, about 1.9:1 on the dark background. No page on the site uses tabs today.
   - D5 `clean: true` deletes the 258-file `dev/` tree on `gh-pages`, so outside bookmarks into it break. Nothing in the repo links to it, and the plan scope names this removal.
+
+Triage at the merge gate (2026-10-01):
+
+- D1 fix now: a comment beside `light-switch: true` says that the switch keeps the navbar light.
+- D2 fix now: the workflow comment points to `pkgdown:::package_mds()` and no longer lists the skipped files.
+- D3 fix now: the section title is `All articles`. A rebuild shows the `<h1>` "Articles" and the `<h3>` "All articles". The menu order, the absence of a menu heading, and the 0 dark navbar tags still hold. `check_pkgdown()` still prints "No problems found".
+- D4 rejected: no page uses tabs, so it has no effect today.
+- D5 and B1 rejected: the plan scope names the clean deploy and the `dev/` removal, and `origin/gh-pages` has no `CNAME`.
+- B2 rejected: the targeted delete is the scope the plan chose.
+- B3 rejected: the search box measured 8.18:1 in light mode and 11.85:1 in dark mode.
+- B4 and B5 noted: they request nothing.

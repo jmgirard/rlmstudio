@@ -9,6 +9,8 @@ template:
   bslib:
     preset: zephyr
     primary: "#4139C3"
+  # The light switch also drops the navbar background class, which keeps the
+  # navbar light. Without it, zephyr gives the navbar `bg-primary`.
   light-switch: true
 
 development:
@@ -24,7 +26,7 @@ repo:
 articles:
   # If no articles section has a `navbar` key, the Articles menu is a plain link.
   # `navbar: ~` lists the articles in the menu, in this order, with no heading.
-  - title: Articles
+  - title: All articles
     navbar: ~
     contents:
       - getting-started

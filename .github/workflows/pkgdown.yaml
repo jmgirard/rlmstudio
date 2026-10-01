@@ -38,9 +38,9 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
-      # pkgdown renders each .md file at the repo root (except README, NEWS,
-      # LICENSE, and cran-comments) as a site page and does not read
-      # .Rbuildignore, so CLAUDE.md would otherwise become one.
+      # pkgdown renders root .md files as site pages (pkgdown:::package_mds()
+      # lists which) and does not read .Rbuildignore, so CLAUDE.md would
+      # otherwise become one.
       - name: Remove CLAUDE.md before the build
         run: rm -f CLAUDE.md
 
