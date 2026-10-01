@@ -121,6 +121,8 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 - 2026-09-30: T5 done. With the server stopped, no model loaded, and `RLMSTUDIO_API_TOKEN` unset (`env -u`), `devtools::check()` gave 0 errors, 0 warnings, 0 notes, and the server stayed stopped. The `pkgbuild::build()` tarball lists no `.Rmd.orig`. `devtools::document()` left no diff, `pkgdown::check_pkgdown()` found no problems, and `devtools::test()` gave 0 failed, 0 errors, 3 skipped.
 - 2026-09-30: claim audit: 96 claims read, 3 corrected — data-raw/knit-vignettes.R (the `loaded_models()` comment; the header on later sources after a failed chunk), vignettes/headless-config.Rmd.orig and .Rmd (cut a sentence that named the removed `lms_ready` value). The same reader re-read all three, and all hold. `%||%` was replaced by an `is.null()` fallback for R before 4.4. Two findings on carried-over headless prose went to the M072 work log. headless-config re-knitted from a clean start, exit 0, and the AC3 (b) case re-ran with the new `loaded_models()`.
 - 2026-09-30: all tasks done. Status set to review.
+- 2026-09-30: review ran all five criteria and the gate clean. Three reviewers gave 16 findings, none a criterion failure. F1 to F4 and F10 were fixed on the branch, and the rest were logged as follow-ups or rejected.
+- 2026-09-30: step-7 approval: m070-knit-ahead-vignettes approved for merge
 
 ## Decisions
 
