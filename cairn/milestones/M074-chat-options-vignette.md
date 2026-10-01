@@ -1,6 +1,6 @@
 # M074: A vignette shows chat options, conversations, and errors in scripts
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
@@ -58,7 +58,7 @@ scoring are M073.
       its first use in prose or in a code comment of the knitted vignette:
       route, request option, response id, conversation history, raw reply,
       and condition class.
-- [x] AC5: Take each prose sentence and each `#` comment line that states
+- [ ] AC5: Take each prose sentence and each `#` comment line that states
       what a package function does with an argument, returns, or raises,
       beyond what its name says. A named test under `tests/testthat/`
       exercises that behavior. A sentence about what LM Studio itself does
@@ -71,12 +71,12 @@ scoring are M073.
 
 ## Coverage
 
-- AC1 → T1, T2, T3
-- AC2 → T2
-- AC3 → T2, T4
-- AC4 → T2, T4
-- AC5 → T1, T5
-- AC6 → T6
+- AC1 → T1, T2, T3, T10
+- AC2 → T2, T10
+- AC3 → T2, T4, T10
+- AC4 → T2, T4, T7
+- AC5 → T1, T5, T7, T8, T9
+- AC6 → T6, T8, T10
 
 ## Tasks
 
@@ -99,6 +99,10 @@ scoring are M073.
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
 - [x] T6: Add the NEWS entry and run the checks of AC6.
+- [ ] T7: Fix the review findings F1, F2, F4, F6, F7, and F9 in the source. Name the dots that the package checks, and say that a `NULL` option is dropped. Limit the mismatch text to one loaded model and to the default and openai routes. Back or drop the temperature-0 sentence, and explain "system prompt" before its first use. Point to `?lms_chat` for `ttl`.
+- [ ] T8: Fix F3. Add an `rlmstudio_bad_response` handler to `chat_or_na()`, and say which errors still stop a loop. Narrow the intro and the NEWS entry to match.
+- [ ] T9: Fix F5 and F8. Give the openai part of the log-probability test a mock reply that carries log probabilities, or back the "No" cell with a live call. Rewrap the test header and the two long source lines.
+- [ ] T10: Re-knit from a clean start, and re-run the checks of AC1 to AC6.
 
 ## Work log
 
@@ -132,6 +136,7 @@ scoring are M073.
 - 2026-10-01: claim audit: 56 claims read, 2 corrected — vignettes/chat-options.Rmd.orig, vignettes/chat-options.Rmd. "The server keeps no history" on the openai route had no live evidence and now rests on the missing response id. The route advice no longer suggests that `lms_chat()` takes a data frame. The same reader re-read both and found that they hold.
 - 2026-10-01: after the audit, a re-knit from a clean start passes the T3 checks, and the source scan passes the AC2 and AC3 checks.
 - 2026-10-01: all tasks done. `devtools::test()`: 0 failed, 0 errors, 3 live skips. Status set to review.
+- 2026-10-01: review return 1 (defect): AC5 fails on F1, the false sentence "The package does not check the names of request options". At the gate the user chose to send it back and fix F1 to F9 as T7 to T10. F10 to F12 are rejected for the reasons in the Review section. AC5 is unticked. Status set to in-progress.
 
 ## Decisions
 
