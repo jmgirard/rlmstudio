@@ -95,7 +95,7 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
       paragraphs about the build. In `text-analysis`, merge the
       `unload-all` and `unload-new` chunks into one `lms_unload_all()`
       chunk, without their comments about the build. Keep every other line.
-- [ ] T3: Run the script from a clean start. Read each knitted `.Rmd` for
+- [x] T3: Run the script from a clean start. Read each knitted `.Rmd` for
       error lines and for output under each chunk that printed some.
 - [ ] T4: Add `^vignettes/.*\.Rmd\.orig$` to `.Rbuildignore`. Copy the
       vignette rules into DESIGN.md Conventions. Correct LESSONS M009,
@@ -116,6 +116,7 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 - 2026-09-30: plan gate chose a plain, conversational prose register over strict Simple English; falsified by reader-pass reports of sentences too long or terms not explained.
 - 2026-09-30: T1 done. `data-raw/knit-vignettes.R` checks the clean start with `lms server status --json` as well as `lms_server_ready()`, because a token-guarded server with no token set reads as not ready. It knits to a temp file and copies on success. AC3 runs: (a) server running, exit 1 naming the server; (b) `google/gemma-3-1b` loaded, exit 1 naming it; (c) a scratch source that started the server, loaded the model (seen in `lms ps --json` inside the failing chunk), then called `stop()`: exit 1 naming chunk `boom`, no `.Rmd` written, server stopped, `lms ps --json` empty.
 - 2026-09-30: T2 done. The three vignettes moved to `.Rmd.orig` by `git mv`. The gate variables, hidden state chunks, `eval` gates, pasted `#>` lines, and build paragraphs went. With `lms_ready` gone, the two `lms_ready <- lms_server_ready()` chunks print `lms_server_ready()` directly. The text-analysis teardown is one `lms_unload_all()` chunk. The hidden download-wait chunks stay for M071 and M072.
+- 2026-09-30: T3 done. From a clean start (server stopped, `lms ps --json` empty), the script knitted all three sources, exit 0, and ended clean. The knitted `.Rmd` files hold no ```` ```{r ```` line and no `Error` or `Warning` text. Each chunk that printed shows `#>` lines. The text-analysis schema batch again gave 5 stars to "Terrible. Never again.", so its prose still matches.
 
 ## Decisions
 
