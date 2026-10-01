@@ -9,7 +9,7 @@ _Last hygiene check: 2026-10-01 (triage: five-guards row routed to Known issues,
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M079 | The text checks strip a class before they read a name, and their tests turn a sending site red | planned | — | normal | milestones/M079-text-check-class-strip.md |
+| M079 | The text checks strip a class before they read a name, and their tests turn a sending site red | in-progress | — | normal | milestones/M079-text-check-class-strip.md |
 | M078 | A pull request runs only the CI jobs that the package can turn red | done | — | normal | milestones/archive/M078-ci-gate-setup.md |
 | M077 | A chat continues a thread from the reply itself | done | — | normal | milestones/archive/M077-reply-as-thread-id.md |
 | M076 | The vignette knit fails on an unmarked warning and stale output, and a release has live-run steps | done | — | normal | milestones/archive/M076-knit-warnings-live-run.md |

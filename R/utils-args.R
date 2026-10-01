@@ -42,6 +42,28 @@ plain_string <- function(value) {
   unclass(value)[[1]]
 }
 
+#' A value with no class and no S4 bit
+#'
+#' A check reads the value with `[`, `[[`, `length()`, `dim()`, or `is.na()`.
+#' A class method for one of them would run inside the check, and it could
+#' replace the abort or change its detail (D-041). `unclass()` removes the
+#' class, so no S3 or S4 method runs, and `asS4(, FALSE)` then clears the S4
+#' bit. The names and the `dim` attribute stay, because the array rule of
+#' `id_fault()` reads `dim`. `as.character()` is not used, for the reason
+#' `plain_string()` states.
+#'
+#' @param value A character vector, with or without a class.
+#' @return `value` with no class and no S4 bit.
+#'
+#' @noRd
+strip_class <- function(value) {
+  value <- unclass(value)
+  if (isS4(value)) {
+    value <- asS4(value, FALSE)
+  }
+  value
+}
+
 #' Reject a wait that is not one usable number of seconds
 #'
 #' `lms_server_start(wait =)` names a number of seconds, so the check runs
@@ -188,6 +210,7 @@ id_fault <- function(value) {
     cls <- class(value)[[1]]
     return(paste0("You gave ", article_for(cls), " ", cls, " value."))
   }
+  value <- strip_class(value)
   if (!is.null(dim(value))) {
     return("You gave an array rather than a single string.")
   }
@@ -1514,6 +1537,7 @@ type_fault <- function(value) {
     cls <- class(value)[[1]]
     return(paste0("You gave ", article_for(cls), " ", cls, " value."))
   }
+  value <- strip_class(value)
   if (length(value) == 0L) {
     return("You gave an empty character vector.")
   }

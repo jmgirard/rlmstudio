@@ -1,13 +1,13 @@
 # M079: The text checks strip a class before they read a name, and their tests turn a sending site red
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes the aborts, the type filter match, and the check order of exported functions.
-- **Branch/PR:** —
+- **Branch/PR:** m079-text-check-class-strip
 
 ## Goal
 
@@ -52,7 +52,7 @@ A classed name, id, or type filter gets the check, the match, and the message of
 
 ## Tasks
 
-- [ ] T1: In `id_fault()` and `type_fault()`, remove the class and the S4 bit before the first call that can dispatch. Keep the `dim` attribute that the array rule reads, and never call `as.character()`. Add the AC1 tests to `test-name-faults.R`. Give the S3 class its own name, because `send_pair()` mocks `as.character.foo`. Write the S4 methods with the full signatures of each generic. In a scratch copy, undo the strip and make sure that the AC1 tests go red.
+- [x] T1: In `id_fault()` and `type_fault()`, remove the class and the S4 bit before the first call that can dispatch. Keep the `dim` attribute that the array rule reads, and never call `as.character()`. Add the AC1 tests to `test-name-faults.R`. Give the S3 class its own name, because `send_pair()` mocks `as.character.foo`. Write the S4 methods with the full signatures of each generic. In a scratch copy, undo the strip and make sure that the AC1 tests go red.
 - [ ] T2: `rlm_check_type()` returns the plain vector, and `list_models()` (R/list.R:70) and `list_instances()` (R/list.R:247) reassign `type`. Add the AC2 tests to `test-list-args.R`. The `type` help of both functions says that a classed filter matches by its value, as D-041 states.
 - [ ] T3: Add the two AC1 classes to `plain_probes`, and keep the `as.character()` mock of `send_pair()`. In a scratch copy, remove the `plain_string()` reassignment at one body-field site and make sure that a probe goes red.
 - [ ] T4: In `test-chat-dot-clash.R`, read the value of each passing dot in every request body. Run the batch with `api =` as well, and add the `instr` test of AC4.
@@ -67,6 +67,8 @@ A classed name, id, or type filter gets the check, the match, and the message of
 - 2026-10-01: plan gate chose no test of the unwritten body list over such a test, because jsonlite drops names and the S4 bit. Falsified by a body writer that keeps either one.
 - 2026-10-01: plan gate kept the call-site guard as it is over deleting or hardening it, because each call site today is a top-level function. Falsified by a call site that the guard misses.
 - 2026-10-01: plan chose to move the route-dot check of `lms_chat()` after `schema` over moving the batch check earlier. The batch reads the route from its dots only after `rlm_chat_dots()`. Falsified by a dot fault that must outrank a `model` fault.
+- 2026-10-01: implement started on branch m079-text-check-class-strip. Question gate chose the short headline "`<arg>` must be a string of valid text." for T6, with no "or `NULL`" on `previous_response_id`.
+- 2026-10-01: T1 done. `strip_class()` runs in `id_fault()` and `type_fault()` after the type test. The AC1 tests failed on "trap method ran" before the fix. In a scratch copy with the `type_fault()` strip removed, only the four `type` tests went red. `devtools::test()`: 0 failed, 3 skipped.
 
 ## Decisions
 
