@@ -7,12 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
+
 
 This vignette shows you how to control a chat with a model from an R
 script. You pick the format of a request, set options that change how the
@@ -28,16 +23,21 @@ LM Studio, starting the server, and downloading `google/gemma-3-1b`.
 The server is the program of LM Studio that answers the requests of R.
 Start it, and load the model into memory.
 
-```{r start}
+
+``` r
 library(rlmstudio)
 
 model <- "google/gemma-3-1b"
 
 # Start the server, and wait up to about 30 seconds for it to answer
 lms_server_start(wait = 30)
+#> ✔ LM Studio server started successfully on the default port.
 
 # Load the model
 lms_load(model)
+#> ℹ Loading model: "google/gemma-3-1b"...
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [7.1s]
+#> 
 ```
 
 ## Three routes
@@ -59,17 +59,25 @@ loaded with no request, and `?lms_chat` explains it.
 Here is the same prompt on each route. A prompt is the text that you send
 to the model.
 
-```{r routes}
+
+``` r
 prompt <- "Name one color. Answer with one word."
 
 # The default route
 lms_chat(model, prompt)
+#> [1] "Blue."
+#> attr(,"response_id")
+#> [1] "resp_42943f0c581bd4744cf151e1532c289eaeb5cf8206ebebeb"
 
 # The OpenAI route
 lms_chat(model, prompt, api_type = "openai")
+#> [1] "Blue."
 
 # The native route of LM Studio
 lms_chat(model, prompt, api_type = "native")
+#> [1] "Blue"
+#> attr(,"response_id")
+#> [1] "resp_d951ddb156c47bcd69fca2d10cf827b4ffbf1808682ef825"
 ```
 
 Each call returns the text of the reply. On the default route and the
@@ -87,9 +95,13 @@ such as a word or a part of a word. The `temperature` option sets how much
 chance goes into the choice of each token. At 0, the model takes its most
 likely token each time.
 
-```{r temperature}
+
+``` r
 # Set the temperature to 0
 lms_chat(model, prompt, temperature = 0)
+#> [1] "Blue."
+#> attr(,"response_id")
+#> [1] "resp_1d0639b1ce60e64ff0e4d68674fc522f827fd6e898827e8b"
 ```
 
 The package does not check the names of request options. The server
@@ -97,9 +109,13 @@ checks them, and the routes do not check them in the same way. On the
 default route, the server ignores a name that it does not know. The call
 below misspells `temperature`, and it still returns a reply with no error.
 
-```{r misspelled}
+
+``` r
 # "temprature" is not an option that the server knows
 lms_chat(model, prompt, temprature = 0)
+#> [1] "Blue."
+#> attr(,"response_id")
+#> [1] "resp_eb959563943dee2080ad6df13eb28627986be12305bd1a25"
 ```
 
 So a misspelled option can go unnoticed. The section "The raw reply" shows
@@ -117,7 +133,8 @@ prompt and reply to the model with your new prompt.
 Each call below sets `temperature = 0`, so that the model takes its most
 likely answer.
 
-```{r follow-up}
+
+``` r
 # Tell the model a fact
 first <- lms_chat(
   model,
@@ -125,6 +142,9 @@ first <- lms_chat(
   temperature = 0
 )
 first
+#> [1] "OK."
+#> attr(,"response_id")
+#> [1] "resp_49a2751d9ebb9a31243b072f7abcfcffaeb6871f4d5fdf96"
 
 # Ask about the fact in a follow-up
 lms_chat(
@@ -133,6 +153,9 @@ lms_chat(
   previous_response_id = attr(first, "response_id"),
   temperature = 0
 )
+#> [1] "Green."
+#> attr(,"response_id")
+#> [1] "resp_a9f615c2576386b88d6401896d74f37837c3ce3421f53520"
 
 # Ask the same question with no response id
 lms_chat(
@@ -140,6 +163,9 @@ lms_chat(
   "What is my favorite color? Answer with one word.",
   temperature = 0
 )
+#> [1] "Blue."
+#> attr(,"response_id")
+#> [1] "resp_c801fa0cce4936bb02222049b0104ca368eb20076966794f"
 ```
 
 With the response id, the model answered from the first prompt. With no
@@ -164,7 +190,8 @@ message, and the `content` column holds the text. The roles are:
 You write the history yourself, so an `assistant` row can hold a reply that
 the model never gave.
 
-```{r history}
+
+``` r
 history <- data.frame(
   role = c("system", "user", "assistant", "user"),
   content = c(
@@ -175,17 +202,24 @@ history <- data.frame(
   )
 )
 history
+#>        role                           content
+#> 1    system You answer in one short sentence.
+#> 2      user       My favorite color is green.
+#> 3 assistant            Green is a nice color.
+#> 4      user        What is my favorite color?
 
 # Send the whole conversation
 reply <- lms_chat_openai(model, messages = history, temperature = 0)
 reply
+#> [1] "Your favorite color is green."
 ```
 
 To continue the conversation, add the reply and your next prompt to the
 data frame as new rows, and send it again. `trimws()` removes the line
 break at the end of the reply.
 
-```{r history-next}
+
+``` r
 # Add the reply and a new prompt as two rows
 history <- rbind(
   history,
@@ -197,6 +231,7 @@ history <- rbind(
 
 # Send the longer conversation
 lms_chat_openai(model, messages = history, temperature = 0)
+#> [1] "A mango!"
 ```
 
 ## The raw reply
@@ -205,25 +240,40 @@ The server sends its reply in JSON, a text format for data. The raw reply
 is that whole reply, read into R as a list. With `simplify = FALSE`,
 `lms_chat()` returns the raw reply in place of the text.
 
-```{r raw}
+
+``` r
 raw <- lms_chat(model, prompt, temperature = 0, simplify = FALSE)
 
 # The fields of the raw reply
 names(raw)
+#>  [1] "id"                   "object"               "created_at"          
+#>  [4] "completed_at"         "status"               "incomplete_details"  
+#>  [7] "model"                "previous_response_id" "instructions"        
+#> [10] "output"               "error"                "tools"               
+#> [13] "tool_choice"          "truncation"           "parallel_tool_calls" 
+#> [16] "text"                 "top_p"                "presence_penalty"    
+#> [19] "frequency_penalty"    "top_logprobs"         "temperature"         
+#> [22] "reasoning"            "usage"                "max_output_tokens"   
+#> [25] "max_tool_calls"       "store"                "background"          
+#> [28] "service_tier"         "metadata"             "safety_identifier"   
+#> [31] "prompt_cache_key"
 
 # The temperature that the server used
 raw$temperature
+#> [1] 0
 ```
 
 The raw reply holds more than the text, such as the `temperature` that the
 server used. Here is the call with the misspelled option from the section
 "Request options".
 
-```{r raw-misspelled}
+
+``` r
 raw_typo <- lms_chat(model, prompt, temprature = 0, simplify = FALSE)
 
 # The temperature that the server used
 raw_typo$temperature
+#> [1] 0.8
 ```
 
 The server did not use a temperature of 0. It ignored `temprature` and
@@ -250,7 +300,8 @@ function prints a message and returns `NA`. In a loop over
 many prompts, such a function keeps one failed call from stopping the
 loop.
 
-```{r chat-or-na}
+
+``` r
 # Chat, and return NA with a message if the call fails
 chat_or_na <- function(...) {
   tryCatch(
@@ -274,23 +325,35 @@ chat_or_na <- function(...) {
 
 # A call that works returns the reply
 chat_or_na(model, prompt, temperature = 0)
+#> [1] "Blue."
+#> attr(,"response_id")
+#> [1] "resp_3bd6d15e15f3f8a46c278b24fff427aef46cac1f4f0ad386"
 ```
 
 The first call below goes to port 1, where no server runs. The other calls
 misspell the model name or an option.
 
-```{r errors}
+
+``` r
 # No server listens at this address
 chat_or_na(model, prompt, host = "http://localhost:1")
+#> No server answered.
+#> [1] NA
 
 # A misspelled model name on the native route
 chat_or_na("google/gemma-3-1bb", prompt, api_type = "native")
+#> The server refused the call: status 404, code model_not_found.
+#> [1] NA
 
 # The same misspelled model name on the default route
 chat_or_na("google/gemma-3-1bb", prompt)
+#> The reply came from google/gemma-3-1b, not from google/gemma-3-1bb.
+#> [1] NA
 
 # A misspelled option on the native route
 chat_or_na(model, prompt, api_type = "native", temprature = 0)
+#> The server refused the call: status 400, code unrecognized_keys.
+#> [1] NA
 ```
 
 The native route refused the misspelled model name and the misspelled
@@ -303,10 +366,15 @@ raised `rlmstudio_model_mismatch` when it read the reply.
 When you are done, unload the model to free its memory, and stop the
 server.
 
-```{r clean-up}
+
+``` r
 # Remove the model from memory
 lms_unload(model)
+#> ℹ Unloading model: "google/gemma-3-1b"...
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [529ms]
+#> 
 
 # Stop the local server
 lms_server_stop()
+#> ✔ LM Studio server stopped successfully.
 ```

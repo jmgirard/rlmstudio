@@ -89,7 +89,7 @@ scoring are M073.
 - [x] T2: Write the source to the outline in Scope. Keep each code chunk
       short, with a comment that says what it does. Add the source to the
       list that `data-raw/knit-vignettes.R` knits.
-- [ ] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
+- [x] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
       the knitted file for error lines and for the output lines of AC1.
 - [ ] T4: Spawn a fresh reader with the persona of a researcher who knows
       R and has run `getting-started`. It reads the knitted vignette and
@@ -113,6 +113,7 @@ scoring are M073.
 - 2026-10-01: mini gate on the T1 finding: the error section catches the misspelled model on both routes, so it also handles `rlmstudio_model_mismatch`. Scope item 6 names two classes, and no criterion changes.
 - 2026-10-01: T2 note: `data-raw/knit-vignettes.R` knits every `vignettes/*.Rmd.orig` with no list, so T2 adds nothing to the script.
 - 2026-10-01: T2: wrote `vignettes/chat-options.Rmd.orig` to the six-step outline. A scan of the source finds all ten AC1 strings, no AC2 code pattern, no inline R, and no AC3 prose word.
+- 2026-10-01: T3: the first knit left the chunk that defines `chat_or_na()` with `lms_chat(` and no `#>` line, and a scratch block checker flagged it. A working call now ends that chunk. The re-knit from a clean start has no `{r` fence and no `#> Error` line. All 9 blocks that call a chat function have a `#>` line after the last code line.
 
 ## Decisions
 
