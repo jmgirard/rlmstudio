@@ -58,7 +58,7 @@ scoring are M073.
       its first use in prose or in a code comment of the knitted vignette:
       route, request option, response id, conversation history, raw reply,
       and condition class.
-- [ ] AC5: Take each prose sentence and each `#` comment line that states
+- [x] AC5: Take each prose sentence and each `#` comment line that states
       what a package function does with an argument, returns, or raises,
       beyond what its name says. A named test under `tests/testthat/`
       exercises that behavior. A sentence about what LM Studio itself does
@@ -150,6 +150,7 @@ scoring are M073.
 - 2026-10-01: T10 AC6: `document()` gives no diff, and `check_pkgdown()` finds no problems. With the server stopped and the token unset, `devtools::check()` gives 0 errors, 0 warnings, and 0 notes.
 - 2026-10-01: claim audit: 46 claims read, 1 corrected — vignettes/chat-options.Rmd.orig, vignettes/chat-options.Rmd. The checked option names read as a full list but left out `response_format` with `schema`, so the list now opens with "For example". The same reader re-read it and found that it holds.
 - 2026-10-01: after the audit, a re-knit passes the T10 scans with the same live answers. All tasks done. Status set to review.
+- 2026-10-01: review pass 2 started by /milestone-review. Fresh evidence for AC1 to AC6 is recorded, and the consistency gate passes. The diff reviewer is still running (checkpoint, review not finished).
 
 ## Decisions
 
@@ -180,3 +181,17 @@ Independent review, 2026-10-01: three fresh reviewers (diff, history, prior revi
 - F10 (diff 3): the new route test strips the `response_id` attribute. Proposed: reject, because test-thread.R "lms_chat() returns the attribute on the two thread routes" backs the claim.
 - F11 (prior 4): the native-route warning test matches message text. Proposed: reject, because the warning has no class to match.
 - F12 (history 4 and 5, diff 7 and 8): `store = FALSE`, the narrow meaning of `rlmstudio_no_server`, and the return type of `logprobs = TRUE` on openai are not covered. Proposed: reject, because the vignette does not use them and the help pages state them.
+
+Gate decision on pass 1: F1 to F9 fixed as T7 to T9, and F10 to F12 rejected for the reasons above.
+
+Review pass 2, evidence gathered 2026-10-01 on `m074-chat-options-vignette` at 467bd71, level with `origin/main` (no merge needed). The pass-1 ticks were cleared, and each box is ticked again against its pass-2 line.
+
+- AC1 (pass 2): `knitr::purl()` of the source gives 140 lines. Each of the 10 strings is present at least once. The knitted file has 436 lines, with 0 that start with ```` ```{r ```` and 0 that start with `#> Error`. Of the 9 blocks that call `lms_chat(` or `lms_chat_openai(`, all 9 have a `#>` line after their last code line.
+- AC2 (pass 2): The 16 regular expressions of the DESIGN.md code list find 0 matches in the 140 purled lines. Planted `lapply(`, `\(z)`, and `t(m)` lines each match, so the search can fail. The source holds 0 inline `` `r `` expressions.
+- AC3 (pass 2): A case-blind search for the 14 entries of the DESIGN.md prose list finds 0 matches. It ran over the 214 of 368 source lines outside the chunks, with the YAML header and inline code. A planted line with a list word in capitals matches, so the search can fail.
+- AC4 (pass 2): Read in the knitted file this session, with a case-blind search for the first use of each term. Route is explained at its first use on line 13, and request option on line 14. Response id is explained on line 52, before the table on line 58. Conversation history is explained on line 199, and condition class on line 313. Raw reply is explained on line 266. Its only earlier use is the heading on line 263, three lines above.
+- AC5 (pass 2), package claims: each test of the T5 ledger and of T9 exists under `tests/testthat/`, found by name. The claims that T7 and T8 added are each backed by a named test. The checked `stream` is backed by test-arg-guards.R "a stream other than FALSE or NULL aborts …() before the server probe". The checked `instructions` and `messages` are backed by test-chat-dot-clash.R "lms_chat() aborts on a dot that it passes itself". The `NULL` option and the misspelled name are backed by "lms_chat() sends a request option as written, a misspelled name included, on each route". A body that is not JSON is backed by test-chat-body-parse.R "a 200 body that does not parse raises rlmstudio_bad_response". The mismatch as a bad response is backed by test-model-check.R "lms_chat() raises the mismatch on the default route and the openai route". Its helper asserts both classes. No mismatch on native is backed by "lms_chat() on the native route returns a reply from another model with no error".
+- AC5 (pass 2), the wrong-argument sentence: test-arg-guards.R exercises the abort before any request in "a bad model or job id aborts …(), named, before any request". No test asserts that this error lacks the four classes. A probe this session gave the classes `rlang_error`, `error`, and `condition` for a bad `stream` and for a two-string model.
+- AC5 (pass 2), LM Studio claims: a live probe this session with `google/gemma-3-1b` gave what the vignette states. All three routes replied, and the default and native replies carried a `response_id` attribute. The raw `temperature` was 0 with `temperature = 0` and 0.8 with `temprature = 0`, in a raw reply of 31 fields. A follow-up by response id answered "Green.", and the same question with no id answered "Blue.". The `messages` data frame answered "Your favorite color is green.", and the longer one "GREEN!". Port 1 raised `rlmstudio_no_server`. The misspelled model gave 404 `model_not_found` on native and a mismatch on the default route, with `model` "google/gemma-3-1bb" and `reply_model` "google/gemma-3-1b". The misspelled option on native gave 400 `unrecognized_keys`. The probe stopped the server and unloaded the model at its end.
+- AC6 (pass 2): `NEWS.md` has the entry under "rlmstudio (development version)", and it names `vignette("chat-options")`. `devtools::document()` left `git status` clean. `devtools::test()` gave 19806 expectations in 49 files, with 0 failed, 0 errors, and 3 live skips. `pkgdown::check_pkgdown()` found no problems. With the server stopped and `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate (pass 2): `cairn_validate.py` passed, exit 0. No DESIGN.md principle changed, so `cairn_impact.py` was skipped. README is not touched, and the branch adds no top-level file. The `document()`, `check_pkgdown()`, NEWS, and `check()` items of the profile are in the AC6 line.
