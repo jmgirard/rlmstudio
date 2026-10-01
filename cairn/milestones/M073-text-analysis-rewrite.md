@@ -1,6 +1,6 @@
 # M073: The text-analysis vignette scores a data frame of texts in plain code
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
@@ -139,6 +139,9 @@ conversations are M074.
 - 2026-10-01: T8 fixed the prose findings. The logprobs section says to leave `api_type` at its default. A new vignette-claims test backs it, and a plant of a logprobs frame on the openai route turned it red. The summary chunk prints the raw second reply and calls `trimws()`. The server and load glosses moved to the intro, and "at each step" before the step gloss is gone. Two lines were rewrapped.
 - 2026-10-01: T8 embedding prose says that the sixth review fits. A live probe added a sentence to the end of a text. It changed the embedding of the 200-sentence text and left a 400-sentence text the same. A clean re-knit changed only the `trimws()` lines. AC1 to AC4 checks pass on 169 purled lines and 393 source lines, and their plants turn red. Suite: 19,770 expectations, 0 failed, 3 live skips.
 - 2026-10-01: T9 nested the two loops of `test-vignette-claims.R` one `test_that()` per request, and moved an `expect_length()` after its loop. `loop-sweep.R` lists both as nested, with no before-subtest row in the file. A new test shows that `lms_server_stop()` sends `server stop` alone. A plant that sent `server status` turned it red. Suite: 19,767 expectations, 0 failed, 3 live skips.
+- 2026-10-01: claim audit: 96 claims read, 1 corrected — vignettes/text-analysis.Rmd.orig, vignettes/text-analysis.Rmd
+- 2026-10-01: the correction. The unload-first advice failed with no server, because `lms_unload()` aborts without one. The prose now says to call it after `lms_server_start()` and before `lms_load()`. The same reader re-read it as OK. A re-knit changed no output line, and the AC1 to AC3 checks pass.
+- 2026-10-01: status set to review.
 
 ## Decisions
 
