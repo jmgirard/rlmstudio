@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-01 (M074 done, M071 row pruned, knit lesson extended)_
+_Last hygiene check: 2026-10-01 (M075 done, M072 row pruned, no lesson changes)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-10-01 (M074 done, M071 row pruned, knit lesson extende
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M075 | The website has a light purple theme, a dark mode switch, and articles in reading order | review | — | normal | milestones/M075-pkgdown-light-theme.md |
+| M075 | The website has a light purple theme, a dark mode switch, and articles in reading order | done | — | normal | milestones/archive/M075-pkgdown-light-theme.md |
 | M074 | A vignette shows chat options, conversations, and errors in scripts | done | M070 | normal | milestones/archive/M074-chat-options-vignette.md |
 | M073 | The text-analysis vignette scores a data frame of texts in plain code | done | M070 | normal | milestones/archive/M073-text-analysis-rewrite.md |
-| M072 | The headless vignette covers what differs without the desktop app | done | M070 | normal | milestones/archive/M072-headless-vignette-rewrite.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
