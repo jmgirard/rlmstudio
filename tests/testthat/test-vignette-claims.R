@@ -155,6 +155,118 @@ test_that("lms_score_expected() without a step column reads the first run of the
   expect_equal(res$entropy, 0.9182958, tolerance = 1e-6)
 })
 
+test_that("a logprobs data-frame batch sends top_logprobs and temperature with each input", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  # Each reply carries one step with two candidates, so each cell is a data
+  # frame whose step column starts at 1.
+  reply <- function(digit) {
+    steps <- json_array(step_json(
+      quoted(digit),
+      "-0.3",
+      json_array(candidate_json(quoted(digit), "-0.3"), candidate_json(quoted("4"), "-1.5"))
+    ))
+    mock_response(200L, output_body(responses_message(output_text(quoted(digit), steps))))
+  }
+  recorder <- local_request_sequence(list(reply("3"), reply("2")))
+
+  out <- lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = "data.frame",
+    logprobs = TRUE,
+    top_logprobs = 10,
+    temperature = 0,
+    quiet = TRUE
+  )
+
+  expect_length(recorder$requests, 2L)
+  for (k in 1:2) {
+    sent <- request_target(recorder$requests[[k]])
+    at <- paste("request", k)
+    expect_identical(sent[["path"]], "/v1/responses", info = at)
+    expect_equal(sent[["body"]][["top_logprobs"]], 10, info = at)
+    expect_equal(sent[["body"]][["temperature"]], 0, info = at)
+  }
+  expect_identical(out$output, c("3", "2"))
+  expect_true(is.list(out$logprobs))
+  expect_s3_class(out$logprobs[[2]], "data.frame")
+  expect_identical(out$logprobs[[2]]$step, c(1L, 1L))
+  expect_identical(out$logprobs[[2]]$candidate_token, c("2", "4"))
+})
+
+test_that("a schema batch on the openai route asks the given host and adds the fields as columns", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  schema <- list(
+    type = "object",
+    properties = list(
+      sentiment = list(type = "string"),
+      stars = list(type = "integer")
+    )
+  )
+  recorder <- local_request_sequence(list(
+    mock_response(200L, completion_body(quoted('{"sentiment": "positive", "stars": 4}'))),
+    mock_response(200L, completion_body(quoted('{"sentiment": "negative", "stars": 1}')))
+  ))
+
+  out <- lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    format = "data.frame",
+    api_type = "openai",
+    schema = schema,
+    quiet = TRUE
+  )
+
+  for (k in 1:2) {
+    sent <- request_target(recorder$requests[[k]])
+    at <- paste("request", k)
+    expect_identical(sent[["host"]], "localhost:1234", info = at)
+    expect_identical(sent[["path"]], "/v1/chat/completions", info = at)
+    expect_identical(
+      sent[["body"]][["response_format"]][["json_schema"]][["schema"]][["type"]],
+      "object",
+      info = at
+    )
+  }
+  expect_identical(out$sentiment, c("positive", "negative"))
+  expect_identical(out$stars, c(4L, 1L))
+})
+
+test_that("a schema data frame keeps the error of a failed input in its output column", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  schema <- list(
+    type = "object",
+    properties = list(sentiment = list(type = "string"))
+  )
+  # The second input fails with status 500, as a prompt longer than the
+  # context length did on a live server. The third still gets its reply.
+  local_request_sequence(list(
+    mock_response(200L, completion_body(quoted('{"sentiment": "positive"}'))),
+    mock_response(500L, '{"error": {"message": "too many tokens"}}'),
+    mock_response(200L, completion_body(quoted('{"sentiment": "negative"}')))
+  ))
+
+  res <- collect_warnings(lms_chat_batch(
+    "a-model",
+    c("first", "second", "third"),
+    format = "data.frame",
+    api_type = "openai",
+    schema = schema,
+    quiet = TRUE
+  ))
+  out <- res$value
+
+  expect_identical(out$sentiment, c("positive", NA, "negative"))
+  expect_true(is.list(out$output))
+  expect_s3_class(out$output[[2]], "rlmstudio_api_error")
+  expect_identical(out$output[[2]]$status, 500L)
+  expect_identical(out$output[[3]], list(sentiment = "negative"))
+  expect_length(res$warnings, 1L)
+  shown <- conditionMessage(res$warnings[[1]])
+  expect_match(shown, "1 input failed, at position 2.", fixed = TRUE)
+  expect_match(shown, "rlmstudio_api_error", fixed = TRUE)
+})
+
 # Claims of `vignettes/getting-started.Rmd`.
 
 test_that("check_lms_version() is TRUE from version 0.4.0 and FALSE below it", {

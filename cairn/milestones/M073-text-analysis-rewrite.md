@@ -97,7 +97,7 @@ conversations are M074.
       R and wants to rate texts. It reads the knitted vignette and lists
       each step that it cannot follow and each term used before it is
       explained. Fix each item, or log why not, and re-knit.
-- [ ] T5: List the claims of AC5 with the test or probe that backs each, as
+- [x] T5: List the claims of AC5 with the test or probe that backs each, as
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
 - [ ] T6: Add the NEWS entry and run the checks of AC6.
@@ -113,6 +113,11 @@ conversations are M074.
 - 2026-10-01: T3 knitted 3 times from a clean start, with the same output each time. No chunk header or `#> Error` line. The 6 chunks that call the batch, score, or embed functions each end with `#>` lines. A plant that removes them turns the check red. New prose names what the output shows. Examples are the reply "3\n", the `**` summary, and the 5 stars of "Terrible". Others are a score below 2 beside 5 stars, and the review closest to the query. Dropped a claim that a new run gives the same replies, because the T1 scores differed from the knit.
 - 2026-10-01: T4 fresh Opus reader (researcher persona) listed 21 steps and 9 unexplained terms. Fixed: a wrong claim that a schema batch puts `NA` in `output`, where it holds the error. Also fixed: `api_type = "openai"`, schema keywords, and "how sure", which no output showed. Glossed: step, server, load, request, reply columns, `**`, 768 columns, and the similarity baseline. Also fixed: a wrong section pointer, model instance, `llm`, model key, and the server stop. Re-knit gave the same output lines.
 - 2026-10-01: T4 items not fixed. Tokens per character, a good `context_length`, its default, memory cost, and how to reload with a larger one are machine-dependent or unprobed. The blank candidate's identity is unverified. Which measure to prefer is the researcher's call. A successful list element, JSON itself, and condition class names stay out to keep the steps short.
+- 2026-10-01: T5 ledger, part 1 (file:line of `test_that`). Quiet hides load messages: vignette-claims:19. Quiet hides the batch bar: flag-args:502. The failed-input warning shows past quiet: chat-schema:646. `wait` waits up to its budget: serve:225, serve:264, serve:346. `context_length` is sent: load:11.
+- 2026-10-01: T5 ledger, part 2. One request per text, same system prompt, rows in order, `output`: vignette-claims:43, vignette-claims:242. Id and token columns: chat-batch:947. A schema needs `"openai"`: arg-guards:559. One column per field, string and integer types: chat-schema:825, chat-schema:897. The openai route asks the given host: new vignette-claims test.
+- 2026-10-01: T5 ledger, part 3. The logprobs column of data frames with `step` from 1, and `top_logprobs` sent: new vignette-claims test. Score reads step 1, keeps the scale, sums "3" and " 3", rescales: score:137, score:44, score:75. A failed input does not stop the batch, gives `NA` and `NULL`, and one warning: chat-batch:98, chat-batch:183. A schema `output` keeps the error: new vignette-claims test. List format: chat-batch:98.
+- 2026-10-01: T5 ledger, part 4. `lms_embed()` rows in order: embed:129. `list_instances()` rows and config columns: list-instances:62, list-instances:170. `lms_unload_all()` unloads each instance: unload:165. `lms_unload()` by id: unload:16. LM Studio claims rest on the knitted output: the top candidate, the 10 candidates, the context-length error, and the 2048 embedding context.
+- 2026-10-01: T5 added 3 tests to `test-vignette-claims.R`. Plants in a scratch `R/chat.R` turned each red on its own expectation: dropped dots failed `top_logprobs`, a fixed host failed the host check, and a failure slot of `NA` failed the condition check. Suite: 1953 tests, 0 failed, 3 live skips.
 
 ## Decisions
 
