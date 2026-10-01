@@ -57,7 +57,7 @@ changes.
 ## Tasks
 
 - [x] T1: In `pkgdown/_pkgdown.yml`, set the `template:` block to `bootstrap: 5`, `bslib: preset: zephyr`, `primary: "#4139C3"`, and `light-switch: true`. Remove `navbar: bg: primary`. Delete `pkgdown/extra.css`. If `bootswatch` stays beside `preset`, pkgdown warns "Multiple Bootstrap preset themes".
-- [ ] T2: Add an `articles:` index to `pkgdown/_pkgdown.yml`. It has one section with `navbar: ~` and the four vignettes in the AC3 order. A comment states the rule: with no `navbar` key, pkgdown makes the Articles menu a plain link.
+- [x] T2: Add an `articles:` index to `pkgdown/_pkgdown.yml`. It has one section with `navbar: ~` and the four vignettes in the AC3 order. A comment states the rule: with no `navbar` key, pkgdown makes the Articles menu a plain link.
 - [ ] T3: In `.github/workflows/pkgdown.yaml`, add a step before the build that deletes `CLAUDE.md`. Its comment says that pkgdown renders every root `.md` file. Set `clean: true` on the deploy step.
 - [ ] T4: Run `pkgdown::init_site()` before an article build, because an article build does not refresh `deps/` after a theme change (circumplex lesson, M156). Build the site into a fresh scratch folder and record the AC1 to AC4 evidence. Do the AC6 build from a copy without `CLAUDE.md`. Run `pkgdown::check_pkgdown()`.
 - [ ] T5: After the merge, wait for the deploy run on the default branch. Then run `git ls-tree -r --name-only origin/gh-pages`. Make sure that it lists no `CLAUDE.html`, no `CLAUDE.md`, no `extra.css`, and nothing under `dev/`, and that `.nojekyll` is still there. Record the result in the work log.
@@ -72,3 +72,4 @@ changes.
 - 2026-10-01: second audit pass (same reader, full mode) on AC6 and the revised AC1 to AC5 returned 2 findings, both fixed. AC6 named a post-merge effect, so it now names pre-merge evidence and the `gh-pages` listing moved to T5. AC2 compares the color trimmed.
 - 2026-10-01: implement started on branch `m075-pkgdown-light-theme`. The question gate was skipped, because the plan left no choice open.
 - 2026-10-01: T1 done. `_pkgdown.yml` uses the zephyr preset with `light-switch: true`, and `pkgdown/extra.css` is deleted. pkgdown 2.2.1, bslib 0.12.0.
+- 2026-10-01: T2 done. The `articles:` index has one section with `navbar: ~`. The comment matches `pkgdown:::navbar_articles()` in 2.2.1, read this session.

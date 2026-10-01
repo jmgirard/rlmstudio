@@ -21,6 +21,17 @@ repo:
     issue: https://github.com/jmgirard/rlmstudio/issues/
     user: https://github.com/jmgirard/
 
+articles:
+  # With no `navbar` key, pkgdown makes the Articles menu a plain link.
+  # `navbar: ~` lists the articles in the menu, in this order, with no heading.
+  - title: Articles
+    navbar: ~
+    contents:
+      - getting-started
+      - chat-options
+      - text-analysis
+      - headless-config
+
 reference:
   - title: "Chat & Inference"
     desc: "Interact with loaded LLMs to generate text and process batches of prompts."
