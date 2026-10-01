@@ -142,6 +142,7 @@ in the DESIGN known issue.
 - 2026-09-30: The first `devtools::check()` failed at the `headless-config.Rmd` build. LM Studio could not resolve `qwen/qwen3-4b-2507` and reported "Network connection failed". The branch does not touch that vignette. The failed build left the server running, and it was stopped by hand. The rerun gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-30: implement done, status review.
 - 2026-09-30: review return 1 (defect): AC3 failed. The score test that replaced `test-vignette-claims.R:125` holds a `step` column, so it exercises the AC2 rule, not the no-`step` fallback the criterion names. Status in-progress. The other criteria passed, and the 13 reviewer findings in the Review section wait for triage.
+- 2026-09-30: T2 repair for the AC3 return. The score test at `test-vignette-claims.R:126` now uses a frame with no `step` column and the step tokens "3", "\n", "3", so it exercises the run fallback. With the old rule planted (every row with the first step token), it failed in the label, probability, expected value, SD, and entropy checks. `devtools::document()` gives no diff, and `devtools::test()` gives 0 failures and 3 skips.
 
 ## Decisions
 

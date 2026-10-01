@@ -123,22 +123,23 @@ test_that("lms_chat() on the default route sends the dots and lists the candidat
   expect_identical(without_response_id(res), "3")
 })
 
-test_that("lms_score_expected() reads the rows of the first step, keeps the scale, and rescales", {
-  # Step 1 holds "3", "4", a number outside the scale, and a newline. Step 2
-  # holds a "5" and step 3 a "2". Step 3 has the same token as step 1, and
-  # neither later step counts.
+test_that("lms_score_expected() without a step column reads the first run of the first step token, keeps the scale, and rescales", {
+  # The frame has no `step` column, as a frame saved before that column did.
+  # The first run of "3" rows holds "3", "4", a number outside the scale, and
+  # a newline. The "\n" rows end the run and hold a "5". The last "3" row
+  # holds a "2". It has the same token as the first row but sits after the
+  # run, so it does not count.
   lp_df <- data.frame(
     step_token = c("3", "3", "3", "3", "\n", "\n", "3"),
     step_logprob = c(-0.5, -0.5, -0.5, -0.5, -0.1, -0.1, -0.2),
     candidate_token = c("3", "4", "6", "\n", "\n", "5", "2"),
     candidate_logprob = log(c(0.4, 0.2, 0.1, 0.1, 0.9, 0.1, 0.2)),
-    step = c(1L, 1L, 1L, 1L, 2L, 2L, 3L),
     stringsAsFactors = FALSE
   )
 
   res <- lms_score_expected(lp_df, scale = 1:5)
 
-  # Kept: 3 (0.4) and 4 (0.2) from the rows of step 1.
+  # Kept: 3 (0.4) and 4 (0.2) from the first run of "3" rows.
   # Rescaled to sum to 1: 0.4 / 0.6 = 2/3 and 0.2 / 0.6 = 1/3.
   expect_identical(names(res), c("expected_value", "weighted_sd", "entropy", "probabilities"))
   expect_identical(res$probabilities$label, c(3, 4))
