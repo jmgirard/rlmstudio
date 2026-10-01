@@ -74,8 +74,18 @@ print.lms_chat_result <- function(x, ...) {
       inherits(x$logprobs, "data.frame") &&
       nrow(x$logprobs) > 0
   ) {
-    # Count unique steps by looking at the step_token or step indices
-    n_steps <- length(unique(x$logprobs$step_token))
+    # Count the distinct step numbers. A frame with no step column counts
+    # runs of the same step token, so two adjacent steps with one token
+    # count as one.
+    step <- x$logprobs[["step"]]
+    n_steps <- if (is.null(step)) {
+      tokens <- x$logprobs$step_token
+      same <- tokens[-1] == tokens[-length(tokens)] |
+        (is.na(tokens[-1]) & is.na(tokens[-length(tokens)]))
+      1L + sum(!same %in% TRUE)
+    } else {
+      length(unique(step))
+    }
 
     rlm_alert_info(
       "Includes log probabilities for {.val {n_steps}} token step{?s}. Access the data via {.code x$logprobs}"

@@ -706,3 +706,32 @@ test_that("print() shows reply text with braces and does not run it", {
   expect_match(shown$messages, brace_probe, fixed = TRUE)
   expect_no_match(shown$stdout, "EVALUATED", fixed = TRUE)
 })
+
+test_that("print() counts the steps of a reply whose steps 1 and 3 share a token", {
+  withr::local_options(rlmstudio.quiet = FALSE)
+  # Three steps with the tokens "3", "\n", and "3", two candidates each.
+  with_step <- data.frame(
+    step_token = rep(c("3", "\n", "3"), each = 2),
+    step_logprob = -0.5,
+    candidate_token = c("3", "4", "\n", " ", "3", "2"),
+    candidate_logprob = -1,
+    step = rep(1:3, each = 2),
+    stringsAsFactors = FALSE
+  )
+  frames <- list(
+    "a step column" = with_step,
+    "no step column" = with_step[setdiff(names(with_step), "step")]
+  )
+  for (case in names(frames)) {
+    result <- new_lms_chat_result(text = "3\n3", logprobs = frames[[case]])
+    shown <- capture_shown(print(result))
+    expect_null(shown$error, info = case)
+    expect_match(
+      shown$messages,
+      "Includes log probabilities for 3 token steps",
+      fixed = TRUE,
+      all = FALSE,
+      info = case
+    )
+  }
+})
