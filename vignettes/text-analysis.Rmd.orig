@@ -96,8 +96,7 @@ holds the reply.
 
 Each chat call in this vignette sets `temperature = 0`. The temperature
 sets how much chance goes into the choice of each token. At 0, the model
-takes its most likely token at each step, so that a new run gives the
-same replies.
+takes its most likely token at each step.
 
 The batch below warns that the sixth input failed. The section "When an
 input fails" explains why.
@@ -119,6 +118,9 @@ names(summaries)
 reviews$summary <- summaries$output
 reviews[, c("id", "summary")]
 ```
+
+The model does not always follow the system prompt. Here, the second
+summary holds `**` marks and a line break, `\n`.
 
 ## Labels and ratings as columns
 
@@ -200,14 +202,21 @@ digits <- lms_chat_batch(
   temperature = 0
 )
 
-# The candidates for the first token of the first reply
+# The reply to the first review
+digits$output[1]
+
+# The candidates for the first token of that reply
 first <- digits$logprobs[[1]]
 first[first$step == 1, c("candidate_token", "candidate_logprob")]
 ```
 
+The first token of the reply, `3`, is the candidate with the highest log
+probability. The `\n` after it is a line break.
+
 `lms_score_expected()` reads the candidates of the first step. It keeps
-the candidates whose token is a number in `scale`, and it adds up the
-probabilities of candidates that give the same number. It then scales the
+the candidates whose token is a number in `scale`, so that a token such as
+`**` above does not count. It adds up the probabilities of candidates that
+give the same number. It then scales the
 probabilities to sum to 1. It returns the expected value, the average of
 the numbers, each weighted by its probability. The expected value is a
 score that can fall between two whole numbers.
@@ -230,6 +239,10 @@ for (i in seq_len(nrow(digits))) {
 reviews[, c("id", "stars", "score")]
 ```
 
+The score of the second review is below 2, but its star rating is 5.
+The two came from separate requests with different system prompts. When
+two such measures disagree, read the text.
+
 ## When an input fails
 
 The sixth review needs more tokens than the 1,024 that the model has room
@@ -250,7 +263,7 @@ failed <- lms_chat_batch(
   format = "list",
   temperature = 0
 )
-conditionMessage(failed[[1]])
+cat(conditionMessage(failed[[1]]))
 ```
 
 To keep such a text, load the model with a larger `context_length`, or
@@ -293,6 +306,10 @@ for (i in seq_len(nrow(reviews))) {
 reviews[, c("id", "summary", "similarity")]
 ```
 
+The first review, about slow service, is the closest to the query. The
+sixth review has a similarity too, because the embedding model has room
+for 2,048 tokens, as the next section shows.
+
 ## All the results
 
 Each step added columns to the same data frame. Here it is without the
@@ -304,8 +321,8 @@ reviews[, names(reviews) != "text"]
 
 ## Clean up
 
-`list_instances()` returns one row for each loaded model instance, with
-its id, its type, and its context length.
+`list_instances()` returns one row for each loaded model instance. Its
+columns include the id, the type, and the context length of each instance.
 
 ```{r instances}
 instances <- list_instances()
