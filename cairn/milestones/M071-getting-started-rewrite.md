@@ -77,7 +77,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - [x] T1: Probe the live calls that the outline needs, on this machine, and
       log what each returns: `check_lms_version()`, `list_models()`, and a
       three-input `lms_chat_batch()` on `google/gemma-3-1b`.
-- [ ] T2: Rewrite the source to the outline in Scope. Keep each code chunk
+- [x] T2: Rewrite the source to the outline in Scope. Keep each code chunk
       short, with a comment that says what it does.
 - [ ] T3: Knit with `data-raw/knit-vignettes.R` from a clean start. Read
       the knitted file for error lines and for the output lines of AC1.
@@ -96,6 +96,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: M070 review handed one finding (F8) to this rewrite. The knit ran with the model on disk, so the download chunk shows "already downloaded" and no download job, next to prose about a download.
 - 2026-09-30: implement started on branch m071-getting-started-rewrite. Gate answered (see Decisions).
 - 2026-09-30: T1 probe, live, gemma-3-1b on disk: `check_lms_version()` TRUE with the "modern architecture (0.4.0+)" message. `lms_server_ready()` FALSE before start and after stop, TRUE after start. `list_models()` gave 5 models, columns state, type, display_name, key, architecture, size_gb. `lms_download()` gave "already_downloaded", and `lms_download_status()` of it gave status "already_downloaded", job_id "N/A". A three-input `lms_chat_batch()` gave 3 strings, one per input.
+- 2026-09-30: T2 source rewritten to the Scope outline. The AC1 to AC3 search script finds every AC1 string, no code-list match, and no prose-list match. Run on the old source, it finds `repeat` and 4 prose words.
 
 ## Decisions
 
