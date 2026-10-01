@@ -1,7 +1,7 @@
 # Tests for claims that `vignettes/text-analysis.Rmd`,
 # `vignettes/getting-started.Rmd`, `vignettes/headless-config.Rmd`, and
-# `vignettes/chat-options.Rmd` make about package functions. Some of them repeat a check that another test file
-# makes.
+# `vignettes/chat-options.Rmd` make about package functions. Some of them
+# repeat a check that another test file makes.
 
 # The messages that `expr` gives, as text, with each one muffled.
 claim_messages <- function(expr) {
@@ -731,9 +731,18 @@ test_that("lms_chat() sends each api_type to its own route and returns the reply
 test_that("lms_chat() returns log probabilities on the default route alone", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   steps <- json_array(step_json(quoted("Blue"), "-0.2"))
+  # The OpenAI reply carries log probabilities in the OpenAI shape, so a NULL
+  # comes from the package and not from a reply with none.
+  openai_with_logprobs <- paste0(
+    '{"id": "chatcmpl-1", "object": "chat.completion", "choices": [',
+    '{"index": 0, "message": {"role": "assistant", "content": "Blue"}, ',
+    '"logprobs": {"content": [{"token": "Blue", "logprob": -0.2, ',
+    '"top_logprobs": [{"token": "Blue", "logprob": -0.2}]}]}, ',
+    '"finish_reason": "stop"}]}'
+  )
   recorder <- local_request_sequence(list(
     mock_response(200L, responses_reply("Blue", logprobs_json = steps)),
-    mock_response(200L, openai_reply(quoted("Blue"))),
+    mock_response(200L, openai_with_logprobs),
     mock_response(200L, native_reply("Blue"))
   ))
 
@@ -748,7 +757,9 @@ test_that("lms_chat() returns log probabilities on the default route alone", {
   expect_s3_class(default, "lms_chat_result")
   expect_identical(default$logprobs$step_token, "Blue")
   expect_s3_class(openai, "lms_chat_result")
+  expect_identical(openai$text, "Blue")
   expect_null(openai$logprobs)
+  expect_true(request_target(recorder$requests[[2]])[["body"]][["logprobs"]])
   expect_identical(without_response_id(native), "Blue")
   native_body <- request_target(recorder$requests[[3]])[["body"]]
   expect_null(native_body[["logprobs"]])
@@ -768,14 +779,37 @@ test_that("lms_chat() sends a request option as written, a misspelled name inclu
 
       lms_chat("a-model", "hi", api_type = route, temperature = 0)
       lms_chat("a-model", "hi", api_type = route, temprature = 0)
+      lms_chat("a-model", "hi", api_type = route, temperature = NULL)
 
       right <- request_target(recorder$requests[[1]])[["body"]]
       typo <- request_target(recorder$requests[[2]])[["body"]]
+      dropped <- request_target(recorder$requests[[3]])[["body"]]
       expect_equal(right[["temperature"]], 0)
       expect_equal(typo[["temprature"]], 0)
       expect_null(typo[["temperature"]])
+      # A NULL option is left out of the request.
+      expect_false("temperature" %in% names(dropped))
+      expect_identical(dropped[["model"]], "a-model")
     })
   }
+})
+
+test_that("lms_chat() on the native route returns a reply from another model with no error", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  body <- json_object(
+    model_instance_id = quoted("org/model-y"),
+    output = json_array(native_message(quoted("Blue."))),
+    stats = native_stats(),
+    response_id = quoted("resp_1")
+  )
+  recorder <- local_request_recorder(mock_response(200L, body))
+
+  reply <- lms_chat("org/model-x", "hi", api_type = "native")
+
+  expect_identical(without_response_id(reply), "Blue.")
+  # The native route sends no model-list request to check the model.
+  expect_length(recorder$requests, 1L)
+  expect_identical(request_target(recorder$requests[[1]])[["path"]], "/api/v1/chat")
 })
 
 test_that("lms_chat() on the openai route sends the system prompt and the prompt as its messages", {

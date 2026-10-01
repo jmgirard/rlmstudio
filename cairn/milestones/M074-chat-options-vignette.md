@@ -101,7 +101,7 @@ scoring are M073.
 - [x] T6: Add the NEWS entry and run the checks of AC6.
 - [x] T7: Fix the review findings F1, F2, F4, F6, F7, and F9 in the source. Name the dots that the package checks, and say that a `NULL` option is dropped. Limit the mismatch text to one loaded model and to the default and openai routes. Back or drop the temperature-0 sentence, and explain "system prompt" before its first use. Point to `?lms_chat` for `ttl`.
 - [x] T8: Fix F3. Add an `rlmstudio_bad_response` handler to `chat_or_na()`, and say which errors still stop a loop. Narrow the intro and the NEWS entry to match.
-- [ ] T9: Fix F5 and F8. Give the openai part of the log-probability test a mock reply that carries log probabilities, or back the "No" cell with a live call. Rewrap the test header and the two long source lines.
+- [x] T9: Fix F5 and F8. Give the openai part of the log-probability test a mock reply that carries log probabilities, or back the "No" cell with a live call. Rewrap the test header and the two long source lines.
 - [ ] T10: Re-knit from a clean start, and re-run the checks of AC1 to AC6.
 
 ## Work log
@@ -141,6 +141,10 @@ scoring are M073.
 - 2026-10-01: resumed by /milestone-implement. No question gate: T9 takes the mock reply, and T7 drops the temperature-0 claim.
 - 2026-10-01: T7: the options text names the checked dots (`stream`, `instructions` on the default route, `messages` on openai) and says a `NULL` option is left out. "As you wrote it" and both temperature-0 claims are gone. "System prompt" is explained at its first use, and the `ttl` sentence is a pointer to `?lms_chat`. The mismatch text says "with one model loaded" and names the default and openai routes.
 - 2026-10-01: T8: `chat_or_na()` has an `rlmstudio_bad_response` handler after the mismatch handler, since the mismatch is also a bad response. The text says that other errors, such as a wrong argument, still stop a loop. The intro and the NEWS entry now name the four classes.
+- 2026-10-01: T9: the openai mock in the log-probability test now carries log probabilities. The test file header is rewrapped. The two long source lines went in T7.
+- 2026-10-01: T9: new test "lms_chat() on the native route returns a reply from another model with no error". The option test now also sends `temperature = NULL` and finds no field.
+- 2026-10-01: T9 plants in a scratch copy: `c()` in place of `modifyList()` turned the option test red on two routes. Openai logprobs read from the reply turned the log-probability test red. A native model check turned the native test red.
+- 2026-10-01: T9: `devtools::test()` ran 1973 tests: 0 failed, 0 errors, 3 live skips.
 
 ## Decisions
 
