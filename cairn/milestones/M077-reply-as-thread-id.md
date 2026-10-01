@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M077: A chat continues a thread from the reply itself
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -59,6 +59,9 @@ A user continues a stored chat thread with `previous_response_id = first`, where
 - 2026-10-01: T2 done. `rlm_check_response_id()` reads the attribute with `exact = TRUE` and returns it as a plain string. A planted `exact = FALSE` and a planted raw return each fail the three function tests. `devtools::test()`: 1993 tests, 0 failed, 0 errors, 3 skipped.
 - 2026-10-01: T3 done. The `previous_response_id` help of the three functions, the batch `...` help, and the three `@return` texts say to pass the reply. NEWS entry added. `devtools::document()` rewrote the four Rd files. No test reads them.
 - 2026-10-01: T4 done. The `follow-up` chunk passes `first`, and the prose before and after it says so. Knitted `chat-options` alone, so no other vignette needed a restore. The call that passes `first` answered "Green." and the call with no id "Blue.". The last of three knits changed the replies of the route chunk, which no prose describes. `devtools::test()`: 1993 tests, 0 failed, 0 errors, 3 skipped.
+- 2026-10-01: claim audit: 32 claims read, 1 corrected — tests/testthat/test-thread.R
+- 2026-10-01: the audit found no evidence for the AC6 claim of status 400 on a reply with no id. A live probe with google/gemma-3-1b sent a native `store = FALSE` reply, which had no attributes, as `previous_response_id`. The native route answered 400 with code `invalid_string`, and the OpenResponses route 400 with code `invalid_value`. The wording stays, and the same reader cleared it on re-read.
+- 2026-10-01: implement complete, status set to review. The style hook flags plan-owned and history text in this file and in NEWS.md that was there before. The branch adds one hit, the em dash of the fixed claim-audit line.
 
 ## Decisions
 

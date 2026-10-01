@@ -844,7 +844,7 @@ expect_reply_continues_thread <- function(name) {
     "an id string that carries another id"
   )
   # An attribute with a class and names goes out as a plain string. jsonlite
-  # would write the names as a JSON object.
+  # fails on a class that it has no method for.
   expect_thread_id_sent(
     name,
     structure(
