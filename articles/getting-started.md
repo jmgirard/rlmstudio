@@ -120,7 +120,7 @@ So the output shows the first case.
 # Download the model, or find that it is already on disk
 job_id <- lms_download(model)
 #> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [1.1s]
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [1.4s]
 #> 
 #> ✔ Model "google/gemma-3-1b" is already downloaded.
 job_id
@@ -146,7 +146,7 @@ loads the model before the chat.
 # Read the model into memory
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [4.4s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.6s]
 #> 
 ```
 
@@ -173,7 +173,7 @@ reply <- lms_chat(
 
 # Print the text of the reply
 cat(reply)
-#> Hello there, welcome to the world of R! 😊
+#> “Hi there, welcome to the world of R! Glad you’re here.”
 ```
 
 ## Send several prompts in one call
@@ -200,11 +200,11 @@ answers <- lms_chat_batch(
   system_prompt = "Answer with one word."
 )
 answers
-#> [1] "Apple \n" "Blue."    "Mars."
+#> [1] "Apple " "Blue"   "Mars\n"
 
 # Remove the spaces and line breaks around each reply
 trimws(answers)
-#> [1] "Apple" "Blue." "Mars."
+#> [1] "Apple" "Blue"  "Mars"
 ```
 
 A reply can carry extra spaces or line breaks, and a model does not
@@ -225,7 +225,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [421ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [546ms]
 #> 
 
 # Stop the local server
