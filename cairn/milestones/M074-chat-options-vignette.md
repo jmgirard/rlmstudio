@@ -95,7 +95,7 @@ scoring are M073.
       R and has run `getting-started`. It reads the knitted vignette and
       lists each step that it cannot follow and each term used before it is
       explained. Fix each item, or log why not, and re-knit.
-- [ ] T5: List the claims of AC5 with the test or probe that backs each, as
+- [x] T5: List the claims of AC5 with the test or probe that backs each, as
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
 - [ ] T6: Add the NEWS entry and run the checks of AC6.
@@ -118,6 +118,16 @@ scoring are M073.
 - 2026-10-01: T4 fixes: the intro defines route and request option. Response id and the table columns are defined above the table, and a route choice follows it. Field, `host`, port, HTTP status, and `unrecognized_keys` are explained. The text says how `lms_chat_openai()` relates to the openai route. The `trimws()` sentence no longer claims a line break that the knit did not show.
 - 2026-10-01: T4 fixes: the prompt "Name a fruit of that color." gave "A mango!". It became "Write my favorite color in capital letters.", which gave "GREEN!", and one sentence states that. A pointer to <https://lmstudio.ai/docs/developer> was added. Its native chat page, read this session, lists `temperature`.
 - 2026-10-01: T4 not fixed: how long the server keeps a reply, which was not probed. Also the other fields of `names(raw)`, which the text does not use, and a list of error codes, which is out of scope. A re-knit from a clean start passes the T3 checks.
+- 2026-10-01: T5 ledger, routes: `api_type` picks the route and each returns the text, backed by the new test "lms_chat() sends each api_type to its own route and returns the reply text". The default route is also backed by "lms_chat() sends the input and the system prompt and returns the reply text".
+- 2026-10-01: T5 ledger, table: the response id column is backed by test-thread.R "lms_chat() sends previous_response_id on both thread routes" and "lms_chat() refuses previous_response_id on the openai route". The log probability column is backed by the new test "lms_chat() returns log probabilities on the default route alone".
+- 2026-10-01: T5 ledger, table: the `schema` and `ttl` column is backed by test-arg-guards.R "a schema on a route other than openai aborts …" and "a ttl on a route other than openai aborts …". The `response_id` attribute is backed by test-thread.R "lms_chat() returns the attribute on the two thread routes" and "lms_chat_openai() and lms_chat() on openai return no attribute".
+- 2026-10-01: T5 ledger, options and history: new tests "lms_chat() sends a request option as written, a misspelled name included, on each route", "lms_chat() on the openai route sends the system prompt and the prompt as its messages", and "lms_chat_openai() sends a messages data frame as one message per row, in order".
+- 2026-10-01: T5 ledger, raw reply and errors: `simplify = FALSE` is backed by test-thread.R "a call with simplify = FALSE returns the body with no attribute". `rlmstudio_no_server` is backed by test-chat.R "lms_chat passes rlmstudio_no_server through for api_type …", once for each route.
+- 2026-10-01: T5 ledger, errors: the `status` and `code` fields are backed by test-model-check.R "a recorded model_not_found reply carries its code on both routes" and "an API error carries the code string of the body, or NULL". The mismatch and its `model` and `reply_model` fields are backed by "lms_chat() raises the mismatch on the default route and the openai route".
+- 2026-10-01: T5 ledger, other: the `host` default is backed by "lms_load(), lms_chat(), and lms_unload() take a host argument". The 30-second wait comment is backed by test-serve.R "wait_for_server starts no request after the budget passes".
+- 2026-10-01: T5 ledger, LM Studio claims: the knitted output shows each one. Those are the replies, the raw `temperature` of 0 and 0.8, the native refusals (400 `unrecognized_keys`, 404 `model_not_found`), the default-route mismatch, the follow-up "Green." against "Blue.", and "GREEN!".
+- 2026-10-01: T5 probe: the raw openresponses reply holds the text "Blue." at `output[[1]]$content[[1]]$text`. The raw openai fields are `id`, `object`, `created`, `model`, `choices`, `usage`, `stats`, and `system_fingerprint`. The raw native fields are `model_instance_id`, `output`, `stats`, and `response_id`. So the fields differ by route.
+- 2026-10-01: T5: added 5 tests to `tests/testthat/test-vignette-claims.R`. A planted defect in a scratch copy turned each one red, and no other test. The plants were a wrong native path, a filter on unknown dots, a swapped system role, reversed message rows, and a changed native warning. `devtools::test()`: 0 failed, 0 errors, 3 live skips.
 
 ## Decisions
 
