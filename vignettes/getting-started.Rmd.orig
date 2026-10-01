@@ -79,8 +79,10 @@ memory, which a later section explains.
 list_models()
 ```
 
-On a new install, you have no models yet, and the next section downloads
-one. This vignette uses `google/gemma-3-1b`, a small model. Keep its key in
+On a new install, you have no model to chat with yet. LM Studio comes with
+an embedding model, a model that turns text into numbers and does not chat.
+The next section downloads a model that you can chat with. This vignette
+uses `google/gemma-3-1b`, a small model. Keep its key in
 a variable, so that each call below can use it.
 
 ```{r model}

@@ -94,8 +94,10 @@ list_models()
 #> 5         <NA>    0.08
 ```
 
-On a new install, you have no models yet, and the next section downloads
-one. This vignette uses `google/gemma-3-1b`, a small model. Keep its key in
+On a new install, you have no model to chat with yet. LM Studio comes with
+an embedding model, a model that turns text into numbers and does not chat.
+The next section downloads a model that you can chat with. This vignette
+uses `google/gemma-3-1b`, a small model. Keep its key in
 a variable, so that each call below can use it.
 
 
@@ -120,7 +122,7 @@ the output shows the first case.
 # Download the model, or find that it is already on disk
 job_id <- lms_download(model)
 #> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [967ms]
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [822ms]
 #> 
 #> ✔ Model "google/gemma-3-1b" is already downloaded.
 job_id
@@ -144,7 +146,7 @@ the chat waits for the load. `lms_load()` loads the model before the chat.
 # Read the model into memory
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [4.7s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [4.4s]
 #> 
 ```
 
@@ -168,7 +170,7 @@ reply <- lms_chat(
 
 # Print the text of the reply
 cat(reply)
-#> “Welcome to the world of R! Please feel free to ask any questions – I’m here to help you get started.”
+#> Hello there, welcome to the world of R! 😊
 ```
 
 ## Send several prompts in one call
@@ -193,11 +195,11 @@ answers <- lms_chat_batch(
   system_prompt = "Answer with one word."
 )
 answers
-#> [1] "Apple."  "Blue \n" "Mars "
+#> [1] "Apple "  "Blue"    "Mars \n"
 
 # Remove the spaces and line breaks around each reply
 trimws(answers)
-#> [1] "Apple." "Blue"   "Mars"
+#> [1] "Apple" "Blue"  "Mars"
 ```
 
 A reply can carry extra spaces or line breaks, and a model does not always
@@ -216,7 +218,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [536ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [450ms]
 #> 
 
 # Stop the local server
