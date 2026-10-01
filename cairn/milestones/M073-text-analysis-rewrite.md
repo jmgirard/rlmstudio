@@ -101,7 +101,7 @@ conversations are M074.
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
 - [x] T6: Add the NEWS entry and run the checks of AC6.
-- [ ] T7: Fix the load path. Make the vignette work, or say what to do, when
+- [x] T7: Fix the load path. Make the vignette work, or say what to do, when
       the model is already loaded. Give the unload step before a larger
       `context_length`. Rewrite the context-length sentence to match the
       live probe in the Review section. Back each new claim with a test or
@@ -134,6 +134,8 @@ conversations are M074.
 - 2026-10-01: status set to review.
 - 2026-10-01: review returned the milestone, defect return 1. AC5 failed: a live probe gave a 299-token reply under a 128-token context, against the vignette sentence "your prompt and its reply together". Review send-back added T7 to T9 for the fix-now findings in the Review section, and mapped AC5 to T7 and T9. Status set to in-progress.
 - 2026-10-01: rewrapped the AC3 line breaks with no change of words. A line that started with a four-backtick code span made `cairn_validate` read an open code fence, and count the rest of the file against the plan cap.
+- 2026-10-01: implement resumed after the return. Question gate: for a model that is already loaded, the prose says what to do, and no code unloads it. The summary chunk calls `trimws()`.
+- 2026-10-01: T7 rewrote the context-length sentence to "the most tokens that a prompt to it can hold". It added an unload-first paragraph before the load chunk. It gave the unload step before a larger `context_length`. Backing: long-prompts:127 (no load request for a loaded model), unload:16, and load:11. A live probe loaded at 512. A second load at 1024 left 512, and an unload and a load gave 1024.
 
 ## Decisions
 
