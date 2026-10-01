@@ -102,7 +102,7 @@ other candidate rows stay as they are.
       names that source. Then restore the source.
 - [x] T4: Run the full live knit. It rewrites every vignette. Read each
       `.Rmd` diff and log any output change other than the stamp.
-- [ ] T5: Write `data-raw/README.md` from a same-session read of the tests
+- [x] T5: Write `data-raw/README.md` from a same-session read of the tests
       and the recorder scripts (the derived-claims rule). It covers the
       models, the directories with their recorder or remove-and-rerun route,
       and the re-knit. Add the pointer line to the release-walk slot of
@@ -125,6 +125,7 @@ other candidate rows stay as they are.
 - 2026-10-01: T2 done. Marked chunks `summaries`, `schema`, `logprobs`, and `failed`. Scratch source in the session scratch directory with the vignette setup chunk: an unmarked `warning()` chunk exits 1 with "The chunk 'noisy' of <path> gave a warning, and the chunk does not set expect_warning = TRUE.", the target absent stays absent and a present target keeps its MD5. With `expect_warning = TRUE` it exits 0 and the `.Rmd` holds `#> Warning: planted warning`.
 - 2026-10-01: T3 done. The stamp line is `<!-- Knitted from <name>.Rmd.orig with MD5 <sum>. -->`. Before the re-knit, the new test gave 4 failures, one per source. After it, the test passes 4. A planted space in `headless-config.Rmd.orig` gave 1 failure that names it. A moved `headless-config.Rmd` gave 1 failure that names it. Both were restored. Full `devtools::test()`: 0 failures, 3 skips, 19942 passes.
 - 2026-10-01: T4 done. With the server stopped and no model loaded, the full knit exited 0. `text-analysis.Rmd` keeps `#> Warning` in all 4 marked chunks. Besides the stamps and new response ids and timings, two outputs changed. In `chat-options.Rmd`, the default and OpenAI routes, with no temperature, now answer "Blue" plus a follow-up sentence. In `getting-started.Rmd`, the hello reply and the batch answers changed wording. No prose states the old text.
+- 2026-10-01: T5 done. `data-raw/README.md` maps 6 directories to recorder scripts and 3 to remove-and-rerun with an anchored `devtools::test()` filter. It names 3 models: `google/gemma-3-1b`, `qwen/qwen3-4b-2507`, and `text-embedding-nomic-embed-text-v1.5`. A run of `filter = "^list$"` ran `test-list.R` alone, with 6 passes. PROFILE has 109 lines. `cairn_validate` passes.
 
 ## Decisions
 
