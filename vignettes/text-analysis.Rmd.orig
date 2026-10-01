@@ -10,15 +10,6 @@ vignette: >
 ```{r setup}
 library(rlmstudio)
 
-# Gates for the chunks below. The first says the CLI is on this machine.
-# The second says the REST API answered. The last two say that the chat
-# model and the embedding model are on disk. The last three stay FALSE
-# until the server has been started and asked.
-lms_installed <- has_lms()
-lms_ready <- FALSE
-chat_ready <- FALSE
-embed_ready <- FALSE
-
 model <- "google/gemma-3-1b"
 embed_model <- "text-embedding-nomic-embed-text-v1.5"
 
@@ -38,39 +29,9 @@ server, and downloading `google/gemma-3-1b`.
 
 ## Start the server
 
-```{r server-before, include=FALSE}
-# Whether the server ran before this vignette. The teardown stops only a
-# server that this vignette started.
-server_was_running <- FALSE
-if (lms_installed) {
-  status <- suppressWarnings(lms_server_status(json = TRUE))
-  server_was_running <- is.list(status) && isTRUE(status[["running"]])
-}
-```
-
-```{r start-server, eval=lms_installed}
+```{r start-server}
 lms_server_start(wait = 30)
-#> ✔ LM Studio server started successfully on the default port.
-lms_ready <- lms_server_ready()
-lms_ready
-#> [1] TRUE
-```
-
-```{r models-before, include=FALSE}
-# The ids of the instances that were loaded before this vignette. The
-# teardown reads them to choose what to unload.
-loaded_ids <- function() {
-  loaded <- list_models(loaded = TRUE, detailed = TRUE, quiet = TRUE)
-  ids <- lapply(loaded$loaded_instances, function(x) x[["id"]])
-  as.character(unlist(ids))
-}
-ids_before <- character()
-if (lms_ready) {
-  on_disk <- list_models(quiet = TRUE)$key
-  chat_ready <- model %in% on_disk
-  embed_ready <- embed_model %in% on_disk
-  ids_before <- loaded_ids()
-}
+lms_server_ready()
 ```
 
 ## Quiet output
@@ -85,7 +46,7 @@ teardown.
 old_options <- options(rlmstudio.quiet = TRUE)
 ```
 
-```{r load, eval=chat_ready}
+```{r load}
 lms_load(model)
 ```
 
@@ -104,7 +65,7 @@ reviews <- c(
 )
 ```
 
-```{r batch, eval=chat_ready}
+```{r batch}
 summaries <- lms_chat_batch(
   model,
   reviews,
@@ -113,18 +74,7 @@ summaries <- lms_chat_batch(
   temperature = 0
 )
 names(summaries)
-#> [1] "input"                   "output"
-#> [3] "response_id"             "input_tokens"
-#> [5] "total_output_tokens"     "reasoning_output_tokens"
 summaries[, c("input", "output")]
-#>                                              input
-#> 1     The food was great but the service was slow.
-#> 2                           Terrible. Never again.
-#> 3 Best pizza in town, and the staff were friendly.
-#>                               output
-#> 1       Excellent, but slow service.
-#> 2 **A disappointing experience.** \n
-#> 3                   Excellent pizza!
 ```
 
 ## Structured output as columns
@@ -135,7 +85,7 @@ needs `api_type = "openai"`, and the call aborts on any other route. On
 column per top-level property of the schema. A `"string"` property gives a
 character column, and an `"integer"` property gives an integer column.
 
-```{r schema, eval=chat_ready}
+```{r schema}
 schema <- list(
   type = "object",
   properties = list(
@@ -160,10 +110,6 @@ rated <- lms_chat_batch(
   temperature = 0
 )
 rated[, c("input", "sentiment", "stars")]
-#>                                              input sentiment stars
-#> 1     The food was great but the service was slow.     mixed     4
-#> 2                           Terrible. Never again.  negative     5
-#> 3 Best pizza in town, and the staff were friendly.  positive     5
 ```
 
 In this output, the model gave 5 stars to the negative review. A model as
@@ -180,7 +126,7 @@ carries them. The data frame lists the candidate tokens at each step of the
 reply, and its `step` column numbers the steps from 1. The `top_logprobs` and
 `temperature` fields go into the request body.
 
-```{r logprobs, eval=chat_ready}
+```{r logprobs}
 rating <- lms_chat(
   model = model,
   input = paste(
@@ -193,12 +139,7 @@ rating <- lms_chat(
   temperature = 0
 )
 rating$text
-#> [1] "3\n"
 head(rating$logprobs, 3)
-#>   step_token step_logprob candidate_token candidate_logprob step
-#> 1          3     -0.34375               3          -0.34375    1
-#> 2          3     -0.34375               4          -1.53125    1
-#> 3          3     -0.34375               5          -2.71875    1
 ```
 
 `lms_score_expected()` reads the rows of the first step, the rows whose
@@ -212,17 +153,10 @@ same label, such as `"3"` and `" 3"`. It then scales the probabilities to sum
 to 1. It returns the expected value, the weighted standard deviation, the
 entropy in bits, and the probability of each label.
 
-```{r score, eval=chat_ready}
+```{r score}
 score <- lms_score_expected(rating$logprobs, scale = 1:5)
 score$expected_value
-#> [1] 3.348005
 score$probabilities
-#>   label         prob
-#> 1     3 7.136382e-01
-#> 2     4 2.176473e-01
-#> 3     5 6.637869e-02
-#> 4     2 2.271354e-03
-#> 5     1 6.443335e-05
 ```
 
 ## Embeddings
@@ -231,21 +165,15 @@ score$probabilities
 with one row per input text, in the order given. LM Studio comes with the
 embedding model `text-embedding-nomic-embed-text-v1.5`.
 
-```{r embed, eval=embed_ready}
+```{r embed}
 lms_load(embed_model)
 texts <- c(reviews, "The stock market fell sharply today.")
 vectors <- lms_embed(embed_model, texts)
 dim(vectors)
-#> [1]   4 768
 
 # The cosine similarity of each pair of texts
 unit <- vectors / sqrt(rowSums(vectors^2))
 round(unit %*% t(unit), 2)
-#>      [,1] [,2] [,3] [,4]
-#> [1,] 1.00 0.37 0.56 0.47
-#> [2,] 0.37 1.00 0.36 0.44
-#> [3,] 0.56 0.36 1.00 0.34
-#> [4,] 0.47 0.44 0.34 1.00
 ```
 
 ## Loaded instances
@@ -254,12 +182,9 @@ round(unit %*% t(unit), 2)
 hold the instance id, the model key, the model type, the display name, and
 the load configuration of the instance.
 
-```{r instances, eval=chat_ready || embed_ready}
+```{r instances}
 instances <- list_instances()
 instances[, c("id", "type", "context_length")]
-#>                                     id      type context_length
-#> 1                    google/gemma-3-1b       llm           8192
-#> 2 text-embedding-nomic-embed-text-v1.5 embedding           2048
 ```
 
 ## Teardown
@@ -269,40 +194,12 @@ instances[, c("id", "type", "context_length")]
 options(old_options)
 ```
 
-`lms_unload_all()` unloads every loaded model instance. The two cases below
-hold on a host where the LM Studio desktop app runs the daemon. When this
-vignette is built with the server stopped and no model loaded, it calls
-`lms_unload_all()` and then stops the server. When it is built with the
-server running and `google/gemma-3-1b` loaded, it unloads only the
-instances that it loaded, and it leaves the server running.
+`lms_unload_all()` unloads every loaded model instance.
 
-```{r ids-after, include=FALSE}
-ids_after <- if (lms_ready) loaded_ids() else character()
-```
-
-```{r unload-all, eval=lms_ready && length(ids_before) == 0}
-# The build found no model loaded, so it unloads every instance
+```{r unload-all}
 lms_unload_all()
-#> ℹ Found 2 loaded model instances. Unloading now...
-#> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [564ms]
-#>
-#> ℹ Unloading model: "text-embedding-nomic-embed-text-v1.5"...
-#> ✔ Model "text-embedding-nomic-embed-text-v1.5" unloaded successfully. [21ms]
-#>
-#> ✔ All models unloaded successfully.
 ```
 
-```{r unload-new, eval=lms_ready && length(ids_before) > 0}
-# The build found a model loaded, so it unloads only what it loaded
-for (id in setdiff(ids_after, ids_before)) {
-  lms_unload(id)
-}
-#> ℹ Unloading model: "text-embedding-nomic-embed-text-v1.5"...
-#> ✔ Model "text-embedding-nomic-embed-text-v1.5" unloaded successfully. [27ms]
-```
-
-```{r stop-server, eval=lms_installed && !server_was_running}
+```{r stop-server}
 lms_server_stop()
-#> ✔ LM Studio server stopped successfully.
 ```

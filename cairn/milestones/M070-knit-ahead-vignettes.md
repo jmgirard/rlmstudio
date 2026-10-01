@@ -90,7 +90,7 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
       `knitr::knit()` and `error = FALSE`, and tears down in the `finally`
       clause of a `tryCatch()`. LESSONS M017 says that `on.exit()` never
       runs at the top level of `Rscript`. Run the three cases of AC3.
-- [ ] T2: Move each vignette to its `.Rmd.orig` source. Delete the hidden
+- [x] T2: Move each vignette to its `.Rmd.orig` source. Delete the hidden
       state chunks, the `eval` gates, the pasted `#>` comments, and the
       paragraphs about the build. In `text-analysis`, merge the
       `unload-all` and `unload-new` chunks into one `lms_unload_all()`
@@ -115,6 +115,7 @@ chat vignette is M074. Apart from the cuts named above, M070 changes no prose.
 - 2026-09-30: plan gate chose four vignettes (three rewrites and a new chat-options vignette) over a separate scoring vignette and over merging getting-started with headless-config; falsified by a reader pass that finds text-analysis too long to follow, or headless-config too thin to stand alone.
 - 2026-09-30: plan gate chose a plain, conversational prose register over strict Simple English; falsified by reader-pass reports of sentences too long or terms not explained.
 - 2026-09-30: T1 done. `data-raw/knit-vignettes.R` checks the clean start with `lms server status --json` as well as `lms_server_ready()`, because a token-guarded server with no token set reads as not ready. It knits to a temp file and copies on success. AC3 runs: (a) server running, exit 1 naming the server; (b) `google/gemma-3-1b` loaded, exit 1 naming it; (c) a scratch source that started the server, loaded the model (seen in `lms ps --json` inside the failing chunk), then called `stop()`: exit 1 naming chunk `boom`, no `.Rmd` written, server stopped, `lms ps --json` empty.
+- 2026-09-30: T2 done. The three vignettes moved to `.Rmd.orig` by `git mv`. The gate variables, hidden state chunks, `eval` gates, pasted `#>` lines, and build paragraphs went. With `lms_ready` gone, the two `lms_ready <- lms_server_ready()` chunks print `lms_server_ready()` directly. The text-analysis teardown is one `lms_unload_all()` chunk. The hidden download-wait chunks stay for M071 and M072.
 
 ## Decisions
 
