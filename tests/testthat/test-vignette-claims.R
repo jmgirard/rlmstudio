@@ -179,14 +179,15 @@ test_that("a logprobs data-frame batch sends top_logprobs and temperature with e
     quiet = TRUE
   )
 
-  expect_length(recorder$requests, 2L)
   for (k in 1:2) {
-    sent <- request_target(recorder$requests[[k]])
-    at <- paste("request", k)
-    expect_identical(sent[["path"]], "/v1/responses", info = at)
-    expect_equal(sent[["body"]][["top_logprobs"]], 10, info = at)
-    expect_equal(sent[["body"]][["temperature"]], 0, info = at)
+    test_that(paste("request", k), {
+      sent <- request_target(recorder$requests[[k]])
+      expect_identical(sent[["path"]], "/v1/responses")
+      expect_equal(sent[["body"]][["top_logprobs"]], 10)
+      expect_equal(sent[["body"]][["temperature"]], 0)
+    })
   }
+  expect_length(recorder$requests, 2L)
   expect_identical(out$output, c("3", "2"))
   expect_true(is.list(out$logprobs))
   expect_s3_class(out$logprobs[[2]], "data.frame")
@@ -267,15 +268,15 @@ test_that("a schema batch on the openai route asks the default local host and ad
   )
 
   for (k in 1:2) {
-    sent <- request_target(recorder$requests[[k]])
-    at <- paste("request", k)
-    expect_identical(sent[["host"]], "localhost:1234", info = at)
-    expect_identical(sent[["path"]], "/v1/chat/completions", info = at)
-    expect_identical(
-      sent[["body"]][["response_format"]][["json_schema"]][["schema"]][["type"]],
-      "object",
-      info = at
-    )
+    test_that(paste("request", k), {
+      sent <- request_target(recorder$requests[[k]])
+      expect_identical(sent[["host"]], "localhost:1234")
+      expect_identical(sent[["path"]], "/v1/chat/completions")
+      expect_identical(
+        sent[["body"]][["response_format"]][["json_schema"]][["schema"]][["type"]],
+        "object"
+      )
+    })
   }
   expect_identical(out$sentiment, c("positive", "negative"))
   expect_identical(out$stars, c(4L, 1L))
@@ -609,6 +610,19 @@ test_that("lms_daemon_stop(force = TRUE) stops the server before the daemon", {
   capture_shown(lms_daemon_stop(force = TRUE))
 
   expect_identical(calls$args, list(c("server", "stop"), c("daemon", "down")))
+})
+
+test_that("lms_server_stop() sends server stop alone and reports the stop", {
+  calls <- local_lms_calls()
+
+  shown <- capture_shown(status <- withVisible(lms_server_stop()))
+
+  # One call, with no check of who started the server.
+  expect_identical(calls$args, list(c("server", "stop")))
+  expect_null(shown$error)
+  expect_match(shown$messages, "server stopped successfully", fixed = TRUE)
+  expect_identical(status$value, 0L)
+  expect_false(status$visible)
 })
 
 test_that("with_lms_daemon() starts the daemon, runs the code, and stops the server and the daemon", {
