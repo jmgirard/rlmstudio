@@ -92,7 +92,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
       reply. Run a schema data-frame batch over `api_type = "openai"`. Log
       what each call returned. If a call fails, change the vignette's gates
       before T2.
-- [ ] T2: Write `vignettes/text-analysis.Rmd` on the pattern of
+- [x] T2: Write `vignettes/text-analysis.Rmd` on the pattern of
       `getting-started.Rmd`. Use the gates `lms_installed` and `lms_ready`,
       and an embedding gate. Hidden chunks record the server state and the
       loaded instance ids before the build. Sections cover the quiet option,
@@ -100,7 +100,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
       `lms_score_expected()`, embeddings, and `list_instances()`. The
       vignette sets `rlmstudio.quiet` back to its old value before the
       teardown.
-- [ ] T3: Write the teardown. If the build found no model loaded,
+- [x] T3: Write the teardown. If the build found no model loaded,
       `lms_unload_all()` runs. If not, the build unloads each instance in
       the after-build list that is not in the before-build list. The prose
       names the condition for the `lms_unload_all()` chunk. If the build
@@ -132,3 +132,4 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 ## Decisions
 
 ## Review
+- 2026-09-30: T2 and T3 wrote `vignettes/text-analysis.Rmd`. Minor amendment: a fourth gate, `chat_ready`, says that `google/gemma-3-1b` is on disk, beside the embedding gate `embed_ready`. The hidden state chunks read instance ids from `list_models(loaded = TRUE, detailed = TRUE)`, so that every chunk that calls `list_instances()` shows output. The vignette loads the embedding model with `lms_load()`, so the teardown does not rely on a load on demand. The schema chunk gave 5 stars to "Terrible. Never again." in two renders, and the prose says so after the output.
