@@ -47,9 +47,12 @@ lms_score_expected <- function(lp_df, scale = 1:5) {
     )
   }
 
-  vals <- nums[valid_idx]
   # Convert logprobs to raw probabilities
-  probs <- exp(candidates$candidate_logprob[valid_idx])
+  raw <- exp(candidates$candidate_logprob[valid_idx])
+  # Sum the candidates that give the same label, such as "3" and " 3", in
+  # the order in which each label first appears
+  vals <- unique(nums[valid_idx])
+  probs <- vapply(vals, \(v) sum(raw[nums[valid_idx] == v]), numeric(1))
   # Normalize so they sum to 1 (re-distributing mass from ignored tokens)
   probs <- probs / sum(probs)
 

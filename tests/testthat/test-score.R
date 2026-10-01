@@ -72,6 +72,37 @@ test_that("lms_score_expected aborts on no valid tokens", {
   )
 })
 
+test_that("lms_score_expected() sums the candidates that give the same label", {
+  # "3", " 3", and "3.0" all give the label 3, with "4" between them and a
+  # newline outside the scale.
+  lp_df <- data.frame(
+    step_token = "3",
+    step_logprob = log(0.3),
+    candidate_token = c("3", "4", " 3", "\n", "3.0"),
+    candidate_logprob = log(c(0.3, 0.2, 0.1, 0.1, 0.05)),
+    step = 1L,
+    stringsAsFactors = FALSE
+  )
+
+  res <- lms_score_expected(lp_df, scale = 1:5)
+
+  # Label 3: 0.3 + 0.1 + 0.05 = 0.45. Label 4: 0.2. Total 0.65.
+  # Rescaled: 0.45 / 0.65 = 9/13 and 0.2 / 0.65 = 4/13, in the order in
+  # which each label first appears.
+  expect_identical(res$probabilities$label, c(3, 4))
+  expect_equal(res$probabilities$prob, c(9 / 13, 4 / 13))
+  # Expected value: 3 * 9/13 + 4 * 4/13 = 43/13 = 3.307692. Summing the rows
+  # does not change it.
+  expect_equal(res$expected_value, 43 / 13)
+  # Weighted SD: sqrt(9/13 * (3 - 43/13)^2 + 4/13 * (4 - 43/13)^2)
+  #   = sqrt(9/13 * 16/169 + 4/13 * 81/169) = sqrt(36/169) = 6/13.
+  expect_equal(res$weighted_sd, 6 / 13)
+  # Entropy in bits over the two summed labels:
+  #   -(9/13 * log2(9/13) + 4/13 * log2(4/13)) = 0.3672794 + 0.5232122
+  #   = 0.8904916. Over the four unsummed rows it would be 1.738149.
+  expect_equal(res$entropy, 0.8904916, tolerance = 1e-6)
+})
+
 # A logprobs frame from columns. `step` is left out when it is NULL.
 score_frame <- function(step_token, candidate_token, prob, step = NULL) {
   lp_df <- data.frame(
