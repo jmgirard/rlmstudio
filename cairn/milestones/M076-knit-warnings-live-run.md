@@ -57,7 +57,7 @@ other candidate rows stay as they are.
       reports one failure for each source whose `.Rmd` is missing or holds
       no sum. Each failure names its source. If the test finds no source, it
       skips.
-- [ ] AC5: `data-raw/README.md` gives the live-run steps of a release in
+- [x] AC5: `data-raw/README.md` gives the live-run steps of a release in
       this order. Start the server with the models that the live tests need.
       Run `devtools::test()` and make sure that no test skipped for want of
       the server or a model. Re-record the cassettes. Re-knit the vignettes.
@@ -70,7 +70,7 @@ other candidate rows stay as they are.
       header lines of the recorder scripts. The README names each model key
       on those lines. The release-walk slot of `cairn/PROFILE.md` points to
       the README.
-- [ ] AC6: `devtools::test()` and `devtools::check()` finish with 0 errors
+- [x] AC6: `devtools::test()` and `devtools::check()` finish with 0 errors
       and 0 warnings. The Review section of this file lists each NOTE with
       its reason.
 
@@ -143,6 +143,7 @@ other candidate rows stay as they are.
 - 2026-10-01: T7 done. The README has a `fixtures` row and a note on the empty `_snaps`. The two test files that read `fixtures` say its files are copies of LM Studio docs examples. T7 dropped the `skip_if_no_lms()` reason: both calls follow a mock of `has_lms()` to TRUE, so that skip cannot fire. All 10 `ls-tree` directories have one README row, and the README names the 3 model keys of the header lines. `devtools::test()`: 0 failures, 3 skips, 19942 passes.
 - 2026-10-01: claim audit: not owed — internal tier
 - 2026-10-01: amendment done, status set to review.
+- 2026-10-01: re-review: AC5 and AC6 verified and ticked, consistency gate clean. Three fresh reviewers spawned, findings pending.
 
 ## Decisions
 
@@ -153,3 +154,6 @@ other candidate rows stay as they are.
 - AC3 evidence (2026-10-01): `lms server status --json` gave `"running":false`, and `lms ps --json` gave `[]`. Then `Rscript data-raw/knit-vignettes.R` with no argument knitted all 4 sources and exited 0. `text-analysis.Rmd` holds `#> Warning` at lines 130, 208, 263, and 354. In order, these are the outputs of the chunks `summaries`, `schema`, `logprobs`, and `failed`. The source marks these 4 chunks, and no other, `expect_warning = TRUE`. The run changed only live replies, response ids, and timings. The review restored the committed output.
 - AC4 evidence (2026-10-01): the last line of each of the 4 committed `.Rmd` files holds the `md5` of its `.Rmd.orig`. All 4 pairs match. `tests/testthat/test-vignette-knit.R` lists the sources with `testthat::test_path("../../vignettes")`. On the branch, `devtools::test(filter = "vignette-knit")` gave 4 passes and 0 failures. Three plants each gave 1 failure and 3 passes, and each was restored. A byte added to `chat-options.Rmd.orig` gave "chat-options.Rmd.orig changed after its knit." The stamp line cut from `getting-started.Rmd` gave "The .Rmd of getting-started.Rmd.orig holds no source MD5 sum." A moved `text-analysis.Rmd` gave "text-analysis.Rmd.orig has no knitted .Rmd." In a scratch tree with an empty `vignettes/`, the test skipped with "No vignette sources to compare."
 - AC5 evidence (2026-10-01), not met as written: `list.dirs("tests/testthat", recursive = FALSE)` listed 12 directories, one of them an empty `_snaps`. The README table names the other 9, except `fixtures` and `_problems`, each with its recorder script or its remove-and-rerun command. It does not name `_snaps`. Git does not track `_snaps`, and `git ls-tree -d HEAD tests/testthat/` lists 10 directories without it. After `rmdir`, a filtered run such as `devtools::test(filter = "^list$")` made the empty `_snaps` again. The README uses such filtered runs in step 3. The other AC5 parts held. The model strings of the recorder scripts are `google/gemma-3-1b`, `text-embedding-nomic-embed-text-v1.5`, `qwen/qwen3-4b-2507`, and the case variant `Google/Gemma-3-1B`. The `skip_if_no_server()` blocks name `google/gemma-3-1b` and `text-embedding-nomic-embed-text-v1.5`, and the README names all 3 models. Its 4 step headings follow the AC5 order, and PROFILE line 73 points to it. AC6 was not run, and no reviewer was spawned. Review stopped at the return.
+- Re-review (2026-10-01): `git diff 49bbaf4..HEAD` touches only `data-raw/README.md` and tracking files, so the AC1 to AC4 evidence above stands for unchanged code. AC6's full `devtools::test()` run re-runs the AC4 test.
+- AC5 evidence (2026-10-01, amended wording): `git ls-tree -d --name-only HEAD:tests/testthat` lists 10 directories. The README names all 10. Six have a recorder script, and each script writes `tests/testthat/<dir>` for its row. `chat_integration`, `integration_e2e`, and `list_models` have the remove-and-rerun route. `test-chat.R`, `test-integration.R`, and `test-list.R` open those directories with `with_mock_dir()`. `fixtures` is named as holding no recorded responses. `grep -E '^#   Models?:' data-raw/record-*.R` gives 6 lines with the keys `google/gemma-3-1b`, `qwen/qwen3-4b-2507`, and `text-embedding-nomic-embed-text-v1.5`, and the README Models list names all 3. The four step headings follow the AC5 order: start the server with models, run `devtools::test()` with a make-sure-no-skip check, re-record, re-knit. PROFILE line 73 points to the README.
+- AC6 evidence (2026-10-01): `devtools::test()` gave `[ FAIL 0 | WARN 0 | SKIP 3 | PASS 19942 ]`. The 3 skips are live tests that need the server. `vignette-knit` gave 4 passes. `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, so no NOTE needs a reason.
