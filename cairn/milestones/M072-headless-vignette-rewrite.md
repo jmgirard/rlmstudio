@@ -48,8 +48,8 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
       DESIGN.md code list finds no match. A search of the source for
       `` `r `` finds no inline R expression.
 - [x] AC3: A case-blind search for each entry of the DESIGN.md prose list
-      finds no match. It runs over every line of the source outside its
-      ```` ```{r} ```` chunks, with the YAML header and inline code.
+      finds no match. It runs over every line of the source outside
+      its ```` ```{r} ```` chunks, with the YAML header and inline code.
 - [x] AC4: Each of these terms is explained in plain words at or before
       its first use in prose or in a code comment of the knitted vignette:
       headless, daemon, host, and API token.
@@ -115,6 +115,7 @@ vignette rules in DESIGN.md Conventions (M070). A NEWS entry.
 - 2026-09-30: T6 NEWS entry added. The first `devtools::check()` failed 10 expectations of the consent tests. In the byte-compiled package, the base `interactive()` call is inlined, so the base mock never reached it. `R/setup.R` gained a package binding `interactive <- NULL` that the tests mock. With the server stopped and the token unset, `devtools::document()` gave no diff, `pkgdown::check_pkgdown()` found no problems, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes, and `devtools::test()` gave 0 failures, 0 errors, 3 skips.
 - 2026-09-30: claim audit: 62 claims read, 4 corrected — vignettes/headless-config.Rmd.orig, vignettes/headless-config.Rmd, tests/testthat/test-vignette-claims.R. Two vignette lines said that the desktop app runs the daemon, against the `isDaemon` false probe. Two test comments were wrong. The list of causes of a `FALSE` ready gained a held port. The same reader re-read the 5 spots once and found 0 wrong. Re-knitted, and the AC1 to AC3 check and the claim tests passed.
 - 2026-09-30: review gate: the user chose the proposed split. Ten findings fixed on the branch, one moved to the `lms daemon up` row at hygiene, two rejected, two noted. Re-knitted, and check, test, document, and pkgdown are clean.
+- 2026-09-30: review moved one line break in AC3, with the words unchanged. The line started with a four-backtick code span. `cairn_validate.py` read it as a code fence and counted the Review section as plan lines (156, cap 150).
 
 ## Decisions
 
