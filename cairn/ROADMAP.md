@@ -9,6 +9,7 @@ _Last hygiene check: 2026-10-01 (M076 done, M073 row pruned, lessons M009 and M0
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
+| M077 | A chat continues a thread from the reply itself | planned | — | normal | milestones/M077-reply-as-thread-id.md |
 | M076 | The vignette knit fails on an unmarked warning and stale output, and a release has live-run steps | done | — | normal | milestones/archive/M076-knit-warnings-live-run.md |
 | M075 | The website has a light purple theme, a dark mode switch, and articles in reading order | done | — | normal | milestones/archive/M075-pkgdown-light-theme.md |
 | M074 | A vignette shows chat options, conversations, and errors in scripts | done | M070 | normal | milestones/archive/M074-chat-options-vignette.md |
