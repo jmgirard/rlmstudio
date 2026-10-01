@@ -1,6 +1,6 @@
 # M069: lms_score_expected() reads the first step of a reply alone
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -33,7 +33,7 @@ in the DESIGN known issue.
 
 ## Acceptance criteria
 
-- [ ] AC1: With `logprobs = TRUE`, the logprobs data frame of
+- [x] AC1: With `logprobs = TRUE`, the logprobs data frame of
       `lms_chat_openresponses()` has a fifth and last column `step`. This
       also holds for `lms_chat()` on its default route and for each
       OpenResponses cell of `lms_chat_batch()` that holds a logprobs data
@@ -45,7 +45,7 @@ in the DESIGN known issue.
       parts with logprobs and a part with no logprobs between them. One of
       its steps has no candidates. The checks at `test-chat-batch.R:688` and
       `test-chat-batch-usage.R:373` also assert `step`.
-- [ ] AC2: Given a frame with a `step` column whose first value is not
+- [x] AC2: Given a frame with a `step` column whose first value is not
       `NA`, `lms_score_expected()` reads only the rows whose `step` equals
       the `step` of the first row. Tests cover three frames. In the first,
       step 1 and step 3 share the step token "3". In the second, steps 1
@@ -62,20 +62,20 @@ in the DESIGN known issue.
       test replaces the score test at `test-vignette-claims.R:125`, which
       holds the old rule. The help page states this: without a `step`
       column, two adjacent steps with the same token count as one step.
-- [ ] AC4: Candidates of the read step can have tokens that give the same
+- [x] AC4: Candidates of the read step can have tokens that give the same
       label, such as "3", " 3", and "3.0". They give one row of
       `probabilities` that holds the sum of their probabilities, in order
       of first appearance. The `entropy` uses those summed rows. The
       expected value and the weighted standard deviation do not change. A
       test asserts hand-computed values for a frame with those three
       spellings and another label between them.
-- [ ] AC5: For a frame with a `step` column, the print method of
+- [x] AC5: For a frame with a `step` column, the print method of
       `lms_chat_result` reports the number of distinct `step` values. For
       a frame with no `step` column, it reports the number of runs of
       consecutive identical `step_token` values. With
       `rlmstudio.quiet = FALSE`, a test of a three-step reply whose steps 1
       and 3 share a token shows 3 steps in each case.
-- [ ] AC6: `grep -rl 'step_token\|lms_score_expected' R vignettes tests
+- [x] AC6: `grep -rl 'step_token\|lms_score_expected' R vignettes tests
       README.Rmd NEWS.md` lists files. In each, prose or test code that
       says which rows `lms_score_expected()` reads states the rules of AC2
       and AC3. The help of `lms_chat_openresponses()` describes the `step`
@@ -84,7 +84,7 @@ in the DESIGN known issue.
       per label. `test-vignette-claims.R` asserts the five column names and
       the `step` values of its mocked reply. `NEWS.md` has an entry for the
       new column, the step rule, and the summed labels.
-- [ ] AC7: The `verify` slot of `cairn/PROFILE.md` is clean:
+- [x] AC7: The `verify` slot of `cairn/PROFILE.md` is clean:
       `devtools::document()` gives no diff, and `devtools::test()` passes.
 
 ## Coverage
@@ -141,7 +141,25 @@ in the DESIGN known issue.
 - 2026-09-30: claim audit: 85 claims read, 3 corrected — tests/testthat/test-score.R, R/score.R, man/lms_score_expected.Rd
 - 2026-09-30: The first `devtools::check()` failed at the `headless-config.Rmd` build. LM Studio could not resolve `qwen/qwen3-4b-2507` and reported "Network connection failed". The branch does not touch that vignette. The failed build left the server running, and it was stopped by hand. The rerun gave 0 errors, 0 warnings, and 0 notes.
 - 2026-09-30: implement done, status review.
+- 2026-09-30: review return 1 (defect): AC3 failed. The score test that replaced `test-vignette-claims.R:125` holds a `step` column, so it exercises the AC2 rule, not the no-`step` fallback the criterion names. Status in-progress. The other criteria passed, and the 13 reviewer findings in the Review section wait for triage.
 
 ## Decisions
 
 ## Review
+
+Sync 2026-09-30: `origin/main` (cc0d45d) is an ancestor of the branch head, so no merge was needed. Fresh runs on 97a1c9d: `devtools::document()` gave no diff. `devtools::test()` gave 0 failures and 3 skips. The skips are live tests that need a running server (`test-embed.R:1117`, `test-embed.R:1139`, `test-list-instances.R:409`). `devtools::check()` with the API token gave 0 errors, 0 warnings, and 0 notes, vignettes rebuilt.
+
+- AC1: `test-chat.R:331` passes. Its mocked reply has a part with two steps (the second with no candidates), a part with no logprobs, and a part with one step. It asserts the five names, with `step` last, and `step` = `c(1L, 1L, 2L, 3L, 3L, 3L)`. `test-vignette-claims.R:114` asserts `step` for `lms_chat()` on its default route. `test-chat-batch.R:689` and `test-chat-batch-usage.R:374` assert `step` = `1L` for batch OpenResponses cells. `logprobs_frame()` sets `step = i` from `seq_along(steps)`, an integer.
+- AC2: `test-score.R:137` passes over three frames: steps 1 and 3 share "3", steps 1 and 2 share "3", and a step-1 row follows a step-2 row. Each gives the hand values in the comments at `test-score.R:121` (3.25, 0.4330127, 0.8112781) and is identical to the result for the step-1 rows alone. `test-score.R:196` gives a frame whose first `step` is `NA` and shows that it scores like the same frame with no `step` column.
+- AC3: FAIL. `test-score.R:176` passes. Its frame has no `step` column and the step tokens "3", "\n", "3", and the last "3" rows do not count. Its second frame has a first step token of `NA`. The help page states the adjacent-steps rule. But the criterion says this test replaces the score test at `test-vignette-claims.R:125`. The replacement at `test-vignette-claims.R:126` holds a `step` column, so it exercises the AC2 rule and not the fallback of AC3. The diff reviewer and the blame-history reviewer both found this gap.
+- AC4: `test-score.R:75` passes. Its frame holds "3", "4", " 3", "\n", and "3.0". It asserts labels `c(3, 4)`, probabilities 9/13 and 4/13, expected value 43/13, SD 6/13, and entropy 0.8904916, with the arithmetic in comments.
+- AC5: `test-chat.R:702` passes with `rlmstudio.quiet = FALSE`. Its reply has the steps "3", "\n", "3". The message says 3 token steps for the frame with a `step` column. It says the same for the frame without one.
+- AC6: The grep lists 10 files. The rule prose in `R/score.R`, `vignettes/text-analysis.Rmd`, `NEWS.md`, and the comment at `test-chat.R:47` states the AC2 and AC3 rules. No text of the old rule is left. `R/chat.R` and `R/chat_oop.R` hold the five-column help and the step count. The help of `lms_chat_openresponses()` describes `step`. The vignette's pasted logprobs output shows `step`, and its score output has one row per label (3, 4, 5, 2, 1). `test-vignette-claims.R:110` asserts the five names and `test-vignette-claims.R:114` the `step` values. `NEWS.md` has entries for the column, the step rule, and the summed labels. `pkgdown::check_pkgdown()` found no problems.
+- AC7: `devtools::document()` gave no diff, and `devtools::test()` gave 0 failures (see the sync line above).
+
+Consistency gate: `cairn_validate.py` passed. No IP or GP changed, so `cairn_impact` did not run. The profile checks passed: `document()` gave no diff, `check_pkgdown()` found no problems, NEWS has the entries, the branch adds no top-level file, and `check()` gave 0 notes. README is not touched.
+
+Reviewer findings, pass 1. The review returned at AC3 before the gate, so none is triaged yet. The next pass triages them at the gate.
+- Diff reviewer: (1) `R/score.R:85` gives an entropy of -1.44e-09 for one label, and the label sum makes one label common, as with "3" and " 3". (2) `R/score.R:114` drops a step-1 row whose `step` is `NA`. (3) A first `step` of `NA` uses the token run and ignores later step-1 rows, as AC2 and AC3 state. (4) `R/chat_oop.R:88` counts an `NA` step as a step. (5) The AC3 gap above. (6) `test-chat.R:47` turns any error into `NA`, which hides the message. (7) The batch `step` checks see one step only, and the AC5 test asserts printed text. (8) `NEWS.md:10` puts the print change under the score entry. (9) A "0x3" token is summed into label 3.
+- Blame-history reviewer: (1) The AC3 gap above. (2) The live test at `test-chat.R:47` now calls the function it checks, which T5 asked for. (3) Same as diff finding 4. (4) The new rules have no D-entry, and only the work log and NEWS record them.
+- Prior-review reviewer: no prior-review evidence on these files, and no PR review comments.
