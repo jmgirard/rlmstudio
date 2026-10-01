@@ -61,7 +61,7 @@ conversations are M074.
       its first use in prose or in a code comment of the knitted vignette:
       token, log probability, expected value, JSON schema, embedding, and
       cosine similarity.
-- [ ] AC5: Take each prose sentence and each `#` comment line that states
+- [x] AC5: Take each prose sentence and each `#` comment line that states
       what a package function does with an argument, returns, or raises,
       beyond what its name says. A named test under `tests/testthat/`
       exercises that behavior. A sentence about what LM Studio itself does
@@ -186,3 +186,15 @@ conversations are M074.
 - Reject: P6, the quiet prose names one warning. The article "a" keeps it true.
 - Reject: P7, `list_models()` is named before `library()`. It is a mention, not a step to run.
 - Reject: P8, `$` on a condition object. The partial-match risk is for parsed JSON.
+
+### Review pass 2 (after T7 to T9)
+
+- Sync: `origin/main` has not moved since the branch was cut, and no PR exists for the branch.
+- AC1 (2026-10-01, fresh): `knitr::purl()` of the source gives 169 lines, and each of the 10 strings is present. The knitted file has 475 lines, with 0 lines that start with an unknitted chunk header and 0 that start with `#> Error`. Six chunks call `lms_chat_batch(`, `lms_score_expected(`, or `lms_embed(`, at knitted lines 116, 175, 246, 300, 343, and 381. Each has a `#>` line after its last code line. A copy with the `#>` lines removed turned all 6 red. The code lines of the knitted file equal the purled code, less the hidden setup chunk.
+- AC2 (2026-10-01, fresh): each of the 16 regular expressions of the DESIGN.md code list matched 0 of the 169 purled lines. A search of the 394 source lines for `` `r `` found 0. Planted `lapply(` and `\(x)` lines matched their patterns.
+- AC3 (2026-10-01, fresh): the source has 13 chunk openers and 13 closers. The 211 lines outside the chunks include the YAML header and the inline code. A case-blind search for each of the 14 entries of the DESIGN.md prose list matched 0 of them. A planted line with a capitalized entry matched.
+- AC4 (2026-10-01, fresh read of the 475-line knit): a case-blind search found the first use of each term, and the defining sentence is at that line. Token: line 44, "a short piece of text". JSON schema: line 159, "a description of the fields". Log probability: line 231, "the natural log of that probability". Expected value: line 292, "the average of the numbers, each weighted by its probability". Embedding: line 368, "a list of numbers that stands for the meaning". Cosine similarity: line 373, "measures how close two embeddings are". The only earlier match of any term is the model key at line 23. That key is an identifier, and the line says the model turns text into numbers.
+- AC5 (2026-10-01, fresh): the 24 `file:line` references of the T5 ledger and the T7 backing were read in the current tree. Each lands on a `test_that()` header whose name states the claimed behavior. `arg-guards:559` is the name string of the generated test at line 557. A re-read of the 475-line knit found 4 claims that the ledger does not name. "`lms_unload()` needs a running server" is backed by `unload:1`. The `expected_value` element is backed by `test-score.R`. "`api_type = "openai"` gives `NULL` cells" is backed by `vignette-claims:198`. "`lms_server_stop()` stops the server" is backed by `vignette-claims:615`, which shows that `server stop` alone is sent. `devtools::test()` with the token unset gave 19,767 expectations, 0 failed, 0 errors, and 3 live skips.
+- AC5 live probes (2026-10-01, fresh, `google/gemma-3-1b` at `context_length = 128`): a prompt of 58 tokens got a reply. A prompt of 20 sentences failed alone, with the same "tokens to keep" message as the knit. A second load at 1024 left the instance at 128. An unload and a load gave 1024. The embedding model listed a 2,048-token context. A sentence added to the end of a 200-sentence text changed its embedding by up to 0.0073. The same sentence added to a 400-sentence text changed nothing, and no warning was given. The server was stopped and no model was loaded after each probe.
+- AC6 (2026-10-01, fresh): `NEWS.md` line 19 sits under "rlmstudio (development version)", the heading at line 1, and names `vignette("text-analysis")`. `devtools::document()` left no change outside this file. `devtools::test()` passed, as AC5 records. `pkgdown::check_pkgdown()` found no problems. `lms server status` said the server was not running. With `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate (2026-10-01, pass 2): `cairn_validate.py` passed with exit 0, coverage complete included. `DESIGN.md` has no change on the branch, so `cairn_impact` was skipped. `document()` gave no diff, and `check_pkgdown()`, `check()`, and the NEWS entry pass (AC6). The branch touches no README, generated file, or new top-level file.
