@@ -56,7 +56,7 @@ A classed name, id, or type filter gets the check, the match, and the message of
 - [x] T2: `rlm_check_type()` returns the plain vector, and `list_models()` (R/list.R:70) and `list_instances()` (R/list.R:247) reassign `type`. Add the AC2 tests to `test-list-args.R`. The `type` help of both functions says that a classed filter matches by its value, as D-041 states.
 - [x] T3: Add the two AC1 classes to `plain_probes`, and keep the `as.character()` mock of `send_pair()`. In a scratch copy, remove the `plain_string()` reassignment at one body-field site and make sure that a probe goes red.
 - [x] T4: In `test-chat-dot-clash.R`, read the value of each passing dot in every request body. Run the batch with `api =` as well, and add the `instr` test of AC4.
-- [ ] T5: In `lms_chat()` (R/chat.R:155), move `rlm_check_route_dots()` after `rlm_check_schema()`. Add the six AC5 tests to `test-chat-dot-clash.R`.
+- [x] T5: In `lms_chat()` (R/chat.R:155), move `rlm_check_route_dots()` after `rlm_check_schema()`. Add the six AC5 tests to `test-chat-dot-clash.R`.
 - [ ] T6: Give a text fault the headline of AC6 in `rlm_check_id()` (R/utils-args.R:17) and in both headlines of `rlm_check_response_id()` (R/utils-args.R:395). Update the tests that expect the old headline, and add the AC6 tests, the attribute probes included.
 - [ ] T7: Fix the `check_reply_model()` comment on classed names (R/chat.R:917). Add NEWS.md entries for the type filter, the check order, and the headline. Run `devtools::document()`, `devtools::test()`, and `devtools::check()` with `RLMSTUDIO_API_TOKEN` set.
 
@@ -72,6 +72,7 @@ A classed name, id, or type filter gets the check, the match, and the message of
 - 2026-10-01: T2 done. `rlm_check_type()` returns the filter with no attributes, and both list functions reassign `type`. The three AC2 tests failed before the fix. `devtools::test()`: 0 failed, 3 skipped.
 - 2026-10-01: T3 done. `plain_probes` holds the two trap classes, and `send_pair()` installs their methods. In a scratch copy with the `model` reassignment of `lms_chat_openai()` removed, its send test went red on "No method asJSON S3 class: foo", and with the trap probes alone on "No method asJSON S3 class: rlmTrap". `devtools::test()`: 0 failed, 3 skipped.
 - 2026-10-01: T4 done. The passing-dot test reads the dot value in every body, and the batch runs with `api_type =` and `api =`. In a scratch copy with a wrong expected `instructions` value, 10 body checks failed. `devtools::test()`: 0 failed, 3 skipped.
+- 2026-10-01: T5 done. `lms_chat()` runs `rlm_check_route_dots()` after `rlm_check_schema()`. Before the move, the three `lms_chat()` cases failed on the `instructions` headline, and the three batch cases passed. `devtools::test()`: 0 failed, 3 skipped.
 
 ## Decisions
 

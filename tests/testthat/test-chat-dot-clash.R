@@ -98,6 +98,59 @@ passing_cases <- list(
   )
 )
 
+# A clashing dot and one other fault. The other fault names its own argument,
+# so the headline names it and not `instructions`. `lms_chat_batch()` takes
+# `inputs` where `lms_chat()` takes `input`.
+other_faults <- list(
+  list(label = "a bad model", model = 1, input = "hi", schema = NULL, arg = "model"),
+  list(label = "a bad input", model = "a-model", input = NA_character_, schema = NULL, arg = "input"),
+  list(label = "a refused schema", model = "a-model", input = "hi", schema = 1, arg = "schema")
+)
+
+expect_other_fault_first <- function(call, arg, info) {
+  probe <- local_counting_probe()
+  err <- tryCatch(call(), error = identity)
+  expect_s3_class(err, "error")
+  expect_identical(probe$calls, 0L, info = info)
+  headline <- cli::ansi_strip(conditionMessage(err))
+  headline <- strsplit(headline, "\n", fixed = TRUE)[[1]][[1]]
+  expect_match(headline, paste0("^`", arg, "` must "), info = info)
+  expect_no_match(headline, "instructions", fixed = TRUE, info = info)
+}
+
+test_that("another argument fault comes before the clashing dot", {
+  for (fault in other_faults) {
+    expect_other_fault_first(
+      function() {
+        lms_chat(
+          fault$model,
+          fault$input,
+          api_type = "openresponses",
+          schema = fault$schema,
+          instructions = "Be brief."
+        )
+      },
+      fault$arg,
+      paste("lms_chat() with", fault$label)
+    )
+    inputs <- c("first", fault$input)
+    expect_other_fault_first(
+      function() {
+        lms_chat_batch(
+          fault$model,
+          inputs,
+          quiet = TRUE,
+          api_type = "openresponses",
+          schema = fault$schema,
+          instructions = "Be brief."
+        )
+      },
+      if (fault$arg == "input") "inputs" else fault$arg,
+      paste("lms_chat_batch() with", fault$label)
+    )
+  }
+})
+
 # Each of `requests` must carry the dot of `case` with its value.
 expect_dot_sent <- function(requests, n, case, info) {
   expect_identical(length(requests), n, info = info)
