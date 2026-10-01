@@ -12,7 +12,10 @@
 #   Rscript data-raw/knit-vignettes.R
 #   Rscript data-raw/knit-vignettes.R vignettes/getting-started.Rmd.orig
 #
-# With no arguments, it knits every vignettes/*.Rmd.orig file.
+# With no arguments, it knits every vignettes/*.Rmd.orig file. The last line
+# of each knitted .Rmd holds the MD5 sum of its source, and
+# tests/testthat/test-vignette-knit.R fails for a source that changed after
+# its knit.
 #
 # The script refuses to start if the server runs or a model is loaded. After
 # each source, it unloads every model and stops the server, so each vignette
@@ -147,6 +150,13 @@ knit_source <- function(source) {
       call. = FALSE
     )
   }
+  # The last line holds the MD5 sum of the source. A test compares it with
+  # the source, so an edit to the source without a new knit fails the test.
+  cat(
+    "\n<!-- Knitted from ", basename(source), " with MD5 ",
+    unname(tools::md5sum(source)), ". -->\n",
+    file = temp, append = TRUE, sep = ""
+  )
   if (!file.copy(temp, target, overwrite = TRUE)) {
     stop("Could not copy the knitted ", source, " to ", target, ".", call. = FALSE)
   }

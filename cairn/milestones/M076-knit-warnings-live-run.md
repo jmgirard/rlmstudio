@@ -94,7 +94,7 @@ other candidate rows stay as they are.
       with `expect_warning = TRUE`. Their `.Rmd` output holds `#> Warning` at
       lines 130, 208, 263, and 354. Run AC1 and AC2 on a scratch source in a
       temp directory. Log the exit codes and the message.
-- [ ] T3: Make the knit write the source MD5 sum as an HTML comment line in
+- [x] T3: Make the knit write the source MD5 sum as an HTML comment line in
       the `.Rmd`. Add the stale-knit test in a new `test-vignette-knit.R` or
       in `test-vignette-claims.R`. The sources do not ship to
       `R CMD check`, so the test skips on an empty source list (LESSONS
@@ -123,6 +123,7 @@ other candidate rows stay as they are.
 - 2026-10-01: implement started on branch m076-knit-warnings-live-run. No question gate: nothing was open. The stamp is an HTML comment line at the end of the `.Rmd`, and the test goes in a new `test-vignette-knit.R`.
 - 2026-10-01: T1 done. `knit_source()` calls `knitr::render_markdown()` before it wraps the warning hook, because `knit()` sets the markdown hooks only while all hooks are at their defaults. A scratch run with `warning = FALSE` showed no warning on the console, so the header comment says the option hides it.
 - 2026-10-01: T2 done. Marked chunks `summaries`, `schema`, `logprobs`, and `failed`. Scratch source in the session scratch directory with the vignette setup chunk: an unmarked `warning()` chunk exits 1 with "The chunk 'noisy' of <path> gave a warning, and the chunk does not set expect_warning = TRUE.", the target absent stays absent and a present target keeps its MD5. With `expect_warning = TRUE` it exits 0 and the `.Rmd` holds `#> Warning: planted warning`.
+- 2026-10-01: T3 done. The stamp line is `<!-- Knitted from <name>.Rmd.orig with MD5 <sum>. -->`. Before the re-knit, the new test gave 4 failures, one per source. After it, the test passes 4. A planted space in `headless-config.Rmd.orig` gave 1 failure that names it. A moved `headless-config.Rmd` gave 1 failure that names it. Both were restored. Full `devtools::test()`: 0 failures, 3 skips, 19942 passes.
 
 ## Decisions
 
