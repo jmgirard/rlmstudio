@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-30 (M067 done, M064 row pruned, M067 follow-up row added)_
+_Last hygiene check: 2026-09-30 (M068 done, M065 row pruned)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-09-30 (M067 done, M064 row pruned, M067 follow-up row 
 |---|---|---|---|---|---|
 <!-- Rows are grouped by status, not sorted by ID. Keep only the 3 most recent
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
-| M068 | A vignette shows batch chat, structured output, logprobs scores, and embeddings | review | none | normal | milestones/M068-text-analysis-vignette.md |
+| M068 | A vignette shows batch chat, structured output, logprobs scores, and embeddings | done | none | normal | milestones/archive/M068-text-analysis-vignette.md |
 | M067 | A messages data frame with a wrong-length or unwritable column gets a message that names the fault | done | none | normal | milestones/archive/M067-messages-column-faults.md |
 | M066 | A test that reads a request survives a dry-run port that another program holds | done | none | high | milestones/archive/M066-dry-run-held-port.md |
-| M065 | An error in one test-loop pass no longer stops the later passes | done | none | normal | milestones/archive/M065-nested-loop-subtests.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
