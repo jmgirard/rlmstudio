@@ -11,7 +11,9 @@
 #' are the first run of consecutive rows whose \code{step_token} is identical
 #' to that of the first row, with \code{NA} equal to \code{NA}. In that case,
 #' with no \code{step} column or a first \code{step} of \code{NA}, two
-#' adjacent steps with the same token count as one step.
+#' adjacent steps with the same token count as one step. Both rules start from
+#' the first row, so keep the rows in reply order: a sorted frame can start
+#' with a later step.
 #'
 #' Of those rows, the function keeps the candidates whose token, read as a
 #' number, is in \code{scale}. Candidates that give the same label, such as
@@ -83,7 +85,10 @@ lms_score_expected <- function(lp_df, scale = 1:5) {
 
   # Shannon Entropy: -Sum(p * log2(p))
   # Measures "surprise" or "confusion" in bits
-  entropy <- -sum(probs * log2(probs + 1e-9)) # small epsilon to avoid log(0)
+  # A label whose probability underflows to 0 adds 0, so it is left out
+  # rather than given log2(0)
+  p <- probs[probs > 0]
+  entropy <- -sum(p * log2(p))
 
   # 4. Results
   list(
@@ -103,7 +108,8 @@ lms_score_expected <- function(lp_df, scale = 1:5) {
 #' With a `step` column whose first value is not `NA`, the rows whose `step`
 #' equals that value, wherever they sit. Otherwise the first run of
 #' consecutive rows whose `step_token` is identical to that of the first row,
-#' `NA` included, so two adjacent steps with the same token read as one.
+#' `NA` included, so two adjacent steps with the same token read as one. With
+#' neither column, no rows.
 #'
 #' @param lp_df A logprobs data frame with at least one row.
 #' @return The row numbers of the first step.
@@ -114,7 +120,10 @@ first_step_rows <- function(lp_df) {
   if (!is.null(step) && !is.na(step[1])) {
     return(which(step == step[1]))
   }
-  tokens <- lp_df$step_token
+  tokens <- lp_df[["step_token"]]
+  if (is.null(tokens)) {
+    return(integer(0))
+  }
   same <- if (is.na(tokens[1])) {
     is.na(tokens)
   } else {

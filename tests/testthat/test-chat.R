@@ -45,10 +45,16 @@ test_that("Full Integration: Download, Load, and Rate", {
     }
 
     # lms_score_expected() reads the rows of the first step, and aborts when
-    # no candidate of that step is in the scale.
+    # no candidate of that step is in the scale. Only that abort becomes NA,
+    # so any other error keeps its message.
     tryCatch(
       lms_score_expected(lp_df, scale = 1:5)$expected_value,
-      error = function(e) NA_real_
+      error = function(e) {
+        if (!grepl("No tokens in the top candidates", conditionMessage(e), fixed = TRUE)) {
+          stop(e)
+        }
+        NA_real_
+      }
     )
   })
 

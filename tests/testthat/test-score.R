@@ -210,3 +210,32 @@ test_that("lms_score_expected() reads the first run of a step token when the fir
     lms_score_expected(lp_df[setdiff(names(lp_df), "step")], scale = 1:5)
   )
 })
+
+test_that("lms_score_expected() gives an entropy of 0 for one label", {
+  # "3" and " 3" give the one label 3, with probability 1 after the sum.
+  # Entropy in bits: -(1 * log2 1) = 0.
+  lp_df <- data.frame(
+    step_token = c("3", "3"),
+    step_logprob = c(-0.2, -0.2),
+    candidate_token = c("3", " 3"),
+    candidate_logprob = log(c(0.6, 0.3)),
+    stringsAsFactors = FALSE
+  )
+  res <- lms_score_expected(lp_df, scale = 1:5)
+  expect_identical(res$probabilities$label, 3)
+  expect_identical(res$entropy, 0)
+})
+
+test_that("lms_score_expected() aborts on a frame with no step_token and no step column", {
+  # With neither column, no row is read as the first step, so no candidate
+  # is in the scale.
+  lp_df <- data.frame(
+    candidate_token = c("3", "4"),
+    candidate_logprob = log(c(0.6, 0.3)),
+    stringsAsFactors = FALSE
+  )
+  expect_error(
+    lms_score_expected(lp_df, scale = 1:5),
+    "No tokens in the top candidates matched the provided scale."
+  )
+})

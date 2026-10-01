@@ -33,7 +33,9 @@ step with the same token as the first step does not count. Otherwise, these
 are the first run of consecutive rows whose \code{step_token} is identical
 to that of the first row, with \code{NA} equal to \code{NA}. In that case,
 with no \code{step} column or a first \code{step} of \code{NA}, two
-adjacent steps with the same token count as one step.
+adjacent steps with the same token count as one step. Both rules start from
+the first row, so keep the rows in reply order: a sorted frame can start
+with a later step.
 
 Of those rows, the function keeps the candidates whose token, read as a
 number, is in \code{scale}. Candidates that give the same label, such as

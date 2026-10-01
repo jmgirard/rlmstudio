@@ -145,6 +145,8 @@ in the DESIGN known issue.
 - 2026-09-30: T2 repair for the AC3 return. The score test at `test-vignette-claims.R:126` now uses a frame with no `step` column and the step tokens "3", "\n", "3", so it exercises the run fallback. With the old rule planted (every row with the first step token), it failed in the label, probability, expected value, SD, and entropy checks. `devtools::document()` gives no diff, and `devtools::test()` gives 0 failures and 3 skips.
 - 2026-09-30: claim audit: 62 claims read, 0 corrected — none
 - 2026-09-30: implement done after return 1, status review. The 13 reviewer findings of pass 1 still wait for triage at the review gate.
+- 2026-09-30: review pass 2 passed all 7 criteria. Gate triage fixed F1 to F5 on the branch (entropy of one label, reply-order help sentence, abort for a frame with no `step_token`, narrower `tryCatch` in the live test, own NEWS bullet for print) and rejected F6 to F15. `devtools::document()` regenerated `man/lms_score_expected.Rd`, and `devtools::test()` gave 0 failures and 3 skips.
+- 2026-09-30: step-7 approval: m069-score-first-step approved for merge
 
 ## Decisions
 
@@ -197,3 +199,20 @@ Reviewer findings, pass 2, merged with pass 1. Each item names its sources (P1 o
 - F13: The vignette paste changed values that the code does not touch, from a live re-run. (P2 b6)
 - F14: Tests read `step` with `$`, which matches name prefixes. (P2 p3)
 - F15: The AC3 gap of return 1. It is fixed by the T2 repair. (P1 d5, P1 b1, P2 d11)
+
+Triage at the gate, 2026-09-30. The user chose the recommended triage.
+- F1: fix now. The entropy sums only labels with a probability above 0 and has no `+ 1e-9` term. A new `test-score.R` test asserts an entropy identical to 0 for "3" and " 3". It failed before the fix with -1.4e-09. NEWS states the change.
+- F2: fix now. The help of `lms_score_expected()` says that both rules start from the first row, so the rows must stay in reply order.
+- F3: fix now. `first_step_rows()` gives no rows when the frame has neither column, so the package abort fires. A new `test-score.R` test asserts that message. It failed before the fix with "argument is of length zero".
+- F4: fix now. The live test at `test-chat.R:47` turns only the scale abort into `NA` and rethrows any other error.
+- F5: fix now. The print change has its own NEWS bullet.
+- F6: reject. The input is the frame of one reply, and the old rule also pooled stacked frames.
+- F7: reject. AC2 and AC3 set this rule.
+- F8: reject. `logprobs_frame()` never builds an `NA` step.
+- F9: reject. `as.numeric()` read these tokens the same way before, and the sum was planned.
+- F10: reject. `test-chat.R:331` covers more than one step through the same `logprobs_frame()` code.
+- F11: reject. The pre-1.0 waiver covers the change, and the plan gate's choices are in the work log.
+- F12: reject. Task T5 asked for this.
+- F13: reject. The work log records the live re-run.
+- F14: reject. A missing `step` still fails these tests.
+- F15: reject. It is already fixed.
