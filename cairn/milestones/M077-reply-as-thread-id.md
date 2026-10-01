@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M077: A chat continues a thread from the reply itself
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP4
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes what an exported argument accepts
-- **Branch/PR:** —
+- **Branch/PR:** m077-reply-as-thread-id
 
 ## Goal
 
@@ -43,7 +43,7 @@ A user continues a stored chat thread with `previous_response_id = first`, where
 
 ## Tasks
 
-- [ ] T1: Write the AC1 to AC4 tests in `tests/testthat/test-thread.R` first, and see the new ones fail. Reuse `thread_bad_values` (line 173) and `thread_routes` (line 39) for AC3.
+- [x] T1: Write the AC1 to AC4 tests in `tests/testthat/test-thread.R` first, and see the new ones fail. Reuse `thread_bad_values` (line 173) and `thread_routes` (line 39) for AC3.
 - [ ] T2: In `rlm_check_response_id()` (`R/utils-args.R`, near line 395), read `attr(value, "response_id", exact = TRUE)`. When it is not `NULL`, check it with `id_fault()` under a message that names the attribute, and return its plain string. `lms_chat()` keeps passing the raw value to its delegates (`R/chat.R:146`), so the existing delegate test stays as it is. The batch check at `R/chat.R:2004` is not changed. Run the profile's verify slot.
 - [ ] T3: Update the `previous_response_id` roxygen of the four functions (`R/chat.R:53`, `:239`, `:1382`, `:1771`) and the `@return` text that says to pass the attribute. Run `devtools::document()`. Add the NEWS entry.
 - [ ] T4: Edit the `follow-up` chunk and its prose in `vignettes/chat-options.Rmd.orig`. Knit with `data-raw/knit-vignettes.R` against a live LM Studio, with the token as the user memory names it. Restore the other vignettes with `git checkout --` (LESSONS, M009). Match the prose after the chunk to the output. Run `devtools::test()`.
@@ -54,6 +54,8 @@ A user continues a stored chat thread with `previous_response_id = first`, where
 - 2026-10-01: criteria audit (full mode, fresh Opus reader) returned 14 findings over AC1 to AC6 and 3 missed cases. Each had one clear fix, applied before the gate. The fixes add a hand-built native `lms_chat_result` and probes for attribute precedence, exact name, and a classed attribute. They add the OpenAI refusal, `thread_bad_values` on all routes, and a message that names both. They add a `test-*.R` pathspec with an `expect_` diff, the vignette prose, help on a reply with no id and on batch formats, and D-039.
 - 2026-10-01: plan gate chose reading the `response_id` attribute over a new S3 class on the reply text, because `vctrs::vec_c()` fails to combine a classed string with a plain one (D-030, GP2); falsified by a user who passes a reply with no id and cannot tell why the server answered 400.
 - 2026-10-01: plan gate chose a vignette chunk that shows `first` alone over one that shows both forms, because one call keeps the chunk short; falsified by a reader who needs the id string form and misses the sentence that names it.
+- 2026-10-01: implement started on branch m077-reply-as-thread-id. No question gate, because the plan left only the abort wording open and AC3 fixes what it names.
+- 2026-10-01: T1 done. Ten new tests in `test-thread.R`. Nine fail before T2, and the reply with no id passes, as AC4 expects.
 
 ## Decisions
 

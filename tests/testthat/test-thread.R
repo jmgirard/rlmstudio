@@ -795,3 +795,196 @@ test_that("a batch keeps going past a recorded unknown-id reply on both routes",
     )
   }
 })
+
+# The reply as the thread id (D-039) ----------------------------------------
+
+# Values that carry a `response_id` attribute, as the simplified reply of a
+# thread route does. The `lms_chat_result` is built by hand, because the
+# native route never returns one.
+thread_carriers <- list(
+  "a reply string" = structure("hi there", response_id = "resp_7"),
+  "an lms_chat_result" = structure(
+    new_lms_chat_result(text = "hi there", logprobs = data.frame()),
+    response_id = "resp_7"
+  )
+)
+
+# The `previous_response_id` field of each request that `name` sent on
+# `route` for `value`.
+sent_thread_ids <- function(name, route, value) {
+  jsons <- sent_thread_bodies(name, route, previous_response_id = value)
+  lapply(jsons, function(json) {
+    jsonlite::parse_json(json)[["previous_response_id"]]
+  })
+}
+
+# The function sends the attribute of `value` as the plain string `id`, once
+# for each request: one for a chat call and two for the two-input batch.
+expect_thread_id_sent <- function(name, value, id, label) {
+  for (route in thread_routes[[name]]) {
+    info <- paste(name, "on", route, "with", label)
+    ids <- sent_thread_ids(name, route, value)
+    expect_identical(
+      ids,
+      rep(list(id), if (name == "lms_chat_batch") 2L else 1L),
+      info = info
+    )
+  }
+}
+
+expect_reply_continues_thread <- function(name) {
+  for (label in names(thread_carriers)) {
+    expect_thread_id_sent(name, thread_carriers[[label]], "resp_7", label)
+  }
+  # The attribute wins over a value that is itself a usable id.
+  expect_thread_id_sent(
+    name,
+    structure("resp_1", response_id = "resp_7"),
+    "resp_7",
+    "an id string that carries another id"
+  )
+  # An attribute with a class and names goes out as a plain string. jsonlite
+  # would write the names as a JSON object.
+  expect_thread_id_sent(
+    name,
+    structure(
+      "hi there",
+      response_id = structure(c(n = "resp_7"), class = "thread_id")
+    ),
+    "resp_7",
+    "a classed and named attribute"
+  )
+  # `attr()` matches a partial name unless `exact = TRUE`, so an attribute
+  # under a longer name is not read.
+  expect_thread_id_sent(
+    name,
+    structure("resp_1", response_idx = "resp_7"),
+    "resp_1",
+    "an attribute under another name"
+  )
+}
+
+test_that("lms_chat_native() continues a thread from a value that carries the reply id", {
+  expect_reply_continues_thread("lms_chat_native")
+})
+
+test_that("lms_chat_openresponses() continues a thread from a value that carries the reply id", {
+  expect_reply_continues_thread("lms_chat_openresponses")
+})
+
+test_that("lms_chat() continues a thread from a value that carries the reply id", {
+  expect_reply_continues_thread("lms_chat")
+})
+
+test_that("lms_chat_batch() continues a thread from a value in its dots on both thread routes", {
+  for (label in names(thread_carriers)) {
+    expect_thread_id_sent(
+      "lms_chat_batch",
+      thread_carriers[[label]],
+      "resp_7",
+      label
+    )
+  }
+})
+
+test_that("a reply that came back with no id goes out as its own text", {
+  # A native reply sent with `store = FALSE` has no `response_id` field, so
+  # its simplified value is the text with no attribute.
+  reply <- simplified_value(
+    function() lms_chat_native("a-model", "hi"),
+    thread_reply_with_id("native", NULL)
+  )
+  expect_null(attributes(reply))
+  for (name in names(thread_calls)) {
+    expect_thread_id_sent(name, reply, "hi", "a reply with no id")
+  }
+})
+
+test_that("lms_chat() and lms_chat_batch() refuse a reply that carries an id on the openai route", {
+  calls <- list(
+    lms_chat = function(value) {
+      lms_chat(
+        "a-model",
+        "hi",
+        api_type = "openai",
+        previous_response_id = value
+      )
+    },
+    lms_chat_batch = function(value) {
+      lms_chat_batch(
+        "a-model",
+        c("first", "second"),
+        api_type = "openai",
+        previous_response_id = value
+      )
+    }
+  )
+  probe <- local_counting_probe()
+  delegates <- local_counting_delegates()
+  for (name in names(calls)) {
+    for (label in names(thread_carriers)) {
+      info <- paste(name, "with", label)
+      err <- expect_error(
+        calls[[name]](thread_carriers[[label]]),
+        "needs `api_type = \"native\"` or `api_type = \"openresponses\"`",
+        fixed = TRUE,
+        info = info
+      )
+      expect_false(any(grepl("^rlmstudio_", class(err))), info = info)
+    }
+  }
+  expect_identical(probe$calls, 0L)
+  expect_identical(delegates$calls, 0L)
+})
+
+# Each bad value of the attribute aborts with no package class, before the
+# probe and before any request. The message names the argument and the
+# attribute, and on the openai route it comes before the route refusal.
+expect_thread_attribute_aborts <- function(name, routes) {
+  probe <- local_counting_probe()
+  if (name == "lms_chat") {
+    delegates <- local_counting_delegates()
+  }
+  for (route in routes) {
+    for (p in thread_bad_values) {
+      label <- paste(name, "on", route, "with", p$label)
+      value <- structure("hi there", response_id = p$value)
+      err <- expect_error(
+        thread_calls[[name]](route, previous_response_id = value),
+        p$match,
+        info = label
+      )
+      msg <- conditionMessage(err)
+      expect_match(msg, "`previous_response_id`", fixed = TRUE, info = label)
+      expect_match(msg, "`response_id` attribute", fixed = TRUE, info = label)
+      expect_no_match(msg, "api_type", fixed = TRUE, info = label)
+      expect_false(any(grepl("^rlmstudio_", class(err))), info = label)
+    }
+  }
+  expect_identical(probe$calls, 0L)
+  if (name == "lms_chat") {
+    expect_identical(delegates$calls, 0L)
+  }
+}
+
+test_that("lms_chat_native() aborts on a response_id attribute that is not one usable string", {
+  expect_thread_attribute_aborts("lms_chat_native", "native")
+})
+
+test_that("lms_chat_openresponses() aborts on a response_id attribute that is not one usable string", {
+  expect_thread_attribute_aborts("lms_chat_openresponses", "openresponses")
+})
+
+test_that("lms_chat() aborts on a response_id attribute that is not one usable string", {
+  expect_thread_attribute_aborts(
+    "lms_chat",
+    c("native", "openresponses", "openai")
+  )
+})
+
+test_that("lms_chat_batch() aborts on a response_id attribute that is not one usable string", {
+  expect_thread_attribute_aborts(
+    "lms_chat_batch",
+    c("native", "openresponses", "openai")
+  )
+})
