@@ -88,7 +88,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - [x] T5: List the claims of AC5 with the test or probe that backs each, as
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
-- [ ] T6: Add the NEWS entry and run the checks of AC6.
+- [x] T6: Add the NEWS entry and run the checks of AC6.
 
 ## Work log
 
@@ -102,7 +102,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: T5 added 6 tests to `test-vignette-claims.R`. With `>=` changed to `>` in `check_lms_version()`, the version test failed. With the download URL changed, the browser test failed. Code restored. `devtools::test()`: 0 fail, 3 skip, 19801 pass.
 - 2026-09-30: T5 fix: `lms_server_start()` docs say the `wait` limit is not hard, so the prose says "about", and "a few seconds" became "does not answer at once". Re-knitted clean.
 - 2026-09-30: ledger 1: `install_lmstudio(method = "browser")` opens the download page. Test: "install_lmstudio() with the browser method opens the download page" (new).
-- 2026-09-30: ledger 2: `has_lms()` is TRUE if R finds lms. Tests: "has_lms is TRUE when lms sits on the PATH", "has_lms is FALSE when no lookup finds the CLI".
+- 2026-09-30: ledger 2: when R finds lms, `has_lms()` is TRUE. Tests: "has_lms is TRUE when lms sits on the PATH", "has_lms is FALSE when no lookup finds the CLI".
 - 2026-09-30: ledger 3: `check_lms_version()` is TRUE for 0.4.0 or later. Test: "check_lms_version() is TRUE from version 0.4.0 and FALSE below it" (new).
 - 2026-09-30: ledger 4: requests go to localhost:1234 by default. Ledger 8: `list_models()` gives one row per model with a key column. Test: "list_models() asks localhost:1234 by default and gives one row per model" (new).
 - 2026-09-30: ledger 5: `lms_server_start()` waits about `wait` seconds. Tests: "wait_for_server starts no request after the budget passes", "lms_server_start returns quietly once the server answers".
@@ -116,6 +116,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: ledger 14, LM Studio: the server does not answer at once. Backed by the `lms_server_start()` docs, which say the CLI returns before the REST API answers. Live: T1 gave `lms_server_ready()` FALSE before the start.
 - 2026-09-30: ledger 15, LM Studio: a model on disk gives "already_downloaded". Live: T1 probe and each knit.
 - 2026-09-30: ledger 16, model: a reply does not always follow the system prompt. Live: the first T3 knit asked for one word and got "Apple" with an emoji.
+- 2026-09-30: T6 NEWS entry added. `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. With the server stopped and the token unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 
