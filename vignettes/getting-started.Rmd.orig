@@ -65,8 +65,9 @@ lms_server_ready()
 ## Find a model
 
 A model key is the name that you give R to choose a model, such as
-`"google/gemma-3-1b"`. `list_models()` shows the models that LM Studio has on your computer, one
-row for each model. The `key` column holds the model key.
+`"google/gemma-3-1b"`. `list_models()` shows the models that LM Studio
+has on your computer, one row for each model. The `key` column holds the
+model key.
 
 ```{r list-models}
 # The models on this computer, one row each
@@ -152,6 +153,9 @@ answers <- lms_chat_batch(
   system_prompt = "Answer with one word."
 )
 answers
+
+# Remove the spaces and line breaks around each reply
+trimws(answers)
 ```
 
 `vignette("text-analysis")` shows how to get the replies of a batch as a
