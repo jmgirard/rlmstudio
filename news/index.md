@@ -2,6 +2,25 @@
 
 ## rlmstudio (development version)
 
+- The
+  [`vignette("getting-started")`](https://jmgirard.github.io/rlmstudio/articles/getting-started.md)
+  text is rewritten for a reader who knows R but has not run a local
+  model. It explains terms such as model key and system prompt in plain
+  words. It goes from installing LM Studio to a first batch of replies.
+  It covers a check of the `lms` tool with
+  [`has_lms()`](https://jmgirard.github.io/rlmstudio/reference/has_lms.md)
+  and
+  [`check_lms_version()`](https://jmgirard.github.io/rlmstudio/reference/check_lms_version.md).
+  It covers starting the server, checking that it answers, and finding
+  models with
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md).
+  It also covers downloading, loading, one chat with a system prompt, a
+  batch with
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
+  and cleaning up. It points to
+  [`vignette("headless-config")`](https://jmgirard.github.io/rlmstudio/articles/headless-config.md)
+  for use without the desktop app.
+
 - The vignettes now ship with output that was knitted ahead of time from
   a live LM Studio. A build or check of the package therefore runs no
   vignette code and never reaches LM Studio. Before, where `lms` was

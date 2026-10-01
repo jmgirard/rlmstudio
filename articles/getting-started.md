@@ -1,173 +1,242 @@
 # Getting Started with LM Studio in R
 
+A large language model is a program that writes text in reply to text
+that you give it. The text that you give it is a prompt. LM Studio is a
+desktop app that downloads such models and runs them on your own
+computer. The rlmstudio package lets you control LM Studio from R. This
+vignette takes you from installing LM Studio to your first replies from
+a model.
+
+## Install LM Studio
+
+LM Studio comes with a command-line tool called `lms`. A command-line
+tool is a program that you run by typing commands, and the messages of
+the package call it the CLI. The package uses `lms` to start and stop
+parts of LM Studio. If you do not have LM Studio yet, run
+`rlmstudio::install_lmstudio(method = "browser")`. It opens the LM
+Studio download page in your web browser. After you install LM Studio,
+restart R.
+
+Load the package and check that R can find LM Studio.
+
 ``` r
 
 library(rlmstudio)
 
-model <- "google/gemma-3-1b"
-
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
-The `rlmstudio` package bridges the gap between R and local Large
-Language Models by wrapping the LM Studio CLI and its REST API. This
-vignette covers the **GUI Workflow**, which is best for visual users on
-desktop environments like macOS, Windows, and Linux desktops.
-
-While the R package provides functions to manage the entire lifecycle of
-a local LLM, the LM Studio desktop application provides an excellent
-visual search function for finding new models and exploring advanced
-configurations beyond what the API can currently do. You can seamlessly
-mix and match: use the GUI to discover and tweak models, and use R to
-automate your chatting and data processing.
-
-## Setup and Installation
-
-This package relies on the LM Studio CLI. If you do not have LM Studio
-installed or need to update your version, the package provides a
-convenient setup function.
-
-For desktop users, you can run `install_lmstudio(method = "browser")` in
-your console to open the official download page.
-
-``` r
-
-# Check if LM Studio is available on this system
+# TRUE if R finds the lms tool
 has_lms()
+#> [1] TRUE
+
+# TRUE if the lms tool is version 0.4.0 or later
+check_lms_version()
+#> ✔ LM Studio CLI is using the modern architecture (0.4.0+).
 #> [1] TRUE
 ```
 
-## Step-by-Step Guide
+If either call returns `FALSE`, install or update LM Studio before you
+go on.
 
-### 1. Start the Server
+## Start the server
 
-You have two options for starting the local server. You can open the LM
-Studio desktop application, navigate to the Developer or Local Server
-tab, and click “Start”. Alternatively, you can start it directly from R.
-The CLI returns before the REST API answers, so
+R talks to LM Studio through a local server. A local server is a program
+on your own computer that answers requests from other programs, such as
+R. By default, the package sends its requests to
+`http://localhost:1234`. That is an address on your own computer.
+
 [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
-keeps asking the REST API whether it is ready and returns once it
-answers. The `wait` argument sets how many seconds it keeps asking, and
-defaults to 10.
+starts the server. Then it waits until LM Studio answers. The `wait`
+argument sets about how many seconds it waits. If the wait runs out, the
+function gives a warning, and your script goes on. So call
+[`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+next. It returns `TRUE` only when LM Studio answers.
 
 ``` r
 
-# Start the local server on the default port, and allow 30 seconds for it
+# Start the server, and wait about 30 seconds for it to answer
 lms_server_start(wait = 30)
 #> ✔ LM Studio server started successfully on the default port.
-```
 
-A wait that runs out raises a warning and returns rather than aborting,
-so the start call alone does not prove that the server is usable. Check
-that it answers before you call it.
-[`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-asks the host for a model list and reports `TRUE` only for an answer LM
-Studio would give. It reports `FALSE` for a port held by another process
-and for a server that turns your token away.
-
-``` r
-
+# TRUE if LM Studio answers
 lms_server_ready()
 #> [1] TRUE
 ```
 
-### 2. Finding and Managing Models
+## Find a model
 
-The LM Studio GUI shines when it comes to discovering models. You can
-use its built-in search bar to browse Hugging Face, filter by
-compatibility, and select specific quantizations.
-
-However, if you already know the exact identifier of the model you want,
-you can download it and manage your inventory directly from R.
+A model key is the name that you give R to choose a model, such as
+`"google/gemma-3-1b"`.
+[`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+shows the models that LM Studio has on your computer, one row for each
+model. The `key` column holds the model key. In the `type` column, `llm`
+marks a large language model, the kind that you chat with. The `state`
+column says whether the model is in memory, which a later section
+explains.
 
 ``` r
 
-# Download a model using its identifier
+# The models on this computer, one row each
+list_models()
+#>      state      type          display_name                                  key
+#> 1 unloaded       llm           Gemma 4 E4B                   google/gemma-4-e4b
+#> 2 unloaded       llm   Gemma 4 26B A4B QAT           google/gemma-4-26b-a4b-qat
+#> 3 unloaded       llm         Qwen3 4B 2507                   qwen/qwen3-4b-2507
+#> 4 unloaded       llm            Gemma 3 1B                    google/gemma-3-1b
+#> 5 unloaded embedding Nomic Embed Text v1.5 text-embedding-nomic-embed-text-v1.5
+#>   architecture size_gb
+#> 1       gemma4    6.39
+#> 2       gemma4   14.57
+#> 3        qwen3    2.12
+#> 4  gemma3_text    0.72
+#> 5         <NA>    0.08
+```
+
+On a new install, you have no model to chat with yet. LM Studio comes
+with an embedding model, a model that turns text into numbers and does
+not chat. The next section downloads a model that you can chat with.
+This vignette uses `google/gemma-3-1b`, a small model. Keep its key in a
+variable, so that each call below can use it.
+
+``` r
+
+model <- "google/gemma-3-1b"
+```
+
+## Download the model
+
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+asks LM Studio to download a model. For a model that is already on your
+computer, it returns `"already_downloaded"`. For a new model, it returns
+a job id, a string that names the download. Pass the job id to
+[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+to see the status of the download. Call
+[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+again until the status says that the download finished.
+
+When the output below was made, the model was already on the computer.
+So the output shows the first case.
+
+``` r
+
+# Download the model, or find that it is already on disk
 job_id <- lms_download(model)
 #> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [1s]
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [1.1s]
 #> 
 #> ✔ Model "google/gemma-3-1b" is already downloaded.
+job_id
+#> [1] "already_downloaded"
 
+# The status of the download
 lms_download_status(job_id)
 #> 
 #> ── Download Job: "N/A"
 #> Status: already_downloaded
 ```
 
-### 3. Loading Models
+## Put the model in memory
 
-Before you can chat with a model, you must load it into system memory.
-We include the optional `flash_attention = TRUE` argument here, which
-speeds up processing and reduces memory usage on supported hardware.
+Loading a model means that LM Studio reads it from disk into memory. A
+chat with a model that is not loaded can make LM Studio load it, but
+then the chat waits for the load.
+[`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+loads the model before the chat.
 
 ``` r
 
-# Standard load
-lms_load(model, flash_attention = TRUE)
+# Read the model into memory
+lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.9s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [4.4s]
 #> 
 ```
 
-### 4. Chatting
+## Chat with the model
 
-Interact with the model by sending it text prompts. The
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-function takes a few key arguments to guide the AI’s response:
+sends one prompt to the model and returns the reply as text. The `input`
+argument holds your prompt.
 
-- `input`: This is your main message or question for the model.
-
-- `system_prompt`: This is an optional set of background instructions.
-  You use it to tell the AI how to behave, what role to play, or how to
-  format its answers (like asking it to act as an expert R programmer).
-
-*Note:* By default, each call to
+A system prompt is a set of instructions that the model gets with your
+prompt. Use it to set the role, the tone, or the length of the reply.
+The `system_prompt` argument of
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-starts a new conversation. The model does not remember earlier messages
-or context from your R script. To continue a conversation, pass the
-`response_id` attribute of the earlier reply as `previous_response_id`.
-This works on the default route, `api_type = "openresponses"`, and on
-`api_type = "native"`, but not on `api_type = "openai"`. See
-[`?lms_chat`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-for details.
+holds it.
 
 ``` r
 
-response <- lms_chat(
+# Send one prompt, with a system prompt
+reply <- lms_chat(
   model = model,
-  input = "Say hello!",
-  system_prompt = "Answer in rhymes."
+  input = "Say hello to a new R user.",
+  system_prompt = "Answer in one short sentence."
 )
 
-cat(response)
-#> Hello there, it’s a lovely day! 
-#> Let’s chat and have some play. 
-#> Say hello, it’s a joyful plea,
-#> Come on say hello, you see!
+# Print the text of the reply
+cat(reply)
+#> Hello there, welcome to the world of R! 😊
 ```
 
-### 5. Teardown
+## Send several prompts in one call
 
-To free up memory and system resources when you are finished, it is best
-practice to unload your models and stop the local server. Closing the LM
-Studio GUI will also perform this cleanup if you forget.
+A batch is a set of prompts that you send in one call, such as one
+prompt for each row of your data.
+[`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+sends each prompt in `inputs` as its own request, with the same system
+prompt. It returns one reply for each prompt, in the order of the
+prompts.
 
 ``` r
 
-# Unload the model
+questions <- c(
+  "Name a fruit.",
+  "Name a color.",
+  "Name a planet."
+)
+
+# One reply for each prompt, in the same order
+answers <- lms_chat_batch(
+  model = model,
+  inputs = questions,
+  system_prompt = "Answer with one word."
+)
+answers
+#> [1] "Apple \n" "Blue."    "Mars."
+
+# Remove the spaces and line breaks around each reply
+trimws(answers)
+#> [1] "Apple" "Blue." "Mars."
+```
+
+A reply can carry extra spaces or line breaks, and a model does not
+always follow its system prompt. So read the replies before you use
+them.
+
+[`vignette("text-analysis")`](https://jmgirard.github.io/rlmstudio/articles/text-analysis.md)
+shows how to get the replies of a batch as a data frame, with one row
+for each prompt.
+
+## Clean up
+
+When you are done, unload the model to free its memory, and stop the
+server.
+
+``` r
+
+# Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [560ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [421ms]
 #> 
-```
 
-``` r
-
-# Stop the server
+# Stop the local server
 lms_server_stop()
 #> ✔ LM Studio server stopped successfully.
 ```
+
+## Without the desktop app
+
+You can also run LM Studio without the desktop app, for example on a
+remote computer that you reach over a network. This is called a headless
+setup.
+[`vignette("headless-config")`](https://jmgirard.github.io/rlmstudio/articles/headless-config.md)
+shows how to install and use LM Studio that way.

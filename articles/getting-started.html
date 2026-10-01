@@ -68,156 +68,213 @@
 
     
     
+<p>A large language model is a program that writes text in reply to text
+that you give it. The text that you give it is a prompt. LM Studio is a
+desktop app that downloads such models and runs them on your own
+computer. The rlmstudio package lets you control LM Studio from R. This
+vignette takes you from installing LM Studio to your first replies from
+a model.</p>
+<div class="section level2">
+<h2 id="install-lm-studio">Install LM Studio<a class="anchor" aria-label="anchor" href="#install-lm-studio"></a>
+</h2>
+<p>LM Studio comes with a command-line tool called <code>lms</code>. A
+command-line tool is a program that you run by typing commands, and the
+messages of the package call it the CLI. The package uses
+<code>lms</code> to start and stop parts of LM Studio. If you do not
+have LM Studio yet, run
+<code>rlmstudio::install_lmstudio(method = "browser")</code>. It opens
+the LM Studio download page in your web browser. After you install LM
+Studio, restart R.</p>
+<p>Load the package and check that R can find LM Studio.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jmgirard.github.io/rlmstudio/">rlmstudio</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span>
-<span></span>
-<span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html" class="external-link">opts_chunk</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span></span>
-<span>  collapse <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  comment <span class="op">=</span> <span class="st">"#&gt;"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The <code>rlmstudio</code> package bridges the gap between R and
-local Large Language Models by wrapping the LM Studio CLI and its REST
-API. This vignette covers the <strong>GUI Workflow</strong>, which is
-best for visual users on desktop environments like macOS, Windows, and
-Linux desktops.</p>
-<p>While the R package provides functions to manage the entire lifecycle
-of a local LLM, the LM Studio desktop application provides an excellent
-visual search function for finding new models and exploring advanced
-configurations beyond what the API can currently do. You can seamlessly
-mix and match: use the GUI to discover and tweak models, and use R to
-automate your chatting and data processing.</p>
-<div class="section level2">
-<h2 id="setup-and-installation">Setup and Installation<a class="anchor" aria-label="anchor" href="#setup-and-installation"></a>
-</h2>
-<p>This package relies on the LM Studio CLI. If you do not have LM
-Studio installed or need to update your version, the package provides a
-convenient setup function.</p>
-<p>For desktop users, you can run
-<code>install_lmstudio(method = "browser")</code> in your console to
-open the official download page.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Check if LM Studio is available on this system</span></span>
+<span><span class="co"># TRUE if R finds the lms tool</span></span>
 <span><span class="fu"><a href="../reference/has_lms.html">has_lms</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span></span>
+<span><span class="co"># TRUE if the lms tool is version 0.4.0 or later</span></span>
+<span><span class="fu"><a href="../reference/check_lms_version.html">check_lms_version</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ LM Studio CLI is using the modern architecture (0.4.0+).</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>If either call returns <code>FALSE</code>, install or update LM
+Studio before you go on.</p>
+</div>
+<div class="section level2">
+<h2 id="start-the-server">Start the server<a class="anchor" aria-label="anchor" href="#start-the-server"></a>
+</h2>
+<p>R talks to LM Studio through a local server. A local server is a
+program on your own computer that answers requests from other programs,
+such as R. By default, the package sends its requests to
+<code>http://localhost:1234</code>. That is an address on your own
+computer.</p>
+<p><code><a href="../reference/lms_server_start.html">lms_server_start()</a></code> starts the server. Then it waits
+until LM Studio answers. The <code>wait</code> argument sets about how
+many seconds it waits. If the wait runs out, the function gives a
+warning, and your script goes on. So call
+<code><a href="../reference/lms_server_ready.html">lms_server_ready()</a></code> next. It returns <code>TRUE</code> only
+when LM Studio answers.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Start the server, and wait about 30 seconds for it to answer</span></span>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ LM Studio server started successfully on the default port.</span></span>
+<span></span>
+<span><span class="co"># TRUE if LM Studio answers</span></span>
+<span><span class="fu"><a href="../reference/lms_server_ready.html">lms_server_ready</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="step-by-step-guide">Step-by-Step Guide<a class="anchor" aria-label="anchor" href="#step-by-step-guide"></a>
+<h2 id="find-a-model">Find a model<a class="anchor" aria-label="anchor" href="#find-a-model"></a>
 </h2>
-<div class="section level3">
-<h3 id="start-the-server">1. Start the Server<a class="anchor" aria-label="anchor" href="#start-the-server"></a>
-</h3>
-<p>You have two options for starting the local server. You can open the
-LM Studio desktop application, navigate to the Developer or Local Server
-tab, and click “Start”. Alternatively, you can start it directly from R.
-The CLI returns before the REST API answers, so
-<code><a href="../reference/lms_server_start.html">lms_server_start()</a></code> keeps asking the REST API whether it is
-ready and returns once it answers. The <code>wait</code> argument sets
-how many seconds it keeps asking, and defaults to 10.</p>
+<p>A model key is the name that you give R to choose a model, such as
+<code>"google/gemma-3-1b"</code>. <code><a href="../reference/list_models.html">list_models()</a></code> shows the
+models that LM Studio has on your computer, one row for each model. The
+<code>key</code> column holds the model key. In the <code>type</code>
+column, <code>llm</code> marks a large language model, the kind that you
+chat with. The <code>state</code> column says whether the model is in
+memory, which a later section explains.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Start the local server on the default port, and allow 30 seconds for it</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ✔ LM Studio server started successfully on the default port.</span></span></code></pre></div>
-<p>A wait that runs out raises a warning and returns rather than
-aborting, so the start call alone does not prove that the server is
-usable. Check that it answers before you call it.
-<code><a href="../reference/lms_server_ready.html">lms_server_ready()</a></code> asks the host for a model list and
-reports <code>TRUE</code> only for an answer LM Studio would give. It
-reports <code>FALSE</code> for a port held by another process and for a
-server that turns your token away.</p>
+<code class="sourceCode R"><span><span class="co"># The models on this computer, one row each</span></span>
+<span><span class="fu"><a href="../reference/list_models.html">list_models</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      state      type          display_name                                  key</span></span>
+<span><span class="co">#&gt; 1 unloaded       llm           Gemma 4 E4B                   google/gemma-4-e4b</span></span>
+<span><span class="co">#&gt; 2 unloaded       llm   Gemma 4 26B A4B QAT           google/gemma-4-26b-a4b-qat</span></span>
+<span><span class="co">#&gt; 3 unloaded       llm         Qwen3 4B 2507                   qwen/qwen3-4b-2507</span></span>
+<span><span class="co">#&gt; 4 unloaded       llm            Gemma 3 1B                    google/gemma-3-1b</span></span>
+<span><span class="co">#&gt; 5 unloaded embedding Nomic Embed Text v1.5 text-embedding-nomic-embed-text-v1.5</span></span>
+<span><span class="co">#&gt;   architecture size_gb</span></span>
+<span><span class="co">#&gt; 1       gemma4    6.39</span></span>
+<span><span class="co">#&gt; 2       gemma4   14.57</span></span>
+<span><span class="co">#&gt; 3        qwen3    2.12</span></span>
+<span><span class="co">#&gt; 4  gemma3_text    0.72</span></span>
+<span><span class="co">#&gt; 5         &lt;NA&gt;    0.08</span></span></code></pre></div>
+<p>On a new install, you have no model to chat with yet. LM Studio comes
+with an embedding model, a model that turns text into numbers and does
+not chat. The next section downloads a model that you can chat with.
+This vignette uses <code>google/gemma-3-1b</code>, a small model. Keep
+its key in a variable, so that each call below can use it.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/lms_server_ready.html">lms_server_ready</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="finding-and-managing-models">2. Finding and Managing Models<a class="anchor" aria-label="anchor" href="#finding-and-managing-models"></a>
-</h3>
-<p>The LM Studio GUI shines when it comes to discovering models. You can
-use its built-in search bar to browse Hugging Face, filter by
-compatibility, and select specific quantizations.</p>
-<p>However, if you already know the exact identifier of the model you
-want, you can download it and manage your inventory directly from R.</p>
+<div class="section level2">
+<h2 id="download-the-model">Download the model<a class="anchor" aria-label="anchor" href="#download-the-model"></a>
+</h2>
+<p><code><a href="../reference/lms_download.html">lms_download()</a></code> asks LM Studio to download a model. For a
+model that is already on your computer, it returns
+<code>"already_downloaded"</code>. For a new model, it returns a job id,
+a string that names the download. Pass the job id to
+<code><a href="../reference/lms_download_status.html">lms_download_status()</a></code> to see the status of the download.
+Call <code><a href="../reference/lms_download_status.html">lms_download_status()</a></code> again until the status says that
+the download finished.</p>
+<p>When the output below was made, the model was already on the
+computer. So the output shows the first case.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Download a model using its identifier</span></span>
+<code class="sourceCode R"><span><span class="co"># Download the model, or find that it is already on disk</span></span>
 <span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ℹ Initiating download for model: "google/gemma-3-1b"...</span></span>
-<span><span class="co">#&gt; ✔ Initiating download for model: "google/gemma-3-1b"... [1s]</span></span>
+<span><span class="co">#&gt; ✔ Initiating download for model: "google/gemma-3-1b"... [1.1s]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" is already downloaded.</span></span>
+<span><span class="va">job_id</span></span>
+<span><span class="co">#&gt; [1] "already_downloaded"</span></span>
 <span></span>
+<span><span class="co"># The status of the download</span></span>
 <span><span class="fu"><a href="../reference/lms_download_status.html">lms_download_status</a></span><span class="op">(</span><span class="va">job_id</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Download Job: "N/A"</span></span>
 <span><span class="co">#&gt; Status: already_downloaded</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="loading-models">3. Loading Models<a class="anchor" aria-label="anchor" href="#loading-models"></a>
-</h3>
-<p>Before you can chat with a model, you must load it into system
-memory. We include the optional <code>flash_attention = TRUE</code>
-argument here, which speeds up processing and reduces memory usage on
-supported hardware.</p>
+<div class="section level2">
+<h2 id="put-the-model-in-memory">Put the model in memory<a class="anchor" aria-label="anchor" href="#put-the-model-in-memory"></a>
+</h2>
+<p>Loading a model means that LM Studio reads it from disk into memory.
+A chat with a model that is not loaded can make LM Studio load it, but
+then the chat waits for the load. <code><a href="../reference/lms_load.html">lms_load()</a></code> loads the
+model before the chat.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Standard load</span></span>
-<span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span>, flash_attention <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Read the model into memory</span></span>
+<span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ℹ Loading model: "google/gemma-3-1b"...</span></span>
-<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" loaded and verified. [5.9s]</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" loaded and verified. [4.4s]</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="chatting">4. Chatting<a class="anchor" aria-label="anchor" href="#chatting"></a>
-</h3>
-<p>Interact with the model by sending it text prompts. The
-<code><a href="../reference/lms_chat.html">lms_chat()</a></code> function takes a few key arguments to guide the
-AI’s response:</p>
-<ul>
-<li><p><code>input</code>: This is your main message or question for the
-model.</p></li>
-<li><p><code>system_prompt</code>: This is an optional set of background
-instructions. You use it to tell the AI how to behave, what role to
-play, or how to format its answers (like asking it to act as an expert R
-programmer).</p></li>
-</ul>
-<p><em>Note:</em> By default, each call to <code><a href="../reference/lms_chat.html">lms_chat()</a></code>
-starts a new conversation. The model does not remember earlier messages
-or context from your R script. To continue a conversation, pass the
-<code>response_id</code> attribute of the earlier reply as
-<code>previous_response_id</code>. This works on the default route,
-<code>api_type = "openresponses"</code>, and on
-<code>api_type = "native"</code>, but not on
-<code>api_type = "openai"</code>. See <code><a href="../reference/lms_chat.html">?lms_chat</a></code> for
-details.</p>
+<div class="section level2">
+<h2 id="chat-with-the-model">Chat with the model<a class="anchor" aria-label="anchor" href="#chat-with-the-model"></a>
+</h2>
+<p><code><a href="../reference/lms_chat.html">lms_chat()</a></code> sends one prompt to the model and returns the
+reply as text. The <code>input</code> argument holds your prompt.</p>
+<p>A system prompt is a set of instructions that the model gets with
+your prompt. Use it to set the role, the tone, or the length of the
+reply. The <code>system_prompt</code> argument of
+<code><a href="../reference/lms_chat.html">lms_chat()</a></code> holds it.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># Send one prompt, with a system prompt</span></span>
+<span><span class="va">reply</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model</span>,</span>
-<span>  input <span class="op">=</span> <span class="st">"Say hello!"</span>,</span>
-<span>  system_prompt <span class="op">=</span> <span class="st">"Answer in rhymes."</span></span>
+<span>  input <span class="op">=</span> <span class="st">"Say hello to a new R user."</span>,</span>
+<span>  system_prompt <span class="op">=</span> <span class="st">"Answer in one short sentence."</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">response</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Hello there, it’s a lovely day! </span></span>
-<span><span class="co">#&gt; Let’s chat and have some play. </span></span>
-<span><span class="co">#&gt; Say hello, it’s a joyful plea,</span></span>
-<span><span class="co">#&gt; Come on say hello, you see!</span></span></code></pre></div>
+<span><span class="co"># Print the text of the reply</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">reply</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Hello there, welcome to the world of R! 😊</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="teardown">5. Teardown<a class="anchor" aria-label="anchor" href="#teardown"></a>
-</h3>
-<p>To free up memory and system resources when you are finished, it is
-best practice to unload your models and stop the local server. Closing
-the LM Studio GUI will also perform this cleanup if you forget.</p>
+<div class="section level2">
+<h2 id="send-several-prompts-in-one-call">Send several prompts in one call<a class="anchor" aria-label="anchor" href="#send-several-prompts-in-one-call"></a>
+</h2>
+<p>A batch is a set of prompts that you send in one call, such as one
+prompt for each row of your data. <code><a href="../reference/lms_chat_batch.html">lms_chat_batch()</a></code> sends
+each prompt in <code>inputs</code> as its own request, with the same
+system prompt. It returns one reply for each prompt, in the order of the
+prompts.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Unload the model</span></span>
+<code class="sourceCode R"><span><span class="va">questions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Name a fruit."</span>,</span>
+<span>  <span class="st">"Name a color."</span>,</span>
+<span>  <span class="st">"Name a planet."</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># One reply for each prompt, in the same order</span></span>
+<span><span class="va">answers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat_batch.html">lms_chat_batch</a></span><span class="op">(</span></span>
+<span>  model <span class="op">=</span> <span class="va">model</span>,</span>
+<span>  inputs <span class="op">=</span> <span class="va">questions</span>,</span>
+<span>  system_prompt <span class="op">=</span> <span class="st">"Answer with one word."</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">answers</span></span>
+<span><span class="co">#&gt; [1] "Apple \n" "Blue."    "Mars."</span></span>
+<span></span>
+<span><span class="co"># Remove the spaces and line breaks around each reply</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/trimws.html" class="external-link">trimws</a></span><span class="op">(</span><span class="va">answers</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Apple" "Blue." "Mars."</span></span></code></pre></div>
+<p>A reply can carry extra spaces or line breaks, and a model does not
+always follow its system prompt. So read the replies before you use
+them.</p>
+<p><code><a href="../articles/text-analysis.html">vignette("text-analysis")</a></code> shows how to get the replies
+of a batch as a data frame, with one row for each prompt.</p>
+</div>
+<div class="section level2">
+<h2 id="clean-up">Clean up<a class="anchor" aria-label="anchor" href="#clean-up"></a>
+</h2>
+<p>When you are done, unload the model to free its memory, and stop the
+server.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Remove the model from memory</span></span>
 <span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ℹ Unloading model: "google/gemma-3-1b"...</span></span>
-<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [560ms]</span></span>
-<span><span class="co">#&gt; </span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Stop the server</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [421ms]</span></span>
+<span><span class="co">#&gt; </span></span>
+<span></span>
+<span><span class="co"># Stop the local server</span></span>
 <span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ LM Studio server stopped successfully.</span></span></code></pre></div>
 </div>
+<div class="section level2">
+<h2 id="without-the-desktop-app">Without the desktop app<a class="anchor" aria-label="anchor" href="#without-the-desktop-app"></a>
+</h2>
+<p>You can also run LM Studio without the desktop app, for example on a
+remote computer that you reach over a network. This is called a headless
+setup. <code><a href="../articles/headless-config.html">vignette("headless-config")</a></code> shows how to install and
+use LM Studio that way.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
