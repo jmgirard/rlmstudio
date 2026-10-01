@@ -336,6 +336,36 @@ test_that("lms_chat_openresponses takes logprobs from every output_text part in 
   expect_identical(res$logprobs$step_token, "b")
 })
 
+test_that("lms_chat_openresponses numbers the logprobs steps across output_text parts", {
+  # Part 1 holds step 1 with two candidates and step 2 with none. Part 2
+  # holds no logprobs. Part 3 holds step 3 with three candidates.
+  body <- output_body(responses_message(
+    output_text(quoted("ab"), json_array(
+      step_json(quoted("a"), "-0.1", json_array(
+        candidate_json(quoted("a"), "-0.1"),
+        candidate_json(quoted("x"), "-3")
+      )),
+      step_json(quoted("b"), "-0.2")
+    )),
+    output_text(quoted("-")),
+    output_text(quoted("c"), json_array(
+      step_json(quoted("c"), "-0.3", json_array(
+        candidate_json(quoted("c"), "-0.3"),
+        candidate_json(quoted("y"), "-2"),
+        candidate_json(quoted("z"), "-4")
+      ))
+    ))
+  ))
+  res <- call_with_body(lms_chat_openresponses, body, logprobs = TRUE)
+  expect_identical(
+    names(res$logprobs),
+    c("step_token", "step_logprob", "candidate_token", "candidate_logprob", "step")
+  )
+  expect_identical(res$logprobs$step_token, c("a", "a", "b", "c", "c", "c"))
+  expect_identical(res$logprobs$candidate_token, c("a", "x", NA, "c", "y", "z"))
+  expect_identical(res$logprobs$step, c(1L, 1L, 2L, 3L, 3L, 3L))
+})
+
 # The message for each rule a `logprobs` value can break. They are written out
 # here, apart from the code, so a test fails if the code names the wrong rule.
 logprobs_rule_messages <- c(
@@ -516,6 +546,7 @@ test_that("a null logprobs value and an empty object step are readable", {
       step_logprob = NA_real_,
       candidate_token = NA_character_,
       candidate_logprob = NA_real_,
+      step = 1L,
       stringsAsFactors = FALSE
     )
   )
@@ -571,12 +602,14 @@ test_that("lms_chat_openresponses reads logprobs fields by their exact names", {
     body <- output_body(responses_message(output_text(quoted("a"), logprobs)))
     call_with_body(lms_chat_openresponses, body, logprobs = TRUE)$logprobs
   }
-  frame <- function(step_token, step_logprob, candidate_token, candidate_logprob) {
+  frame <- function(step_token, step_logprob, candidate_token, candidate_logprob,
+                    step = 1L) {
     data.frame(
       step_token = step_token,
       step_logprob = step_logprob,
       candidate_token = candidate_token,
       candidate_logprob = candidate_logprob,
+      step = step,
       stringsAsFactors = FALSE
     )
   }
@@ -591,7 +624,10 @@ test_that("lms_chat_openresponses reads logprobs fields by their exact names", {
       )),
       step_json(quoted("z"), "-1")
     )),
-    frame(c("x", "x", "z"), c(-0.25, -0.25, -1), c("x", "y", NA), c(-0.25, -2, NA))
+    frame(
+      c("x", "x", "z"), c(-0.25, -0.25, -1), c("x", "y", NA), c(-0.25, -2, NA),
+      step = c(1L, 1L, 2L)
+    )
   )
 
   # A field whose name only starts with the one asked for is not read.
@@ -630,7 +666,8 @@ test_that("lms_chat_openresponses reads logprobs fields by their exact names", {
       rep(NA_character_, 3),
       rep(NA_real_, 3),
       rep(NA_character_, 3),
-      rep(NA_real_, 3)
+      rep(NA_real_, 3),
+      step = c(1L, 2L, 2L)
     )
   )
 })

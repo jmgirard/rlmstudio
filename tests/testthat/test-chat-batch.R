@@ -686,6 +686,7 @@ test_that("a reply that breaks a logprobs rule fails only its own input", {
     expect_s3_class(out[[i]], "lms_chat_result")
     expect_identical(out[[i]]$text, sprintf("reply %d", i), info = i)
     expect_identical(out[[i]]$logprobs$step_token, "r", info = i)
+    expect_identical(out[[i]]$logprobs$step, 1L, info = i)
   }
   expect_failed_slot(out[[2]], "rlmstudio_bad_response")
   expect_match(

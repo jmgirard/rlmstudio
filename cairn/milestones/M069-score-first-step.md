@@ -1,13 +1,13 @@
 # M069: lms_score_expected() reads the first step of a reply alone
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes an exported scoring result and the shape of an exported return value
-- **Branch/PR:** —
+- **Branch/PR:** m069-score-first-step
 
 ## Goal
 
@@ -99,7 +99,7 @@ in the DESIGN known issue.
 
 ## Tasks
 
-- [ ] T1: In `logprobs_frame()` (`R/chat.R:1269`), number the steps from 1
+- [x] T1: In `logprobs_frame()` (`R/chat.R:1269`), number the steps from 1
       and add `step` as the last column. Add the `test-chat.R` test of AC1.
       Add `step` checks at `test-chat-batch.R:688` and
       `test-chat-batch-usage.R:373`. Update every `names()` check of the
@@ -132,6 +132,8 @@ in the DESIGN known issue.
 - 2026-09-30: plan gate chose `step` as the last column over the first, because code that reads the four current columns by position keeps working; falsified by a user who finds the printed order hard to read.
 - 2026-09-30: plan gate chose a run fallback for a frame with no `step` over an abort, because frames saved before this change keep scoring; falsified by a saved frame whose adjacent same-token steps the fallback merges into a wrong score.
 - 2026-09-30: plan gate put the sum of duplicate labels in this milestone over a separate candidate row, because it fixes the entropy of the same function; falsified by a user who needs each token spelling as its own row.
+- 2026-09-30: implement started on branch m069-score-first-step. Question gate skipped: the criteria fix the column, the step rule, the fallback, and the label sum.
+- 2026-09-30: T1 done. `logprobs_frame()` adds an integer `step` column last. The new `test-chat.R` test failed on the old code (no `step` column) and passes now. The batch checks, the four-column frame tests, and the vignette-claims names check carry `step`. `devtools::test()` clean.
 
 ## Decisions
 

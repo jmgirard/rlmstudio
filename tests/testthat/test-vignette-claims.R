@@ -108,9 +108,10 @@ test_that("lms_chat() on the default route sends the dots and lists the candidat
   expect_s3_class(res$logprobs, "data.frame")
   expect_identical(
     names(res$logprobs),
-    c("step_token", "step_logprob", "candidate_token", "candidate_logprob")
+    c("step_token", "step_logprob", "candidate_token", "candidate_logprob", "step")
   )
   expect_identical(res$logprobs$step_token, c("3", "3", "\n", "\n", "\n"))
+  expect_identical(res$logprobs$step, c(1L, 1L, 2L, 2L, 2L))
   expect_identical(res$logprobs$candidate_token, c("3", "4", "\n", "/", "."))
   expect_identical(res$logprobs$candidate_logprob, c(-0.3, -1.5, -0.1, -4, -5))
 
