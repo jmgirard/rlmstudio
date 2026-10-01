@@ -39,7 +39,7 @@ scoring are M073.
 
 ## Acceptance criteria
 
-- [ ] AC1: The R code that `knitr::purl()` extracts from
+- [x] AC1: The R code that `knitr::purl()` extracts from
       `vignettes/chat-options.Rmd.orig` holds each of these strings:
       `api_type = "native"`, `api_type = "openai"`, `temperature =`,
       `previous_response_id =`, `lms_chat_openai(`, `messages =`,
@@ -48,22 +48,22 @@ scoring are M073.
       no line starts with ```` ```{r ```` or with `#> Error`. The block of
       each chunk that calls `lms_chat(` or `lms_chat_openai(` holds a line
       that starts with `#>` after its last code line.
-- [ ] AC2: A search of that purled code for each regular expression in the
+- [x] AC2: A search of that purled code for each regular expression in the
       DESIGN.md code list finds no match. A search of the source for
       `` `r `` finds no inline R expression.
-- [ ] AC3: A case-blind search for each entry of the DESIGN.md prose list
+- [x] AC3: A case-blind search for each entry of the DESIGN.md prose list
       finds no match. It runs over every line of the source outside its
       ```` ```{r} ```` chunks, with the YAML header and inline code.
-- [ ] AC4: Each of these terms is explained in plain words at or before
+- [x] AC4: Each of these terms is explained in plain words at or before
       its first use in prose or in a code comment of the knitted vignette:
       route, request option, response id, conversation history, raw reply,
       and condition class.
-- [ ] AC5: Take each prose sentence and each `#` comment line that states
+- [x] AC5: Take each prose sentence and each `#` comment line that states
       what a package function does with an argument, returns, or raises,
       beyond what its name says. A named test under `tests/testthat/`
       exercises that behavior. A sentence about what LM Studio itself does
       matches what a live call on this machine returned.
-- [ ] AC6: `NEWS.md` has an entry under the development-version heading
+- [x] AC6: `NEWS.md` has an entry under the development-version heading
       that names the new vignette. `devtools::document()` gives no diff,
       `devtools::test()` passes, and `pkgdown::check_pkgdown()` passes.
       With the server stopped and `RLMSTUDIO_API_TOKEN` unset,
@@ -136,3 +136,14 @@ scoring are M073.
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-10-01 on `m074-chat-options-vignette`, level with `origin/main` (no merge needed).
+
+- AC1: `knitr::purl()` of the source gives 136 lines, and each of the 10 strings is present. The knitted file has 0 lines that start with ```` ```{r ```` and 0 that start with `#> Error`. Of the 9 chunks that call `lms_chat(` or `lms_chat_openai(`, all 9 have a `#>` line after their last code line.
+- AC2: The 16 regular expressions of the DESIGN.md code list find 0 matches in the purled code. The source holds 0 inline `` `r `` expressions. A planted `lapply(` line matches the first expression, so the search can fail.
+- AC3: A case-blind search for the 14 entries of the DESIGN.md prose list finds 0 matches. It ran over the 194 of 344 source lines outside the chunks, with the YAML header and inline code. A planted list word in capitals matches, so the search can fail.
+- AC4: Read in the knitted file this session. Route is explained at its first use on line 13 and request option on line 14. Response id is explained on line 51, before the table. Conversation history is explained on line 192, condition class on line 305, and raw reply on line 257. The only earlier use of raw reply is the heading on line 255, directly above that sentence.
+- AC5, package claims: each of the 19 tests named in the T5 ledger exists under `tests/testthat/`, found by name. All pass in the AC6 test run.
+- AC5, LM Studio claims: a live probe on this machine, with `google/gemma-3-1b`, gave the results that the vignette states. The default and native routes return a `response_id` attribute, and the openai route returns none. A follow-up by response id answered "Green.", and the same question with no id answered "Blue.". The raw `temperature` was 0 with `temperature = 0` and 0.8 with the misspelled name. Port 1 raised `rlmstudio_no_server`. The misspelled model on the native route raised `rlmstudio_api_error` with status 404 and code `model_not_found`. The misspelled option on the native route gave status 400 and code `unrecognized_keys`. The misspelled model on the default route raised `rlmstudio_model_mismatch` with `model` "google/gemma-3-1bb" and `reply_model` "google/gemma-3-1b". `previous_response_id` on the openai route raised an error. The probe stopped the server and unloaded the model at its end.
+- AC6: `NEWS.md` has the entry under "rlmstudio (development version)", and it names `vignette("chat-options")`. `devtools::document()` left `git status` clean. `devtools::test()` ran 1972 tests in 49 files: 0 failed, 0 errors, 3 live skips. `pkgdown::check_pkgdown()` found no problems. With the server stopped and `RLMSTUDIO_API_TOKEN` unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- Consistency gate: `cairn_validate.py` passed, exit 0. No DESIGN.md principle changed, so `cairn_impact.py` was skipped. README is not touched. The branch adds no new top-level file.
