@@ -116,7 +116,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
       exercises it. Where none does, add a test, and log a change to package
       code that makes the test fail.
 - [x] T6: Add the NEWS entry.
-- [ ] T7: Run `devtools::document()`, `devtools::test()`,
+- [x] T7: Run `devtools::document()`, `devtools::test()`,
       `pkgdown::check_pkgdown()`, and `devtools::check()` with the token
       set.
 
@@ -140,6 +140,7 @@ headless-host run of the teardown stays in the `lms daemon up` candidate row.
 - 2026-09-30: amendment at the mini gate, chosen by the user. AC1's first sentence now reads the `inst/doc/text-analysis.R` that `devtools::build()` writes. Before, it read a bare `knitr::purl()`, which drops the gated chunks. The chunk headers keep the pattern of the other two vignettes.
 - re-audit: AC1 (full) — nothing. The reader found both halves reachable, and the string check passes in a build without LM Studio as commented code, with the marker render covering live output.
 - 2026-09-30: T4 closed under the amended AC1. Its task text now names the build-tangle check, a minor edit.
+- 2026-09-30: T7 checks. `devtools::document()` gave no diff. `pkgdown::check_pkgdown()` found no problems. `devtools::test()` gave 0 failed, 0 errors, and 3 live tests skipped with the server stopped. `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes. It started from state (a), and `lms server status --json` and `lms ps --json` read the same before and after.
 
 ## Decisions
 
