@@ -102,7 +102,7 @@ scoring are M073.
 - [x] T7: Fix the review findings F1, F2, F4, F6, F7, and F9 in the source. Name the dots that the package checks, and say that a `NULL` option is dropped. Limit the mismatch text to one loaded model and to the default and openai routes. Back or drop the temperature-0 sentence, and explain "system prompt" before its first use. Point to `?lms_chat` for `ttl`.
 - [x] T8: Fix F3. Add an `rlmstudio_bad_response` handler to `chat_or_na()`, and say which errors still stop a loop. Narrow the intro and the NEWS entry to match.
 - [x] T9: Fix F5 and F8. Give the openai part of the log-probability test a mock reply that carries log probabilities, or back the "No" cell with a live call. Rewrap the test header and the two long source lines.
-- [ ] T10: Re-knit from a clean start, and re-run the checks of AC1 to AC6.
+- [x] T10: Re-knit from a clean start, and re-run the checks of AC1 to AC6.
 
 ## Work log
 
@@ -145,6 +145,9 @@ scoring are M073.
 - 2026-10-01: T9: new test "lms_chat() on the native route returns a reply from another model with no error". The option test now also sends `temperature = NULL` and finds no field.
 - 2026-10-01: T9 plants in a scratch copy: `c()` in place of `modifyList()` turned the option test red on two routes. Openai logprobs read from the reply turned the log-probability test red. A native model check turned the native test red.
 - 2026-10-01: T9: `devtools::test()` ran 1973 tests: 0 failed, 0 errors, 3 live skips.
+- 2026-10-01: T10: re-knit from a clean start. The output shows "Green." with the id, "Blue." without it, "GREEN!", and raw temperatures 0 and 0.8. All four error calls return `NA` with their message.
+- 2026-10-01: T10 AC1 to AC3: purl gives 166 lines with all 10 strings. The knit has no `{r` fence and no `#> Error` line. All 9 chat blocks have a `#>` line after the last code line. The 16 code patterns and 14 prose words find 0 hits, and a plant of each matches.
+- 2026-10-01: T10 AC6: `document()` gives no diff, and `check_pkgdown()` finds no problems. With the server stopped and the token unset, `devtools::check()` gives 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 
