@@ -4,15 +4,6 @@
 
 library(rlmstudio)
 
-# Gates for the chunks below. The first says the CLI is on this machine.
-# The second says the REST API answered. The last two say that the chat
-# model and the embedding model are on disk. The last three stay FALSE
-# until the server has been started and asked.
-lms_installed <- has_lms()
-lms_ready <- FALSE
-chat_ready <- FALSE
-embed_ready <- FALSE
-
 model <- "google/gemma-3-1b"
 embed_model <- "text-embedding-nomic-embed-text-v1.5"
 
@@ -37,8 +28,7 @@ server, and downloading `google/gemma-3-1b`.
 
 lms_server_start(wait = 30)
 #> ✔ LM Studio server started successfully on the default port.
-lms_ready <- lms_server_ready()
-lms_ready
+lms_server_ready()
 #> [1] TRUE
 ```
 
@@ -88,8 +78,8 @@ summaries <- lms_chat_batch(
   temperature = 0
 )
 names(summaries)
-#> [1] "input"                   "output"
-#> [3] "response_id"             "input_tokens"
+#> [1] "input"                   "output"                 
+#> [3] "response_id"             "input_tokens"           
 #> [5] "total_output_tokens"     "reasoning_output_tokens"
 summaries[, c("input", "output")]
 #>                                              input
@@ -175,9 +165,9 @@ rating$text
 #> [1] "3\n"
 head(rating$logprobs, 3)
 #>   step_token step_logprob candidate_token candidate_logprob step
-#> 1          3     -0.34375               3          -0.34375    1
-#> 2          3     -0.34375               4          -1.53125    1
-#> 3          3     -0.34375               5          -2.71875    1
+#> 1          3     -0.34375               3         -0.343750    1
+#> 2          3     -0.34375               4         -1.546875    1
+#> 3          3     -0.34375               5         -2.750000    1
 ```
 
 [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md)
@@ -196,14 +186,14 @@ each label.
 
 score <- lms_score_expected(rating$logprobs, scale = 1:5)
 score$expected_value
-#> [1] 3.348005
+#> [1] 3.342552
 score$probabilities
 #>   label         prob
-#> 1     3 7.136382e-01
-#> 2     4 2.176473e-01
-#> 3     5 6.637869e-02
-#> 4     2 2.271354e-03
-#> 5     1 6.443335e-05
+#> 1     3 0.7176032364
+#> 2     4 0.2154635645
+#> 3     5 0.0646938939
+#> 4     2 0.0021793830
+#> 5     1 0.0000599222
 ```
 
 ## Embeddings
@@ -256,36 +246,19 @@ options(old_options)
 ```
 
 [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-unloads every loaded model instance. The two cases below hold on a host
-where the LM Studio desktop app runs the daemon. When this vignette is
-built with the server stopped and no model loaded, it calls
-[`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-and then stops the server. When it is built with the server running and
-`google/gemma-3-1b` loaded, it unloads only the instances that it
-loaded, and it leaves the server running.
+unloads every loaded model instance.
 
 ``` r
 
-# The build found no model loaded, so it unloads every instance
 lms_unload_all()
 #> ℹ Found 2 loaded model instances. Unloading now...
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [564ms]
-#>
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [557ms]
+#> 
 #> ℹ Unloading model: "text-embedding-nomic-embed-text-v1.5"...
-#> ✔ Model "text-embedding-nomic-embed-text-v1.5" unloaded successfully. [21ms]
-#>
+#> ✔ Model "text-embedding-nomic-embed-text-v1.5" unloaded successfully. [9ms]
+#> 
 #> ✔ All models unloaded successfully.
-```
-
-``` r
-
-# The build found a model loaded, so it unloads only what it loaded
-for (id in setdiff(ids_after, ids_before)) {
-  lms_unload(id)
-}
-#> ℹ Unloading model: "text-embedding-nomic-embed-text-v1.5"...
-#> ✔ Model "text-embedding-nomic-embed-text-v1.5" unloaded successfully. [27ms]
 ```
 
 ``` r

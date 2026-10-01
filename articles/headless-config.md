@@ -4,12 +4,6 @@
 
 library(rlmstudio)
 
-# Two gates for the chunks below. The first says the CLI is on this machine.
-# The second says the REST API answered. It stays FALSE until the server has
-# been started and asked.
-lms_installed <- has_lms()
-lms_ready <- FALSE
-
 model <- "google/gemma-3-1b"
 
 knitr::opts_chunk$set(
@@ -39,7 +33,7 @@ the automated installation script.
 
 # Verify the CLI is available before proceeding
 has_lms()
-#> [1] FALSE
+#> [1] TRUE
 ```
 
 ## Step-by-Step Guide
@@ -55,6 +49,7 @@ models or start the API server.
 
 # Start the headless engine in the background
 lms_daemon_start()
+#> ✔ LM Studio daemon started in the background.
 ```
 
 ### 2. Start the Local Server
@@ -70,6 +65,7 @@ default 10 seconds.
 
 # Start the local server on the default port, and allow 30 seconds for it
 lms_server_start(wait = 30)
+#> ✔ LM Studio server started successfully on the default port.
 ```
 
 A wait that runs out raises a warning and returns, so on a headless box
@@ -81,8 +77,8 @@ that turned your token away.
 
 ``` r
 
-lms_ready <- lms_server_ready()
-lms_ready
+lms_server_ready()
+#> [1] TRUE
 ```
 
 ### 3. Finding and Managing Models
@@ -95,7 +91,14 @@ the model you want to use.
 
 # Download a model using its identifier
 job_id <- lms_download("qwen/qwen3-4b-2507")
+#> ℹ Initiating download for model: "qwen/qwen3-4b-2507"...
+#> ✔ Initiating download for model: "qwen/qwen3-4b-2507"... [1.3s]
+#> 
+#> ✔ Model "qwen/qwen3-4b-2507" is already downloaded.
 lms_download_status(job_id)
+#> 
+#> ── Download Job: "N/A"
+#> Status: already_downloaded
 ```
 
 ``` r
@@ -107,6 +110,16 @@ models <- list_models()
 unloaded_llms <- models |>
   subset(type == "llm" & state == "unloaded")
 unloaded_llms
+#>      state type        display_name                        key architecture
+#> 1 unloaded  llm         Gemma 4 E4B         google/gemma-4-e4b       gemma4
+#> 2 unloaded  llm Gemma 4 26B A4B QAT google/gemma-4-26b-a4b-qat       gemma4
+#> 3 unloaded  llm       Qwen3 4B 2507         qwen/qwen3-4b-2507        qwen3
+#> 4 unloaded  llm          Gemma 3 1B          google/gemma-3-1b  gemma3_text
+#>   size_gb
+#> 1    6.39
+#> 2   14.57
+#> 3    2.12
+#> 4    0.72
 ```
 
 ### 4. Loading Models
@@ -118,6 +131,9 @@ inference.
 
 # Load the model
 lms_load(model, flash_attention = TRUE)
+#> ℹ Loading model: "google/gemma-3-1b"...
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.4s]
+#> 
 ```
 
 ### 5. Chatting
@@ -135,38 +151,63 @@ response <- lms_chat(
 cat(response)
 ```
 
+    #> ```r
+    #> str_extract(text, ".*[^,]*")
+    #> ```
+    #> 
+    #> **Explanation:**
+    #> 
+    #> *   `str_extract()`:  This function from the `string` package in tidyverse is specifically designed for this task.
+    #> *   `".*[^,]*"`: This is the pattern to match. Let's break it down:
+    #>     *   `.*`: Matches any character (`.`) zero or more times (`*`). This effectively captures everything after the first comma.
+    #>     *   `[^,]*`: Matches any character that is *not* a comma (`[^,]`).  This is the key to capturing everything after the third comma. The `^` inside the character class means "not".
+    #> 
+    #> **Example:**
+    #> 
+    #> Let's say your `text` is:
+    #> 
+    #> ```
+    #> "Data.  Some values here!  Another one.  More details."
+    #> ```
+    #> 
+    #> Then `str_extract("Data.  Some values here!  Another one.  More details.", ".*[^,]*")` would return:
+    #> 
+    #> ```
+    #> "Some values here!  Another one.  More details."
+    #> ```
+    #> 
+    #> **Important Considerations:**
+    #> 
+    #> *   This pattern works well when the third comma is the last element in a series.
+    #> *  If there's no final comma, it will capture everything after the *first* comma.
+    #> *   The `[^,]` character class is crucial for handling cases where there might be more than one comma in the input.
+    #> 
+    #> Would you like to see an example with a different text or more complex scenarios?
+
 ### 6. Teardown and Cleanup
 
 In a headless environment, managing your system resources is critical.
 When your script finishes, you should explicitly tear down the entire
 stack to free up memory and stop background processes.
 
-When this vignette is built, it unloads the model only if the model was
-not loaded before the build. It stops the server and the daemon only if
-the server was not running before the build. If the LM Studio desktop
-app runs the daemon,
-[`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
-leaves the daemon running, and the build leaves the server and the model
-as it found them. On a host without the desktop app, the daemon stops,
-and a model that was loaded before the build can be unloaded with it.
-
 ``` r
 
 # 1. Unload the model from memory
 lms_unload(model)
+#> ℹ Unloading model: "google/gemma-3-1b"...
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [521ms]
+#> 
 ```
-
-Stopping the server and the daemon does not go through the REST API, so
-it does not wait on the readiness check. A stack that this vignette
-started is torn down even if the readiness check said no.
 
 ``` r
 
 # 2. Stop the API server
 lms_server_stop()
+#> ✔ LM Studio server stopped successfully.
 
 # 3. Stop the background daemon
 lms_daemon_stop()
+#> ℹ The daemon is managed by the LM Studio GUI and will remain running.
 ```
 
 ## Bonus: Pipeline Automation
@@ -178,13 +219,11 @@ wrapper handles the setup and guaranteed teardown of the background
 engine automatically.
 
 This block starts its own server, so it asks again whether that server
-answers. The value measured earlier belongs to the server the teardown
-above has already stopped. The block calls
+answers. The block calls
 [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
 only if the block loaded the model. On a host without the desktop app,
 the daemon stop on exit can also unload a model that was loaded before
-the block. When this vignette is built, the block runs only if the
-server was not running before the build.
+the block.
 
 ``` r
 
@@ -205,4 +244,15 @@ results <- with_lms_daemon({
   lms_server_stop()
   res
 })
+#> ✔ LM Studio daemon started in the background.
+#> ✔ LM Studio server started successfully on the default port.
+#> ℹ Loading model: "google/gemma-3-1b"...
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.7s]
+#> 
+#> ℹ Unloading model: "google/gemma-3-1b"...
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [519ms]
+#> 
+#> ✔ LM Studio server stopped successfully.
+#> ℹ The LM Studio server is already stopped.
+#> ℹ The daemon is managed by the LM Studio GUI and will remain running.
 ```

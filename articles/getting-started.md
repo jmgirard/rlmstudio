@@ -4,12 +4,6 @@
 
 library(rlmstudio)
 
-# Two gates for the chunks below. The first says the CLI is on this machine.
-# The second says the REST API answered. It stays FALSE until the server has
-# been started and asked.
-lms_installed <- has_lms()
-lms_ready <- FALSE
-
 model <- "google/gemma-3-1b"
 
 knitr::opts_chunk$set(
@@ -43,7 +37,7 @@ your console to open the official download page.
 
 # Check if LM Studio is available on this system
 has_lms()
-#> [1] FALSE
+#> [1] TRUE
 ```
 
 ## Step-by-Step Guide
@@ -76,8 +70,8 @@ and for a server that turns your token away.
 
 ``` r
 
-lms_ready <- lms_server_ready()
-lms_ready
+lms_server_ready()
+#> [1] TRUE
 ```
 
 ### 2. Finding and Managing Models
@@ -93,13 +87,15 @@ you can download it and manage your inventory directly from R.
 
 # Download a model using its identifier
 job_id <- lms_download(model)
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [973ms]
-#> ✔ Download job started successfully. Job ID: "job_02c8a1f86e"
+#> ℹ Initiating download for model: "google/gemma-3-1b"...
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [1s]
+#> 
+#> ✔ Model "google/gemma-3-1b" is already downloaded.
 
 lms_download_status(job_id)
-#> ── Download Job: "job_02c8a1f86e"
-#> Status: completed
-#> Progress: 100% (737 MB / 737 MB)
+#> 
+#> ── Download Job: "N/A"
+#> Status: already_downloaded
 ```
 
 ### 3. Loading Models
@@ -112,7 +108,9 @@ speeds up processing and reduces memory usage on supported hardware.
 
 # Standard load
 lms_load(model, flash_attention = TRUE)
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [30.8s]
+#> ℹ Loading model: "google/gemma-3-1b"...
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.9s]
+#> 
 ```
 
 ### 4. Chatting
@@ -146,11 +144,10 @@ response <- lms_chat(
 )
 
 cat(response)
-#> A friendly face, so bright and new,
-#> Hello there, it’s waiting for you!
-#>
-#> Let's chat and have a joyful spree,
-#> Hello there, happy as can be!
+#> Hello there, it’s a lovely day! 
+#> Let’s chat and have some play. 
+#> Say hello, it’s a joyful plea,
+#> Come on say hello, you see!
 ```
 
 ### 5. Teardown
@@ -159,22 +156,14 @@ To free up memory and system resources when you are finished, it is best
 practice to unload your models and stop the local server. Closing the LM
 Studio GUI will also perform this cleanup if you forget.
 
-When this vignette is built, it unloads the model only if the model was
-not loaded before the build. It stops the server only if the server was
-not running before the build. On a host where the LM Studio desktop app
-runs the daemon, a build that finishes then leaves the server state, and
-whether the model is loaded, as it found them.
-
 ``` r
 
 # Unload the model
 lms_unload(model)
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]
+#> ℹ Unloading model: "google/gemma-3-1b"...
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [560ms]
+#> 
 ```
-
-Stopping the server does not go through the REST API, so it does not
-wait on the readiness check. A server that this vignette started is
-stopped even if the readiness check said no.
 
 ``` r
 

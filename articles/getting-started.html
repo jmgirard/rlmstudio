@@ -71,12 +71,6 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jmgirard.github.io/rlmstudio/">rlmstudio</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Two gates for the chunks below. The first says the CLI is on this machine.</span></span>
-<span><span class="co"># The second says the REST API answered. It stays FALSE until the server has</span></span>
-<span><span class="co"># been started and asked.</span></span>
-<span><span class="va">lms_installed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/has_lms.html">has_lms</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">lms_ready</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
-<span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span>
 <span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html" class="external-link">opts_chunk</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span></span>
@@ -106,7 +100,7 @@ open the official download page.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Check if LM Studio is available on this system</span></span>
 <span><span class="fu"><a href="../reference/has_lms.html">has_lms</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="step-by-step-guide">Step-by-Step Guide<a class="anchor" aria-label="anchor" href="#step-by-step-guide"></a>
@@ -133,8 +127,8 @@ reports <code>TRUE</code> only for an answer LM Studio would give. It
 reports <code>FALSE</code> for a port held by another process and for a
 server that turns your token away.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">lms_ready</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_server_ready.html">lms_server_ready</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">lms_ready</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/lms_server_ready.html">lms_server_ready</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="finding-and-managing-models">2. Finding and Managing Models<a class="anchor" aria-label="anchor" href="#finding-and-managing-models"></a>
@@ -147,13 +141,15 @@ want, you can download it and manage your inventory directly from R.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Download a model using its identifier</span></span>
 <span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ✔ Initiating download for model: "google/gemma-3-1b"... [973ms]</span></span>
-<span><span class="co">#&gt; ✔ Download job started successfully. Job ID: "job_02c8a1f86e"</span></span>
+<span><span class="co">#&gt; ℹ Initiating download for model: "google/gemma-3-1b"...</span></span>
+<span><span class="co">#&gt; ✔ Initiating download for model: "google/gemma-3-1b"... [1s]</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" is already downloaded.</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/lms_download_status.html">lms_download_status</a></span><span class="op">(</span><span class="va">job_id</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ── Download Job: "job_02c8a1f86e"</span></span>
-<span><span class="co">#&gt; Status: completed</span></span>
-<span><span class="co">#&gt; Progress: 100% (737 MB / 737 MB)</span></span></code></pre></div>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── Download Job: "N/A"</span></span>
+<span><span class="co">#&gt; Status: already_downloaded</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="loading-models">3. Loading Models<a class="anchor" aria-label="anchor" href="#loading-models"></a>
@@ -165,7 +161,9 @@ supported hardware.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Standard load</span></span>
 <span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span>, flash_attention <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" loaded and verified. [30.8s]</span></span></code></pre></div>
+<span><span class="co">#&gt; ℹ Loading model: "google/gemma-3-1b"...</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" loaded and verified. [5.9s]</span></span>
+<span><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="chatting">4. Chatting<a class="anchor" aria-label="anchor" href="#chatting"></a>
@@ -198,11 +196,10 @@ details.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">response</span><span class="op">)</span></span>
-<span><span class="co">#&gt; A friendly face, so bright and new,</span></span>
-<span><span class="co">#&gt; Hello there, it’s waiting for you!</span></span>
-<span><span class="co">#&gt;</span></span>
-<span><span class="co">#&gt; Let's chat and have a joyful spree,</span></span>
-<span><span class="co">#&gt; Hello there, happy as can be!</span></span></code></pre></div>
+<span><span class="co">#&gt; Hello there, it’s a lovely day! </span></span>
+<span><span class="co">#&gt; Let’s chat and have some play. </span></span>
+<span><span class="co">#&gt; Say hello, it’s a joyful plea,</span></span>
+<span><span class="co">#&gt; Come on say hello, you see!</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="teardown">5. Teardown<a class="anchor" aria-label="anchor" href="#teardown"></a>
@@ -210,18 +207,12 @@ details.</p>
 <p>To free up memory and system resources when you are finished, it is
 best practice to unload your models and stop the local server. Closing
 the LM Studio GUI will also perform this cleanup if you forget.</p>
-<p>When this vignette is built, it unloads the model only if the model
-was not loaded before the build. It stops the server only if the server
-was not running before the build. On a host where the LM Studio desktop
-app runs the daemon, a build that finishes then leaves the server state,
-and whether the model is loaded, as it found them.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Unload the model</span></span>
 <span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [431ms]</span></span></code></pre></div>
-<p>Stopping the server does not go through the REST API, so it does not
-wait on the readiness check. A server that this vignette started is
-stopped even if the readiness check said no.</p>
+<span><span class="co">#&gt; ℹ Unloading model: "google/gemma-3-1b"...</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [560ms]</span></span>
+<span><span class="co">#&gt; </span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Stop the server</span></span>
 <span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>

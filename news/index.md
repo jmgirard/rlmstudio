@@ -2,6 +2,14 @@
 
 ## rlmstudio (development version)
 
+- The vignettes now ship with output that was knitted ahead of time from
+  a live LM Studio. A build or check of the package therefore runs no
+  vignette code and never reaches LM Studio. Before, where `lms` was
+  installed, a build of `getting-started` and `headless-config` ran
+  their code against the local LM Studio. That code starts the server
+  and loads a model. Elsewhere, the build showed the code with output
+  pasted as comments.
+
 - The logprobs data frame has a new fifth and last column, `step`. This
   holds for
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
@@ -428,22 +436,6 @@
   read the token sources again after the reply. A token source that
   changed in that time, such as the `rlmstudio.token` option, gave the
   hint for the other case.
-
-- The teardown of both vignettes now depends on the state before the
-  build. If the server was not running before a build of either
-  vignette, the build stops it. If the `google/gemma-3-1b` model was not
-  loaded before the build, the build unloads it. Before, a build stopped
-  a server that was running before it, and each vignette unloaded a
-  model that was loaded before it. `headless-config.Rmd` does not
-  restore the daemon state. It calls
-  [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
-  whenever it stops the server. If its
-  [`with_lms_daemon()`](https://jmgirard.github.io/rlmstudio/reference/with_lms_daemon.md)
-  example loads the model, the example now unloads it. These rules keep
-  the server and model state where the LM Studio desktop app runs the
-  daemon, because the app then keeps the daemon running. On a host
-  without the desktop app, the daemon stop in `headless-config.Rmd` can
-  also unload a model that was loaded before the build.
 
 - If a run of the LM Studio CLI or the headless installer fails, the
   abort message now quotes what the run wrote, beside the exit code.
@@ -1522,10 +1514,6 @@
   [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
   as the stronger test. The same section appears on the help page of
   every exported function that can raise the condition.
-
-- Both vignettes now ask whether the server answers before they call it.
-  A host that does not answer makes them skip their REST examples.
-  Before, a server that was not usable made the vignette fail to build.
 
 - The package can now authenticate to an LM Studio server that requires
   an API token. Eleven functions take a `token` argument. They are
