@@ -1,6 +1,6 @@
 # M071: The getting-started vignette reads plainly and covers a first run
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M070
 - **Driving RR:** —
@@ -32,7 +32,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 
 ## Acceptance criteria
 
-- [ ] AC1: The R code that `knitr::purl()` extracts from
+- [x] AC1: The R code that `knitr::purl()` extracts from
       `vignettes/getting-started.Rmd.orig` holds each of these strings:
       `has_lms(`, `check_lms_version(`, `lms_server_start(`,
       `lms_server_ready(`, `list_models(`, `lms_download(`, `lms_load(`,
@@ -42,13 +42,13 @@ and embeddings are M073. Routes, conversations, and errors are M074.
       ```` ```{r ```` or with `#> Error`. The block of each chunk that calls
       `list_models(`, `lms_chat(`, or `lms_chat_batch(` holds a line that
       starts with `#>` after its last code line.
-- [ ] AC2: A search of that purled code for each regular expression in the
+- [x] AC2: A search of that purled code for each regular expression in the
       DESIGN.md code list finds no match. A search of the source for
       `` `r `` finds no inline R expression.
-- [ ] AC3: A case-blind search for each entry of the DESIGN.md prose list
+- [x] AC3: A case-blind search for each entry of the DESIGN.md prose list
       finds no match. It runs over every line of the source outside its
       ```` ```{r} ```` chunks, with the YAML header and inline code.
-- [ ] AC4: Each of these terms is explained in plain words at or before
+- [x] AC4: Each of these terms is explained in plain words at or before
       its first use in prose or in a code comment of the knitted vignette:
       large language model, local server, model key, loading a model,
       system prompt, and batch.
@@ -120,6 +120,7 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30: claim audit: 42 claims read, 2 corrected — vignettes/getting-started.Rmd.orig, vignettes/getting-started.Rmd
 - 2026-09-30: claim audit detail: "reads before your prompt" became "gets with your prompt", which the re-read found holds. The batch caution now says that a reply can carry extra spaces, which holds. Its clause that a model does not always follow its system prompt rests on ledger 16 alone, and the re-read found no support for it in the files. Re-knitted clean.
 - 2026-09-30: status set to review.
+- 2026-09-30: review return 1 (defect): AC5 failed. In 3 of 3 live runs, the server answered at once after `lms server start`, against the vignette sentence "The server does not answer at once". A live chat to an unloaded model loaded it and replied. The vignette sentence "A model must be loaded before it can answer" is not in the ledger. AC1 to AC4 passed. AC6, the gate, and the reviewers did not run. Status set to in-progress.
 
 ## Decisions
 
@@ -127,3 +128,9 @@ and embeddings are M073. Routes, conversations, and errors are M074.
 - 2026-09-30 (gate): The vignette shows no loop that waits for a download. The text tells the reader to call `lms_download_status()` with the job id until the download ends.
 
 ## Review
+
+- AC1 (2026-09-30): `knitr::purl()` of the source gave 66 lines, and `grep -F` found each of the 12 strings at least once. The source holds `headless-config` once. The knitted file has 0 lines that start with ```` ```{r ```` and 0 that start with `#> Error`. An awk pass over the knitted blocks found a `#>` line after the last code line in the `list_models(`, `lms_chat(`, and `lms_chat_batch(` blocks.
+- AC2 (2026-09-30): An R script searched the 66 purled lines for each of the 16 DESIGN.md code patterns and found 0 matches. As a control, 3 planted lines (`lapply(`, `repeat`, `\(x)`) gave 3 matches. A search of the source for `` `r `` found 0 matches.
+- AC3 (2026-09-30): The same script kept the 115 of 192 source lines outside the ```` ```{r} ```` chunks, with the YAML header among them. A case-blind search for each of the 14 DESIGN.md prose entries found 0 matches. As a control, a planted line that started with a prose-list word in capitals gave 1 match.
+- AC4 (2026-09-30): A `grep` of the knitted file, output lines left out, found the first use of each term. "large language model" first shows at line 12, in the sentence that explains it. "local server" first shows at line 48, and the next sentence of line 48 explains it. The heading at line 46 says "the server" before that. "model key" first shows at line 72, in the sentence that explains it. The first use of "load" is "Load the package" at line 27, which is about the R package. The first use for a model is line 138, in the sentence that explains it. "system prompt" first shows at line 155, and "batch" at line 175, each in the sentence that explains it.
+- AC5 (2026-09-30), FAIL: Each of the 16 tests that the ledger names exists under `tests/testthat/`. Live calls on this machine matched the ledger for the model list, the `already_downloaded` reply, and the extra spaces in batch replies. Live calls did not match the sentence "The server does not answer at once" (knitted line 53). In 3 of 3 runs, `lms server start` returned in about 0.16 s, and `lms_server_ready()` was TRUE in its first call, 0.02 s or less later. Ledger 14 backed that sentence with the docs and a FALSE before the start, not with a live call after the start. Also, "A model must be loaded before it can answer" (line 139) is not in the ledger. A live `lms_chat()` to an unloaded `google/gemma-3-1b` returned a reply, and the model state went from "unloaded" to "loaded" with a 60-minute idle limit. So when a chat names an unloaded model, LM Studio loads it, and the vignette does not say so. LM Studio was left with the server stopped and no model loaded.
