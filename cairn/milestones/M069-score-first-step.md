@@ -178,3 +178,22 @@ Sync 2026-09-30: `origin/main` (cc0d45d) is an ancestor of the branch head 411c6
 - AC5: `test-chat.R:702` passes with `rlmstudio.quiet = FALSE`. A reply with the steps "3", "\n", "3" prints 3 token steps with and without a `step` column.
 - AC6: the grep lists 10 files. They are `R/score.R`, `R/chat.R`, `R/chat_oop.R`, the vignette, five test files, and `NEWS.md`. The rule prose in `R/score.R:7`, `NEWS.md:5`, the vignette, and `test-chat.R:47` states the AC2 and AC3 rules. The help of `lms_chat_openresponses()` describes `step`. The vignette's pasted logprobs output shows `step`, and its score output has one row per label. `test-vignette-claims.R:110` asserts the five names and `:114` the `step` values. `NEWS.md:3`, `:5`, and `:8` hold the column, the step rule, and the summed labels.
 - AC7: `devtools::document()` gave no diff, and `devtools::test()` gave 0 failures (sync line above).
+
+Consistency gate, pass 2: `cairn_validate.py` passed. No IP or GP changed, so `cairn_impact` did not run. `pkgdown::check_pkgdown()` found no problems. NEWS has the entries and no milestone numbers. The branch adds no top-level file, and README is not touched. `devtools::check()` with the API token on 411c632 gave 0 errors, 0 warnings, and 0 notes, vignettes rebuilt.
+
+Reviewer findings, pass 2, merged with pass 1. Each item names its sources (P1 or P2, then d for diff, b for blame-history, p for prior-review, with the reviewer's number).
+- F1: `R/score.R:85` gives an entropy of -1.44e-09 for one label, because of the `+ 1e-9` term. The label sum makes one label common, as with "3" and " 3". (P1 d1, P2 d3, P2 b2)
+- F2: `R/score.R:116` reads the step of the first row, not the lowest step. A sorted frame with `step` = 2, 2, 1, 1 scores step 2, but the title says "the first step of the reply". (P2 d1)
+- F3: A frame with no `step` and no `step_token` column fails with the base R error "argument is of length zero". On main it reached the package abort "No tokens in the top candidates". (P2 d4)
+- F4: `test-chat.R:49` turns any error into `NA`, which hides the message. (P1 d6, P1 b2, P2 d8, P2 b4, P2 p2)
+- F5: `NEWS.md:9` puts the print change under the score entry. (P1 d8, P2 d9, P2 p1)
+- F6: Rows stacked from several replies pool step 1 of every reply. (P2 d2)
+- F7: A first `step` of `NA` uses the token run and drops later step-1 rows and step-1 rows whose `step` is `NA`. (P1 d2, P1 d3, P2 d5)
+- F8: `R/chat_oop.R:88` counts an `NA` step as a step. (P1 d4, P1 b3, P2 d6, P2 b3)
+- F9: "0x3", "3e0", "+3", and " 3\n" are summed into label 3. (P1 d9, P2 d7)
+- F10: The batch `step` checks see one step, and the AC5 test builds the result by hand. (P1 d7, P2 d10)
+- F11: The new rules have no D-entry. (P1 b4, P2 d12, P2 b1)
+- F12: The live test at `test-chat.R:47` calls the function it checks. (P1 b2, P2 b4)
+- F13: The vignette paste changed values that the code does not touch, from a live re-run. (P2 b6)
+- F14: Tests read `step` with `$`, which matches name prefixes. (P2 p3)
+- F15: The AC3 gap of return 1. It is fixed by the T2 repair. (P1 d5, P1 b1, P2 d11)
