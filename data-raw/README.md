@@ -77,8 +77,15 @@ remove the directory, and then run its test file with the server running:
 | `integration_e2e` | `devtools::test(filter = "^integration$")` |
 | `list_models` | `devtools::test(filter = "^list$")` |
 
-The directories `fixtures` and `_problems` hold no recorded responses.
-Leave them as they are.
+One more directory that git tracks needs no new recording:
+
+| Directory | What it holds |
+|---|---|
+| `fixtures` | No recorded responses. It holds example replies copied from the LM Studio docs. |
+
+Leave it as it is. A filtered run such as `devtools::test(filter = "^list$")`
+can also leave an empty `_snaps` directory. Git does not track it, and you
+can delete it.
 
 After all the recordings, run `devtools::test()` again. Read the
 `git diff` of the `tests/testthat` directory. If a provenance header names a recording

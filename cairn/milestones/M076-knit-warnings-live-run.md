@@ -1,6 +1,6 @@
 # M076: The vignette knit fails on an unmarked warning and stale output, and a release has live-run steps
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -61,14 +61,15 @@ other candidate rows stay as they are.
       this order. Start the server with the models that the live tests need.
       Run `devtools::test()` and make sure that no test skipped for want of
       the server or a model. Re-record the cassettes. Re-knit the vignettes.
-      `list.dirs(recursive = FALSE)` lists the top-level directories under
-      `tests/testthat/`. The README names each of them, except `fixtures`
-      and `_problems`. Next to each, it names the `data-raw/record-*.R`
-      script, or the removal of the directory and a live run of its test. A
-      model counts as needed when a string names it in a recorder script, or
-      in a `test_that()` block that calls `skip_if_no_server()`. The README
-      names each such model. The release-walk slot of `cairn/PROFILE.md`
-      points to the README.
+      `git ls-tree -d --name-only HEAD:tests/testthat` lists the top-level
+      directories under `tests/testthat/` that git tracks. The README names
+      each of them. Next to each, it names the `data-raw/record-*.R` script,
+      or the removal of the directory and a live run of its test, or that the
+      directory holds no recorded responses.
+      `grep -E '^#   Models?:' data-raw/record-*.R` lists the provenance
+      header lines of the recorder scripts. The README names each model key
+      on those lines. The release-walk slot of `cairn/PROFILE.md` points to
+      the README.
 - [ ] AC6: `devtools::test()` and `devtools::check()` finish with 0 errors
       and 0 warnings. The Review section of this file lists each NOTE with
       its reason.
@@ -79,7 +80,7 @@ other candidate rows stay as they are.
 - AC2 → T1, T2
 - AC3 → T1, T2, T4
 - AC4 → T3, T4
-- AC5 → T5
+- AC5 → T5, T7
 - AC6 → T6
 
 ## Tasks
@@ -112,6 +113,9 @@ other candidate rows stay as they are.
 - [x] T6: Run `devtools::document()`, `devtools::test()`, and
       `devtools::check()`. Record each NOTE. Nothing that users run changes,
       so NEWS gets no entry.
+- [x] T7: Bring `data-raw/README.md` in line with the amended AC5. Add a
+      `fixtures` row that says it holds no recorded responses. Say that a
+      filtered test run can leave an empty `_snaps`.
 
 ## Work log
 
@@ -131,6 +135,14 @@ other candidate rows stay as they are.
 - 2026-10-01: all tasks done, status set to review.
 - 2026-10-01: review: AC1 to AC4 verified and ticked. AC5 fails as written on an empty, untracked `tests/testthat/_snaps` that each filtered `devtools::test()` run makes. The exclusion list "`fixtures` and `_problems`" is a hand list. So the repair narrows the promise to a procedure and does not add `_snaps` to the list (widening test). Status back to in-progress for this amendment alone.
 - 2026-10-01: amendment return: AC5 — "`git ls-tree -d --name-only HEAD tests/testthat/` lists the top-level directories under `tests/testthat/` that git tracks. The README names each of them, except `fixtures`."
+- 2026-10-01: implement resumed for the AC5 amendment alone.
+- 2026-10-01: re-audit: AC5 (reduced) — fresh Opus reader. (1) The model rule "a string names it" decides no membership for a decoy such as `"Google/Gemma-3-1B"`, and it names no search for the test blocks. (2) `git ls-tree -d --name-only HEAD tests/testthat/` prints full paths, and `HEAD:tests/testthat` prints bare names. (3) The `fixtures` exception is a carve-out from memory. (4) Low: the README skip list lacks "LM Studio CLI is not installed.". (5) Low: the `list_models` block fakes the server check, so the model rule leaves it out. Instrument question: nothing.
+- 2026-10-01: AC5 mini gate: the user chose "Narrow both" (recommended) over narrowing the directory clause alone and over a pause. Directories come from `git ls-tree -d --name-only HEAD:tests/testthat`, models from `grep -E '^#   Models?:' data-raw/record-*.R`, and the `fixtures` exception is gone.
+- 2026-10-01: re-audit: AC5 (reduced) — second fresh Opus reader on the gated wording. (1) Low-medium: the step text "the models that the live tests need" names no procedure, if it binds the README to name them. (2) Low: "holds no recorded responses" is loose for `fixtures`, which holds docs examples. (3) Low: "model key" is decided in practice, and continuation lines fall outside the grep. Proportionality and instrument: nothing beyond (1). This is the second AC5 re-audit, so further churn on AC5 goes to the user.
+- 2026-10-01: AC5 amended to the gated wording, executing the review's amendment return. The final clause replaces the review's proposed `HEAD tests/testthat/` form with `HEAD:tests/testthat` and drops the `fixtures` exception. T7 added for the README change, and Coverage now reads AC5 → T5, T7.
+- 2026-10-01: T7 done. The README has a `fixtures` row and a note on the empty `_snaps`. The two test files that read `fixtures` say its files are copies of LM Studio docs examples. T7 dropped the `skip_if_no_lms()` reason: both calls follow a mock of `has_lms()` to TRUE, so that skip cannot fire. All 10 `ls-tree` directories have one README row, and the README names the 3 model keys of the header lines. `devtools::test()`: 0 failures, 3 skips, 19942 passes.
+- 2026-10-01: claim audit: not owed — internal tier
+- 2026-10-01: amendment done, status set to review.
 
 ## Decisions
 
