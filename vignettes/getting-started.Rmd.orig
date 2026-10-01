@@ -51,11 +51,11 @@ on your own computer that answers requests from other programs, such as R.
 By default, the package sends its requests to `http://localhost:1234`.
 That is an address on your own computer.
 
-`lms_server_start()` starts the server. The server does not answer at
-once, so the function waits for it. The `wait` argument sets about how many
-seconds it waits. If the wait runs out, the function gives a warning, and
-your script goes on. So call `lms_server_ready()` next. It
-returns `TRUE` only when LM Studio answers.
+`lms_server_start()` starts the server. Then it waits until LM Studio
+answers. The `wait` argument sets about how many seconds it waits at most.
+If the wait runs out, the function gives a warning, and your script goes
+on. So call `lms_server_ready()` next. It returns `TRUE` only when LM
+Studio answers.
 
 ```{r start-server}
 # Start the server, and wait about 30 seconds at most for it to answer
@@ -111,7 +111,8 @@ lms_download_status(job_id)
 ## Put the model in memory
 
 Loading a model means that LM Studio reads it from disk into memory. A
-model must be loaded before it can answer. `lms_load()` loads the model.
+chat with a model that is not loaded can make LM Studio load it, but then
+the chat waits for the load. `lms_load()` loads the model before the chat.
 
 ```{r load}
 # Read the model into memory

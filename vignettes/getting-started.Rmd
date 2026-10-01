@@ -50,11 +50,11 @@ on your own computer that answers requests from other programs, such as R.
 By default, the package sends its requests to `http://localhost:1234`.
 That is an address on your own computer.
 
-`lms_server_start()` starts the server. The server does not answer at
-once, so the function waits for it. The `wait` argument sets about how many
-seconds it waits. If the wait runs out, the function gives a warning, and
-your script goes on. So call `lms_server_ready()` next. It
-returns `TRUE` only when LM Studio answers.
+`lms_server_start()` starts the server. Then it waits until LM Studio
+answers. The `wait` argument sets about how many seconds it waits at most.
+If the wait runs out, the function gives a warning, and your script goes
+on. So call `lms_server_ready()` next. It returns `TRUE` only when LM
+Studio answers.
 
 
 ``` r
@@ -120,7 +120,7 @@ the output shows the first case.
 # Download the model, or find that it is already on disk
 job_id <- lms_download(model)
 #> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [916ms]
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [967ms]
 #> 
 #> ✔ Model "google/gemma-3-1b" is already downloaded.
 job_id
@@ -136,14 +136,15 @@ lms_download_status(job_id)
 ## Put the model in memory
 
 Loading a model means that LM Studio reads it from disk into memory. A
-model must be loaded before it can answer. `lms_load()` loads the model.
+chat with a model that is not loaded can make LM Studio load it, but then
+the chat waits for the load. `lms_load()` loads the model before the chat.
 
 
 ``` r
 # Read the model into memory
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [4.3s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [4.7s]
 #> 
 ```
 
@@ -167,7 +168,7 @@ reply <- lms_chat(
 
 # Print the text of the reply
 cat(reply)
-#> Certainly! Hello there, new R user – welcome to the world of data analysis!
+#> “Welcome to the world of R! Please feel free to ask any questions – I’m here to help you get started.”
 ```
 
 ## Send several prompts in one call
@@ -192,11 +193,11 @@ answers <- lms_chat_batch(
   system_prompt = "Answer with one word."
 )
 answers
-#> [1] "Apple " "Blue"   "Mars."
+#> [1] "Apple."  "Blue \n" "Mars "
 
 # Remove the spaces and line breaks around each reply
 trimws(answers)
-#> [1] "Apple" "Blue"  "Mars."
+#> [1] "Apple." "Blue"   "Mars"
 ```
 
 A reply can carry extra spaces or line breaks, and a model does not always
@@ -215,7 +216,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [423ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [536ms]
 #> 
 
 # Stop the local server
