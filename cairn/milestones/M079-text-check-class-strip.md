@@ -1,6 +1,6 @@
 # M079: The text checks strip a class before they read a name, and their tests turn a sending site red
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -75,6 +75,8 @@ A classed name, id, or type filter gets the check, the match, and the message of
 - 2026-10-01: T5 done. `lms_chat()` runs `rlm_check_route_dots()` after `rlm_check_schema()`. Before the move, the three `lms_chat()` cases failed on the `instructions` headline, and the three batch cases passed. `devtools::test()`: 0 failed, 3 skipped.
 - 2026-10-01: T6 done. `id_fault()` marks a text fault with a `text_rule` attribute, and `rlm_check_id()` and both `rlm_check_response_id()` headlines read it. No existing test read the old headline for a text fault. The 14 AC6 tests failed before the fix. The headline tests read the `message` field of the error. The full message wrapped the attribute headline in an `Rscript` run, and `rlang` is not a declared dependency. `devtools::test()`: 0 failed, 3 skipped.
 - 2026-10-01: T7 done. The `check_reply_model()` comment says that both callers pass the plain string. NEWS.md has three entries: the class strip with the type filter, the text headline, and the check order. `devtools::document()` gave no diff, `devtools::test()` with `RLMSTUDIO_API_TOKEN` set gave 0 failed and 3 skipped, and `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
+- claim audit: 30 claims read, 0 corrected — NEWS.md, R/chat.R, R/list.R, R/utils-args.R, man/list_models.Rd, man/list_instances.Rd, tests/testthat/test-chat-dot-clash.R, tests/testthat/test-list-args.R, tests/testthat/test-name-faults.R
+- 2026-10-01: implement complete, status set to review.
 
 ## Decisions
 
