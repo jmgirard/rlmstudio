@@ -100,7 +100,7 @@ conversations are M074.
 - [x] T5: List the claims of AC5 with the test or probe that backs each, as
       a ledger in the work log. Add tests to
       `tests/testthat/test-vignette-claims.R` where none covers a claim.
-- [ ] T6: Add the NEWS entry and run the checks of AC6.
+- [x] T6: Add the NEWS entry and run the checks of AC6.
 
 ## Work log
 
@@ -118,6 +118,7 @@ conversations are M074.
 - 2026-10-01: T5 ledger, part 3. The logprobs column of data frames with `step` from 1, and `top_logprobs` sent: new vignette-claims test. Score reads step 1, keeps the scale, sums "3" and " 3", rescales: score:137, score:44, score:75. A failed input does not stop the batch, gives `NA` and `NULL`, and one warning: chat-batch:98, chat-batch:183. A schema `output` keeps the error: new vignette-claims test. List format: chat-batch:98.
 - 2026-10-01: T5 ledger, part 4. `lms_embed()` rows in order: embed:129. `list_instances()` rows and config columns: list-instances:62, list-instances:170. `lms_unload_all()` unloads each instance: unload:165. `lms_unload()` by id: unload:16. LM Studio claims rest on the knitted output: the top candidate, the 10 candidates, the context-length error, and the 2048 embedding context.
 - 2026-10-01: T5 added 3 tests to `test-vignette-claims.R`. Plants in a scratch `R/chat.R` turned each red on its own expectation: dropped dots failed `top_logprobs`, a fixed host failed the host check, and a failure slot of `NA` failed the condition check. Suite: 1953 tests, 0 failed, 3 live skips.
+- 2026-10-01: T6 rewrote the existing development NEWS entry for `vignette("text-analysis")`, which was never released, in place of a second entry. `document()` gave no diff, and `check_pkgdown()` found no problems. With the server stopped and the token unset, `devtools::check()` gave 0 errors, 0 warnings, and 0 notes.
 
 ## Decisions
 
