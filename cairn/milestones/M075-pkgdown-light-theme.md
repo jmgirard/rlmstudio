@@ -38,10 +38,10 @@ changes.
 
 ## Acceptance criteria
 
-- [ ] AC1: In a site built by `pkgdown::build_site()` from the milestone branch into a fresh folder, every `.html` page that a recursive listing of that folder finds holding a `<nav>` element whose class list contains `navbar` gives that element's start tag no `bg-` class and no `data-bs-theme` attribute. This marks a light navbar and does not test how the navbar renders.
-- [ ] AC2: On the built `index.html`, opened in the browser pane, `--bs-link-color` on the root element equals `#4139C3`, compared trimmed and case-insensitively, with `data-bs-theme="light"` set on the root element. With `data-bs-theme="dark"` set there, it computes to a color whose contrast ratio against the computed `--bs-body-bg` is at least 4.5:1 (WCAG 2.1, success criterion 1.4.3). The built `index.html` holds pkgdown's mode switch (`#dropdown-lightswitch`) and its search box (`#search-input`).
-- [ ] AC3: The Articles menu of the built `index.html` is a dropdown whose links, read in `href` order, are `getting-started`, `chat-options`, `text-analysis`, `headless-config`, under no heading. `articles/index.html` lists them in the same order. The set of linked names equals the file names, without `.Rmd`, that `list.files("vignettes", "\\.Rmd$")` returns.
-- [ ] AC4: `pkgdown/extra.css` does not exist. In the fresh build folder, no file is named `extra.css`, and no `.html` page holds a `<link>` whose `href` ends in `extra.css`.
+- [x] AC1: In a site built by `pkgdown::build_site()` from the milestone branch into a fresh folder, every `.html` page that a recursive listing of that folder finds holding a `<nav>` element whose class list contains `navbar` gives that element's start tag no `bg-` class and no `data-bs-theme` attribute. This marks a light navbar and does not test how the navbar renders.
+- [x] AC2: On the built `index.html`, opened in the browser pane, `--bs-link-color` on the root element equals `#4139C3`, compared trimmed and case-insensitively, with `data-bs-theme="light"` set on the root element. With `data-bs-theme="dark"` set there, it computes to a color whose contrast ratio against the computed `--bs-body-bg` is at least 4.5:1 (WCAG 2.1, success criterion 1.4.3). The built `index.html` holds pkgdown's mode switch (`#dropdown-lightswitch`) and its search box (`#search-input`).
+- [x] AC3: The Articles menu of the built `index.html` is a dropdown whose links, read in `href` order, are `getting-started`, `chat-options`, `text-analysis`, `headless-config`, under no heading. `articles/index.html` lists them in the same order. The set of linked names equals the file names, without `.Rmd`, that `list.files("vignettes", "\\.Rmd$")` returns.
+- [x] AC4: `pkgdown/extra.css` does not exist. In the fresh build folder, no file is named `extra.css`, and no `.html` page holds a `<link>` whose `href` ends in `extra.css`.
 - [ ] AC5: `pkgdown::check_pkgdown()` prints "No problems found" and raises no error, and the `pkgdown.yaml` workflow passes on the milestone's pull request.
 - [ ] AC6: In `.github/workflows/pkgdown.yaml`, a step before the site build deletes `CLAUDE.md`, and the deploy step sets `clean: true`. On the milestone's pull request, the workflow log shows that the delete step ran. A `pkgdown::build_site_github_pages()` run into a fresh folder, from a copy of the branch without `CLAUDE.md`, writes no `CLAUDE.html` and no `CLAUDE.md`.
 
@@ -78,3 +78,33 @@ changes.
 - 2026-10-01: T5 runs after the merge, at `/milestone-review`. AC5 and AC6 also need the workflow run on the pull request, which review opens.
 - 2026-10-01: claim audit: 5 claims read, 2 corrected — .github/workflows/pkgdown.yaml, pkgdown/_pkgdown.yml
 - 2026-10-01: implement complete, status set to review. T5 stays open until after the merge, as the plan states.
+- 2026-10-01: review started. No PR existed for the branch, and `origin/main` had not moved since the branch was cut.
+
+## Review
+
+Fresh build for AC1 to AC4: `pkgdown::init_site()` then `pkgdown::build_site()` from the branch head into an empty scratch folder, with pkgdown 2.2.1. The build exited 0. Its only warnings were pandoc's `--mathml` deprecation notices.
+
+- AC1: A recursive walk of the build folder found 55 `.html` pages and 46 `<nav>` start tags whose class list holds `navbar`. None carries a `bg-` class or `data-bs-theme`. Control: `index.html` on `origin/gh-pages` has `bg-primary` and `data-bs-theme="dark"` on the same tag, so the scan can fail.
+- AC2: The built `index.html` was served on localhost and opened in the browser pane. With `data-bs-theme="light"` on the root, `--bs-link-color` read `#4139C3`. With `data-bs-theme="dark"`, it read `#8d88db` against a `--bs-body-bg` of `#212529`, a contrast ratio of 4.90:1 by the WCAG 2.1 formula. `#dropdown-lightswitch` and `#search-input` are both on the page.
+- AC3: In the built `index.html`, the Articles item is a `dropdown-toggle` menu. Its links in document order are getting-started, chat-options, text-analysis, headless-config, with no `dropdown-header`. `articles/index.html` lists the same four in the same order. `list.files("vignettes", "\\.Rmd$")` returns the same four names.
+- AC4: `pkgdown/extra.css` does not exist. The walk of the build folder found no file named `extra.css`. None of the 147 `<link>` tags has an `href` that ends in `extra.css`. Control: `index.html` on `origin/gh-pages` holds such a link.
+- AC5 (local half): `pkgdown::check_pkgdown()` printed "No problems found" and raised no error. The workflow half needs the `pkgdown.yaml` run on the pull request, which step 8 opens after the merge approval. The box stays open until that run passes.
+- AC6 (local half): In `.github/workflows/pkgdown.yaml`, the step "Remove CLAUDE.md before the build" (`rm -f CLAUDE.md`) comes before "Build site", and the deploy step sets `clean: true`. A `git archive` copy of the branch head, with `CLAUDE.md` removed, ran `pkgdown::build_site_github_pages()` into an empty folder. It wrote 54 `.html` pages, `.nojekyll`, and no `CLAUDE*` file. Control: the AC1 build, with `CLAUDE.md` present, wrote `CLAUDE.html` and `CLAUDE.md`. The log half needs the workflow run on the pull request. The box stays open until that log shows the delete step ran.
+
+Consistency gate: `cairn_validate.py` exited 0 with every line PASS or OK. `devtools::document()` left no diff. `devtools::check()` gave 0 errors, 0 warnings, 0 notes. `devtools::test()` gave 0 failures, 3 skips, because LM Studio was not running. `pkgdown::check_pkgdown()` passed (AC5). README.Rmd and README.md did not change. No NEWS entry, because the plan scope excludes one: no package code changed. No new top-level files and no principle changes.
+
+Independent review (three fresh lenses, user-facing tier):
+
+- Prior-review lens (Sonnet): no prior-review evidence on the touched files. The archive holds no review finding on the site configuration, and the repo has no PR review comments.
+- Blame-history lens (Sonnet), 5 findings, all ranked low:
+  - B1 `clean: true` deletes anything on `gh-pages` that the build does not make, such as a future `CNAME` or hand-edited page. `clean: false` came from the r-lib template in `6d21753` with no stated reason. `origin/gh-pages` holds no `CNAME` today.
+  - B2 The `rm -f CLAUDE.md` step covers that one file. A new root `.md` file publishes the same way. `CLAUDE.md` is the only such file today.
+  - B3 Deleting `extra.css` drops forced search-box colors, and AC2 tests only that `#search-input` exists. Measured in the browser pane on the fresh build: text on the box is 8.18:1 in light mode and 11.85:1 in dark mode.
+  - B4 Removing `link-color` undoes nothing. Zephyr derives links from `primary`, as AC2 measured.
+  - B5 The `articles:` index lists the four vignettes by name, so a fifth one needs an entry. `check_pkgdown()` reports a missing one.
+- Diff-bug lens (Opus), 5 findings, all ranked low, none blocking. D1 to D3 were confirmed against pkgdown 2.2.1 source and the fresh build this session.
+  - D1 The light navbar comes from `light-switch: true`, not from removing `navbar: bg`. `pkgdown:::data_navbar()` sets the navbar style to `NULL` with the light switch on. Without it, zephyr's default is `bg-primary`. Nothing in the configuration records that link.
+  - D2 The workflow comment lists the skipped `.md` files as README, NEWS, LICENSE, and cran-comments. `pkgdown:::package_mds()` also skips `LICENCE.md`, the issue and PR templates, and `404.md` in dev mode, and it renders `.md` files in `.github/`.
+  - D3 `articles/index.html` shows "Articles" twice, as the page `<h1>` and as the section `<h3>`, because the one section has the title `Articles`.
+  - D4 Zephyr colors the active tab label with raw `primary`, about 1.9:1 on the dark background. No page on the site uses tabs today.
+  - D5 `clean: true` deletes the 258-file `dev/` tree on `gh-pages`, so outside bookmarks into it break. Nothing in the repo links to it, and the plan scope names this removal.
