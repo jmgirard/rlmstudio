@@ -79,6 +79,7 @@ A classed name, id, or type filter gets the check, the match, and the message of
 - 2026-10-01: implement complete, status set to review.
 - 2026-10-01: review in progress. AC1 and AC3 to AC7 verified and ticked. AC2 waits for the gate, and two of three reviewers are still running.
 - 2026-10-01: gate triage chose to fix all six fix-now findings (D1, D2, D3, D4, A2, P1). D4 kept the file's subtest naming. AC2 ticked on the new instance case. Merge approval is asked again.
+- step-7 approval: m079-text-check-class-strip approved for merge
 
 ## Decisions
 
