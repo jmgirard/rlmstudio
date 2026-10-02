@@ -1,3 +1,7 @@
+## Resubmission
+
+This resubmission fixes the test error of the Debian incoming pretest. A test matched the full libcurl message for a URL with no host, and that wording differs between libcurl versions. The test now matches only the part that all versions share.
+
 ## R CMD check results
 
 0 errors | 0 warnings | 0 notes

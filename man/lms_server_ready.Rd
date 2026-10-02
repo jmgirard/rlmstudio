@@ -58,7 +58,9 @@ single string, not a character \code{NA}.
 \item A \code{host} that is one string but cannot be parsed as a URL. curl reports
 that it failed to parse the URL and names the reason. A \code{host} holding a
 space gives "Malformed input to a URL function". An empty \code{host} gives
-"No host part in the URL".
+a reason that says the URL has no host. Its wording depends on the
+libcurl version, for example "No host part in the URL" or "No host
+present".
 \item A \code{timeout} below one millisecond. httr2 reports that \code{seconds} must be
 greater than 1 ms.
 \item A \code{timeout} that is not one number, such as a string or a vector of two.

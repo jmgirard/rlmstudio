@@ -221,13 +221,16 @@ test_that("a host that is not one string aborts whatever the reason", {
 
 test_that("a host that cannot be parsed as a URL aborts", {
   # curl names the reason, so the page quotes two of them rather than one.
+  # The wording of the empty-host reason depends on the libcurl version:
+  # libcurl 8.14.1 says "No host part in the URL", and the libcurl of CRAN's
+  # Debian check says "No host present". The test matches only the common start.
   expect_error(
     lms_server_ready(host = "http://exa mple:1234"),
     "Failed to parse URL: Malformed input to a URL function"
   )
   expect_error(
     lms_server_ready(host = ""),
-    "Failed to parse URL: No host part in the URL"
+    "Failed to parse URL: No host"
   )
 })
 

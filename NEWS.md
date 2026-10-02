@@ -85,6 +85,8 @@
 
 * A `POSIXlt` value in a request body no longer makes the call recurse with no end.
 
+* The help of `lms_server_ready()` no longer quotes one exact libcurl message for an empty `host`. The wording depends on the libcurl version, and the tests now pass with each wording.
+
 # rlmstudio 0.2.2
 
 * Fix CRAN issues
