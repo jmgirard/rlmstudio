@@ -2,6 +2,7 @@
 
 _The only authority on milestone status. Grouped by status, not ID._
 _Last hygiene check: 2026-10-02 (M081 archived, two follow-up rows added, M078 row pruned, cairn_validate green)_
+_Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
 
 ## Milestones
 
