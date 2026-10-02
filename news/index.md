@@ -1,1799 +1,228 @@
 # Changelog
 
-## rlmstudio (development version)
+## rlmstudio 0.3.0
 
-- A `model`, `job_id`, `previous_response_id`, or `type` value with a
-  class or the S4 bit is now checked as its plain value. The check
-  removes the class and the S4 bit before it reads the value, also for
-  an S4 class that contains an S3 class. So a class method for `[`,
-  `[[`, [`length()`](https://rdrr.io/r/base/length.html),
-  [`dim()`](https://rdrr.io/r/base/dim.html), or
-  [`is.na()`](https://rdrr.io/r/base/NA.html) no longer runs inside the
-  check. Before, such a method was able to replace the abort of the
-  package or change its detail.
+### Breaking changes
 
-  - A classed `type` filter of
-    [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-    and
-    [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
-    now matches by its value. Before, `%in%` read the filter through its
-    [`as.character()`](https://rdrr.io/r/base/character.html) method. So
-    a filter that held `"llm"`, with a method that gave `"embedding"`,
-    kept the embedding models.
+- Each `TRUE`/`FALSE` argument now aborts on any other value, with a
+  message that names the argument. Before, `NA`, `"yes"`, `1`, and
+  `NULL` acted as `FALSE`. This covers `simplify`, `logprobs`, `force`,
+  `echo_load_config`, `cors`, `loaded`, `detailed`, `json`, and
+  `verbose`.
 
-- A `model`, `job_id`, or `previous_response_id` string that is not
-  valid text now gets a new first line in its abort. The line names the
-  argument and says that it “must be a string of valid text”. The same
-  holds for the `response_id` attribute of a `previous_response_id`.
-  Before, the first line asked for the value “given as a single string”,
-  and the value was one string. Other faults, such as `NA` or two
-  values, keep the old first line.
-
-- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  now checks `model`, `input`, and `schema` before it checks its `...`
-  for a name that it sets itself, as
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  does. Take a call with a bad `model`, `input`, or `schema` and a
-  clashing dot. The dot is an `instructions` in `...` on the default
-  route, or a `messages` in `...` with `api_type = "openai"`. The abort
-  now names the bad argument. Before, it named the dot.
-
-- `previous_response_id` now takes the earlier reply itself. With
-  `first <- lms_chat(...)`, pass `previous_response_id = first` to
-  continue the thread. This holds for
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  and the `...` of
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
-  A value that carries a `response_id` attribute sends that attribute as
-  a plain string in place of the value. A string reply and an
-  `lms_chat_result` both work, and the id string from
-  `attr(first, "response_id")` still works.
-
-  - The attribute follows the rules of the id string. A bad attribute
-    aborts before the check for a running server, with a message that
-    names `previous_response_id` and its `response_id` attribute. With
-    `api_type = "openai"`,
-    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-    and
-    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-    still refuse such a value, as they refuse a string.
-  - A value with no `response_id` attribute is sent as the id itself, as
-    before. So a reply that came back with no id goes out as its own
-    text, and the server answers with status 400. An example is a native
-    reply sent with `store = FALSE`. A reply text that is empty or holds
-    only whitespace aborts before the request, as such an id does. The
-    character vector of `lms_chat_batch(format = "vector")` and the
-    `output` column of its data frame carry no attribute.
-
-- A new vignette,
-  [`vignette("chat-options")`](https://jmgirard.github.io/rlmstudio/articles/chat-options.md),
-  shows how to control a chat from an R script. A table compares the
-  three routes of
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  that `api_type` picks. The vignette covers a request option such as
-  `temperature`, and a misspelled option that the default route ignores.
-  It covers a follow-up question with `previous_response_id` and a whole
-  conversation as a `messages` data frame on
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
-  It shows the raw reply with `simplify = FALSE`. It also shows a
-  function that catches four condition classes with
-  [`tryCatch()`](https://rdrr.io/r/base/conditions.html):
-  `rlmstudio_no_server`, `rlmstudio_api_error`,
-  `rlmstudio_model_mismatch`, and `rlmstudio_bad_response`. A call that
-  fails with one of these classes then does not stop a script.
-
-- The
-  [`vignette("headless-config")`](https://jmgirard.github.io/rlmstudio/articles/headless-config.md)
-  text is rewritten, under the new title “Using LM Studio Without the
-  Desktop App”. It covers only what differs from
-  [`vignette("getting-started")`](https://jmgirard.github.io/rlmstudio/articles/getting-started.md).
-  It shows the headless install with
-  `install_lmstudio(method = "headless")` and says when that function
-  asks before it installs. It covers the daemon with
-  [`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_start.md),
-  [`lms_daemon_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_status.md),
-  and
-  [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md),
-  and a script wrapped in
-  [`with_lms_daemon()`](https://jmgirard.github.io/rlmstudio/reference/with_lms_daemon.md).
-  A new section covers a server that requires an API token, with
-  `RLMSTUDIO_API_TOKEN` and the `token` argument. Another covers a
-  server on another computer, with the `LMS_SERVER_HOST` environment
-  variable on that computer and the `host` argument in R.
-
-- The
-  [`vignette("getting-started")`](https://jmgirard.github.io/rlmstudio/articles/getting-started.md)
-  text is rewritten for a reader who knows R but has not run a local
-  model. It explains terms such as model key and system prompt in plain
-  words. It goes from installing LM Studio to a first batch of replies.
-  It covers a check of the `lms` tool with
-  [`has_lms()`](https://jmgirard.github.io/rlmstudio/reference/has_lms.md)
-  and
-  [`check_lms_version()`](https://jmgirard.github.io/rlmstudio/reference/check_lms_version.md).
-  It covers starting the server, checking that it answers, and finding
-  models with
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md).
-  It also covers downloading, loading, one chat with a system prompt, a
-  batch with
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  and cleaning up. It points to
-  [`vignette("headless-config")`](https://jmgirard.github.io/rlmstudio/articles/headless-config.md)
-  for use without the desktop app.
-
-- The vignettes now ship with output that was knitted ahead of time from
-  a live LM Studio. A build or check of the package therefore runs no
-  vignette code and never reaches LM Studio. Before, where `lms` was
-  installed, a build of `getting-started` and `headless-config` ran
-  their code against the local LM Studio. That code starts the server
-  and loads a model. Elsewhere, the build showed the code with output
-  pasted as comments.
-
-- The logprobs data frame has a new fifth and last column, `step`. This
-  holds for
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  for
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  on its default route, and for each OpenResponses reply of
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  with `logprobs = TRUE`. It is an integer that numbers the steps of the
-  reply from 1, across all the `output_text` parts. Each row of a step
-  carries the number of that step, so two steps with the same token keep
-  different numbers. The four columns before it do not change.
-
-- [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md)
-  now scores the first step of the reply alone. Before, it read every
-  row whose `step_token` equaled that of the first row. So a later step
-  that repeated the first token added its candidates to the score.
-
-  - With a `step` column whose first value is not `NA`, it reads the
-    rows whose `step` equals that value, wherever they sit.
-  - With no `step` column, or a first `step` of `NA`, it reads the first
-    rows that share the `step_token` of the first row. It stops before
-    the first row with another token, and an `NA` token counts as the
-    same as an `NA` token. In such a frame, two adjacent steps with the
-    same token still count as one step.
-  - Candidates that give the same label, such as `"3"`, `" 3"`, and
-    `"3.0"`, now give one row of `probabilities`. That row holds the sum
-    of their probabilities. The rows come in the order in which each
-    label first appears. The `entropy` is computed over those rows. The
-    expected value and the weighted standard deviation do not change.
-  - With one label, the `entropy` is now 0. Before, it was a small
-    negative number, about -1.4e-09.
-
-- The print method of an `lms_chat_result` counts the steps of the
-  logprobs data frame by `step`. With no `step` column, it counts runs
-  of the same `step_token`. Before, it counted distinct step tokens, so
-  a reply with the steps “3”, “”, “3” showed 2 steps.
-
-- A new vignette,
-  [`vignette("text-analysis")`](https://jmgirard.github.io/rlmstudio/articles/text-analysis.md),
-  shows how to analyze a data frame of texts with a local model. Each
-  result goes back into the data frame as a column, in plain R code. It
-  covers a batch of summaries with
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  and `format = "data.frame"`. It covers a `schema` on
-  `api_type = "openai"` whose fields become a label column and a
-  star-rating column. It covers a batch with `logprobs = TRUE`, scored
-  row by row with
-  [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md)
-  in a `for` loop. It shows what a failed input looks like, with a text
-  longer than the context length. It covers the similarity of each text
-  to a query from
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
-  through a short helper function. It also covers the `rlmstudio.quiet`
-  option,
-  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
-  and
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
-  which also unloads models that were loaded before.
-
-- If a `messages` data frame holds a column whose row count differs from
-  the row count of the data frame,
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now aborts. The message says “You gave a data frame with a column
-  whose row count differs from the row count of the data frame.” The
-  abort has no condition class, and it comes before the check for a
-  running server. The rule reads each data-frame column, and each atomic
-  or list column with no class or with the class `"AsIs"` alone. It
-  reads such columns in the data frame and in its data-frame columns at
-  any depth. The row count of a matrix or array column is the first
-  extent of its `dim`. Before, such a column gave the jsonlite message,
-  which names no column. Some such columns also gave the R warning
-  “longer object length is not a multiple of shorter object length”. A
-  one-dimensional array of length one gave the R error “dims \[product
-  1\] do not match the length of object \[2\]” from inside the package.
-  A 3-by-2 `NA` matrix as the only column gave the message about a row
-  in which every cell is `NA`.
-
-  - The rule does not read a column with another class. A `POSIXlt`
-    column of length one is still sent with its one value in each
-    message. A `Date` or factor column of a wrong length now reaches the
-    jsonlite message with no warning. So does a one-dimensional `Date`
-    array of length one, with no R error. An earlier rule can still
-    refuse the data frame first. An example is a length-one `NA` `Date`
-    column in a data frame that has a row with no other value.
-
-- When jsonlite cannot write a `messages` data frame, the abort of
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  can now name a column. The package writes each top-level column alone,
-  in column order. If one fails, the abort names the first that fails.
-  For a column `d`, the line reads
-  `Column "d" is the first column that jsonlite cannot write on its own.`
-  Before, the message gave the jsonlite text alone, such as “values must
-  be length 2, but FUN(X\[\[2\]\]) result is length 3”, which names no
-  column. A list of messages that is not a data frame still gets the
-  jsonlite text alone.
-
-- The help pages now show only the sections on a malformed reply whose
-  rules their function applies. The “Malformed response” section keeps
-  the text that applies to every function: what `rlmstudio_bad_response`
-  is, a body that does not parse as JSON, and the `status` field. The
-  rest moves to five new sections: “Malformed model list”, “Malformed
-  load or download reply”, “Malformed embeddings”, “Malformed chat
-  reply”, and “Malformed logprobs”. Each page has the sections of the
-  rules its function applies, itself or through a call. Before, every
-  such page carried every rule, such as the `logprobs` rules on the
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-  page. Two functions can share a section, so a page can still hold a
-  rule of another function. An example is the OpenAI chat rules on the
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
-  page.
-
-  - With `simplify = TRUE` and `logprobs = TRUE`,
-    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-    now gives two messages where it gave one.
-    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-    gives them through it, and
-    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-    keeps them in the element of each failed input. A `top_logprobs`
-    that is not an array gives “The `top_logprobs` of a `logprobs` step
-    is not an array.” A candidate that is not a JSON object gives “A
-    candidate in `top_logprobs` is not a JSON object.” Before, both gave
-    “The `top_logprobs` of a `logprobs` step is not an array of JSON
-    objects.” The “Malformed logprobs” section now lists seven rules.
-  - The “Server not running” section now names
-    [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-    and
-    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-    among the functions that raise `rlmstudio_bad_response` for a model
-    list with another shape. They raise it through the model lookup that
-    a reply from another model starts, with either setting of
-    `simplify`.
-
-- [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  now warns when `context_length` is larger than the
-  `max_context_length` that the model list gives for the model. The
-  warning has the class `rlmstudio_context_above_max`, names both
-  numbers, and shows when the `rlmstudio.quiet` option is `TRUE`. The
-  load still goes ahead with the asked value, as the server loads it
-  with no message. The warning comes only with `force = FALSE`, for a
-  model that is not loaded yet.
-
-  - The
-    [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-    and
-    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-    help pages have a new “Long prompts” section. It covers the error
-    for a prompt longer than the loaded context, the warning, and how to
-    read the prompt token count.
-
-- The model-list check now requires the `max_context_length` of each
-  model to be a number, absent, or `null`. Any other value makes
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
-  and
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  with `force = FALSE` abort with `rlmstudio_bad_response`.
-  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-  returns `FALSE` for such a list.
-
-- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  and
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-  now abort when a character `input` does not hold exactly one string.
-  The message names `input`, states how many strings were given, and
-  names
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  which sends several prompts, one request each. The abort has no
-  condition class, and it comes before the check for a running server. A
-  character `input` that holds an `NA` still gets the message about
-  missing values first. Before, a two-string `input` went to the server
-  as a JSON array, and each route answered with a 400 whose message did
-  not say that more than one prompt was sent. A list `input` is still
-  sent as given.
-
-- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  and
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-  gain a `store` argument that turns off the storage of a reply on the
-  server.
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  takes it in `...` and sends it with every call.
-
-  - `store` must be `TRUE`, `FALSE`, or `NULL`. Any other value, `NA`
-    included, aborts before the check for a running server, with a
-    message that names `store`. A `TRUE` or `FALSE` with names,
-    dimensions, or a class is sent as a plain JSON `true` or `false`.
-  - `NULL`, the default, sends no `store` field, so the server default
-    applies, and that default stores the reply.
-  - With `api_type = "openai"`,
-    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-    and
-    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-    abort on `TRUE` or `FALSE`, because the OpenAI chat endpoint keeps
-    no thread.
-  - Before, a `store` in `...` went to the server unchecked on every
-    route, the `"openai"` route included. A `matrix(FALSE)` was sent as
-    `[[false]]`, and a classed value failed after the check for a
-    running server.
-  - [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-    has no `store` argument. It still sends a `store` in `...` to the
-    server unchecked.
-
-- A `model`, `job_id`, `previous_response_id`, or `type` string that is
-  not valid in its declared encoding now aborts. The message says so. An
-  example is the byte `0xff` in a UTF-8 string. A string marked
-  `"bytes"` also aborts, with a message that says it is marked as bytes.
-  Each abort names the argument and comes before the check for a running
-  server. Before, such a string was reported as “whitespace only”, with
-  two warnings from [`grepl()`](https://rdrr.io/r/base/grep.html), and a
-  string marked `"bytes"` passed the check. The check covers `model` of
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  and
-  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md).
-  It also covers `job_id` of
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
-  `previous_response_id` of
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  and
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  and `type` of
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-  and
-  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md).
-  For `type`, the message names the element.
-
-- A `model`, `job_id`, or `previous_response_id` that has a class,
-  names, or the S4 bit is now sent as a plain string. Before, a class
-  that jsonlite has no method for failed after the check for a running
-  server. For `structure("m", class = "foo")`, the error was “No method
-  asJSON S3 class: foo”. `I("m")` was sent as the JSON array `["m"]`. A
-  classed `"already_downloaded"` job id in
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  sent a request instead of returning the already-downloaded status.
-
-  - [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-    and
-    [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
-    now return the plain string. Before, they returned the value as
-    given, with its class, names, or S4 bit.
-
-- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  and
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now abort when their `...` holds an `instructions` on the
-  `"openresponses"` route, the default, or a `messages` on the
-  `"openai"` route.
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  sets `instructions` from `system_prompt` on the first route, and it
-  builds `messages` from `system_prompt` and `input` on the second. The
-  message names the argument and says what
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  sets it from. The abort has no condition class, and it comes before
-  the check for a running server. Before, R’s own error “formal argument
-  matched by multiple actual arguments” came from inside the package. In
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  it came after the check for a running server. On the other routes,
-  each name still goes into the request body.
-
-- With `api_type = "native"`,
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now ignores `logprobs = TRUE` in every format, because the native
-  route has no logprobs. It returns what it returns with
-  `logprobs = FALSE`. Before, the vector format returned a list of
-  strings, with a warning that the format cannot store logprobs data
-  frames. The data frame had a `logprobs` column of `NULL`.
-
-  - The batch now gives one warning that the native route ignores
-    `logprobs`. Before, it gave the same warning once for each input.
-    The warning comes after the check for a running server, and
-    `quiet = TRUE` does not hide it.
-
-- If two values in the `...` of
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  reach the same
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  argument, the batch now aborts with a message that names the argument.
-  Examples are `logprobs = TRUE, logprobs = "yes"`,
-  `log = TRUE, lo = FALSE`, and two `previous_response_id` values. So
-  does an `input` in its `...`, because the batch passes each element of
-  `inputs` as `input`. An `input` reaches `...` only when `inputs` is
-  given by its full name. Otherwise R reads `input` as a shortened
-  `inputs`. The abort has no condition class, and it comes before every
-  other check of `...` and before the check for a running server.
-  Before, R’s own error “formal argument matched by multiple actual
-  arguments” came from inside the package. An exact name beside a
-  shortened one, such as `logprobs` and `log`, still passes, because R
-  gives the shortened one to the `...` of
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md).
-
-- [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  and
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  gain a `previous_response_id` argument that continues a stored chat
-  thread.
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  takes it in `...`. With `simplify = TRUE`, the native and
-  OpenResponses routes now return the id of the reply in a `response_id`
-  attribute. Pass it as `previous_response_id` in the next call.
-
-  - `previous_response_id` must be `NULL` or one string that is not
-    empty and not whitespace only. Any other value aborts before the
-    check for a running server. With `api_type = "openai"`,
-    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-    and
-    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-    abort on a string, because the OpenAI chat endpoint keeps no thread.
-  - A simplified string reply with an id now prints an
-    `attr(,"response_id")` line under the text.
-    [`identical()`](https://rdrr.io/r/base/identical.html) of such a
-    reply and a plain string returns `FALSE`.
-    [`trimws()`](https://rdrr.io/r/base/trimws.html),
-    [`toupper()`](https://rdrr.io/r/base/chartr.html),
-    [`sub()`](https://rdrr.io/r/base/grep.html), and
-    [`gsub()`](https://rdrr.io/r/base/grep.html) keep the attribute on
-    the text they return, and
-    [`paste0()`](https://rdrr.io/r/base/paste.html) drops it. If you
-    need the plain string, remove the attribute with
-    `attr(x, "response_id") <- NULL`.
-  - In
-    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-    the list format keeps the attribute on each reply. The character
-    vector of the vector format and the `output` column of the data
-    frame carry none. On the OpenResponses route with `logprobs = TRUE`,
-    the vector format returns a list, and each element keeps the
-    attribute. An id that the server does not hold fails each input
-    alone.
-
-- Each `TRUE` or `FALSE` argument now takes only `TRUE` or `FALSE`. Any
-  other value aborts with a message that names the argument, and the
-  abort has no condition class. It aborts before the check for a running
-  server and sends no request. A function that makes no such check
-  aborts before the `lms` CLI runs. A named `TRUE`, or a `TRUE` or
-  `FALSE` in a one-by-one matrix, still passes.
-
-  - `simplify` of
-    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-    [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-    [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-    and
-    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-    now aborts on any other value. So does `logprobs` of
-    [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-    [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-    and
-    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md).
-    So do `echo_load_config` and `force` of
-    [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-    and `force` of
-    [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md).
-    So do `json`, `verbose`, and `quiet` of
-    [`lms_server_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_status.md).
-    Before, each read any value other than `TRUE` as `FALSE`, so `NA`,
-    `"yes"`, `1`, and `NULL` acted as `FALSE`.
   - `flash_attention` and `offload_kv_cache_to_gpu` of
     [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-    must be `TRUE`, `FALSE`, or `NULL`. Before, the function sent the
+    take `TRUE`, `FALSE`, or `NULL`. Before, the function sent the
     result of [`as.logical()`](https://rdrr.io/r/base/logical.html) for
-    any value. So `1` and `"true"` were sent as `true`, `NA` and `"yes"`
-    as `null`, and `c(TRUE, FALSE)` as an array.
-  - A `logprobs` in the `...` of
-    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-    must be `TRUE` or `FALSE`, also under a shortened name such as
-    `log`. Before, any other value acted as `FALSE`.
-  - Each element of the `...` of
-    [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
-    named exactly `logprobs` must be `TRUE`, `FALSE`, or `NULL`. None of
-    them goes into the request body, and a `TRUE` still warns. Before,
-    only a first `logprobs` of `TRUE` was dropped, and a value such as
-    `FALSE` or `"yes"` went into the request body. A longer name such as
-    `logprobs_x` no longer warns, and it goes to the server as any other
-    field does.
+    any value.
 
 - `quiet` of
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md),
-  and
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now defaults to `NULL`, as in
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md).
-  `NULL` follows the `rlmstudio.quiet` option. `TRUE` hides the messages
-  and starts no progress bar. `FALSE` prints the messages and starts the
-  bar, and the option does not change that. Before, with the option
-  `TRUE`, `quiet = FALSE` in
   [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
   and
-  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
-  still hid their messages. With the option `TRUE`,
   [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now starts no progress bar by default. Before, its default
-  `quiet = FALSE` started the bar whatever the option said.
+  now defaults to `NULL`, which follows the `rlmstudio.quiet` option.
+  `TRUE` or `FALSE` overrides the option.
 
-  - `quiet` of
-    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-    and
-    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-    must now be `TRUE`, `FALSE`, or `NULL`. Before, any other value
-    acted as `FALSE`.
-  - If `quiet` or the option is `TRUE`, the warnings about failed
-    inputs, cut-off replies, and a vector format that returns a list
-    still show.
-  - The option does not change `quiet` of
-    [`lms_server_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_status.md),
-    which passes `--quiet` to the `lms` CLI.
-  - The
-    [`?rlmstudio`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-package.md)
-    help page now describes the `rlmstudio.quiet` option. Before, the
-    entry did not reach the page.
+- If a character `input` holds more than one string,
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+  and
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+  now abort. Use
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  to send several prompts.
 
-- The hint in a 401 or 403 abort message now matches the request that
-  was sent. If the request carried a token, the hint says that the
-  server rejected it. If not, the hint names `RLMSTUDIO_API_TOKEN`.
-  Before, each REST function except
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-  read the token sources again after the reply. A token source that
-  changed in that time, such as the `rlmstudio.token` option, gave the
-  hint for the other case.
+- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  no longer stops at a failed input. It stores the failure, goes on to
+  the next input, and warns once at the end with the positions of the
+  failed inputs. In a list result, the element of a failed input holds
+  the condition. Where the result is text, it holds `NA`.
 
-- If a run of the LM Studio CLI or the headless installer fails, the
-  abort message now quotes what the run wrote, beside the exit code.
+  - The batch still aborts on a lost server, on status 401, 403, or 404,
+    and on a model that the server cannot find. The condition carries
+    the replies so far in a `results` field.
+  - With `api_type = "native"`, the batch ignores `logprobs = TRUE` and
+    warns once.
 
-  - [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
-    [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md),
-    [`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_start.md),
-    and
-    [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
-    quote it after “The CLI said:”. Before,
-    [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
-    [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md),
-    and
-    [`lms_daemon_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_start.md)
-    gave the exit code alone.
-    [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
-    wrote “CLI output:” with the text in quotes. The quoted text is the
-    stderr text. If stderr holds only whitespace and escape codes, it is
-    the stdout text.
-  - `install_lmstudio(method = "headless")` quotes the installer output
-    after “The installer said:”. Before, the message the user saw
-    dropped that output. Any other error of the install step still
-    aborts with “Headless installation failed.” and the error message.
-  - In the quoted text, a byte that is not valid UTF-8 shows as `<xx>`,
-    its hex value. ANSI escape codes, such as color codes, cursor codes,
-    and terminal links, are removed, and each run of whitespace becomes
-    one space. A text longer than 1000 characters keeps at most its last
-    1000 characters, after “…”.
-  - If the CLI text holds a byte that is not valid UTF-8,
-    [`lms_daemon_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_daemon_stop.md)
-    no longer fails with a base R error.
+- If no server answers,
+  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
+  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
+  and
+  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
+  now abort with `rlmstudio_no_server`. Before, they returned an empty
+  data frame or `NULL`.
 
-- [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md)
-  with no server running now prints an info message and returns the CLI
-  exit code invisibly. Before, it aborted. If no server is running,
-  `lms_daemon_stop(force = TRUE)` shows the same message.
+- [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+  returns the job id string, or `"already_downloaded"` invisibly. A
+  reply with no job id now aborts with `rlmstudio_bad_response`. Before,
+  the call returned `TRUE`.
 
 - [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
-  now checks `port` and `cors` before the CLI runs. A bad value aborts
-  with a message that names the argument, and no server starts.
+  now waits up to 10 seconds for the REST API to answer before it
+  returns. Set `wait = 0` to return as soon as the CLI does, as before.
 
-  - `port` must be `NULL` or one whole number from 1 to 65535, given as
-    a number. `port = "8080"` and a one-cell matrix now abort. Before,
-    each reached the CLI as `"8080"` and started a server. A missing
-    value, a number outside the range, and a vector of two ports now
-    abort before the CLI runs.
-  - `cors` must be `TRUE` or `FALSE`. `cors = NULL`, `NA`, `1`, and
-    `"yes"` now abort. Before, each acted as `FALSE`.
+- [`lms_server_stop()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_stop.md)
+  with no server running now prints a message and returns. Before, it
+  aborted.
 
-- [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+- The logprobs data frame has a new last column, `step`, that numbers
+  the steps of the reply.
+  [`lms_score_expected()`](https://jmgirard.github.io/rlmstudio/reference/lms_score_expected.md)
+  now scores the first step alone. It also adds up candidates that give
+  the same label, such as `"3"` and `" 3"`.
+
+- With `simplify = TRUE`, a reply from
+  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
   and
-  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
-  now check `type` and `quiet`, and
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-  also checks `loaded` and `detailed`. A bad value aborts with a message
-  that names the argument. It aborts before the check for a running
-  server and sends no request. Before, `quiet = NA` failed with a base R
-  error after the request, on a call that matched no model. `type = 1`
-  returned an empty data frame, and `loaded = "yes"` acted as `FALSE`.
-  `quiet = 1` acted as `TRUE`, and it now aborts too.
+  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+  now carries a `response_id` attribute. So
+  [`identical()`](https://rdrr.io/r/base/identical.html) of such a reply
+  and a plain string returns `FALSE`.
 
-  - `type` must be a character vector of one or more elements, and no
-    element can be `NA`, empty, or whitespace only. A factor aborts. A
-    type that no model has, such as `"vlm"`, still returns an empty data
-    frame and a message.
-  - `quiet` must be `TRUE`, `FALSE`, or `NULL`. `NULL` is new. The entry
-    above on the `quiet` default says what each value does.
-  - `loaded` and `detailed` must be `TRUE` or `FALSE`.
+### New features
 
-- With `api_type = "openai"`, an object `schema`,
-  `format = "data.frame"`, and `logprobs = FALSE`,
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now adds one column per top-level property of the schema. The columns
-  come after the four reply columns, in the order of `properties`, and
-  have the property names. The `output` list-column stays. The columns
-  come from the schema and not from the replies. If every input failed,
-  they are still there.
-
-  - A `"string"`, `"integer"`, `"number"`, or `"boolean"` property gives
-    a character, integer, double, or logical column. A pair of such a
-    type and `"null"` gives the same column type. Any other property
-    gives a list-column, and a nested object gets no columns of its own.
-  - A field that is not one value of the column type gives `NA` with no
-    warning, and `output` keeps the value. A list-column cell is `NULL`
-    for an absent or `null` field. A reply that is not a JSON object and
-    the row of a failed input give `NA` and `NULL` cells.
-  - If a property name is empty, `NA`, repeated, or equal to another
-    column name such as `output`, the call now aborts. It aborts before
-    the check for a running server. A data frame with `logprobs = TRUE`,
-    and the list and vector formats, do not check the names.
+- New
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  turns texts into embedding vectors. It returns a numeric matrix with
+  one row per text. It sends the texts in batches of `batch_size`
+  (default 100) and shows a progress bar for more than one batch.
 
 - New
   [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
-  returns one row per loaded model instance, the view that `lms ps`
-  prints. It reads the REST model list, as
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-  does, so it honors `host` and `token`. The first four columns are
-  `id`, `key`, `type`, and `display_name`. Each field of the load
-  configuration of an instance, such as `context_length`, gets a column
-  of its own. With no loaded instance of a type in `type`, it returns a
-  zero-row data frame with the four columns. It also prints a message,
-  which `quiet` controls as in
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md).
-  It does not include four fields that `lms ps --json` reports. They are
-  the generation status, the queued requests, the ttl, and the last-used
-  time.
+  returns one row per loaded model instance, with a column for each
+  field of its load configuration.
 
-  - It aborts with `rlmstudio_bad_response` on a model list that
-    [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-    rejects. In a model of a listed type with a loaded instance, it also
-    aborts on two more faults. One is a `display_name` that is not a
-    string. The other is an instance `config` that is not a JSON object.
+- New
+  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+  tells whether a host answers as an LM Studio server that you can use.
+  It returns `TRUE` or `FALSE`, and it never aborts on a failed request.
 
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  and
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-  now abort on a reply from a model other than the one asked for, with
-  either setting of `simplify`. With one chat model loaded, LM Studio
-  0.4.25+1 answered a model name that it could not find with status 200
-  and a reply from the loaded model. The new condition class is
-  `rlmstudio_model_mismatch`, which is also an `rlmstudio_bad_response`.
-  Its `model` field holds the asked name, and its `reply_model` field
-  holds the `model` field of the reply.
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  raises it through the two functions.
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
-  does not check the reply.
+- The package can now use an LM Studio server that requires an API
+  token. Each function that reaches the REST API takes a `token`
+  argument. Without it, the package reads the `rlmstudio.token` option,
+  then the `RLMSTUDIO_API_TOKEN` environment variable. See
+  [`?rlmstudio_token`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio_token.md).
 
-  - If the `model` field of the reply differs from the asked name, the
-    call sends one request for the model list. The reply is accepted if
-    a loaded instance of a model whose key equals the asked name, in any
-    letter case, answered. A model loaded under another id, such as with
-    `lms load --identifier`, therefore still works by its key.
-  - If that request fails, the call raises the condition of the failure,
-    and the message says that the model-list lookup failed.
-  - [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-    aborts at such a reply on the `"openai"` and `"openresponses"`
-    routes, with a `results` field as for a lost server.
-
-- An `rlmstudio_api_error` now carries a `code` field. It holds the
-  string at `error.code` of the response body, or `NULL`. With two chat
-  models loaded, the `/v1/chat/completions` and `/v1/responses`
-  endpoints of LM Studio 0.4.25+1 answered a model name that they could
-  not find with status 400 and the code `"model_not_found"`.
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now aborts at that error with a `results` field. Before, each input
-  failed alone, and the batch sent every request. A 400 with another
-  code, or with no code, still fails its own input alone.
-
-- The
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-  help page now describes a limit of LM Studio 0.4.25+1. The server
-  embeds only the first tokens of each text, up to the context length of
-  the loaded model instance. A longer text returns a vector for its
-  start, with no error or warning, and the reply reported 0 tokens on
-  that version. The page names two ways to avoid the cut. One is to
-  split a long text before the call. The other is to unload the model
-  and load it again with a larger `context_length`.
-
-- [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-  now sends its input in batches, one request for each run of at most
-  `batch_size` texts. The default `batch_size` is 100. A new `quiet`
-  argument controls a progress bar, which shows when a call sends more
-  than one request.
-
-  - A request that fails with `rlmstudio_bad_response`, or with
-    `rlmstudio_api_error` at a status other than 401, 403, or 404,
-    leaves the rows of its inputs `NA`. The call goes on and warns once,
-    even when quiet. If every request fails, the call aborts with the
-    first failure.
-  - A 401, 403, or 404 and a server lost between requests abort the
-    call. With `simplify = TRUE`, so does a batch whose embeddings have
-    another width. After a request that succeeded, the condition carries
-    a `results` field. It holds the matrix so far, with `NA` rows. With
-    `simplify = FALSE`, it holds the list of bodies so far.
-  - With `simplify = FALSE`,
-    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-    now returns a list of parsed bodies, one per request. A call with
-    one request returns a list of one. Before, it returned the body
-    itself.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  no longer counts a matrix or array column of a `messages` data frame
-  as empty in a row that holds no cells of it. An example is a row of a
-  2-by-0 matrix. jsonlite writes that row of the column as `[]`, or as
-  nested empty arrays such as `[[],[],[]]`. Before, a row in which every
-  other cell was `NA` aborted with “You gave a data frame with a row in
-  which every cell is NA or a NULL list cell.”
-
-  - If the column is an atomic matrix or array with no class attribute,
-    or a list matrix, such a row is now sent. If a data-frame column
-    holds such a matrix, the row is also sent, as `{"m":[]}`.
-  - A list array of three or more dimensions now aborts with the error
-    for a list with a `dim` attribute.
-  - A data-frame column with no columns still counts as empty in every
-    row.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now refuses an `NA`, `NaN`, `Inf`, or `-Inf` number inside `messages`,
-  before the check for a running server. Before, jsonlite sent it as the
-  string `"NA"`, `"NaN"`, `"Inf"`, or `"-Inf"`. In some data-frame
-  columns, it left an `Inf` cell out of the message with no warning. The
-  error opens with “`messages` holds a field value that cannot be sent
-  as JSON.” and has no condition class. The rule reads a double or
-  integer vector with no class or with the class `"AsIs"` alone. It
-  reads a field, a list below a field, a list-column or list-matrix
-  cell, and a matrix or array column.
-
-  - In an atomic data-frame column with no `dim` attribute, only `Inf`
-    and `-Inf` abort. An `NA` or `NaN` cell there is still left out of
-    its message.
-  - A number with another class is still written by its class. For
-    example, `as.Date(NA)` is sent as `null` and `as.Date(Inf)` as
-    `"Inf"`.
-  - Take a list below a field with a class other than `"AsIs"`. If
-    jsonlite writes it as it writes the list without its class, the rule
-    reads its parts. An example is a list with the class
-    `c("foo", "list")`. The rule does not read the parts of a `POSIXlt`
-    value.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  and
-  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md)
-  now send the request body as the text that
-  [`jsonlite::toJSON()`](https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html)
-  writes from it. Before, httr2 rebuilt each list in the body before it
-  wrote it. This changes three things.
-
-  - A zero-width matrix or array column of a `messages` data frame is
-    now sent. Before, an atomic matrix or array column with no cells in
-    a row was left out of the message. A 2-by-0 list matrix column was
-    sent as `null`. A data-frame column that holds such a matrix is now
-    sent as `{"m":[]}`, and before it was sent as
-    [`{}`](https://rdrr.io/r/base/Paren.html).
-  - A `POSIXlt` value in `messages` or in `...` is now sent as jsonlite
-    writes it, such as `"2020-01-01 10:00:00"`. Before, httr2 recursed
-    with no end on it. The call did not return, or it failed with
-    “evaluation nested too deeply: infinite recursion”. A
-    [`packageVersion()`](https://rdrr.io/r/utils/packageDescription.html)
-    or [`person()`](https://rdrr.io/r/utils/person.html) value in `...`
-    also recursed. Now it aborts with the jsonlite error “No method
-    asJSON S3 class: numeric_version” or “No method asJSON S3 class:
-    person”.
-  - An
-    [`httr2::obfuscated()`](https://httr2.r-lib.org/reference/obfuscate.html)
-    value in `...` now aborts with the jsonlite error “No method asJSON
-    S3 class: httr2_obfuscated”. Before, httr2 sent the value it hides.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now refuses a value inside `messages` that is not an atomic vector, a
-  list, or `NULL`, before the check for a running server. The rule reads
-  a list message and a data frame at any depth. Examples are an
-  environment, a symbol, a call, a formula, and an expression vector. So
-  are an external pointer, an S4 object, a reference-class object, and
-  an S4 class definition. The error opens with “`messages` holds a field
-  value that cannot be sent as JSON.” and names the type of the value,
-  such as “environment” or “S4”. The error has no condition class. The
-  rule reads the storage type, so a class set by hand on such a value
-  does not hide it. A vector or a list with a class set by hand is not
-  refused, and jsonlite still writes it by that class. For example,
-  `structure(1L, class = "NULL")` is sent as `null`. Before, most such
-  values aborted with the jsonlite error, but some were sent. Some
-  values with a class set by hand, such as `"POSIXt"` or `"NULL"`, were
-  sent as printed text or `null`. An environment, a call, an expression
-  vector, or an external pointer was sent in this way. An S4 class
-  definition was sent too. With a slot, it was sent as an object that
-  maps each slot name to its class. As a data-frame column, it also gave
-  a jsonlite warning. As a field or a list cell, a class definition with
-  no slot was sent as an empty array. A function still gets the error
-  for a function. A `NULL` field is still sent. So is an S4 object whose
-  class contains an atomic type, such as `"numeric"`, but without its
-  other slots.
-
-- If the first extent of an array column of a `messages` data frame is
-  the row count,
+- Structured output:
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now reads that column one row at a time. Such a column counts as empty
-  in a row only if each of its cells in that row is `NA` or a `NULL`
-  list cell. Before, a row with one empty cell in an array of three or
-  more dimensions sometimes aborted as a row in which every cell is
-  `NA`. Now a three-dimensional character or logical column with one
-  `NA` in a row is sent, and jsonlite writes that `NA` as `null`. A
-  numeric one aborts with the error for a number that is `NA`, `NaN`, or
-  infinite. A list column of three or more dimensions aborts with the
-  error for a list with a `dim` attribute. If a row is empty in every
-  column, the error “You gave a data frame with a row in which every
-  cell is NA or a NULL list cell.” comes first.
+  and `lms_chat(api_type = "openai")` take a `schema` argument, a JSON
+  Schema written as a named list. With `simplify = TRUE`, the reply
+  comes back parsed into an R value. With `format = "data.frame"` and
+  `logprobs = FALSE`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  adds one column per top-level property of an object schema.
 
-  - A data-frame column that is neither an atomic vector nor a list,
-    such as an environment, a symbol, or an expression vector, no longer
-    gives an R warning from the empty-row check. It never counts as
-    empty, so the later rules decide the call. A function aborts with
-    the error for a function. Any other such column aborts with the
-    error for a value that is not an atomic vector, a list, or `NULL`.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now refuses two more kinds of `messages` value before the check for a
-  running server. The errors have no condition class.
-
-  - A list with a `dim` attribute inside a message aborts, such as a
-    list-matrix as a field or in a list-column cell. So does a list
-    column of a data frame with one, three, or more dimensions. Before,
-    jsonlite sent such a list as nested arrays with each cell in an
-    array of its own. A one-dimensional list column with more than one
-    row was refused before too, with a jsonlite error. An atomic matrix
-    field and a list-matrix column are still sent.
-  - A function anywhere inside `messages` aborts, such as a field, a
-    data-frame column, or a list-column cell. Before, jsonlite sent the
-    function’s source text.
-  - Two errors get a new header, “`messages` holds a field value that
-    cannot be sent as JSON.” They are the error for a function and the
-    error for a value that jsonlite cannot write. They no longer show
-    the form of a message. Before, it opened with “`messages` must be a
-    data frame or an unnamed list of messages.” The other `messages`
-    errors keep that header.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now refuses more `messages` values before the check for a running
-  server. The errors have no condition class.
-
-  - A data frame row whose cells are all `NA` or `NULL` list cells
-    aborts. Before, it was sent as a message with `null` fields. A row
-    with a [`list()`](https://rdrr.io/r/base/list.html) or `list(NA)`
-    cell is still sent.
-  - A list of messages with a `dim` attribute, such as a matrix of
-    messages, aborts. So does a message that is a list with a `dim`
-    attribute. Before, a matrix was sent flat in column order, and such
-    a message was sent with each field in an array.
-  - A name that is `NA`, empty, or repeated aborts. The rule applies to
-    a message and to each list or data frame inside a message or inside
-    a data frame cell or column. Before, a repeated field name in a
-    message was sent, and so was a bad name below the message level.
-    jsonlite sent an `NA` or empty name as a number and renamed a
-    repeated `a` to `a.1`.
-  - A value that jsonlite cannot write aborts with the jsonlite message.
-    An example is a field with a class that jsonlite has no method for.
-    Before, the call failed after the check for a running server, with
-    an error that did not name `messages`.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now sends a `messages` list that has a class attribute. The call
-  removes the class of the outer list and of each message after the
-  check, and before it builds the request. Before, a class that jsonlite
-  has no method for failed after the check for a running server, with an
-  error that did not name `messages`. A class on a field inside a
-  message is kept, so [`I()`](https://rdrr.io/r/base/AsIs.html) on a
-  field still makes an array. A data frame and its columns keep their
-  classes. A data frame `messages` value now also aborts before the
-  request if it has no columns, or a column name that is `NA`, empty, or
-  repeated. It also aborts if a row holds `NA` in every cell. Before,
-  jsonlite sent such a data frame with empty messages, or with a `null`
-  field for an `NA` in a list column. It also replaced a bad column name
-  with a number or a suffix.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now checks `messages` before the request. It must be a data frame with
-  at least one row, or an unnamed list of one or more messages. Each
-  message must be a list of one or more fields, and each field must have
-  a name. A message must not be a data frame. Any other value aborts. A
-  single message that is not in a list, such as
-  `list(role = "user", content = "Hi")`, also aborts. The error has no
-  condition class, and it comes before the check for a running server.
-  Before, the call sent such a value to the server. For some values,
-  such as a single string, the server answered with an error that did
-  not name the fault. The package does not check the roles or the
-  content of a message.
-
-- A `stream` in the `...` of
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
+- Chat threads:
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  or
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now aborts before the request unless it is `FALSE` or `NULL`. The
-  error has no condition class, and it comes before the check for a
-  running server. Before, `stream = TRUE` made the server send a
-  streamed reply, and the call failed with `rlmstudio_bad_response` and
-  a hint that another program can be answering on the host.
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  failed every input that way and did not stop. The package reads a
-  whole reply only.
-
-- The help of
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now says that with `simplify = TRUE`, a reply is read from its first
-  choice alone. A request with `n` in `...` returns the first choice,
-  and the cut-off warning and abort depend on the finish reason of that
-  choice alone. With `simplify = FALSE`, the body holds every choice.
-  The behavior is unchanged. `lms_chat(api_type = "openai")` and
-  `lms_chat_batch(api_type = "openai")` read replies in the same way.
-
-- If the server reports the finish reason `"length"`,
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  with a `schema`, `simplify = TRUE`, and `logprobs = FALSE` now aborts
-  with `rlmstudio_bad_response`. Such a reply whose content parses
-  aborts too. A length limit ended such a reply, so the parsed value can
-  be incomplete. The limit is `max_tokens` or the context length of the
-  model, and the message names both. The condition holds the reply
-  content in its `content` field and `"length"` in its `finish_reason`
-  field. Before, a cut-off reply that parsed came back as a whole
-  answer. `lms_chat(api_type = "openai")` aborts in the same way.
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  stores the failure and warns once, as for other failed inputs. The
-  message for a cut-off reply that does not parse now also names the
-  context length.
-
-- If a length limit ended a reply that
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  returns as text, the call now warns with class
-  `rlmstudio_reply_cut_off`. That covers a call with no `schema` and a
-  call with `logprobs = TRUE`. The call returns the reply as before. The
-  warning shows whatever `quiet` and the `rlmstudio.quiet` option say.
-  `lms_chat(api_type = "openai")` warns in the same way.
-  `lms_chat_batch(api_type = "openai")` gives one such warning for the
-  batch, after any warning about failed inputs. It names the count and
-  the positions of the cut-off inputs. A batch that aborts on a lost
-  server, or on status 401, 403, or 404, gives this warning before the
-  abort. With `simplify = FALSE`, no call gives this warning.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
-  and
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  take a new `ttl` argument. It is the number of seconds that a model
-  stays loaded with no request. It has an effect only on a model that
-  the request itself loads. A model that is already loaded keeps its
-  idle time. `ttl` must be `NULL` or one whole number from 1 to
-  `.Machine$integer.max`, and any other value aborts before the request.
-  LM Studio accepts a bad value such as `-5` with no error.
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  takes `ttl` with `api_type = "openai"` only. On any other route, the
-  default included, it now aborts before the request. Before, LM Studio
-  ignored a `ttl` in `...` on the openresponses route and rejected it
-  with status 400 on the native route.
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  passes `ttl` to
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  and checks it before the first request.
-
-- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now aborts at an input that fails with an `rlmstudio_api_error` of
-  status 401, 403, or 404. It aborts with that condition and sends no
-  more requests. LM Studio sends 401 for a token that it refuses. With
-  `api_type = "native"`, it sends 404 for a model that it cannot find.
-  In both cases, every later input fails in the same way. The condition
-  carries a `results` field, as for a lost server. Its elements before
-  the failed input hold what `format = "list"` returns, and the other
-  elements are `NULL`. Before, the batch stored the condition, sent a
-  request for every other input, and warned at the end. Any other
-  status, and an `rlmstudio_bad_response`, still fail their own input
-  alone.
-
-- If a download reply has a `status` of `"failed"`,
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-  now aborts with `rlmstudio_bad_response`. The message says that LM
-  Studio reports that the download failed. If the reply’s `job_id` is a
-  string with a character that is not whitespace, the message names it.
-  Before, if the `job_id` was a string, the call said “Download job
-  started successfully” and returned the job id.
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  still returns a `"failed"` status and does not abort.
-
-- If the `job_id` of a download reply is empty or holds only whitespace,
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-  now aborts with `rlmstudio_bad_response`. The message says that
-  `job_id` is a string with no character that is not whitespace. Before,
-  the call returned that job id.
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  then failed with an argument error.
-
-- [`print()`](https://rdrr.io/r/base/print.html) on a download status
-  now shows no `NaN` and no `Inf`. If the total size is 0 or below, or
-  if a size is not finite, the progress line is left out. If the speed
-  is 0, below 0, or not finite, the speed line is left out. Before,
-  sizes of 0 printed `Progress: NaN%`. A speed of `1e400` printed
-  `Speed: Inf MB/s`.
-
-- [`print()`](https://rdrr.io/r/base/print.html) on a download status
-  now shows a percentage from 0 to 100 only. If the downloaded size is
-  below 0 or above the total size, the progress line is left out.
-  Before, 101 of 100 bytes printed `Progress: 101%`. The percentage now
-  rounds down to one decimal. So 9996 of 10000 bytes prints `99.9%` and
-  not `100%`. Each size and the speed now print in B, KB, MB, GB, or TB.
-  The value has three significant digits. The unit is the largest in
-  which the rounded value is 1 or more. When no unit gives such a value,
-  the unit is B. So 1023.9 bytes prints `1 KB`, and 1023 bytes prints
-  `1020 B`. Before, sizes were always in GB and the speed in MB/s. A
-  speed of `1e-9` printed `Speed: 0 MB/s`, and 50 of 100 bytes printed
-  `(0 GB / 0 GB)`.
-
-- [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  now checks the shape of a status-200 load reply before it reads it.
-  The reply must be a JSON object whose `status` is the string
-  `"loaded"`. With `echo_load_config = TRUE`, its `load_config` must
-  also be a JSON object, and the call returns it as a list. Any other
-  reply aborts with `rlmstudio_bad_response`, and the message names the
-  field that broke the rule. Fields are read by their exact names.
-  Before, [`{}`](https://rdrr.io/r/base/Paren.html) and a status such as
-  `"pending"` aborted with `rlmstudio_api_error` and status 200. A body
-  such as `"x"` failed with an unclassed error. A field such as
-  `statusX` was read in place of `status`. With
-  `echo_load_config = TRUE`, a reply with no `load_config` returned
-  `NULL`.
-
-- [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-  now checks the shape of a status-200 reply before it reads it. The
-  reply must be a JSON object whose `status` is a string. If the status
-  is `"already_downloaded"`, the call returns `"already_downloaded"`
-  invisibly, as before. Otherwise the reply’s `job_id` must be a string,
-  and the call returns it. The two entries above add two more rules: a
-  `"failed"` status aborts, and so does a `job_id` that holds only
-  whitespace. Any other reply aborts with `rlmstudio_bad_response`, and
-  the message names the field that broke the rule. The call no longer
-  returns `TRUE`. Before, [`{}`](https://rdrr.io/r/base/Paren.html),
-  `[]`, and `null` returned `TRUE`, a `job_id` of `1` returned `1L`, and
-  a `job_id` that was an array returned a list.
-
-- [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  now checks the shape of a status-200 reply before it reads it. The
-  reply must be a JSON object whose `job_id` and `status` are strings.
-  Its `total_size_bytes`, `downloaded_bytes`, and `bytes_per_second`
-  must each be a number, or absent, or `null`. Any other reply aborts
-  with `rlmstudio_bad_response`, and the message names the field that
-  broke the rule. Before, [`{}`](https://rdrr.io/r/base/Paren.html)
-  returned an empty status object, and printing it failed with “EXPR
-  must be a length 1 vector”.
-
-- [`print()`](https://rdrr.io/r/base/print.html) on a download status
-  now reads each field by its exact name. Before, a field such as
-  `bytes_per_secondX` was read in place of an absent `bytes_per_second`.
-  A string there made [`print()`](https://rdrr.io/r/base/print.html)
-  fail with “non-numeric argument to binary operator”.
-  [`print()`](https://rdrr.io/r/base/print.html) also shows the status
-  as text now. Before, braces in the status were run as R code, so a
-  status of `"{1 + 1}"` printed as `2`.
-
-- [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-  now checks the shape of a status-200 model list before it reads it. A
-  model list that breaks a rule aborts with `rlmstudio_bad_response`,
-  and the message names the field or entry that broke it. The body must
-  be a JSON object whose `models` is an array. Each model must be a JSON
-  object whose `type` and `key` are strings and whose `loaded_instances`
-  is an array. A `size_bytes` must be a number when it is present and
-  not `null`. Each loaded instance must be a JSON object whose `id` is a
-  string that is not empty or blank. Fields are read by their exact
-  names. The check covers every entry, also the entries that the `type`
-  and `loaded` filters drop.
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
-  and
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  without `force = TRUE`, raise the condition through
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-  and send no other request. Before,
-  [`{}`](https://rdrr.io/r/base/Paren.html) gave an empty data frame, a
-  field such as `modelsX` was read in place of `models`, and some bad
-  fields, such as a missing `key` or `type`, were read without error.
-  Some other bodies failed with a base R error, such as “\$ operator is
-  invalid for atomic vectors” or “missing value where TRUE/FALSE
-  needed”.
-
-- [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-  no longer fails on a model list with no models in it, which is what a
-  server with nothing downloaded returns. It returns an empty data frame
-  and, unless `quiet = TRUE`, says that no models were found on the
-  host. Before, it failed with “missing value where TRUE/FALSE needed”.
-  Through it,
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-  failed the same way, and so did
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  without `force = TRUE`. Now
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-  reports that no models are loaded, and
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  loads the model.
-
-- [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-  now reads each loaded instance by its `id` field alone. Before, it
-  read an `identifier` field first, then `id`, then the first field, and
-  it skipped an id that was `NA` or empty.
-
-- [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-  now returns `TRUE` only for a model list that
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-  can read. It applies the same rules. Before, it accepted any array of
-  JSON objects under `models`, such as models without a `type` or a
-  `key`.
-
-- A reply body is now read as JSON text and nothing else. Before, the
-  package fetched a body whose text was a URL that starts with `http://`
-  or `https://`. It read a body whose text was the path of an existing
-  file from disk. For a file that held a valid reply,
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
-  and the chat functions returned the content of that file. If the reply
-  header said `application/json`,
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  and
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  did the same. Now such a body does not parse, so the functions that
-  read a status-200 body abort with `rlmstudio_bad_response`, and
-  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-  returns `FALSE`. An error body of that kind is shown as its own text
-  in the `rlmstudio_api_error` message.
-
-- A status-200 body that does not parse as JSON now aborts with
-  `rlmstudio_bad_response` in
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  and
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md).
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-  raises it through
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  and so does
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  unless `force = TRUE`. The condition’s `status` is `200L`. After a
-  label, the message says what the message of the chat functions says.
-  The label is the function’s own. If the model list is the body that
-  fails,
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-  and
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  show the label of
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  “API List Failed”. Before, such a body failed with an unclassed error
-  from httr2 or jsonlite.
-
-- [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  and
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  now read a status-200 body by its content, not by its `Content-Type`
-  header. Valid JSON under `text/plain` now gives the same result as
-  under `application/json`. Before, it failed with an unclassed httr2
-  error.
-  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-  now returns `TRUE` for a model list sent as `text/plain`, where before
-  it returned `FALSE`. An `rlmstudio_api_error` whose JSON body comes as
-  `text/plain` now shows the error text from the body, where before it
-  showed the whole body.
-
-- A status-200 reply body that does not parse as JSON now aborts with
-  `rlmstudio_bad_response` in
   [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
   and
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
-  Examples are an HTML page from a proxy, JSON text that stops part way,
-  and an empty body. The abort happens with `simplify = TRUE` and with
-  `simplify = FALSE`. The condition’s `status` is `200L`. The message
-  says that the body did not parse as JSON. It also says that something
-  other than LM Studio can be answering on the host. It does not hold
-  the body text. On the OpenAI route, the condition’s `content` and
-  `finish_reason` fields are `NULL`. Before, such a body failed with an
-  unclassed error from httr2 or jsonlite. In
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  that error ended the batch and lost every reply so far. Now that input
-  fails alone, and the batch stores the failure and warns once, as for
-  other failed inputs.
-
-- The three chat functions now parse a status-200 body by its content,
-  not by its `Content-Type` header. Valid JSON under `text/plain` now
-  gives the same result as under `application/json`. Before, it failed
-  with an unclassed httr2 error.
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-  already worked this way, and its behavior does not change.
-
-- With `api_type = "openresponses"` or `api_type = "openai"` and
-  `format = "data.frame"`,
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now returns four more columns: `response_id`, `input_tokens`,
-  `total_output_tokens`, and `reasoning_output_tokens`. They follow
-  `output`. With `logprobs = TRUE`, they follow `logprobs`. With an
-  object `schema`, the property columns come after them. They carry the
-  names of the first four native columns, so batches from the three
-  routes share them. `response_id` is the reply’s `id`. The counts come
-  from the reply’s `usage` object. The OpenResponses route reads
-  `input_tokens`, `output_tokens`, and
-  `output_tokens_details.reasoning_tokens`. The OpenAI route reads
-  `prompt_tokens`, `completion_tokens`, and
-  `completion_tokens_details.reasoning_tokens`. The columns are there
-  with `logprobs = TRUE` and with a `schema` too. `response_id` is
-  character, and the counts are double. If a field is absent or is not
-  one value of the column type, its cell is `NA`, with no warning. If
-  `usage` is not a JSON object, all three count cells are `NA`. The row
-  of an input that failed holds `NA` in all four columns. Apart from the
-  bare-value change below, the answer columns, the vector and list
-  formats, and single calls return what they did before.
-
-- A 200 response body can be a bare JSON value, such as `5`, `"s"`, or
-  `true`. With `simplify = TRUE`, such a body now aborts with
-  `rlmstudio_bad_response` in
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  and
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
-  The message says that the body is not a JSON object. Before, such a
-  body failed with the base R error “subscript out of bounds”. In
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  that error ended the batch and lost every reply so far. Now the batch
-  stores the failure and goes on. With `simplify = FALSE`, the body
-  comes back unchanged, as before.
-
-- With `api_type = "native"` and `format = "data.frame"`,
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now returns seven more columns at the end of the data frame. The first
-  is `response_id`, the id of the reply on the server. The other six
-  come from the `stats` object of the reply. They are `input_tokens`,
-  `total_output_tokens`, `reasoning_output_tokens`, `tokens_per_second`,
-  `time_to_first_token_seconds`, and `model_load_time_seconds`.
-  `response_id` is character, and the other six are double. If a field
-  is absent or has the wrong type, its cell is `NA`, with no warning.
-  The answer in `output` is kept. The row of an input that failed holds
-  `NA` in all seven columns. If every input failed, the columns are
-  still there. The other routes, the other formats, and single calls
-  return what they did before.
-
-- With `simplify = TRUE` and `logprobs = TRUE`,
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-  now checks the `logprobs` value of each `"output_text"` part before it
-  builds the data frame. The value must be an array of JSON objects. In
-  each object, `token` must be a string and `logprob` must be a number.
-  Its `top_logprobs` must be an array of objects whose `token` and
-  `logprob` follow the same two rules. Each of these fields, and the
-  `logprobs` value itself, can also be `null` or absent. A `null` step
-  or candidate breaks a rule. A value that breaks a rule aborts with
-  `rlmstudio_bad_response`, and the message names the first rule it
-  breaks. The parts, the steps of a part, and the candidates of a step
-  are checked one at a time, in order. Within a step, `token`,
-  `logprob`, and the array test of `top_logprobs` come before the
-  candidates. A bad `text` in any part is reported before any `logprobs`
-  fault. Before, a value such as `[5]` failed with the bare R error “\$
-  operator is invalid for atomic vectors”. Parts of other types, such as
-  a refusal, are not checked. With `logprobs = FALSE`, the call returns
-  the text as before.
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  stores this failure as it stores other failed inputs.
+  take `previous_response_id` to continue a stored thread. Pass the
+  earlier reply itself, or its `response_id` attribute. A new `store`
+  argument turns off the storage of a reply on the server.
 
-- The fields of each step and candidate are now read by their exact
-  names. Before, a step with a `tokenX` field and no `token` field gave
-  the value of `tokenX` as its token. Now it gives `NA`, as a `null` or
-  absent field does. A readable `logprobs` value gives the same data
-  frame as before.
+- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
+  and
+  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+  take a `ttl` argument. It sets the seconds that a model loaded by the
+  request stays loaded with no request.
+  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  takes it on the `"openai"` route only.
+
+- [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
+  gains `wait`, `host`, and `token` arguments for its readiness check.
+  It also checks `port` and `cors` before the CLI runs.
+
+- With `format = "data.frame"`,
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  adds the reply id and token counts as columns. On the native route, it
+  also adds the speed and timing columns from the reply `stats`.
+
+- If `context_length` is larger than the maximum that the model list
+  gives for the model,
+  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
+  warns with class `rlmstudio_context_above_max`.
+
+- New condition classes let you catch each kind of failure with
+  [`tryCatch()`](https://rdrr.io/r/base/conditions.html). They are
+  `rlmstudio_no_server`, `rlmstudio_api_error`,
+  `rlmstudio_bad_response`, and `rlmstudio_model_mismatch`. An
+  `rlmstudio_api_error` carries the HTTP `status` and the error `code`
+  of the reply. See `?rlmstudio-conditions`.
+
+- Two new vignettes.
+  [`vignette("chat-options")`](https://jmgirard.github.io/rlmstudio/articles/chat-options.md)
+  shows how to control a chat from an R script.
+  [`vignette("text-analysis")`](https://jmgirard.github.io/rlmstudio/articles/text-analysis.md)
+  shows how to analyze a data frame of texts. The `getting-started` and
+  `headless-config` vignettes are rewritten.
+
+- The vignettes now ship with output knitted ahead of time from a live
+  LM Studio. A build or check of the package runs no vignette code.
+
+### Bug fixes and new checks
+
+- Each argument that names a model, a job, a thread, or a model type is
+  now checked before the request. A bad value aborts with a message that
+  names the argument. Text arguments that hold `NA` abort too.
+
+- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  now checks `messages` before the request. It aborts on a value that
+  the server cannot read, with a message that names the fault.
+
+- A `stream` in `...` of a chat function now aborts unless it is `FALSE`
+  or `NULL`. The package reads a whole reply only.
+
+- Each function now checks the shape of a reply before it reads it. A
+  reply that the package cannot read aborts with
+  `rlmstudio_bad_response`. Before, many such replies gave a base R
+  error, or returned `NULL` or a wrong value.
+
+- A reply body is now read as JSON text alone, whatever its
+  `Content-Type` header says. Before, a body whose text was a URL or a
+  file path made the package read that URL or file.
 
 - [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md)
   and
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-  now read the answer from the reply items of type `"message"`. Before,
-  they read the first item of the `output` array. A reasoning model puts
-  a reasoning item first, so the call returned the reasoning in place of
-  the answer. The text of every message item is now pasted together in
-  order, and reasoning items, tool calls, and other items are skipped.
-  On the OpenResponses route, the text comes from each part of type
-  `"output_text"`, and a part of another type, such as a refusal, is
-  skipped. With `logprobs = TRUE`, the log probabilities come from every
-  such part in order.
+  now return the answer of a reasoning model. Before, they returned its
+  reasoning.
 
-- With `simplify = TRUE`, those two functions now abort with
-  `rlmstudio_bad_response` when a reply holds no readable answer text.
-  That covers an `output` field that is missing, empty, or not an array,
-  and a reply with no message item, such as one that holds only
-  reasoning or a tool call. It also covers message text that is not one
-  string. Before, some of these replies failed with a bare R error such
-  as “subscript out of bounds”. Others returned `NULL` or a value that
-  was not a string. `simplify = FALSE` still returns the body unchanged.
-
-- With `simplify = TRUE`,
+- If a model other than the one asked for answers,
   [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now aborts with `rlmstudio_bad_response` when the reply content is not
-  one string. That includes `null` content, which a reply that holds
-  only a tool call has. The condition carries the content and the finish
-  reason in its `content` and `finish_reason` fields. Before, `null`
-  content returned `NULL`, and with `logprobs = TRUE` it failed with an
-  unclassed error. Content such as a number or an array was returned as
-  it was.
-
-- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  stores these failures as it stores other failed inputs, and warns
-  once. With `format = "data.frame"` and `simplify = FALSE`, it now
-  aborts before it sends any request. Before, it sent every request
-  first and then aborted, and the replies were lost.
-
-- [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  has a new `schema` argument for structured output. Give it a JSON
-  Schema written as a named list. The request then asks the server for a
-  reply that matches the schema. With `simplify = TRUE`, the call
-  returns the reply parsed into an R value, for example
-  `list(score = 3L)`, rather than a string. With `simplify = FALSE` or
-  `logprobs = TRUE`, the reply stays a string. A plain vector of length
-  one is sent as a single value. Write a JSON array of one item as a
-  list, such as `required = list("score")`.
-
-- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  takes `schema` too and passes it to
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md).
-  It needs `api_type = "openai"`, because LM Studio documents structured
-  output on that endpoint only. Any other `api_type` with a `schema`
-  aborts before the request.
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  passes `schema` on through `...`. When `simplify = TRUE` and
-  `logprobs = FALSE`, the reply is parsed. In that case,
-  `format = "list"` returns one parsed reply per input. With
-  `format = "data.frame"`, the `output` column is a list of parsed
-  replies. With `format = "vector"`, the call warns and returns the
-  list.
-
-- A `schema` must be a named list, an empty list, or `NULL`. Any other
-  value aborts before the request, and so does a `schema` given together
-  with a `response_format` in `...`. An empty object nested in the
-  schema, such as `properties`, is written
-  `setNames(list(), character())`, because
-  [`list()`](https://rdrr.io/r/base/list.html) is sent as the empty
-  array `[]`.
-
-- The reply is parsed only with a `schema`, `simplify = TRUE`, and
-  `logprobs = FALSE`. There, reply content that is not one string of
-  valid JSON aborts with the condition class `rlmstudio_bad_response`.
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  now raises it, as
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-  does, and
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
-  passes it on. The condition carries the reply content in a `content`
-  field and the server’s finish reason in a `finish_reason` field. You
-  can therefore read what the model wrote without a second request. If
-  the finish reason is `"length"`, the message says that the token limit
-  cut the reply off and names `max_tokens`.
-
-- With `simplify = TRUE`, a chat completions response from
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  whose `choices` field is missing, empty, or not an array, or whose
-  first element is not a JSON object with a `message` object in it, also
-  aborts with `rlmstudio_bad_response`, with or without a `schema`.
-  Before, an empty `choices` list failed with the bare error
-  `subscript out of bounds`. Without a `schema` and with
-  `logprobs = FALSE`, a missing `choices` field returned `NULL`. The
-  condition’s `content` and `finish_reason` fields are `NULL`. Without a
-  `schema`,
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  now stores such a response as a failed input, as the next entry says.
-  Before, a missing `choices` field gave `NULL` for that input. With
-  `format = "vector"`, the result was then shorter than the input.
-
-- [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  no longer stops at an input that fails with `rlmstudio_api_error` or
-  `rlmstudio_bad_response`, whatever its settings. It goes on to the
-  next input. In a returned list, and in the `output` list-column that a
-  `schema` gives, the element for that input holds the condition. Where
-  the result is text, the element holds `NA`. That is the case for
-  `format = "vector"` when it returns a vector, and for a data frame
-  whose replies are not parsed. In such a data frame, the `logprobs`
-  column of the OpenResponses and OpenAI routes holds `NULL` for a
-  failed input. A reply with no readable answer text, such as one whose
-  content is `null`, fails in the same way, so the result stays as long
-  as `inputs`. On those two routes, with `format = "data.frame"` and
-  `logprobs = TRUE`, the `logprobs` column is now always there, even
-  when no reply carried log probabilities. Before, it was left out in
-  that case. The call gives one warning that names the count and the
-  positions of the failed inputs. `quiet = TRUE` does not silence it.
-  Where the result holds `NA`, the warning names `format = "list"` as
-  the way to keep the conditions.
-
-- An `rlmstudio_no_server` from one input still aborts
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  but the replies so far are no longer lost. The condition carries them
-  in a new `results` field, with any failures stored so far. It is a
-  list as long as `inputs`, with `NULL` from the lost input on. This
-  covers a server that the check before each input finds gone. A
-  connection that fails during a request still aborts with an
-  `httr2_failure` error and no `results` field.
-
-- [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
-  now waits for the REST API to answer before it returns. The CLI
-  reports success as soon as it asks for the server. The REST API
-  accepts a request some time after that. A script that called the API
-  on the next line therefore reported a missing server on a healthy
-  machine. The call now asks
-  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-  again and again until it reports `TRUE`. It pauses a quarter of a
-  second between requests. Once the wait passes it starts no new
-  request. After the first `TRUE` it sends no further request.
-
-- A new `wait` argument on
-  [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
-  sets how many seconds that lasts. It defaults to 10. It is not a hard
-  cap. No new request starts once the wait passes, but a request already
-  in flight is allowed one second to finish. With no `host` and no
-  `port`, the call first asks the CLI which port the server uses, and
-  that read runs before the wait starts to count. With `wait = 0` the
-  call sends no readiness request and returns as soon as the CLI does,
-  which is what every earlier version did. A `wait` that is not one
-  number, zero or more, aborts before the CLI runs. `NULL`, a string, a
-  vector of two, `NA`, `NaN`, `Inf`, and a negative number all abort.
-  The message names the argument and the rule the value broke.
-
-- A wait that runs out raises a warning rather than an error, and the
-  call still returns the CLI exit code. Aborting cannot undo a server
-  that already started. The warning names the host it asked and the
-  `wait` argument. The `rlmstudio.quiet` option does not silence it.
-
-- A new `host` argument on
-  [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
-  says where to look for the server that was started. It does not change
-  where the CLI starts it, which only `port` does. When you give no
-  `host`, the host is `http://localhost:` plus the `port` you gave. When
-  you give neither, the port that `lms_server_status(json = TRUE)`
-  reports is read instead. A call that reaches that last case and finds
-  no usable port sends no readiness request. It raises its own warning
-  instead. That warning names the failed port read, the `host` argument,
-  and the `port` argument.
-
-- A new `token` argument on
-  [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
-  is sent on the readiness request. It serves a server that requires
-  authentication. With `token = NULL`, the request reads the
-  `rlmstudio.token` option and then the `RLMSTUDIO_API_TOKEN`
-  environment variable.
-
-- [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
-  now checks `host` and `token` before the CLI runs. A fault in either
-  one therefore aborts before any server starts. A `token` that is not
-  one character string and not `NULL` aborts. A `host` that the
-  readiness request cannot be built from also aborts. The message names
-  `host` and quotes the reason from httr2 or curl. Some examples are a
-  vector of two strings, `NA`, an empty string, and a number. A URL with
-  a space in it and `"localhost:1234"`, which lacks `http://`, abort
-  too. Both checks also run with `wait = 0`.
-
-- If the readiness check aborts during the wait,
-  [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
-  raises one warning and returns the CLI exit code. The warning names
-  the host and quotes the abort message.
-
-- The help page of
-  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-  now names the call faults that abort it rather than returning `FALSE`.
-  There are six. A `host` of `NULL`. A `host` of more than one string. A
-  `host` that is a character `NA`. A `host` that cannot be parsed as a
-  URL. A `timeout` below one millisecond. A `timeout` that is not one
-  number. The page says which package each message comes from. The httr2
-  messages name `url` and `seconds` rather than `host` and `timeout`,
-  and the page says so. The curl message for a `host` that cannot be
-  parsed as a URL names no argument. It names the parse reason instead.
-  The page also says that those six are not the whole list, because any
-  `host` that is not one string aborts the same way. The `token` fault
-  the page already named is unchanged.
-
-- A model name or a job id that the server cannot use now aborts before
-  the request goes out. The message names the argument and the rule the
-  value broke. The check covers `model` on
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
   and
-  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md).
-  It covers `job_id` on
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md).
-  Each of these must be one name, given as a single string. These all
-  abort: a vector of two names, an empty character vector, `NA`, an
-  empty string, and a string of whitespace only. So do a one-by-one
-  matrix, `NULL`, and any value that is not a character string. Before,
-  eight of these functions had no check on `model` at all. A vector of
-  two names went to those as a JSON array of two. The error that came
-  back named neither the argument nor the mistake.
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  was the one exception. If a model was already loaded, it raised a bare
-  R error from its already-loaded test instead.
-
-- A missing value inside a text argument now aborts. `lms_embed(input)`
-  and `lms_chat_batch(inputs)` must hold at least one value and no `NA`.
-  On
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  and
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  a character `input` must hold no `NA`. A value of any other type still
-  passes through to the server on those three. The structured input form
-  that the OpenResponses endpoint accepts therefore still works. Two
-  things stay unchecked. `lms_chat_openai(messages)` takes a list, which
-  no rule here reaches. On the three chat wrappers above, a character
-  `input` of length zero still goes out as an empty JSON array. Before,
-  an `NA` went out as JSON `null`. The server then answered with an
-  error or a count that named neither the `NA` nor its position.
-
-- Two of these messages changed text.
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-  and
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  used to say “You must provide a valid model identifier or URL.” and
-  “You must provide a valid job_id.”. Those two checks also raised a
-  bare R error, rather than their own message, when the argument held
-  more than one value.
-
-- A new function,
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
-  turns text into the vectors that an embedding model produces for it.
-  Give it a loaded embedding model and a character vector of texts. The
-  whole vector goes out in one request to the server. By default the
-  return is a numeric matrix. It has one row per input text and one
-  column per embedding dimension, so it goes straight to
-  [`dist()`](https://rdrr.io/r/stats/dist.html) or
-  [`prcomp()`](https://rdrr.io/r/stats/prcomp.html). The matrix carries
-  no row or column names, so rows pair with inputs by position. The row
-  at each position holds the vector that the response reported for the
-  text at that position, whatever order the server answered in. With
-  `simplify = FALSE` the return is the parsed response body instead. A
-  `token` argument works as it does on the other functions that reach
-  the REST API. The `...` argument forwards any other field to the
-  request body.
-
-- [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-  reads the response before it builds the matrix, and aborts rather than
-  returning a matrix it cannot trust. It aborts on each of these. The
-  response body is not JSON at all. The response body is a plain value
-  rather than an object or an array. The response carries no list of
-  vectors, which is also what a body sent as a bare array reports,
-  because such a body can carry no named field. The list of vectors is a
-  plain value rather than a list. The list of vectors arrived as a JSON
-  object rather than an array. It carries a different number of vectors
-  than there were texts. A vector carries no position, or a position
-  that is not a whole number. Two vectors carry the same position. A
-  position falls outside the range of the texts. A vector is not a list
-  of numbers. A vector is an empty list. An entry in the list of vectors
-  is not an object at all. The vectors are of unequal length. These
-  aborts carry the new condition class `rlmstudio_bad_response` and a
-  `status` field holding the HTTP status as an integer. Every message
-  but one names `simplify = FALSE`, which returns the body unchanged so
-  you can read what arrived. The exception is a body that is not JSON:
-  the parse runs before `simplify` is read, so that message instead
-  tells you to check what is answering on the host.
-
-- The help pages now document a third condition class.
-  `rlmstudio_bad_response` has its own section on the
-  `rlmstudio-conditions` page and its own alias, so
-  [`?rlmstudio_bad_response`](https://jmgirard.github.io/rlmstudio/reference/rlmstudio-conditions.md)
-  reaches it. The same section appears on the
-  [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-  page. The class means a response that the server did not report as a
-  failure and that the package still cannot read. That is a different
-  thing from `rlmstudio_api_error`.
-
-- A new function,
-  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md),
-  reports whether a host answers as an LM Studio server you can use. It
-  sends one GET request to the model list endpoint and returns `TRUE`
-  only for an HTTP 200 whose body carries a list of models. An empty
-  list counts, because a fresh install has nothing downloaded and its
-  server still works. Every other answer returns `FALSE`: a refused
-  connection, a listener that never replies, a rejected token, a failed
-  status, and a body that is not a model list. The function raises
-  nothing of its own for any of these, so a caller can branch on the
-  value directly. A `timeout` argument sets how many seconds to wait,
-  and defaults to 2. A `token` argument works as it does on the other
-  functions that reach the REST API. A `token` that is not one character
-  string and not `NULL` still aborts.
-
-- The help page for the error conditions now says what the server check
-  actually reads. Functions that call the REST API open a TCP connection
-  to the host and port. Any process holding that port accepts the
-  connection, so `rlmstudio_no_server` is not raised even though no LM
-  Studio server is there. The call then fails later as an
-  `rlmstudio_api_error` or as a raw parse error. The page names
-  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-  as the stronger test. The same section appears on the help page of
-  every exported function that can raise the condition.
-
-- The package can now authenticate to an LM Studio server that requires
-  an API token. Eleven functions take a `token` argument. They are
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md),
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-  and
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md).
-  Each one sends the value as a bearer token in the `Authorization`
-  header of every request it makes. When `token` is not given, the
-  package reads the `rlmstudio.token` option, and then the
-  `RLMSTUDIO_API_TOKEN` environment variable. When none of the three
-  holds a value, the request carries no `Authorization` header. A new
-  help topic, `rlmstudio_token`, is the source. On the nine of these
-  functions that take `...`, `token` sits after the dots. It is
-  therefore matched by name alone, and no existing argument moved
-  position.
-
-- A printed request shows the `Authorization` header as `<REDACTED>`
-  rather than showing the token. The package never puts the token into
-  the message of a failed REST call. That message does repeat the text
-  the server sent. An R backtrace also repeats your own calling line.
-  Neither one is under the package’s control.
-
-- A `token` argument that is not one character string and not `NULL` now
-  aborts. Before, a value such as a vector of two strings was discarded
-  without a message. The call then fell through to the option and the
-  environment variable.
-
-- A REST response with HTTP status 401 or 403 now adds a hint to the
-  abort. If the request carried no token, the hint names
-  `RLMSTUDIO_API_TOKEN` and the `token` argument. If the request carried
-  a token, the hint says that the server rejected it. Other statuses
-  gain no hint.
-
-- The help pages now document the error condition classes that this
-  package raises. A new help topic, `rlmstudio-conditions`, is the
-  source. It names the situation that raises `rlmstudio_no_server` and
-  the situation that raises `rlmstudio_api_error`. It states that an
-  `rlmstudio_api_error` condition carries a `status` field, which holds
-  the HTTP status as an integer. It shows how to catch each class with
-  [`tryCatch()`](https://rdrr.io/r/base/conditions.html). The same two
-  sections now appear on the help page of every exported function that
-  can raise one of these classes. The pages of
-  [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md),
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md),
-  and
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-  also name the function that they reach the abort through.
-
-- Every failed REST response now aborts through one path. This affects
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-  and
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md).
-  All seven now report the same message text for the same response body.
-  Every one of these aborts carries the condition class
-  `rlmstudio_api_error`. It also carries a `status` field, which holds
-  the HTTP status as an integer.
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md)
-  and
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-  call these functions, so their failures change in the same way. The
-  aborts from
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
-  and
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  no longer print the call that raised them. The other five already
-  suppressed it.
-
-- Some failure messages changed as a result. A JSON body whose `error`
-  field is a plain string now reports that string. Before,
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  and
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  printed the whole raw body, and
   [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
-  and
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
-  printed the status. A JSON body that carries no readable message now
-  reports `HTTP Status <n>`. Before, such a body gave the raw body text,
-  a fragment of the `error` object, or a crash, depending on the
-  function and the shape. A body that is not JSON and holds text now
-  reports that text at all seven functions. Before, the three chat
-  functions printed the status instead. An empty body still reports
-  `HTTP Status <n>`. If
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md)
-  gets a successful response that does not report the model as loaded,
-  it now reports the response body.
+  abort with `rlmstudio_model_mismatch`.
 
-- Response bodies that used to crash now abort with a message. Before,
-  all seven functions raised a raw R error on at least one body shape.
-  An `error` field holding an empty object, an empty array, or an array
-  of strings raised errors such as `argument is of length zero`. At
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  and
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
-  an empty response body raised `Can't retrieve empty body.`
+- If a length limit cut off a text reply,
+  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+  warns with class `rlmstudio_reply_cut_off`. With a `schema`, a cut-off
+  reply aborts.
+
+- Every failed REST response now aborts with `rlmstudio_api_error` and
+  the same message for the same response body. A 401 or 403 abort adds a
+  hint about the API token.
+
+- The server check now honors the `host` argument. Before, it always
+  tried `localhost:1234`.
 
 - [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
-  now reports a failed REST response through that same path. Before, it
-  raised the raw httr2 error, such as `HTTP 400 Bad Request`. It now
-  aborts with the message `API List Failed:` followed by the text read
-  out of the response body. The abort carries the condition class
-  `rlmstudio_api_error`. It also carries a `status` field, which holds
-  the HTTP status as an integer. If the status is 400 or above and the
-  body carries no readable message, the abort reports `HTTP Status <n>`.
-  Below status 400 it reports the body text instead. The call now aborts
-  on every status other than 200. Before, only status 400 and above
-  raised an error, so a status such as 201 or 302 reached the parser.
-
-- The server probe now honors the `host` argument. This affects
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
-  [`lms_unload()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload.md),
-  [`lms_unload_all()`](https://jmgirard.github.io/rlmstudio/reference/lms_unload_all.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
-  [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md),
-  [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md),
-  [`lms_chat_native()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_native.md),
-  and
-  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
-  Before, the probe always tried `localhost:1234`, so a server on
-  another hostname or port was reported as not running.
-
-- If the server is not running,
-  [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md),
-  [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md),
-  and
-  [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-  now abort instead of returning an empty data frame or `NULL`. Every
-  server-down abort carries the condition class `rlmstudio_no_server`.
+  no longer fails on a server with no models.
 
 - [`has_lms()`](https://jmgirard.github.io/rlmstudio/reference/has_lms.md)
-  now uses the same lookup as
-  [`lms_path()`](https://jmgirard.github.io/rlmstudio/reference/lms_path.md):
-  the `RLMSTUDIO_LMS_PATH` environment variable, then the system `PATH`,
-  then common installation directories. Before, it checked only the
-  `PATH`, so the two functions did not always agree.
+  now finds `lms` in the same places as
+  [`lms_path()`](https://jmgirard.github.io/rlmstudio/reference/lms_path.md).
+
+- A failed run of the LM Studio CLI or the headless installer now quotes
+  its output in the abort message.
+
+- [`print()`](https://rdrr.io/r/base/print.html) on a download status no
+  longer shows `NaN`, `Inf`, or a percentage above 100. It prints each
+  size in the unit that fits.
+
+- A `POSIXlt` value in a request body no longer makes the call recurse
+  with no end.
 
 ## rlmstudio 0.2.2
 
