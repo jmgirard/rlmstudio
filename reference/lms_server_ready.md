@@ -71,7 +71,9 @@ such faults are named below.
 - A `host` that is one string but cannot be parsed as a URL. curl
   reports that it failed to parse the URL and names the reason. A `host`
   holding a space gives "Malformed input to a URL function". An empty
-  `host` gives "No host part in the URL".
+  `host` gives a reason that says the URL has no host. Its wording
+  depends on the libcurl version, for example "No host part in the URL"
+  or "No host present".
 
 - A `timeout` below one millisecond. httr2 reports that `seconds` must
   be greater than 1 ms.

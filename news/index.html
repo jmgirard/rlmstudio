@@ -101,6 +101,7 @@
 <li><p>A failed run of the LM Studio CLI or the headless installer now quotes its output in the abort message.</p></li>
 <li><p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> on a download status no longer shows <code>NaN</code>, <code>Inf</code>, or a percentage above 100. It prints each size in the unit that fits.</p></li>
 <li><p>A <code>POSIXlt</code> value in a request body no longer makes the call recurse with no end.</p></li>
+<li><p>The help of <code><a href="../reference/lms_server_ready.html">lms_server_ready()</a></code> no longer quotes one exact libcurl message for an empty <code>host</code>. The wording depends on the libcurl version, and the tests now pass with each wording.</p></li>
 </ul></div>
 </div>
     <div class="section level2">
