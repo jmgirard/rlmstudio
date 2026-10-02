@@ -92,6 +92,7 @@ The Windows R-devel check of the package takes less than 10 minutes, because CRA
 - claim audit: 5 claims read, 0 corrected — tests/testthat/test-arg-guards.R, test-flag-args.R, test-name-faults.R
 - 2026-10-02: blocked on T6. The user starts `devtools::check_win_devel()` from the branch and reads the emailed check time and status. Resume with `/milestone-implement M081`.
 - 2026-10-02: T6 win-builder R-devel check (R Under development 2026-09-30 r90605 ucrt) of the branch: check time 463 s, install 8 s, Status: OK, tests 348 s (https://win-builder.r-project.org/o5ArKbmBJwc4). The CRAN incoming check of `main` (9c2a2df) on the same day took 13 min overall and 11 min for tests. No code changed after the T5 check at 409b221, so that check stands as the verify result. Status set to review.
+- step-7 approval: m081-cran-skip-arg-check-files approved for merge, with the fixes for findings F3 and F4 and candidate rows for F1 and F2.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
@@ -125,3 +126,5 @@ Reviewers: Opus diff-bug, Sonnet blame-history, and Sonnet prior-review, each fr
 - F7: The same comment and skip appear three times, and a helper in `helper-skips.R` can hold them. Proposed: reject, because three lines inline keep the reason in the file the reader opens.
 - F8: `CRAN-SUBMISSION` is untracked in the working tree. Proposed: reject, because the diff does not touch it and `/cairn-release` handles it.
 - F9: The call-site guard in `test-name-faults.R` already skips under R CMD check, so the coverage loss is smaller than the count suggests. `skip_on_cran()` already appears in three other test files. No test in the three files guards a CRAN-only bug. Proposed: noted, no action.
+
+At the gate on 2026-10-02, the user accepted every proposed disposition. F3 and F4 are fixed on the branch. F1 and F2 are candidate rows in `cairn/ROADMAP.md`. After the fix, the three files pass with `NOT_CRAN=true`. With `NOT_CRAN=false`, the check reporter lists their three "On CRAN" skips at line 4.
