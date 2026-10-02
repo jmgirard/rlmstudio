@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-01 (M080 archived, pkgdown follow-up row added, M077 row pruned, cairn_validate green)_
+_Last hygiene check: 2026-10-02 (M081 archived, two follow-up rows added, M078 row pruned, cairn_validate green)_
 
 ## Milestones
 
@@ -9,10 +9,9 @@ _Last hygiene check: 2026-10-01 (M080 archived, pkgdown follow-up row added, M07
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M081 | The CRAN check skips the three argument-check test files | review | — | normal | milestones/M081-cran-skip-arg-check-files.md |
+| M081 | The CRAN check skips the three argument-check test files | done | — | normal | milestones/archive/M081-cran-skip-arg-check-files.md |
 | M080 | A pkgdown run deploys the site only from the default branch or a release | done | — | normal | milestones/archive/M080-pkgdown-deploy-default-branch.md |
 | M079 | The text checks strip a class before they read a name, and their tests turn a sending site red | done | — | normal | milestones/archive/M079-text-check-class-strip.md |
-| M078 | A pull request runs only the CI jobs that the package can turn red | done | — | normal | milestones/archive/M078-ci-gate-setup.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
