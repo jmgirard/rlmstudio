@@ -2,6 +2,42 @@
 
 ## rlmstudio (development version)
 
+- A `model`, `job_id`, `previous_response_id`, or `type` value with a
+  class or the S4 bit is now checked as its plain value. The check
+  removes the class and the S4 bit before it reads the value, also for
+  an S4 class that contains an S3 class. So a class method for `[`,
+  `[[`, [`length()`](https://rdrr.io/r/base/length.html),
+  [`dim()`](https://rdrr.io/r/base/dim.html), or
+  [`is.na()`](https://rdrr.io/r/base/NA.html) no longer runs inside the
+  check. Before, such a method was able to replace the abort of the
+  package or change its detail.
+
+  - A classed `type` filter of
+    [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
+    and
+    [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+    now matches by its value. Before, `%in%` read the filter through its
+    [`as.character()`](https://rdrr.io/r/base/character.html) method. So
+    a filter that held `"llm"`, with a method that gave `"embedding"`,
+    kept the embedding models.
+
+- A `model`, `job_id`, or `previous_response_id` string that is not
+  valid text now gets a new first line in its abort. The line names the
+  argument and says that it “must be a string of valid text”. The same
+  holds for the `response_id` attribute of a `previous_response_id`.
+  Before, the first line asked for the value “given as a single string”,
+  and the value was one string. Other faults, such as `NA` or two
+  values, keep the old first line.
+
+- [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
+  now checks `model`, `input`, and `schema` before it checks its `...`
+  for a name that it sets itself, as
+  [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+  does. Take a call with a bad `model`, `input`, or `schema` and a
+  clashing dot. The dot is an `instructions` in `...` on the default
+  route, or a `messages` in `...` with `api_type = "openai"`. The abort
+  now names the bad argument. Before, it named the dot.
+
 - `previous_response_id` now takes the earlier reply itself. With
   `first <- lms_chat(...)`, pass `previous_response_id = first` to
   continue the thread. This holds for

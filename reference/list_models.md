@@ -32,7 +32,9 @@ list_models(
   valid in its declared encoding and not marked `"bytes"`. Any other
   value, `NULL` and a factor included, aborts before the check for a
   running server. A type that no model has, such as `"vlm"`, matches
-  nothing.
+  nothing. A classed filter matches by its value, and a class method
+  such as [`as.character()`](https://rdrr.io/r/base/character.html) does
+  not change the match.
 
 - detailed:
 

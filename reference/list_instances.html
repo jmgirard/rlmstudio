@@ -79,7 +79,9 @@ that <code><a href="list_models.html">list_models()</a></code> reads, so it hono
 element can be <code>NA</code>, empty, or whitespace only. Each element must be
 valid in its declared encoding and not marked <code>"bytes"</code>. Any other value,
 <code>NULL</code> and a factor included, aborts before the check for a running
-server. A type that no model has, such as <code>"vlm"</code>, matches nothing.</p></dd>
+server. A type that no model has, such as <code>"vlm"</code>, matches nothing. A
+classed filter matches by its value, and a class method such as
+<code><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character()</a></code> does not change the match.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
