@@ -48,8 +48,11 @@ jobs:
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
+      # Deploy only from a published release or a run on the default branch.
+      # Every other run builds the site and skips this step, for example a pull
+      # request (ref refs/pull/<n>/merge) or a manual run on another branch.
       - name: Deploy to GitHub pages 🚀
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
           clean: true
