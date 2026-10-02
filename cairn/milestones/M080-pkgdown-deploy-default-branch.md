@@ -50,6 +50,8 @@ A run of `pkgdown.yaml` deploys the site to `gh-pages` only from the default bra
 - 2026-10-01: verify slot: `devtools::test()` gave 0 failures and 0 errors, with 3 skips. The diff changes no R code.
 - 2026-10-01: claim audit: not owed — internal tier
 - 2026-10-01: status review.
+- 2026-10-01: review gate fix F5: reworded the comment above the deploy step.
+- step-7 approval: m080-pkgdown-deploy-default-branch approved for merge
 
 ## Decisions
 
@@ -65,3 +67,5 @@ A run of `pkgdown.yaml` deploys the site to `gh-pages` only from the default bra
   - F4 (diff-bug): `release: types: [published]` includes prereleases, so a prerelease deploys. The comment says "a published release", and a prerelease is one. Unchanged behavior.
   - F5 (diff-bug): the comment names two skip cases and omits a manual run on a tag and a push to another branch. Nothing it states is false.
   - F6 (blame-history): a release of an old tag replaces the site with an older build. Unchanged behavior, and the plan keeps the release deploy.
+- Triage at the step-7 gate (2026-10-01): F1 and F2 became one ROADMAP candidate row. F5 was fixed now: the comment says that every other run builds and skips, with two examples. F3 was rejected, because no `master` branch exists and only the default branch is meant to deploy. F4 and F6 were rejected as unchanged behavior that the plan keeps.
+- After the F5 fix, the `if:` line that AC1 reads is unchanged. Only comment lines differ from the file of run 36946984849, so AC2 still holds for the condition that run evaluated.
