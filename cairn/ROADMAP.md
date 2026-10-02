@@ -9,7 +9,7 @@ _Last hygiene check: 2026-10-01 (M079 archived, M060 follow-up row narrowed to t
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M080 | A pkgdown run deploys the site only from the default branch or a release | in-progress | — | normal | milestones/M080-pkgdown-deploy-default-branch.md |
+| M080 | A pkgdown run deploys the site only from the default branch or a release | review | — | normal | milestones/M080-pkgdown-deploy-default-branch.md |
 | M079 | The text checks strip a class before they read a name, and their tests turn a sending site red | done | — | normal | milestones/archive/M079-text-check-class-strip.md |
 | M078 | A pull request runs only the CI jobs that the package can turn red | done | — | normal | milestones/archive/M078-ci-gate-setup.md |
 | M077 | A chat continues a thread from the reply itself | done | — | normal | milestones/archive/M077-reply-as-thread-id.md |

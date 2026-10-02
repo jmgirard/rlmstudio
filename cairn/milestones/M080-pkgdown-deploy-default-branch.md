@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M080: A pkgdown run deploys the site only from the default branch or a release
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -36,7 +36,7 @@ A run of `pkgdown.yaml` deploys the site to `gh-pages` only from the default bra
 ## Tasks
 
 - [x] T1: Replace `if: github.event_name != 'pull_request'` at `.github/workflows/pkgdown.yaml:52` with `if: github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)`. A pull request run has the ref `refs/pull/<n>/merge`, so it stays skipped. Add a comment above the step that says which runs deploy. Checkpoint-commit and push the branch.
-- [ ] T2: Start a manual run with `gh workflow run pkgdown.yaml --ref <branch>`, wait for it to end, and record the run id and both step results in the work log. If the deploy step shows `success`, the branch site reached `gh-pages`. Then re-run the latest pkgdown run on `main` to restore the site, and return to T1.
+- [x] T2: Start a manual run with `gh workflow run pkgdown.yaml --ref <branch>`, wait for it to end, and record the run id and both step results in the work log. If the deploy step shows `success`, the branch site reached `gh-pages`. Then re-run the latest pkgdown run on `main` to restore the site, and return to T1.
 
 ## Work log
 
@@ -46,6 +46,10 @@ A run of `pkgdown.yaml` deploys the site to `gh-pages` only from the default bra
 - 2026-10-01: plan chose `github.event.repository.default_branch` over a literal `refs/heads/main`, because tracking names no branch; falsified by a post-merge push run on `main` that skips the deploy.
 - 2026-10-01: status in-progress on branch `m080-pkgdown-deploy-default-branch`. Plan left no implementation choice open, so the question gate was skipped.
 - 2026-10-01: T1 done. The deploy step `if:` now reads `github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)`, with a comment above it. `yaml::read_yaml()` parses the file and returns that line for step 7 of 7.
+- 2026-10-01: T2 done. Manual run 36946984849 (`workflow_dispatch` on the branch at f25259b) ended `success`, with "Build site" `success` and "Deploy to GitHub pages" `skipped`.
+- 2026-10-01: verify slot: `devtools::test()` gave 0 failures and 0 errors, with 3 skips. The diff changes no R code.
+- 2026-10-01: claim audit: not owed — internal tier
+- 2026-10-01: status review.
 
 ## Decisions
 
