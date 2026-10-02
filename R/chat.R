@@ -157,7 +157,8 @@ lms_chat <- function(
   rlm_check_one_prompt(input, "input")
   rlm_check_schema(schema, ...names())
   # After `schema`, as in `lms_chat_batch()`, which can read the route only
-  # once it has matched its dots. So both functions report the same fault.
+  # once it has matched its dots. So a fault in `model`, `input`, or `schema`
+  # comes before a clashing dot in both functions.
   rlm_check_route_dots(...names(), api_type)
   rlm_check_schema_route(schema, api_type)
   rlm_check_ttl(ttl)

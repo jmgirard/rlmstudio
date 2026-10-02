@@ -136,18 +136,20 @@ for (pair in grep("(type)", names(name_pairs), fixed = TRUE, invert = TRUE, valu
     call <- name_pairs[[pair]]
     arg <- pair_arg(pair)
     for (p in text_probes) {
-      info <- paste(pair, "with", p$label)
-      expect_text_headline(call, p$value, paste0("`", arg, "`"), info)
-      if (arg == "previous_response_id") {
-        info <- paste(info, "in the response_id attribute")
-        value <- structure("a reply", response_id = p$value)
-        expect_text_headline(
-          call,
-          value,
-          "The `response_id` attribute of `previous_response_id`",
-          info
-        )
-      }
+      test_that(paste(pair, "with", p$label), {
+        info <- paste(pair, "with", p$label)
+        expect_text_headline(call, p$value, paste0("`", arg, "`"), info)
+        if (arg == "previous_response_id") {
+          attr_info <- paste(info, "in the response_id attribute")
+          value <- structure("a reply", response_id = p$value)
+          expect_text_headline(
+            call,
+            value,
+            "The `response_id` attribute of `previous_response_id`",
+            attr_info
+          )
+        }
+      })
     }
   })
 }
@@ -155,6 +157,12 @@ for (pair in grep("(type)", names(name_pairs), fixed = TRUE, invert = TRUE, valu
 # A classed value gets the check of its plain form --------------------------
 
 methods::setClass("rlmTrapString", contains = "character")
+
+# An S4 class that contains the S3 class "rlmOldTrap". Its objects carry the
+# `.S3Class` attribute, which `asS4(, FALSE)` sets back as the class unless
+# `complete = FALSE`.
+methods::setOldClass(c("rlmOldTrap", "character"))
+methods::setClass("rlmTrapOld", contains = "rlmOldTrap")
 
 # The functions that a check can call on the value, and that a class can
 # take over with a method.
@@ -169,17 +177,20 @@ trap_s4_methods <- list(
   "is.na" = function(x) stop("trap method ran")
 )
 
-# Gives the S3 class "rlmTrap" and the S4 class "rlmTrapString" a method for
-# each of `trap_generics` that raises an error, for the life of the caller.
-# "rlmTrap" is not "foo", because `send_pair()` mocks `as.character.foo`.
+# Gives the S3 classes "rlmTrap" and "rlmOldTrap" and the S4 class
+# "rlmTrapString" a method for each of `trap_generics` that raises an error,
+# for the life of the caller. "rlmTrap" is not "foo", because `send_pair()`
+# mocks `as.character.foo`.
 local_trap_methods <- function(frame = parent.frame()) {
   for (generic in trap_generics) {
-    testthat::local_mocked_s3_method(
-      generic,
-      "rlmTrap",
-      function(x, ...) stop("trap method ran"),
-      frame = frame
-    )
+    for (s3_class in c("rlmTrap", "rlmOldTrap")) {
+      testthat::local_mocked_s3_method(
+        generic,
+        s3_class,
+        function(x, ...) stop("trap method ran"),
+        frame = frame
+      )
+    }
     testthat::local_mocked_s4_method(
       generic,
       "rlmTrapString",
@@ -191,23 +202,28 @@ local_trap_methods <- function(frame = parent.frame()) {
 
 trap_classes <- list(
   "S3 trap" = function(v) structure(v, class = "rlmTrap"),
-  "S4 trap" = function(v) methods::new("rlmTrapString", v)
+  "S4 trap" = function(v) methods::new("rlmTrapString", v),
+  "S4 trap of an S3 class" = function(v) methods::new("rlmTrapOld", v)
 )
 
 test_that("the trap classes raise an error from each of their methods", {
   local_trap_methods()
   for (label in names(trap_classes)) {
-    value <- trap_classes[[label]]("m")
-    expect_true(is.character(value), info = label)
-    for (generic in trap_generics) {
-      call <- switch(
-        generic,
-        "[" = function() value[1],
-        "[[" = function() value[[1]],
-        function() get(generic, baseenv())(value)
-      )
-      expect_error(call(), "trap method ran", fixed = TRUE, info = paste(label, generic))
-    }
+    test_that(label, {
+      for (generic in trap_generics) {
+        test_that(generic, {
+          value <- trap_classes[[label]]("m")
+          expect_true(is.character(value), info = label)
+          call <- switch(
+            generic,
+            "[" = function() value[1],
+            "[[" = function() value[[1]],
+            function() get(generic, baseenv())(value)
+          )
+          expect_error(call(), "trap method ran", fixed = TRUE, info = paste(label, generic))
+        })
+      }
+    })
   }
 })
 
@@ -244,12 +260,16 @@ for (pair in names(name_pairs)) {
       probes[["two values"]] <- c("m", "m")
     }
     for (label in names(probes)) {
-      plain <- abort_message(call, probes[[label]], paste(pair, "with", label))
-      for (cls in names(trap_classes)) {
-        info <- paste(pair, "with", label, "in the", cls, "class")
-        classed <- abort_message(call, trap_classes[[cls]](probes[[label]]), info)
-        expect_identical(classed, plain, info = info)
-      }
+      test_that(paste("with", label), {
+        for (cls in names(trap_classes)) {
+          test_that(paste("in the", cls, "class"), {
+            plain <- abort_message(call, probes[[label]], paste(pair, "with", label))
+            info <- paste(pair, "with", label, "in the", cls, "class")
+            classed <- abort_message(call, trap_classes[[cls]](probes[[label]]), info)
+            expect_identical(classed, plain, info = info)
+          })
+        }
+      })
     }
   })
 
@@ -258,16 +278,20 @@ for (pair in names(name_pairs)) {
     local_trap_methods()
     call <- name_pairs[[pair]]
     for (form in names(valid_cafe)) {
-      for (cls in names(trap_classes)) {
-        info <- paste(pair, "with cafe", form, "in the", cls, "class")
-        probe <- local_counting_probe()
-        expect_error(
-          call(trap_classes[[cls]](valid_cafe[[form]])),
-          class = "rlmstudio_no_server",
-          info = info
-        )
-        expect_identical(probe$calls, 1L, info = info)
-      }
+      test_that(paste("with cafe", form), {
+        for (cls in names(trap_classes)) {
+          test_that(paste("in the", cls, "class"), {
+            info <- paste(pair, "with cafe", form, "in the", cls, "class")
+            probe <- local_counting_probe()
+            expect_error(
+              call(trap_classes[[cls]](valid_cafe[[form]])),
+              class = "rlmstudio_no_server",
+              info = info
+            )
+            expect_identical(probe$calls, 1L, info = info)
+          })
+        }
+      })
     }
   })
 }

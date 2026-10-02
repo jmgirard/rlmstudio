@@ -60,8 +60,10 @@ plain_string <- function(value) {
 #' A check reads the value with `[`, `[[`, `length()`, `dim()`, or `is.na()`.
 #' A class method for one of them would run inside the check, and it could
 #' replace the abort or change its detail (D-041). `unclass()` removes the
-#' class, so no S3 or S4 method runs, and `asS4(, FALSE)` then clears the S4
-#' bit. The names and the `dim` attribute stay, because the array rule of
+#' class, so no S3 or S4 method runs, and `asS4(, FALSE, complete = FALSE)`
+#' then clears the S4 bit. With `complete = TRUE`, `asS4()` would set the
+#' `.S3Class` of an S4 class that contains a `setOldClass()` class back as the
+#' class. The names and the `dim` attribute stay, because the array rule of
 #' `id_fault()` reads `dim`. `as.character()` is not used, for the reason
 #' `plain_string()` states.
 #'
@@ -72,7 +74,7 @@ plain_string <- function(value) {
 strip_class <- function(value) {
   value <- unclass(value)
   if (isS4(value)) {
-    value <- asS4(value, FALSE)
+    value <- asS4(value, FALSE, complete = FALSE)
   }
   value
 }
