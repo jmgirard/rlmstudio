@@ -1,3 +1,8 @@
+# A run without NOT_CRAN=true skips this file, as CRAN's does, to keep CRAN's
+# Windows R-devel check under its time limit. setup-r in CI, devtools::test(),
+# and devtools::check() set NOT_CRAN=true if it is unset, so they run it.
+testthat::skip_on_cran()
+
 # Each TRUE/FALSE argument of an exported function takes one TRUE or FALSE and
 # nothing else. Which functions and arguments are under test is read from the
 # formals of the NAMESPACE exports, so a flag argument added later joins the

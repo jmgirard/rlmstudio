@@ -1,3 +1,8 @@
+# A run without NOT_CRAN=true skips this file, as CRAN's does, to keep CRAN's
+# Windows R-devel check under its time limit. setup-r in CI, devtools::test(),
+# and devtools::check() set NOT_CRAN=true if it is unset, so they run it.
+testthat::skip_on_cran()
+
 # Which exported functions must guard which argument is read from the package
 # NAMESPACE rather than from a list written here. A wrapper added later joins
 # the domain on its own, which a hand-written list of names would not do.

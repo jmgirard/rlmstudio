@@ -1,3 +1,8 @@
+# A run without NOT_CRAN=true skips this file, as CRAN's does, to keep CRAN's
+# Windows R-devel check under its time limit. setup-r in CI, devtools::test(),
+# and devtools::check() set NOT_CRAN=true if it is unset, so they run it.
+testthat::skip_on_cran()
+
 # A model name, job id, thread id, or type filter that is not valid text, or
 # that carries a class, names, or the S4 bit. Each pair of function and
 # argument gets its own test_that() block, so a failure names the pair.
