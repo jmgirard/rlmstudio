@@ -94,3 +94,19 @@ Fresh runs on 2026-10-01 at 471fc0d, origin/main an ancestor of the branch. `dev
 - AC7: `devtools::test()` gave 0 failed (the run above). `devtools::check()` with `RLMSTUDIO_API_TOKEN` set gave 0 errors, 0 warnings, and 0 notes.
 
 Consistency gate: `cairn_validate.py` exit 0, all checks passed. No principle text changed, so `cairn_impact` was skipped. `devtools::document()` left no diff. The branch adds no file and does not touch README.Rmd or README.md. The repo has no pkgdown site. NEWS.md has three entries, with no milestone number: the class strip with the type filter, the text headline, and the check order.
+
+Independent review: three fresh reviewers (Opus diff, Sonnet history, Sonnet prior review). PR inline comments: none. Findings, with the proposed disposition that the gate settles:
+
+- D1 (diff, verified here): `strip_class()` (R/utils-args.R:72) calls `asS4(value, FALSE)`, whose default `complete = TRUE` puts back the `.S3Class` of an S4 class that contains an S3 class registered with `setOldClass()`. With `length.myS3` raising an error, `lms_load(new("S4x", NA_character_))` gives "myS3 length ran". The plain form gives the `model` abort. `complete = FALSE` leaves no class. NEWS.md and the roxygen overclaim. Proposed: fix now, with a third trap class in the AC1 tests.
+- D2 (diff and prior review): the check-order move also changes the `messages` dot on "openai". `lms_chat(1, "hi", api_type = "openai", messages = list())` now aborts on `model`. NEWS names only `instructions`, and no test pins the "openai" case. Proposed: fix now, in NEWS and in the AC5 test.
+- D3 (diff): the new comment at R/chat.R:159 says that both functions report the same fault. A bad `api_type` still differs, because `lms_chat()` runs `match.arg()` first. That difference predates M079. Proposed: fix now, narrow the comment.
+- D4 (diff): the AC2 subtests are named "list_models" and "list_instances" alone, and one `expect_s3_class()` has no label. Proposed: fix now, with clearer subtest names.
+- A2 (this review): the AC2 malformed case breaks the model `display_name`, not an entry of `loaded_instances`. Proposed: fix now, add an instance `config` case, then tick AC2.
+- P1 (prior review): the new test loops in test-name-faults.R and test-chat-dot-clash.R are flat, against the nested-subtest rule of D-038. The candidate row on flat loops holds the older ones. Proposed: fix now, nest the loops that this branch adds.
+- H1 (history): the `previous_response_id` text headline drops "or `NULL`". Proposed: reject, the implement question gate chose it.
+- H2 (history): no D-entry records the headline or the check order. Proposed: reject, the plan scoped one D-entry, and NEWS records both.
+- H3 (history): the headline tests read `err[["message"]]`, a cli and rlang storage detail. Proposed: reject, the T6 work log records the choice because the full message wraps.
+- H4 (history): the M060 follow-up row still lists items that M079 fixes. Proposed: noted, post-merge hygiene narrows it.
+- H5 (history): `rlm_check_type()` now drops names and `dim`, which changes how a named filter prints in the "No models found" message. Proposed: reject, the values print the same.
+- H6 (history): the `id_fault()` detail now carries a `text_rule` attribute. Proposed: reject, internal and read by all three callers.
+- H7 (history): the C locale gap, the type element order, and the call-site guard limit are unchanged. Proposed: reject, out of scope or recorded already.
