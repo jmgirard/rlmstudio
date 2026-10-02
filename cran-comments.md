@@ -1,6 +1,6 @@
 ## Resubmission
 
-This resubmission fixes the test error of the Debian incoming pretest. A test matched the full libcurl message for a URL with no host, and that wording differs between libcurl versions. The test now matches only the part that all versions share.
+This resubmission shortens the check time. The incoming check of the last submission took 13 minutes, with 11 minutes in the tests. The tests now skip three slow argument-check files on CRAN. A win-builder R-devel check then took 463 seconds.
 
 ## R CMD check results
 
