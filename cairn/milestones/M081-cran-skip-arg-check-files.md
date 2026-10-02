@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M081: The CRAN check skips the three argument-check test files
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — CRAN's check machines run the test suite   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m081-cran-skip-arg-check-files   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -63,7 +63,7 @@ The Windows R-devel check of the package takes less than 10 minutes, because CRA
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Before any edit, run `devtools::test()` with `ListReporter` on `main` at the plan commit, once with `NOT_CRAN=false` and once with `NOT_CRAN=true`. Save the per-file sets of test names and the summed `real` time in the scratchpad. Write a small comparison script there that reads two saved runs and names each file whose set of test names differs or that is missing. Log the per-mode sums in one work-log line.
+- [x] T1: Before any edit, run `devtools::test()` with `ListReporter` on `main` at the plan commit, once with `NOT_CRAN=false` and once with `NOT_CRAN=true`. Save the per-file sets of test names and the summed `real` time in the scratchpad. Write a small comparison script there that reads two saved runs and names each file whose set of test names differs or that is missing. Log the per-mode sums in one work-log line.
 - [ ] T2: Add `testthat::skip_on_cran()` at the top level of the three files, above their first code. Its comment says that the call keeps the Windows R-devel check of CRAN under its time limit. It also says that CI and `devtools::check()` set `NOT_CRAN=true`, so they still run the file. Format with Air.
 - [ ] T3: Show that the checks can fail. In a scratch edit, put `skip_on_cran()` at the top of one other test file. Make sure that the T1 comparison names that file for AC3. Revert the edit. Make sure that the `check` reporter lists the three "On CRAN" skips of AC1.
 - [ ] T4: Run the branch in both modes, and compare the test names with the T1 baseline (AC2, AC3). For AC4, make a scratch `git worktree` of `main`. Run it and the branch back to back with `NOT_CRAN=false`, and compare the summed `real` times.
@@ -84,6 +84,7 @@ The Windows R-devel check of the package takes less than 10 minutes, because CRA
 - 2026-10-01: created by /milestone-plan.
 - 2026-10-01: criteria audit (full mode, fresh Opus reader) returned 5 findings, all fixed before the gate. AC1 reads the skip from the `check` reporter, because `ListReporter` records nothing for a top-level skip. AC2 lost an "On CRAN" clause that cannot fail. AC3 takes its files from `list.files()`. AC5 reads the time in the win-builder email, because the overall-checktime NOTE comes only from CRAN incoming checks. AC6 adds a `NOT_CRAN=false` check.
 - 2026-10-01: plan gate chose a whole-file `skip_on_cran()` in three files over one probe per loop on CRAN. The skip is three lines, and the other choice needs about 100 loop edits and a helper. Falsified by an argument-guard fault that only a CRAN check platform shows.
+- 2026-10-01: question gate skipped, because the plan left no choice open. T1 baseline at 5b4a145: `NOT_CRAN=false` 50 files, 2983 tests, 0 failed, summed real 140.8 s. `NOT_CRAN=true` 50 files, 2983 tests, 0 failed, 151.4 s. Both modes hold the same per-file test names, and all 50 `list.files()` test files appear.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
