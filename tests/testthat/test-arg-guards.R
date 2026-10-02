@@ -1,3 +1,8 @@
+# CRAN skips this file, so that the Windows R-devel check of CRAN stays under
+# its time limit. CI and devtools::check() set NOT_CRAN=true, so they still
+# run it.
+testthat::skip_on_cran()
+
 # Which exported functions must guard which argument is read from the package
 # NAMESPACE rather than from a list written here. A wrapper added later joins
 # the domain on its own, which a hand-written list of names would not do.
