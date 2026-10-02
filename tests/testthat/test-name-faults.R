@@ -113,6 +113,189 @@ for (pair in names(name_pairs)) {
   })
 }
 
+# A text fault gets its own headline ----------------------------------------
+
+text_headline <- "must be a string of valid text"
+
+expect_text_headline <- function(call, value, name, info) {
+  probe <- local_counting_probe()
+  err <- tryCatch(call(value), error = identity)
+  expect_s3_class(err, "error")
+  expect_identical(probe$calls, 0L, info = info)
+  # The `message` field of the error holds the headline alone. The full
+  # message wraps at the width and adds the detail.
+  headline <- cli::ansi_strip(err[["message"]][[1]])
+  expect_match(headline, name, fixed = TRUE, info = info)
+  expect_match(headline, text_headline, fixed = TRUE, info = info)
+  expect_no_match(headline, "given as a single string", fixed = TRUE, info = info)
+}
+
+for (pair in grep("(type)", names(name_pairs), fixed = TRUE, invert = TRUE, value = TRUE)) {
+  test_that(paste0(pair, " gives a text fault the text headline"), {
+    skip_if_not(l10n_info()[["UTF-8"]], "needs a UTF-8 locale")
+    call <- name_pairs[[pair]]
+    arg <- pair_arg(pair)
+    for (p in text_probes) {
+      test_that(paste(pair, "with", p$label), {
+        info <- paste(pair, "with", p$label)
+        expect_text_headline(call, p$value, paste0("`", arg, "`"), info)
+        if (arg == "previous_response_id") {
+          attr_info <- paste(info, "in the response_id attribute")
+          value <- structure("a reply", response_id = p$value)
+          expect_text_headline(
+            call,
+            value,
+            "The `response_id` attribute of `previous_response_id`",
+            attr_info
+          )
+        }
+      })
+    }
+  })
+}
+
+# A classed value gets the check of its plain form --------------------------
+
+methods::setClass("rlmTrapString", contains = "character")
+
+# An S4 class that contains the S3 class "rlmOldTrap". Its objects carry the
+# `.S3Class` attribute, which `asS4(, FALSE)` sets back as the class unless
+# `complete = FALSE`.
+methods::setOldClass(c("rlmOldTrap", "character"))
+methods::setClass("rlmTrapOld", contains = "rlmOldTrap")
+
+# The functions that a check can call on the value, and that a class can
+# take over with a method.
+trap_generics <- c("[", "[[", "length", "dim", "is.na")
+
+# The S4 methods take the full formals of each generic.
+trap_s4_methods <- list(
+  "[" = function(x, i, j, ..., drop = TRUE) stop("trap method ran"),
+  "[[" = function(x, i, j, ...) stop("trap method ran"),
+  "length" = function(x) stop("trap method ran"),
+  "dim" = function(x) stop("trap method ran"),
+  "is.na" = function(x) stop("trap method ran")
+)
+
+# Gives the S3 classes "rlmTrap" and "rlmOldTrap" and the S4 class
+# "rlmTrapString" a method for each of `trap_generics` that raises an error,
+# for the life of the caller. "rlmTrap" is not "foo", because `send_pair()`
+# mocks `as.character.foo`.
+local_trap_methods <- function(frame = parent.frame()) {
+  for (generic in trap_generics) {
+    for (s3_class in c("rlmTrap", "rlmOldTrap")) {
+      testthat::local_mocked_s3_method(
+        generic,
+        s3_class,
+        function(x, ...) stop("trap method ran"),
+        frame = frame
+      )
+    }
+    testthat::local_mocked_s4_method(
+      generic,
+      "rlmTrapString",
+      trap_s4_methods[[generic]],
+      frame = frame
+    )
+  }
+}
+
+trap_classes <- list(
+  "S3 trap" = function(v) structure(v, class = "rlmTrap"),
+  "S4 trap" = function(v) methods::new("rlmTrapString", v),
+  "S4 trap of an S3 class" = function(v) methods::new("rlmTrapOld", v)
+)
+
+test_that("the trap classes raise an error from each of their methods", {
+  local_trap_methods()
+  for (label in names(trap_classes)) {
+    test_that(label, {
+      for (generic in trap_generics) {
+        test_that(generic, {
+          value <- trap_classes[[label]]("m")
+          expect_true(is.character(value), info = label)
+          call <- switch(
+            generic,
+            "[" = function() value[1],
+            "[[" = function() value[[1]],
+            function() get(generic, baseenv())(value)
+          )
+          expect_error(call(), "trap method ran", fixed = TRUE, info = paste(label, generic))
+        })
+      }
+    })
+  }
+})
+
+# The fault probes, with a label each. The text probes need a UTF-8 locale.
+fault_probes <- function() {
+  probes <- list("NA" = NA_character_, "empty" = "", "a space" = " ")
+  if (l10n_info()[["UTF-8"]]) {
+    for (p in text_probes) probes[[p$label]] <- p$value
+  }
+  probes
+}
+
+# The message of the abort that `call(value)` raises before the server probe.
+abort_message <- function(call, value, info) {
+  probe <- local_counting_probe()
+  err <- tryCatch(call(value), error = identity)
+  expect_s3_class(err, "error")
+  expect_false(inherits(err, "rlmstudio_no_server"), info = info)
+  expect_identical(probe$calls, 0L, info = info)
+  conditionMessage(err)
+}
+
+for (pair in names(name_pairs)) {
+  test_that(paste0(pair, " gives a classed fault the message of its plain form"), {
+    local_trap_methods()
+    call <- name_pairs[[pair]]
+    probes <- fault_probes()
+    if (pair_arg(pair) == "type") {
+      # The class is set on the whole vector.
+      for (label in names(probes)) {
+        probes[[paste("llm and", label)]] <- c("llm", probes[[label]])
+      }
+    } else {
+      probes[["two values"]] <- c("m", "m")
+    }
+    for (label in names(probes)) {
+      test_that(paste("with", label), {
+        for (cls in names(trap_classes)) {
+          test_that(paste("in the", cls, "class"), {
+            plain <- abort_message(call, probes[[label]], paste(pair, "with", label))
+            info <- paste(pair, "with", label, "in the", cls, "class")
+            classed <- abort_message(call, trap_classes[[cls]](probes[[label]]), info)
+            expect_identical(classed, plain, info = info)
+          })
+        }
+      })
+    }
+  })
+
+  test_that(paste0(pair, " passes classed valid text to the server check"), {
+    skip_if_not(l10n_info()[["UTF-8"]], "needs a UTF-8 locale")
+    local_trap_methods()
+    call <- name_pairs[[pair]]
+    for (form in names(valid_cafe)) {
+      test_that(paste("with cafe", form), {
+        for (cls in names(trap_classes)) {
+          test_that(paste("in the", cls, "class"), {
+            info <- paste(pair, "with cafe", form, "in the", cls, "class")
+            probe <- local_counting_probe()
+            expect_error(
+              call(trap_classes[[cls]](valid_cafe[[form]])),
+              class = "rlmstudio_no_server",
+              info = info
+            )
+            expect_identical(probe$calls, 1L, info = info)
+          })
+        }
+      })
+    }
+  })
+}
+
 # The function and argument of each call to the three check helpers in R/,
 # read from the parsed sources. A new call site turns this red, which is the
 # signal to add its pair to `name_pairs` above.
@@ -152,12 +335,16 @@ test_that("the pairs above are every call site of the three check helpers", {
 methods::setClass("rlmTestString", contains = "character")
 
 # Each probe holds the value "m". `as.character()` on the class "foo" returns
-# another value, so a plain string made by `as.character()` would show.
-plain_probes <- list(
-  "class foo" = structure("m", class = "foo"),
-  "I()" = I("m"),
-  "a name" = c(a = "m"),
-  "S4" = methods::new("rlmTestString", "m")
+# another value, so a plain string made by `as.character()` would show. The
+# two trap classes raise an error from any read that runs their methods.
+plain_probes <- c(
+  list(
+    "class foo" = structure("m", class = "foo"),
+    "I()" = I("m"),
+    "a name" = c(a = "m"),
+    "S4" = methods::new("rlmTestString", "m")
+  ),
+  lapply(trap_classes, function(make) make("m"))
 )
 
 # `one_loaded_llm` in test-list-args.R, with the key and the instance id "m".
@@ -277,6 +464,7 @@ send_pair <- function(pair, value) {
     "foo",
     function(x, ...) "other"
   )
+  local_trap_methods()
   recorder <- local_request_sequence(
     lapply(spec$replies, function(body) mock_response(200L, body))
   )
@@ -336,6 +524,7 @@ test_that("lms_load() and lms_unload() return the plain string", {
 
 test_that("lms_load() returns the plain string on the already-loaded path", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_trap_methods()
   for (label in names(plain_probes)) {
     recorder <- local_request_sequence(list(mock_response(200L, model_m_loaded)))
     out <- suppressMessages(lms_load(plain_probes[[label]]))

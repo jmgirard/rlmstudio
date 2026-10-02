@@ -11,7 +11,9 @@
 #'   element can be `NA`, empty, or whitespace only. Each element must be
 #'   valid in its declared encoding and not marked `"bytes"`. Any other value,
 #'   `NULL` and a factor included, aborts before the check for a running
-#'   server. A type that no model has, such as `"vlm"`, matches nothing.
+#'   server. A type that no model has, such as `"vlm"`, matches nothing. A
+#'   classed filter matches by its value, and a class method such as
+#'   `as.character()` does not change the match.
 #' @param detailed `TRUE` or `FALSE`. Show all information about each model.
 #'   Defaults to \code{FALSE}. Any other value, `NULL` and `NA` included,
 #'   aborts before the check for a running server.
@@ -67,7 +69,7 @@ list_models <- function(
   token = NULL
 ) {
   rlm_check_flag(loaded, "loaded")
-  rlm_check_type(type)
+  type <- rlm_check_type(type)
   rlm_check_flag(detailed, "detailed")
   rlm_check_flag(quiet, "quiet", null_ok = TRUE)
   stop_if_no_server(host)
@@ -198,7 +200,9 @@ list_models <- function(
 #'   element can be `NA`, empty, or whitespace only. Each element must be
 #'   valid in its declared encoding and not marked `"bytes"`. Any other value,
 #'   `NULL` and a factor included, aborts before the check for a running
-#'   server. A type that no model has, such as `"vlm"`, matches nothing.
+#'   server. A type that no model has, such as `"vlm"`, matches nothing. A
+#'   classed filter matches by its value, and a class method such as
+#'   `as.character()` does not change the match.
 #' @param quiet `TRUE`, `FALSE`, or `NULL`, the default. `NULL` follows the
 #'   `rlmstudio.quiet` option. `TRUE` hides the message printed when no
 #'   instance is found, and `FALSE` prints it, also when the option is `TRUE`.
@@ -244,7 +248,7 @@ list_instances <- function(
   host = "http://localhost:1234",
   token = NULL
 ) {
-  rlm_check_type(type)
+  type <- rlm_check_type(type)
   rlm_check_flag(quiet, "quiet", null_ok = TRUE)
   stop_if_no_server(host)
 

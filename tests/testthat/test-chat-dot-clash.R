@@ -98,29 +98,158 @@ passing_cases <- list(
   )
 )
 
+# A clashing dot and one other fault. The other fault names its own argument,
+# so the headline names it and not `instructions`. `lms_chat_batch()` takes
+# `inputs` where `lms_chat()` takes `input`.
+other_faults <- list(
+  list(label = "a bad model", model = 1, input = "hi", schema = NULL, arg = "model"),
+  list(label = "a bad input", model = "a-model", input = NA_character_, schema = NULL, arg = "input"),
+  list(label = "a refused schema", model = "a-model", input = "hi", schema = 1, arg = "schema")
+)
+
+# The clashing dot of each route that sets one.
+clash_dots <- list(
+  list(route = "openresponses", dot = list(instructions = "Be brief.")),
+  list(route = "openai", dot = list(messages = list(list(role = "user", content = "hi"))))
+)
+
+expect_other_fault_first <- function(call, arg, dot_name, info) {
+  probe <- local_counting_probe()
+  err <- tryCatch(call(), error = identity)
+  expect_s3_class(err, "error")
+  expect_identical(probe$calls, 0L, info = info)
+  # The `message` field of the error holds the headline alone. The full
+  # message wraps at the width and adds the detail.
+  headline <- cli::ansi_strip(err[["message"]][[1]])
+  expect_match(headline, paste0("^`", arg, "` must "), info = info)
+  expect_no_match(headline, dot_name, fixed = TRUE, info = info)
+}
+
+# Each clashing dot with each other fault.
+clash_fault_cases <- unlist(
+  lapply(clash_dots, function(clash) {
+    lapply(other_faults, function(fault) list(clash = clash, fault = fault))
+  }),
+  recursive = FALSE
+)
+
+test_that("another argument fault comes before the clashing dot", {
+  for (case in clash_fault_cases) {
+    test_that(
+      paste(case$fault$label, "and", names(case$clash$dot), "on", case$clash$route),
+      {
+        clash <- case$clash
+        fault <- case$fault
+        dot_name <- names(clash$dot)
+        label <- paste(fault$label, "and", dot_name, "on", clash$route)
+        expect_other_fault_first(
+          function() {
+            do.call(
+              lms_chat,
+              c(
+                list(fault$model, fault$input, api_type = clash$route, schema = fault$schema),
+                clash$dot
+              )
+            )
+          },
+          fault$arg,
+          dot_name,
+          paste("lms_chat() with", label)
+        )
+        inputs <- c("first", fault$input)
+        expect_other_fault_first(
+          function() {
+            do.call(
+              lms_chat_batch,
+              c(
+                list(fault$model, inputs, quiet = TRUE, api_type = clash$route, schema = fault$schema),
+                clash$dot
+              )
+            )
+          },
+          if (fault$arg == "input") "inputs" else fault$arg,
+          dot_name,
+          paste("lms_chat_batch() with", label)
+        )
+      }
+    )
+  }
+})
+
+# Each of `requests` must carry the dot of `case` with its value.
+expect_dot_sent <- function(requests, n, case, info) {
+  expect_identical(length(requests), n, info = info)
+  name <- names(case$dot)
+  for (req in requests) {
+    body <- jsonlite::parse_json(request_body_text(req))
+    expect_identical(body[[name]], case$dot[[name]], info = info)
+  }
+}
+
 test_that("the dot on another route is sent as a field, with no abort", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   for (case in passing_cases) {
-    info <- paste(names(case$dot), "on", case$route)
-    recorder <- local_request_recorder(mock_response(200L, case$reply))
-    expect_no_error(
-      do.call(lms_chat, c(list("a-model", "hi", api_type = case$route), case$dot))
-    )
-    body <- jsonlite::parse_json(request_body_text(recorder$requests[[1]]))
-    expect_true(names(case$dot) %in% names(body), info = info)
-
-    recorder <- local_request_recorder(mock_response(200L, case$reply))
-    expect_no_error(
-      do.call(
-        lms_chat_batch,
-        c(
-          list("a-model", c("first", "second"), quiet = TRUE, api_type = case$route),
-          case$dot
+    test_that(paste(names(case$dot), "on", case$route), {
+      info <- paste(names(case$dot), "on", case$route)
+      test_that("lms_chat()", {
+        recorder <- local_request_recorder(mock_response(200L, case$reply))
+        expect_no_error(
+          do.call(lms_chat, c(list("a-model", "hi", api_type = case$route), case$dot))
         )
-      )
-    )
-    expect_identical(length(recorder$requests), 2L, info = info)
+        expect_dot_sent(recorder$requests, 1L, case, paste("lms_chat() with", info))
+      })
+
+      # The batch takes the route in `...`, also under the shortened name
+      # `api`. Each name gets its own recorder.
+      for (route_arg in c("api_type", "api")) {
+        test_that(paste("lms_chat_batch() given the route as", route_arg), {
+          batch_info <- paste("lms_chat_batch() with", info, "given as", route_arg)
+          route <- stats::setNames(list(case$route), route_arg)
+          recorder <- local_request_recorder(mock_response(200L, case$reply))
+          expect_no_error(
+            do.call(
+              lms_chat_batch,
+              c(list("a-model", c("first", "second"), quiet = TRUE), route, case$dot)
+            )
+          )
+          expect_dot_sent(recorder$requests, 2L, case, batch_info)
+        })
+      }
+    })
   }
+})
+
+# R matches the exact name `instructions` first, so a shortened `instr` goes
+# to the `...` of `lms_chat_openresponses()` and not to `instructions`.
+test_that("a shortened instr dot is sent beside the system prompt", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  expect_both_fields <- function(requests, n, info) {
+    expect_identical(length(requests), n, info = info)
+    json <- vapply(requests, request_body_text, character(1))
+    expect_match(json, '"instructions":"S"', fixed = TRUE, all = TRUE, info = info)
+    expect_match(json, '"instr":"Be brief."', fixed = TRUE, all = TRUE, info = info)
+  }
+
+  recorder <- local_request_recorder(mock_response(200L, responses_reply()))
+  expect_no_error(lms_chat(
+    "a-model",
+    "hi",
+    system_prompt = "S",
+    api_type = "openresponses",
+    instr = "Be brief."
+  ))
+  expect_both_fields(recorder$requests, 1L, "lms_chat()")
+
+  recorder <- local_request_recorder(mock_response(200L, responses_reply()))
+  expect_no_error(lms_chat_batch(
+    "a-model",
+    c("first", "second"),
+    system_prompt = "S",
+    quiet = TRUE,
+    api_type = "openresponses",
+    instr = "Be brief."
+  ))
+  expect_both_fields(recorder$requests, 2L, "lms_chat_batch()")
 })
 
 # The arguments that lms_chat() passes by name to a route function, less its

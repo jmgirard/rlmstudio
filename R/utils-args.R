@@ -17,15 +17,28 @@
 rlm_check_id <- function(value, arg) {
   fault <- id_fault(value)
   if (!is.null(fault)) {
-    cli::cli_abort(
-      c(
-        "{.arg {arg}} must be one name, given as a single string.",
-        "x" = "{fault}"
-      ),
-      call = NULL
-    )
+    headline <- if (is_text_fault(fault)) {
+      "{.arg {arg}} must be a string of valid text."
+    } else {
+      "{.arg {arg}} must be one name, given as a single string."
+    }
+    cli::cli_abort(c(headline, "x" = "{fault}"), call = NULL)
   }
   invisible(plain_string(value))
+}
+
+#' Did a string break a text rule?
+#'
+#' A string that breaks a text rule is one string, so the headline names the
+#' text rule and not the one-string rule. `id_fault()` marks such a detail
+#' with the attribute `text_rule`.
+#'
+#' @param fault A detail from `id_fault()`.
+#' @return `TRUE` or `FALSE`.
+#'
+#' @noRd
+is_text_fault <- function(fault) {
+  isTRUE(attr(fault, "text_rule", exact = TRUE))
 }
 
 #' One string with no class, names, or S4 bit
@@ -40,6 +53,30 @@ rlm_check_id <- function(value, arg) {
 #' @noRd
 plain_string <- function(value) {
   unclass(value)[[1]]
+}
+
+#' A value with no class and no S4 bit
+#'
+#' A check reads the value with `[`, `[[`, `length()`, `dim()`, or `is.na()`.
+#' A class method for one of them would run inside the check, and it could
+#' replace the abort or change its detail (D-041). `unclass()` removes the
+#' class, so no S3 or S4 method runs, and `asS4(, FALSE, complete = FALSE)`
+#' then clears the S4 bit. With `complete = TRUE`, `asS4()` would set the
+#' `.S3Class` of an S4 class that contains a `setOldClass()` class back as the
+#' class. The names and the `dim` attribute stay, because the array rule of
+#' `id_fault()` reads `dim`. `as.character()` is not used, for the reason
+#' `plain_string()` states.
+#'
+#' @param value A character vector, with or without a class.
+#' @return `value` with no class and no S4 bit.
+#'
+#' @noRd
+strip_class <- function(value) {
+  value <- unclass(value)
+  if (isS4(value)) {
+    value <- asS4(value, FALSE, complete = FALSE)
+  }
+  value
 }
 
 #' Reject a wait that is not one usable number of seconds
@@ -177,7 +214,9 @@ port_fault <- function(value) {
 #' string (LESSONS, M012). The detail also names no value back to the user.
 #'
 #' @param value The value the caller passed.
-#' @return A one-sentence detail, or `NULL` when the value is usable.
+#' @return A one-sentence detail, or `NULL` when the value is usable. The
+#'   detail of a text fault carries the attribute `text_rule = TRUE`, which
+#'   `is_text_fault()` reads.
 #'
 #' @noRd
 id_fault <- function(value) {
@@ -188,6 +227,7 @@ id_fault <- function(value) {
     cls <- class(value)[[1]]
     return(paste0("You gave ", article_for(cls), " ", cls, " value."))
   }
+  value <- strip_class(value)
   if (!is.null(dim(value))) {
     return("You gave an array rather than a single string.")
   }
@@ -202,7 +242,10 @@ id_fault <- function(value) {
   }
   text <- text_fault(value)
   if (!is.null(text)) {
-    return(paste0("You gave a string that ", text, "."))
+    return(structure(
+      paste0("You gave a string that ", text, "."),
+      text_rule = TRUE
+    ))
   }
   # `trimws()` strips space, tab, carriage return, and line feed and nothing
   # else, so a form feed or a vertical tab survives it. The rule is stated
@@ -400,25 +443,23 @@ rlm_check_response_id <- function(value) {
   if (!is.null(id)) {
     fault <- id_fault(id)
     if (!is.null(fault)) {
-      cli::cli_abort(
-        c(
-          "The {.code response_id} attribute of {.arg previous_response_id} must be one response id, given as a single string.",
-          "x" = "{fault}"
-        ),
-        call = NULL
-      )
+      headline <- if (is_text_fault(fault)) {
+        "The {.code response_id} attribute of {.arg previous_response_id} must be a string of valid text."
+      } else {
+        "The {.code response_id} attribute of {.arg previous_response_id} must be one response id, given as a single string."
+      }
+      cli::cli_abort(c(headline, "x" = "{fault}"), call = NULL)
     }
     return(invisible(plain_string(id)))
   }
   fault <- id_fault(value)
   if (!is.null(fault)) {
-    cli::cli_abort(
-      c(
-        "{.arg previous_response_id} must be one response id, given as a single string, or {.code NULL}.",
-        "x" = "{fault}"
-      ),
-      call = NULL
-    )
+    headline <- if (is_text_fault(fault)) {
+      "{.arg previous_response_id} must be a string of valid text."
+    } else {
+      "{.arg previous_response_id} must be one response id, given as a single string, or {.code NULL}."
+    }
+    cli::cli_abort(c(headline, "x" = "{fault}"), call = NULL)
   }
   invisible(plain_string(value))
 }
@@ -1478,8 +1519,13 @@ rlm_check_one_prompt <- function(value, arg) {
 #' unknown name passes and matches nothing. A value that is not a usable type
 #' name, such as a number or an empty string, aborts.
 #'
+#' A filter that passes comes back as a plain character vector, with no
+#' attributes and no S4 bit. `%in%` reads a classed value through its
+#' `as.character()` method, so a caller that matches the filter reassigns it
+#' (D-041).
+#'
 #' @param value The value the caller passed as `type`.
-#' @return `value`, invisibly.
+#' @return `value` as a plain character vector, invisibly.
 #'
 #' @noRd
 rlm_check_type <- function(value) {
@@ -1493,7 +1539,9 @@ rlm_check_type <- function(value) {
       call = NULL
     )
   }
-  invisible(value)
+  plain <- strip_class(value)
+  attributes(plain) <- NULL
+  invisible(plain)
 }
 
 #' Which rule did this model type filter break?
@@ -1514,6 +1562,7 @@ type_fault <- function(value) {
     cls <- class(value)[[1]]
     return(paste0("You gave ", article_for(cls), " ", cls, " value."))
   }
+  value <- strip_class(value)
   if (length(value) == 0L) {
     return("You gave an empty character vector.")
   }

@@ -23,7 +23,9 @@ included, aborts before the check for a running server.}
 element can be \code{NA}, empty, or whitespace only. Each element must be
 valid in its declared encoding and not marked \code{"bytes"}. Any other value,
 \code{NULL} and a factor included, aborts before the check for a running
-server. A type that no model has, such as \code{"vlm"}, matches nothing.}
+server. A type that no model has, such as \code{"vlm"}, matches nothing. A
+classed filter matches by its value, and a class method such as
+\code{as.character()} does not change the match.}
 
 \item{detailed}{\code{TRUE} or \code{FALSE}. Show all information about each model.
 Defaults to \code{FALSE}. Any other value, \code{NULL} and \code{NA} included,

@@ -255,3 +255,86 @@ test_that("an unknown type returns the empty frame and a message, with no abort"
     )
   )
 })
+
+# A classed type filter is matched by its value ------------------------------
+
+# An llm and an embedding model, each with one loaded instance. With
+# `bad_embedding = "display_name"`, the embedding model has a `display_name`
+# that is not a string. With `bad_embedding = "config"`, its instance entry
+# has a `config` that is not an object. `list_instances()` refuses each one in
+# a model that it keeps.
+llm_and_embedding <- function(bad_embedding = "none") {
+  embedding_name <- if (bad_embedding == "display_name") "5" else '"E1"'
+  embedding_instance <- if (bad_embedding == "config") {
+    '{"id": "e1", "config": 5}'
+  } else {
+    '{"id": "e1"}'
+  }
+  paste0(
+    '{"models": [',
+    '{"type": "llm", "key": "m1", "display_name": "M1", ',
+    '"size_bytes": 1073741824, "loaded_instances": [{"id": "i1"}]}, ',
+    '{"type": "embedding", "key": "e1", "display_name": ', embedding_name, ', ',
+    '"size_bytes": 1073741824, "loaded_instances": [', embedding_instance, ']}',
+    ']}'
+  )
+}
+
+# Runs one list function on one model list, with an `as.character()` method
+# for the class "rlmOtherType" that gives "embedding". Returns the value, or
+# the error.
+run_with_other_type <- function(fn, body, type) {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_mocked_s3_method(
+    "as.character",
+    "rlmOtherType",
+    function(x, ...) "embedding"
+  )
+  local_request_recorder(mock_response(200L, body))
+  tryCatch(suppressMessages(fn(type = type)), error = identity)
+}
+
+other_type_llm <- structure("llm", class = "rlmOtherType")
+
+test_that("the as.character() method of the other-type class gives embedding", {
+  local_mocked_s3_method(
+    "as.character",
+    "rlmOtherType",
+    function(x, ...) "embedding"
+  )
+  expect_identical(as.character(other_type_llm), "embedding")
+  # Without the plain filter, `%in%` reads the method and keeps the other row.
+  expect_identical(c("llm", "embedding") %in% other_type_llm, c(FALSE, TRUE))
+})
+
+test_that("a classed type filter gets the rows of its plain form", {
+  for (name in names(list_calls)) {
+    test_that(name, {
+      fn <- list_calls[[name]]
+      plain <- run_with_other_type(fn, llm_and_embedding(), "llm")
+      classed <- run_with_other_type(fn, llm_and_embedding(), other_type_llm)
+      expect_s3_class(plain, "data.frame")
+      expect_identical(plain$key, "m1", info = name)
+      expect_identical(classed, plain, info = name)
+    })
+  }
+})
+
+test_that("a classed type filter gets the instance outcome of its plain form", {
+  for (bad in c("display_name", "config")) {
+    test_that(paste("with a bad embedding", bad), {
+      body <- llm_and_embedding(bad_embedding = bad)
+      plain <- run_with_other_type(list_instances, body, "llm")
+      classed <- run_with_other_type(list_instances, body, other_type_llm)
+      # The plain filter keeps only the llm, so the bad embedding entry is not
+      # read, and the call returns its one row.
+      expect_s3_class(plain, "data.frame")
+      expect_identical(plain$id, "i1", info = bad)
+      expect_identical(classed, plain, info = bad)
+      # The same body with the embedding kept is refused, so the test can tell
+      # the two outcomes apart.
+      refused <- run_with_other_type(list_instances, body, "embedding")
+      expect_s3_class(refused, "rlmstudio_bad_response")
+    })
+  }
+})
