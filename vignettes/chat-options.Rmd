@@ -37,7 +37,7 @@ lms_server_start(wait = 30)
 # Load the model
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [7s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [11.7s]
 #> 
 ```
 
@@ -77,9 +77,9 @@ prompt <- "Name one color. Answer with one word."
 
 # The default route
 lms_chat(model, prompt)
-#> [1] "Blue."
+#> [1] "Blue \n\nLet me know if you’d like another!"
 #> attr(,"response_id")
-#> [1] "resp_5066d9297e26c824a491b3e4c77f6979dc03a5c42368de44"
+#> [1] "resp_5cf482638f60b6dee10cb5fd6c4b254663ab888f1d48e295"
 
 # The OpenAI route
 lms_chat(model, prompt, api_type = "openai")
@@ -87,9 +87,9 @@ lms_chat(model, prompt, api_type = "openai")
 
 # The native route of LM Studio
 lms_chat(model, prompt, api_type = "native")
-#> [1] "Blue \n\nLet me know if you’d like another! 😊"
+#> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_c1e28f0cbf43fe854f818ca209cb099f45b83b27019da035"
+#> [1] "resp_c42e41ec31f20b2124f9fc2e06ccd48f9e9ea586e5e550e7"
 ```
 
 Each call returns the text of the reply. An attribute is a named value
@@ -116,7 +116,7 @@ chance goes into the choice of each token. The call below sets it to 0.
 lms_chat(model, prompt, temperature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_c9f944bff12f24d21faf78c9177fb06bbd3f01316085bd29"
+#> [1] "resp_c858e32caaa1abf0bb6b46a3f92492027bcf6b14b50a69cb"
 ```
 
 The package checks a few option names. For example, it stops with an error
@@ -137,7 +137,7 @@ with no error.
 lms_chat(model, prompt, temprature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_4c0666a67b6255e8d5257d9e640bfad8abf73265a8d99b8a"
+#> [1] "resp_e9fa3986708ece2925883ed9f7e59999867016bfe21ca658"
 ```
 
 So a misspelled option can go unnoticed. A later section shows how to see
@@ -167,7 +167,7 @@ first <- lms_chat(
 first
 #> [1] "OK."
 #> attr(,"response_id")
-#> [1] "resp_f672645b0ad63014ef56aefe5192cdf668c183b7d25e8b11"
+#> [1] "resp_342a9e50660c1e6ca25912df33559f6f0c9520f5a5012d3b"
 
 # Ask about the fact in a follow-up
 lms_chat(
@@ -178,7 +178,7 @@ lms_chat(
 )
 #> [1] "Green."
 #> attr(,"response_id")
-#> [1] "resp_82acfecf7433013b5e0d59d4e3faa5e72f50e5c829dd2dc3"
+#> [1] "resp_f9f176cf59816d6b3f8c602dfcb91df493e0338c7d8b01ea"
 
 # Ask the same question with no response id
 lms_chat(
@@ -188,7 +188,7 @@ lms_chat(
 )
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_14051c9228f825971a587f4aa8f49c6317b7014864f954a3"
+#> [1] "resp_91e29038937144cf4478592485332f092e67d5cf7a5c997d"
 ```
 
 With the first reply as `previous_response_id`, the model answered from
@@ -387,7 +387,7 @@ chat_or_na <- function(...) {
 chat_or_na(model, prompt, temperature = 0)
 #> [1] "Blue."
 #> attr(,"response_id")
-#> [1] "resp_2fd1ff476cd266f2d824b0e18a5dd71d2cb7ff45b529159e"
+#> [1] "resp_220281674e43b24eb1d488881bae74895a8bd66ea524b3c3"
 ```
 
 The first call below goes to port 1, where no server runs. The other calls
@@ -438,7 +438,7 @@ vignette.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [548ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [525ms]
 #> 
 
 # Stop the local server
