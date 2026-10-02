@@ -25,8 +25,8 @@ A run of `pkgdown.yaml` deploys the site to `gh-pages` only from the default bra
 
 ## Acceptance criteria
 
-- [ ] AC1: The `if:` line of the "Deploy to GitHub pages" step in `.github/workflows/pkgdown.yaml` is true in two cases only. The first case is the event `release`. The second case is a `github.ref` equal to `refs/heads/` joined to `github.event.repository.default_branch`. Evidence: the line as read from the branch.
-- [ ] AC2: A manual run of `pkgdown.yaml` on the milestone branch ends with the "Build site" step `success` and the "Deploy to GitHub pages" step `skipped`, as `gh run view <id> --json jobs` reports.
+- [x] AC1: The `if:` line of the "Deploy to GitHub pages" step in `.github/workflows/pkgdown.yaml` is true in two cases only. The first case is the event `release`. The second case is a `github.ref` equal to `refs/heads/` joined to `github.event.repository.default_branch`. Evidence: the line as read from the branch.
+- [x] AC2: A manual run of `pkgdown.yaml` on the milestone branch ends with the "Build site" step `success` and the "Deploy to GitHub pages" step `skipped`, as `gh run view <id> --json jobs` reports.
 
 ## Coverage
 
@@ -54,3 +54,6 @@ A run of `pkgdown.yaml` deploys the site to `gh-pages` only from the default bra
 ## Decisions
 
 ## Review
+
+- AC1 evidence (2026-10-01, HEAD 0467147): `git show HEAD:.github/workflows/pkgdown.yaml` line 55, the deploy step `if:`, reads `github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)`. The line is an OR of two equality tests. It is true for the event `release` and for a ref equal to `refs/heads/<default branch>`, and for nothing else. `yaml::read_yaml()` returns the same text for step 7 of 7.
+- AC2 evidence (2026-10-01): `gh run view 36946984849` reports a `workflow_dispatch` run on `m080-pkgdown-deploy-default-branch` at f25259b, conclusion `success`. Its "Build site" step is `success` and its "Deploy to GitHub pages" step is `skipped`. `git diff f25259b HEAD -- .github` is empty, so the run used the workflow file that HEAD carries.
