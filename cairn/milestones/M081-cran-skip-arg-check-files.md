@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M081: The CRAN check skips the three argument-check test files
 
-- **Status:** blocked   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -68,7 +68,7 @@ The Windows R-devel check of the package takes less than 10 minutes, because CRA
 - [x] T3: Show that the checks can fail. In a scratch edit, put `skip_on_cran()` at the top of one other test file. Make sure that the T1 comparison names that file for AC3. Revert the edit. Make sure that the `check` reporter lists the three "On CRAN" skips of AC1.
 - [x] T4: Run the branch in both modes, and compare the test names with the T1 baseline (AC2, AC3). For AC4, make a scratch `git worktree` of `main`. Run it and the branch back to back with `NOT_CRAN=false`, and compare the summed `real` times.
 - [x] T5: Run `devtools::check()` with its default settings and with `env_vars = c(NOT_CRAN = "false")` (AC6).
-- [ ] T6: Ask the user to run `devtools::check_win_devel()` from the branch. Win-builder sends the result to the maintainer address in DESCRIPTION. Record the emailed check time and status in the work log (AC5).
+- [x] T6: Ask the user to run `devtools::check_win_devel()` from the branch. Win-builder sends the result to the maintainer address in DESCRIPTION. Record the emailed check time and status in the work log (AC5).
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates.
@@ -91,6 +91,7 @@ The Windows R-devel check of the package takes less than 10 minutes, because CRA
 - 2026-10-02: T5 `devtools::check()` at 409b221 gave 0 errors, 0 warnings, and 0 notes with its default settings, and the same with `env_vars = c(NOT_CRAN = "false")`.
 - claim audit: 5 claims read, 0 corrected — tests/testthat/test-arg-guards.R, test-flag-args.R, test-name-faults.R
 - 2026-10-02: blocked on T6. The user starts `devtools::check_win_devel()` from the branch and reads the emailed check time and status. Resume with `/milestone-implement M081`.
+- 2026-10-02: T6 win-builder R-devel check (R Under development 2026-09-30 r90605 ucrt) of the branch: check time 463 s, install 8 s, Status: OK, tests 348 s (https://win-builder.r-project.org/o5ArKbmBJwc4). The CRAN incoming check of `main` (9c2a2df) on the same day took 13 min overall and 11 min for tests. No code changed after the T5 check at 409b221, so that check stands as the verify result. Status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
