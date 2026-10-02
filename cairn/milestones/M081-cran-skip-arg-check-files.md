@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M081: The CRAN check skips the three argument-check test files
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** blocked   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -89,6 +89,8 @@ The Windows R-devel check of the package takes less than 10 minutes, because CRA
 - 2026-10-01: T3 planted `skip_on_cran()` at the top of `test-ttl.R`. In a `NOT_CRAN=false` run, the comparison over 47 files named `test-ttl.R` alone (baseline 10 names, run missing), and the edit is reverted. The `check` reporter in that mode lists "On CRAN" skips at line 4:1 of each of the three files, with 0 failures.
 - 2026-10-02: T4 runs at ab11d3c. With `NOT_CRAN=true`, the three files hold the same test names as the baseline. With `NOT_CRAN=false`, the other 47 files hold the same names as the baseline, and the `ListReporter` run records no result from the three files. Back to back with `NOT_CRAN=false`, a worktree of 5b4a145 summed 107.8 s of real time and the branch 59.6 s, a ratio of 0.553. All runs had 0 failures and 0 errors.
 - 2026-10-02: T5 `devtools::check()` at 409b221 gave 0 errors, 0 warnings, and 0 notes with its default settings, and the same with `env_vars = c(NOT_CRAN = "false")`.
+- claim audit: 5 claims read, 0 corrected — tests/testthat/test-arg-guards.R, test-flag-args.R, test-name-faults.R
+- 2026-10-02: blocked on T6. The user starts `devtools::check_win_devel()` from the branch and reads the emailed check time and status. Resume with `/milestone-implement M081`.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
