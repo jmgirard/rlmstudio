@@ -1,8 +1,8 @@
 {
-    "id": "resp_03dd2375032b5a19aa4cac382eb4386b334ae6fb7de1f887",
+    "id": "resp_b8cd888530dabd44e55d0c160c68ccee6d1e2b4676aec3eb",
     "object": "response",
-    "created_at": 1773948899,
-    "completed_at": 1773948900,
+    "created_at": 1790903542,
+    "completed_at": 1790903542,
     "status": "completed",
     "incomplete_details": null,
     "model": "google/gemma-3-1b",
@@ -10,7 +10,7 @@
     "instructions": "Rate on a scale of 1 to 5. Respond with ONLY the integer.",
     "output": [
         {
-            "id": "msg_f5j4cbvgfeh101h4a7x3n",
+            "id": "msg_nuoxm213k68u2oeiczixrl",
             "type": "message",
             "role": "assistant",
             "status": "completed",
@@ -38,7 +38,7 @@
                                 },
                                 {
                                     "token": "4",
-                                    "logprob": -4.75,
+                                    "logprob": -4.765625,
                                     "bytes": [
                                         52
                                     ]
@@ -102,21 +102,21 @@
                                 },
                                 {
                                     "token": " ",
-                                    "logprob": -6.25,
+                                    "logprob": -6.28125,
                                     "bytes": [
                                         32
                                     ]
                                 },
                                 {
                                     "token": ".",
-                                    "logprob": -6.484375,
+                                    "logprob": -6.46875,
                                     "bytes": [
                                         46
                                     ]
                                 },
                                 {
                                     "token": "\n\n",
-                                    "logprob": -7.03125,
+                                    "logprob": -7.0625,
                                     "bytes": [
                                         10,
                                         10
