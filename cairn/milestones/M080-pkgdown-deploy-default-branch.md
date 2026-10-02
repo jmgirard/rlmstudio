@@ -61,7 +61,7 @@ A run of `pkgdown.yaml` deploys the site to `gh-pages` only from the default bra
 - Review fan-out: three fresh reviewers (Opus diff-bug, Sonnet blame-history, Sonnet prior-review). All three found the condition correct for each trigger. The prior-review lens found no regression of M075 or M078 review findings and no GitHub review comments. Findings, merged across lenses, most severe first:
   - F1 (all three lenses): the job concurrency group `pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}` (line 22) is `pkgdown-true` for every run that is not a pull request. GitHub keeps one pending run per group, and a newer pending run cancels the older one. So a manual run on another branch can cancel a queued deploy from `main` or a release. This predates M080, but branch runs no longer deploy, so they no longer need the group.
   - F2 (diff-bug): the job grants `contents: write` to every run, which most runs no longer use. This predates M080.
-  - F3 (all three lenses): the push trigger still lists `master`. A push to `master` would now build and skip the deploy. The repo has no `master` branch.
+  - F3 (all three lenses): the push trigger still lists `master`. A push to `master` now builds and skips the deploy. The repo has no `master` branch.
   - F4 (diff-bug): `release: types: [published]` includes prereleases, so a prerelease deploys. The comment says "a published release", and a prerelease is one. Unchanged behavior.
   - F5 (diff-bug): the comment names two skip cases and omits a manual run on a tag and a push to another branch. Nothing it states is false.
   - F6 (blame-history): a release of an old tag replaces the site with an older build. Unchanged behavior, and the plan keeps the release deploy.
