@@ -608,6 +608,7 @@ run_unreadable_batch <- function(ok, body, format, api_type, logprobs = FALSE) {
 }
 
 test_that("a reply with no readable text fails only its own input on every route", {
+  testthat::skip_on_cran()
   routes <- list(
     native = list(
       ok = mock_response(200L, output_body(native_message(quoted("reply 1")))),

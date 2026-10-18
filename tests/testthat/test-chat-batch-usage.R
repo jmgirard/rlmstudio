@@ -476,6 +476,7 @@ unreadable_bodies <- function(s) {
 }
 
 test_that("an unreadable reply fails its input as the single call fails", {
+  testthat::skip_on_cran()
   for (s in usage_settings) {
     ok <- usage_reply(s$api_type, answer_text(s, 1L), lp = s$logprobs)
     bodies <- unreadable_bodies(s)

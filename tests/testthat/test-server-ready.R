@@ -18,6 +18,7 @@ test_that("a closed port is not ready", {
 })
 
 test_that("an open port whose listener never answers is not ready", {
+  testthat::skip_on_cran()
   port <- local_listener()
 
   started <- Sys.time()
@@ -37,6 +38,7 @@ test_that("an open port whose listener never answers is not ready", {
 })
 
 test_that("a port held by something else passes the TCP probe and fails here", {
+  testthat::skip_on_cran()
   # This is the gap the condition help page now names. The TCP probe reads the
   # port and nothing else, so a listener that is not LM Studio suppresses the
   # `rlmstudio_no_server` condition. The readiness check is what tells them

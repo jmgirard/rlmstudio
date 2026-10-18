@@ -147,6 +147,7 @@ pass_cases <- function() {
 }
 
 test_that("each rule of the model list aborts list_models() with rlmstudio_bad_response", {
+  testthat::skip_on_cran()
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   withr::local_options(rlmstudio.quiet = TRUE)
   for (case in fault_cases()) {

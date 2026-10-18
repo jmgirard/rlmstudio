@@ -138,6 +138,7 @@ test_that("request_target() reads a request when the echo server cannot bind the
 # not speak HTTP can do. The dry run then ends with a curl error, which is the
 # third outcome the dry-run helper tries again on.
 test_that("request_target() reads a request when the program on the first dry-run port never replies", {
+  testthat::skip_on_cran()
   require_httpuv()
   held <- free_port()
   id <- httpuv::startServer("127.0.0.1", held, list(call = function(req) NULL))
@@ -198,6 +199,7 @@ test_that("the dry-run helper keeps curl's error when the request itself is at f
 # echo server's bind over the held port, so there no try reaches the program
 # and the test is skipped.
 test_that("request_body_text() spreads its time limit over the dry-run tries", {
+  testthat::skip_on_cran()
   require_httpuv()
   held <- free_port()
   id <- httpuv::startServer("127.0.0.1", held, list(call = function(req) NULL))
