@@ -89,10 +89,16 @@ condition class even when the server is down. A condition of class
 refused connection raises it. So do an address the package cannot parse
 and a hostname that does not resolve. An address that neither accepts
 nor refuses the connection also raises it. That case waits for the
-operating system to give up, which can take a minute. Start the server
-with
-[`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md),
-or give `host` the address that your server listens on.
+operating system to give up, which can take a minute. If the hostname of
+`host` is `localhost`, in any letter case, or `127.0.0.1`, start the
+server with
+[`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
+and the port of `host`. For the default `host`, that is
+`lms_server_start(port = 1234)`. With no `port`, LM Studio uses the port
+that it used last. For any other `host`, start the server on the machine
+that `host` names, or give `host` the address that your server listens
+on. A `host` that does not parse gets this second hint too. The
+condition message gives the same hint for the `host` of the call.
 
 The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
