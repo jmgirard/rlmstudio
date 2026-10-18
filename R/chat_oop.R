@@ -91,7 +91,7 @@ print.lms_chat_result <- function(x, ...) {
       "Includes log probabilities for {.val {n_steps}} token step{?s}. Access the data via {.code x$logprobs}"
     )
   } else {
-    cli::cli_alert_warning("Log probability data is empty or missing.")
+    rlm_alert_warning("Log probability data is empty or missing.")
   }
 
   # Standard S3 practice: return the object invisibly

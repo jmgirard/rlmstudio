@@ -355,6 +355,7 @@ test_that("check_lms_version() is TRUE from version 0.4.0 and FALSE below it", {
 })
 
 test_that("install_lmstudio() with the browser method opens the download page", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   local_mocked_bindings(has_lms = function() FALSE)
   opened <- character()
   local_mocked_bindings(

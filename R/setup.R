@@ -40,7 +40,7 @@ has_lms <- function() {
 check_lms_version <- function(min_version = "0.4.0") {
   path <- tryCatch(lms_path(), error = function(e) NULL)
   if (is.null(path)) {
-    cli::cli_alert_danger("LM Studio CLI is not installed.")
+    rlm_alert_danger("LM Studio CLI is not installed.")
     return(FALSE)
   }
 
@@ -66,7 +66,7 @@ check_lms_version <- function(min_version = "0.4.0") {
       )
 
       if (length(version_string) == 0) {
-        cli::cli_alert_warning(c(
+        rlm_alert_warning(c(
           "Could not parse the LM Studio CLI version. Output was: ",
           "{.val {trimws(output)}}"
         ))
@@ -79,7 +79,7 @@ check_lms_version <- function(min_version = "0.4.0") {
         )
         return(TRUE)
       } else {
-        cli::cli_alert_danger(
+        rlm_alert_danger(
           "LM Studio CLI version {.val {version_string}} is too old. Minimum required is {.val {min_version}}."
         )
         return(FALSE)
@@ -144,7 +144,7 @@ install_lmstudio <- function(method = c("browser", "headless")) {
       "Opening the LM Studio download page in your default browser..."
     )
     utils::browseURL("https://lmstudio.ai/download")
-    cli::cli_alert_warning(
+    rlm_alert_warning(
       "Please install or update the software, open the LM Studio app once, then restart R and try again."
     )
   } else if (method == "headless") {
