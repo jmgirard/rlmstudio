@@ -41,9 +41,13 @@ down. A condition of class
 refused connection raises it. So do an address the package cannot parse and
 a hostname that does not resolve. An address that neither accepts nor
 refuses the connection also raises it. That case waits for the operating
-system to give up, which can take a minute. Start the server with
-\code{\link[=lms_server_start]{lms_server_start()}}, or give \code{host} the address that your server listens
-on.
+system to give up, which can take a minute. If the hostname of \code{host} is
+\code{localhost}, in any letter case, or \verb{127.0.0.1}, start the server with
+\code{\link[=lms_server_start]{lms_server_start()}} and the port of \code{host}. For the default \code{host}, that is
+\code{lms_server_start(port = 1234)}. With no \code{port}, LM Studio uses the port
+that it used last. For any other \code{host}, start the server on the machine
+that \code{host} names, or give \code{host} the address that your server listens on.
+The condition message gives the same hint for the \code{host} of the call.
 
 The check reads the port and nothing else. Any process holding that port
 accepts the connection, so the condition is not raised even though no LM
