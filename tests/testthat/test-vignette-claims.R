@@ -521,6 +521,12 @@ test_that("install_lmstudio() with the headless method runs the LM Studio instal
     "curl -fsSL https://lmstudio.ai/install.sh | bash",
     fixed = TRUE
   )
+  # The last message, after the success line, names the port to start on,
+  # because with no port LM Studio uses the port that it used last.
+  shown <- gsub("[[:space:]]+", " ", cli::ansi_strip(res$shown$messages))
+  expect_match(shown, "installed successfully.", fixed = TRUE)
+  last <- sub(".*installed successfully\\.", "", shown)
+  expect_match(last, "lms_server_start(port = 1234)", fixed = TRUE)
 })
 
 test_that("install_lmstudio() at the console asks first and installs only on yes", {

@@ -702,32 +702,76 @@ wait_for_server <- function(host, wait, timeout = 1, pause = 0.25,
 #' }
 #' }
 is_server_running <- function(host = "http://localhost:1234") {
-  if (!grepl("^[A-Za-z][A-Za-z0-9+.-]*://", host)) {
-    host <- paste0("http://", host)
-  }
-  url <- tryCatch(httr2::url_parse(host), error = function(e) NULL)
-  if (is.null(url)) {
+  address <- host_address(host)
+  if (is.null(address)) {
     return(FALSE)
   }
-  hostname <- url$hostname
-  port <- if (is.null(url$port)) 1234L else as.integer(url$port)
-
-  if (is.null(hostname) || identical(hostname, "")) {
-    return(FALSE)
-  }
-  # url_parse keeps the brackets of an IPv6 literal; socketConnection does not
-  # accept them.
-  hostname <- sub("^\\[(.*)\\]$", "\\1", hostname)
 
   tryCatch(
     {
       con <- suppressWarnings(
-        socketConnection(host = hostname, port = port, timeout = 0.5)
+        socketConnection(
+          host = address$hostname,
+          port = address$port,
+          timeout = 0.5
+        )
       )
       close(con)
       TRUE
     },
     error = function(e) FALSE
+  )
+}
+
+#' Read the hostname and port that the server probe uses
+#'
+#' A `host` with no scheme is read as `http://`. When `host` names no port,
+#' the port is 1234, the LM Studio default. The brackets of an IPv6 literal
+#' are removed, because `socketConnection()` does not accept them.
+#'
+#' @param host Character. The host address of the local server.
+#' @return A list with `hostname` and the integer `port`, or `NULL` when
+#'   `host` does not parse or names no hostname.
+#'
+#' @noRd
+host_address <- function(host) {
+  if (!grepl("^[A-Za-z][A-Za-z0-9+.-]*://", host)) {
+    host <- paste0("http://", host)
+  }
+  url <- tryCatch(httr2::url_parse(host), error = function(e) NULL)
+  if (is.null(url) || is.null(url$hostname) || identical(url$hostname, "")) {
+    return(NULL)
+  }
+  list(
+    hostname = sub("^\\[(.*)\\]$", "\\1", url$hostname),
+    port = if (is.null(url$port)) 1234L else as.integer(url$port)
+  )
+}
+
+#' Tell the user how to start the server that `host` names
+#'
+#' [lms_server_start()] starts a server on this machine only, and with no
+#' `port` it uses the port that LM Studio used last. So for a `host` whose
+#' hostname is `localhost`, in any letter case, or `127.0.0.1`, the hint names
+#' the port that [is_server_running()] probes. For any other `host`, or one
+#' that does not parse, the hint names the host and no start call.
+#'
+#' @param host Character. The host address of the call.
+#' @return A string, formatted, for use as a value in a cli message.
+#'
+#' @noRd
+no_server_hint <- function(host) {
+  address <- host_address(host)
+  local <- !is.null(address) &&
+    tolower(address$hostname) %in% c("localhost", "127.0.0.1")
+  if (local) {
+    port <- address$port
+    return(cli::format_inline(
+      "Run {.code lms_server_start(port = {port})} first."
+    ))
+  }
+  cli::format_inline(
+    "Start the LM Studio server at {.val {host}}, or give {.arg host} the address that your server listens on."
   )
 }
 
@@ -742,8 +786,9 @@ is_server_running <- function(host = "http://localhost:1234") {
 #' @noRd
 stop_if_no_server <- function(host = "http://localhost:1234") {
   if (!is_server_running(host)) {
+    hint <- no_server_hint(host)
     cli::cli_abort(
-      "The LM Studio server is not running. Run {.fn lms_server_start} first.",
+      c("The LM Studio server is not running.", "i" = "{hint}"),
       class = "rlmstudio_no_server",
       call = NULL
     )

@@ -81,6 +81,56 @@ test_that("is_server_running is FALSE for a host that does not parse", {
   expect_false(is_server_running(""))
 })
 
+test_that("the no-server abort names the port of a local host", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  # The port that is_server_running() probes for each host.
+  local_hosts <- list(
+    list(host = "http://localhost:1234", port = 1234L),
+    list(host = "http://localhost:8080", port = 8080L),
+    list(host = "localhost:5000", port = 5000L),
+    list(host = "http://LocalHost:1234", port = 1234L),
+    list(host = "http://127.0.0.1:4321", port = 4321L),
+    list(host = "http://localhost", port = 1234L)
+  )
+  for (case in local_hosts) {
+    test_that(case$host, {
+      err <- expect_error(
+        stop_if_no_server(case$host),
+        class = "rlmstudio_no_server"
+      )
+      msg <- gsub("[[:space:]]+", " ", cli::ansi_strip(conditionMessage(err)))
+      expect_match(
+        msg,
+        paste0("lms_server_start(port = ", case$port, ")"),
+        fixed = TRUE
+      )
+    })
+  }
+  test_that("the default host", {
+    err <- expect_error(stop_if_no_server(), class = "rlmstudio_no_server")
+    msg <- cli::ansi_strip(conditionMessage(err))
+    expect_match(msg, "lms_server_start(port = 1234)", fixed = TRUE)
+  })
+})
+
+test_that("the no-server abort names no start call for another host", {
+  local_mocked_bindings(is_server_running = function(...) FALSE)
+  # The second host does not parse: its port is not a number. The third holds
+  # braces, which must reach the message as text and not run as cli code.
+  remote_hosts <- c("http://192.168.1.5:1234", "http://localhost:abc", "http://{x}:1")
+  for (host in remote_hosts) {
+    test_that(host, {
+      err <- expect_error(
+        stop_if_no_server(host),
+        class = "rlmstudio_no_server"
+      )
+      msg <- gsub("[[:space:]]+", " ", cli::ansi_strip(conditionMessage(err)))
+      expect_match(msg, host, fixed = TRUE)
+      expect_no_match(msg, "lms_server_start(", fixed = TRUE)
+    })
+  }
+})
+
 test_that("lms_server_status warns on multiple logging flags", {
   mock_run <- function(command, args, error_on_status) {
     list(status = 0, stdout = "ok", stderr = "")

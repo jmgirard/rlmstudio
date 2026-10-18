@@ -554,6 +554,40 @@ test_that("a lookup that cannot reach the server raises no_server", {
   }
 })
 
+test_that("a lookup that cannot reach the server names the port of a local host", {
+  # The second host is not this machine, so no start call can help.
+  hosts <- list(
+    list(host = "http://localhost:8080", hint = TRUE),
+    list(host = "http://192.168.1.5:1234", hint = FALSE)
+  )
+  for (route in chat_routes) {
+    for (case in hosts) {
+      test_that(paste(route, case$host), {
+        probes <- 0L
+        local_mocked_bindings(is_server_running = function(...) {
+          probes <<- probes + 1L
+          probes == 1L
+        })
+        local_request_sequence(list(
+          reply_with_model(route, quoted("org/model-y"))
+        ))
+        err <- expect_error(
+          mocked_call(route, "org/model-x", host = case$host),
+          class = "rlmstudio_no_server"
+        )
+        expect_lookup_message(err, route)
+        msg <- gsub("[[:space:]]+", " ", cli::ansi_strip(conditionMessage(err)))
+        if (case$hint) {
+          expect_match(msg, "lms_server_start(port = 8080)", fixed = TRUE)
+        } else {
+          expect_match(msg, case$host, fixed = TRUE)
+          expect_no_match(msg, "lms_server_start(", fixed = TRUE)
+        }
+      })
+    }
+  }
+})
+
 test_that("the lookup sends the call's token to the same host and prints nothing", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   for (route in chat_routes) {
