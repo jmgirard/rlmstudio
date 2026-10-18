@@ -172,16 +172,24 @@ test_that("the dry-run helper names the cause when every try lands on a held por
 })
 
 # curl rejects a path with a space before it connects, so every try fails the
-# same way. The stop message must keep curl's own error.
+# same way. The stop message must keep curl's own error. The text of that error
+# depends on the libcurl build: macOS gives "Malformed input to a URL
+# function", and the libcurl 8.5.0 of Ubuntu 24.04 gives "Out of memory". So
+# the test reads curl's error for the same dry run first.
 test_that("the dry-run helper keeps curl's error when the request itself is at fault", {
   require_httpuv()
   req <- httr2::request("http://localhost:1234/v1/a b")
+  curl_cnd <- tryCatch(
+    httr2::req_dry_run(httr2::req_timeout(req, 5), quiet = TRUE),
+    curl_error = identity
+  )
+  expect_s3_class(curl_cnd, "curl_error")
 
   cnd <- expect_error(request_target(req))
 
   message <- conditionMessage(cnd)
   expect_match(message, "received no request", fixed = TRUE)
-  expect_match(message, "Malformed input to a URL function", fixed = TRUE)
+  expect_match(message, conditionMessage(curl_cnd), fixed = TRUE)
 })
 
 # Each try must end before the time limit of request_body_text() does. A limit
