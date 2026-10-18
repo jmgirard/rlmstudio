@@ -71,6 +71,8 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 - 2026-10-18: verify: no R code changed since the clean `devtools::test()` on 1a943f5 and `devtools::check()` on e936d95. Status set to `review`.
 - 2026-10-18: step-7 approval: m082-pkgdown-deploy-job approved for merge.
 - 2026-10-18: PR #84 opened. CI red on three Ubuntu checks (test-coverage, R-CMD-check release and oldrel-1), all at `test-mock-http-helper.R:184`, where runner curl says "Out of memory" and the test expects "Malformed input to a URL function". The same failure is on `main` at 3ccfc28 (test-coverage run 39086632850), and the branch changes no R or test file. The user chose a hotfix first. Resume with `/milestone-review M082` after it merges, which brings `main` into this branch and re-runs CI.
+- 2026-10-18: hotfix PR #85 merged as 8b7ad16 with all checks green. Merge f0605b5 brought it into this branch. Review resumed by route (c), and the chip was posed again.
+- 2026-10-18: step-7 approval: m082-pkgdown-deploy-job approved for merge.
 
 ## Decisions
 
@@ -129,3 +131,4 @@ Resume after the hotfix, 2026-10-18. PR #84 was open with every box ticked and a
 - AC1 to AC3: the parse check on f0605b5 gives the same results as pass 2. Pass.
 - AC4: `git diff d353754 f0605b5 -- .github` changes comment lines only, so run 39150570451 stands for the file. Pass.
 - `devtools::test()` on f0605b5: 0 failed, 0 errors, 3 skipped.
+- conversation: PR #84 — the read found 0 reviews, 0 conversation comments, and 0 review threads. Nothing to settle.
