@@ -73,6 +73,7 @@ A CRAN check runs the request-body tests and skips the test blocks that take a s
 - 2026-10-18: T4: `devtools::test()` 0 failed, 0 warnings, 3 skipped; CRAN-mode `devtools::test()` (`NOT_CRAN=false`) 0 failed, 0 warnings, 13 skipped; `devtools::check()` 0 errors, 0 warnings, 0 notes.
 - 2026-10-18: claim audit: 67 claims read, 1 corrected — tests/testthat/test-request-body.R (its header said every shared helper is in helper-arg-guards.R, but it also uses helper-mock-http.R and helper-chat-bodies.R; now it names the helpers that test-arg-guards.R defined, and the re-read found it true).
 - 2026-10-18: implement done; status review.
+- 2026-10-18: step-7 approval: m087-cran-test-time approved for merge
 
 ## Review
 <!-- owner: review · exclusive -->
