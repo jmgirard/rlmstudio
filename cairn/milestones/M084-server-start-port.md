@@ -33,13 +33,13 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: Each line of `README.Rmd` and `vignettes/*.Rmd.orig` that starts, after any spaces, with `lms_server_start(` passes `port = 1234`, as a test in `tests/testthat/test-vignette-claims.R` checks. `README.md` holds the line `## ✔ LM Studio server started successfully on port 1234.` under its server-start call.
-- [ ] AC2: With no `port`, `lms_server_start()` reports "LM Studio server started successfully on the port that LM Studio used last.", and with `port = 1234` it reports "LM Studio server started successfully on port 1234.", as a test in `tests/testthat/test-serve.R` checks. `grep -rn "default port" R/ man/ README.Rmd README.md vignettes/` prints no line.
-- [ ] AC3: In `man/lms_server_start.Rd`, the `port` argument text names the functions that send requests and `http://localhost:1234`. For each `man/*.Rd` file, `tools::Rd2ex(f, out, commentDontrun = FALSE)` writes its examples, and `grep -n '^ *lms_server_start(' out` prints only lines that pass `port = 1234`, except `lms_server_start(port = 8080, cors = TRUE)` from `man/lms_server_start.Rd`, whose comment above it holds `host = "http://localhost:8080"`.
-- [ ] AC4: `install_lmstudio(method = "browser")` tells the user to open the LM Studio app once and then restart R, as an assertion on its message in the browser-method test of `tests/testthat/test-vignette-claims.R` checks.
-- [ ] AC5: The knitted `vignettes/chat-options.Rmd`, `vignettes/text-analysis.Rmd`, and `vignettes/headless-config.Rmd` each hold the MD5 sum of their edited source, as `tests/testthat/test-vignette-knit.R` checks. The output of the server-start chunk in `chat-options.Rmd` and of the `start-server` chunk in `headless-config.Rmd` holds `✔ LM Studio server started successfully on port 1234.`
-- [ ] AC6: The development section of `NEWS.md` says that the success message of `lms_server_start()` with no `port` names the port as the one LM Studio used last, that the help examples, the README, and the vignettes start the server with `port = 1234`, and that `install_lmstudio()` says to open the app once.
-- [ ] AC7: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings.
+- [x] AC1: Each line of `README.Rmd` and `vignettes/*.Rmd.orig` that starts, after any spaces, with `lms_server_start(` passes `port = 1234`, as a test in `tests/testthat/test-vignette-claims.R` checks. `README.md` holds the line `## ✔ LM Studio server started successfully on port 1234.` under its server-start call.
+- [x] AC2: With no `port`, `lms_server_start()` reports "LM Studio server started successfully on the port that LM Studio used last.", and with `port = 1234` it reports "LM Studio server started successfully on port 1234.", as a test in `tests/testthat/test-serve.R` checks. `grep -rn "default port" R/ man/ README.Rmd README.md vignettes/` prints no line.
+- [x] AC3: In `man/lms_server_start.Rd`, the `port` argument text names the functions that send requests and `http://localhost:1234`. For each `man/*.Rd` file, `tools::Rd2ex(f, out, commentDontrun = FALSE)` writes its examples, and `grep -n '^ *lms_server_start(' out` prints only lines that pass `port = 1234`, except `lms_server_start(port = 8080, cors = TRUE)` from `man/lms_server_start.Rd`, whose comment above it holds `host = "http://localhost:8080"`.
+- [x] AC4: `install_lmstudio(method = "browser")` tells the user to open the LM Studio app once and then restart R, as an assertion on its message in the browser-method test of `tests/testthat/test-vignette-claims.R` checks.
+- [x] AC5: The knitted `vignettes/chat-options.Rmd`, `vignettes/text-analysis.Rmd`, and `vignettes/headless-config.Rmd` each hold the MD5 sum of their edited source, as `tests/testthat/test-vignette-knit.R` checks. The output of the server-start chunk in `chat-options.Rmd` and of the `start-server` chunk in `headless-config.Rmd` holds `✔ LM Studio server started successfully on port 1234.`
+- [x] AC6: The development section of `NEWS.md` says that the success message of `lms_server_start()` with no `port` names the port as the one LM Studio used last, that the help examples, the README, and the vignettes start the server with `port = 1234`, and that `install_lmstudio()` says to open the app once.
+- [x] AC7: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings.
 
 ## Coverage
 <!-- owner: plan · create/amend-via-gate -->
@@ -91,9 +91,21 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 - 2026-10-18: T7 done: the first `devtools::check()` gave 1 ERROR in "checking tests", whose last 13 lines named no test or message, and its temp check directory was already removed; a second run with a kept `check_dir` gave 0 errors, 0 warnings, 0 notes on the same code. The unnamed error matches the intermittent-test candidate row (the M065 check error); the hygiene pass notes it there. `devtools::test()` after T6: 0 fail.
 - 2026-10-18: claim audit: 21 claims read, 3 corrected — R/serve.R (two example comments said "the other functions", which includes CLI functions with no `host`; now "the functions that send requests"), NEWS.md ("The other functions that send requests"); the re-read found all three hold; `devtools::document()` rerun, `devtools::test()` 0 fail.
 - 2026-10-18: status review; all tasks checked, `devtools::test()` and `devtools::check()` clean.
+- 2026-10-18: review: evidence recorded and all 7 criteria ticked, gate clean; three review lenses running (checkpoint, findings not yet settled).
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+Evidence, 2026-10-18, branch head eb08956, level with main 62eaeab.
+
+- AC1: `grep -n "^ *lms_server_start(" README.Rmd vignettes/*.Rmd.orig` gives 7 lines, each with `port = 1234`; the test "each server start in the README and the vignette sources passes port = 1234" ran 8 expectations, 0 failed (T4 saw it red on the 6 old lines). README.md:69 is `## ✔ LM Studio server started successfully on port 1234.`
+- AC2: test-serve.R "the success message names the port, or the last-used port with no port" ran its two subtests ("no port", "port = 1234"), 2 expectations each, 0 failed; each matches the exact message and no "default port". `grep -rn "default port" R/ man/ README.Rmd README.md vignettes/` printed nothing (exit 1).
+- AC3: `man/lms_server_start.Rd:16-20`, the `port` item, names "functions that send requests" and `\verb{http://localhost:1234}`. `tools::Rd2ex(f, out, commentDontrun = FALSE)` over each `man/*.Rd`, then the grep, gave 15 lines in 12 files: 14 pass `port = 1234`; the one other is `lms_server_start(port = 8080, cors = TRUE)` in lms_server_start.Rd, whose comment above holds `host = "http://localhost:8080"` (Rd line 107).
+- AC4: the browser-method test ran 2 expectations, 0 failed; its new assertion matches "open the LM Studio app once, then restart R" in the shown messages (T3 saw it red on the old warning); `R/setup.R:148` holds the new text.
+- AC5: `test-vignette-knit.R` ran 4 subtests, 1 expectation each, 0 failed, so each of the four knitted vignettes holds its source's MD5. `vignettes/chat-options.Rmd:36` and `vignettes/headless-config.Rmd:109` read `#> ✔ LM Studio server started successfully on port 1234.`
+- AC6: NEWS.md:5 says a no-port start now reports "on the port that LM Studio used last" and that the help examples, the README, and the other vignettes start with `port = 1234`; NEWS.md:7 says `install_lmstudio(method = "browser")` tells you to open the app once. No milestone number appears.
+- AC7: `devtools::test()` 0 fail, 0 warn, 3 skip (live-server tests), 24580 pass; `devtools::check()` with a kept `check_dir` gave 0 errors, 0 warnings, 0 notes.
+- Gate: `cairn_validate.py` all checks passed; no principle text changed, so `cairn_impact` skipped; `devtools::document()` and `devtools::build_readme()` left no diff; `pkgdown::check_pkgdown()` found no problems; NEWS has two entries; no new top-level file.
