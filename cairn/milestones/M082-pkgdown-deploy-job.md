@@ -1,6 +1,6 @@
 # M082: The pkgdown deploy runs in its own job, and only that job can write or queue
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -38,7 +38,7 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 - [x] T1: Rewrite `.github/workflows/pkgdown.yaml` as AC1 to AC3 state. Keep the triggers, the workflow-level `permissions: read-all`, and the build steps of the `pkgdown` job (`pkgdown.yaml:28-49`) in `build`. Use `actions/upload-artifact@v4`, the version `test-coverage.yaml:66` uses, and the matching `actions/download-artifact`. Before the edit, read the GitHub Actions docs on whether a job that its `if:` skips takes its concurrency group, and record the answer in the work log. Replace the comment `# Only restrict concurrency for non-PR jobs` and move the deploy comment to the `deploy` job.
 - [x] T2: Read the edited file with `yaml::read_yaml()` in a scratch script, not committed, and print the keys that AC1 to AC3 name for each job. Record the result in the work log.
 - [x] T3: Push the branch and start a manual run with `gh workflow run pkgdown.yaml --ref m082-pkgdown-deploy-job`. Wait for it, then read the job conclusions and download the artifact as AC4 states. Record the run id in the work log.
-- [ ] T4: Remove the job-level group from `deploy` and add the top-level `concurrency` group that the amended AC3 states. Repeat the T2 parse check and the T3 manual run, and record the new run id.
+- [x] T4: Remove the job-level group from `deploy` and add the top-level `concurrency` group that the amended AC3 states. Repeat the T2 parse check and the T3 manual run, and record the new run id.
 
 ## Work log
 
@@ -67,6 +67,8 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 - 2026-10-18: re-audit: AC3 (reduced) — nothing. The reader noted that the group condition and the `deploy` `if:` can drift apart. AC2 and AC3 each pin the same condition string exactly, and AC1 pins `permissions: read-all`.
 - 2026-10-18: amendment return: AC2 — "The same file has a job `deploy` with `needs: build` and `permissions: contents: write`."
 - 2026-10-18: amendment return: AC3 — "Of the jobs that `yaml::read_yaml()` returns for the file, only `deploy` carries a `permissions` key, and no job carries a `concurrency` key. The top-level `concurrency` key holds only the key `group`, with the value `pkgdown-${{ (github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) && 'deploy' || github.run_id }}`." The Scope In sentence on the group changed to match, and T4 was added for the work.
+- 2026-10-18: T4 done in d353754: top-level group added, job-level group removed, comments updated. The parse check showed no job with a `concurrency` key, `deploy` alone with `permissions`, and a top-level `concurrency` of only `group`, identical to the AC3 value. Manual run 39150570451 on d353754 ended `success`, with `build` `success` and `deploy` `skipped`. Its `site` artifact held `index.html` and `.nojekyll` and expires 2026-10-19, one day after upload.
+- 2026-10-18: verify: no R code changed since the clean `devtools::test()` on 1a943f5 and `devtools::check()` on e936d95. Status set to `review`.
 
 ## Decisions
 
