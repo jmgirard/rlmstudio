@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M086: Every alert of the package follows the quiet option
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP6   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — messages that users see or silence   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m086-quiet-alerts   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -48,7 +48,7 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
 
-- [ ] T1: Test first: write `tests/testthat/test-quiet-alerts.R` with the AC2 rows, each row in a nested `test_that()` (D-038). Reuse the mocks of the existing tests for each site: `tests/testthat/test-setup.R:35` and `tests/testthat/test-vignette-claims.R:346` (`check_lms_version()`), `tests/testthat/test-vignette-claims.R:357` (browser install), and the print tests of `tests/testthat/test-chat.R`. See the quiet half of each row red.
+- [x] T1: Test first: write `tests/testthat/test-quiet-alerts.R` with the AC2 rows, each row in a nested `test_that()` (D-038). Reuse the mocks of the existing tests for each site: `tests/testthat/test-setup.R:35` and `tests/testthat/test-vignette-claims.R:346` (`check_lms_version()`), `tests/testthat/test-vignette-claims.R:357` (browser install), and the print tests of `tests/testthat/test-chat.R`. See the quiet half of each row red.
 - [ ] T2: Add `rlm_alert_warning()` and `rlm_alert_danger()` to `R/utils-msg.R`. Route the five calls through them. Rerun the AC1 grep, which also catches a bare `cli::cli_alert(`, and see T1 green. Plant a direct `cli::cli_alert_warning()` back at one site and see its row go red.
 - [ ] T3: One NEWS bullet in the development section, written against the T1 and T2 output.
 - [ ] T4: `devtools::test()` and `devtools::check()` clean.
@@ -65,3 +65,5 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 - 2026-10-18: collision check: absorbs the "install message quiet" row in full; D-028 (quiet follows the option when the argument is `NULL`) holds; D-010, D-021, D-032, and D-037 govern warnings past quiet and stay out of scope; inbox has 0 open issues and 0 open PRs.
 - 2026-10-18: lessons surfaced: M014 (a base mock does not reach `interactive()` in the byte-compiled package; mock the package binding), M019/M015 (`expect_no_error()` and `expect_s3_class()` take no `info`; nested tests and parent checks).
 - 2026-10-18: changelog: one new NEWS bullet in the development section.
+- 2026-10-18: implement started on branch m086-quiet-alerts, cut from main at 7524bcc.
+- 2026-10-18: T1: `test-quiet-alerts.R` holds five cases in nested `test_that()` blocks; each mocks inside its own `run()` and reads `capture_shown()` stdout and messages; quiet half red on all five (the alert text shows with the option TRUE), loud half green.
