@@ -1,0 +1,67 @@
+<!-- Section ownership + write-modes: see tracking-rules.md "Milestone-file
+     section ownership". A phase skill never rewrites another phase's section.
+     Per-section owners are tagged below. The one size check that can fail is
+     cairn_validate's <150 over the plan-owned body. -->
+# M087: CRAN skips the slow tests and runs the request-body tests
+
+- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
+- **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
+- **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
+- **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
+- **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
+- **Surface tier:** user-facing — CRAN and the reverse-dependency checks of httr2 and jsonlite run the test suite   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
+- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+
+## Goal
+<!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
+
+A CRAN check runs the request-body tests and skips the test blocks that take a second or more.
+
+## Scope
+<!-- owner: plan · create/amend-via-gate -->
+
+**In:** Absorbs the candidate row "Skip more slow tests on CRAN" in full, both parts. Move each request-body test out of `tests/testthat/test-arg-guards.R`, which M081 skips on CRAN, into a new `tests/testthat/test-request-body.R` with no CRAN skip. A helper that only the moved tests use moves with them, and one that both files use goes to a `helper-*.R` file. Time each test block in CRAN mode (`NOT_CRAN=false`) and add `skip_on_cran()` at the top of each block outside `test-request-body.R` that takes 1 s or more. No NEWS entry, because users see no change.
+
+**Out:**
+- The three file-level skips of M081 (`test-arg-guards.R:4`, `test-flag-args.R:4`, `test-name-faults.R:4`): they stay.
+- A Windows R-devel job: the "Add Windows to the weekly R-devel job" candidate row.
+- Faster test code, such as fewer cases in a loop: the blocks keep their cases and run off CRAN.
+
+## Acceptance criteria
+<!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
+
+- [ ] AC1: Each `test_that()` block of `tests/testthat/test-arg-guards.R` whose body, at the branch cut, calls `sent_messages(`, `request_body_text(`, or `request_target(` directly is in `tests/testthat/test-request-body.R` and not in `test-arg-guards.R`. `test-request-body.R` calls no `skip_on_cran()`. The sorted test names that a `NOT_CRAN=true` run with `testthat::ListReporter` records for `test-arg-guards.R` at the branch cut equal the sorted names it records for the two files after the move, as a `diff` of the two lists shows.
+- [ ] AC2: A CRAN-mode run of `tests/testthat/test-request-body.R` (`NOT_CRAN=false`) passes, skips no block, and reports the same number of expectations as a run with `NOT_CRAN=true`.
+- [ ] AC3: Each top-level `test_that()` block outside `test-request-body.R`, `test-arg-guards.R`, `test-flag-args.R`, and `test-name-faults.R` that the T3 timing run times at 1 s or more, its subtest rows summed, calls `skip_on_cran()` as its first statement. The T3 run is a CRAN-mode `devtools::test()` (`NOT_CRAN=false`) with no LM Studio server running.
+- [ ] AC4: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings, and so does a CRAN-mode `devtools::test()` with `NOT_CRAN=false`.
+
+## Coverage
+<!-- owner: plan · create/amend-via-gate -->
+
+- AC1 → T1, T2
+- AC2 → T2
+- AC3 → T3
+- AC4 → T4
+
+## Tasks
+<!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
+
+- [ ] T1: At the branch cut, save the sorted test names that a `NOT_CRAN=true` `ListReporter` run records for `test-arg-guards.R`, because loops build some names at run time (`:141`, `:155`, `:1034`). List its blocks that call `sent_messages(`, `request_body_text(`, or `request_target(`. On 2026-10-18 a read found 13 sites, one a loop of 5 names (`:1034`, `:1081`, `:2215` to `:3602`). Rerun the search at the task. Read each block for the helpers it calls (`sent_messages` `:2206`, the `stream_*` helpers `:929-1022`, `no_cell_frame` `:2886`, `classed_sent` `:3166`, and others).
+- [ ] T2: Create `tests/testthat/test-request-body.R` with the T1 blocks and the helpers that only they use. Put a helper that both files use in a `helper-*.R` file. Run the AC1 `diff`. Run the new file with `NOT_CRAN=false` and with `NOT_CRAN=true`, and compare the expectation counts.
+- [ ] T3: With no LM Studio server running, time every block in CRAN mode: `NOT_CRAN=false` and `as.data.frame(devtools::test(reporter = testthat::ListReporter$new()))`, reading the `real` column and summing the subtest rows of each top-level block (LESSONS M019). Add `skip_on_cran()` as the first statement of each block at 1 s or more outside the four files that AC3 names. Write one work-log line with the run date, the blocks, their times, and the total time before and after.
+- [ ] T4: `devtools::test()`, `devtools::check()`, and the CRAN-mode `devtools::test()` clean.
+
+## Work log
+<!-- owner: any skill · append-only; one line per entry; absolute dates. -->
+
+- 2026-10-18: created by /milestone-plan.
+- 2026-10-18: tier check: not run — work named at the question set.
+- 2026-10-18: question set: which work — the "Skip more slow tests on CRAN" row, planned as M087 beside M085 and M086.
+- 2026-10-18: plan chose a 1 s per-block bar from a timing run over the four file groups that the row names, because the row's 22 s and 12 s have no per-block split and an Explore read found no timed wait in `test-chat*.R` or `test-api-error.R`; falsified by a CRAN check time above 600 s after M087.
+- 2026-10-18: plan chose a new test file over removing the file-level skip of `test-arg-guards.R` because M081 cut the CRAN-mode test time from 97.5 s to 51.7 s with that skip; falsified by a timing run where the whole file takes under 5 s.
+- 2026-10-18: Explore (Haiku) read M081's skip (`skip_on_cran()` at line 4 of three files), 13 request-body sites in `test-arg-guards.R`, and the loop blocks of the named files; the only timed waits are in `test-mock-http-helper.R:140` and `:200`.
+- 2026-10-18: collision check: absorbs the "Skip more slow tests on CRAN" row in full; M081 (archived) made the three file skips; D-038 (nested tests) holds for any new loop; inbox has 0 open issues and 0 open PRs.
+- 2026-10-18: criteria audit (full mode, fresh Opus reader), 3 findings, all taken: AC1 compares the test names a `ListReporter` run records, because loops build some names at run time, and its domain is direct calls; AC3 lost its work-log sentence (an instrument promise), now counts top-level blocks with subtest rows summed, and names a run with no LM Studio server.
+- 2026-10-18: no changelog entry: users see no change.
+- 2026-10-18: lessons surfaced: M005 (a test that reads `R/` skips under `R CMD check`), M019 (the `as.data.frame()` table of a test run drops results recorded around nested tests; read timing per top-level block).
