@@ -70,6 +70,7 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 - 2026-10-18: T4 done in d353754: top-level group added, job-level group removed, comments updated. The parse check showed no job with a `concurrency` key, `deploy` alone with `permissions`, and a top-level `concurrency` of only `group`, identical to the AC3 value. Manual run 39150570451 on d353754 ended `success`, with `build` `success` and `deploy` `skipped`. Its `site` artifact held `index.html` and `.nojekyll` and expires 2026-10-19, one day after upload.
 - 2026-10-18: verify: no R code changed since the clean `devtools::test()` on 1a943f5 and `devtools::check()` on e936d95. Status set to `review`.
 - 2026-10-18: step-7 approval: m082-pkgdown-deploy-job approved for merge.
+- 2026-10-18: PR #84 opened. CI red on three Ubuntu checks (test-coverage, R-CMD-check release and oldrel-1), all at `test-mock-http-helper.R:184`, where runner curl says "Out of memory" and the test expects "Malformed input to a URL function". The same failure is on `main` at 3ccfc28 (test-coverage run 39086632850), and the branch changes no R or test file. The user chose a hotfix first. Resume with `/milestone-review M082` after it merges, which brings `main` into this branch and re-runs CI.
 
 ## Decisions
 
