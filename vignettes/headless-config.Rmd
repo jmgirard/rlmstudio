@@ -104,9 +104,9 @@ is slow to start the server, give a longer wait. Then call
 
 
 ``` r
-# Start the server, and wait about 60 seconds for it to answer
-lms_server_start(wait = 60)
-#> ✔ LM Studio server started successfully on the default port.
+# Start the server on port 1234, and wait about 60 seconds for it to answer
+lms_server_start(port = 1234, wait = 60)
+#> ✔ LM Studio server started successfully on port 1234.
 
 # TRUE if LM Studio answers
 lms_server_ready()
@@ -195,7 +195,7 @@ The address `0.0.0.0` means every network address of the host.
 ``` r
 # On the host: let other computers reach the server
 Sys.setenv(LMS_SERVER_HOST = "0.0.0.0")
-lms_server_start(wait = 60)
+lms_server_start(port = 1234, wait = 60)
 ```
 
 Then any computer that can reach the host over the network can send
@@ -246,7 +246,7 @@ desktop app is open, the daemon keeps running, as the next section says.
 model <- "google/gemma-3-1b"
 
 replies <- with_lms_daemon({
-  lms_server_start(wait = 60)
+  lms_server_start(port = 1234, wait = 60)
   lms_load(model)
   out <- lms_chat_batch(
     model = model,
@@ -276,4 +276,4 @@ lms_daemon_stop(force = TRUE)
 If the desktop app is open, `lms_daemon_stop()` does not stop the daemon. The
 function returns `FALSE` and prints a message that says so.
 
-<!-- Knitted from headless-config.Rmd.orig with MD5 e72953945963185349e06c053fa5d998. -->
+<!-- Knitted from headless-config.Rmd.orig with MD5 159dd9270e0cfa250c73d9348ee1ee9f. -->
