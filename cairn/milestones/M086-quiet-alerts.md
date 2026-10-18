@@ -50,7 +50,7 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 
 - [x] T1: Test first: write `tests/testthat/test-quiet-alerts.R` with the AC2 rows, each row in a nested `test_that()` (D-038). Reuse the mocks of the existing tests for each site: `tests/testthat/test-setup.R:35` and `tests/testthat/test-vignette-claims.R:346` (`check_lms_version()`), `tests/testthat/test-vignette-claims.R:357` (browser install), and the print tests of `tests/testthat/test-chat.R`. See the quiet half of each row red.
 - [x] T2: Add `rlm_alert_warning()` and `rlm_alert_danger()` to `R/utils-msg.R`. Route the five calls through them. Rerun the AC1 grep, which also catches a bare `cli::cli_alert(`, and see T1 green. Plant a direct `cli::cli_alert_warning()` back at one site and see its row go red.
-- [ ] T3: One NEWS bullet in the development section, written against the T1 and T2 output.
+- [x] T3: One NEWS bullet in the development section, written against the T1 and T2 output.
 - [ ] T4: `devtools::test()` and `devtools::check()` clean.
 
 ## Work log
@@ -68,3 +68,4 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 - 2026-10-18: implement started on branch m086-quiet-alerts, cut from main at 7524bcc.
 - 2026-10-18: T1: `test-quiet-alerts.R` holds five cases in nested `test_that()` blocks; each mocks inside its own `run()` and reads `capture_shown()` stdout and messages; quiet half red on all five (the alert text shows with the option TRUE), loud half green.
 - 2026-10-18: T2: added `rlm_alert_warning()` and `rlm_alert_danger()` beside `rlm_alert_info()` with the same signature, routed the five calls; AC1 grep prints only `R/utils-msg.R:27,41,55,69` and `R/load.R:149`; T1 green 30/30; a direct `cli::cli_alert_warning()` planted back at the print site turned only that row red, then restored; `devtools::test()` FAIL 0, SKIP 3 (no live server), PASS 24649.
+- 2026-10-18: T3: one NEWS bullet in the development section, after the browser-install bullet; its alert wording read from the five T1 alert texts and the routed calls; "results do not change" read from the helpers, which gate only the cli call.
