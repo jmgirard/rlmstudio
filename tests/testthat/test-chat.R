@@ -421,6 +421,7 @@ logprobs_locations <- function(bad, good = json_array(step_json())) {
 }
 
 test_that("lms_chat_openresponses names the first logprobs rule a reply breaks", {
+  testthat::skip_on_cran()
   for (case in logprobs_breaks()) {
     # R1 entries are whole values. The others are a step, placed first and
     # after two good steps.
@@ -671,6 +672,7 @@ test_that("lms_chat_openresponses reads logprobs fields by their exact names", {
 })
 
 test_that("lms_chat_openresponses aborts as a bad response when a reply has no readable text", {
+  testthat::skip_on_cran()
   shapes <- responses_unreadable()
   details <- responses_unreadable_details()
   expect_identical(names(details), names(shapes))
