@@ -21,10 +21,10 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 
 ## Acceptance criteria
 
-- [ ] AC1: `.github/workflows/pkgdown.yaml` has a job `build` that builds the site and uploads the `docs` folder as the artifact `site`, hidden files included (`include-hidden-files: true`). The job has no `permissions` key of its own, so it runs under the workflow-level `permissions: read-all`. A read of the file with `yaml::read_yaml()` shows this.
-- [ ] AC2: The same file has a job `deploy` with `needs: build`, `permissions: contents: write`, and `concurrency: group: pkgdown-deploy`. Its job-level `if:` is `github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)`. Its steps check out the repository, then download the artifact `site` into `docs`, then run `JamesIves/github-pages-deploy-action@v4.5.0` with `clean: true`, `branch: gh-pages`, and `folder: docs`. A read of the file with `yaml::read_yaml()` shows this.
-- [ ] AC3: Of the jobs that `yaml::read_yaml()` returns for the file, only `deploy` carries a `permissions` key or a `concurrency` key, and the file has no top-level `concurrency` key. A loop over every job shows this.
-- [ ] AC4: A manual run on the milestone branch (`gh workflow run pkgdown.yaml --ref <branch>`) ends with the conclusion `success` for the `build` job and `skipped` for the `deploy` job. `gh run view <id> --json jobs` shows the two conclusions. `gh run download <id> -n site -D <dir>` puts `index.html` and `.nojekyll` directly in `<dir>`.
+- [x] AC1: `.github/workflows/pkgdown.yaml` has a job `build` that builds the site and uploads the `docs` folder as the artifact `site`, hidden files included (`include-hidden-files: true`). The job has no `permissions` key of its own, so it runs under the workflow-level `permissions: read-all`. A read of the file with `yaml::read_yaml()` shows this.
+- [x] AC2: The same file has a job `deploy` with `needs: build`, `permissions: contents: write`, and `concurrency: group: pkgdown-deploy`. Its job-level `if:` is `github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)`. Its steps check out the repository, then download the artifact `site` into `docs`, then run `JamesIves/github-pages-deploy-action@v4.5.0` with `clean: true`, `branch: gh-pages`, and `folder: docs`. A read of the file with `yaml::read_yaml()` shows this.
+- [x] AC3: Of the jobs that `yaml::read_yaml()` returns for the file, only `deploy` carries a `permissions` key or a `concurrency` key, and the file has no top-level `concurrency` key. A loop over every job shows this.
+- [x] AC4: A manual run on the milestone branch (`gh workflow run pkgdown.yaml --ref <branch>`) ends with the conclusion `success` for the `build` job and `skipped` for the `deploy` job. `gh run view <id> --json jobs` shows the two conclusions. `gh run download <id> -n site -D <dir>` puts `index.html` and `.nojekyll` directly in `<dir>`.
 
 ## Coverage
 
@@ -62,3 +62,10 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-10-18 on e5f5f85. `main` at 171e449, the branch base, so no sync was needed.
+
+- AC1: a scratch `yaml::read_yaml()` script read the file. Job `build` has no `permissions` key, the workflow `permissions` is `read-all`, step "Build site" runs `pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)`, and one `actions/upload-artifact@v4` step has `name: site`, `path: docs`, and `include-hidden-files: true`. Pass.
+- AC2: the same script read job `deploy`: `needs` is `build`, `if` is identical to the stated condition, `permissions` is identical to `list(contents = "write")`, and `concurrency` is identical to `list(group = "pkgdown-deploy")`. The steps in order are `actions/checkout@v6`, `actions/download-artifact@v4` with `name: site` and `path: docs`, and `JamesIves/github-pages-deploy-action@v4.5.0` with `clean: true`, `branch: gh-pages`, and `folder: docs`. Pass.
+- AC3: a loop over the 2 jobs the file holds (`build`, `deploy`) found `permissions` or `concurrency` on `deploy` alone. The file has no top-level `concurrency` key. Pass.
+- AC4: run 39149477796 (`workflow_dispatch`, branch `m082-pkgdown-deploy-job`, head 1a943f5) ended `success`, with `build` `success` and `deploy` `skipped` (`gh run view --json jobs`, re-read at review). `git diff 1a943f5 HEAD -- .github` is empty, so the run used the workflow file under review. A fresh `gh run download 39149477796 -n site -D <scratch>` put `index.html` and `.nojekyll` directly in the folder. Pass.
