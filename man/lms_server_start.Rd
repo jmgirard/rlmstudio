@@ -15,7 +15,9 @@ lms_server_start(
 \arguments{
 \item{port}{Numeric or \code{NULL}. Port to run the server on. It must be one
 whole number from 1 to 65535, given as a number and not as an array or a
-string. \code{NULL}, the default, lets LM Studio use the last used port.}
+string. \code{NULL}, the default, lets LM Studio use the last used port. The
+functions that send requests ask \verb{http://localhost:1234} by default, so
+pass \code{port = 1234} unless you give those functions a \code{host}.}
 
 \item{cors}{Logical. Enable CORS support for web application development.
 Must be \code{TRUE} or \code{FALSE}. Defaults to \code{FALSE}. Any other value, \code{NULL}
@@ -97,17 +99,19 @@ silenced by the \code{rlmstudio.quiet} option.
 
 \examples{
 \dontrun{
-# Start server on the default port and wait for the REST API
-lms_server_start()
+# Start the server on port 1234, where the other functions look by
+# default, and wait for the REST API
+lms_server_start(port = 1234)
 
-# Start server on a custom port with CORS enabled
+# Start the server on another port with CORS enabled. The other
+# functions then need host = "http://localhost:8080".
 lms_server_start(port = 8080, cors = TRUE)
 
 # Return as soon as the CLI does, without waiting
-lms_server_start(wait = 0)
+lms_server_start(port = 1234, wait = 0)
 
 # Wait longer, and ask a host the rules above would not pick
-lms_server_start(wait = 60, host = "http://127.0.0.1:1234")
+lms_server_start(port = 1234, wait = 60, host = "http://127.0.0.1:1234")
 }
 }
 \seealso{

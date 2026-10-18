@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M084: The server-start examples pass port 1234, and the no-port message names the last-used port
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP6   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — the README, the vignettes, the help pages, and two messages that users read   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m084-server-start-port   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -35,7 +35,7 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 
 - [ ] AC1: Each line of `README.Rmd` and `vignettes/*.Rmd.orig` that starts, after any spaces, with `lms_server_start(` passes `port = 1234`, as a test in `tests/testthat/test-vignette-claims.R` checks. `README.md` holds the line `## ✔ LM Studio server started successfully on port 1234.` under its server-start call.
 - [ ] AC2: With no `port`, `lms_server_start()` reports "LM Studio server started successfully on the port that LM Studio used last.", and with `port = 1234` it reports "LM Studio server started successfully on port 1234.", as a test in `tests/testthat/test-serve.R` checks. `grep -rn "default port" R/ man/ README.Rmd README.md vignettes/` prints no line.
-- [ ] AC3: In `man/lms_server_start.Rd`, the `port` argument says that the functions that send requests ask `http://localhost:1234` by default. Each line of `man/*.Rd` that starts, after any spaces, with `lms_server_start(` passes `port = 1234`, as `grep -n "^ *lms_server_start(" man/*.Rd` shows.
+- [ ] AC3: In `man/lms_server_start.Rd`, the `port` argument text names the functions that send requests and `http://localhost:1234`. For each `man/*.Rd` file, `tools::Rd2ex(f, out, commentDontrun = FALSE)` writes its examples, and `grep -n '^ *lms_server_start(' out` prints only lines that pass `port = 1234`, except `lms_server_start(port = 8080, cors = TRUE)` from `man/lms_server_start.Rd`, whose comment above it holds `host = "http://localhost:8080"`.
 - [ ] AC4: `install_lmstudio(method = "browser")` tells the user to open the LM Studio app once and then restart R, as an assertion on its message in the browser-method test of `tests/testthat/test-vignette-claims.R` checks.
 - [ ] AC5: The knitted `vignettes/chat-options.Rmd`, `vignettes/text-analysis.Rmd`, and `vignettes/headless-config.Rmd` each hold the MD5 sum of their edited source, as `tests/testthat/test-vignette-knit.R` checks. The output of the server-start chunk in `chat-options.Rmd` and of the `start-server` chunk in `headless-config.Rmd` holds `✔ LM Studio server started successfully on port 1234.`
 - [ ] AC6: The development section of `NEWS.md` says that the success message of `lms_server_start()` with no `port` names the port as the one LM Studio used last, that the help examples, the README, and the vignettes start the server with `port = 1234`, and that `install_lmstudio()` says to open the app once.
@@ -55,7 +55,7 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
 
-- [ ] T1: Test first in `tests/testthat/test-serve.R`: the success message of a no-port start and of `port = 1234`, red against `R/serve.R:153`. Then change that message. Add to `@param port` (`R/serve.R:38-40`) that the request functions ask `http://localhost:1234` by default. Pass `port = 1234` in the four `lms_server_start()` examples (`R/serve.R:104-116`), and rewrite the first comment.
+- [x] T1: Test first in `tests/testthat/test-serve.R`: the success message of a no-port start and of `port = 1234`, red against `R/serve.R:153`. Then change that message. Add to `@param port` (`R/serve.R:38-40`) that the request functions ask `http://localhost:1234` by default. Pass `port = 1234` in the four `lms_server_start()` examples (`R/serve.R:104-116`), and rewrite the first comment.
 - [ ] T2: Pass `port = 1234` in each other roxygen example line that starts with `lms_server_start(`. On 2026-10-18, `grep -n "^#' *lms_server_start(" R/*.R` gave `R/chat.R:2618`, `R/load.R:93`, `R/download.R:37`, `:193`, `:280`, `R/list.R:50`, `:236`, `R/serve.R:443`, `:528`, `:694`, `:821`, `R/unload.R:36`, `:108`. Rerun the grep at the task. Run `devtools::document()`, then the AC3 grep and the AC2 grep over `R/` and `man/`.
 - [ ] T3: Add a message assertion to the browser-method test (`tests/testthat/test-vignette-claims.R:357`) and see it red. Then edit the warning at `R/setup.R:148` to say to open the LM Studio app once, then restart R.
 - [ ] T4: Test first in `tests/testthat/test-vignette-claims.R`: read `README.Rmd` and `vignettes/*.Rmd.orig`. Skip when they are absent (`.Rbuildignore` drops them, LESSONS M005). Fail when the files are present and give no matching line, and fail on a matching line without `port = 1234`. See it red on today's six lines. Then edit `README.Rmd:59-60`, `chat-options.Rmd.orig:38`, `text-analysis.Rmd.orig:69`, and `headless-config.Rmd.orig:101`, `:184`, `:233`, plus any prose that says the start uses the default port. Run `devtools::build_readme()`.
@@ -77,6 +77,12 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 - 2026-10-18: criteria audit (full mode), 6 findings, all taken: AC1's test skip and non-empty check moved to T4; AC1's README.md clause now names the line, not a `build_readme()` diff; AC3 widened to every `man/*.Rd` example line (13 sites outside `lms_server_start()`) and its port text narrowed to the request functions; AC4 names the new message assertion; AC5's output clause narrowed to chat-options and headless-config, because text-analysis sets `rlmstudio.quiet` before its start chunk; the browser warning's quiet bypass became a candidate row.
 - 2026-10-18: AC1 keeps a one-line domain (a call split over lines is outside it), decided toward the narrower promise.
 - 2026-10-18: changelog: one new NEWS bullet, beside the M083 getting-started bullet.
+- 2026-10-18: status in-progress; branch m084-server-start-port cut from main at 62eaeab.
+- 2026-10-18: T1 kept the custom-port example `lms_server_start(port = 8080, cors = TRUE)`, with a comment naming the `host` the other functions then need; AC3 as written requires `port = 1234` there, so AC3 goes to amendment.
+- 2026-10-18: re-audit: AC3 (full) — the whole-file grep also matches the `\usage{}` line of `man/lms_server_start.Rd`, which can never pass `port = 1234` (the old wording had the same flaw); the probe could not show the exception's comment.
+- 2026-10-18: re-audit: AC3 (full) — domain limited to `\examples{}` is reachable and unblocked; name the extraction procedure (`tools::Rd2ex(..., commentDontrun = FALSE)`, since the default comments out `\dontrun` lines and a brace range mis-scopes), and do not grep the port sentence literally (roxygen writes `\verb{}` and wraps lines). Second re-audit line on AC3: the wording goes to the user.
+- 2026-10-18: substantive amendment: AC3 limited to the examples sections through `tools::Rd2ex()`, with the 8080 example as its one exception; the user accepted the wording at the stop.
+- 2026-10-18: T1 done: test-serve.R tests the no-port and `port = 1234` messages (red on the old message, then green); message, `port` help, and `lms_server_start()` examples changed; `devtools::test()` 0 fail, 3 skip, 24571 pass.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
