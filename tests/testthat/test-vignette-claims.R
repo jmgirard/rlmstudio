@@ -362,9 +362,15 @@ test_that("install_lmstudio() with the browser method opens the download page", 
     .package = "utils"
   )
 
-  claim_messages(install_lmstudio(method = "browser"))
+  shown <- claim_messages(install_lmstudio(method = "browser"))
 
   expect_identical(opened, "https://lmstudio.ai/download")
+  # The LM Studio documentation says to run the app once before lms works.
+  expect_match(
+    cli::ansi_strip(paste(shown, collapse = "")),
+    "open the LM Studio app once, then restart R",
+    fixed = TRUE
+  )
 })
 
 test_that("list_models() asks localhost:1234 by default and gives one row per model", {
@@ -656,6 +662,38 @@ test_that("lms_server_start(port = 1234) passes the port to lms server start", {
   claim_messages(lms_server_start(port = 1234, wait = 0))
 
   expect_identical(calls$args, list(c("server", "start", "--port", "1234")))
+})
+
+test_that("each server start in the README and the vignette sources passes port = 1234", {
+  # A start with no port reuses the port LM Studio used last, and the calls
+  # after it ask localhost:1234. R CMD check builds without these sources
+  # (.Rbuildignore), so the test skips there.
+  sources <- c(
+    testthat::test_path("../../README.Rmd"),
+    list.files(
+      testthat::test_path("../../vignettes"),
+      pattern = "\\.Rmd\\.orig$",
+      full.names = TRUE
+    )
+  )
+  sources <- sources[file.exists(sources)]
+  skip_if(length(sources) == 0, "No README or vignette sources to read.")
+
+  starts <- character()
+  for (source in sources) {
+    lines <- readLines(source, warn = FALSE)
+    hits <- grep("^ *lms_server_start\\(", lines)
+    starts <- c(starts, paste0(basename(source), ":", hits, ": ", lines[hits]))
+  }
+  for (start in starts) {
+    test_that(start, {
+      # The port ends the argument, so port = 12345 does not pass.
+      expect_match(start, "port = 1234[,)]")
+    })
+  }
+  # A pattern that silently matches nothing would pass every file. This
+  # check comes after the subtests, where the result table keeps it.
+  expect_gt(length(starts), 0)
 })
 
 test_that("lms_server_stop() sends server stop alone and reports the stop", {

@@ -30,7 +30,7 @@ removed, and each run of whitespace becomes one space. A text longer than
 }
 \examples{
 \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 lms_server_stop()
 }
 }

@@ -65,8 +65,9 @@ shows the output of `list_instances()`.
 ```{r start}
 model <- "google/gemma-3-1b"
 
-# Start the server, and wait up to about 30 seconds for it to answer
-lms_server_start(wait = 30)
+# Start the server on port 1234, and wait up to about 30 seconds for it to
+# answer
+lms_server_start(port = 1234, wait = 30)
 
 # Load the model with room for 1,024 tokens
 lms_load(model, context_length = 1024)

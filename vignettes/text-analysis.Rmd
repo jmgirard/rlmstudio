@@ -62,8 +62,9 @@ shows the output of `list_instances()`.
 ``` r
 model <- "google/gemma-3-1b"
 
-# Start the server, and wait up to about 30 seconds for it to answer
-lms_server_start(wait = 30)
+# Start the server on port 1234, and wait up to about 30 seconds for it to
+# answer
+lms_server_start(port = 1234, wait = 30)
 
 # Load the model with room for 1,024 tokens
 lms_load(model, context_length = 1024)
@@ -215,10 +216,10 @@ reviews$sentiment <- rated$sentiment
 reviews$stars <- rated$stars
 reviews[, c("id", "sentiment", "stars")]
 #>   id sentiment stars
-#> 1  1     mixed     4
+#> 1  1  positive     4
 #> 2  2  negative     5
 #> 3  3  positive     5
-#> 4  4  negative     3
+#> 4  4  negative     1
 #> 5  5  positive     5
 #> 6  6      <NA>    NA
 ```
@@ -274,14 +275,14 @@ first[first$step == 1, c("candidate_token", "candidate_logprob")]
 #>    candidate_token candidate_logprob
 #> 1                3         -0.312500
 #> 2                4         -1.578125
-#> 3                5         -3.031250
+#> 3                5         -3.046875
 #> 4                2         -6.265625
 #> 5                1         -9.718750
-#> 6               **        -10.234375
-#> 7                         -13.562500
-#> 8                6        -14.203125
-#> 9               ★★        -14.640625
-#> 10             ★★★        -14.765625
+#> 6               **        -10.265625
+#> 7                         -13.593750
+#> 8                6        -14.218750
+#> 9               ★★        -14.671875
+#> 10             ★★★        -14.796875
 ```
 
 The first token of the reply, `3`, is the candidate with the highest log
@@ -314,11 +315,11 @@ for (i in seq_len(nrow(digits))) {
 
 reviews[, c("id", "stars", "score")]
 #>   id stars    score
-#> 1  1     4 3.304446
-#> 2  2     5 1.585227
-#> 3  3     5 4.995245
-#> 4  4     3 1.978156
-#> 5  5     5 4.990581
+#> 1  1     4 3.303161
+#> 2  2     5 1.566338
+#> 3  3     5 4.995173
+#> 4  4     1 1.974338
+#> 5  5     5 4.990429
 #> 6  6    NA       NA
 ```
 
@@ -406,12 +407,12 @@ for (i in seq_len(nrow(reviews))) {
 
 reviews[, c("id", "summary", "similarity")]
 #>   id                         summary similarity
-#> 1  1    Excellent, but slow service.  0.8813357
-#> 2  2 **A disappointing experience.**  0.4035554
-#> 3  3                Excellent pizza!  0.4531046
-#> 4  4            Terrible experience.  0.5790481
-#> 5  5            Relaxing and lovely.  0.5259885
-#> 6  6                            <NA>  0.3849392
+#> 1  1    Excellent, but slow service.  0.8815064
+#> 2  2 **A disappointing experience.**  0.4035788
+#> 3  3                Excellent pizza!  0.4533284
+#> 4  4            Terrible experience.  0.5790611
+#> 5  5            Relaxing and lovely.  0.5259393
+#> 6  6                            <NA>  0.3849732
 ```
 
 Each embedding of this model holds 768 numbers, one for each column of
@@ -434,12 +435,12 @@ Each section added columns to the same data frame. Here it is without the
 ``` r
 reviews[, names(reviews) != "text"]
 #>   id                         summary sentiment stars    score similarity
-#> 1  1    Excellent, but slow service.     mixed     4 3.304446  0.8813357
-#> 2  2 **A disappointing experience.**  negative     5 1.585227  0.4035554
-#> 3  3                Excellent pizza!  positive     5 4.995245  0.4531046
-#> 4  4            Terrible experience.  negative     3 1.978156  0.5790481
-#> 5  5            Relaxing and lovely.  positive     5 4.990581  0.5259885
-#> 6  6                            <NA>      <NA>    NA       NA  0.3849392
+#> 1  1    Excellent, but slow service.  positive     4 3.303161  0.8815064
+#> 2  2 **A disappointing experience.**  negative     5 1.566338  0.4035788
+#> 3  3                Excellent pizza!  positive     5 4.995173  0.4533284
+#> 4  4            Terrible experience.  negative     1 1.974338  0.5790611
+#> 5  5            Relaxing and lovely.  positive     5 4.990429  0.5259393
+#> 6  6                            <NA>      <NA>    NA       NA  0.3849732
 ```
 
 ## The loaded models
@@ -477,4 +478,4 @@ lms_server_stop()
 #> ✔ LM Studio server stopped successfully.
 ```
 
-<!-- Knitted from text-analysis.Rmd.orig with MD5 919992eeb7223045bff5fa336f2c0cd8. -->
+<!-- Knitted from text-analysis.Rmd.orig with MD5 4e82f2b36e650487dad60154f9aa97f2. -->

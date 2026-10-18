@@ -10,7 +10,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M084 | The server-start examples pass port 1234, and the no-port message names the last-used port | planned | — | normal | milestones/M084-server-start-port.md |
+| M084 | The server-start examples pass port 1234, and the no-port message names the last-used port | review | — | normal | milestones/M084-server-start-port.md |
 | M083 | The getting-started vignette covers the first app run, a finished download, the server port, and finding model keys | done | — | normal | milestones/archive/M083-getting-started-gaps.md |
 | M082 | The pkgdown deploy runs in its own job, and only that job can write or queue | done | — | normal | milestones/archive/M082-pkgdown-deploy-job.md |
 | M081 | The CRAN check skips the three argument-check test files | done | — | normal | milestones/archive/M081-cran-skip-arg-check-files.md |

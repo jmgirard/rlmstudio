@@ -410,6 +410,32 @@ test_that("the success message and the readiness host print the port as digits",
   expect_identical(stub$calls()[[1]]$host, "http://localhost:8080")
 })
 
+test_that("the success message names the port, or the last-used port with no port", {
+  start_success()
+  withr::local_options(rlmstudio.quiet = FALSE)
+
+  cases <- list(
+    list(
+      port = NULL,
+      text = "LM Studio server started successfully on the port that LM Studio used last."
+    ),
+    list(
+      port = 1234,
+      text = "LM Studio server started successfully on port 1234."
+    )
+  )
+  for (case in cases) {
+    test_that(if (is.null(case$port)) "no port" else "port = 1234", {
+      msgs <- testthat::capture_messages(
+        lms_server_start(port = case$port, wait = 0)
+      )
+      shown <- cli::ansi_strip(paste(msgs, collapse = ""))
+      expect_match(shown, case$text, fixed = TRUE)
+      expect_no_match(shown, "default port", fixed = TRUE)
+    })
+  }
+})
+
 test_that("lms_server_start asks the host the caller gave", {
   start_success()
   fake_clock()

@@ -42,7 +42,7 @@ You can only use one logging control flag at a time (\code{verbose},
 }
 \examples{
 \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 
 # Get basic status string
 lms_server_status()

@@ -159,7 +159,7 @@ invisible(tryCatch(
   {
     if (!is_server_running(host)) {
       server_started <- TRUE
-      lms_server_start()
+      lms_server_start(port = 1234)
     }
     loaded <- list_models(
       loaded = TRUE,

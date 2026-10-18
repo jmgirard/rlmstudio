@@ -37,7 +37,9 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' @param port Numeric or `NULL`. Port to run the server on. It must be one
 #'   whole number from 1 to 65535, given as a number and not as an array or a
-#'   string. `NULL`, the default, lets LM Studio use the last used port.
+#'   string. `NULL`, the default, lets LM Studio use the last used port. The
+#'   functions that send requests ask `http://localhost:1234` by default, so
+#'   pass `port = 1234` unless you give those functions a `host`.
 #' @param cors Logical. Enable CORS support for web application development.
 #'   Must be `TRUE` or `FALSE`. Defaults to `FALSE`. Any other value, `NULL`
 #'   and `NA` included, aborts before the `lms` CLI runs.
@@ -102,17 +104,19 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' @examples
 #' \dontrun{
-#' # Start server on the default port and wait for the REST API
-#' lms_server_start()
+#' # Start the server on port 1234, where the functions that send requests
+#' # look by default, and wait for the REST API
+#' lms_server_start(port = 1234)
 #'
-#' # Start server on a custom port with CORS enabled
+#' # Start the server on another port with CORS enabled. The functions
+#' # that send requests then need host = "http://localhost:8080".
 #' lms_server_start(port = 8080, cors = TRUE)
 #'
 #' # Return as soon as the CLI does, without waiting
-#' lms_server_start(wait = 0)
+#' lms_server_start(port = 1234, wait = 0)
 #'
 #' # Wait longer, and ask a host the rules above would not pick
-#' lms_server_start(wait = 60, host = "http://127.0.0.1:1234")
+#' lms_server_start(port = 1234, wait = 60, host = "http://127.0.0.1:1234")
 #' }
 lms_server_start <- function(
   port = NULL,
@@ -150,7 +154,7 @@ lms_server_start <- function(
       )
     } else {
       rlm_alert_success(
-        "LM Studio server started successfully on the default port."
+        "LM Studio server started successfully on the port that LM Studio used last."
       )
     }
   } else {
@@ -440,7 +444,7 @@ build_args_server_stop <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #' lms_server_stop()
 #' }
 lms_server_stop <- function() {
@@ -525,7 +529,7 @@ build_args_server_status <- function(
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' # Get basic status string
 #' lms_server_status()
@@ -691,7 +695,7 @@ wait_for_server <- function(host, wait, timeout = 1, pause = 0.25,
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' if (is_server_running(host = "http://localhost:1234")) {
 #'   message("The LM Studio server is currently active.")
@@ -818,7 +822,7 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' if (lms_server_ready()) {
 #'   list_models()

@@ -145,7 +145,7 @@ install_lmstudio <- function(method = c("browser", "headless")) {
     )
     utils::browseURL("https://lmstudio.ai/download")
     cli::cli_alert_warning(
-      "Please install or update the software, restart R, and try again."
+      "Please install or update the software, open the LM Studio app once, then restart R and try again."
     )
   } else if (method == "headless") {
     # CRAN Compliance: Require interactive consent or explicit environment variable
