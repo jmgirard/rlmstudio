@@ -103,3 +103,21 @@ Pass 2, after the AC2 and AC3 amendment. Evidence gathered 2026-10-18 on 5514b4c
 - AC2: job `deploy`: `needs` is `build`, `if` is identical to the stated condition, and `permissions` is identical to `list(contents = "write")`. Steps in order: `actions/checkout@v6`, `actions/download-artifact@v4` with `name: site` and `path: docs`, then `JamesIves/github-pages-deploy-action@v4.5.0` with `clean: true`, `branch: gh-pages`, and `folder: docs`. Pass.
 - AC3: a loop over the 2 jobs found `permissions` on `deploy` alone and `concurrency` on no job. The top-level `concurrency` has the one key `group`, identical to the stated value. Pass.
 - AC4: run 39150570451 (`workflow_dispatch`, branch `m082-pkgdown-deploy-job`, head d353754) ended `success`, with `build` `success` and `deploy` `skipped`. `git diff d353754 HEAD -- .github` is empty. A fresh `gh run download 39150570451 -n site -D <scratch>` put `index.html` and `.nojekyll` directly in the folder. Pass.
+
+spawned: diff-bug, blame-history, prior-review
+
+- diff-bug #1: the `deploy` steps have not run, because both manual runs skipped `deploy` — reject, planned change: Scope names the first push run on `main` after the merge as the check.
+- diff-bug #2: with `retention-days: 1`, re-running only `deploy` more than a day after the build fails at the download. Re-running all jobs works, because of `overwrite: true` — fix now, the comment above the upload says to re-run all jobs after one day, fixed 8e7c724.
+- diff-bug #3: a pending release run and a pending push run on `main` share one slot, so a release of an older tag can replace a newer pending push and deploy an older site. The old group `pkgdown-true` did the same, and M080 review finding F6 kept old-tag deploys — follow-up, `[low]` candidate row written at hygiene.
+- diff-bug #4: the deploy condition is written twice, in the group and in the `deploy` `if:`, and only a comment ties them — reject, planned change: amended AC2 and AC3 pin both strings, and a workflow-level group cannot read a job's `if:`.
+- diff-bug #5: the expression is valid at workflow level, and no other workflow can produce `pkgdown-deploy` — noted, no defect.
+- diff-bug #6: pull-request runs get their own group with no `cancel-in-progress`, so a stale pull-request run is not cancelled, unlike the other workflows. The old file did the same — follow-up, same `[low]` candidate row as #3.
+- diff-bug #7: the checkout comment leaves implicit that the checkout would wipe a site downloaded first — fix now, comment says so, fixed 8e7c724.
+- diff-bug #8 to #11: the handoff is correct, the token permissions suffice, `main` has no branch protection that names the old check, and nothing the old job did is lost — noted, no defect.
+- blame-history #1: a re-run of `deploy` alone fails after one day — fix now, same as diff-bug #2, fixed 8e7c724.
+- blame-history #2: a manual branch run can now run beside a queued deploy. It writes nothing — reject, planned change: the M080 F1 fix.
+- blame-history #3: `build` drops `contents: write` — reject, planned change: the M080 F2 fix.
+- blame-history #4: the condition is written twice — reject, same as diff-bug #4.
+- blame-history #5: a re-run of a run that does not deploy keeps its run-id group — reject, false as a defect: a re-run starts after the first attempt ends, so nothing waits on the first attempt.
+- prior-review #1: the pkgdown group differs in shape from the other four workflows, which M078 set to `${{ github.workflow }}-${{ github.ref }}` — reject, planned change: M080 F1 needs a deploy-only group, and the lens itself calls it a deliberate divergence.
+- After 8e7c724: `git diff d353754 HEAD -- .github` changes comment lines only, and the parse check still passes AC1 to AC3, so the AC4 run stands for the file.
