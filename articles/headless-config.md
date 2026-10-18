@@ -101,9 +101,9 @@ which returns `TRUE` only when LM Studio answers.
 
 ``` r
 
-# Start the server, and wait about 60 seconds for it to answer
-lms_server_start(wait = 60)
-#> ✔ LM Studio server started successfully on the default port.
+# Start the server on port 1234, and wait about 60 seconds for it to answer
+lms_server_start(port = 1234, wait = 60)
+#> ✔ LM Studio server started successfully on port 1234.
 
 # TRUE if LM Studio answers
 lms_server_ready()
@@ -196,7 +196,7 @@ address `0.0.0.0` means every network address of the host.
 
 # On the host: let other computers reach the server
 Sys.setenv(LMS_SERVER_HOST = "0.0.0.0")
-lms_server_start(wait = 60)
+lms_server_start(port = 1234, wait = 60)
 ```
 
 Then any computer that can reach the host over the network can send
@@ -252,7 +252,7 @@ the daemon keeps running, as the next section says.
 model <- "google/gemma-3-1b"
 
 replies <- with_lms_daemon({
-  lms_server_start(wait = 60)
+  lms_server_start(port = 1234, wait = 60)
   lms_load(model)
   out <- lms_chat_batch(
     model = model,

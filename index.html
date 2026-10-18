@@ -87,7 +87,7 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jmgirard.github.io/rlmstudio/">rlmstudio</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/install_lmstudio.html">install_lmstudio</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">## ℹ Opening the LM Studio download page in your default browser...</span></span>
-<span><span class="co">## ! Please install or update the software, restart R, and try again.</span></span></code></pre></div>
+<span><span class="co">## ! Please install or update the software, open the LM Studio app once, then restart R and try again.</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
@@ -97,10 +97,10 @@
 <div class="section level3">
 <h3 id="id_1-start-the-server">1. Start the Server<a class="anchor" aria-label="anchor" href="#id_1-start-the-server"></a>
 </h3>
-<p>Before you can load models or generate text, you need to start the LM Studio backend server.</p>
+<p>Before you can load models or generate text, you need to start the LM Studio backend server. The package sends its requests to port 1234 by default, so start the server there. Without a <code>port</code>, LM Studio uses the port that it used last.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## ✔ LM Studio server started successfully on the default port.</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>port <span class="op">=</span> <span class="fl">1234</span><span class="op">)</span></span>
+<span><span class="co">## ✔ LM Studio server started successfully on port 1234.</span></span></code></pre></div>
 <p><em>(Note for headless environments like remote servers or Docker containers: You must start the background daemon first using <code><a href="reference/lms_daemon_start.html">lms_daemon_start()</a></code> before starting the server).</em></p>
 </div>
 <div class="section level3">

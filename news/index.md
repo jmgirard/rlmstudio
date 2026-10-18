@@ -9,6 +9,17 @@
   model key in the LM Studio model catalog. It also names the `status`
   of a finished download, `"completed"`.
 
+- [`lms_server_start()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_start.md)
+  with no `port` now says that the server started “on the port that LM
+  Studio used last”, not “on the default port”. The README, the other
+  vignettes, and the help examples, apart from one that shows another
+  port, now start the server with `port = 1234`. The other functions
+  that send requests ask that port by default, and the `port` help now
+  says so.
+
+- `install_lmstudio(method = "browser")` now tells you to open the LM
+  Studio app once before you restart R.
+
 ## rlmstudio 0.3.0
 
 CRAN release: 2026-10-02

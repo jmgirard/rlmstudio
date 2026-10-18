@@ -58,7 +58,7 @@ Documentation](https://lmstudio.ai/docs/cli/serve/server-status)
 
 ``` r
 if (FALSE) { # \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 
 # Get basic status string
 lms_server_status()

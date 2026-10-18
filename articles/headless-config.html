@@ -160,9 +160,9 @@ the server, give a longer wait. Then call
 <code><a href="../reference/lms_server_ready.html">lms_server_ready()</a></code>, which returns <code>TRUE</code> only
 when LM Studio answers.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Start the server, and wait about 60 seconds for it to answer</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ✔ LM Studio server started successfully on the default port.</span></span>
+<code class="sourceCode R"><span><span class="co"># Start the server on port 1234, and wait about 60 seconds for it to answer</span></span>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>port <span class="op">=</span> <span class="fl">1234</span>, wait <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ LM Studio server started successfully on port 1234.</span></span>
 <span></span>
 <span><span class="co"># TRUE if LM Studio answers</span></span>
 <span><span class="fu"><a href="../reference/lms_server_ready.html">lms_server_ready</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -239,7 +239,7 @@ of the host.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># On the host: let other computers reach the server</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>LMS_SERVER_HOST <span class="op">=</span> <span class="st">"0.0.0.0"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>port <span class="op">=</span> <span class="fl">1234</span>, wait <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span></code></pre></div>
 <p>Then any computer that can reach the host over the network can send
 requests to the server. If the network is not private, require an API
 token on the server. The LM Studio documentation shows how to turn on
@@ -284,7 +284,7 @@ section says.</p>
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span>
 <span></span>
 <span><span class="va">replies</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/with_lms_daemon.html">with_lms_daemon</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>port <span class="op">=</span> <span class="fl">1234</span>, wait <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_chat_batch.html">lms_chat_batch</a></span><span class="op">(</span></span>
 <span>    model <span class="op">=</span> <span class="va">model</span>,</span>
@@ -311,7 +311,7 @@ the server first.</p>
 <p>If the desktop app is open, <code><a href="../reference/lms_daemon_stop.html">lms_daemon_stop()</a></code> does not
 stop the daemon. The function returns <code>FALSE</code> and prints a
 message that says so.</p>
-<!-- Knitted from headless-config.Rmd.orig with MD5 e72953945963185349e06c053fa5d998. -->
+<!-- Knitted from headless-config.Rmd.orig with MD5 159dd9270e0cfa250c73d9348ee1ee9f. -->
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -41,7 +41,7 @@ Documentation](https://lmstudio.ai/docs/cli/serve/server-stop)
 
 ``` r
 if (FALSE) { # \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 lms_server_stop()
 } # }
 ```

@@ -102,7 +102,7 @@ for what the CLI reports about it.
 
 ``` r
 if (FALSE) { # \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 
 if (lms_server_ready()) {
   list_models()

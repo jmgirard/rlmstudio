@@ -95,14 +95,15 @@ installing LM Studio, starting the server, and downloading
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span>
 <span></span>
-<span><span class="co"># Start the server, and wait up to about 30 seconds for it to answer</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ✔ LM Studio server started successfully on the default port.</span></span>
+<span><span class="co"># Start the server on port 1234, and wait up to about 30 seconds for it to</span></span>
+<span><span class="co"># answer</span></span>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>port <span class="op">=</span> <span class="fl">1234</span>, wait <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ LM Studio server started successfully on port 1234.</span></span>
 <span></span>
 <span><span class="co"># Load the model</span></span>
 <span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ℹ Loading model: "google/gemma-3-1b"...</span></span>
-<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" loaded and verified. [11.7s]</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" loaded and verified. [6s]</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -170,9 +171,9 @@ send to the model.</p>
 <span></span>
 <span><span class="co"># The default route</span></span>
 <span><span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">prompt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Blue \n\nLet me know if you’d like another!"</span></span>
+<span><span class="co">#&gt; [1] "Blue."</span></span>
 <span><span class="co">#&gt; attr(,"response_id")</span></span>
-<span><span class="co">#&gt; [1] "resp_5cf482638f60b6dee10cb5fd6c4b254663ab888f1d48e295"</span></span>
+<span><span class="co">#&gt; [1] "resp_88dd07ff9196af81e3d9bb18f50ef1f89fe258dc105638f7"</span></span>
 <span></span>
 <span><span class="co"># The OpenAI route</span></span>
 <span><span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">prompt</span>, api_type <span class="op">=</span> <span class="st">"openai"</span><span class="op">)</span></span>
@@ -182,7 +183,7 @@ send to the model.</p>
 <span><span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">prompt</span>, api_type <span class="op">=</span> <span class="st">"native"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Blue."</span></span>
 <span><span class="co">#&gt; attr(,"response_id")</span></span>
-<span><span class="co">#&gt; [1] "resp_c42e41ec31f20b2124f9fc2e06ccd48f9e9ea586e5e550e7"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "resp_c7fad4603eecbf8897bdfc99e27c1100ed282542c0bc1757"</span></span></code></pre></div>
 <p>Each call returns the text of the reply. An attribute is a named
 value that R attaches to an object, and <code><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr()</a></code> reads it. On
 the default route and the native route, the text also carries a
@@ -208,7 +209,7 @@ below sets it to 0.</p>
 <span><span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">prompt</span>, temperature <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Blue."</span></span>
 <span><span class="co">#&gt; attr(,"response_id")</span></span>
-<span><span class="co">#&gt; [1] "resp_c858e32caaa1abf0bb6b46a3f92492027bcf6b14b50a69cb"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "resp_1ffff69a10ddd7cb92ab51b93860bab7b4b32079fcf55f6e"</span></span></code></pre></div>
 <p>The package checks a few option names. For example, it stops with an
 error on a <code>stream</code> other than <code>FALSE</code> or
 <code>NULL</code>, because it reads a whole reply and not one sent in
@@ -224,9 +225,9 @@ still returns a reply with no error.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># "temprature" is not an option that the server knows</span></span>
 <span><span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">prompt</span>, temprature <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Blue."</span></span>
+<span><span class="co">#&gt; [1] "Blue \n\nLet me know if you’d like another one! 😊"</span></span>
 <span><span class="co">#&gt; attr(,"response_id")</span></span>
-<span><span class="co">#&gt; [1] "resp_e9fa3986708ece2925883ed9f7e59999867016bfe21ca658"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "resp_347b6e84bc01fd657beb1b4bcfbf95505008a2ba1aab0deb"</span></span></code></pre></div>
 <p>So a misspelled option can go unnoticed. A later section shows how to
 see the temperature that the server used. The last section shows what
 the native route does with the same call.</p>
@@ -252,7 +253,7 @@ string from <code>attr(first, "response_id")</code> also works.</p>
 <span><span class="va">first</span></span>
 <span><span class="co">#&gt; [1] "OK."</span></span>
 <span><span class="co">#&gt; attr(,"response_id")</span></span>
-<span><span class="co">#&gt; [1] "resp_342a9e50660c1e6ca25912df33559f6f0c9520f5a5012d3b"</span></span>
+<span><span class="co">#&gt; [1] "resp_e7c6904f7922da97fa97193b0e97831327b6fcd1a16da567"</span></span>
 <span></span>
 <span><span class="co"># Ask about the fact in a follow-up</span></span>
 <span><span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
@@ -263,7 +264,7 @@ string from <code>attr(first, "response_id")</code> also works.</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Green."</span></span>
 <span><span class="co">#&gt; attr(,"response_id")</span></span>
-<span><span class="co">#&gt; [1] "resp_f9f176cf59816d6b3f8c602dfcb91df493e0338c7d8b01ea"</span></span>
+<span><span class="co">#&gt; [1] "resp_eff37bdc54d96c993407480d672553dc47f7b117c25b1052"</span></span>
 <span></span>
 <span><span class="co"># Ask the same question with no response id</span></span>
 <span><span class="fu"><a href="../reference/lms_chat.html">lms_chat</a></span><span class="op">(</span></span>
@@ -273,7 +274,7 @@ string from <code>attr(first, "response_id")</code> also works.</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Blue."</span></span>
 <span><span class="co">#&gt; attr(,"response_id")</span></span>
-<span><span class="co">#&gt; [1] "resp_91e29038937144cf4478592485332f092e67d5cf7a5c997d"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "resp_95665de1de964fb55b9bc5eff839770206709a69f85a6e8a"</span></span></code></pre></div>
 <p>With the first reply as <code>previous_response_id</code>, the model
 answered from the first prompt. With no response id, the model did not
 see the first prompt, and its answer was a guess.</p>
@@ -468,7 +469,7 @@ during a request raises an error of the class
 <span><span class="fu">chat_or_na</span><span class="op">(</span><span class="va">model</span>, <span class="va">prompt</span>, temperature <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Blue."</span></span>
 <span><span class="co">#&gt; attr(,"response_id")</span></span>
-<span><span class="co">#&gt; [1] "resp_220281674e43b24eb1d488881bae74895a8bd66ea524b3c3"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "resp_476382b1e05d690f19e9db9ac6bdbbe9dbbb364e966f9f8c"</span></span></code></pre></div>
 <p>The first call below goes to port 1, where no server runs. The other
 calls misspell the model name or an option.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
@@ -511,13 +512,13 @@ before this vignette.</p>
 <code class="sourceCode R"><span><span class="co"># Remove the model from memory</span></span>
 <span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ℹ Unloading model: "google/gemma-3-1b"...</span></span>
-<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [525ms]</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [542ms]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span></span>
 <span><span class="co"># Stop the local server</span></span>
 <span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ LM Studio server stopped successfully.</span></span></code></pre></div>
-<!-- Knitted from chat-options.Rmd.orig with MD5 2a8ae2a16e437bfa1779916f7fd57fd6. -->
+<!-- Knitted from chat-options.Rmd.orig with MD5 4743935643e7825bd3fea435c9e893c3. -->
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

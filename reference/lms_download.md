@@ -296,7 +296,7 @@ API](https://lmstudio.ai/docs/developer/rest/download)
 
 ``` r
 if (FALSE) { # \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 
 # Download a model by its HuggingFace identifier
 job_id <- lms_download("google/gemma-3-1b")

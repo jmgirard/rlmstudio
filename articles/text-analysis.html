@@ -128,8 +128,9 @@ loaded models” shows the output of <code><a href="../reference/list_instances.
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"google/gemma-3-1b"</span></span>
 <span></span>
-<span><span class="co"># Start the server, and wait up to about 30 seconds for it to answer</span></span>
-<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>wait <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
+<span><span class="co"># Start the server on port 1234, and wait up to about 30 seconds for it to</span></span>
+<span><span class="co"># answer</span></span>
+<span><span class="fu"><a href="../reference/lms_server_start.html">lms_server_start</a></span><span class="op">(</span>port <span class="op">=</span> <span class="fl">1234</span>, wait <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Load the model with room for 1,024 tokens</span></span>
 <span><span class="fu"><a href="../reference/lms_load.html">lms_load</a></span><span class="op">(</span><span class="va">model</span>, context_length <span class="op">=</span> <span class="fl">1024</span><span class="op">)</span></span></code></pre></div>
@@ -273,10 +274,10 @@ one of three labels, and <code>stars</code> must be a whole number.</p>
 <span><span class="va">reviews</span><span class="op">$</span><span class="va">stars</span> <span class="op">&lt;-</span> <span class="va">rated</span><span class="op">$</span><span class="va">stars</span></span>
 <span><span class="va">reviews</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"sentiment"</span>, <span class="st">"stars"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;   id sentiment stars</span></span>
-<span><span class="co">#&gt; 1  1     mixed     4</span></span>
+<span><span class="co">#&gt; 1  1  positive     4</span></span>
 <span><span class="co">#&gt; 2  2  negative     5</span></span>
 <span><span class="co">#&gt; 3  3  positive     5</span></span>
-<span><span class="co">#&gt; 4  4  negative     3</span></span>
+<span><span class="co">#&gt; 4  4  negative     1</span></span>
 <span><span class="co">#&gt; 5  5  positive     5</span></span>
 <span><span class="co">#&gt; 6  6      &lt;NA&gt;    NA</span></span></code></pre></div>
 <p>A small model such as <code>google/gemma-3-1b</code> makes mistakes.
@@ -329,14 +330,14 @@ column is <code>NULL</code>, so the loop below would skip every row.</p>
 <span><span class="co">#&gt;    candidate_token candidate_logprob</span></span>
 <span><span class="co">#&gt; 1                3         -0.312500</span></span>
 <span><span class="co">#&gt; 2                4         -1.578125</span></span>
-<span><span class="co">#&gt; 3                5         -3.031250</span></span>
+<span><span class="co">#&gt; 3                5         -3.046875</span></span>
 <span><span class="co">#&gt; 4                2         -6.265625</span></span>
 <span><span class="co">#&gt; 5                1         -9.718750</span></span>
-<span><span class="co">#&gt; 6               **        -10.234375</span></span>
-<span><span class="co">#&gt; 7                         -13.562500</span></span>
-<span><span class="co">#&gt; 8                6        -14.203125</span></span>
-<span><span class="co">#&gt; 9               ★★        -14.640625</span></span>
-<span><span class="co">#&gt; 10             ★★★        -14.765625</span></span></code></pre></div>
+<span><span class="co">#&gt; 6               **        -10.265625</span></span>
+<span><span class="co">#&gt; 7                         -13.593750</span></span>
+<span><span class="co">#&gt; 8                6        -14.218750</span></span>
+<span><span class="co">#&gt; 9               ★★        -14.671875</span></span>
+<span><span class="co">#&gt; 10             ★★★        -14.796875</span></span></code></pre></div>
 <p>The first token of the reply, <code>3</code>, is the candidate with
 the highest log probability. The <code>\n</code> after it is a line
 break.</p>
@@ -366,11 +367,11 @@ has no candidates, so the loop skips it, and its score stays
 <span></span>
 <span><span class="va">reviews</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"stars"</span>, <span class="st">"score"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;   id stars    score</span></span>
-<span><span class="co">#&gt; 1  1     4 3.304446</span></span>
-<span><span class="co">#&gt; 2  2     5 1.585227</span></span>
-<span><span class="co">#&gt; 3  3     5 4.995245</span></span>
-<span><span class="co">#&gt; 4  4     3 1.978156</span></span>
-<span><span class="co">#&gt; 5  5     5 4.990581</span></span>
+<span><span class="co">#&gt; 1  1     4 3.303161</span></span>
+<span><span class="co">#&gt; 2  2     5 1.566338</span></span>
+<span><span class="co">#&gt; 3  3     5 4.995173</span></span>
+<span><span class="co">#&gt; 4  4     1 1.974338</span></span>
+<span><span class="co">#&gt; 5  5     5 4.990429</span></span>
 <span><span class="co">#&gt; 6  6    NA       NA</span></span></code></pre></div>
 <p>The score of the second review is below 2, but its star rating is 5.
 The two came from separate requests with different system prompts. When
@@ -451,12 +452,12 @@ slow.”</p>
 <span></span>
 <span><span class="va">reviews</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"summary"</span>, <span class="st">"similarity"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;   id                         summary similarity</span></span>
-<span><span class="co">#&gt; 1  1    Excellent, but slow service.  0.8813357</span></span>
-<span><span class="co">#&gt; 2  2 **A disappointing experience.**  0.4035554</span></span>
-<span><span class="co">#&gt; 3  3                Excellent pizza!  0.4531046</span></span>
-<span><span class="co">#&gt; 4  4            Terrible experience.  0.5790481</span></span>
-<span><span class="co">#&gt; 5  5            Relaxing and lovely.  0.5259885</span></span>
-<span><span class="co">#&gt; 6  6                            &lt;NA&gt;  0.3849392</span></span></code></pre></div>
+<span><span class="co">#&gt; 1  1    Excellent, but slow service.  0.8815064</span></span>
+<span><span class="co">#&gt; 2  2 **A disappointing experience.**  0.4035788</span></span>
+<span><span class="co">#&gt; 3  3                Excellent pizza!  0.4533284</span></span>
+<span><span class="co">#&gt; 4  4            Terrible experience.  0.5790611</span></span>
+<span><span class="co">#&gt; 5  5            Relaxing and lovely.  0.5259393</span></span>
+<span><span class="co">#&gt; 6  6                            &lt;NA&gt;  0.3849732</span></span></code></pre></div>
 <p>Each embedding of this model holds 768 numbers, one for each column
 of the matrix. The first review, about slow service, is the closest to
 the query. Even unrelated texts get a similarity well above 0 here, so
@@ -475,12 +476,12 @@ the <code>text</code> column.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">reviews</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">reviews</span><span class="op">)</span> <span class="op">!=</span> <span class="st">"text"</span><span class="op">]</span></span>
 <span><span class="co">#&gt;   id                         summary sentiment stars    score similarity</span></span>
-<span><span class="co">#&gt; 1  1    Excellent, but slow service.     mixed     4 3.304446  0.8813357</span></span>
-<span><span class="co">#&gt; 2  2 **A disappointing experience.**  negative     5 1.585227  0.4035554</span></span>
-<span><span class="co">#&gt; 3  3                Excellent pizza!  positive     5 4.995245  0.4531046</span></span>
-<span><span class="co">#&gt; 4  4            Terrible experience.  negative     3 1.978156  0.5790481</span></span>
-<span><span class="co">#&gt; 5  5            Relaxing and lovely.  positive     5 4.990581  0.5259885</span></span>
-<span><span class="co">#&gt; 6  6                            &lt;NA&gt;      &lt;NA&gt;    NA       NA  0.3849392</span></span></code></pre></div>
+<span><span class="co">#&gt; 1  1    Excellent, but slow service.  positive     4 3.303161  0.8815064</span></span>
+<span><span class="co">#&gt; 2  2 **A disappointing experience.**  negative     5 1.566338  0.4035788</span></span>
+<span><span class="co">#&gt; 3  3                Excellent pizza!  positive     5 4.995173  0.4533284</span></span>
+<span><span class="co">#&gt; 4  4            Terrible experience.  negative     1 1.974338  0.5790611</span></span>
+<span><span class="co">#&gt; 5  5            Relaxing and lovely.  positive     5 4.990429  0.5259393</span></span>
+<span><span class="co">#&gt; 6  6                            &lt;NA&gt;      &lt;NA&gt;    NA       NA  0.3849732</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="the-loaded-models">The loaded models<a class="anchor" aria-label="anchor" href="#the-loaded-models"></a>
@@ -515,7 +516,7 @@ this vignette.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old_options</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/lms_server_stop.html">lms_server_stop</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ LM Studio server stopped successfully.</span></span></code></pre></div>
-<!-- Knitted from text-analysis.Rmd.orig with MD5 919992eeb7223045bff5fa336f2c0cd8. -->
+<!-- Knitted from text-analysis.Rmd.orig with MD5 4e82f2b36e650487dad60154f9aa97f2. -->
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
