@@ -37,7 +37,8 @@
 #' `lms_server_start(port = 1234)`. With no `port`, LM Studio uses the port
 #' that it used last. For any other `host`, start the server on the machine
 #' that `host` names, or give `host` the address that your server listens on.
-#' The condition message gives the same hint for the `host` of the call.
+#' A `host` that does not parse gets this second hint too. The condition
+#' message gives the same hint for the `host` of the call.
 #'
 #' The check reads the port and nothing else. Any process holding that port
 #' accepts the connection, so the condition is not raised even though no LM

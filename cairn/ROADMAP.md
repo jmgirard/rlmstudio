@@ -10,7 +10,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M085 | The no-server hints name the port of the host that the call asked | in-progress | — | normal | milestones/M085-no-server-hint-port.md |
+| M085 | The no-server hints name the port of the host that the call asked | review | — | normal | milestones/M085-no-server-hint-port.md |
 | M086 | Every alert of the package follows the quiet option | planned | — | normal | milestones/M086-quiet-alerts.md |
 | M087 | CRAN skips the slow tests and runs the request-body tests | planned | — | normal | milestones/M087-cran-test-time.md |
 | M084 | The server-start examples pass port 1234, and the no-port message names the last-used port | done | — | normal | milestones/archive/M084-server-start-port.md |

@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M085: The no-server hints name the port of the host that the call asked
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -56,8 +56,8 @@ A user who follows a no-server hint starts the server on the port that the faile
 - [x] T2: Test first beside the lookup tests of `tests/testthat/test-model-check.R:465`: the AC2 cases, red against `R/chat.R:997`. Then build that hint with the T1 helper.
 - [x] T3: Rewrite `R/conditions.R:34-36` to match the T1 hint. Run `devtools::document()` and read the section in `man/rlmstudio-conditions.Rd`.
 - [x] T4: Test first: add the AC4 assertion to the successful headless-install test at `tests/testthat/test-vignette-claims.R:514` and see it red. Then edit `R/setup.R:235`.
-- [ ] T5: One NEWS bullet in the development section, written against the T1 to T4 output.
-- [ ] T6: `devtools::test()` and `devtools::check()` clean.
+- [x] T5: One NEWS bullet in the development section, written against the T1 to T4 output.
+- [x] T6: `devtools::test()` and `devtools::check()` clean.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -78,3 +78,6 @@ A user who follows a no-server hint starts the server on the port that the faile
 - 2026-10-18: T2 done: `reply_model_serves()` builds its hint with `no_server_hint()`; the new lookup test in `test-model-check.R` went red on both routes and both hosts first, then green; `devtools::test()` 0 failed, 0 errors.
 - 2026-10-18: T3 done: the "Server not running" section names `localhost`, `127.0.0.1`, and `lms_server_start(port = 1234)` for the default host; `devtools::document()` rewrote `man/rlmstudio-conditions.Rd` and the 13 pages that inherit it; `devtools::test()` 0 failed, 0 errors.
 - 2026-10-18: T4 done: the headless install message names `lms_server_start(port = 1234)`; the new assertion reads the text after the success line, and went red on the old message first; `devtools::test()` 0 failed, 0 errors.
+- 2026-10-18: T5 done: one NEWS bullet in the development section; the simple-english hook split two long sentences.
+- 2026-10-18: T6 done: `devtools::check()` 0 errors, 0 warnings, 0 notes (4m 40s), run before the claim-audit wording fixes, which touch help prose and NEWS only.
+- 2026-10-18: claim audit: 27 claims read, 2 corrected — NEWS.md (the error says how to start the server, not always a port), R/conditions.R (a host that does not parse gets the second hint).
