@@ -123,3 +123,9 @@ spawned: diff-bug, blame-history, prior-review
 - blame-history #5: a re-run of a run that does not deploy keeps its run-id group — reject, false as a defect: a re-run starts after the first attempt ends, so nothing waits on the first attempt.
 - prior-review #1: the pkgdown group differs in shape from the other four workflows, which M078 set to `${{ github.workflow }}-${{ github.ref }}` — reject, planned change: M080 F1 needs a deploy-only group, and the lens itself calls it a deliberate divergence.
 - After 8e7c724: `git diff d353754 HEAD -- .github` changes comment lines only, and the parse check still passes AC1 to AC3, so the AC4 run stands for the file.
+
+Resume after the hotfix, 2026-10-18. PR #84 was open with every box ticked and an approval recorded, so route (c) re-ran step 1. `main` had moved to 8b7ad16 (PR #85, the test fix), and merge f0605b5 brought it into the branch. The merge changed only `tests/testthat/test-mock-http-helper.R`.
+
+- AC1 to AC3: the parse check on f0605b5 gives the same results as pass 2. Pass.
+- AC4: `git diff d353754 f0605b5 -- .github` changes comment lines only, so run 39150570451 stands for the file. Pass.
+- `devtools::test()` on f0605b5: 0 failed, 0 errors, 3 skipped.
