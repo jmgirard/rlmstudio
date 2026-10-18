@@ -42,42 +42,42 @@ reader asks for one). The other vignettes.
      insertion, removal, or reorder renumbers the labels and the Coverage
      lines together. -->
 
-- [ ] AC1: The "Install LM Studio" section of
+- [x] AC1: The "Install LM Studio" section of
       `vignettes/getting-started.Rmd.orig` tells the reader to open the LM
       Studio app at least once after installing it and before the
       `has_lms()` check. Any reason the section gives for this step
       paraphrases a sentence of https://lmstudio.ai/docs/cli as read on the
       day of review. If the page gives no reason, the section gives none.
-- [ ] AC2: The "Download the model" section names both `status` values that
+- [x] AC2: The "Download the model" section names both `status` values that
       `lms_download_status()` returns for a finished download:
       `"already_downloaded"` and the value for a finished job id. One of its
       chunks reads the value out of the result. The job-id value equals the
       `status` that a live `lms_download_status()` call returns after
       `lms_download()` has finished for a small model that was not on disk
       before the call. A re-check downloads such a model and deletes none.
-- [ ] AC3: In a live run where the server was last started on port 8080 and
+- [x] AC3: In a live run where the server was last started on port 8080 and
       then stopped, the code of the "Start the server" section, run as
       written, makes `lms_server_ready()` return `TRUE` and `list_models()`
       return a data frame, both called with their default host.
-- [ ] AC4: The "Find a model" section tells the reader where to find the
+- [x] AC4: The "Find a model" section tells the reader where to find the
       key of a model that is not on their computer. In a live run, the key
       read from that place for `google/gemma-3-1b` and for one other model,
       each passed to `lms_download()`, returns a job id or
       `"already_downloaded"`.
-- [ ] AC5: The `lms_server_ready()` help no longer says that a fresh LM
+- [x] AC5: The `lms_server_ready()` help no longer says that a fresh LM
       Studio install has no models downloaded: the sentence of `R/serve.R`
       that begins "An empty list counts, because a fresh LM Studio install"
       is replaced by one that makes no claim about what a new install
       holds. After `devtools::document()`, `git status man/` shows no change
       against the branch commit.
-- [ ] AC6: `vignettes/getting-started.Rmd` is the output of
+- [x] AC6: `vignettes/getting-started.Rmd` is the output of
       `data-raw/knit-vignettes.R` run on the new source, and
       `tests/testthat/test-vignette-knit.R` passes. In the source, the word
       list of the vignette prose convention of `cairn/DESIGN.md`, ignoring
       case and matched as substrings, finds no match; the regular
       expressions of the vignette code convention find no match inside R
       chunks; and a search for "`r " finds no inline R expression.
-- [ ] AC7: `tests/testthat/test-vignette-claims.R` has a test for each of
+- [x] AC7: `tests/testthat/test-vignette-claims.R` has a test for each of
       the two package claims that the new text rests on. The port test goes
       through `lms_server_start(port = 1234)` with the CLI call mocked and
       fails when `port` is dropped in `lms_server_start()` or in
@@ -166,3 +166,14 @@ reader asks for one). The other vignettes.
 ## Review
 <!-- owner: review · exclusive; evidence per criterion, consistency-gate
      results, review findings + triage. -->
+
+Pass 1, 2026-10-18, branch head 8de63ca, main a51b423 (not moved since the cut).
+
+- AC1 evidence: `getting-started.Rmd.orig` "Install LM Studio" says "After you install LM Studio, open the app once, and then restart R", before the `check-lms` chunk that calls `has_lms()`. Its reason, "you need to run LM Studio at least once before you can use `lms`", paraphrases https://lmstudio.ai/docs/cli, read 2026-10-18: "You need to run LM Studio at least once before you can use lms."
+- AC2 evidence: the section names `"downloading"`, `"completed"` ("the download finished"), and `"already_downloaded"`; the `download` chunk runs `status <- lms_download_status(job_id)` then `status$status`. Live 2026-10-18: `lms_download("liquid/lfm2-350m")` (not on disk before; `lms ls` listed no lfm model) gave job_a2d441b906, and `lms_download_status()` read "downloading" then "completed". No model was deleted.
+- AC3 evidence: live 2026-10-18: `lms_server_start(port = 8080, wait = 30)`, `lms_server_stop()`, then `lms server status --json` gave `{"running":false,"port":8080}`. The `start-server` chunk, read from the source and evaluated as written, returned `TRUE` from its `lms_server_ready()`; `list_models(quiet = TRUE)` with the default host then returned a data.frame of 6 rows. Server stopped with last-used port 1234.
+- AC4 evidence: "Find a model" points to https://lmstudio.ai/models and says a model's own page address ends with its key. Live 2026-10-18: `lms_download("google/gemma-3-1b")` (from https://lmstudio.ai/models/google/gemma-3-1b) gave "already_downloaded"; `lms_download("liquid/lfm2-350m")` (from https://lmstudio.ai/models/liquid/lfm2-350m, linked from the lfm2 family page) gave job id job_a2d441b906.
+- AC5 evidence: `grep -n "fresh LM Studio install" R/serve.R man/lms_server_ready.Rd` finds nothing; `R/serve.R:757` now reads "An empty list counts, so a server that lists no models gives `TRUE`", no claim about a new install. After `devtools::document()`, `git status --short man/ NAMESPACE` is empty.
+- AC6 evidence: the last line of `getting-started.Rmd` names MD5 7575ee7baed14e75361794e2f884d496, which `md5 -q` gives for the source, written by `data-raw/knit-vignettes.R` (work log, claim-audit re-knit); `test-vignette-knit.R` passes inside the full suite. The 14 prose words (case-insensitive substring) and the 16 code regexes over the 58 R chunk lines found no match; "`r " found 0. Each search went red on a planted line during T5.
+- AC7 evidence: in scratch copies, each plant alone: port dropped at the `build_args_server_start()` call of `lms_server_start()` → the port test 1 failed; `--port` dropped in `build_args_server_start()` → 1 failed; `return(NULL)` before the status request (job-id branch) → status test 2 failed and 1 error; the `"already_downloaded"` test replaced by `FALSE` → 2 failed; unchanged controls 0 failed for both tests. The port test calls `lms_server_start(port = 1234, wait = 0)` with `processx::run` mocked; the job-id mock's status is "completed" (AC2). `devtools::test()`: 24444 expectations, 0 failed, 0 errors, 0 warnings, 3 skipped (live tests). `devtools::check()`: 0 errors, 0 warnings, 0 notes, so no note beyond main.
+- Gate: `cairn_validate.py` all checks passed; `devtools::document()` no diff; `pkgdown::check_pkgdown()` no problems; README not touched; NEWS.md has the entry, with no milestone number; no new top-level files; no principle changed, so `cairn_impact` skipped.
