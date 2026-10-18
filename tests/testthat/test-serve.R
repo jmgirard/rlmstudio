@@ -115,8 +115,10 @@ test_that("the no-server abort names the port of a local host", {
 
 test_that("the no-server abort names no start call for another host", {
   local_mocked_bindings(is_server_running = function(...) FALSE)
-  # The second host does not parse: its port is not a number.
-  for (host in c("http://192.168.1.5:1234", "http://localhost:abc")) {
+  # The second host does not parse: its port is not a number. The third holds
+  # braces, which must reach the message as text and not run as cli code.
+  remote_hosts <- c("http://192.168.1.5:1234", "http://localhost:abc", "http://{x}:1")
+  for (host in remote_hosts) {
     test_that(host, {
       err <- expect_error(
         stop_if_no_server(host),

@@ -8,7 +8,7 @@
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
-- **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
+- **Principles touched:** GP3   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — two error messages, a help section that 13 pages inherit, and an install message   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
 - **Branch/PR:** m085-no-server-hint-port   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
@@ -82,6 +82,7 @@ A user who follows a no-server hint starts the server on the port that the faile
 - 2026-10-18: T6 done: `devtools::check()` 0 errors, 0 warnings, 0 notes (4m 40s), run before the claim-audit wording fixes, which touch help prose and NEWS only.
 - 2026-10-18: claim audit: 27 claims read, 2 corrected — NEWS.md (the error says how to start the server, not always a port), R/conditions.R (a host that does not parse gets the second hint).
 - 2026-10-18: review added the template's empty `## Decisions` heading and the `## Review` section, which the plan file left out; evidence recorded for AC1 to AC6 and the consistency gate.
+- 2026-10-18: review fix-now: D-042 added (trades GP3), DESIGN.md:52 corrected, `Principles touched` set to GP3 (the plan missed that GP3 names the start call), help example, NEWS letter-case sentence, brace-host test row.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
@@ -97,3 +98,17 @@ A user who follows a no-server hint starts the server on the port that the faile
 - AC5: `NEWS.md:9`, one bullet in the development section: the `rlmstudio_no_server` error "says to run `lms_server_start()` with the port of `host`" for `localhost` or `127.0.0.1`, 1234 when `host` names no port, and "The headless `install_lmstudio()` message now names `lms_server_start(port = 1234)`". It names the port for local hosts only, as the code does; no milestone number in it.
 - AC6: 2026-10-18 on the branch head `bc98fcb`: `devtools::test()` 0 failed, 0 errors (3 skipped); `devtools::check()` 0 errors, 0 warnings, 0 notes (5m 2s).
 - Consistency gate: `cairn_validate.py` all checks passed; `devtools::document()` no diff; `pkgdown::check_pkgdown()` no problems; README not touched; NEWS has the entry; no new top-level file; no principle changed, so no `cairn_impact` run.
+- spawned: diff-bug, blame-history, prior-review.
+- blame-history #1: DESIGN.md:52 and GP3 say a server-down abort names `lms_server_start()`, and the remote hint names none, with no D-entry — fix now: D-042 (trades GP3, records the user's plan-gate rule), DESIGN.md:52 corrected in place.
+- diff-bug #1: DESIGN.md:52 still says every server-down abort names `lms_server_start` — fix now, same fix as blame-history #1.
+- diff-bug #2: the `rlmstudio-conditions` example prefixes "The server is not running: " to a message that now has a line break and an "i" line — fix now: the example prints `conditionMessage(cnd)` alone.
+- diff-bug #3: `::1`, `localhost.`, `127.0.0.2`, and `0.0.0.0` get the remote hint — reject, planned change (Scope Out, the user's plan-gate choice; D-042).
+- diff-bug #4: `http://localhost:0` gives `lms_server_start(port = 0)`, and `https://localhost` gives 1234 — reject, planned change: AC1 binds the hint to the port the probe uses, and the probe reads the same ports.
+- diff-bug #5: the NEWS bullet leaves out "in any letter case" — fix now: one sentence added.
+- diff-bug #6: no test sends a host with braces through the hint, so a later paste of `host` into the cli string would pass — fix now: `http://{x}:1` row added to the remote-host test; a planted `paste0()` hint failed it with a cli evaluation error, not `rlmstudio_no_server`.
+- diff-bug #7: the hint is formatted in the helper and spliced as a value — reject, style (it follows LESSONS M012/M018).
+- diff-bug #8: the AC2 test's probe mock answers TRUE once, then FALSE, so it depends on probe order — reject, false as a defect: the existing lookup test at `test-model-check.R:537` uses the same mock, and a probe-order change would fail both visibly.
+- blame-history #2: `::1` gets the remote hint though the plan's reason (the call starts a server on this machine) also covers it — reject, planned change (Scope Out, D-042).
+- blame-history #3: the help now says LM Studio uses its last port with no `port` — reject, false as a defect: the claim audit read `lms server start --help`, which says so, and M084 states it elsewhere.
+- blame-history #4: the abort changes from one sentence to a main line and an "i" line — reject, planned change (the hint text is the deliverable; D-001 covers message text before 1.0).
+- prior-review #1: `::1` gets the remote hint — reject, planned change (Scope Out, D-042).

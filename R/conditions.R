@@ -399,7 +399,7 @@
 #' tryCatch(
 #'   list_models(host = "http://localhost:9999"),
 #'   rlmstudio_no_server = function(cnd) {
-#'     message("The server is not running: ", conditionMessage(cnd))
+#'     message(conditionMessage(cnd))
 #'   },
 #'   rlmstudio_api_error = function(cnd) {
 #'     message("The API call failed with status ", cnd$status)
