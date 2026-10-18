@@ -10,7 +10,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M082 | The pkgdown deploy runs in its own job, and only that job can write or queue | planned | — | normal | milestones/M082-pkgdown-deploy-job.md |
+| M082 | The pkgdown deploy runs in its own job, and only that job can write or queue | in-progress | — | normal | milestones/M082-pkgdown-deploy-job.md |
 | M081 | The CRAN check skips the three argument-check test files | done | — | normal | milestones/archive/M081-cran-skip-arg-check-files.md |
 | M080 | A pkgdown run deploys the site only from the default branch or a release | done | — | normal | milestones/archive/M080-pkgdown-deploy-default-branch.md |
 | M079 | The text checks strip a class before they read a name, and their tests turn a sending site red | done | — | normal | milestones/archive/M079-text-check-class-strip.md |
