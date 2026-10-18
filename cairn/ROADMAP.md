@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-02 (M081 archived, two follow-up rows added, M078 row pruned, cairn_validate green)_
+_Last hygiene check: 2026-10-17 (lessons pass: dropped 2026-09-20 M009 macOS zstd and 2026-09-20 M011 pkgcache (planner test), 2026-09-22 M025 fromJSON (enforcement); merged M013 into M003, M018 into M012, M015 into M019; corrected M009 knit; compressed M002, M005 test_path, M011 triggers; no decision entry; validate green)_
 _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
 
 ## Milestones
