@@ -825,11 +825,13 @@ openai_reply_value <- function(resp, resp_data, logprobs, schema) {
   }
 
   if (isTRUE(logprobs)) {
-    # Return S3 object with NULL logprobs (since OpenAI endpoint is a stub in LM Studio)
+    # The package reads no logprobs from this route, so the result holds
+    # `NULL` and the call says so (D-043).
     value <- validate_lms_chat_result(
       new_lms_chat_result(text = res_text, logprobs = NULL)
     )
     warn_if_cut_off(finish_reason)
+    warn_no_openai_logprobs()
     return(value)
   }
   if (!is.null(schema)) {
@@ -878,6 +880,27 @@ warn_if_cut_off <- function(finish_reason) {
       call = NULL
     )
   }
+}
+
+#' Warn that the OpenAI route returns no logprobs
+#'
+#' Called only after every check on the reply has passed, and after
+#' `warn_if_cut_off()`, so a reply never both warns and fails. The warning goes
+#' through `cli::cli_warn()` and not through the quiet helpers, because it is
+#' the only sign that the logprobs asked for are missing (D-043).
+#' `lms_chat_batch()` muffles it for each input and gives one warning of the
+#' same class for the batch.
+#'
+#' @noRd
+warn_no_openai_logprobs <- function() {
+  cli::cli_warn(
+    c(
+      "The {.val openai} route returns no log probabilities, so the {.field logprobs} of the result is {.code NULL}.",
+      "i" = "Use {.fn lms_chat_openresponses} or {.code lms_chat(api_type = \"openresponses\")} for log probabilities."
+    ),
+    class = "rlmstudio_no_logprobs",
+    call = NULL
+  )
 }
 
 #' Abort on a response body that is a bare JSON value
@@ -2151,6 +2174,7 @@ lms_chat_batch <- function(
   abort_with_results <- function(cnd) {
     cnd$results <- results
     warn_cut_off_inputs()
+    warn_no_logprobs_inputs()
     stop(cnd)
   }
   # A refused token or a model the server cannot find fails every input the
@@ -2242,6 +2266,28 @@ lms_chat_batch <- function(
       class = "rlmstudio_reply_cut_off"
     )
   }
+  # The number of OpenAI replies that came back with no logprobs. Each input's
+  # own warning is muffled, and the batch gives one warning for all of them
+  # after the cut-off warning (D-043).
+  no_logprobs <- 0L
+  note_no_logprobs <- function(w) {
+    no_logprobs <<- no_logprobs + 1L
+    invokeRestart("muffleWarning")
+  }
+  # Shown whatever `quiet` says, because it is the only sign that the logprobs
+  # asked for are missing (D-043).
+  warn_no_logprobs_inputs <- function() {
+    if (no_logprobs == 0L) {
+      return(invisible())
+    }
+    cli::cli_warn(
+      c(
+        "The {.val openai} route returns no log probabilities, so the {.field logprobs} of {no_logprobs} repl{?y/ies} {?is/are} {.code NULL}.",
+        "i" = "Use {.code api_type = \"openresponses\"} for log probabilities."
+      ),
+      class = "rlmstudio_no_logprobs"
+    )
+  }
   # The dots go through `chat_dots`, where the native route has set the dot
   # that fills `logprobs` to `FALSE` above.
   # `simplify` comes after `...`, so only its exact name matches it, and
@@ -2278,7 +2324,8 @@ lms_chat_batch <- function(
             quote = TRUE
           )
         },
-        rlmstudio_reply_cut_off = note_cut_off
+        rlmstudio_reply_cut_off = note_cut_off,
+        rlmstudio_no_logprobs = note_no_logprobs
       ),
       rlmstudio_api_error = keep_or_abort_api,
       rlmstudio_bad_response = keep_or_abort_bad,
@@ -2351,6 +2398,7 @@ lms_chat_batch <- function(
   }
 
   warn_cut_off_inputs()
+  warn_no_logprobs_inputs()
 
   # Keyed on the route, not on the replies, so the columns and their types
   # are there even when every input failed. A failed input has no values.

@@ -107,10 +107,14 @@ test_that("simplify = FALSE returns the response with the reply unparsed", {
 })
 
 test_that("logprobs = TRUE returns a chat result holding the unparsed reply", {
-  out <- call_with_reply(
-    completion_body(quoted('{"score": 3}')),
-    schema = score_schema,
-    logprobs = TRUE
+  # The route returns no logprobs, so the call says so (D-043).
+  expect_warning(
+    out <- call_with_reply(
+      completion_body(quoted('{"score": 3}')),
+      schema = score_schema,
+      logprobs = TRUE
+    ),
+    class = "rlmstudio_no_logprobs"
   )
   expect_s3_class(out$value, "lms_chat_result")
   expect_identical(out$value$text, '{"score": 3}')
@@ -328,14 +332,20 @@ test_that("a text reply cut off at the token limit warns and keeps its value", {
     }
     cut <- call("length")
     done <- call("stop")
+    # With logprobs, each call also gives the no-logprobs warning, after the
+    # cut-off warning (D-043).
+    extra <- if (isTRUE(setting$args$logprobs)) 1L else 0L
     expect_identical(cut$value$value, done$value$value, info = info)
-    expect_identical(length(cut$warnings), 1L, info = info)
+    expect_identical(length(cut$warnings), 1L + extra, info = info)
     expect_s3_class(cut$warnings[[1]], "rlmstudio_reply_cut_off")
     expect_length_limit_message(cut$warnings[[1]], info = info)
     # A reply that the model ended on its own, or with no finish reason,
-    # gives no warning.
-    expect_identical(length(done$warnings), 0L, info = info)
-    expect_identical(length(call(NULL)$warnings), 0L, info = info)
+    # gives no cut-off warning.
+    expect_identical(length(done$warnings), extra, info = info)
+    expect_identical(length(call(NULL)$warnings), extra, info = info)
+    for (w in c(cut$warnings[-1], done$warnings)) {
+      expect_true(inherits(w, "rlmstudio_no_logprobs"), info = info)
+    }
   }
   # Stated apart from the call with "stop": the text comes back as sent.
   expect_identical(
@@ -539,17 +549,21 @@ test_that("batch reads shortened argument names as lms_chat() does", {
   expect_identical(out, list(list(score = 3L)))
 
   # `log` is how lms_chat() would take `logprobs`, so the reply is not parsed
-  # and the vector format names logprobs, not the schema.
+  # and the vector format names logprobs, not the schema. The route returns
+  # no logprobs, so the batch also says so (D-043).
   expect_warning(
-    lms_chat_batch(
-      "a-model",
-      "first",
-      quiet = TRUE,
-      api_type = "openai",
-      log = TRUE,
-      schema = score_schema
+    expect_warning(
+      lms_chat_batch(
+        "a-model",
+        "first",
+        quiet = TRUE,
+        api_type = "openai",
+        log = TRUE,
+        schema = score_schema
+      ),
+      "cannot store logprobs"
     ),
-    "cannot store logprobs"
+    class = "rlmstudio_no_logprobs"
   )
 })
 
@@ -1118,14 +1132,18 @@ test_that("a schema that is not an object schema adds no column", {
 test_that("an object schema adds no column with logprobs or outside a data frame", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(200L, completion_body(quoted('{"score": 3}'))))
-  out <- lms_chat_batch(
-    "a-model",
-    c("first", "second"),
-    format = "data.frame",
-    quiet = TRUE,
-    api_type = "openai",
-    logprobs = TRUE,
-    schema = score_schema
+  # The route returns no logprobs, so the batch says so (D-043).
+  expect_warning(
+    out <- lms_chat_batch(
+      "a-model",
+      c("first", "second"),
+      format = "data.frame",
+      quiet = TRUE,
+      api_type = "openai",
+      logprobs = TRUE,
+      schema = score_schema
+    ),
+    class = "rlmstudio_no_logprobs"
   )
   expect_identical(
     names(out),

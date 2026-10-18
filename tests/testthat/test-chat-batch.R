@@ -187,9 +187,11 @@ test_that("a failed input leaves NULL logprobs in a data frame", {
     expect_named(res$out, c("input", "output", "logprobs", usage_columns))
     expect_identical(res$out$output, c("reply 1", NA, "reply 3"), info = cls)
     expect_null(res$out$logprobs[[2]])
-    expect_length(res$warnings, 1L)
-    expect_match(res$warnings, "1 input failed, at position 2\\.", info = cls)
-    expect_match(res$warnings, 'format = "list"', fixed = TRUE, info = cls)
+    # The OpenAI route returns no logprobs, so its warning follows (D-043).
+    expect_length(res$warnings, 2L)
+    expect_match(res$warnings[[1]], "1 input failed, at position 2\\.", info = cls)
+    expect_match(res$warnings[[1]], 'format = "list"', fixed = TRUE, info = cls)
+    expect_match(res$warnings[[2]], "no log probabilities", fixed = TRUE, info = cls)
   }
 
   # The openai route leaves every logprobs slot NULL, so this route shows the
@@ -653,8 +655,11 @@ test_that("an OpenAI reply with null content fails its input in a logprobs data 
     "openai",
     logprobs = TRUE
   )
-  expect_length(res$warnings, 1L)
+  # The first reply returns a value, so the no-logprobs warning follows
+  # (D-043).
+  expect_length(res$warnings, 2L)
   expect_match(res$warnings[[1]], "1 input failed, at position 2\\.")
+  expect_match(res$warnings[[2]], "logprobs of 1 reply is", fixed = TRUE)
   expect_identical(res$out$output, c("reply 1", NA))
   expect_identical(res$out$logprobs, list(NULL, NULL))
 })
@@ -964,8 +969,14 @@ test_that("the other routes add the usage columns and no stats column", {
       expected <- if (logprobs) c("input", "output", "logprobs") else c("input", "output")
       expect_identical(names(res$out), c(expected, usage_columns), info = info)
       expect_identical(res$out$output, c("reply 1", "reply 2"), info = info)
-      # A failed input would warn, so no warning means both inputs read.
-      expect_identical(res$warnings, character(), info = info)
+      # A failed input would warn, so no warning means both inputs read. The
+      # OpenAI route with logprobs gives its no-logprobs warning alone (D-043).
+      if (api_type == "openai" && logprobs) {
+        expect_identical(length(res$warnings), 1L, info = info)
+        expect_match(res$warnings, "logprobs of 2 replies", fixed = TRUE, info = info)
+      } else {
+        expect_identical(res$warnings, character(), info = info)
+      }
     }
   }
 

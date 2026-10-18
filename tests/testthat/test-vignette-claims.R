@@ -824,7 +824,10 @@ test_that("lms_chat() returns log probabilities on the default route alone", {
   ))
 
   default <- lms_chat("a-model", "hi", logprobs = TRUE)
-  openai <- lms_chat("a-model", "hi", api_type = "openai", logprobs = TRUE)
+  expect_warning(
+    openai <- lms_chat("a-model", "hi", api_type = "openai", logprobs = TRUE),
+    class = "rlmstudio_no_logprobs"
+  )
   expect_warning(
     native <- lms_chat("a-model", "hi", api_type = "native", logprobs = TRUE),
     "does not support logprobs",
