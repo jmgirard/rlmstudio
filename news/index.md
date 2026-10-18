@@ -1,6 +1,10 @@
 # Changelog
 
+## rlmstudio (development version)
+
 ## rlmstudio 0.3.0
+
+CRAN release: 2026-10-02
 
 ### Breaking changes
 
