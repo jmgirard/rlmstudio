@@ -35,7 +35,7 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 - [x] AC1: `grep -n "cli::cli_alert" R/*.R` prints lines of `R/utils-msg.R` and the one line of the already-loaded echo branch of `R/load.R`, and no other line.
 - [x] AC2: A table test in `tests/testthat/test-quiet-alerts.R` has one row for each of the five call sites that the Scope `In:` names. Each row runs its call once with `rlmstudio.quiet` set to `TRUE` and asserts that the shown output does not hold that row's alert text, and once with the option `FALSE` and asserts that it does.
 - [x] AC3: The development section of `NEWS.md` has one bullet that names `check_lms_version()`, `install_lmstudio()`, and the print of a chat result as now silent under `rlmstudio.quiet`.
-- [ ] AC4: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings.
+- [x] AC4: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings.
 
 ## Coverage
 <!-- owner: plan · create/amend-via-gate -->
@@ -79,6 +79,7 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 - AC1: `grep -n "cli::cli_alert" R/*.R` on 2026-10-18 at 8edc161 printed `R/load.R:149` (the `cli_alert_warning(` inside `if (isTRUE(echo_load_config))` of the already-loaded branch, lines 145-151 read) and `R/utils-msg.R:27`, `:41`, `:55`, `:69`, and no other line. Pass.
 - AC2: `tests/testthat/test-quiet-alerts.R` has five cases, one per Scope `In:` site: `check_lms_version()` no CLI (`R/setup.R:43`), unparsed output (`:69`), version 0.3.9 (`:82`), `install_lmstudio("browser")` (`:147`), print with `logprobs = NULL` (`R/chat_oop.R:94`). Each nested `test_that()` runs its call with `rlmstudio.quiet` TRUE and asserts `expect_no_match` of its alert text, then FALSE and asserts `expect_match`. `test_file()` on 2026-10-18: 30 expectations, 0 failures. Implement T1 saw all five quiet halves red before T2, and a planted direct call turned one row red. Pass.
 - AC3: `NEWS.md:9`, under `# rlmstudio (development version)`, is one bullet that names `check_lms_version()`, `install_lmstudio(method = "browser")`, and "the print of a chat result" as showing no alerts with `options(rlmstudio.quiet = TRUE)`. Pass.
+- AC4: on 2026-10-18 at b07e6be (the final code tree), `devtools::test()` FAIL 0, WARN 0, SKIP 3 (no live server), PASS 24649; `devtools::check()` 0 errors, 0 warnings, 0 notes; `devtools::document()` left no diff. Pass.
 - spawned: diff-bug, blame-history, prior-review
 - gate: `cairn_validate.py` all checks passed (exit 0); `pkgdown::check_pkgdown()` no problems; no new top-level files; README not touched; NEWS has the entry (AC3); no principle changed, so `cairn_impact` skipped.
 - diff-bug #1: `test-setup.R:38` (unparsed-output braces test) and `test-vignette-claims.R:357` (browser install test) assert alert text that the branch made quiet-aware and do not pin `rlmstudio.quiet = FALSE`, so both fail under an ambient `options(rlmstudio.quiet = TRUE)` — fix now, fixed b07e6be (both pinned; under ambient quiet `test-setup.R` passes and `test-vignette-claims.R` shows only the four failures that main at 7524bcc also shows, which went to the new candidate row "tests under ambient quiet").
