@@ -27,7 +27,9 @@ is a program that you run by typing commands, and the messages of the
 package call it the CLI. The package uses `lms` to start and stop parts of
 LM Studio. If you do not have LM Studio yet, run
 `rlmstudio::install_lmstudio(method = "browser")`. It opens the LM Studio
-download page in your web browser. After you install LM Studio, restart R.
+download page in your web browser. After you install LM Studio, open the
+app once, and then restart R. The LM Studio documentation says that you
+need to run LM Studio at least once before you can use `lms`.
 
 Load the package and check that R can find LM Studio.
 
@@ -57,9 +59,14 @@ wait runs out, the function gives a warning, and your script goes on. So
 call `lms_server_ready()` next. It returns `TRUE` only when LM Studio
 answers.
 
+The number at the end of the address, 1234, is the port. Without a `port`
+argument, the server starts on the port that it used last time. If that
+port is not 1234, the calls of this vignette do not reach the server. So
+pass `port = 1234`.
+
 ```{r start-server}
-# Start the server, and wait about 30 seconds for it to answer
-lms_server_start(wait = 30)
+# Start the server on port 1234, and wait about 30 seconds for it to answer
+lms_server_start(port = 1234, wait = 30)
 
 # TRUE if LM Studio answers
 lms_server_ready()
@@ -89,14 +96,26 @@ that each call below can use it.
 model <- "google/gemma-3-1b"
 ```
 
+To find other models, go to the LM Studio model catalog at
+<https://lmstudio.ai/models>. The address of a model's own page ends with
+its key. For example, the page of the model above is
+<https://lmstudio.ai/models/google/gemma-3-1b>, so its key is
+`google/gemma-3-1b`. Some catalog pages show a family of models, such as
+the sizes of one model. Open the page of one model in the family to get
+its key.
+
 ## Download the model
 
 `lms_download()` asks LM Studio to download a model. For a model that is
 already on your computer, it returns `"already_downloaded"`. For a new
 model, it returns a job id, a string that names the download. Pass the job
-id to `lms_download_status()` to see the status of the download. Call
-`lms_download_status()` again until the status says that the download
-finished.
+id to `lms_download_status()` to see the status of the download.
+
+The `status` element of the result holds the status. While LM Studio
+downloads the model, it is `"downloading"`. Call `lms_download_status()`
+again until it is `"completed"`, which means that the download finished.
+If you pass `"already_downloaded"` to `lms_download_status()`, the status
+is `"already_downloaded"`.
 
 When the output below was made, the model was already on the computer. So
 the output shows the first case.
@@ -107,7 +126,8 @@ job_id <- lms_download(model)
 job_id
 
 # The status of the download
-lms_download_status(job_id)
+status <- lms_download_status(job_id)
+status$status
 ```
 
 ## Put the model in memory
