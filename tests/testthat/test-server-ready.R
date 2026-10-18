@@ -83,9 +83,8 @@ test_that("a 200 whose body carries a model list is ready", {
 })
 
 test_that("a model list with no models in it is still ready", {
-  # A fresh LM Studio install has nothing downloaded. The server works, so the
-  # empty list reads as ready. A JSON object under the same key does not: that
-  # is a different server answering.
+  # An empty list reads as ready. A JSON object under the same key does not:
+  # that is a different server answering.
   local_request_recorder(mock_response(200L, '{"models": []}'))
   expect_identical(lms_server_ready(), TRUE)
 })

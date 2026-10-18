@@ -754,9 +754,8 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #' The answer is `TRUE` only when the request returns HTTP status 200 and the
 #' response body is a model list that [list_models()] can read. The two
 #' functions apply the same shape rules, which the "Malformed model list"
-#' section of [list_models()] states. An empty list counts, because a
-#' fresh LM Studio install has no models downloaded yet and its server still
-#' works.
+#' section of [list_models()] states. An empty list counts, so a server that
+#' lists no models gives `TRUE`.
 #'
 #' Use this in place of a port check. Another process holding the port, a
 #' server that has not finished starting, and a server that rejects the token

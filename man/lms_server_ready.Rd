@@ -31,9 +31,8 @@ whether the answer came from an LM Studio server that this package can use.
 The answer is \code{TRUE} only when the request returns HTTP status 200 and the
 response body is a model list that \code{\link[=list_models]{list_models()}} can read. The two
 functions apply the same shape rules, which the "Malformed model list"
-section of \code{\link[=list_models]{list_models()}} states. An empty list counts, because a
-fresh LM Studio install has no models downloaded yet and its server still
-works.
+section of \code{\link[=list_models]{list_models()}} states. An empty list counts, so a server that
+lists no models gives \code{TRUE}.
 }
 \details{
 Use this in place of a port check. Another process holding the port, a
