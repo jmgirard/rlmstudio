@@ -44,7 +44,7 @@ update your version, the package provides a convenient setup function.
 library(rlmstudio)
 install_lmstudio()
 ## ℹ Opening the LM Studio download page in your default browser...
-## ! Please install or update the software, restart R, and try again.
+## ! Please install or update the software, open the LM Studio app once, then restart R and try again.
 ```
 
 ## Quick Start
@@ -60,11 +60,13 @@ background daemon, please see the package vignettes.
 ### 1. Start the Server
 
 Before you can load models or generate text, you need to start the LM
-Studio backend server.
+Studio backend server. The package sends its requests to port 1234 by
+default, so start the server there. Without a `port`, LM Studio uses the
+port that it used last.
 
 ``` r
-lms_server_start()
-## ✔ LM Studio server started successfully on the default port.
+lms_server_start(port = 1234)
+## ✔ LM Studio server started successfully on port 1234.
 ```
 
 *(Note for headless environments like remote servers or Docker

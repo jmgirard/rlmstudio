@@ -34,8 +34,9 @@ library(rlmstudio)
 
 model <- "google/gemma-3-1b"
 
-# Start the server, and wait up to about 30 seconds for it to answer
-lms_server_start(wait = 30)
+# Start the server on port 1234, and wait up to about 30 seconds for it to
+# answer
+lms_server_start(port = 1234, wait = 30)
 
 # Load the model
 lms_load(model)
