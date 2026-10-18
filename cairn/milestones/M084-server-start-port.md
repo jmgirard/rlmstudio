@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M084: The server-start examples pass port 1234, and the no-port message names the last-used port
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -89,6 +89,8 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 - 2026-10-18: T5 done: live knits of chat-options, text-analysis, and headless-config, one per run, each exit 0; chat-options and headless-config print "started successfully on port 1234."; new model replies changed review 1's sentiment and review 4's stars in text-analysis, and the prose there names neither; `lms daemon down` refused because the desktop app runs the daemon, so it stays up; ended with `lms server start --port 1234` and a stop, no model loaded; the AC2 grep printed nothing; `devtools::test()` 0 fail, 3 skip, 24580 pass.
 - 2026-10-18: T6 done: two NEWS bullets, one for the start message and examples and one for the install message (the plan said one bullet; two read better as separate behaviors); the request-function default was read from the signatures (13 `host = "http://localhost:1234"`, plus `lms_server_start()`'s `host = NULL`).
 - 2026-10-18: T7 done: the first `devtools::check()` gave 1 ERROR in "checking tests", whose last 13 lines named no test or message, and its temp check directory was already removed; a second run with a kept `check_dir` gave 0 errors, 0 warnings, 0 notes on the same code. The unnamed error matches the intermittent-test candidate row (the M065 check error); the hygiene pass notes it there. `devtools::test()` after T6: 0 fail.
+- 2026-10-18: claim audit: 21 claims read, 3 corrected — R/serve.R (two example comments said "the other functions", which includes CLI functions with no `host`; now "the functions that send requests"), NEWS.md ("The other functions that send requests"); the re-read found all three hold; `devtools::document()` rerun, `devtools::test()` 0 fail.
+- 2026-10-18: status review; all tasks checked, `devtools::test()` and `devtools::check()` clean.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

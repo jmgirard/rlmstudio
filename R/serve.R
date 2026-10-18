@@ -104,12 +104,12 @@ build_args_server_start <- function(port = NULL, cors = FALSE) {
 #'
 #' @examples
 #' \dontrun{
-#' # Start the server on port 1234, where the other functions look by
-#' # default, and wait for the REST API
+#' # Start the server on port 1234, where the functions that send requests
+#' # look by default, and wait for the REST API
 #' lms_server_start(port = 1234)
 #'
-#' # Start the server on another port with CORS enabled. The other
-#' # functions then need host = "http://localhost:8080".
+#' # Start the server on another port with CORS enabled. The functions
+#' # that send requests then need host = "http://localhost:8080".
 #' lms_server_start(port = 8080, cors = TRUE)
 #'
 #' # Return as soon as the CLI does, without waiting
