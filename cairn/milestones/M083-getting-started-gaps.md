@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M083: The getting-started vignette covers the first app run, a finished download, the server port, and finding model keys
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -158,6 +158,7 @@ reader asks for one). The other vignettes.
 - 2026-10-18: T4: the help sentence now reads "An empty list counts, so a server that lists no models gives `TRUE`", a package claim that `test-server-ready.R:89` covers, in place of a claim about LM Studio; a second `devtools::document()` writes nothing.
 - 2026-10-18: T5: `Rscript data-raw/knit-vignettes.R vignettes/getting-started.Rmd.orig` with the token knitted to `vignettes/getting-started.Rmd` with no error; the start chunk shows "started successfully on port 1234" and the download chunk `"already_downloaded"`. The model list now holds google/functiongemma-270m from T1, and the batch replies changed with the run. Word list (substring, ignoring case), code regexes over the 58 R chunk lines, and "`r " searches found nothing; each search went red on a planted line. One NEWS entry added.
 - 2026-10-18: T6: `devtools::test()` 24444 expectations, 0 failed, 0 errors, 3 skipped (live tests, server stopped); `devtools::check()` 0 errors, 0 warnings, 0 notes.
+- 2026-10-18: claim audit: 21 claims read, 2 corrected — NEWS.md (the port sentence read as if the app starts the server; now names `port = 1234` and the last-used-port reason), tests/testthat/test-vignette-claims.R (the mock comment called made-up values real). Two of the reader's optional points taken: the vignette now says that a page's `lms get` name is not always a download key (T1 record), and the `test-server-ready.R:86` comment drops the fresh-install claim. Re-knit with the token, word and inline searches clean, the knit, claims, and server-ready test files pass.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

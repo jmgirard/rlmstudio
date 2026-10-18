@@ -102,7 +102,9 @@ its key. For example, the page of the model above is
 <https://lmstudio.ai/models/google/gemma-3-1b>, so its key is
 `google/gemma-3-1b`. Some catalog pages show a family of models, such as
 the sizes of one model. Open the page of one model in the family to get
-its key.
+its key. A model page can also show an `lms get` command. The model name in
+that command is not always a key that `lms_download()` accepts, so use the
+end of the page address.
 
 ## Download the model
 

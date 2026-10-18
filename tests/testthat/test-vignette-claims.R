@@ -403,7 +403,8 @@ test_that("lms_download_status() of already_downloaded reports that status and s
 
 test_that("lms_download_status() gives completed for a finished job and already_downloaded for a model on disk, under status", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-  # The fields of a finished job, as LM Studio sent them on 2026-10-18.
+  # A finished job, with made-up values. On 2026-10-18, LM Studio gave a
+  # finished job the status "completed" and a `completed_at` field.
   body <- paste0(
     '{"job_id": "job_1", "downloaded_bytes": 10, "total_size_bytes": 10, ',
     '"started_at": "2026-10-18T18:48:58.595Z", "status": "completed", ',
