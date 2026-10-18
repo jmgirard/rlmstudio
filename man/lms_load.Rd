@@ -3,6 +3,7 @@
 \name{lms_load}
 \alias{lms_load}
 \alias{rlmstudio_context_above_max}
+\alias{rlmstudio_no_load_config}
 \title{Load a model via REST API}
 \usage{
 lms_load(
@@ -71,7 +72,11 @@ Invisibly returns a character string of the loaded model identifier
 upon success, also when the model was already loaded. It is a plain
 string, with no class, names, or S4 bit. If \code{echo_load_config = TRUE}
 and this call loads the model, it instead invisibly
-returns a list containing the model's detailed load configuration.
+returns a list containing the model's detailed load configuration. If
+\code{echo_load_config = TRUE} and the model is already loaded, with
+\code{force = FALSE}, the call returns the model key and gives a warning
+of class \code{rlmstudio_no_load_config}. The \code{rlmstudio.quiet} option does
+not hide it.
 }
 \description{
 Load a model via REST API

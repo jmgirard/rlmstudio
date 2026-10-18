@@ -1,13 +1,13 @@
 # M088: A missing load config or missing OpenAI logprobs warns past quiet
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP5, GP6
 - **Resolves:** —
 - **Surface tier:** user-facing — two exported functions gain warnings that users see and catch by class
-- **Branch/PR:** —
+- **Branch/PR:** m088-missing-result-warnings
 
 ## Goal
 
@@ -50,7 +50,7 @@ Tests that fail under an ambient `rlmstudio.quiet = TRUE` pin the option to `FAL
 
 ## Tasks
 
-- [ ] T1: In `lms_load()` (`R/load.R:146-154`), replace the echo alert with `cli::cli_warn(class = "rlmstudio_no_load_config")`, after the quiet-aware "already loaded" info line. Word the message from the already-loaded case and `force = TRUE`. Tests first for each AC1 case with a mocked transport, through the shared request recorder (the pre-check sends a `list_models()` request, LESSONS M008); count warnings with `withCallingHandlers()` (LESSONS M019); confirm the test goes red with the alert put back.
+- [x] T1: In `lms_load()` (`R/load.R:146-154`), replace the echo alert with `cli::cli_warn(class = "rlmstudio_no_load_config")`, after the quiet-aware "already loaded" info line. Word the message from the already-loaded case and `force = TRUE`. Tests first for each AC1 case with a mocked transport, through the shared request recorder (the pre-check sends a `list_models()` request, LESSONS M008); count warnings with `withCallingHandlers()` (LESSONS M019); confirm the test goes red with the alert put back.
 - [ ] T2: In `openai_reply_value()` (`R/chat.R:827-833`), after every reply check passes and after `warn_if_cut_off()`, warn with class `rlmstudio_no_logprobs` that the package returns no log probabilities on this route, with a pointer to the OpenResponses route. Tests first for each AC2 case with a mocked transport, including the delegate path of `lms_chat()` (LESSONS M003).
 - [ ] T3: In `lms_chat_batch()` (`R/chat.R` near `note_cut_off`), add a calling handler for `rlmstudio_no_logprobs` that muffles each input's warning and counts the inputs, and a helper that gives one warning of that class when the count is above 0. Call it after `warn_cut_off_inputs()` at the end and in `abort_with_results()`. Tests first for each AC3 case with a mocked transport.
 - [ ] T4: Pin `withr::local_options(rlmstudio.quiet = FALSE)` in each test that fails under the option (LESSONS M086). A run on main at 5305240 failed 8 expectations in 7 tests: `test-daemon.R` "lms_daemon_stop exits gracefully when managed by GUI", `test-model-list-shape.R` "an empty model list returns an empty data frame and informs" and "an empty model list reaches the callers as nothing loaded", `test-unload.R` "lms_unload_all returns early when list_models reports nothing loaded", and three tests of `test-vignette-claims.R` (headless `install_lmstudio()`, `lms_daemon_stop()`, `lms_server_stop()`). Re-run under the option until the run is clean.
@@ -69,3 +69,5 @@ Tests that fail under an ambient `rlmstudio.quiet = TRUE` pin the option to `FAL
 - 2026-10-18: collision sweep: candidate rows "load echo alert", "openai logprobs stub", "tests under ambient quiet" absorbed in full. D-010, D-021, D-028, D-032, D-033, D-037 read: this widens the GP6 exception of D-010 and D-021 and keeps D-033's OpenAI `logprobs` column. No planned or in-progress milestone. GitHub inbox: 0 open issues, 0 open PRs.
 - 2026-10-18: ambient-quiet probe: `devtools::test()` with the option TRUE on main at 5305240 failed 8 expectations in 7 tests across 4 files, 0 errors, 3 skipped; T4 lists them (the candidate row named 4 in one file).
 - 2026-10-18: criteria audit (full mode, fresh Opus reader) returned 14 findings, all fixed: AC2 and AC3 gained `simplify`, `schema`, local `quiet`, failure-kind, cut-off order, and abort-path cases; AC1 gained the not-loaded case; AC1-AC3 lost their test-harness clauses (moved to T1-T3); AC5 narrowed to the tests that run without LM Studio; AC6 added `?lms_chat` and `?lms_chat_batch`; GP5 added; D-043 written at the plan commit; a no-op T5 step dropped.
+- 2026-10-18: implement started on branch m088-missing-result-warnings, cut from main at 34d97fa.
+- 2026-10-18: T1 done: `lms_load()` warns with class `rlmstudio_no_load_config` (alias on `?lms_load`, `@return` text); new `test-missing-result-warnings.R` failed 2 expectations on the old alert, then passed; `grep -rn 'cli_alert' R/` finds nothing outside `R/utils-msg.R`; full suite 0 failed, 0 errors, 3 skipped.
