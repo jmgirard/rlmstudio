@@ -991,10 +991,11 @@ check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
 reply_model_serves <- function(model, reply_model, host, token, label) {
   lookup_label <- paste0(label, ", because the model-list lookup failed")
   if (!is_server_running(host)) {
+    hint <- no_server_hint(host)
     cli::cli_abort(
       c(
         "x" = "{lookup_label}: the LM Studio server is not running.",
-        "i" = "Run {.fn lms_server_start} first."
+        "i" = "{hint}"
       ),
       class = "rlmstudio_no_server",
       call = NULL

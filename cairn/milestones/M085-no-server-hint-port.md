@@ -53,7 +53,7 @@ A user who follows a no-server hint starts the server on the port that the faile
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
 
 - [x] T1: Test first in `tests/testthat/test-serve.R`: the AC1 table, with `is_server_running()` mocked to `FALSE`, red against `R/serve.R:746`. Find an unparseable `host` with no spaces by a run of `httr2::url_parse()`, not from memory, because cli wraps a message at spaces. Move the host parse of `is_server_running()` (`R/serve.R:705-720`) into one helper that returns the hostname and port, and use it in the probe and in a new hint helper. Plant a hint that names 1234 for every host and see the 8080 row go red.
-- [ ] T2: Test first beside the lookup tests of `tests/testthat/test-model-check.R:465`: the AC2 cases, red against `R/chat.R:997`. Then build that hint with the T1 helper.
+- [x] T2: Test first beside the lookup tests of `tests/testthat/test-model-check.R:465`: the AC2 cases, red against `R/chat.R:997`. Then build that hint with the T1 helper.
 - [ ] T3: Rewrite `R/conditions.R:34-36` to match the T1 hint. Run `devtools::document()` and read the section in `man/rlmstudio-conditions.Rd`.
 - [ ] T4: Test first: add the AC4 assertion to the successful headless-install test at `tests/testthat/test-vignette-claims.R:514` and see it red. Then edit `R/setup.R:235`.
 - [ ] T5: One NEWS bullet in the development section, written against the T1 to T4 output.
@@ -75,3 +75,4 @@ A user who follows a no-server hint starts the server on the port that the faile
 - 2026-10-18: ROADMAP line cap: merged the two `lms_embed()` rows, the two `list_instances()` rows, and the RoPE row into the `ttl` row, to add the M085 to M087 rows and the "load echo alert" row.
 - 2026-10-18: implement started on branch m085-no-server-hint-port; tree clean at the cut.
 - 2026-10-18: T1 done: `host_address()` and `no_server_hint()` in `R/serve.R`; the abort now has a main line and an "i" hint line. Unparseable host chosen by a run of `httr2::url_parse()`: `http://localhost:abc` (port not a number). The table went red on all rows first; a planted fixed-1234 `host_address()` turned the 8080 check red; `devtools::test()` 0 failed, 0 errors.
+- 2026-10-18: T2 done: `reply_model_serves()` builds its hint with `no_server_hint()`; the new lookup test in `test-model-check.R` went red on both routes and both hosts first, then green; `devtools::test()` 0 failed, 0 errors.
