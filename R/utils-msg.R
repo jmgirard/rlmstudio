@@ -44,6 +44,34 @@ rlm_alert_success <- function(
 
 #' @noRd
 #' @examples
+#' rlm_alert_warning("Something needs your attention.")
+rlm_alert_warning <- function(
+  text,
+  ...,
+  .envir = parent.frame(),
+  quiet = NULL
+) {
+  if (!is_quiet(quiet)) {
+    cli::cli_alert_warning(text, ..., .envir = .envir)
+  }
+}
+
+#' @noRd
+#' @examples
+#' rlm_alert_danger("Something went wrong.")
+rlm_alert_danger <- function(
+  text,
+  ...,
+  .envir = parent.frame(),
+  quiet = NULL
+) {
+  if (!is_quiet(quiet)) {
+    cli::cli_alert_danger(text, ..., .envir = .envir)
+  }
+}
+
+#' @noRd
+#' @examples
 #' rlm_inform("Standard package information.")
 rlm_inform <- function(text, ..., .envir = parent.frame(), quiet = NULL) {
   if (!is_quiet(quiet)) {
