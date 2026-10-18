@@ -15,8 +15,7 @@ and the headless `install_lmstudio()` message say the same. New tests: a host
 table in `test-serve.R` (a brace host included), the lookup hint on both chat
 routes, and the headless install message. One NEWS bullet.
 
-**Decisions:** D-042 records the narrowed start-call wording as a trade of
-GP3, and `DESIGN.md` line 52 was corrected to match.
+**Decisions:** D-042 trades GP3 for the start-call wording; DESIGN.md:52 corrected.
 
 **Review:** 6 criteria verified. Three lenses gave 13 findings: 5 fixed (D-042
 and the DESIGN text, the help example, the NEWS letter-case sentence, a
