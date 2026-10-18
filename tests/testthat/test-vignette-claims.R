@@ -401,6 +401,29 @@ test_that("lms_download_status() of already_downloaded reports that status and s
   expect_identical(res$status, "already_downloaded")
 })
 
+test_that("lms_download_status() gives completed for a finished job and already_downloaded for a model on disk, under status", {
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  # The fields of a finished job, as LM Studio sent them on 2026-10-18.
+  body <- paste0(
+    '{"job_id": "job_1", "downloaded_bytes": 10, "total_size_bytes": 10, ',
+    '"started_at": "2026-10-18T18:48:58.595Z", "status": "completed", ',
+    '"completed_at": "2026-10-18T18:49:13.103Z"}'
+  )
+  recorder <- local_request_recorder(mock_response(200L, body))
+
+  finished <- lms_download_status("job_1")
+  on_disk <- lms_download_status("already_downloaded")
+
+  expect_identical(finished$status, "completed")
+  expect_identical(on_disk$status, "already_downloaded")
+  # Only the job id goes to the server.
+  expect_identical(length(recorder$requests), 1L)
+  expect_identical(
+    request_target(recorder$requests[[1]])[["path"]],
+    "/api/v1/models/download/status/job_1"
+  )
+})
+
 test_that("lms_chat() sends the input and the system prompt and returns the reply text", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   recorder <- local_request_recorder(
@@ -624,6 +647,14 @@ test_that("lms_daemon_stop(force = TRUE) stops the server before the daemon", {
   capture_shown(lms_daemon_stop(force = TRUE))
 
   expect_identical(calls$args, list(c("server", "stop"), c("daemon", "down")))
+})
+
+test_that("lms_server_start(port = 1234) passes the port to lms server start", {
+  calls <- local_lms_calls()
+
+  claim_messages(lms_server_start(port = 1234, wait = 0))
+
+  expect_identical(calls$args, list(c("server", "start", "--port", "1234")))
 })
 
 test_that("lms_server_stop() sends server stop alone and reports the stop", {

@@ -119,7 +119,7 @@ reader asks for one). The other vignettes.
       one other model. Finish with the server started once on 1234 and stopped,
       so the user's last-used port is 1234 again. One work-log line per
       probe, with the date and the observed value.
-- [ ] T2: Tests first in `tests/testthat/test-vignette-claims.R` for the two
+- [x] T2: Tests first in `tests/testthat/test-vignette-claims.R` for the two
       package claims of AC7 (mocked, no live server), each planted red in a
       scratch copy.
 - [ ] T3: Rewrite the four passages of `vignettes/getting-started.Rmd.orig`
@@ -153,6 +153,7 @@ reader asks for one). The other vignettes.
 - 2026-10-18: T1 port probe (LM Studio CLI, macOS): after a start on 8080 and a stop, `lms server status --json` said port 8080; `lms_server_start(wait = 30)` with no port started on 8080 and `lms_server_ready()` gave FALSE; `lms_server_start(port = 1234, wait = 30)` gave `lms_server_ready()` TRUE and `list_models()` a data frame. With the server still running on 8080, a start with `port = 1234` also gave TRUE.
 - 2026-10-18: T1 side finding: for under 1 s after a start that switches the port, `lms server status` reports the old port and not running, and `lms server stop` then says "not running", so `lms_server_stop()` reports "already stopped" and leaves the server up; recorded as a candidate row.
 - 2026-10-18: T1 download probe: `lms_download("google/functiongemma-270m")` (not on disk) gave job_1846f7bb47; `lms_download_status()` read "downloading", then "completed" with `completed_at`; `lms_download("google/gemma-3-1b")` gave "already_downloaded". The model stays on disk (569.72 MB). Server left stopped with last-used port 1234.
+- 2026-10-18: T2: two tests added to `test-vignette-claims.R`; both pass. Plants in scratch copies, each alone: port dropped at the `build_args_server_start()` call of `lms_server_start()` (1 failed), `--port` dropped in `build_args_server_start()` (1 failed), `return(NULL)` before the status request (2 failed, 1 error), the `"already_downloaded"` test replaced by `FALSE` (2 failed); unchanged control 0 failed.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
