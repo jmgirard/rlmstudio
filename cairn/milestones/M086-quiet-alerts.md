@@ -72,6 +72,7 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 - 2026-10-18: T4: `devtools::document()` no diff (its link warning at `R/serve.R:753` predates the branch); `devtools::check()` 0 errors, 0 warnings, 0 notes; `devtools::test()` as at T2 (T3 changed NEWS only).
 - 2026-10-18: claim audit: 16 claims read, 0 corrected — NEWS.md, R/chat_oop.R, R/setup.R, R/utils-msg.R, tests/testthat/test-quiet-alerts.R (fresh Opus reader; ran each path under quiet TRUE and FALSE).
 - 2026-10-18: implement complete; status review.
+- 2026-10-18: step-7 approval: m086-quiet-alerts approved for merge
 
 ## Review
 <!-- owner: review · exclusive -->
