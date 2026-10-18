@@ -99,13 +99,13 @@ A user who follows a no-server hint starts the server on the port that the faile
 - AC6: 2026-10-18 on the branch head `bc98fcb`: `devtools::test()` 0 failed, 0 errors (3 skipped); `devtools::check()` 0 errors, 0 warnings, 0 notes (5m 2s).
 - Consistency gate: `cairn_validate.py` all checks passed; `devtools::document()` no diff; `pkgdown::check_pkgdown()` no problems; README not touched; NEWS has the entry; no new top-level file; no principle changed, so no `cairn_impact` run.
 - spawned: diff-bug, blame-history, prior-review.
-- blame-history #1: DESIGN.md:52 and GP3 say a server-down abort names `lms_server_start()`, and the remote hint names none, with no D-entry — fix now: D-042 (trades GP3, records the user's plan-gate rule), DESIGN.md:52 corrected in place.
-- diff-bug #1: DESIGN.md:52 still says every server-down abort names `lms_server_start` — fix now, same fix as blame-history #1.
-- diff-bug #2: the `rlmstudio-conditions` example prefixes "The server is not running: " to a message that now has a line break and an "i" line — fix now: the example prints `conditionMessage(cnd)` alone.
+- blame-history #1: DESIGN.md:52 and GP3 say a server-down abort names `lms_server_start()`, and the remote hint names none, with no D-entry — fix now: D-042 (trades GP3, records the user's plan-gate rule), DESIGN.md:52 corrected in place, fixed 46d1488.
+- diff-bug #1: DESIGN.md:52 still says every server-down abort names `lms_server_start` — fix now, same fix as blame-history #1, fixed 46d1488.
+- diff-bug #2: the `rlmstudio-conditions` example prefixes "The server is not running: " to a message that now has a line break and an "i" line — fix now: the example prints `conditionMessage(cnd)` alone, fixed 46d1488.
 - diff-bug #3: `::1`, `localhost.`, `127.0.0.2`, and `0.0.0.0` get the remote hint — reject, planned change (Scope Out, the user's plan-gate choice; D-042).
 - diff-bug #4: `http://localhost:0` gives `lms_server_start(port = 0)`, and `https://localhost` gives 1234 — reject, planned change: AC1 binds the hint to the port the probe uses, and the probe reads the same ports.
-- diff-bug #5: the NEWS bullet leaves out "in any letter case" — fix now: one sentence added.
-- diff-bug #6: no test sends a host with braces through the hint, so a later paste of `host` into the cli string would pass — fix now: `http://{x}:1` row added to the remote-host test; a planted `paste0()` hint failed it with a cli evaluation error, not `rlmstudio_no_server`.
+- diff-bug #5: the NEWS bullet leaves out "in any letter case" — fix now: one sentence added, fixed 46d1488.
+- diff-bug #6: no test sends a host with braces through the hint, so a later paste of `host` into the cli string would pass — fix now: `http://{x}:1` row added to the remote-host test; a planted `paste0()` hint failed it with a cli evaluation error, not `rlmstudio_no_server`, fixed 46d1488.
 - diff-bug #7: the hint is formatted in the helper and spliced as a value — reject, style (it follows LESSONS M012/M018).
 - diff-bug #8: the AC2 test's probe mock answers TRUE once, then FALSE, so it depends on probe order — reject, false as a defect: the existing lookup test at `test-model-check.R:537` uses the same mock, and a probe-order change would fail both visibly.
 - blame-history #2: `::1` gets the remote hint though the plan's reason (the call starts a server on this machine) also covers it — reject, planned change (Scope Out, D-042).
