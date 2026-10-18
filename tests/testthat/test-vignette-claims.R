@@ -685,11 +685,15 @@ test_that("each server start in the README and the vignette sources passes port 
     hits <- grep("^ *lms_server_start\\(", lines)
     starts <- c(starts, paste0(basename(source), ":", hits, ": ", lines[hits]))
   }
-  # A pattern that silently matches nothing would pass every file.
-  expect_gt(length(starts), 0)
   for (start in starts) {
-    expect_match(start, "port = 1234", fixed = TRUE, info = start)
+    test_that(start, {
+      # The port ends the argument, so port = 12345 does not pass.
+      expect_match(start, "port = 1234[,)]")
+    })
   }
+  # A pattern that silently matches nothing would pass every file. This
+  # check comes after the subtests, where the result table keeps it.
+  expect_gt(length(starts), 0)
 })
 
 test_that("lms_server_stop() sends server stop alone and reports the stop", {

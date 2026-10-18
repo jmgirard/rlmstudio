@@ -92,6 +92,7 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 - 2026-10-18: claim audit: 21 claims read, 3 corrected — R/serve.R (two example comments said "the other functions", which includes CLI functions with no `host`; now "the functions that send requests"), NEWS.md ("The other functions that send requests"); the re-read found all three hold; `devtools::document()` rerun, `devtools::test()` 0 fail.
 - 2026-10-18: status review; all tasks checked, `devtools::test()` and `devtools::check()` clean.
 - 2026-10-18: review: evidence recorded and all 7 criteria ticked, gate clean; three review lenses running (checkpoint, findings not yet settled).
+- 2026-10-18: review: 18 findings settled (6 fix now, 5 follow-up, 7 reject); fix-now edits made, suite re-run pending (checkpoint).
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
@@ -109,3 +110,23 @@ Evidence, 2026-10-18, branch head eb08956, level with main 62eaeab.
 - AC6: NEWS.md:5 says a no-port start now reports "on the port that LM Studio used last" and that the help examples, the README, and the other vignettes start with `port = 1234`; NEWS.md:7 says `install_lmstudio(method = "browser")` tells you to open the app once. No milestone number appears.
 - AC7: `devtools::test()` 0 fail, 0 warn, 3 skip (live-server tests), 24580 pass; `devtools::check()` with a kept `check_dir` gave 0 errors, 0 warnings, 0 notes.
 - Gate: `cairn_validate.py` all checks passed; no principle text changed, so `cairn_impact` skipped; `devtools::document()` and `devtools::build_readme()` left no diff; `pkgdown::check_pkgdown()` found no problems; NEWS has two entries; no new top-level file.
+- spawned: diff-bug, blame-history, prior-review
+- diff-bug #1: the no-server aborts (`R/serve.R:746`, `R/chat.R:997`) and the "Server not running" help (`R/conditions.R:34-35`) still say to run `lms_server_start()` with no port — follow-up, new "server-start hints" row, written in the hygiene commit (the row cap needs the graduation first)
+- diff-bug #2: the headless install message (`R/setup.R:235`) names `lms_server_start()` with no port — follow-up, same "server-start hints" row
+- diff-bug #3: NEWS said every help example passes `port = 1234`, but the 8080 example does not — fix now
+- diff-bug #4: two NEWS bullets where Scope said one — reject (false as a defect: AC6 sets no count and the work log records the choice)
+- diff-bug #5: the edited install warning still bypasses quiet (GP6) — follow-up, the existing "install message quiet" row
+- diff-bug #6: the source test passes `port = 12345` and a matching comment — fix now (match `port = 1234[,)]`)
+- diff-bug #7: message strings over 80 characters — reject (style)
+- diff-bug #8: the new message test has no top-level expectation — reject (false: each nested subtest can fail, as the reviewer says)
+- blame-history #1: install warning bypasses quiet (GP6) — follow-up, "install message quiet" row
+- blame-history #2: the source test loop has no nested `test_that()` per pass, against D-038 — fix now
+- blame-history #3: `port = 12345` passes the source test — fix now (same fix as diff-bug #6)
+- blame-history #4: the no-port message could name the port that the status read gives — reject (planned change; right after a port switch the status read reports the old port, the observed case in the `lms_server_status(json = TRUE)` row, so the message could name the wrong port)
+- blame-history #5: `data-raw/record-thread-cassette.R:162` starts the server with no port and then asks `localhost:1234` — fix now
+- blame-history #6: the text-analysis re-knit changed review 1's sentiment and review 4's stars — reject (planned change: the live re-knit was planned, and the prose names neither value)
+- blame-history #7: long message lines — reject (style)
+- prior-review #1: the source test loop is flat, against the M065 nested-test rule — fix now (same fix as blame-history #2)
+- prior-review #2: the test-serve.R loop computes its label before the nested `test_that()`, so loop-sweep marks it flat — fix now
+- prior-review #3: install warning bypasses quiet (GP6) — follow-up, "install message quiet" row
+- Fix-now check: the reworked source-test loop over a planted scratch file failed on `port = 12345` and on a no-port line and passed `port = 1234, wait = 30`.

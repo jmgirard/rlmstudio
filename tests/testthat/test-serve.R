@@ -425,8 +425,7 @@ test_that("the success message names the port, or the last-used port with no por
     )
   )
   for (case in cases) {
-    label <- if (is.null(case$port)) "no port" else "port = 1234"
-    test_that(label, {
+    test_that(if (is.null(case$port)) "no port" else "port = 1234", {
       msgs <- testthat::capture_messages(
         lms_server_start(port = case$port, wait = 0)
       )
