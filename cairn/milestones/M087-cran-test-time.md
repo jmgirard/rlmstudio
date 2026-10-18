@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M087: CRAN skips the slow tests and runs the request-body tests
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — CRAN and the reverse-dependency checks of httr2 and jsonlite run the test suite   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m087-cran-test-time   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -47,7 +47,7 @@ A CRAN check runs the request-body tests and skips the test blocks that take a s
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
 
-- [ ] T1: At the branch cut, save the sorted test names that a `NOT_CRAN=true` `ListReporter` run records for `test-arg-guards.R`, because loops build some names at run time (`:141`, `:155`, `:1034`). List its blocks that call `sent_messages(`, `request_body_text(`, or `request_target(`. On 2026-10-18 a read found 13 sites, one a loop of 5 names (`:1034`, `:1081`, `:2215` to `:3602`). Rerun the search at the task. Read each block for the helpers it calls (`sent_messages` `:2206`, the `stream_*` helpers `:929-1022`, `no_cell_frame` `:2886`, `classed_sent` `:3166`, and others).
+- [x] T1: At the branch cut, save the sorted test names that a `NOT_CRAN=true` `ListReporter` run records for `test-arg-guards.R`, because loops build some names at run time (`:141`, `:155`, `:1034`). List its blocks that call `sent_messages(`, `request_body_text(`, or `request_target(`. On 2026-10-18 a read found 13 sites, one a loop of 5 names (`:1034`, `:1081`, `:2215` to `:3602`). Rerun the search at the task. Read each block for the helpers it calls (`sent_messages` `:2206`, the `stream_*` helpers `:929-1022`, `no_cell_frame` `:2886`, `classed_sent` `:3166`, and others).
 - [ ] T2: Create `tests/testthat/test-request-body.R` with the T1 blocks and the helpers that only they use. Put a helper that both files use in a `helper-*.R` file. Run the AC1 `diff`. Run the new file with `NOT_CRAN=false` and with `NOT_CRAN=true`, and compare the expectation counts.
 - [ ] T3: With no LM Studio server running, time every block in CRAN mode: `NOT_CRAN=false` and `as.data.frame(devtools::test(reporter = testthat::ListReporter$new()))`, reading the `real` column and summing the subtest rows of each top-level block (LESSONS M019). Add `skip_on_cran()` as the first statement of each block at 1 s or more outside the four files that AC3 names. Write one work-log line with the run date, the blocks, their times, and the total time before and after.
 - [ ] T4: `devtools::test()`, `devtools::check()`, and the CRAN-mode `devtools::test()` clean.
@@ -65,3 +65,6 @@ A CRAN check runs the request-body tests and skips the test blocks that take a s
 - 2026-10-18: criteria audit (full mode, fresh Opus reader), 3 findings, all taken: AC1 compares the test names a `ListReporter` run records, because loops build some names at run time, and its domain is direct calls; AC3 lost its work-log sentence (an instrument promise), now counts top-level blocks with subtest rows summed, and names a run with no LM Studio server.
 - 2026-10-18: no changelog entry: users see no change.
 - 2026-10-18: lessons surfaced: M005 (a test that reads `R/` skips under `R CMD check`), M019 (the `as.data.frame()` table of a test run drops results recorded around nested tests; read timing per top-level block).
+- 2026-10-18: implement started; branch m087-cran-test-time cut from main at c55b31d.
+- 2026-10-18: T1: a `NOT_CRAN=true` `ListReporter` run of `test-arg-guards.R` at c55b31d records 1041 test names, none repeated, 0 failures (sorted list sha256 c1d264cb4b08). A parse of the file finds 13 top-level expressions that call the three helpers (the loop at `:1034` and 12 blocks, `:1081` to `:3602`). They need 19 top-level helpers of the file: 6 only they use (`stream_reply`, `sent_messages`, `first_msg`, `later_msg`, `classed_sent`, `class_forms`) and 13 that kept blocks also use; no other test file defines any of the 19 names.
+- 2026-10-18: implement choice: the 13 shared helpers go to one new file, `tests/testthat/helper-arg-guards.R`, in their order in the file, with their comments.
