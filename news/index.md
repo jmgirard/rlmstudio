@@ -20,6 +20,18 @@
 - `install_lmstudio(method = "browser")` now tells you to open the LM
   Studio app once before you restart R.
 
+- With `options(rlmstudio.quiet = TRUE)`,
+  [`check_lms_version()`](https://jmgirard.github.io/rlmstudio/reference/check_lms_version.md),
+  `install_lmstudio(method = "browser")`, and the print of a chat result
+  now show no alerts. Before,
+  [`check_lms_version()`](https://jmgirard.github.io/rlmstudio/reference/check_lms_version.md)
+  showed an alert for a missing CLI, for version output that did not
+  parse, and for a version that was too old.
+  [`install_lmstudio()`](https://jmgirard.github.io/rlmstudio/reference/install_lmstudio.md)
+  showed its request to install the software, and the print showed that
+  log probability data was empty or missing. The function results do not
+  change.
+
 - When no server answers, the `rlmstudio_no_server` error now says how
   to start the server. The hostname `localhost` can be in any letter
   case. If the hostname of `host` is `localhost` or `127.0.0.1`, the
