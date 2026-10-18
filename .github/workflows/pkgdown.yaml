@@ -52,6 +52,8 @@ jobs:
           name: site
           path: docs
           include-hidden-files: true
+          retention-days: 1
+          overwrite: true
 
   # Deploys only from a published release or a run on the default branch.
   # Every other run skips this job, for example a pull request (ref
@@ -67,7 +69,7 @@ jobs:
       contents: write
     steps:
       # The deploy action runs git in a checkout. The checkout comes first,
-      # because it cleans the workspace.
+      # because on a folder with no git repository it deletes the contents.
       - uses: actions/checkout@v6
 
       - name: Download site
