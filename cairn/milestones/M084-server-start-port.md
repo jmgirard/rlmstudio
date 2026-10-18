@@ -1,0 +1,85 @@
+<!-- Section ownership + write-modes: see tracking-rules.md "Milestone-file
+     section ownership". A phase skill never rewrites another phase's section.
+     Per-section owners are tagged below. The one size check that can fail is
+     cairn_validate's <150 over the plan-owned body. -->
+# M084: The server-start examples pass port 1234, and the no-port message names the last-used port
+
+- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
+- **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
+- **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
+- **Principles touched:** GP6   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
+- **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
+- **Surface tier:** user-facing — the README, the vignettes, the help pages, and two messages that users read   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
+- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+
+## Goal
+<!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
+
+A reader who copies a server start from the README, a vignette, or a help example starts the server on port 1234, where the package's other calls look.
+
+## Scope
+<!-- owner: plan · create/amend-via-gate -->
+
+**In:** Absorbs the candidate row "No-port start outside getting-started" in full. `port = 1234` in each server-start line of `README.Rmd`, `chat-options`, `text-analysis`, and `headless-config`, and in each roxygen example that starts the server. The no-port success message of `lms_server_start()` (`R/serve.R:153`) names the last-used port, not "the default port". The `port` argument help says where the request functions look. The browser branch of `install_lmstudio()` (`R/setup.R:148`) says to open the app once. A live re-knit of the three vignettes. One NEWS bullet.
+
+**Out:**
+- A `port` default of 1234 in `lms_server_start()`: the user chose to keep the default at the plan gate, 2026-10-18.
+- `vignette("getting-started")`: M083 shipped its port fix.
+- A stop right after a port switch: the `lms_server_status(json = TRUE)` candidate row.
+- The `rlmstudio.quiet` bypass of the browser-branch warning: the new "install message quiet" candidate row.
+- The headless-branch install message: llmster has no app to open, so it stays as it is.
+
+## Acceptance criteria
+<!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
+
+- [ ] AC1: Each line of `README.Rmd` and `vignettes/*.Rmd.orig` that starts, after any spaces, with `lms_server_start(` passes `port = 1234`, as a test in `tests/testthat/test-vignette-claims.R` checks. `README.md` holds the line `## ✔ LM Studio server started successfully on port 1234.` under its server-start call.
+- [ ] AC2: With no `port`, `lms_server_start()` reports "LM Studio server started successfully on the port that LM Studio used last.", and with `port = 1234` it reports "LM Studio server started successfully on port 1234.", as a test in `tests/testthat/test-serve.R` checks. `grep -rn "default port" R/ man/ README.Rmd README.md vignettes/` prints no line.
+- [ ] AC3: In `man/lms_server_start.Rd`, the `port` argument says that the functions that send requests ask `http://localhost:1234` by default. Each line of `man/*.Rd` that starts, after any spaces, with `lms_server_start(` passes `port = 1234`, as `grep -n "^ *lms_server_start(" man/*.Rd` shows.
+- [ ] AC4: `install_lmstudio(method = "browser")` tells the user to open the LM Studio app once and then restart R, as an assertion on its message in the browser-method test of `tests/testthat/test-vignette-claims.R` checks.
+- [ ] AC5: The knitted `vignettes/chat-options.Rmd`, `vignettes/text-analysis.Rmd`, and `vignettes/headless-config.Rmd` each hold the MD5 sum of their edited source, as `tests/testthat/test-vignette-knit.R` checks. The output of the server-start chunk in `chat-options.Rmd` and of the `start-server` chunk in `headless-config.Rmd` holds `✔ LM Studio server started successfully on port 1234.`
+- [ ] AC6: The development section of `NEWS.md` says that the success message of `lms_server_start()` with no `port` names the port as the one LM Studio used last, that the help examples, the README, and the vignettes start the server with `port = 1234`, and that `install_lmstudio()` says to open the app once.
+- [ ] AC7: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings.
+
+## Coverage
+<!-- owner: plan · create/amend-via-gate -->
+
+- AC1 → T4
+- AC2 → T1, T2, T4, T5
+- AC3 → T1, T2
+- AC4 → T3
+- AC5 → T5
+- AC6 → T6
+- AC7 → T7
+
+## Tasks
+<!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
+
+- [ ] T1: Test first in `tests/testthat/test-serve.R`: the success message of a no-port start and of `port = 1234`, red against `R/serve.R:153`. Then change that message. Add to `@param port` (`R/serve.R:38-40`) that the request functions ask `http://localhost:1234` by default. Pass `port = 1234` in the four `lms_server_start()` examples (`R/serve.R:104-116`), and rewrite the first comment.
+- [ ] T2: Pass `port = 1234` in each other roxygen example line that starts with `lms_server_start(`. On 2026-10-18, `grep -n "^#' *lms_server_start(" R/*.R` gave `R/chat.R:2618`, `R/load.R:93`, `R/download.R:37`, `:193`, `:280`, `R/list.R:50`, `:236`, `R/serve.R:443`, `:528`, `:694`, `:821`, `R/unload.R:36`, `:108`. Rerun the grep at the task. Run `devtools::document()`, then the AC3 grep and the AC2 grep over `R/` and `man/`.
+- [ ] T3: Add a message assertion to the browser-method test (`tests/testthat/test-vignette-claims.R:357`) and see it red. Then edit the warning at `R/setup.R:148` to say to open the LM Studio app once, then restart R.
+- [ ] T4: Test first in `tests/testthat/test-vignette-claims.R`: read `README.Rmd` and `vignettes/*.Rmd.orig`. Skip when they are absent (`.Rbuildignore` drops them, LESSONS M005). Fail when the files are present and give no matching line, and fail on a matching line without `port = 1234`. See it red on today's six lines. Then edit `README.Rmd:59-60`, `chat-options.Rmd.orig:38`, `text-analysis.Rmd.orig:69`, and `headless-config.Rmd.orig:101`, `:184`, `:233`, plus any prose that says the start uses the default port. Run `devtools::build_readme()`.
+- [ ] T5: Live knit, one source per run: `Rscript data-raw/knit-vignettes.R vignettes/<name>.Rmd.orig` for `chat-options`, `text-analysis`, and `headless-config` (LESSONS M009), with the server stopped and no model loaded. Stop the daemon after the `headless-config` knit. End with a start on port 1234 and a stop (LESSONS M083). Run the AC2 grep over `vignettes/`.
+- [ ] T6: One new bullet in the development section of `NEWS.md`, written against the T1 to T5 output.
+- [ ] T7: `devtools::test()` and `devtools::check()` clean.
+
+## Work log
+<!-- owner: any skill · append-only; one line per entry; absolute dates. -->
+
+- 2026-10-18: created by /milestone-plan.
+- 2026-10-18: tier check: not run — work named at the question set.
+- 2026-10-18: question set: which work — the server port fix, the "No-port start outside getting-started" candidate row.
+- 2026-10-18: question set: change the `port` default of `lms_server_start()` — no, keep the default and fix the docs and messages.
+- 2026-10-18: question set: live LM Studio runs on this Mac (start and stop the server, re-knit chat-options, text-analysis, and headless-config) — granted.
+- 2026-10-18: plan gate chose the docs and message fix over a `port` default of 1234 because the user chose it and it changes no exported behavior; falsified by a reader who follows the fixed docs and still starts the server on another port.
+- 2026-10-18: collision check: absorbs the "No-port start outside getting-started" row in full; M083 shipped the getting-started part; no D-entry bears on a server port; inbox has 0 open issues and 0 open PRs.
+- 2026-10-18: lessons surfaced: M005 (skip a source-reading test on an empty file list), M009 (knit one source per run; the headless knit leaves the daemon up), M083 (end a live run with a start on 1234 and a stop).
+- 2026-10-18: criteria audit (full mode), 6 findings, all taken: AC1's test skip and non-empty check moved to T4; AC1's README.md clause now names the line, not a `build_readme()` diff; AC3 widened to every `man/*.Rd` example line (13 sites outside `lms_server_start()`) and its port text narrowed to the request functions; AC4 names the new message assertion; AC5's output clause narrowed to chat-options and headless-config, because text-analysis sets `rlmstudio.quiet` before its start chunk; the browser warning's quiet bypass became a candidate row.
+- 2026-10-18: AC1 keeps a one-line domain (a call split over lines is outside it), decided toward the narrower promise.
+- 2026-10-18: changelog: one new NEWS bullet, beside the M083 getting-started bullet.
+
+## Decisions
+<!-- owner: implement / review · append-only; milestone-local. -->
+
+## Review
+<!-- owner: review · exclusive. -->
