@@ -32,9 +32,9 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `grep -n "cli::cli_alert" R/*.R` prints lines of `R/utils-msg.R` and the one line of the already-loaded echo branch of `R/load.R`, and no other line.
-- [ ] AC2: A table test in `tests/testthat/test-quiet-alerts.R` has one row for each of the five call sites that the Scope `In:` names. Each row runs its call once with `rlmstudio.quiet` set to `TRUE` and asserts that the shown output does not hold that row's alert text, and once with the option `FALSE` and asserts that it does.
-- [ ] AC3: The development section of `NEWS.md` has one bullet that names `check_lms_version()`, `install_lmstudio()`, and the print of a chat result as now silent under `rlmstudio.quiet`.
+- [x] AC1: `grep -n "cli::cli_alert" R/*.R` prints lines of `R/utils-msg.R` and the one line of the already-loaded echo branch of `R/load.R`, and no other line.
+- [x] AC2: A table test in `tests/testthat/test-quiet-alerts.R` has one row for each of the five call sites that the Scope `In:` names. Each row runs its call once with `rlmstudio.quiet` set to `TRUE` and asserts that the shown output does not hold that row's alert text, and once with the option `FALSE` and asserts that it does.
+- [x] AC3: The development section of `NEWS.md` has one bullet that names `check_lms_version()`, `install_lmstudio()`, and the print of a chat result as now silent under `rlmstudio.quiet`.
 - [ ] AC4: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings.
 
 ## Coverage
@@ -72,3 +72,10 @@ With `options(rlmstudio.quiet = TRUE)`, no alert of the package prints, except t
 - 2026-10-18: T4: `devtools::document()` no diff (its link warning at `R/serve.R:753` predates the branch); `devtools::check()` 0 errors, 0 warnings, 0 notes; `devtools::test()` as at T2 (T3 changed NEWS only).
 - 2026-10-18: claim audit: 16 claims read, 0 corrected — NEWS.md, R/chat_oop.R, R/setup.R, R/utils-msg.R, tests/testthat/test-quiet-alerts.R (fresh Opus reader; ran each path under quiet TRUE and FALSE).
 - 2026-10-18: implement complete; status review.
+
+## Review
+<!-- owner: review · exclusive -->
+
+- AC1: `grep -n "cli::cli_alert" R/*.R` on 2026-10-18 at 8edc161 printed `R/load.R:149` (the `cli_alert_warning(` inside `if (isTRUE(echo_load_config))` of the already-loaded branch, lines 145-151 read) and `R/utils-msg.R:27`, `:41`, `:55`, `:69`, and no other line. Pass.
+- AC2: `tests/testthat/test-quiet-alerts.R` has five cases, one per Scope `In:` site: `check_lms_version()` no CLI (`R/setup.R:43`), unparsed output (`:69`), version 0.3.9 (`:82`), `install_lmstudio("browser")` (`:147`), print with `logprobs = NULL` (`R/chat_oop.R:94`). Each nested `test_that()` runs its call with `rlmstudio.quiet` TRUE and asserts `expect_no_match` of its alert text, then FALSE and asserts `expect_match`. `test_file()` on 2026-10-18: 30 expectations, 0 failures. Implement T1 saw all five quiet halves red before T2, and a planted direct call turned one row red. Pass.
+- AC3: `NEWS.md:9`, under `# rlmstudio (development version)`, is one bullet that names `check_lms_version()`, `install_lmstudio(method = "browser")`, and "the print of a chat result" as showing no alerts with `options(rlmstudio.quiet = TRUE)`. Pass.
