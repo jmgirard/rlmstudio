@@ -32,12 +32,12 @@ A user who follows a no-server hint starts the server on the port that the faile
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: A table test in `tests/testthat/test-serve.R` calls `stop_if_no_server()` with the server probe failing, once for each `host` in this list: the default `host`, `http://localhost:8080`, `localhost:5000`, `http://LocalHost:1234`, `http://127.0.0.1:4321`, `http://localhost`, `http://192.168.1.5:1234`, and one `host` for which `httr2::url_parse()` errors. For each row it asserts the class `rlmstudio_no_server`. For the first six rows it asserts that the message holds `lms_server_start(port = <p>)`, with `<p>` 1234, 8080, 5000, 1234, 4321, and 1234. For the last two rows it asserts that the message holds the `host` text and no `lms_server_start(`.
-- [ ] AC2: A test calls the model-list lookup of a chat route with the server probe failing, for `host` `http://localhost:8080` and for `http://192.168.1.5:1234`. It asserts the class `rlmstudio_no_server`, the lookup label "because the model-list lookup failed", `lms_server_start(port = 8080)` in the first message, and no `lms_server_start(` in the second.
-- [ ] AC3: The "Server not running" section of `man/rlmstudio-conditions.Rd` says to start the server with `lms_server_start()` and the port of `host` when the hostname of `host` is `localhost` in any letter case or `127.0.0.1`, 1234 for the default `host`, and to start it on the machine that `host` names otherwise, as a read of the section shows.
-- [ ] AC4: `install_lmstudio(method = "headless")` reports `lms_server_start(port = 1234)` in its last message, as an assertion in the successful headless-install test of `tests/testthat/test-vignette-claims.R` checks.
-- [ ] AC5: The development section of `NEWS.md` has one bullet that says that the no-server errors and the headless install message now name the port to start the server on.
-- [ ] AC6: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings.
+- [x] AC1: A table test in `tests/testthat/test-serve.R` calls `stop_if_no_server()` with the server probe failing, once for each `host` in this list: the default `host`, `http://localhost:8080`, `localhost:5000`, `http://LocalHost:1234`, `http://127.0.0.1:4321`, `http://localhost`, `http://192.168.1.5:1234`, and one `host` for which `httr2::url_parse()` errors. For each row it asserts the class `rlmstudio_no_server`. For the first six rows it asserts that the message holds `lms_server_start(port = <p>)`, with `<p>` 1234, 8080, 5000, 1234, 4321, and 1234. For the last two rows it asserts that the message holds the `host` text and no `lms_server_start(`.
+- [x] AC2: A test calls the model-list lookup of a chat route with the server probe failing, for `host` `http://localhost:8080` and for `http://192.168.1.5:1234`. It asserts the class `rlmstudio_no_server`, the lookup label "because the model-list lookup failed", `lms_server_start(port = 8080)` in the first message, and no `lms_server_start(` in the second.
+- [x] AC3: The "Server not running" section of `man/rlmstudio-conditions.Rd` says to start the server with `lms_server_start()` and the port of `host` when the hostname of `host` is `localhost` in any letter case or `127.0.0.1`, 1234 for the default `host`, and to start it on the machine that `host` names otherwise, as a read of the section shows.
+- [x] AC4: `install_lmstudio(method = "headless")` reports `lms_server_start(port = 1234)` in its last message, as an assertion in the successful headless-install test of `tests/testthat/test-vignette-claims.R` checks.
+- [x] AC5: The development section of `NEWS.md` has one bullet that says that the no-server errors and the headless install message now name the port to start the server on.
+- [x] AC6: `devtools::test()` and `devtools::check()` report no failures, errors, or warnings.
 
 ## Coverage
 <!-- owner: plan · create/amend-via-gate -->
@@ -81,3 +81,19 @@ A user who follows a no-server hint starts the server on the port that the faile
 - 2026-10-18: T5 done: one NEWS bullet in the development section; the simple-english hook split two long sentences.
 - 2026-10-18: T6 done: `devtools::check()` 0 errors, 0 warnings, 0 notes (4m 40s), run before the claim-audit wording fixes, which touch help prose and NEWS only.
 - 2026-10-18: claim audit: 27 claims read, 2 corrected — NEWS.md (the error says how to start the server, not always a port), R/conditions.R (a host that does not parse gets the second hint).
+- 2026-10-18: review added the template's empty `## Decisions` heading and the `## Review` section, which the plan file left out; evidence recorded for AC1 to AC6 and the consistency gate.
+
+## Decisions
+<!-- owner: implement / review · append-only; milestone-local. -->
+
+## Review
+<!-- owner: review · exclusive. -->
+
+- 2026-10-18: branch level with origin/main at review start; no Copilot round (PROFILE has no `# Copilot review: on` line).
+- AC1: `devtools::test()` 2026-10-18 on the branch head: 0 failed, 0 errors, 3 skipped, 24489 passed. `test-serve.R` "the no-server abort names the port of a local host" ran its 7 subtests (the 5 listed local hosts, `http://localhost`, and the default host), 2 expectations each, all passing; "names no start call for another host" ran `http://192.168.1.5:1234` and `http://localhost:abc` (does not parse), 3 expectations each (class, host text, no `lms_server_start(`), all passing. T1 records the red-first run and the fixed-1234 plant.
+- AC2: same run: `test-model-check.R` "a lookup that cannot reach the server names the port of a local host" ran 4 subtests (openai and openresponses × `http://localhost:8080` and `http://192.168.1.5:1234`), 3 or 4 expectations each (class, lookup label, then `lms_server_start(port = 8080)`, or the host text and no `lms_server_start(`), all passing.
+- AC3: read of the "Server not running" section of `man/rlmstudio-conditions.Rd` (2026-10-18, after a no-diff `devtools::document()`): it says that if the hostname of `host` is `localhost`, in any letter case, or `127.0.0.1`, start the server with `lms_server_start()` and the port of `host`, that for the default `host` that is `lms_server_start(port = 1234)`, and that for any other `host` you start the server on the machine that `host` names.
+- AC4: same `devtools::test()` run: `test-vignette-claims.R` "install_lmstudio() with the headless method runs the LM Studio install script" passed its 6 expectations, which include `lms_server_start(port = 1234)` in the text after the "installed successfully." line (the last message). T4 records the red run on the old message.
+- AC5: `NEWS.md:9`, one bullet in the development section: the `rlmstudio_no_server` error "says to run `lms_server_start()` with the port of `host`" for `localhost` or `127.0.0.1`, 1234 when `host` names no port, and "The headless `install_lmstudio()` message now names `lms_server_start(port = 1234)`". It names the port for local hosts only, as the code does; no milestone number in it.
+- AC6: 2026-10-18 on the branch head `bc98fcb`: `devtools::test()` 0 failed, 0 errors (3 skipped); `devtools::check()` 0 errors, 0 warnings, 0 notes (5m 2s).
+- Consistency gate: `cairn_validate.py` all checks passed; `devtools::document()` no diff; `pkgdown::check_pkgdown()` no problems; README not touched; NEWS has the entry; no new top-level file; no principle changed, so no `cairn_impact` run.
