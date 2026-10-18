@@ -1,6 +1,6 @@
 # Tests of the request body that a call sends. Unlike test-arg-guards.R, this
-# file has no CRAN skip, so a CRAN check runs it. The helpers it shares
-# with test-arg-guards.R are in helper-arg-guards.R.
+# file has no CRAN skip, so a CRAN check runs it. The helpers that
+# test-arg-guards.R defined and both files use are in helper-arg-guards.R.
 
 # A reply that the route of `name` reads as text.
 stream_reply <- function(name, route) {
