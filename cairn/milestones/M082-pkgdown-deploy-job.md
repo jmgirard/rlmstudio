@@ -7,7 +7,7 @@
 - **Principles touched:** —
 - **Resolves:** —
 - **Surface tier:** internal — a CI workflow that builds and deploys the package site, which no package user runs
-- **Branch/PR:** m082-pkgdown-deploy-job
+- **Branch/PR:** m082-pkgdown-deploy-job, https://github.com/jmgirard/rlmstudio/pull/84
 
 ## Goal
 
