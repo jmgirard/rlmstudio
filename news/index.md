@@ -2,6 +2,13 @@
 
 ## rlmstudio (development version)
 
+- [`vignette("getting-started")`](https://jmgirard.github.io/rlmstudio/articles/getting-started.md)
+  now tells you to open the LM Studio app once after the install. The
+  vignette starts the server with `port = 1234`, because LM Studio
+  otherwise uses the port that it used last time. It shows how to find a
+  model key in the LM Studio model catalog. It also names the `status`
+  of a finished download, `"completed"`.
+
 ## rlmstudio 0.3.0
 
 CRAN release: 2026-10-02

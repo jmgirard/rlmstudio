@@ -15,7 +15,8 @@ the package call it the CLI. The package uses `lms` to start and stop
 parts of LM Studio. If you do not have LM Studio yet, run
 `rlmstudio::install_lmstudio(method = "browser")`. It opens the LM
 Studio download page in your web browser. After you install LM Studio,
-restart R.
+open the app once, and then restart R. The LM Studio documentation says
+that you need to run LM Studio at least once before you can use `lms`.
 
 Load the package and check that R can find LM Studio.
 
@@ -50,11 +51,16 @@ function gives a warning, and your script goes on. So call
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 next. It returns `TRUE` only when LM Studio answers.
 
+The number at the end of the address, 1234, is the port. Without a
+`port` argument, the server starts on the port that it used last time.
+If that port is not 1234, the calls of this vignette do not reach the
+server. So pass `port = 1234`.
+
 ``` r
 
-# Start the server, and wait about 30 seconds for it to answer
-lms_server_start(wait = 30)
-#> ✔ LM Studio server started successfully on the default port.
+# Start the server on port 1234, and wait about 30 seconds for it to answer
+lms_server_start(port = 1234, wait = 30)
+#> ✔ LM Studio server started successfully on port 1234.
 
 # TRUE if LM Studio answers
 lms_server_ready()
@@ -77,17 +83,21 @@ explains.
 # The models on this computer, one row each
 list_models()
 #>      state      type          display_name                                  key
-#> 1 unloaded       llm           Gemma 4 E4B                   google/gemma-4-e4b
-#> 2 unloaded       llm   Gemma 4 26B A4B QAT           google/gemma-4-26b-a4b-qat
-#> 3 unloaded       llm         Qwen3 4B 2507                   qwen/qwen3-4b-2507
-#> 4 unloaded       llm            Gemma 3 1B                    google/gemma-3-1b
-#> 5 unloaded embedding Nomic Embed Text v1.5 text-embedding-nomic-embed-text-v1.5
+#> 1 unloaded       llm             Lfm2 350m                     liquid/lfm2-350m
+#> 2 unloaded       llm    Functiongemma 270m            google/functiongemma-270m
+#> 3 unloaded       llm           Gemma 4 E4B                   google/gemma-4-e4b
+#> 4 unloaded       llm   Gemma 4 26B A4B QAT           google/gemma-4-26b-a4b-qat
+#> 5 unloaded       llm         Qwen3 4B 2507                   qwen/qwen3-4b-2507
+#> 6 unloaded       llm            Gemma 3 1B                    google/gemma-3-1b
+#> 7 unloaded embedding Nomic Embed Text v1.5 text-embedding-nomic-embed-text-v1.5
 #>   architecture size_gb
-#> 1       gemma4    6.39
-#> 2       gemma4   14.57
-#> 3        qwen3    2.12
-#> 4  gemma3_text    0.72
-#> 5         <NA>    0.08
+#> 1         lfm2    0.36
+#> 2  gemma3_text    0.53
+#> 3       gemma4    6.39
+#> 4       gemma4   14.57
+#> 5        qwen3    2.12
+#> 6  gemma3_text    0.72
+#> 7         <NA>    0.08
 ```
 
 On a new install, you have no model to chat with yet. LM Studio comes
@@ -101,6 +111,17 @@ variable, so that each call below can use it.
 model <- "google/gemma-3-1b"
 ```
 
+To find other models, go to the LM Studio model catalog at
+<https://lmstudio.ai/models>. The address of a model’s own page ends
+with its key. For example, the page of the model above is
+<https://lmstudio.ai/models/google/gemma-3-1b>, so its key is
+`google/gemma-3-1b`. Some catalog pages show a family of models, such as
+the sizes of one model. Open the page of one model in the family to get
+its key. A model page can also show an `lms get` command. The model name
+in that command is not always a key that
+[`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
+accepts, so use the end of the page address.
+
 ## Download the model
 
 [`lms_download()`](https://jmgirard.github.io/rlmstudio/reference/lms_download.md)
@@ -108,29 +129,35 @@ asks LM Studio to download a model. For a model that is already on your
 computer, it returns `"already_downloaded"`. For a new model, it returns
 a job id, a string that names the download. Pass the job id to
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-to see the status of the download. Call
+to see the status of the download.
+
+The `status` element of the result holds the status. While LM Studio
+downloads the model, it is `"downloading"`. Call
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
-again until the status says that the download finished.
+again until it is `"completed"`, which means that the download finished.
+If it is `"failed"`, the download did not finish. If you pass
+`"already_downloaded"` to
+[`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md),
+the status is `"already_downloaded"`.
 
 When the output below was made, the model was already on the computer.
-So the output shows the first case.
+So the output shows `"already_downloaded"`.
 
 ``` r
 
 # Download the model, or find that it is already on disk
 job_id <- lms_download(model)
 #> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [1.1s]
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [1.4s]
 #> 
 #> ✔ Model "google/gemma-3-1b" is already downloaded.
 job_id
 #> [1] "already_downloaded"
 
 # The status of the download
-lms_download_status(job_id)
-#> 
-#> ── Download Job: "N/A"
-#> Status: already_downloaded
+status <- lms_download_status(job_id)
+status$status
+#> [1] "already_downloaded"
 ```
 
 ## Put the model in memory
@@ -146,7 +173,7 @@ loads the model before the chat.
 # Read the model into memory
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [7.2s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.4s]
 #> 
 ```
 
@@ -173,7 +200,7 @@ reply <- lms_chat(
 
 # Print the text of the reply
 cat(reply)
-#> Hello there, welcome to the world of R!
+#> Hello there, welcome to the world of R! 😊
 ```
 
 ## Send several prompts in one call
@@ -200,15 +227,11 @@ answers <- lms_chat_batch(
   system_prompt = "Answer with one word."
 )
 answers
-#> [1] "Apple \n"                                       
-#> [2] "Blue \n\nLet me know if you’d like another one!"
-#> [3] "Mars \n"
+#> [1] "Apple \n" "Blue."    "Mars "
 
 # Remove the spaces and line breaks around each reply
 trimws(answers)
-#> [1] "Apple"                                          
-#> [2] "Blue \n\nLet me know if you’d like another one!"
-#> [3] "Mars"
+#> [1] "Apple" "Blue." "Mars"
 ```
 
 A reply can carry extra spaces or line breaks, and a model does not
@@ -229,7 +252,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [585ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [590ms]
 #> 
 
 # Stop the local server
