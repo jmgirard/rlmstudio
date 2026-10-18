@@ -232,7 +232,7 @@ install_lmstudio <- function(method = c("browser", "headless")) {
     rlm_progress_done()
     rlm_alert_success("LM Studio CLI installed successfully.")
     rlm_alert_info(
-      "In a headless environment, remember to start the daemon using {.fn lms_daemon_start} and the server using {.fn lms_server_start} before loading models."
+      "In a headless environment, remember to start the daemon using {.fn lms_daemon_start} and the server using {.code lms_server_start(port = 1234)} before loading models."
     )
   }
 

@@ -55,7 +55,7 @@ A user who follows a no-server hint starts the server on the port that the faile
 - [x] T1: Test first in `tests/testthat/test-serve.R`: the AC1 table, with `is_server_running()` mocked to `FALSE`, red against `R/serve.R:746`. Find an unparseable `host` with no spaces by a run of `httr2::url_parse()`, not from memory, because cli wraps a message at spaces. Move the host parse of `is_server_running()` (`R/serve.R:705-720`) into one helper that returns the hostname and port, and use it in the probe and in a new hint helper. Plant a hint that names 1234 for every host and see the 8080 row go red.
 - [x] T2: Test first beside the lookup tests of `tests/testthat/test-model-check.R:465`: the AC2 cases, red against `R/chat.R:997`. Then build that hint with the T1 helper.
 - [x] T3: Rewrite `R/conditions.R:34-36` to match the T1 hint. Run `devtools::document()` and read the section in `man/rlmstudio-conditions.Rd`.
-- [ ] T4: Test first: add the AC4 assertion to the successful headless-install test at `tests/testthat/test-vignette-claims.R:514` and see it red. Then edit `R/setup.R:235`.
+- [x] T4: Test first: add the AC4 assertion to the successful headless-install test at `tests/testthat/test-vignette-claims.R:514` and see it red. Then edit `R/setup.R:235`.
 - [ ] T5: One NEWS bullet in the development section, written against the T1 to T4 output.
 - [ ] T6: `devtools::test()` and `devtools::check()` clean.
 
@@ -77,3 +77,4 @@ A user who follows a no-server hint starts the server on the port that the faile
 - 2026-10-18: T1 done: `host_address()` and `no_server_hint()` in `R/serve.R`; the abort now has a main line and an "i" hint line. Unparseable host chosen by a run of `httr2::url_parse()`: `http://localhost:abc` (port not a number). The table went red on all rows first; a planted fixed-1234 `host_address()` turned the 8080 check red; `devtools::test()` 0 failed, 0 errors.
 - 2026-10-18: T2 done: `reply_model_serves()` builds its hint with `no_server_hint()`; the new lookup test in `test-model-check.R` went red on both routes and both hosts first, then green; `devtools::test()` 0 failed, 0 errors.
 - 2026-10-18: T3 done: the "Server not running" section names `localhost`, `127.0.0.1`, and `lms_server_start(port = 1234)` for the default host; `devtools::document()` rewrote `man/rlmstudio-conditions.Rd` and the 13 pages that inherit it; `devtools::test()` 0 failed, 0 errors.
+- 2026-10-18: T4 done: the headless install message names `lms_server_start(port = 1234)`; the new assertion reads the text after the success line, and went red on the old message first; `devtools::test()` 0 failed, 0 errors.
