@@ -1,6 +1,6 @@
 # M082: The pkgdown deploy runs in its own job, and only that job can write or queue
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -58,6 +58,9 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 - 2026-10-18: T3 done: manual run 39149477796 on 1a943f5 ended `success`, with `build` `success` and `deploy` `skipped`. `gh run download 39149477796 -n site -D <scratch>` put `index.html` and `.nojekyll` directly in the folder.
 - 2026-10-18: verify: `devtools::test()` on 1a943f5 gave 0 failed, 0 errors, 3 skipped. The diff changes no R code. Status set to `review`.
 - 2026-10-18: claim audit: not owed — internal tier.
+- 2026-10-18: amendment routed: AC2 — diff-bug #1 and #2: a job-level group on `deploy` lets an older build deploy last, and a skipped `deploy` may hold the fixed group. The repair is a workflow-level group `pkgdown-deploy` under the deploy condition and a per-run group otherwise, with no job-level group, which AC2's `concurrency: group: pkgdown-deploy` on `deploy` forbids.
+- 2026-10-18: amendment routed: AC3 — same findings. AC3 forbids a top-level `concurrency` key, which the repair needs.
+- 2026-10-18: review fixes ea9aaaa for diff-bug #3 to #5: `retention-days: 1`, `overwrite: true`, and the checkout comment. Status set to `in-progress` for the AC2 and AC3 amendment alone.
 
 ## Decisions
 
@@ -69,3 +72,19 @@ Evidence gathered 2026-10-18 on e5f5f85. `main` at 171e449, the branch base, so 
 - AC2: the same script read job `deploy`: `needs` is `build`, `if` is identical to the stated condition, `permissions` is identical to `list(contents = "write")`, and `concurrency` is identical to `list(group = "pkgdown-deploy")`. The steps in order are `actions/checkout@v6`, `actions/download-artifact@v4` with `name: site` and `path: docs`, and `JamesIves/github-pages-deploy-action@v4.5.0` with `clean: true`, `branch: gh-pages`, and `folder: docs`. Pass.
 - AC3: a loop over the 2 jobs the file holds (`build`, `deploy`) found `permissions` or `concurrency` on `deploy` alone. The file has no top-level `concurrency` key. Pass.
 - AC4: run 39149477796 (`workflow_dispatch`, branch `m082-pkgdown-deploy-job`, head 1a943f5) ended `success`, with `build` `success` and `deploy` `skipped` (`gh run view --json jobs`, re-read at review). `git diff 1a943f5 HEAD -- .github` is empty, so the run used the workflow file under review. A fresh `gh run download 39149477796 -n site -D <scratch>` put `index.html` and `.nojekyll` directly in the folder. Pass.
+
+Consistency gate on e936d95: `cairn_validate.py` all checks passed. `devtools::check()` 0 errors, 0 warnings, 0 notes, and the tree stayed clean, so `document()` made no diff. `pkgdown::check_pkgdown()` no problems. No principle changed, so no `cairn_impact` run. No changelog entry is owed, because no package behavior changes. README untouched.
+
+spawned: diff-bug, blame-history, prior-review
+
+- diff-bug #1: builds now run in parallel and a deploy joins `pkgdown-deploy` only when its build ends, so an older build that ends later deploys an older site last. The old job held its group from the start — amendment routed (AC2, AC3): AC3 forbids a concurrency key outside `deploy`, which the repair needs.
+- diff-bug #2: if GitHub puts a job in its group before it reads the job's `if:`, a skipped `deploy` on a branch or pull-request run takes the fixed group `pkgdown-deploy` and can cancel a pending deploy. The docs do not settle it (work log, T1) — amendment routed (AC2, AC3), same repair as #1.
+- diff-bug #3: every run keeps the `site` artifact for the default 90 days, and only the same run's `deploy` reads it — fix now, `retention-days: 1` (upload-artifact v4 README, Retention Period, 1 to 90 allowed), fixed ea9aaaa.
+- diff-bug #4: a re-run of all jobs uploads `site` again into the same run, and v4 artifacts are immutable — fix now, `overwrite: true` (README, "Overwriting an Artifact"), fixed ea9aaaa.
+- diff-bug #5: the comment "because it cleans the workspace" is imprecise. On a folder that holds no git repository, checkout deletes the folder contents before it clones (`src/git-directory-helper.ts:118-123` at v6) — fix now, comment reworded, fixed ea9aaaa.
+- diff-bug #6 to #8: the handoff keeps `.nojekyll`, no CNAME is needed, nothing the old job did is lost, and the other comments are accurate — noted, no defect.
+- blame-history #1: deploys can land out of order — amendment routed, same as diff-bug #1.
+- blame-history #2: the real deploy path has not run under this file. Only a run on `main` can run it — reject, planned change: Scope names the first push run on `main` after the merge as the check, with `/hotfix` on failure.
+- blame-history #3: the build job has no concurrency group, as M078 recorded pkgdown as the exception to the group pattern — reject, false as a defect: consistent with the record, and the amendment for #1 sets a workflow-level group.
+- blame-history #4: a fixed artifact name conflicts on a re-run — fix now, same as diff-bug #4, fixed ea9aaaa.
+- prior-review: no finding. The diff keeps the M080 F1, F2, and F5 fixes, the M078 manual-run guard, and the M075 CLAUDE.md step. The PR-comment probe returned no threads.
