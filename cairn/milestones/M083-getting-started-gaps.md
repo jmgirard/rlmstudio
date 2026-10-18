@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M083: The getting-started vignette covers the first app run, a finished download, the server port, and finding model keys
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — a vignette and a help page that package users read   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m083-getting-started-gaps   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -108,7 +108,7 @@ reader asks for one). The other vignettes.
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Live probes, with the token from `~/.lms-token` (never printed).
+- [x] T1: Live probes, with the token from `~/.lms-token` (never printed).
       Read https://lmstudio.ai/docs/cli for the first-run step and the LM
       Studio model catalog for where a key shows. Download a small model
       that is not on disk and read `lms_download_status()` until the
@@ -147,6 +147,12 @@ reader asks for one). The other vignettes.
 - 2026-10-18: plan chose a start chunk that the later calls reach (AC3) over a recovery note that tells the reader to read the port and pass `host`, because the vignette's later calls use the default host; falsified by a live run where an explicit `port = 1234` does not make the server answer on 1234, for example while it runs on another port.
 - 2026-10-18: plan chose a pointer to where keys are listed (AC4) over a package function that searches the catalog, because the REST endpoint table of cairn/references/lmstudio-api-surface.md has no catalog search and GP1 allows only wrappers; falsified by an LM Studio endpoint that searches the catalog.
 - 2026-10-18: criteria audit (full mode, fresh Opus reader) returned 11 findings; 10 taken as narrowings: AC1 paraphrase of a docs sentence; AC2 names both finished values and re-checks with a new download, never a delete; AC3 names port 8080 and adds `list_models()`; AC4 names two keys; AC5 anchors on the sentence text and `git status man/`; AC6 word list as substrings and regexes inside R chunks only; AC7 port test through `lms_server_start()` with two removal sites, status test with two branch removals, notes against main. Finding 5 (end with the last-used port back on 1234) is a run property, moved to T1. Finding 9's work-log record of the knit is a recording instrument, moved to T5; AC6 states the deliverable property (the knit script's output) instead.
+- 2026-10-18: set in-progress on branch m083-getting-started-gaps, cut from main at a51b423.
+- 2026-10-18: T1 docs read: https://lmstudio.ai/docs/cli says "You need to run LM Studio at least once before you can use `lms`" and that `lms` ships with LM Studio.
+- 2026-10-18: T1 catalog read: https://lmstudio.ai/models lists models; a model's own page is https://lmstudio.ai/models/<publisher>/<name> (google/gemma-3-1b; the functiongemma family page links google/functiongemma-270m). The `lms get google/gemma-3-1B-it-QAT` line on the gemma page is not a download key: `lms_download()` aborted "google/gemma-3-1b-it-qat not found".
+- 2026-10-18: T1 port probe (LM Studio CLI, macOS): after a start on 8080 and a stop, `lms server status --json` said port 8080; `lms_server_start(wait = 30)` with no port started on 8080 and `lms_server_ready()` gave FALSE; `lms_server_start(port = 1234, wait = 30)` gave `lms_server_ready()` TRUE and `list_models()` a data frame. With the server still running on 8080, a start with `port = 1234` also gave TRUE.
+- 2026-10-18: T1 side finding: for under 1 s after a start that switches the port, `lms server status` reports the old port and not running, and `lms server stop` then says "not running", so `lms_server_stop()` reports "already stopped" and leaves the server up; recorded as a candidate row.
+- 2026-10-18: T1 download probe: `lms_download("google/functiongemma-270m")` (not on disk) gave job_1846f7bb47; `lms_download_status()` read "downloading", then "completed" with `completed_at`; `lms_download("google/gemma-3-1b")` gave "already_downloaded". The model stays on disk (569.72 MB). Server left stopped with last-used port 1234.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
