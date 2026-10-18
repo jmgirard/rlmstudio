@@ -1,6 +1,6 @@
 # M082: The pkgdown deploy runs in its own job, and only that job can write or queue
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -37,7 +37,7 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 
 - [x] T1: Rewrite `.github/workflows/pkgdown.yaml` as AC1 to AC3 state. Keep the triggers, the workflow-level `permissions: read-all`, and the build steps of the `pkgdown` job (`pkgdown.yaml:28-49`) in `build`. Use `actions/upload-artifact@v4`, the version `test-coverage.yaml:66` uses, and the matching `actions/download-artifact`. Before the edit, read the GitHub Actions docs on whether a job that its `if:` skips takes its concurrency group, and record the answer in the work log. Replace the comment `# Only restrict concurrency for non-PR jobs` and move the deploy comment to the `deploy` job.
 - [x] T2: Read the edited file with `yaml::read_yaml()` in a scratch script, not committed, and print the keys that AC1 to AC3 name for each job. Record the result in the work log.
-- [ ] T3: Push the branch and start a manual run with `gh workflow run pkgdown.yaml --ref m082-pkgdown-deploy-job`. Wait for it, then read the job conclusions and download the artifact as AC4 states. Record the run id in the work log.
+- [x] T3: Push the branch and start a manual run with `gh workflow run pkgdown.yaml --ref m082-pkgdown-deploy-job`. Wait for it, then read the job conclusions and download the artifact as AC4 states. Record the run id in the work log.
 
 ## Work log
 
@@ -55,6 +55,9 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 - 2026-10-18: T1 docs read: the GitHub workflow-syntax page and the concurrency page do not say whether a job that its `if:` skips takes its concurrency group. The `deploy` job keeps the literal group `pkgdown-deploy`, as AC2 states. Falsified by a branch or pull-request run whose skipped `deploy` job holds or cancels a pending deploy.
 - 2026-10-18: T1 done: `pkgdown` job split into `build` and `deploy`. The comments were checked against the upload-artifact v4 README (hidden files left out from v4.4), the checkout v6 `clean` input (`git clean -ffdx` before fetch), and `pkgdown:::build_github_pages()` (writes `.nojekyll`). `actions/download-artifact@v4` matches the upload major.
 - 2026-10-18: T2 done: a scratch `yaml::read_yaml()` script printed each job's keys. `build` has no `permissions` or `concurrency` key and uploads `docs` as `site` with `include-hidden-files: true`. `deploy` has `needs: build`, the M080 `if:`, `contents: write`, group `pkgdown-deploy`, and the steps checkout, download `site` into `docs`, and the deploy action with `clean`, `branch: gh-pages`, and `folder: docs`. The file has no top-level `concurrency` key.
+- 2026-10-18: T3 done: manual run 39149477796 on 1a943f5 ended `success`, with `build` `success` and `deploy` `skipped`. `gh run download 39149477796 -n site -D <scratch>` put `index.html` and `.nojekyll` directly in the folder.
+- 2026-10-18: verify: `devtools::test()` on 1a943f5 gave 0 failed, 0 errors, 3 skipped. The diff changes no R code. Status set to `review`.
+- 2026-10-18: claim audit: not owed — internal tier.
 
 ## Decisions
 
