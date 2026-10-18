@@ -127,7 +127,7 @@ reader asks for one). The other vignettes.
       conventions).
 - [x] T4: Replace the fresh-install sentence of the `lms_server_ready()`
       roxygen in `R/serve.R` and run `devtools::document()`.
-- [ ] T5: Re-knit with
+- [x] T5: Re-knit with
       `Rscript data-raw/knit-vignettes.R vignettes/getting-started.Rmd.orig`
       and the token, with a work-log line for the run; run the word, regex,
       and inline-expression searches; add one NEWS entry under the
@@ -156,6 +156,7 @@ reader asks for one). The other vignettes.
 - 2026-10-18: T2: two tests added to `test-vignette-claims.R`; both pass. Plants in scratch copies, each alone: port dropped at the `build_args_server_start()` call of `lms_server_start()` (1 failed), `--port` dropped in `build_args_server_start()` (1 failed), `return(NULL)` before the status request (2 failed, 1 error), the `"already_downloaded"` test replaced by `FALSE` (2 failed); unchanged control 0 failed.
 - 2026-10-18: T3: four passages written from the T1 records: open the app once (paraphrasing the docs sentence), `port = 1234` in the start chunk with the reason, the catalog page address as the key source (with the family-page note), and the `status` element with "downloading", "completed", and "already_downloaded"; the download chunk now prints `status$status`. `test-vignette-knit.R` fails until the T5 knit.
 - 2026-10-18: T4: the help sentence now reads "An empty list counts, so a server that lists no models gives `TRUE`", a package claim that `test-server-ready.R:89` covers, in place of a claim about LM Studio; a second `devtools::document()` writes nothing.
+- 2026-10-18: T5: `Rscript data-raw/knit-vignettes.R vignettes/getting-started.Rmd.orig` with the token knitted to `vignettes/getting-started.Rmd` with no error; the start chunk shows "started successfully on port 1234" and the download chunk `"already_downloaded"`. The model list now holds google/functiongemma-270m from T1, and the batch replies changed with the run. Word list (substring, ignoring case), code regexes over the 58 R chunk lines, and "`r " searches found nothing; each search went red on a planted line. One NEWS entry added.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
