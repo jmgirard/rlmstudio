@@ -1,6 +1,6 @@
 # rlmstudio (development version)
 
-* `vignette("getting-started")` now tells you to open the LM Studio app once after the install, starts the server on port 1234, shows how to find a model key in the LM Studio model catalog, and names the `status` of a finished download, `"completed"`.
+* `vignette("getting-started")` now tells you to open the LM Studio app once after the install. It starts the server on port 1234. It shows how to find a model key in the LM Studio model catalog. It also names the `status` of a finished download, `"completed"`.
 
 # rlmstudio 0.3.0
 
