@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-18 (M085 done: graduated the server-start hints row, pruned the M082 row, no lesson added; validate green)_
+_Last hygiene check: 2026-10-18 (M086 done: graduated the install message quiet row, pruned the M083 row, added two review rows and one lesson; validate green)_
 _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
 
 ## Milestones
@@ -10,11 +10,10 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M086 | Every alert of the package follows the quiet option | review | — | normal | milestones/M086-quiet-alerts.md |
 | M087 | CRAN skips the slow tests and runs the request-body tests | planned | — | normal | milestones/M087-cran-test-time.md |
+| M086 | Every alert of the package follows the quiet option | done | — | normal | milestones/archive/M086-quiet-alerts.md |
 | M085 | The no-server hints name the port of the host that the call asked | done | — | normal | milestones/archive/M085-no-server-hint-port.md |
 | M084 | The server-start examples pass port 1234, and the no-port message names the last-used port | done | — | normal | milestones/archive/M084-server-start-port.md |
-| M083 | The getting-started vignette covers the first app run, a finished download, the server port, and finding model keys | done | — | normal | milestones/archive/M083-getting-started-gaps.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -46,7 +45,6 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
 - Split the "Server not running" and "API failure" help sections of `R/conditions.R` as M064 splits "Malformed response". Both carry batch and embedding paragraphs to every page that inherits them. Promote on a user who misreads such a paragraph, added 2026-09-30, M064 plan gate
 - Two follow-ups to the `messages` data-frame checks of M067. First, the row-count detail does not name the column, so a user with a wide frame cannot tell which column is wrong. Promote on a user who cannot find that column. Second, on R 4.1 and 4.2, `vapply()` over a `POSIXlt` column in `empty_rows()` can read the parts of the time and warn. The same code runs on main for a `POSIXlt` column of the right length. DESCRIPTION allows R 4.1.0, and no run covered it. Promote on a run on R 4.1 or 4.2 that warns, added 2026-09-30, M067 review findings R5 and R6
 - The `lms_server_start()` help says that the CLI returns before the REST API answers. On 2026-09-30, on macOS with the desktop app, 4 of 4 starts gave a TRUE `lms_server_ready()` at once after the CLI returned. Run the same start on a headless llmster install. If the REST API also answers at once there, narrow the help. Promote on that run, or on a start where the REST API answers late, added 2026-09-30, M071 review return 1, split 2026-10-01, narrowed 2026-10-18 by M083 (the `lms_server_ready()` fresh-install line shipped)
-- install message quiet: the browser branch of `install_lmstudio()` prints its restart warning with `cli::cli_alert_warning()` (`R/setup.R:148`), not through `R/utils-msg.R`, so the `rlmstudio.quiet` option does not hide it (GP6). Promote on a user whose quiet script prints it, added 2026-10-18, M084 criteria audit — started M086
 - load echo alert: with `echo_load_config = TRUE` and the model already loaded, `lms_load()` returns the model key and not the load config, and says so with a `cli::cli_alert_warning()` (`R/load.R:149`) that the `rlmstudio.quiet` option does not hide and no caller can catch by class. Decide between a classed warning past quiet, as D-010 and D-021 give warnings about lost results, and a quiet-aware alert. Promote on a script that reads that return value as a load config, added 2026-10-18, M086 plan
 - openai logprobs stub: `lms_chat_openai(logprobs = TRUE)` always returns `NULL` logprobs (`R/chat.R:827-833`) with no warning at the call. Its help says so, and the print alert "Log probability data is empty or missing." does too, but `rlmstudio.quiet` hides that alert since M086. Decide on a warning past quiet at the call, as D-032 gives the native batch. Promote on a user who asked for logprobs on the OpenAI route and missed that none came back, added 2026-10-18, M086 review finding blame-history 1
 - tests under ambient quiet: with `options(rlmstudio.quiet = TRUE)` set before the run, as a `.Rprofile` can, four tests of `test-vignette-claims.R` fail on main at 7524bcc (the two headless `install_lmstudio()` expectations at lines 527 and 529, `lms_daemon_stop()` at 654, `lms_server_stop()` at 713), because they assert message text and do not pin the option. Pin `rlmstudio.quiet = FALSE` in each, as `test-chat.R:709` does. Promote on a contributor whose run fails this way, added 2026-10-18, M086 review finding diff-bug 1
