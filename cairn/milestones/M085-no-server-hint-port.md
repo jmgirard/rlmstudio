@@ -83,6 +83,7 @@ A user who follows a no-server hint starts the server on the port that the faile
 - 2026-10-18: claim audit: 27 claims read, 2 corrected — NEWS.md (the error says how to start the server, not always a port), R/conditions.R (a host that does not parse gets the second hint).
 - 2026-10-18: review added the template's empty `## Decisions` heading and the `## Review` section, which the plan file left out; evidence recorded for AC1 to AC6 and the consistency gate.
 - 2026-10-18: review fix-now: D-042 added (trades GP3), DESIGN.md:52 corrected, `Principles touched` set to GP3 (the plan missed that GP3 names the start call), help example, NEWS letter-case sentence, brace-host test row.
+- 2026-10-18: step-7 approval: m085-no-server-hint-port approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
