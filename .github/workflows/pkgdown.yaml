@@ -52,7 +52,8 @@ jobs:
         shell: Rscript {0}
 
       # build_site_github_pages() writes docs/.nojekyll, and upload-artifact
-      # leaves out hidden files by default.
+      # leaves out hidden files by default. The artifact expires after one day,
+      # so after that, re-run all jobs, not the deploy job alone.
       - name: Upload site
         uses: actions/upload-artifact@v4
         with:
@@ -75,7 +76,8 @@ jobs:
       contents: write
     steps:
       # The deploy action runs git in a checkout. The checkout comes first,
-      # because on a folder with no git repository it deletes the contents.
+      # because on a folder with no git repository it deletes the contents,
+      # which would remove a site downloaded before it.
       - uses: actions/checkout@v6
 
       - name: Download site
