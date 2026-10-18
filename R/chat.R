@@ -2615,7 +2615,7 @@ rlm_check_route_dots <- function(dot_names, api_type) {
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' req <- lms_client("http://localhost:1234")
 #' # req is a base httr2 request object that can be further modified

@@ -444,7 +444,7 @@ build_args_server_stop <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #' lms_server_stop()
 #' }
 lms_server_stop <- function() {
@@ -529,7 +529,7 @@ build_args_server_status <- function(
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' # Get basic status string
 #' lms_server_status()
@@ -695,7 +695,7 @@ wait_for_server <- function(host, wait, timeout = 1, pause = 0.25,
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' if (is_server_running(host = "http://localhost:1234")) {
 #'   message("The LM Studio server is currently active.")
@@ -822,7 +822,7 @@ stop_if_no_server <- function(host = "http://localhost:1234") {
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' if (lms_server_ready()) {
 #'   list_models()

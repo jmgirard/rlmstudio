@@ -34,7 +34,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' # Download a model by its HuggingFace identifier
 #' job_id <- lms_download("google/gemma-3-1b")
@@ -190,7 +190,7 @@ rlm_abort_download_failed <- function(resp, job_id) {
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' job_id <- lms_download("google/gemma-3-1b")
 #' status <- lms_download_status(job_id)
@@ -277,7 +277,7 @@ download_status_fault <- function(body) {
 #'
 #' @examples
 #' \dontrun{
-#' lms_server_start()
+#' lms_server_start(port = 1234)
 #'
 #' job_id <- lms_download("google/gemma-3-1b")
 #' status <- lms_download_status(job_id)

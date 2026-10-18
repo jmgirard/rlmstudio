@@ -313,7 +313,7 @@ other than LM Studio may be answering on the host.
 
 \examples{
 \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 lms_download("google/gemma-3-1b")
 
 # Load a model with default settings

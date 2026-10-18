@@ -79,7 +79,7 @@ package rather than from httr2.
 
 \examples{
 \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 
 if (lms_server_ready()) {
   list_models()

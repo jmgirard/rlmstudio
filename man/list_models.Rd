@@ -226,7 +226,7 @@ these two rules.
 
 \examples{
 \dontrun{
-lms_server_start()
+lms_server_start(port = 1234)
 lms_download("google/gemma-3-1b")
 lms_load("google/gemma-3-1b")
 
