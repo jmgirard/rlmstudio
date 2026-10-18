@@ -42,7 +42,7 @@ This package relies on the LM Studio CLI (version 0.4.0 or higher) and the new v
 library(rlmstudio)
 install_lmstudio()
 ## ℹ Opening the LM Studio download page in your default browser...
-## ! Please install or update the software, restart R, and try again.
+## ! Please install or update the software, open the LM Studio app once, then restart R and try again.
 ```
 
 ## Quick Start

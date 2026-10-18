@@ -362,9 +362,15 @@ test_that("install_lmstudio() with the browser method opens the download page", 
     .package = "utils"
   )
 
-  claim_messages(install_lmstudio(method = "browser"))
+  shown <- claim_messages(install_lmstudio(method = "browser"))
 
   expect_identical(opened, "https://lmstudio.ai/download")
+  # The LM Studio documentation says to run the app once before lms works.
+  expect_match(
+    cli::ansi_strip(paste(shown, collapse = "")),
+    "open the LM Studio app once, then restart R",
+    fixed = TRUE
+  )
 })
 
 test_that("list_models() asks localhost:1234 by default and gives one row per model", {
