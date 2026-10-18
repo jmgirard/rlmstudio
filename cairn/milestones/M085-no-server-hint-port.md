@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M085: The no-server hints name the port of the host that the call asked
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — two error messages, a help section that 13 pages inherit, and an install message   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m085-no-server-hint-port   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -52,7 +52,7 @@ A user who follows a no-server hint starts the server on the port that the faile
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive change is amend-via-gate. -->
 
-- [ ] T1: Test first in `tests/testthat/test-serve.R`: the AC1 table, with `is_server_running()` mocked to `FALSE`, red against `R/serve.R:746`. Find an unparseable `host` with no spaces by a run of `httr2::url_parse()`, not from memory, because cli wraps a message at spaces. Move the host parse of `is_server_running()` (`R/serve.R:705-720`) into one helper that returns the hostname and port, and use it in the probe and in a new hint helper. Plant a hint that names 1234 for every host and see the 8080 row go red.
+- [x] T1: Test first in `tests/testthat/test-serve.R`: the AC1 table, with `is_server_running()` mocked to `FALSE`, red against `R/serve.R:746`. Find an unparseable `host` with no spaces by a run of `httr2::url_parse()`, not from memory, because cli wraps a message at spaces. Move the host parse of `is_server_running()` (`R/serve.R:705-720`) into one helper that returns the hostname and port, and use it in the probe and in a new hint helper. Plant a hint that names 1234 for every host and see the 8080 row go red.
 - [ ] T2: Test first beside the lookup tests of `tests/testthat/test-model-check.R:465`: the AC2 cases, red against `R/chat.R:997`. Then build that hint with the T1 helper.
 - [ ] T3: Rewrite `R/conditions.R:34-36` to match the T1 hint. Run `devtools::document()` and read the section in `man/rlmstudio-conditions.Rd`.
 - [ ] T4: Test first: add the AC4 assertion to the successful headless-install test at `tests/testthat/test-vignette-claims.R:514` and see it red. Then edit `R/setup.R:235`.
@@ -73,3 +73,5 @@ A user who follows a no-server hint starts the server on the port that the faile
 - 2026-10-18: criteria audit (full mode, fresh Opus reader), 1 finding, taken: AC3 named "this machine", which also covers `::1`; it now names `localhost` and `127.0.0.1`. The reader's tip to pick an unparseable host with no spaces went into T1.
 - 2026-10-18: changelog: one new NEWS bullet in the development section.
 - 2026-10-18: ROADMAP line cap: merged the two `lms_embed()` rows, the two `list_instances()` rows, and the RoPE row into the `ttl` row, to add the M085 to M087 rows and the "load echo alert" row.
+- 2026-10-18: implement started on branch m085-no-server-hint-port; tree clean at the cut.
+- 2026-10-18: T1 done: `host_address()` and `no_server_hint()` in `R/serve.R`; the abort now has a main line and an "i" hint line. Unparseable host chosen by a run of `httr2::url_parse()`: `http://localhost:abc` (port not a number). The table went red on all rows first; a planted fixed-1234 `host_address()` turned the 8080 check red; `devtools::test()` 0 failed, 0 errors.
