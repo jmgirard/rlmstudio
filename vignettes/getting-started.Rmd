@@ -88,19 +88,21 @@ memory, which a later section explains.
 # The models on this computer, one row each
 list_models()
 #>      state      type          display_name                                  key
-#> 1 unloaded       llm    Functiongemma 270m            google/functiongemma-270m
-#> 2 unloaded       llm           Gemma 4 E4B                   google/gemma-4-e4b
-#> 3 unloaded       llm   Gemma 4 26B A4B QAT           google/gemma-4-26b-a4b-qat
-#> 4 unloaded       llm         Qwen3 4B 2507                   qwen/qwen3-4b-2507
-#> 5 unloaded       llm            Gemma 3 1B                    google/gemma-3-1b
-#> 6 unloaded embedding Nomic Embed Text v1.5 text-embedding-nomic-embed-text-v1.5
+#> 1 unloaded       llm             Lfm2 350m                     liquid/lfm2-350m
+#> 2 unloaded       llm    Functiongemma 270m            google/functiongemma-270m
+#> 3 unloaded       llm           Gemma 4 E4B                   google/gemma-4-e4b
+#> 4 unloaded       llm   Gemma 4 26B A4B QAT           google/gemma-4-26b-a4b-qat
+#> 5 unloaded       llm         Qwen3 4B 2507                   qwen/qwen3-4b-2507
+#> 6 unloaded       llm            Gemma 3 1B                    google/gemma-3-1b
+#> 7 unloaded embedding Nomic Embed Text v1.5 text-embedding-nomic-embed-text-v1.5
 #>   architecture size_gb
-#> 1  gemma3_text    0.53
-#> 2       gemma4    6.39
-#> 3       gemma4   14.57
-#> 4        qwen3    2.12
-#> 5  gemma3_text    0.72
-#> 6         <NA>    0.08
+#> 1         lfm2    0.36
+#> 2  gemma3_text    0.53
+#> 3       gemma4    6.39
+#> 4       gemma4   14.57
+#> 5        qwen3    2.12
+#> 6  gemma3_text    0.72
+#> 7         <NA>    0.08
 ```
 
 On a new install, you have no model to chat with yet. LM Studio comes with
@@ -134,18 +136,19 @@ id to `lms_download_status()` to see the status of the download.
 The `status` element of the result holds the status. While LM Studio
 downloads the model, it is `"downloading"`. Call `lms_download_status()`
 again until it is `"completed"`, which means that the download finished.
-If you pass `"already_downloaded"` to `lms_download_status()`, the status
-is `"already_downloaded"`.
+If it is `"failed"`, the download did not finish. If you pass
+`"already_downloaded"` to `lms_download_status()`, the status is
+`"already_downloaded"`.
 
 When the output below was made, the model was already on the computer. So
-the output shows the first case.
+the output shows `"already_downloaded"`.
 
 
 ``` r
 # Download the model, or find that it is already on disk
 job_id <- lms_download(model)
 #> ℹ Initiating download for model: "google/gemma-3-1b"...
-#> ✔ Initiating download for model: "google/gemma-3-1b"... [1.2s]
+#> ✔ Initiating download for model: "google/gemma-3-1b"... [1.4s]
 #> 
 #> ✔ Model "google/gemma-3-1b" is already downloaded.
 job_id
@@ -168,7 +171,7 @@ the chat waits for the load. `lms_load()` loads the model before the chat.
 # Read the model into memory
 lms_load(model)
 #> ℹ Loading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.2s]
+#> ✔ Model "google/gemma-3-1b" loaded and verified. [5.4s]
 #> 
 ```
 
@@ -192,7 +195,7 @@ reply <- lms_chat(
 
 # Print the text of the reply
 cat(reply)
-#> Welcome to the world of R! 😊
+#> Hello there, welcome to the world of R! 😊
 ```
 
 ## Send several prompts in one call
@@ -217,7 +220,7 @@ answers <- lms_chat_batch(
   system_prompt = "Answer with one word."
 )
 answers
-#> [1] "Apple \n" "Blue."    "Mars \n"
+#> [1] "Apple \n" "Blue."    "Mars "
 
 # Remove the spaces and line breaks around each reply
 trimws(answers)
@@ -240,7 +243,7 @@ server.
 # Remove the model from memory
 lms_unload(model)
 #> ℹ Unloading model: "google/gemma-3-1b"...
-#> ✔ Model "google/gemma-3-1b" unloaded successfully. [586ms]
+#> ✔ Model "google/gemma-3-1b" unloaded successfully. [590ms]
 #> 
 
 # Stop the local server
@@ -255,4 +258,4 @@ remote computer that you reach over a network. This is called a headless
 setup. `vignette("headless-config")` shows how to install and use LM Studio
 that way.
 
-<!-- Knitted from getting-started.Rmd.orig with MD5 7575ee7baed14e75361794e2f884d496. -->
+<!-- Knitted from getting-started.Rmd.orig with MD5 f0b111c0fa87bcd695662ad6101da934. -->

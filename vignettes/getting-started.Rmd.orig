@@ -116,11 +116,12 @@ id to `lms_download_status()` to see the status of the download.
 The `status` element of the result holds the status. While LM Studio
 downloads the model, it is `"downloading"`. Call `lms_download_status()`
 again until it is `"completed"`, which means that the download finished.
-If you pass `"already_downloaded"` to `lms_download_status()`, the status
-is `"already_downloaded"`.
+If it is `"failed"`, the download did not finish. If you pass
+`"already_downloaded"` to `lms_download_status()`, the status is
+`"already_downloaded"`.
 
 When the output below was made, the model was already on the computer. So
-the output shows the first case.
+the output shows `"already_downloaded"`.
 
 ```{r download}
 # Download the model, or find that it is already on disk
