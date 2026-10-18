@@ -94,6 +94,7 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 - 2026-10-18: review: evidence recorded and all 7 criteria ticked, gate clean; three review lenses running (checkpoint, findings not yet settled).
 - 2026-10-18: review: 18 findings settled (6 fix now, 5 follow-up, 7 reject); fix-now edits made, suite re-run pending (checkpoint).
 - 2026-10-18: review: the settled count is 7 fix now (4 edits), 5 follow-up, 6 reject, not the 6/5/7 of the line above; `devtools::test()` after the fixes: 0 fail, 3 skip, 24580 pass.
+- 2026-10-18: step-7 approval: m084-server-start-port approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
