@@ -61,7 +61,7 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 - [x] T4: Test first in `tests/testthat/test-vignette-claims.R`: read `README.Rmd` and `vignettes/*.Rmd.orig`. Skip when they are absent (`.Rbuildignore` drops them, LESSONS M005). Fail when the files are present and give no matching line, and fail on a matching line without `port = 1234`. See it red on today's six lines. Then edit `README.Rmd:59-60`, `chat-options.Rmd.orig:38`, `text-analysis.Rmd.orig:69`, and `headless-config.Rmd.orig:101`, `:184`, `:233`, plus any prose that says the start uses the default port. Run `devtools::build_readme()`.
 - [x] T5: Live knit, one source per run: `Rscript data-raw/knit-vignettes.R vignettes/<name>.Rmd.orig` for `chat-options`, `text-analysis`, and `headless-config` (LESSONS M009), with the server stopped and no model loaded. Stop the daemon after the `headless-config` knit. End with a start on port 1234 and a stop (LESSONS M083). Run the AC2 grep over `vignettes/`.
 - [x] T6: One new bullet in the development section of `NEWS.md`, written against the T1 to T5 output.
-- [ ] T7: `devtools::test()` and `devtools::check()` clean.
+- [x] T7: `devtools::test()` and `devtools::check()` clean.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -88,6 +88,7 @@ A reader who copies a server start from the README, a vignette, or a help exampl
 - 2026-10-18: T4 done: the new source test in test-vignette-claims.R was red on the six planned lines and silent on getting-started, then green after the edits; the README Quick Start now says why port 1234; `devtools::build_readme()` rebuilt README.md. `devtools::test()` has 3 failures, all `test-vignette-knit.R:43` for the three edited sources, which T5's knit clears.
 - 2026-10-18: T5 done: live knits of chat-options, text-analysis, and headless-config, one per run, each exit 0; chat-options and headless-config print "started successfully on port 1234."; new model replies changed review 1's sentiment and review 4's stars in text-analysis, and the prose there names neither; `lms daemon down` refused because the desktop app runs the daemon, so it stays up; ended with `lms server start --port 1234` and a stop, no model loaded; the AC2 grep printed nothing; `devtools::test()` 0 fail, 3 skip, 24580 pass.
 - 2026-10-18: T6 done: two NEWS bullets, one for the start message and examples and one for the install message (the plan said one bullet; two read better as separate behaviors); the request-function default was read from the signatures (13 `host = "http://localhost:1234"`, plus `lms_server_start()`'s `host = NULL`).
+- 2026-10-18: T7 done: the first `devtools::check()` gave 1 ERROR in "checking tests", whose last 13 lines named no test or message, and its temp check directory was already removed; a second run with a kept `check_dir` gave 0 errors, 0 warnings, 0 notes on the same code. The unnamed error matches the intermittent-test candidate row (the M065 check error); the hygiene pass notes it there. `devtools::test()` after T6: 0 fail.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
