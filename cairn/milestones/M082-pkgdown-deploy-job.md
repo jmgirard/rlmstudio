@@ -15,29 +15,30 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 
 ## Scope
 
-**In:** Split the one `pkgdown` job of `.github/workflows/pkgdown.yaml` into a `build` job and a `deploy` job. The `build` job builds the site and uploads it as the artifact `site`, under the read-only workflow permissions. The `deploy` job runs only under the M080 deploy condition, alone holds `contents: write`, and alone joins the concurrency group `pkgdown-deploy`. The comments in the file change to match. After the merge, the review records the first push run on `main`, which is the only run that can show a real deploy. If that run does not deploy, the fix goes to `/hotfix`.
+**In:** Split the one `pkgdown` job of `.github/workflows/pkgdown.yaml` into a `build` job and a `deploy` job. The `build` job builds the site and uploads it as the artifact `site`, under the read-only workflow permissions. The `deploy` job runs only under the M080 deploy condition and alone holds `contents: write`. A workflow-level concurrency group puts each run that meets that condition in the group `pkgdown-deploy`, one run at a time. Every other run gets a group of its own. The comments in the file change to match. After the merge, the review records the first push run on `main`, which is the only run that can show a real deploy. If that run does not deploy, the fix goes to `/hotfix`.
 
 **Out:** A prerelease that deploys and a release of an old tag that deploys an older site stay as they are, because M080 review findings F4 and F6 kept them. A move of the Pages source to GitHub Actions deployment is not planned (work log, plan gate). The other workflows keep their concurrency groups, because no candidate row names a fault in them.
 
 ## Acceptance criteria
 
 - [x] AC1: `.github/workflows/pkgdown.yaml` has a job `build` that builds the site and uploads the `docs` folder as the artifact `site`, hidden files included (`include-hidden-files: true`). The job has no `permissions` key of its own, so it runs under the workflow-level `permissions: read-all`. A read of the file with `yaml::read_yaml()` shows this.
-- [x] AC2: The same file has a job `deploy` with `needs: build`, `permissions: contents: write`, and `concurrency: group: pkgdown-deploy`. Its job-level `if:` is `github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)`. Its steps check out the repository, then download the artifact `site` into `docs`, then run `JamesIves/github-pages-deploy-action@v4.5.0` with `clean: true`, `branch: gh-pages`, and `folder: docs`. A read of the file with `yaml::read_yaml()` shows this.
-- [x] AC3: Of the jobs that `yaml::read_yaml()` returns for the file, only `deploy` carries a `permissions` key or a `concurrency` key, and the file has no top-level `concurrency` key. A loop over every job shows this.
+- [ ] AC2: The same file has a job `deploy` with `needs: build` and `permissions: contents: write`. Its job-level `if:` is `github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)`. Its steps check out the repository, then download the artifact `site` into `docs`, then run `JamesIves/github-pages-deploy-action@v4.5.0` with `clean: true`, `branch: gh-pages`, and `folder: docs`. A read of the file with `yaml::read_yaml()` shows this.
+- [ ] AC3: Of the jobs that `yaml::read_yaml()` returns for the file, only `deploy` carries a `permissions` key, and no job carries a `concurrency` key. The top-level `concurrency` key holds only the key `group`, with the value `pkgdown-${{ (github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) && 'deploy' || github.run_id }}`. A loop over every job and a read of the top-level key show this.
 - [x] AC4: A manual run on the milestone branch (`gh workflow run pkgdown.yaml --ref <branch>`) ends with the conclusion `success` for the `build` job and `skipped` for the `deploy` job. `gh run view <id> --json jobs` shows the two conclusions. `gh run download <id> -n site -D <dir>` puts `index.html` and `.nojekyll` directly in `<dir>`.
 
 ## Coverage
 
 - AC1 → T1, T2
-- AC2 → T1, T2
-- AC3 → T1, T2
-- AC4 → T3
+- AC2 → T1, T2, T4
+- AC3 → T1, T2, T4
+- AC4 → T3, T4
 
 ## Tasks
 
 - [x] T1: Rewrite `.github/workflows/pkgdown.yaml` as AC1 to AC3 state. Keep the triggers, the workflow-level `permissions: read-all`, and the build steps of the `pkgdown` job (`pkgdown.yaml:28-49`) in `build`. Use `actions/upload-artifact@v4`, the version `test-coverage.yaml:66` uses, and the matching `actions/download-artifact`. Before the edit, read the GitHub Actions docs on whether a job that its `if:` skips takes its concurrency group, and record the answer in the work log. Replace the comment `# Only restrict concurrency for non-PR jobs` and move the deploy comment to the `deploy` job.
 - [x] T2: Read the edited file with `yaml::read_yaml()` in a scratch script, not committed, and print the keys that AC1 to AC3 name for each job. Record the result in the work log.
 - [x] T3: Push the branch and start a manual run with `gh workflow run pkgdown.yaml --ref m082-pkgdown-deploy-job`. Wait for it, then read the job conclusions and download the artifact as AC4 states. Record the run id in the work log.
+- [ ] T4: Remove the job-level group from `deploy` and add the top-level `concurrency` group that the amended AC3 states. Repeat the T2 parse check and the T3 manual run, and record the new run id.
 
 ## Work log
 
@@ -61,6 +62,11 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 - 2026-10-18: amendment routed: AC2 — diff-bug #1 and #2: a job-level group on `deploy` lets an older build deploy last, and a skipped `deploy` may hold the fixed group. The repair is a workflow-level group `pkgdown-deploy` under the deploy condition and a per-run group otherwise, with no job-level group, which AC2's `concurrency: group: pkgdown-deploy` on `deploy` forbids.
 - 2026-10-18: amendment routed: AC3 — same findings. AC3 forbids a top-level `concurrency` key, which the repair needs.
 - 2026-10-18: review fixes ea9aaaa for diff-bug #3 to #5: `retention-days: 1`, `overwrite: true`, and the checkout comment. Status set to `in-progress` for the AC2 and AC3 amendment alone.
+- 2026-10-18: re-audit: AC2 (reduced) — nothing.
+- 2026-10-18: re-audit: AC3 (reduced) — the wording did not rule out `cancel-in-progress: true`, which would break "one run at a time". Narrowed to "holds only the key `group`".
+- 2026-10-18: re-audit: AC3 (reduced) — nothing. The reader noted that the group condition and the `deploy` `if:` can drift apart. AC2 and AC3 each pin the same condition string exactly, and AC1 pins `permissions: read-all`.
+- 2026-10-18: amendment return: AC2 — "The same file has a job `deploy` with `needs: build` and `permissions: contents: write`."
+- 2026-10-18: amendment return: AC3 — "Of the jobs that `yaml::read_yaml()` returns for the file, only `deploy` carries a `permissions` key, and no job carries a `concurrency` key. The top-level `concurrency` key holds only the key `group`, with the value `pkgdown-${{ (github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) && 'deploy' || github.run_id }}`." The Scope In sentence on the group changed to match, and T4 was added for the work.
 
 ## Decisions
 
