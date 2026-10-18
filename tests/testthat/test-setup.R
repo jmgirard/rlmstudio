@@ -36,6 +36,7 @@ test_that("check_lms_version is FALSE when the CLI is missing", {
 })
 
 test_that("check_lms_version shows unparsed output with braces and does not run it", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   local_mocked_bindings(lms_path = function() "lms")
   local_mocked_bindings(
     run = function(...) list(status = 0, stdout = brace_probe, stderr = ""),
