@@ -69,6 +69,7 @@ A run of `pkgdown.yaml` that does not deploy the site can neither cancel a queue
 - 2026-10-18: amendment return: AC3 — "Of the jobs that `yaml::read_yaml()` returns for the file, only `deploy` carries a `permissions` key, and no job carries a `concurrency` key. The top-level `concurrency` key holds only the key `group`, with the value `pkgdown-${{ (github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) && 'deploy' || github.run_id }}`." The Scope In sentence on the group changed to match, and T4 was added for the work.
 - 2026-10-18: T4 done in d353754: top-level group added, job-level group removed, comments updated. The parse check showed no job with a `concurrency` key, `deploy` alone with `permissions`, and a top-level `concurrency` of only `group`, identical to the AC3 value. Manual run 39150570451 on d353754 ended `success`, with `build` `success` and `deploy` `skipped`. Its `site` artifact held `index.html` and `.nojekyll` and expires 2026-10-19, one day after upload.
 - 2026-10-18: verify: no R code changed since the clean `devtools::test()` on 1a943f5 and `devtools::check()` on e936d95. Status set to `review`.
+- 2026-10-18: step-7 approval: m082-pkgdown-deploy-job approved for merge.
 
 ## Decisions
 
