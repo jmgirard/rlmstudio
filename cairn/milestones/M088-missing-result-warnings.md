@@ -1,6 +1,6 @@
 # M088: A missing load config or missing OpenAI logprobs warns past quiet
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -78,3 +78,4 @@ Tests that fail under an ambient `rlmstudio.quiet = TRUE` pin the option to `FAL
 - 2026-10-18: T5 done: `?lms_chat` (`@return`), `?lms_chat_openai` (`@param logprobs`, `@return`, alias `rlmstudio_no_logprobs`), `?lms_chat_batch` (`...` logprobs paragraph); `?lms_load` was done in T1. The `lms_chat_openai()` help no longer says that LM Studio stubs the logprobs, a claim no probe backs; it says the package reads none. Installed to a scratch library, `utils::help()` finds one topic for each class (`lms_load`, `lms_chat_openai`). One NEWS bullet.
 - 2026-10-18: T6 done: `devtools::document()` no diff; `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped; `devtools::check()` 0 errors, 0 warnings, 0 notes.
 - 2026-10-18: claim audit: 60 claims read, 5 corrected — R/chat.R (`lms_chat_batch` abort paths and "no reply is read", `lms_chat_openai` `logprobs` param under `simplify = TRUE`, `lms_chat` `@return` route wording), NEWS.md ("two cases", `force = FALSE`, `simplify = TRUE` and at least one reply read). Tests re-run after the fixes: 0 failed, 0 errors, 0 warnings, 3 skipped.
+- 2026-10-18: all tasks done; status set to review.

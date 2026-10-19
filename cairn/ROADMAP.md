@@ -10,7 +10,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M088 | A missing load config or missing OpenAI logprobs warns past quiet | in-progress | — | normal | milestones/M088-missing-result-warnings.md |
+| M088 | A missing load config or missing OpenAI logprobs warns past quiet | review | — | normal | milestones/M088-missing-result-warnings.md |
 | M087 | CRAN skips the slow tests and runs the request-body tests | done | — | normal | milestones/archive/M087-cran-test-time.md |
 | M086 | Every alert of the package follows the quiet option | done | — | normal | milestones/archive/M086-quiet-alerts.md |
 | M085 | The no-server hints name the port of the host that the call asked | done | — | normal | milestones/archive/M085-no-server-hint-port.md |
