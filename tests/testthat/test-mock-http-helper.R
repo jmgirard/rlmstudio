@@ -160,7 +160,7 @@ test_that("request_target() reads a request when the program on the first dry-ru
 # retries on "Failed to create server" and not on a curl error, or skips.
 # Here the first dry run instead ends with curl's own error for a port number
 # out of range, which curl raises before it opens a socket. So with httpuv
-# installed, this test runs the retry after a curl error on macOS and on Linux.
+# installed, this test runs the retry after a curl error on Linux too.
 test_that("request_target() reads a request when the first dry run ends with a curl error", {
   require_httpuv()
   real_echo <- curl::curl_echo
