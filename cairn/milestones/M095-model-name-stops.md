@@ -172,6 +172,8 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
 - 2026-10-19: review return 1: AC1 needs the request-2-of-3 mismatch served from the reply recorded in `stop_live/embed_unknown`, not a mocked reply; AC4 needs one NEWS entry that names the embedding check, the stop, and the one lookup per kept id, not three entries. Status in-progress.
 - 2026-10-19: T7 added for review return 1 (minor amendment; Coverage AC1 and AC4 now also map to T7).
 - 2026-10-19: T7 done: new block serves the recorded `embed_unknown` reply and model list at request 2 of 3 with both `simplify` settings; a plant that skips `check_reply_model()` in `embed_request()` turned it red. NEWS: the three entries became one entry with three sub-items. Full `devtools::test()`: 25065 passed, 0 failed, 3 live skips. Status review.
+- 2026-10-19: review pass 2: 26 findings from four lenses (16 fixed in de493dd, 8 rejected, 1 candidate row "chat-options server_message", 1 for hygiene); check clean at a8557ea.
+- 2026-10-19: step-7 approval: m095-model-name-stops approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
