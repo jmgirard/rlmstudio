@@ -51,11 +51,11 @@ call of `req_dry_run()`, and tries 2 to 6 are the 5 tries of the helper.
 | E5 | the request itself is at fault (URL with a space) | tries 1 to 6 `curl_error_url_malformat`: "URL using bad/illegal format or missing URL: URL rejected: Malformed input to a URL function" | tries 1 to 6 `curl_error_out_of_memory`: "Out of memory" |
 | E6 | `request_body_text()` spreads its time limit | tries 1 to 5 `curl_error_operation_timedout`: "Timeout was reached [127.0.0.1]: Operation timed out after 500 milliseconds with 0 bytes received" | skipped before any try: "The echo server cannot bind a port that 127.0.0.1 holds here." |
 
-| E7 | the first dry run ends with a curl error (added by M090) | try 1 `curl_error_url_malformat`: "URL using bad/illegal format or missing URL: URL rejected: Port number was not a decimal number between 0 and 65535", try 2 request read | try 1 `curl_error_url_malformat`, same message, try 2 request read |
+| E7 | the first dry run ends with a curl error (added by M090, try 1 on port 0) | try 1 `curl_error_couldnt_connect`: "Could not connect to server [127.0.0.1]: Failed to connect to 127.0.0.1 port 0 after 0 ms: Could not connect to server", try 2 request read | try 1 `curl_error_couldnt_connect`: "Couldn't connect to server [127.0.0.1]: Failed to connect to 127.0.0.1 port 0 after 0 ms: Couldn't connect to server", try 2 request read |
 
-E7 ran in the M090 review, on the fixed test, on the same two systems. With
-E7, the whole file gave 41 passed, 1 skipped (E6), and 0 failed in the
-container.
+E7 ran after the M090 review return, on the same two systems. It calls
+`local_dry_run_ports(`, so with it the file has 6 such blocks. With E7, the
+whole file gave 41 passed, 1 skipped (E6), and 0 failed in the container.
 
 "Failed to create server" has the classes `simpleError`, `error`, and
 `condition` on both systems.

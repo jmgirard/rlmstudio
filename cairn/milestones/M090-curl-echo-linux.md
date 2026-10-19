@@ -81,7 +81,7 @@ account.
      task(s) satisfying it, by positional number. -->
 
 - AC1 → T1, T2, T3
-- AC2 → T4
+- AC2 → T4, T9
 - AC3 → T5
 - AC4 → T6
 - AC5 → T7
@@ -134,6 +134,9 @@ account.
       now covers it, record that issue's URL instead and file nothing.
 - [x] T8: Run `devtools::test()` on macOS. It reports 0 failures and 0
       warnings.
+- [x] T9: Review return 1. Remove the `curl::` calls from the new test, so
+      that `devtools::check()` gives no warning about an undeclared curl
+      import, with no DESCRIPTION change.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -161,6 +164,9 @@ account.
 - 2026-10-18: claim audit: not owed — internal tier.
 - 2026-10-18: status review. The Docker container `m090` stays up for review re-runs. It holds the package source in `/pkg` and the scripts in `/trace`.
 - 2026-10-18: review return 1: `devtools::check()` warns "'::' or ':::' import not declared from: 'curl'" in tests, because the new curl-error test calls `curl::curl_echo` and `curl::curl_fetch_memory` and DESCRIPTION does not list curl. Fix it so the check gives 0 warnings. Declaring curl in Suggests is a dependency change that the question set did not grant.
+- 2026-10-18: status in-progress for return 1, and task T9 added for it (minor amendment).
+- 2026-10-18: T9 approach: try 1 gets port 0 through the existing `local_dry_run_ports()` mock of curl's port picker. The echo server starts on port 0 with no error, and curl's own transfer to 127.0.0.1 port 0 fails with `curl_error_couldnt_connect` (observed on macOS and in the container). A mock of `httr2::req_dry_run` keeps the first error, and httr2 is in Imports. Chose this over adding curl to Suggests, because this needs no dependency change and the error now comes from the echo's own transfer (diff-bug #4); falsified by a system where httpuv refuses port 0, or where a connection to port 0 does not fail with a curl error.
+- 2026-10-18: T9 done: no `curl::` call is left in `tests/` or `R/` outside comments and one message string. The new block passed on macOS (nb 5, 0.137 s) and in the container (file 41 passed, 1 skipped, 0 failed). A plant (`curl_error` clause replaced by `TRUE`) went red with `curl_error_couldnt_connect` from `curl_dryrun()`. The block now calls `local_dry_run_ports(`, so the AC1 domain is 6 blocks, and page row E7 records its tries on both systems.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
