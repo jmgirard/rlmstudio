@@ -80,6 +80,7 @@ Tests that fail under an ambient `rlmstudio.quiet = TRUE` pin the option to `FAL
 - 2026-10-18: claim audit: 60 claims read, 5 corrected — R/chat.R (`lms_chat_batch` abort paths and "no reply is read", `lms_chat_openai` `logprobs` param under `simplify = TRUE`, `lms_chat` `@return` route wording), NEWS.md ("two cases", `force = FALSE`, `simplify = TRUE` and at least one reply read). Tests re-run after the fixes: 0 failed, 0 errors, 0 warnings, 3 skipped.
 - 2026-10-18: all tasks done; status set to review.
 - 2026-10-18: review started at eadb4b0; branch level with origin/main 34d97fa, no PR yet, Copilot round off (no header line).
+- 2026-10-18: step-7 approval: m088-missing-result-warnings approved for merge
 
 ## Decisions
 
