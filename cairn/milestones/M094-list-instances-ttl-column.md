@@ -122,7 +122,7 @@ every instance field.
       line what `remaining_ttl_seconds` holds for each instance. Leave both
       loaded for T4. If the no-ttl value is neither a number, `null`, nor
       absent, stop and amend AC1 and AC2.
-- [ ] T2: Tests first in `tests/testthat/test-list-instances.R` for AC1 to
+- [x] T2: Tests first in `tests/testthat/test-list-instances.R` for AC1 to
       AC4. Update `fixed_columns`, `expect_empty_instances()`, and the other
       tests that expect four columns. See them fail.
 - [ ] T3: In `R/list.R`, read the field in `list_instances()` with
@@ -161,6 +161,7 @@ every instance field.
 - 2026-10-19: plan chose the fifth position, before the configuration columns, over appending after them, because the fixed columns then stay together and a configuration field cannot move it; falsified by a user script that indexes configuration columns by position.
 - 2026-10-19: implement started on branch m094-list-instances-ttl-column, cut from main at 211b83c.
 - 2026-10-19: T1 live probe, LM Studio 0.4.26+4: in `GET /api/v1/models`, gemma-3-1b loaded with `--ttl 600` carried `remaining_ttl_seconds` 590, an integer, about 10 s after the load; the nomic instance loaded with no ttl had no such field at all (absent, not `null`). `lms ps --json` gave `ttlMs` 600000 and `null`. The no-ttl value is absent, so AC1 and AC2 stand. Both models stay loaded for T4.
+- 2026-10-19: T2 tests in `test-list-instances.R`: `instance_json()` takes `ttl`, `fixed_columns` holds five names, `expect_empty_instances()` checks a double ttl column; new tests for the column (values 600 and 12.5, absent, null, all-NA frame), the clash, the fault over 6 forms, the type skip, and a third body in the list_models/lms_server_ready test. Run before T3: failures in the new and the five-column tests (10 shown, 27 more), as expected.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
