@@ -1,6 +1,6 @@
 # M089: The OpenAI batch vector fallback names what it cannot store
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -50,7 +50,7 @@ The `@return` vector item and the `logprobs` paragraph of `?lms_chat_batch` name
 - [x] T2: In `R/chat.R:2371`, give the `"openai"` route its own fallback text that names the `lms_chat_result` replies. Update the OpenAI expectation at `tests/testthat/test-chat-schema.R:564`, which reads `"cannot store logprobs"`. Run `devtools::test()`.
 - [x] T3: Edit the `@return` vector item at `R/chat.R:1921` and the `logprobs` paragraph at `R/chat.R:1886-1897`. Write each sentence against the T1 test output. Run `devtools::document()`, and read `man/lms_chat_batch.Rd`.
 - [x] T4: Add the NEWS.md sentence to the `lms_chat_batch()` part of the `rlmstudio_no_logprobs` sub-bullet.
-- [ ] T5: Run `devtools::test()` and `devtools::check()`.
+- [x] T5: Run `devtools::test()` and `devtools::check()`.
 
 ## Work log
 
@@ -67,3 +67,4 @@ The `@return` vector item and the `logprobs` paragraph of `?lms_chat_batch` name
 - 2026-10-18: T4: two sentences added to the `rlmstudio_no_logprobs` sub-bullet of NEWS.md, backed by the T1 tests.
 - 2026-10-18: claim audit (first pass, fresh Opus reader): 19 claims read, 2 imprecise and corrected (the `warning_kinds` comment, and the NEWS sentence, which now states `simplify = TRUE` and a batch that does not abort). Its note that an OpenResponses reply with no logprobs part also gets the "logprobs dataframes" text, which AC2 keeps, became the candidate row "openresponses fallback text". The re-read of the two corrections is pending.
 - 2026-10-18: claim audit: 19 claims read, 3 corrected — NEWS.md, tests/testthat/test-batch-native-logprobs.R. The re-read passed the `warning_kinds` comment and added `logprobs = TRUE` to the NEWS sentence. No second pass, by the stopping rule.
+- 2026-10-18: T5: `devtools::check()` at f8c592c (T4): 0 errors, 0 warnings, 0 notes. The later commits change only a test comment, NEWS.md, and tracking files. Status set to review.
