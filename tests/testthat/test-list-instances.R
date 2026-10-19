@@ -214,6 +214,11 @@ test_that("an object, an array, or mixed kinds give a list-column", {
   expect_null(res$on[[3]])
 })
 
+test_that("a field of one number and one string gives a list-column", {
+  res <- config_frame(c('{"two": 8192}', '{"two": "auto"}'))
+  expect_identical(res$two, list(8192L, "auto"))
+})
+
 test_that("a configuration field keeps its name unless it clashes", {
   res <- config_frame(c('{"a-b": 1, "id": "x", "config.id": "y", "": 2}'))
   expect_identical(
@@ -359,6 +364,16 @@ test_that("an absent or null display_name or config gives NA, or NULL in a list-
   expect_identical(res$a, c(1, NA, NA))
   expect_identical(res$b, c("x", NA, NA))
   expect_identical(res$o, list(list(k = 1L), NULL, NULL))
+})
+
+test_that("an empty display_name stays an empty string", {
+  body <- instances_body(c(
+    instances_model("llm", "m1", '""', instance_json("i1")),
+    instances_model("llm", "m2", '"Model Two"', instance_json("i2"))
+  ))
+  res <- run_list_instances(body, quiet = TRUE)$value
+  expect_identical(res$display_name[res$id == "i1"], "")
+  expect_identical(res$display_name[res$id == "i2"], "Model Two")
 })
 
 test_that("a fault of the model list rules aborts with rlmstudio_bad_response", {

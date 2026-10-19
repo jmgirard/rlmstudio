@@ -50,6 +50,8 @@ that \code{\link[=list_models]{list_models()}} reads, so it honors \code{host} a
 \details{
 The model list does not carry four fields that \verb{lms ps --json} reports: the
 generation status, the queued requests, the ttl, and the last-used time.
+Each loaded instance in the model list carries \code{remaining_ttl_seconds},
+which \code{list_instances()} does not read.
 }
 \section{Columns}{
 
@@ -59,7 +61,7 @@ The first four columns are character columns:
 \item \code{key}: the key of its model.
 \item \code{type}: the type of its model, such as \code{"llm"} or \code{"embedding"}.
 \item \code{display_name}: the display name of its model, or \code{NA} when the model
-list gives none.
+list gives none or \code{null}. An empty name stays \code{""}.
 }
 
 Rows follow the order of the models in the model list, then the order of
