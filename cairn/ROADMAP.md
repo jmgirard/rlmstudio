@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-18 (M090 done: graduated "curl echo fault follow-ups", added "dry-run test comment gaps", pruned the M087 row, extended the M004 socket lesson; validate green)_
+_Last hygiene check: 2026-10-18 (M091 done: graduated "dry-run test comment gaps", added "proxy and local requests" and "free_port held-port callers", pruned the M088 row, extended the M004 socket lesson; validate green)_
 _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
 
 ## Milestones
@@ -10,10 +10,9 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M091 | Test dry runs skip a set proxy, and two helper comments match each system | review | — | normal | milestones/M091-dry-run-test-gaps.md |
+| M091 | Test dry runs skip a set proxy, and two helper comments match each system | done | — | normal | milestones/archive/M091-dry-run-test-gaps.md |
 | M090 | The curl echo fault is checked on Linux and reported to curl | done | — | normal | milestones/archive/M090-curl-echo-linux.md |
 | M089 | The OpenAI batch vector fallback names what it cannot store | done | — | normal | milestones/archive/M089-openai-fallback-text.md |
-| M088 | A missing load config or missing OpenAI logprobs warns past quiet | done | — | normal | milestones/archive/M088-missing-result-warnings.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -22,7 +21,6 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
 - list_instances fields and tests: `list_instances()` does not report four fields that only `lms ps --json` gives: the generation status, the queued requests, the ttl, and the last-used time. The REST model list does not carry them. Promote on a user who needs one of them, or once the REST list carries them, added 2026-09-28, M050 plan gate. Also, more tests for `list_instances()`: a field that mixes only a number and a string, and `display_name = ""`. M052 takes `type = NA` and an empty `type`. The code handles each today, added 2026-09-28, M050 review finding O4 (rows merged 2026-10-18 at the M085 plan for the line cap)
-- dry-run test comment gaps: three gaps outside the M090 diff. First, the never-replies comment of `test-mock-http-helper.R` says that the dry run ends with a curl error, yet on Linux that try gets "Failed to create server" (`cairn/references/curl-echo-fault.md` row E3). Second, the `free_port()` comment in `helper-ports.R` says that nothing listens on the port, yet on macOS it can be a port that a program holds on 127.0.0.1 alone, and a dry-run try on it reads an empty result. Third, with `http_proxy` set and 127.0.0.1 not in `no_proxy`, every dry run goes to the proxy. Added 2026-10-18, M090 review findings ripple #2 and #4, diff-bug pass 2 #5 and #7 — started M091
 - proxy and local requests: with `http_proxy` or `all_proxy` set and the host not in `no_proxy`, libcurl sends a request for 127.0.0.1 to the proxy (a test dry run, observed 2026-10-18). No package call was probed. Decide whether package requests to LM Studio skip a set proxy, added 2026-10-18, M091 plan
 - [low] model-name cases: Four model-name cases outside M049. First, no probe covered `lms_embed()` on `/v1/embeddings` with an unknown name. Promote on a live embedding reply from another model. Second, with no model loaded, an unknown name gets 400 "No models loaded" with no `code` on both OpenAI-style routes (observed 2026-10-01). So a batch does not stop there. Decide on a batch stop for it. Third, a batch by key against a model loaded under another id sends one lookup per input. Keep the lookup result across the batch, or document the cost. Fourth, a variant name, a file-name id, a name without its publisher, or a padded name. On 2026-10-01, with just-in-time loading on, none of them aborted while the right model answered. A variant or file-name id loaded under that name, and the reply named it. A bare or padded name got 400 `model_not_found`. An instance loaded under a file-name id did not show in the `loaded_instances` of `/api/v1/models`. Promote on such a name that aborts with just-in-time loading off. Added 2026-09-28, M049 plan gate and review findings O2, O3, R9, Q1, and Q2, M050 claim audit, narrowed 2026-10-01 by live probes
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
