@@ -83,7 +83,7 @@ variables.
       `serverSocket()` on that port succeeds, so `bind_free_port()` can
       return it. Write the `free_port()` comment from that probe and the
       never-replies comment from row E3 (derived-claims rule).
-- [ ] T2: Test first. In `tests/testthat/test-mock-http-helper.R`, add a
+- [x] T2: Test first. In `tests/testthat/test-mock-http-helper.R`, add a
       test that sets the AC3 variables with `withr::local_envvar()`, counts
       tries with `local_dry_run_ports()`, and asserts method, path, body, and
       `tries$n` of 1. See it fail on the current helper with the helper's "no
@@ -108,6 +108,8 @@ variables.
 - 2026-10-18: added the candidate row "proxy and local requests" for the package's own requests, outside this test-only scope.
 - 2026-10-18: implement started on branch `m091-dry-run-test-gaps`, cut from `22eeadb`.
 - 2026-10-18: T1 done: probe on macOS (R 4.6.1) held port 31234 on 127.0.0.1 with httpuv, and `serverSocket(31234)` then returned a connection; the `free_port()` comment and the never-replies comment now state the macOS and Linux results (row E3); `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped.
+- 2026-10-18: T2: the first draft of the proxy test took the proxy port and the echo port from two bare `free_port()` calls, which return the same port, so the echo server acted as the proxy and the test failed on an absolute-URL path; the echo port now leaves the proxy port out of its scan.
+- 2026-10-18: T2 done: on the old helper the proxy test failed with the helper's stop "The dry run received no request in 5 tries", last error `Could not connect to server` to the proxy port; with `httr2::req_options(req, noproxy = "*")` in `request_dry_run()` it passes in 1 try; `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

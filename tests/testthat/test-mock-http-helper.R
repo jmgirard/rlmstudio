@@ -193,6 +193,31 @@ test_that("request_target() reads a request when the first dry run ends with a c
   expect_identical(tries$n, 2L)
 })
 
+# libcurl reads the proxy variables, and with no_proxy empty it sends even a
+# request for 127.0.0.1 to the proxy. Here the proxy port has no listener, so a
+# dry run that went to the proxy would fail on every try.
+test_that("request_target() reads a request when a proxy is set", {
+  require_httpuv()
+  proxy_port <- free_port()
+  proxy <- paste0("http://127.0.0.1:", proxy_port)
+  withr::local_envvar(
+    http_proxy = proxy, all_proxy = proxy, no_proxy = "", NO_PROXY = ""
+  )
+  # free_port() scans from the same start each time, so the echo port must
+  # leave the proxy port out, or the echo server would act as the proxy.
+  spare <- free_port(setdiff(20000:40000, proxy_port))
+  tries <- local_dry_run_ports(function(n) spare)
+  req <- httr2::request("http://localhost:1234/v1/models/load") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+
+  target <- request_target(req)
+
+  expect_identical(target$method, "POST")
+  expect_identical(target$path, "/v1/models/load")
+  expect_identical(target$body, list(model = "m"))
+  expect_identical(tries$n, 1L)
+})
+
 test_that("the dry-run helper names the cause when every try lands on a held port", {
   require_httpuv()
   held <- free_port()
