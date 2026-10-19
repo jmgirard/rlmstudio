@@ -51,9 +51,11 @@ all.
 
 - **API token authentication.** LM Studio 0.4.0 added API tokens. The server
   setting "Require authentication" makes every REST call need an
-  `Authorization: Bearer <token>` header. `lms_client()` in `R/chat.R` sets
-  `Content-Type` and `Accept` only. With authentication on, every wrapper in
-  the package fails. A user cannot fix this through `...`, because `...` goes
+  `Authorization: Bearer <token>` header. When this note was written,
+  `lms_client()` in `R/chat.R` set `Content-Type` and `Accept` only. So with
+  authentication on, every wrapper in the package failed. Corrected M092:
+  `lms_client()` now also sets the bearer token. For `localhost`,
+  `127.0.0.1`, and `::1`, it also sets curl's `noproxy` option. A user cannot fix this through `...`, because `...` goes
   into the request body, not the headers.
 - **Stateful chat** (corrected M058). `/api/v1/chat` stores the conversation
   by default and returns a `response_id`. A later call continues the thread

@@ -69,3 +69,13 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 ## Decisions
 
 ## Review
+
+- AC1 evidence (2026-10-18): `testthat::test_file("tests/testthat/test-proxy.R")` at 1f8b9bc: the subtests for `localhost`, `LOCALHOST`, and `127.0.0.1` pass, 2 expectations each (server recorded `/api/v1/models`, proxy recorded nothing). Before T2 the same subtests failed with the proxy holding the full URL (work log, T1). `lms_server_ready()` goes through `server_ready_request()` and `lms_client()`; AC4 carries the claim to the other requests.
+- AC2 evidence (2026-10-18): the `[::1]` case passes on this machine, also with `CI=true` (0 failed, 0 skipped). A scratch copy that binds the test server to 203.0.113.1 gives a skip with CI unset and 1 failure with no skip with `CI=true`.
+- AC3 evidence (2026-10-18): "a request to another host still goes to a set proxy" passes: the listener recorded `http://lmstudio.test:1234/api/v1/models`.
+- AC4 evidence (2026-10-18): `grep -rn 'httr2::request(' R/` prints only `R/chat.R:2708`, inside `lms_client()`; `grep -rn 'req_url(' R/` prints nothing; `grep -c httr2 NAMESPACE` gives 0.
+- AC5 evidence (2026-10-18): `NEWS.md` line 3, the first entry under `# rlmstudio (development version)`, names the three hostnames, the proxy variables, the old behavior, and that a request that starts at any other host follows the variables as before.
+- Consistency gate (2026-10-18): `cairn_validate.py` all checks passed; `devtools::document()` no diff; README not touched; `pkgdown::check_pkgdown()` no problems; NEWS entry present; no new top-level file. No principle changed, so `cairn_impact` is skipped.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- ripple #1: `cairn/references/lmstudio-api-surface.md:54-55` said `lms_client()` sets `Content-Type` and `Accept` only — fix now (marked as a record of when the note was written, corrected M092)
+- ripple #2: the `request_dry_run()` comment in `helper-mock-http.R` gave the `noproxy = "*"` reason without the new `lms_client()` value — fix now (comment says the helper value replaces it)
