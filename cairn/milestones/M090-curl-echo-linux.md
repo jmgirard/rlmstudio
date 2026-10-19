@@ -211,3 +211,5 @@ Pass 2, 2026-10-18, head 6a87742, synced with main dde3de2 (no move). There is n
 - AC4 evidence (pass 2): the page's reproducer, extracted and re-run on macOS, gave the held port from `find_port()` and `str(res)` with `url` alone. The cited curl lines did not change on the page since pass 1.
 - AC5 evidence (pass 2): `gh issue view 459 --repo jeroen/curl` shows OPEN at https://github.com/jeroen/curl/issues/459, and the page records that URL.
 - AC6 evidence: `devtools::test()` at 9b11175 (the head's code) gave 0 failed, 0 errors, 0 warnings, 3 skipped.
+- Consistency gate (pass 2): `cairn_validate.py` all checks passed. `devtools::document()` left no diff. `devtools::check()` at 9b11175 gave 0 errors, 0 warnings, 0 notes. `pkgdown::check_pkgdown()` passed in pass 1, and no pkgdown input changed since. README, changelog, and `.Rbuildignore`: as in pass 1.
+- spawned: diff-bug, blame-history, prior-review, ripple
