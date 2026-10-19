@@ -118,7 +118,7 @@ test_that("request_target() reads a request when another program holds the first
 })
 
 # A port held on all addresses makes the echo server's own bind fail, which is
-# the other outcome the dry-run helper tries again on.
+# another outcome the dry-run helper tries again on.
 test_that("request_target() reads a request when the echo server cannot bind the first port", {
   require_httpuv()
   held <- local_listener()
@@ -194,8 +194,11 @@ test_that("request_target() reads a request when the first dry run ends with a c
 })
 
 # libcurl reads the proxy variables, and with no_proxy empty it sends even a
-# request for 127.0.0.1 to the proxy. Here the proxy port has no listener, so a
-# dry run that went to the proxy would fail on every try.
+# request for 127.0.0.1 to the proxy. Here the proxy port comes from
+# free_port(), so in a clean run no program listens there. The control dry run
+# below, sent without curl's noproxy option, shows that the proxy is in use:
+# it fails to connect. A dry run of the helper that went to the proxy would
+# fail the same way on every try.
 test_that("request_target() reads a request when a proxy is set", {
   require_httpuv()
   proxy_port <- free_port()
@@ -203,12 +206,21 @@ test_that("request_target() reads a request when a proxy is set", {
   withr::local_envvar(
     http_proxy = proxy, all_proxy = proxy, no_proxy = "", NO_PROXY = ""
   )
+  req <- httr2::request("http://localhost:1234/v1/models/load") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+  control <- tryCatch(
+    httr2::req_dry_run(httr2::req_timeout(req, 5), quiet = TRUE),
+    curl_error = identity
+  )
+  expect_s3_class(control, "curl_error_couldnt_connect")
+  expect_match(
+    conditionMessage(control), paste0("port ", proxy_port),
+    fixed = TRUE
+  )
   # free_port() scans from the same start each time, so the echo port must
   # leave the proxy port out, or the echo server would act as the proxy.
   spare <- free_port(setdiff(20000:40000, proxy_port))
   tries <- local_dry_run_ports(function(n) spare)
-  req <- httr2::request("http://localhost:1234/v1/models/load") |>
-    httr2::req_body_raw('{"model": "m"}', type = "application/json")
 
   target <- request_target(req)
 
@@ -239,12 +251,16 @@ test_that("the dry-run helper names the cause when every try lands on a held por
 # same way. The stop message must keep curl's own error. The text of that error
 # depends on the libcurl build: macOS gives "Malformed input to a URL
 # function", and the libcurl 8.5.0 of Ubuntu 24.04 gives "Out of memory". So
-# the test reads curl's error for the same dry run first.
+# the test reads curl's error for the same dry run first, with the noproxy
+# option that the helper sets.
 test_that("the dry-run helper keeps curl's error when the request itself is at fault", {
   require_httpuv()
   req <- httr2::request("http://localhost:1234/v1/a b")
   curl_cnd <- tryCatch(
-    httr2::req_dry_run(httr2::req_timeout(req, 5), quiet = TRUE),
+    httr2::req_dry_run(
+      httr2::req_options(httr2::req_timeout(req, 5), noproxy = "*"),
+      quiet = TRUE
+    ),
     curl_error = identity
   )
   expect_s3_class(curl_cnd, "curl_error")
