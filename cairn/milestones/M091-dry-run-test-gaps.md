@@ -44,21 +44,21 @@ variables.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: The comment above the `test_that()` block "request_target() reads
+- [x] AC1: The comment above the `test_that()` block "request_target() reads
       a request when the program on the first dry-run port never replies" in
       `tests/testthat/test-mock-http-helper.R` states that the first try ends
       with curl's timeout error on macOS and with httpuv's "Failed to create
       server" on Linux, the two results that row E3 of
       `cairn/references/curl-echo-fault.md` records.
-- [ ] AC2: The comment above `free_port()` in `tests/testthat/helper-ports.R`
+- [x] AC2: The comment above `free_port()` in `tests/testthat/helper-ports.R`
       does not say that nothing listens on the returned port. It states that
       on macOS the returned port can be one that another program holds on
       127.0.0.1 alone.
-- [ ] AC3: With `http_proxy` and `all_proxy` set to `http://127.0.0.1:<port>`
+- [x] AC3: With `http_proxy` and `all_proxy` set to `http://127.0.0.1:<port>`
       for a port that `free_port()` returned, and `no_proxy` and `NO_PROXY`
       set to empty strings, `request_target()` reads the method, path, and
       body of a request in 1 dry-run try.
-- [ ] AC4: `devtools::test()` on macOS, run with no proxy variables set,
+- [x] AC4: `devtools::test()` on macOS, run with no proxy variables set,
       reports 0 failures and 0 warnings.
 
 ## Coverage
@@ -119,3 +119,11 @@ variables.
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Branch synced: `origin/main` is `22eeadb`, the branch's base, so no merge was needed (2026-10-18).
+
+- AC1 evidence: `test-mock-http-helper.R:137-142` says that on macOS "the first try ends with curl's timeout error" and that on Linux "the first try ends with httpuv's \"Failed to create server\"", matching row E3 of `cairn/references/curl-echo-fault.md` (macOS `curl_error_operation_timedout`, Linux "Failed to create server").
+- AC2 evidence: `grep -n "nothing listens" tests/testthat/helper-ports.R` finds no line; `helper-ports.R:34-37` says that on macOS the bind "also succeeds over a port that another program holds on 127.0.0.1 alone, so the returned port can be one that such a program listens on".
+- AC3 evidence: a direct run outside testthat, with `http_proxy` and `all_proxy` set to `http://127.0.0.1:29096` (a `free_port()` port), `no_proxy` and `NO_PROXY` empty, and the echo port 29333, gave method POST, path `/v1/models/load`, body `{"model":"m"}`, in 1 try. In the full suite, "request_target() reads a request when a proxy is set" ran 4 expectations, 0 failed.
+- AC4 evidence: `devtools::test()` on macOS with no proxy variable in the environment (`env | grep -i proxy` empty, and the six variables unset): 0 failed, 0 errors, 0 warnings, 3 skipped, 24695 expectations passed.
+- Gate: `cairn_validate.py` all checks passed; `devtools::document()` left no diff; `pkgdown::check_pkgdown()` no problems; `devtools::check()` 0 errors, 0 warnings, 0 notes; README.Rmd and `R/` untouched; no NEWS entry owed (test files only); no principle changed, so no `cairn_impact` run.
