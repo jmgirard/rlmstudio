@@ -82,13 +82,53 @@ api_error_code <- function(resp) {
   if (is_one_string(code)) code else NULL
 }
 
+#' Pick the error text out of a failed response, as the server sent it
+#'
+#' LM Studio sends the text as `error` on `/v1/embeddings` and as
+#' `error.message` on the chat routes. Unlike `api_error_message()`, this
+#' reads no fallback, so a caller can match the text that the server sent.
+#'
+#' @param resp An httr2 response the caller has decided to abort on.
+#' @return The `error` string of the body, else its `error.message` string,
+#'   else `NULL`.
+#'
+#' @noRd
+api_error_text <- function(resp) {
+  parsed <- tryCatch(parse_json_body(resp), error = function(e) NULL)
+  err <- if (is_json_object(parsed)) parsed[["error"]]
+  if (is_one_string(err)) {
+    return(err)
+  }
+  text <- if (is_json_object(err)) err[["message"]]
+  if (is_one_string(text)) text else NULL
+}
+
+#' Does this API error say that the server has no model loaded?
+#'
+#' With nothing loaded, LM Studio 0.4.26+4 answered an unknown model name with
+#' status 400 and this text on `/v1/chat/completions`, `/v1/responses`, and
+#' `/v1/embeddings`, with no `code` (D-046). No later request can succeed, so
+#' the batch functions stop there.
+#'
+#' @param cnd An `rlmstudio_api_error` condition.
+#' @return `TRUE` or `FALSE`.
+#'
+#' @noRd
+is_no_models_loaded <- function(cnd) {
+  text <- cnd[["server_message"]]
+  identical(cnd[["status"]], 400L) &&
+    is_one_string(text) &&
+    startsWith(text, "No models loaded")
+}
+
 #' Abort on a failed REST response
 #'
 #' The one abort path for every REST wrapper that handles a failed response.
 #' The condition carries the class `rlmstudio_api_error` so callers can catch
 #' an API failure by class, a `status` field holding the response status as
-#' an integer, and a `code` field holding the `error.code` string of the body
-#' or `NULL`.
+#' an integer, a `code` field holding the `error.code` string of the body
+#' or `NULL`, and a `server_message` field holding the error text that
+#' `api_error_text()` reads, or `NULL`.
 #'
 #' A response with status 401 or 403 means the server refused the call on
 #' authentication grounds, so the abort adds a hint. The hint that fits depends
@@ -118,6 +158,7 @@ rlm_abort_api <- function(resp, label, token_sent = FALSE) {
     class = "rlmstudio_api_error",
     status = status,
     code = api_error_code(resp),
+    server_message = api_error_text(resp),
     call = NULL
   )
 }

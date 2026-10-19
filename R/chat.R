@@ -936,21 +936,25 @@ check_body_object <- function(resp, resp_data, label, ...) {
   }
 }
 
-#' Abort on a chat reply from a model other than the one asked for
+#' Abort on a chat or embedding reply from a model other than the one asked for
 #'
 #' LM Studio can answer a model name that it cannot find with a reply from
-#' the one chat model it has loaded, under status 200 (M049 work log). The
+#' the one chat model it has loaded, under status 200 (M049 work log), and
+#' `/v1/embeddings` does the same with its one embedding model (D-046). The
 #' `model` field of the reply names the loaded instance that answered. Its id
 #' can differ from the key the caller asked for, so a name that differs
 #' starts one model-list request, and the reply is accepted when the
 #' answering instance belongs to a model whose key equals the asked name in
-#' any letter case (D-025). A reply with no `model` string is not checked.
+#' any letter case (D-025). Inside a batch call, a reply id that a lookup of
+#' that call accepted for the same name starts no other request (D-046). A
+#' reply with no `model` string is not checked.
 #' Fields are read with `[[`, because `$` would read a field whose name only
 #' starts with the one asked for. The asked name is compared as a plain
 #' string, because `identical()` also compares names, class, and the S4 bit.
-#' Both callers reassign `model` to the plain string that `rlm_check_id()`
-#' returns, so it reaches this function with no class. `unclass(model)[[1]]`
-#' keeps the comparison plain for a caller that does not reassign.
+#' The three callers reassign `model` to the plain string that
+#' `rlm_check_id()` returns, so it reaches this function with no class.
+#' `unclass(model)[[1]]` keeps the comparison plain for a caller that does not
+#' reassign.
 #' `unclass()` keeps the S4 bit, and `[[` drops it.
 #'
 #' Runs before the caller's `simplify` branch, so `simplify = FALSE` cannot
@@ -975,7 +979,11 @@ check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
   if (identical(reply_model, model)) {
     return(invisible())
   }
+  if (reply_model_kept(model, reply_model, host)) {
+    return(invisible())
+  }
   if (reply_model_serves(model, reply_model, host, token, label)) {
+    keep_reply_model(model, reply_model, host)
     return(invisible())
   }
   # The names are placed in the detail as text, so braces in a name that the
@@ -1003,11 +1011,78 @@ check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
   )
 }
 
+# The reply ids that a lookup accepted during the current batch call, as
+# parallel `models`, `ids`, and `hosts` vectors, or NULL outside a batch call.
+# A batch function sets it for the length of its call, so a later reply with a
+# kept id for the same asked name and host sends no lookup (D-046). The host
+# is part of the key, because code that runs during the batch, such as a
+# calling handler, can send a call to another host.
+reply_model_cache <- new.env(parent = emptyenv())
+
+#' Start an empty cache of accepted reply ids for one batch call
+#'
+#' The caller reads `reply_model_cache$kept` and registers
+#' `end_reply_model_cache()` with `on.exit()` before it calls this, so an
+#' interrupt cannot leave the cache on after the call.
+#'
+#' @noRd
+start_reply_model_cache <- function() {
+  reply_model_cache$kept <- list(
+    models = character(),
+    ids = character(),
+    hosts = character()
+  )
+  invisible()
+}
+
+#' Put back the cache that was set before a batch call
+#'
+#' @param old The value of `reply_model_cache$kept` before the call.
+#'
+#' @noRd
+end_reply_model_cache <- function(old) {
+  reply_model_cache$kept <- old
+  invisible()
+}
+
+#' Did a lookup of the current batch call accept this reply id?
+#'
+#' @param model Character. The model name the call sent.
+#' @param reply_model Character. The `model` field of the reply.
+#' @param host Character. The host of the call.
+#' @return `TRUE` when the cache holds the three values together, else
+#'   `FALSE`, also outside a batch call.
+#'
+#' @noRd
+reply_model_kept <- function(model, reply_model, host) {
+  kept <- reply_model_cache$kept
+  !is.null(kept) &&
+    any(kept$models == model & kept$ids == reply_model & kept$hosts == host)
+}
+
+#' Keep a reply id that a lookup accepted, for the rest of the batch call
+#'
+#' Does nothing outside a batch call.
+#'
+#' @inheritParams reply_model_kept
+#'
+#' @noRd
+keep_reply_model <- function(model, reply_model, host) {
+  kept <- reply_model_cache$kept
+  if (!is.null(kept)) {
+    kept$models <- c(kept$models, model)
+    kept$ids <- c(kept$ids, reply_model)
+    kept$hosts <- c(kept$hosts, host)
+    reply_model_cache$kept <- kept
+  }
+  invisible()
+}
+
 #' Does a loaded instance of the asked model have the reply's id?
 #'
 #' Reads the model list of every model type through the checks of
 #' `list_models()`, with no message. A failed lookup raises the condition of
-#' that failure, under a label that names the chat function and the lookup.
+#' that failure, under a label that names the calling function and the lookup.
 #'
 #' @param model Character. The model name the call sent.
 #' @param reply_model Character. The `model` field of the reply.
@@ -2023,8 +2098,9 @@ integer_or_na <- function(x) {
 #' An `rlmstudio_bad_response` that [lms_chat()] raises for one input fails
 #' that input alone, unless it is an `rlmstudio_model_mismatch`. So does an
 #' `rlmstudio_api_error` with any `status` other than 401, 403, or 404,
-#' unless its `status` is 400 and its `code` is `"model_not_found"`. The batch
-#' goes on to the next input. Where the
+#' unless its `status` is 400 and its `code` is `"model_not_found"` or its
+#' `server_message` starts with "No models loaded". The batch goes on to the
+#' next input. Where the
 #' result is a list, or the `output` list-column that a `schema` gives, the
 #' element for that input holds the condition without its backtrace. An
 #' `rlmstudio_bad_response` for reply content that does not
@@ -2051,11 +2127,14 @@ integer_or_na <- function(x) {
 #' failure" section below. No warning about failed inputs is given.
 #'
 #' The batch aborts in the same way at an `rlmstudio_api_error` with `status`
-#' 400 and the `code` `"model_not_found"`, and at an
+#' 400 and the `code` `"model_not_found"`, at one with `status` 400 whose
+#' `server_message` starts with "No models loaded", and at an
 #' `rlmstudio_model_mismatch`. The `"openai"` and `"openresponses"` routes
 #' give these for a model name that the server cannot find, so every later
-#' input fails in the same way.
-#' See the "Reply from another model" section below.
+#' input fails in the same way. They gave the "No models loaded" status 400
+#' when no model was loaded. Within one batch, a reply id that the model-list
+#' lookup accepted is not looked up again.
+#' See the "API failure" and "Reply from another model" sections below.
 #'
 #' A `previous_response_id` that the server does not hold gives status 400
 #' with the `code` `"invalid_value"` on the native route and
@@ -2155,6 +2234,12 @@ lms_chat_batch <- function(
 
   stop_if_no_server(host)
 
+  # A lookup that keeps a reply id keeps it for the rest of the batch, so a
+  # later reply with that id sends no lookup (D-046).
+  old_cache <- reply_model_cache$kept
+  on.exit(end_reply_model_cache(old_cache), add = TRUE)
+  start_reply_model_cache()
+
   # After the server probe, so a batch that cannot run gives no warning.
   # Shown whatever `quiet` says, because it is the only sign that the
   # logprobs asked for are missing (D-032).
@@ -2202,13 +2287,15 @@ lms_chat_batch <- function(
   # same way, whatever the prompt, so these statuses abort like a lost server
   # (D-019). The OpenAI and OpenResponses routes answered a model they could
   # not find with status 400 and the code "model_not_found" when two chat
-  # models were loaded (D-025). Any other status can come from one prompt, so
-  # it fails that input alone.
+  # models were loaded (D-025), and with status 400 and the text "No models
+  # loaded" when no model was loaded (D-046). Any other status can come from
+  # one prompt, so it fails that input alone.
   keep_or_abort_api <- function(cnd) {
     if (
       isTRUE(cnd[["status"]] %in% c(401L, 403L, 404L)) ||
         (identical(cnd[["status"]], 400L) &&
-          identical(cnd[["code"]], "model_not_found"))
+          identical(cnd[["code"]], "model_not_found")) ||
+        is_no_models_loaded(cnd)
     ) {
       abort_with_results(cnd)
     }

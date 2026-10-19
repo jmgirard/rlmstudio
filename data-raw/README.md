@@ -53,7 +53,9 @@ directory gets a new recording in one of two ways.
 A recorder script records these directories. Run each script from the
 package root with `Rscript data-raw/<script>`, in the order of the table.
 The first script needs the two models of step 1 loaded, and no other model.
-The schema script unloads `google/gemma-3-1b` at its end, so it runs last.
+The schema script unloads `google/gemma-3-1b` at its end, so it runs after
+the others that need it. The stop script needs no model loaded, so run
+`lms unload --all` before it, and run it last.
 
 | Directory | Recorder script |
 |---|---|
@@ -63,9 +65,10 @@ The schema script unloads `google/gemma-3-1b` at its end, so it runs last.
 | `mismatch_live` | `record-model-mismatch-cassette.R` |
 | `thread_live` | `record-thread-cassette.R` |
 | `chat_schema_live` | `record-schema-cassette.R` |
+| `stop_live` | `record-model-stop-cassette.R` |
 
-The mismatch script calls the `lms` command by name, so it must be on your
-`PATH`. Read the header of each script for its other conditions.
+The mismatch and stop scripts call the `lms` command by name, so it must be
+on your `PATH`. Read the header of each script for its other conditions.
 
 The test records the other directories itself. For an absent directory,
 httptest2 records the responses. For a present one, it reads them. So

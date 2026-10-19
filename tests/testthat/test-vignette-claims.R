@@ -883,7 +883,8 @@ test_that("lms_chat() sends a request option under its name, a misspelled name i
 
 test_that("lms_chat() on the native route returns a reply from another model with no error", {
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
-  # The model check runs on two routes alone (D-025). A live native reply has
+  # The model check runs on two chat routes alone (D-025), and on
+  # /v1/embeddings (D-046). A live native reply has
   # no model field, but this one carries one, so a check that reads either
   # field turns the test red.
   body <- json_object(

@@ -213,7 +213,8 @@ another shape, and so do \code{\link[=lms_unload_all]{lms_unload_all()}} and \co
 \code{force = TRUE}, which read that list. \code{\link[=lms_chat_openai]{lms_chat_openai()}} and
 \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it for such a model list too, with either
 setting of \code{simplify}, through the model lookup that a reply from another
-model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_load]{lms_load()}},
+model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_embed]{lms_embed()}} raises it
+in the same way for the inputs of that request. \code{\link[=lms_load]{lms_load()}},
 \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their
 own with another shape, such as \code{{}}. A process that does not answer in
 HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the
@@ -233,8 +234,9 @@ such as a server that stops during a request, raises an \code{httr2_failure}
 error instead. That error aborts the batch and carries no \code{results} field.
 
 \code{\link[=lms_embed]{lms_embed()}} checks the server before each request, and a request carries
-at most \code{batch_size} inputs. If a check after the first request finds the
-server gone, the call aborts with \code{rlmstudio_no_server}. Once a request has
+at most \code{batch_size} inputs. If a check after the first request, or the
+check of a model-list lookup, finds the server gone, the call aborts with
+\code{rlmstudio_no_server}. Once a request has
 succeeded, the condition carries a \code{results} field. With \code{simplify = TRUE},
 \code{results} is a matrix with \code{NA} in each row whose embedding did not arrive.
 With \code{simplify = FALSE}, it is a list with one element per batch, with
@@ -250,11 +252,21 @@ carries a \code{status} field, which holds the HTTP response status as an
 integer. It also carries a \code{code} field. The field holds the string at
 \code{error.code} of the response body, such as \code{"model_not_found"}. It is
 \code{NULL} when the body does not parse, when \code{error} is not a JSON object, or
-when its \code{code} is not one string.
+when its \code{code} is not one string. A \code{server_message} field holds the
+error text as the server sent it: the \code{error} string of the body, or else
+the string at \code{error.message}. It is \code{NULL} when the body does not parse
+or holds neither string.
 
-\code{\link[=lms_chat_batch]{lms_chat_batch()}} aborts on it when its \code{status} is 401, 403, or 404, and
-when its \code{status} is 400 and its \code{code} is \code{"model_not_found"}. No request
-goes out after that input. The condition then carries a
+On LM Studio 0.4.26+4 with no model loaded, \verb{/v1/chat/completions},
+\verb{/v1/responses}, and \verb{/v1/embeddings} answered a model name that the server
+could not find with status 400, no \code{code}, and a \code{server_message} that
+starts with "No models loaded".
+
+\code{\link[=lms_chat_batch]{lms_chat_batch()}} aborts on it when its \code{status} is 401, 403, or 404,
+when its \code{status} is 400 and its \code{code} is \code{"model_not_found"}, and when
+its \code{status} is 400 and its \code{server_message} starts with
+"No models loaded", in that letter case. No request goes out after that
+input. The condition then carries a
 \code{results} field that follows the rule for a lost server in the "Server not
 running" section: its elements before the failed input hold the values that
 \code{format = "list"} returns for those inputs, and the element of the failed
@@ -263,12 +275,14 @@ element of the failed input holds the condition, or \code{NA} where the result
 is text, and the batch warns once and goes on. See the details of
 \code{\link[=lms_chat_batch]{lms_chat_batch()}}.
 
-\code{\link[=lms_embed]{lms_embed()}} follows the same rule for each request. A 401, 403, or 404
-aborts the call, and once a request has succeeded the condition carries a
-\code{results} field, a matrix or a list as the "Server not running" section
-describes. Any other status fails the inputs of that request alone, and
-the call warns once and goes on. If every request fails, the call aborts
-with the first condition. See the details of \code{\link[=lms_embed]{lms_embed()}}.
+\code{\link[=lms_embed]{lms_embed()}} follows the same rule for each request, except for the code
+\code{"model_not_found"}. A 401, 403, or 404 aborts the call, and so does a 400
+whose \code{server_message} starts with "No models loaded". Once a request has
+succeeded, the condition carries a \code{results} field, a matrix or a list as
+the "Server not running" section describes. Any other status, a 400 with
+the code \code{"model_not_found"} included, fails the inputs of that request
+alone, and the call warns once and goes on. If every request fails, the
+call aborts with the first condition. See the details of \code{\link[=lms_embed]{lms_embed()}}.
 }
 
 \section{Malformed response}{
@@ -308,9 +322,10 @@ as an \code{rlmstudio_api_error} instead.
 
 \code{\link[=list_models]{list_models()}} also raises it for a status-200 model list with the wrong
 shape. \code{\link[=lms_unload_all]{lms_unload_all()}} and \code{\link[=lms_load]{lms_load()}} without \code{force = TRUE} raise it
-through \code{\link[=list_models]{list_models()}}. \code{\link[=lms_chat_openai]{lms_chat_openai()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}
-apply these rules to the model list of their model lookup, as the "Reply
-from another model" section of \code{\link[=lms_chat_openai]{lms_chat_openai()}} describes. A model list
+through \code{\link[=list_models]{list_models()}}. \code{\link[=lms_chat_openai]{lms_chat_openai()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}},
+and \code{\link[=lms_embed]{lms_embed()}} apply these rules to the model list of their model
+lookup, as the "Reply from another model" section of \code{\link[=lms_chat_openai]{lms_chat_openai()}}
+describes. A model list
 must follow four rules. Each field is
 read by its exact name, so a field named \code{keyX} does not stand in for
 \code{key}.
@@ -464,14 +479,17 @@ because it is the only sign that an answer is not complete.
 
 \section{Reply from another model}{
 
-\code{\link[=lms_chat_openai]{lms_chat_openai()}} and \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} read the \code{model} field
-of each status-200 reply, with either setting of \code{simplify}. On LM Studio
-0.4.25+1 with one chat model loaded, both routes answered a model name that
-the server could not find with status 200 and a reply from the loaded
-model. With two chat models loaded, they answered with status 400 and the
-\code{code} \code{"model_not_found"}, as the "API failure" section describes. The
-\code{model} field names the loaded instance that answered. Its id can differ
-from the key that the call asked for.
+\code{\link[=lms_chat_openai]{lms_chat_openai()}}, \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}}, and \code{\link[=lms_embed]{lms_embed()}} read
+the \code{model} field of each status-200 reply, with either setting of
+\code{simplify}. On LM Studio 0.4.25+1 with one chat model loaded, both chat
+routes answered a model name that the server could not find with status
+200 and a reply from the loaded model. With two chat models loaded, they
+answered with status 400 and the \code{code} \code{"model_not_found"}, as the "API
+failure" section describes. On LM Studio 0.4.26+4 with one embedding model
+loaded, \verb{/v1/embeddings} answered a name that it could not find with
+status 200 and vectors from the loaded embedding model. The \code{model} field
+names the loaded instance that answered. Its id can differ from the key
+that the call asked for.
 
 If the \code{model} field equals the name that the call sent, the reply is
 accepted. If it differs, the call sends one request for the model list to
@@ -485,18 +503,26 @@ the asked name, and its \code{reply_model} field holds the \code{model} field of
 reply. The message names both. A condition from \code{\link[=lms_chat_openai]{lms_chat_openai()}} also
 carries the \code{content} and \code{finish_reason} fields, both \code{NULL}.
 
+Within one call of \code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_embed]{lms_embed()}}, a reply whose
+\code{model} field a lookup of that call already accepted for the asked name and
+the same host is accepted with no other request. Each such call, and each call of
+\code{\link[=lms_chat_openai]{lms_chat_openai()}} or \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} outside a batch, starts
+with no accepted ids.
+
 The check runs before the reply is read, so it also runs with
 \code{logprobs = TRUE}, with a \code{schema} on \code{\link[=lms_chat_openai]{lms_chat_openai()}}, and for a reply
-with no answer text. A reply is not checked if its body is not a JSON
+with no answer text. In \code{\link[=lms_embed]{lms_embed()}}, it runs before the vectors are
+read. A reply is not checked if its body is not a JSON
 object, if it has no \code{model} field, or if its \code{model} is not one string or
 holds only whitespace. A body that is not a JSON object is returned with
 \code{simplify = FALSE}, and with \code{simplify = TRUE} it raises the error that the
-"Malformed chat reply" section describes. If the instance that answered is
+"Malformed chat reply" section describes, or for \code{\link[=lms_embed]{lms_embed()}} the
+"Malformed embeddings" section. If the instance that answered is
 unloaded before the model-list request, the call aborts, also when that
 instance belongs to the asked model.
 
-If the model-list request fails, the call raises the condition of that
-failure. The message opens with the label of the chat function, followed
+If the model-list request fails, the check raises the condition of that
+failure. The message opens with the label of the function, followed
 by "because the model-list lookup failed". A status other than 200 raises
 \code{rlmstudio_api_error}. A body that does not parse as JSON, or that breaks a
 rule of a model list in the "Malformed model list" section, raises
@@ -513,9 +539,23 @@ find with status 404, which raises \code{rlmstudio_api_error}.
 \code{\link[=lms_chat_batch]{lms_chat_batch()}} aborts at the first input that raises
 \code{rlmstudio_model_mismatch}, on the \code{"openai"} and \code{"openresponses"} routes.
 It also aborts at an \code{rlmstudio_api_error} with status 400 whose \code{code} is
-\code{"model_not_found"}. No request goes out after that input. In both cases,
-the condition carries a \code{results} field that follows the rule for a lost
-server in the "Server not running" section.
+\code{"model_not_found"}, and at one with status 400 whose \code{server_message}
+starts with "No models loaded". No request goes out after that input. In
+each case, the condition carries a \code{results} field that follows the rule
+for a lost server in the "Server not running" section.
+
+\code{\link[=lms_embed]{lms_embed()}} aborts at the first request that raises
+\code{rlmstudio_model_mismatch}, and no request goes out after it. A failed
+model-list lookup that raises \code{rlmstudio_no_server}, or an
+\code{rlmstudio_api_error} that would end the call as an embeddings failure,
+such as one with status 401, 403, or 404, ends the call in the same way.
+Once a request has succeeded, the condition carries a \code{results} field, a
+matrix or a list as the "Server not running" section describes.
+Any other \code{rlmstudio_api_error} or \code{rlmstudio_bad_response} from the
+lookup fails the inputs of that request alone, as the "API failure"
+section describes for a failed request. An error of any other class, such
+as an \code{httr2_failure} from a server that stops during the lookup, aborts
+the call unchanged.
 }
 
 \section{Long prompts}{

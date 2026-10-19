@@ -2,7 +2,9 @@
 #'
 #' Sends one or more texts to an embedding model and returns the vector that
 #' the model produced for each one. The texts go out in batches of at most
-#' `batch_size`, one request per batch, in the order given.
+#' `batch_size`, one request per batch, in the order given. A reply that
+#' names another model can add one model-list request, as the "Reply from
+#' another model" section describes.
 #'
 #' @param model Character. The loaded embedding model name. Must be one name,
 #'   given as a single string. The string must be valid in its declared
@@ -53,19 +55,26 @@
 #' Before each request after the first, the function checks again that the
 #' server is running.
 #'
-#' A request that fails with an `rlmstudio_bad_response`, or with an
-#' `rlmstudio_api_error` whose `status` is not 401, 403, or 404, fails the
-#' inputs it carried alone. Their rows hold `NA`, or their element of the
+#' A request that fails with an `rlmstudio_bad_response` other than an
+#' `rlmstudio_model_mismatch`, or with an `rlmstudio_api_error` that does not
+#' end the call as described below, fails the inputs it carried alone. Their
+#' rows hold `NA`, or their element of the
 #' `simplify = FALSE` list holds the condition without its backtrace. The call
 #' goes on to the next request and then gives one warning that names the
 #' count and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`. If every request fails, the call aborts with the condition
 #' of the first failed request, and no warning is given.
 #'
-#' Two faults end the call at once, and no request goes out after them: a
-#' server that the check before a request finds gone, and an
-#' `rlmstudio_api_error` with `status` 401, 403, or 404. With
-#' `simplify = TRUE`, a third fault does the same: a request whose embeddings
+#' Four faults end the call at once, and no request goes out after them: a
+#' server that the check before a request, or the model-list lookup of the
+#' reply check, finds gone; an `rlmstudio_api_error` with `status` 401, 403,
+#' or 404; an `rlmstudio_api_error` with `status` 400 whose `server_message`
+#' starts with "No models loaded", which LM Studio sent for an unknown name
+#' with no model loaded; and an `rlmstudio_model_mismatch`, a reply from a
+#' model other than the one asked for. The "API failure" and "Reply from
+#' another model" sections below describe the last two. A fault that ends the
+#' call gives no warning about the inputs that failed before it. With
+#' `simplify = TRUE`, a fifth fault does the same: a request whose embeddings
 #' have another number of dimensions than those of an earlier request. It
 #' aborts with `rlmstudio_bad_response`. With `simplify = FALSE`, the bodies
 #' do not go through the matrix checks, so bodies of two widths are returned
@@ -94,6 +103,7 @@
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Malformed embeddings
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 #' @examples
 #' \dontrun{
@@ -181,13 +191,31 @@ lms_embed <- function(
     cnd
   }
   # A refused token or a model the server cannot find fails every request the
-  # same way, whatever the texts, so these statuses end the call (D-019).
+  # same way, whatever the texts, so these statuses end the call (D-019). So
+  # does a server with no model loaded (D-046).
   keep_or_abort_api <- function(cnd) {
-    if (isTRUE(cnd$status %in% c(401L, 403L, 404L))) {
+    if (
+      isTRUE(cnd$status %in% c(401L, 403L, 404L)) || is_no_models_loaded(cnd)
+    ) {
       abort_with_results(cnd)
     }
     keep_failure(cnd)
   }
+  # A reply from another model means that the wrong model answers every
+  # request, so it ends the call (D-025, D-046). The test sits in this handler
+  # and not in a handler of its own, because `tryCatch()` runs a handler
+  # inside the handlers named after it (LESSONS, M049).
+  keep_or_abort_bad <- function(cnd) {
+    if (inherits(cnd, "rlmstudio_model_mismatch")) {
+      abort_with_results(cnd)
+    }
+    keep_failure(cnd)
+  }
+  # A lookup that keeps a reply id keeps it for the rest of the call, so a
+  # later reply with that id sends no lookup (D-046).
+  old_cache <- reply_model_cache$kept
+  on.exit(end_reply_model_cache(old_cache), add = TRUE)
+  start_reply_model_cache()
 
   for (b in seq_along(batches)) {
     rows <- batches[[b]]
@@ -211,10 +239,13 @@ lms_embed <- function(
     body <- c(base, list(input = as.list(unname(input[rows]))))
     body <- utils::modifyList(body, dots)
 
+    # The lookup of the reply-model check probes the server, so a server
+    # that stops after the reply ends the call with its results.
     res <- tryCatch(
-      embed_request(client, body, has_token, simplify),
+      embed_request(client, body, has_token, simplify, host, token),
+      rlmstudio_no_server = abort_with_results,
       rlmstudio_api_error = keep_or_abort_api,
-      rlmstudio_bad_response = keep_failure
+      rlmstudio_bad_response = keep_or_abort_bad
     )
 
     if (inherits(res, c("rlmstudio_api_error", "rlmstudio_bad_response"))) {
@@ -286,10 +317,12 @@ lms_embed <- function(
 #' @param body List. The request body, whose `input` is one batch.
 #' @param has_token Logical. Whether a token was sent, for the abort hint.
 #' @param simplify Logical. Whether to build the matrix from the reply.
+#' @param host,token The host and token of the call, for the model-list
+#'   lookup of `check_reply_model()`.
 #' @return A list of `value`, the matrix or the parsed body, and `resp`.
 #'
 #' @noRd
-embed_request <- function(client, body, has_token, simplify) {
+embed_request <- function(client, body, has_token, simplify, host, token) {
   resp <- client |>
     httr2::req_url_path("v1/embeddings") |>
     rlm_req_body(body) |>
@@ -301,6 +334,17 @@ embed_request <- function(client, body, has_token, simplify) {
   }
 
   resp_data <- parse_ok_body(resp, "Embeddings Failed")
+  # With one embedding model loaded, LM Studio answered an unknown name with
+  # status 200 and vectors from that model (D-046), as the chat routes do
+  # (D-025).
+  check_reply_model(
+    resp,
+    resp_data,
+    body[["model"]],
+    host,
+    token,
+    "Embeddings Failed"
+  )
 
   if (!isTRUE(simplify)) {
     return(list(value = resp_data, resp = resp))
