@@ -65,6 +65,7 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 - 2026-10-18: claim audit re-read of the 3 corrected claims: all accurate. Status set to review.
 - 2026-10-18: review evidence pass: a planted `::1` bind failure showed the CI branch recording a failure and then a skip, since `fail()` does not stop the test. The case is now one if/else; the plant then gives a skip off CI and a failure with no skip on CI.
 - 2026-10-18: review fix-now: the test server of the `localhost` cases also listens on `::1`, `local_recorder()` tries up to 5 ports, and `local_test_proxy()` stops with the reason. The tests use `timeout = 0.2`, not the 0.5 s that T1 and the line below give. With the old `lms_client()` swapped in, the 4 local cases fail and the other-host case passes.
+- 2026-10-18: step-7 approval: m092-local-proxy-skip approved for merge
 - 2026-10-18: lessons harvested: M004 (socket rules differ by system; httpuv must be in DESCRIPTION, which it is) and M087 (time test blocks on an idle machine, since each case waits 0.5 s).
 
 ## Decisions
