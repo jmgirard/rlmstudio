@@ -96,7 +96,7 @@ every instance field.
       and the `config.` prefix that a configuration field named
       `remaining_ttl_seconds` now takes, and it names LM Studio 0.4.26+4
       where it states what an instance with no ttl holds.
-- [ ] AC7: `Rscript -e 'devtools::document()'` produces no diff, and
+- [x] AC7: `Rscript -e 'devtools::document()'` produces no diff, and
       `Rscript -e 'devtools::test()'` reports no failure and no error.
 
 ## Coverage
@@ -195,3 +195,25 @@ every instance field.
 - AC4 evidence (same run): "a configuration field named remaining_ttl_seconds takes the config. prefix" passes (3): names are the five fixed columns then `config.remaining_ttl_seconds`; `remaining_ttl_seconds` is 300 (instance value) and `config.remaining_ttl_seconds` is 5 (configuration value).
 - AC5 evidence (same run): "a recorded model list gives one row per loaded instance" passes (4) on `tests/testthat/list_instances/`, asserting `remaining_ttl_seconds` identical to `c(213, NA_real_)`: a number for gemma, loaded with `--ttl 600`, and NA for nomic, whose field is absent as in the T1 probe. The generator header reads "Recorded:  2026-10-19, LM Studio 0.4.26+4" (`data-raw/record-list-instances-cassette.R:8`).
 - AC6 evidence (2026-10-19, `grep` and a read of `man/list_instances.Rd` and `R/list.R` at 0e9acc8): "does not read" matches only the unrelated `lms_unload()` sentence (Rd:151), so the sentence about `remaining_ttl_seconds` is gone. Rd:60 "The first five columns are the fixed columns", Rd:70 "The fifth is a double column", Rd:41 `@return` "the five fixed columns, four character columns and the double column `remaining_ttl_seconds`", Rd:91 clash rule "one of the five fixed column names". Rd:72-76: NA "when the field is absent or `null`", the 0.4.26+4 no-ttl case ("had no such field, so it holds `NA`"), and "No other LM Studio version was checked for this field."; no other sentence on other versions. Rd:53 names "the ttl setting". `NEWS.md:3` names the fifth column, the zero-row frame, `config.remaining_ttl_seconds`, and "In LM Studio 0.4.26+4" for the no-ttl case.
+- AC7 evidence (2026-10-19, at 77cef8b after the review fixes): `Rscript -e 'devtools::document()'` left no diff (git status showed no man/ or NAMESPACE change); full `devtools::test()` with the server stopped: 0 failed, 0 errors, 3 skipped (live tests). Earlier live-server run at T3 also had 0 failures after the four-column fix.
+- Consistency gate (2026-10-19): `cairn_validate.py` all checks passed; `devtools::check()` at 0e9acc8 code: 0 errors, 0 warnings, 0 notes (2m 27.6s); `pkgdown::check_pkgdown()` no problems; `document()` no diff; NEWS.md has the entry; README.Rmd untouched by the diff; no new top-level files; no principle changed, so no impact report.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: `as.double()` and its test are not load-bearing, since `vapply(..., double(1))` already makes the column double — fix now: removed the redundant coercion; the tests pin the double column, fixed 77cef8b.
+- diff-bug #2: comment "jsonlite reads a whole number as an integer" explains a coercion the code does not need — fix now: comment removed with #1, fixed 77cef8b.
+- diff-bug #3: ROADMAP row "list_instances fields and tests" still says the field is unread — reject (planned change: post-merge hygiene narrows the row, per Scope Out).
+- diff-bug #4: `is_json_number()` accepts `Inf`, so `1e400` lands as `Inf` — follow-up: absorbed into the candidate row "list_instances fields and tests" at hygiene.
+- diff-bug #5: NEWS does not say that each configuration column moves one position right — fix now: NEWS sentence added, fixed 77cef8b.
+- diff-bug #6: the ttl type-skip test passes through the shared skip — reject (planned change: AC2 requires that test, and it fails if the skip is removed).
+- diff-bug #7: the generator's ttl pre-check and recording are two requests — reject (false as a defect: a cassette recorded after the ttl ran out gives NA for gemma, and the recorded-reply test then fails, so it cannot ship unseen).
+- diff-bug #8: help, NEWS, and code agree — noted.
+- diff-bug #9: uncommitted milestone file — reject (false: committed at 79e7e50).
+- blame-history #1: a new abort path on a field that main ignored — reject (planned change: AC2, under D-017).
+- blame-history #2: column name and position change for configuration columns — reject (planned change, weighed at the plan gate; NEWS now names the shift).
+- blame-history #3: the cassette adds unloaded models and drops `reasoning_budget_message` from gemma's config, and the header does not say so — fix now: header says the list also holds the other models with no instance, fixed 77cef8b. The config field change comes from the newer LM Studio, and no test reads it.
+- blame-history #4: M093's help sentence is reversed by AC6, M093 and M050 tests survive — noted.
+- blame-history #5: the generator's REST-ttl date and reference-note dates match the records — noted.
+- prior-review #1: ROADMAP row still says the field is unread — reject (planned change: hygiene narrows the row).
+- prior-review #2: `R/list.R` line of 84 characters — reject (style; `air format --check` also flags the main versions of these files).
+- prior-review #3: two blank lines before a test section header — reject (style; the file already uses that pattern before its other section headers).
+- ripple #1: `data-raw/README.md:26` loads gemma with no ttl, so the recorder stops — fix now: `--ttl 600` added and the stop condition named, fixed 77cef8b.
+- ripple #2: ROADMAP candidate row contradicts the column — reject (planned change: hygiene narrows the row).
