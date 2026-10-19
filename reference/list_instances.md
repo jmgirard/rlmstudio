@@ -64,7 +64,8 @@ controls.
 
 The model list does not carry four fields that `lms ps --json` reports:
 the generation status, the queued requests, the ttl, and the last-used
-time.
+time. Each loaded instance in the model list carries
+`remaining_ttl_seconds`, which `list_instances()` does not read.
 
 ## Columns
 
@@ -77,7 +78,7 @@ The first four columns are character columns:
 - `type`: the type of its model, such as `"llm"` or `"embedding"`.
 
 - `display_name`: the display name of its model, or `NA` when the model
-  list gives none.
+  list gives none or `null`. An empty name stays `""`.
 
 Rows follow the order of the models in the model list, then the order of
 the instances of a model. Two instances with the same id, or two models

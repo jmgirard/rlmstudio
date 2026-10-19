@@ -114,7 +114,9 @@ message that <code>quiet</code> controls.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The model list does not carry four fields that <code>lms ps --json</code> reports: the
-generation status, the queued requests, the ttl, and the last-used time.</p>
+generation status, the queued requests, the ttl, and the last-used time.
+Each loaded instance in the model list carries <code>remaining_ttl_seconds</code>,
+which <code>list_instances()</code> does not read.</p>
     </div>
     <div class="section level2">
     <h2 id="columns">Columns<a class="anchor" aria-label="anchor" href="#columns"></a></h2>
@@ -124,7 +126,7 @@ generation status, the queued requests, the ttl, and the last-used time.</p>
 <li><p><code>key</code>: the key of its model.</p></li>
 <li><p><code>type</code>: the type of its model, such as <code>"llm"</code> or <code>"embedding"</code>.</p></li>
 <li><p><code>display_name</code>: the display name of its model, or <code>NA</code> when the model
-list gives none.</p></li>
+list gives none or <code>null</code>. An empty name stays <code>""</code>.</p></li>
 </ul><p>Rows follow the order of the models in the model list, then the order of
 the instances of a model. Two instances with the same id, or two models
 with the same key, give separate rows.</p>
