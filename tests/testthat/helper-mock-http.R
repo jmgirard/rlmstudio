@@ -199,6 +199,8 @@ request_body_text <- function(req, seconds = 30) {
 # reads the proxy variables, such as http_proxy, and sends even a request for
 # 127.0.0.1 to the proxy unless no_proxy lists it. So every try sets curl's
 # noproxy option to "*", and the request goes straight to the echo server.
+# That value replaces the one lms_client() sets for localhost, 127.0.0.1, and
+# ::1, which names the host of the request and not the echo server.
 request_dry_run <- function(req, redact_headers = TRUE, tries = 5L,
                             seconds = 5) {
   require_httpuv()

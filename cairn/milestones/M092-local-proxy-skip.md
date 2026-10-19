@@ -1,13 +1,13 @@
 # M092: Requests to localhost, 127.0.0.1, and ::1 skip a set proxy
 
-- **Status:** planned
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** IP1
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes where every package request to this machine goes when a proxy is set
-- **Branch/PR:** —
+- **Branch/PR:** m092-local-proxy-skip
 
 ## Goal
 
@@ -21,11 +21,11 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 
 ## Acceptance criteria
 
-- [ ] AC1: With `http_proxy`, `https_proxy`, and `all_proxy` set to the address of a test proxy listener and `no_proxy` unset, a call to `lms_server_ready()` whose `host` names a test server by the hostname `localhost`, `LOCALHOST`, or `127.0.0.1` sends its request to that server. A test in `tests/testthat/test-proxy.R` asserts for each hostname that the test server recorded one request and the proxy listener recorded none. AC4 carries the claim to every request the package sends. (RB tripwire: ip-touching)
-- [ ] AC2: The test of AC1 also runs for the hostname `[::1]`. Off CI, where the machine cannot listen on `::1`, that case skips with a message that says so. On CI it fails instead.
-- [ ] AC3: With `http_proxy` set to the address of a test proxy listener, `lms_server_ready(host = "http://lmstudio.test:1234")` sends its request to that listener, and a test asserts that the listener recorded the URL `http://lmstudio.test:1234/api/v1/models`.
-- [ ] AC4: `lms_client()` is the only place in `R/` that builds an httr2 request, and nothing in `R/` changes the URL of a request after it: `grep -rn 'httr2::request(' R/` prints one line, inside `lms_client()`, `grep -rn 'req_url(' R/` prints nothing, and `NAMESPACE` imports nothing from httr2.
-- [ ] AC5: `NEWS.md`, under the development version, has one entry that says that a request to `localhost`, `127.0.0.1`, or `::1` no longer goes through a proxy that the proxy environment variables set, and that a request to any other host follows them as before.
+- [x] AC1: With `http_proxy`, `https_proxy`, and `all_proxy` set to the address of a test proxy listener and `no_proxy` unset, a call to `lms_server_ready()` whose `host` names a test server by the hostname `localhost`, `LOCALHOST`, or `127.0.0.1` sends its request to that server. A test in `tests/testthat/test-proxy.R` asserts for each hostname that the test server recorded one request and the proxy listener recorded none. AC4 carries the claim to every request the package sends. (RB tripwire: ip-touching)
+- [x] AC2: The test of AC1 also runs for the hostname `[::1]`. Off CI, where the machine cannot listen on `::1`, that case skips with a message that says so. On CI it fails instead.
+- [x] AC3: With `http_proxy` set to the address of a test proxy listener, `lms_server_ready(host = "http://lmstudio.test:1234")` sends its request to that listener, and a test asserts that the listener recorded the URL `http://lmstudio.test:1234/api/v1/models`.
+- [x] AC4: `lms_client()` is the only place in `R/` that builds an httr2 request, and nothing in `R/` changes the URL of a request after it: `grep -rn 'httr2::request(' R/` prints one line, inside `lms_client()`, `grep -rn 'req_url(' R/` prints nothing, and `NAMESPACE` imports nothing from httr2.
+- [x] AC5: `NEWS.md`, under the development version, has one entry that says that a request to `localhost`, `127.0.0.1`, or `::1` no longer goes through a proxy that the proxy environment variables set, and that a request to any other host follows them as before.
 - [ ] AC6: `devtools::check()` on the maintainer's machine gives 0 errors, 0 warnings, and 0 notes, `devtools::test()` passes, and the R-CMD-check jobs pass on the PR.
 
 ## Coverage
@@ -39,10 +39,10 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 
 ## Tasks
 
-- [ ] T1: Write `tests/testthat/test-proxy.R`. Start two httpuv listeners in the test process, a test server and a proxy, and set the proxy variables with `withr::local_envvar()`. Call `lms_server_ready(host, timeout = 0.5)`, then run `httpuv::service()` to read the request that each listener holds. `req_perform()` blocks R, so neither listener answers during the call. One case for each hostname of AC1 and AC2, and the AC3 case. Do not go through `request_dry_run()`, which sets `noproxy = "*"` (`helper-mock-http.R:206`) and would hide the change. Before T2, the AC1 and AC2 cases must fail with the proxy listener holding the request, and the AC3 case must pass.
-- [ ] T2: In `lms_client()` (`R/chat.R:2697`), when the hostname from `host_address(host)`, in lower case, is `localhost`, `127.0.0.1`, or `::1`, add `httr2::req_options(noproxy = <hostname>)`. Probe that curl matches `LOCALHOST` and `[::1]` against that value. Update the roxygen block of `lms_client()`. Leave `no_server_hint()` unchanged.
-- [ ] T3: Add the `NEWS.md` entry of AC5.
-- [ ] T4: Run the AC4 greps, `devtools::document()`, `devtools::test()`, and `devtools::check()`. If LM Studio runs, also call `lms_server_ready()` with `http_proxy` set to a closed port, and log the result in one work-log line.
+- [x] T1: Write `tests/testthat/test-proxy.R`. Start two httpuv listeners in the test process, a test server and a proxy, and set the proxy variables with `withr::local_envvar()`. Call `lms_server_ready(host, timeout = 0.5)`, then run `httpuv::service()` to read the request that each listener holds. `req_perform()` blocks R, so neither listener answers during the call. One case for each hostname of AC1 and AC2, and the AC3 case. Do not go through `request_dry_run()`, which sets `noproxy = "*"` (`helper-mock-http.R:206`) and would hide the change. Before T2, the AC1 and AC2 cases must fail with the proxy listener holding the request, and the AC3 case must pass.
+- [x] T2: In `lms_client()` (`R/chat.R:2697`), when the hostname from `host_address(host)`, in lower case, is `localhost`, `127.0.0.1`, or `::1`, add `httr2::req_options(noproxy = <hostname>)`. Probe that curl matches `LOCALHOST` and `[::1]` against that value. Update the roxygen block of `lms_client()`. Leave `no_server_hint()` unchanged.
+- [x] T3: Add the `NEWS.md` entry of AC5.
+- [x] T4: Run the AC4 greps, `devtools::document()`, `devtools::test()`, and `devtools::check()`. If LM Studio runs, also call `lms_server_ready()` with `http_proxy` set to a closed port, and log the result in one work-log line.
 
 ## Work log
 
@@ -55,8 +55,46 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 - 2026-10-18: plan gate chose the three-name host set over every loopback address because users type these three; falsified by a user with another loopback host whose request goes to a proxy.
 - 2026-10-18: plan gate chose `noproxy` set to the hostname over `noproxy = "*"` because a redirect to another host then keeps the user's proxy rules; falsified by a curl build that does not match `LOCALHOST` or `[::1]` against the hostname value.
 - 2026-10-18: plan gate chose in-process httpuv listeners read after the call over a server in a second R process because callr is not in Suggests and adding it is a dependency change; falsified by a run where a listener does not get the request after the call times out.
+- 2026-10-18: implement started on branch m092-local-proxy-skip; RB tripwire offer on AC1 (ip-touching): user chose to proceed without a brief.
+- 2026-10-18: T1 done: `test-proxy.R` added. Before T2, the `localhost`, `LOCALHOST`, `127.0.0.1`, and `[::1]` cases each fail on both checks, with the test proxy holding the full URL; the other-host case passes. Each case takes about 0.2-0.3 s. The suite is red by design until T2.
+- 2026-10-18: T2 done: `lms_client()` reads the hostname with `host_address()`, lowercases it, and sets `noproxy` to it for the three names. The option goes after `httr2::request(host)`, so a bad `host` still fails with the httr2 message. All 6 `test-proxy.R` cases pass, so curl matched `LOCALHOST` against `localhost` and `[::1]` against `::1`. `devtools::test()`: 3054 tests, 0 failed, 0 errors, 3 skipped. The "createTcpServer: address already in use" line comes from `test-mock-http-helper.R` alone, as before.
+- 2026-10-18: T3 done: `NEWS.md` entry added at the top of the development version.
+- 2026-10-18: T4: `grep -rn 'httr2::request(' R/` prints only `R/chat.R:2705`, `grep -rn 'req_url(' R/` prints nothing, and `NAMESPACE` has no httr2 line. `devtools::check()`: 0 errors, 0 warnings, 0 notes (2m 22s). Live probe: with LM Studio started on 1234 and `http_proxy`/`all_proxy` set to a closed port, `lms_server_ready()` for `localhost` and `127.0.0.1` returned TRUE and `list_models()` returned 7 rows, while a plain httr2 request failed at the proxy port. The server was stopped after.
+- 2026-10-18: claim audit: 27 claims read, 3 corrected — NEWS.md, R/chat.R, tests/testthat/test-proxy.R. The NEWS "call failed" sentence now also names a proxy that forwards. The "other host" claims now say "starts at", and the `lms_client()` help names the redirect case. The httpuv comment names all three times the handler runs.
+- 2026-10-18: the claim audit found that the `noproxy` option replaces the `no_proxy` variable for the whole request, so the plan's reason for `noproxy` set to the hostname holds for the proxy variables but not for `no_proxy` after a redirect. Kept the code, narrowed the prose, and added the candidate row "proxy redirect no_proxy". A test of a merged value needs a test server in a second process, because an in-process server cannot answer during the call.
+- 2026-10-18: claim audit re-read of the 3 corrected claims: all accurate. Status set to review.
+- 2026-10-18: review evidence pass: a planted `::1` bind failure showed the CI branch recording a failure and then a skip, since `fail()` does not stop the test. The case is now one if/else; the plant then gives a skip off CI and a failure with no skip on CI.
+- 2026-10-18: review fix-now: the test server of the `localhost` cases also listens on `::1`, `local_recorder()` tries up to 5 ports, and `local_test_proxy()` stops with the reason. The tests use `timeout = 0.2`, not the 0.5 s that T1 and the line below give. With the old `lms_client()` swapped in, the 4 local cases fail and the other-host case passes.
+- 2026-10-18: step-7 approval: m092-local-proxy-skip approved for merge
 - 2026-10-18: lessons harvested: M004 (socket rules differ by system; httpuv must be in DESCRIPTION, which it is) and M087 (time test blocks on an idle machine, since each case waits 0.5 s).
 
 ## Decisions
 
 ## Review
+
+- AC1 evidence (2026-10-18): `testthat::test_file("tests/testthat/test-proxy.R")` at 1f8b9bc: the subtests for `localhost`, `LOCALHOST`, and `127.0.0.1` pass, 2 expectations each (server recorded `/api/v1/models`, proxy recorded nothing). Before T2 the same subtests failed with the proxy holding the full URL (work log, T1). `lms_server_ready()` goes through `server_ready_request()` and `lms_client()`; AC4 carries the claim to the other requests.
+- AC2 evidence (2026-10-18): the `[::1]` case passes on this machine, also with `CI=true` (0 failed, 0 skipped). A scratch copy that binds the test server to 203.0.113.1 gives a skip with CI unset and 1 failure with no skip with `CI=true`.
+- AC3 evidence (2026-10-18): "a request to another host still goes to a set proxy" passes: the listener recorded `http://lmstudio.test:1234/api/v1/models`.
+- AC4 evidence (2026-10-18): `grep -rn 'httr2::request(' R/` prints only `R/chat.R:2708`, inside `lms_client()`; `grep -rn 'req_url(' R/` prints nothing; `grep -c httr2 NAMESPACE` gives 0.
+- AC5 evidence (2026-10-18): `NEWS.md` line 3, the first entry under `# rlmstudio (development version)`, names the three hostnames, the proxy variables, the old behavior, and that a request that starts at any other host follows the variables as before.
+- Consistency gate (2026-10-18): `cairn_validate.py` all checks passed; `devtools::document()` no diff; README not touched; `pkgdown::check_pkgdown()` no problems; NEWS entry present; no new top-level file. No principle changed, so `cairn_impact` is skipped.
+- AC1-AC3 evidence refreshed (2026-10-18) at e177c63, after the review fixes: `test-proxy.R` gives 9 expectations, 0 failed, 0 errors. With the pre-M092 `lms_client()` swapped in, the `localhost`, `LOCALHOST`, `127.0.0.1`, and `[::1]` cases fail 2 each and the other-host case passes.
+- AC6 evidence, local part (2026-10-18) at e177c63: `devtools::check()` 0 errors, 0 warnings, 0 notes (1m 53.6s); `devtools::test()` 3054 tests, 0 failed, 0 errors, 3 skipped. The R-CMD-check jobs on the PR run at the merge step.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- ripple #1: `cairn/references/lmstudio-api-surface.md:54-55` said `lms_client()` sets `Content-Type` and `Accept` only — fix now (marked as a record of when the note was written, corrected M092)
+- diff-bug #1: on Windows, `localhost` can try `::1` first, and a connect to a closed loopback port is not refused at once, so the 0.2 s request could end before curl tries 127.0.0.1 — fix now (the test server for the `localhost` cases also listens on `::1` at the same port where it can)
+- diff-bug #2: httpuv reading the request after curl times out is shown only on macOS — reject (no defect shown; the Linux and Windows R-CMD-check jobs at the merge wait test it, and a red job is fixed on the branch)
+- diff-bug #3: a test proxy that cannot start gives `proxy$port` NULL and an unrelated error — fix now (`local_test_proxy()` stops with the reason, and `local_recorder()` tries up to 5 ports)
+- diff-bug #4: the AC3 check relies on httpuv putting the full URL in `PATH_INFO` — reject (false as a defect: an httpuv change would turn the test red, not hide a fault)
+- diff-bug #5: the outer block holds only nested tests and may report as empty — reject (false: the test table shows it with 0 expectations and no skip)
+- diff-bug #6: T1 text and the lessons work-log line say 0.5 s, the code uses 0.2 s — fix now (work-log line records 0.2 s)
+- diff-bug #7: `localhost.`, `[0:0:0:0:0:0:0:1]`, and `[::1%lo0]` still go to a set proxy — reject (planned change: D-044 leaves other loopback forms out)
+- diff-bug #8: the local set is written in `lms_client()` and `no_server_hint()` with no shared helper — reject (planned change: D-044 keeps the sets apart)
+- diff-bug #9: NEWS writes `::1` where `host` holds `[::1]`, omits the redirect case, and one sentence reads oddly — reject (false and style: the entry names the hostname, which is `::1`, and says "starts at", which the redirect case does not contradict)
+- blame-history #1: a redirect hop from a local host loses the user's `no_proxy`, against D-044's wording — follow-up (row "proxy redirect no_proxy"; D-045 narrows D-044)
+- blame-history #2: the curl matching rests on the tests alone, and AC6 is open — reject (no defect: the tests run the matching, and AC6 is checked at the merge wait)
+- prior-review #1: same as diff-bug #1 — fix now (same fix)
+- prior-review #2: NEWS omits the redirect case, and "in any letter case" rests on one spelling — reject (false: "starts at" is accurate, and the code lowercases every spelling before it compares)
+- prior-review #3: same as diff-bug #3, and the parked row "free_port held-port callers" — fix now (same fix; the row stays for the older callers)
+- prior-review #4: block time near the 1 s bar — reject (no defect: the largest block took 0.25 s on this machine)
+- ripple #2: the `request_dry_run()` comment in `helper-mock-http.R` gave the `noproxy = "*"` reason without the new `lms_client()` value — fix now (comment says the helper value replaces it)
