@@ -195,11 +195,15 @@ request_body_text <- function(req, seconds = 30) {
 # server". In each case this helper tries again on a new port. A request that
 # curl cannot send, such as a URL with a space in its path, also gives a curl
 # error, on every try. So after `tries` tries, the stop message names the
-# likely cause and keeps the last error. No other error is caught.
+# likely cause and keeps the last error. No other error is caught. libcurl
+# reads the proxy variables, such as http_proxy, and sends even a request for
+# 127.0.0.1 to the proxy unless no_proxy lists it. So every try sets curl's
+# noproxy option to "*", and the request goes straight to the echo server.
 request_dry_run <- function(req, redact_headers = TRUE, tries = 5L,
                             seconds = 5) {
   require_httpuv()
   req <- httr2::req_timeout(req, seconds)
+  req <- httr2::req_options(req, noproxy = "*")
   last_error <- NULL
   for (i in seq_len(tries)) {
     out <- tryCatch(

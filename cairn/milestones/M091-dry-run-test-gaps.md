@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M091: Test dry runs skip a set proxy, and two helper comments match each system
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** internal — test helpers and test comments, which no package user relies on   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m091-dry-run-test-gaps, https://github.com/jmgirard/rlmstudio/pull/94   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -44,21 +44,21 @@ variables.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: The comment above the `test_that()` block "request_target() reads
+- [x] AC1: The comment above the `test_that()` block "request_target() reads
       a request when the program on the first dry-run port never replies" in
       `tests/testthat/test-mock-http-helper.R` states that the first try ends
       with curl's timeout error on macOS and with httpuv's "Failed to create
       server" on Linux, the two results that row E3 of
       `cairn/references/curl-echo-fault.md` records.
-- [ ] AC2: The comment above `free_port()` in `tests/testthat/helper-ports.R`
+- [x] AC2: The comment above `free_port()` in `tests/testthat/helper-ports.R`
       does not say that nothing listens on the returned port. It states that
       on macOS the returned port can be one that another program holds on
       127.0.0.1 alone.
-- [ ] AC3: With `http_proxy` and `all_proxy` set to `http://127.0.0.1:<port>`
+- [x] AC3: With `http_proxy` and `all_proxy` set to `http://127.0.0.1:<port>`
       for a port that `free_port()` returned, and `no_proxy` and `NO_PROXY`
       set to empty strings, `request_target()` reads the method, path, and
       body of a request in 1 dry-run try.
-- [ ] AC4: `devtools::test()` on macOS, run with no proxy variables set,
+- [x] AC4: `devtools::test()` on macOS, run with no proxy variables set,
       reports 0 failures and 0 warnings.
 
 ## Coverage
@@ -78,12 +78,12 @@ variables.
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Correct the two comments. First probe on macOS: hold a port on
+- [x] T1: Correct the two comments. First probe on macOS: hold a port on
       127.0.0.1 alone with `httpuv::startServer()`, then confirm that
       `serverSocket()` on that port succeeds, so `bind_free_port()` can
       return it. Write the `free_port()` comment from that probe and the
       never-replies comment from row E3 (derived-claims rule).
-- [ ] T2: Test first. In `tests/testthat/test-mock-http-helper.R`, add a
+- [x] T2: Test first. In `tests/testthat/test-mock-http-helper.R`, add a
       test that sets the AC3 variables with `withr::local_envvar()`, counts
       tries with `local_dry_run_ports()`, and asserts method, path, body, and
       `tries$n` of 1. See it fail on the current helper with the helper's "no
@@ -91,7 +91,7 @@ variables.
       `request_dry_run()` and extend its comment with the proxy case. Plant
       check: remove the option and see the new test go red. No `curl::` call
       (LESSONS M004).
-- [ ] T3: Run `devtools::document()` (no diff expected), `devtools::test()`,
+- [x] T3: Run `devtools::document()` (no diff expected), `devtools::test()`,
       and `devtools::check()`.
 
 ## Work log
@@ -106,9 +106,44 @@ variables.
 - 2026-10-18: plan gate chose `httr2::req_options(noproxy = "*")` on the request over setting `no_proxy` with `withr` inside the helper, because the option binds to the curl handle and does not depend on which variable spellings libcurl reads; falsified by an httr2 or curl release whose dry run ignores the handle's `noproxy` option.
 - 2026-10-18: criteria audit (reduced mode, fresh Opus reader): AC1 and AC2 no finding; AC3 bound an instrument ("as a test asserts"), so the criterion narrowed to the helper's behavior and the test moved to T2; AC4 borderline, narrowed to a run with no proxy variables set.
 - 2026-10-18: added the candidate row "proxy and local requests" for the package's own requests, outside this test-only scope.
+- 2026-10-18: implement started on branch `m091-dry-run-test-gaps`, cut from `22eeadb`.
+- 2026-10-18: T1 done: probe on macOS (R 4.6.1) held port 31234 on 127.0.0.1 with httpuv, and `serverSocket(31234)` then returned a connection; the `free_port()` comment and the never-replies comment now state the macOS and Linux results (row E3); `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped.
+- 2026-10-18: T2: the first draft of the proxy test took the proxy port and the echo port from two bare `free_port()` calls, which return the same port, so the echo server acted as the proxy and the test failed on an absolute-URL path; the echo port now leaves the proxy port out of its scan.
+- 2026-10-18: T2 done: on the old helper the proxy test failed with the helper's stop "The dry run received no request in 5 tries", last error `Could not connect to server` to the proxy port; with `httr2::req_options(req, noproxy = "*")` in `request_dry_run()` it passes in 1 try; `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped.
+- 2026-10-18: T3 done: `devtools::document()` left no diff; `devtools::check()` 0 errors, 0 warnings, 0 notes (proxy variables unset).
+- 2026-10-18: claim audit: not owed — internal tier.
+- 2026-10-18: implement complete; status set to review.
+- 2026-10-18: step-7 approval: m091-dry-run-test-gaps approved for merge
+- 2026-10-18: PR #94 CI red on windows-latest (release) only: the proxy test's control dry run got `curl_error_operation_timedout` ("Connection timed out after 2000 milliseconds", no port named) where macOS and Linux get `curl_error_couldnt_connect`; the helper part passed. The control now accepts either class and checks the port only on a refused connection. The 2 test warnings of that job (`test-arg-guards.R:688`, `test-vignette-claims.R:224`) also show on main's last Windows run. Fix is to the test's control alone, so the approval stands.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
 
 ## Review
 <!-- owner: review · exclusive -->
+
+Branch synced: `origin/main` is `22eeadb`, the branch's base, so no merge was needed (2026-10-18).
+
+- AC1 evidence: `test-mock-http-helper.R:137-142` says that on macOS "the first try ends with curl's timeout error" and that on Linux "the first try ends with httpuv's \"Failed to create server\"", matching row E3 of `cairn/references/curl-echo-fault.md` (macOS `curl_error_operation_timedout`, Linux "Failed to create server").
+- AC2 evidence: `grep -n "nothing listens" tests/testthat/helper-ports.R` finds no line; `helper-ports.R:34-37` says that on macOS the bind "also succeeds over a port that another program holds on 127.0.0.1 alone, so the returned port can be one that such a program listens on".
+- AC3 evidence: a direct run outside testthat, with `http_proxy` and `all_proxy` set to `http://127.0.0.1:29096` (a `free_port()` port), `no_proxy` and `NO_PROXY` empty, and the echo port 29333, gave method POST, path `/v1/models/load`, body `{"model":"m"}`, in 1 try. In the full suite, "request_target() reads a request when a proxy is set" ran 4 expectations, 0 failed.
+- AC4 evidence: `devtools::test()` on macOS with no proxy variable in the environment (`env | grep -i proxy` empty, and the six variables unset): 0 failed, 0 errors, 0 warnings, 3 skipped, 24695 expectations passed.
+- Gate: `cairn_validate.py` all checks passed; `devtools::document()` left no diff; `pkgdown::check_pkgdown()` no problems; `devtools::check()` 0 errors, 0 warnings, 0 notes; README.Rmd and `R/` untouched; no NEWS entry owed (test files only); no principle changed, so no `cairn_impact` run.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: the proxy test never shows that the proxy is in use, so it passes without the fix where libcurl ignores the proxy variables — fix now, a control dry run without `noproxy` must fail with `curl_error_couldnt_connect` naming the proxy port, fixed f3e6ded
+- diff-bug #2: the echo port of the proxy test can be one a program holds on 127.0.0.1 alone on macOS, and the test expects 1 try — follow-up, row "free_port held-port callers"
+- diff-bug #3: the URL-with-space test compares the helper's error with a direct `req_dry_run()` sent without `noproxy` — fix now, the direct call sets `noproxy = "*"`, fixed f3e6ded
+- diff-bug #4: the helper's stop message names one cause, another program on the port, when every try fails — follow-up, row "free_port held-port callers"
+- diff-bug #5: "such as http_proxy" could be read to cover uppercase `HTTP_PROXY` — reject, false: the comment names the lowercase variable that libcurl reads and claims nothing about the uppercase one
+- blame-history #1: the proxy test comment says the proxy port has no listener, against the new `free_port()` caveat — fix now, the comment now says "in a clean run" and points to the control, fixed f3e6ded
+- blame-history #2: no Linux run of the proxy fix — reject, false: AC3 and AC4 promise no Linux result, and the PR's CI matrix runs the new test on Ubuntu and Windows before the merge, which waits on green
+- prior-review #1: the same proxy-port comment contradiction as blame-history #1 — fix now, same fix, fixed f3e6ded
+- ripple #1: the test name "free_port() returns a port that nothing listens on" in `test-ports.R:43` repeats the removed claim — follow-up, row "free_port held-port callers"
+- ripple #2: `helper-ports.R:6` says a port in use makes `serverSocket()` raise — fix now, the comment names the all-addresses case and the macOS exception, fixed f3e6ded
+- ripple #3: the candidate row "dry-run test comment gaps" is still open — reject, planned change: post-merge hygiene graduates it
+- ripple #4 and #5: `test-serve.R:38` and `test-server-ready.R:11-12` take a closed port from `free_port()` — follow-up, row "free_port held-port callers"
+- ripple #6: `test-mock-http-helper.R:121` "the other outcome" pairs with the removed count — fix now, "another outcome", fixed f3e6ded
+- ripple #7: LESSONS M004 "runs on macOS alone" conflicts with the Linux results — reject, false: on Linux the request never reaches the held port, which is what the lesson says
+- ripple #8: same as diff-bug #4 — follow-up, row "free_port held-port callers"
+- ripple #9: the "dry-run retry exit" row does not list the proxy test — reject, false: the proxy test does not exercise the retry and stays valid once the retry goes
+- After the fixes: the helper test file passed 51 with no proxy set and 51 with `http_proxy` and `all_proxy` set to port 9; `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped, 24697 passed.

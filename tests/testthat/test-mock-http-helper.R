@@ -118,7 +118,7 @@ test_that("request_target() reads a request when another program holds the first
 })
 
 # A port held on all addresses makes the echo server's own bind fail, which is
-# the other outcome the dry-run helper tries again on.
+# another outcome the dry-run helper tries again on.
 test_that("request_target() reads a request when the echo server cannot bind the first port", {
   require_httpuv()
   held <- local_listener()
@@ -135,8 +135,11 @@ test_that("request_target() reads a request when the echo server cannot bind the
 })
 
 # An httpuv handler that returns NULL sends no reply, as a program that does
-# not speak HTTP can do. The dry run then ends with a curl error, which is the
-# third outcome the dry-run helper tries again on.
+# not speak HTTP can do. On macOS the echo server binds over the held port, so
+# the request reaches that program and the first try ends with curl's timeout
+# error. On Linux the echo server cannot bind the held port, so the first try
+# ends with httpuv's "Failed to create server". The dry-run helper tries again
+# after either one.
 test_that("request_target() reads a request when the program on the first dry-run port never replies", {
   testthat::skip_on_cran()
   require_httpuv()
@@ -190,6 +193,51 @@ test_that("request_target() reads a request when the first dry run ends with a c
   expect_identical(tries$n, 2L)
 })
 
+# libcurl reads the proxy variables, and with no_proxy empty it sends even a
+# request for 127.0.0.1 to the proxy. Here the proxy port comes from
+# free_port(), so in a clean run no program listens there. The control dry run
+# below, sent without curl's noproxy option, shows that the proxy is in use:
+# it fails to connect. A dry run of the helper that went to the proxy would
+# fail the same way on every try.
+test_that("request_target() reads a request when a proxy is set", {
+  require_httpuv()
+  proxy_port <- free_port()
+  proxy <- paste0("http://127.0.0.1:", proxy_port)
+  withr::local_envvar(
+    http_proxy = proxy, all_proxy = proxy, no_proxy = "", NO_PROXY = ""
+  )
+  req <- httr2::request("http://localhost:1234/v1/models/load") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+  control <- tryCatch(
+    httr2::req_dry_run(httr2::req_timeout(req, 5), quiet = TRUE),
+    curl_error = identity
+  )
+  # macOS and Linux refuse the connection at once. On the Windows CI runner the
+  # connect to the closed port times out at the 2 seconds that curl_echo()
+  # allows, and that message names no port.
+  connect_classes <- c(
+    "curl_error_couldnt_connect", "curl_error_operation_timedout"
+  )
+  expect_true(inherits(control, connect_classes), info = class(control)[1])
+  if (inherits(control, "curl_error_couldnt_connect")) {
+    expect_match(
+      conditionMessage(control), paste0("port ", proxy_port),
+      fixed = TRUE
+    )
+  }
+  # free_port() scans from the same start each time, so the echo port must
+  # leave the proxy port out, or the echo server would act as the proxy.
+  spare <- free_port(setdiff(20000:40000, proxy_port))
+  tries <- local_dry_run_ports(function(n) spare)
+
+  target <- request_target(req)
+
+  expect_identical(target$method, "POST")
+  expect_identical(target$path, "/v1/models/load")
+  expect_identical(target$body, list(model = "m"))
+  expect_identical(tries$n, 1L)
+})
+
 test_that("the dry-run helper names the cause when every try lands on a held port", {
   require_httpuv()
   held <- free_port()
@@ -211,12 +259,16 @@ test_that("the dry-run helper names the cause when every try lands on a held por
 # same way. The stop message must keep curl's own error. The text of that error
 # depends on the libcurl build: macOS gives "Malformed input to a URL
 # function", and the libcurl 8.5.0 of Ubuntu 24.04 gives "Out of memory". So
-# the test reads curl's error for the same dry run first.
+# the test reads curl's error for the same dry run first, with the noproxy
+# option that the helper sets.
 test_that("the dry-run helper keeps curl's error when the request itself is at fault", {
   require_httpuv()
   req <- httr2::request("http://localhost:1234/v1/a b")
   curl_cnd <- tryCatch(
-    httr2::req_dry_run(httr2::req_timeout(req, 5), quiet = TRUE),
+    httr2::req_dry_run(
+      httr2::req_options(httr2::req_timeout(req, 5), noproxy = "*"),
+      quiet = TRUE
+    ),
     curl_error = identity
   )
   expect_s3_class(curl_cnd, "curl_error")

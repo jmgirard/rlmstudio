@@ -3,7 +3,9 @@
 # generator: sample() would move .Random.seed for every later test, and under a
 # fixed seed it would try the same ports on every run. The process id is
 # multiplied by 97, so two R processes with adjacent ids start 97 ports apart.
-# A port in use makes serverSocket() raise, so the scan moves on to the next one.
+# A port that another socket holds on all addresses makes serverSocket() raise,
+# so the scan moves on to the next one. On macOS a port that a program holds on
+# 127.0.0.1 alone does not make it raise (see free_port() below).
 
 # Bind the first free port in `ports` and return the open connection with its
 # port. After 50 tries, stop with the range and the number of ports tried.
@@ -31,8 +33,10 @@ local_listener <- function(ports = 20000:40000, env = parent.frame()) {
   bound$port
 }
 
-# Return a port that nothing listens on. The helper binds it and gives it back,
-# so the port was free a moment ago.
+# Return a port that the helper could bind on all addresses a moment ago. The
+# helper binds it and gives it back. On macOS that bind also succeeds over a
+# port that another program holds on 127.0.0.1 alone, so the returned port can
+# be one that such a program listens on.
 free_port <- function(ports = 20000:40000) {
   bound <- bind_free_port(ports)
   close(bound$con)
