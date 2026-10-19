@@ -88,33 +88,6 @@ test_that("an API error carries the code string of the body, or NULL", {
 
 # The model check -------------------------------------------------------------
 
-# A status-200 reply on `route` whose `model` field is `model_json`, JSON
-# text, or absent when `NULL`. `text_json` is the answer text, and `NULL`
-# gives a reply with no answer text.
-reply_with_model <- function(route, model_json, text_json = quoted("reply")) {
-  if (route == "openai") {
-    content <- if (is.null(text_json)) "null" else text_json
-    choice <- json_object(
-      index = "0",
-      message = json_object(role = quoted("assistant"), content = content),
-      finish_reason = quoted("stop")
-    )
-    body <- json_object(
-      id = quoted("chatcmpl-1"),
-      model = model_json,
-      choices = json_array(choice)
-    )
-  } else {
-    items <- if (is.null(text_json)) {
-      character()
-    } else {
-      responses_message(output_text(text_json))
-    }
-    body <- json_object(model = model_json, output = json_array(items))
-  }
-  mock_response(200L, body)
-}
-
 # Two models: org/model-x loaded under the id "x-instance", and org/model-y
 # loaded under its key.
 two_models_list <- function() {

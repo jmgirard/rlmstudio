@@ -181,9 +181,12 @@ lms_embed <- function(
     cnd
   }
   # A refused token or a model the server cannot find fails every request the
-  # same way, whatever the texts, so these statuses end the call (D-019).
+  # same way, whatever the texts, so these statuses end the call (D-019). So
+  # does a server with no model loaded (D-046).
   keep_or_abort_api <- function(cnd) {
-    if (isTRUE(cnd$status %in% c(401L, 403L, 404L))) {
+    if (
+      isTRUE(cnd$status %in% c(401L, 403L, 404L)) || is_no_models_loaded(cnd)
+    ) {
       abort_with_results(cnd)
     }
     keep_failure(cnd)

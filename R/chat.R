@@ -2263,13 +2263,15 @@ lms_chat_batch <- function(
   # same way, whatever the prompt, so these statuses abort like a lost server
   # (D-019). The OpenAI and OpenResponses routes answered a model they could
   # not find with status 400 and the code "model_not_found" when two chat
-  # models were loaded (D-025). Any other status can come from one prompt, so
-  # it fails that input alone.
+  # models were loaded (D-025), and with status 400 and the text "No models
+  # loaded" when no model was loaded (D-046). Any other status can come from
+  # one prompt, so it fails that input alone.
   keep_or_abort_api <- function(cnd) {
     if (
       isTRUE(cnd[["status"]] %in% c(401L, 403L, 404L)) ||
         (identical(cnd[["status"]], 400L) &&
-          identical(cnd[["code"]], "model_not_found"))
+          identical(cnd[["code"]], "model_not_found")) ||
+        is_no_models_loaded(cnd)
     ) {
       abort_with_results(cnd)
     }
