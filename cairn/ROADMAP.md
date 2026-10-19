@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-10-19 (M094 done: narrowed "list_instances fields and tests" to the four fields and the Inf case, pruned the M091 row; validate green)_
+_Last hygiene check: 2026-10-19 (M095 done: narrowed "model-name cases" to the variant-name case, added "chat-options server_message", pruned the M092 row; validate green)_
 _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
 
 ## Milestones
@@ -10,10 +10,9 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M095 | Model-name stops for embeddings and batches | review | — | normal | milestones/M095-model-name-stops.md |
+| M095 | Model-name stops for embeddings and batches | done | — | normal | milestones/archive/M095-model-name-stops.md |
 | M094 | list_instances remaining ttl column | done | — | normal | milestones/archive/M094-list-instances-ttl-column.md |
 | M093 | list_instances tests for a two-kind field and an empty display name | done | — | normal | milestones/archive/M093-list-instances-tests.md |
-| M092 | Requests to localhost, 127.0.0.1, and ::1 skip a set proxy | done | — | normal | milestones/archive/M092-local-proxy-skip.md |
 
 ## Candidates
 <!-- Unnumbered ideas, one line each, ordered high, then normal, then low:
@@ -22,7 +21,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      The opening token is [high] or [low] or absent (normal).
      See tracking-rules "Candidate priority token". -->
 - list_instances fields and tests: `list_instances()` does not report four fields that only `lms ps --json` gives: the generation status, the queued requests, the ttl setting, and the last-used time. The REST model list does not carry them under those names (observed 2026-10-19, LM Studio 0.4.26+4). Promote on a user who needs one of them, or once the REST list carries them, added 2026-09-28, M050 plan gate. Also, the number rule of `instance_list_fault()` accepts `Inf`, so a `remaining_ttl_seconds` of `1e400` lands as `Inf`. Promote on a server that sends such a value, added 2026-10-19, M094 review finding diff-bug #4. The test part shipped in M093 and the ttl column in M094, narrowed 2026-10-19 by M094
-- [low] model-name cases: Four model-name cases outside M049. First, no probe covered `lms_embed()` on `/v1/embeddings` with an unknown name. Promote on a live embedding reply from another model. Second, with no model loaded, an unknown name gets 400 "No models loaded" with no `code` on both OpenAI-style routes (observed 2026-10-01). So a batch does not stop there. Decide on a batch stop for it. Third, a batch by key against a model loaded under another id sends one lookup per input. Keep the lookup result across the batch, or document the cost. Fourth, a variant name, a file-name id, a name without its publisher, or a padded name. On 2026-10-01, with just-in-time loading on, none of them aborted while the right model answered. A variant or file-name id loaded under that name, and the reply named it. A bare or padded name got 400 `model_not_found`. An instance loaded under a file-name id did not show in the `loaded_instances` of `/api/v1/models`. Promote on such a name that aborts with just-in-time loading off. Added 2026-09-28, M049 plan gate and review findings O2, O3, R9, Q1, and Q2, M050 claim audit, narrowed 2026-10-01 by live probes — started M095
+- [low] model-name cases: A variant name, a file-name id, a name without its publisher, or a padded name. On 2026-10-01, with just-in-time loading on, none of them aborted while the right model answered. A variant or file-name id loaded under that name, and the reply named it. A bare or padded name got 400 `model_not_found`. An instance loaded under a file-name id did not show in the `loaded_instances` of `/api/v1/models`. Promote on such a name that aborts with just-in-time loading off. Added 2026-09-28, M049 plan gate and review findings O2, O3, R9, Q1, and Q2, M050 claim audit, narrowed 2026-10-01 by live probes. The embedding probe and check, the "No models loaded" stop, and the lookup per input shipped in M095, narrowed 2026-10-19 by M095
 - [low] chat-options server_message: `vignette("chat-options")` names the `status` and `code` fields of `rlmstudio_api_error`, and not the `server_message` field that M095 added. The edit changes `vignettes/chat-options.Rmd.orig`, so it needs a live re-knit. Make it at the next knit, added 2026-10-19, M095 review finding diff-bug #11
 - [low] Streaming chat over Server Sent Events (`stream: true`, nineteen named event types). It changes the return shape, so it needs its own design work, added 2026-09-19, cairn/references/lmstudio-api-surface.md
 - [parked] test count drift: Two clean `devtools::test()` runs on 2026-09-30 (M065) differed in pass count by 3, with no code change. Two errors of `devtools::test()` on 2026-09-29 (M059) and one of `devtools::check()` on 2026-09-30 (M065) kept no name or message. M066 fixes one cause of a test error that comes and goes, a dry-run port that another program holds on 127.0.0.1. If a count differs or an unnamed error comes back after M066, compare the per-file counts of two runs. Also record the test name and message, added 2026-09-30, split from the dry-run row at the M066 plan gate. Also, `test-server-ready.R:170` failed once in a full `devtools::test()` run, in the option case, and 4 later runs passed. If it fails again, promote it, added 2026-09-29, M051 review finding R1, split 2026-10-01 (rows merged 2026-10-18 at the M082 plan for the line cap)
