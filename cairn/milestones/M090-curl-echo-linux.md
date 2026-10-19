@@ -213,3 +213,21 @@ Pass 2, 2026-10-18, head 6a87742, synced with main dde3de2 (no move). There is n
 - AC6 evidence: `devtools::test()` at 9b11175 (the head's code) gave 0 failed, 0 errors, 0 warnings, 3 skipped.
 - Consistency gate (pass 2): `cairn_validate.py` all checks passed. `devtools::document()` left no diff. `devtools::check()` at 9b11175 gave 0 errors, 0 warnings, 0 notes. `pkgdown::check_pkgdown()` passed in pass 1, and no pkgdown input changed since. README, changelog, and `.Rbuildignore`: as in pass 1.
 - spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1 (pass 2): a blank line split row E7 off the results table on the page — fix now.
+- diff-bug #2 (pass 2): issue 459 still carries the two sentences that pass-1 findings 6 and 7 corrected on the page — fix now, through the merge question, because the question set granted filing the issue and not editing it.
+- diff-bug #3 (pass 2): the comment says the echo server starts "there", on port 0, yet a bind to port 0 gets a port that the system picks — fix now (the comment says that the server starts when it is given port 0, and curl sends to port 0).
+- diff-bug #4 (pass 2): `expect_s3_class(seen$first, "curl_error")` would also take a timeout or a malformed-URL error — reject, false: the comment claims a curl error, AC2 asks for a `curl_error`, and the plant shows which error the test gets.
+- diff-bug #5 (pass 2): try 2's `free_port()` can be a port that a program holds on 127.0.0.1 alone on macOS, as in the held-port tests — follow-up, to the new candidate row "dry-run test comment gaps".
+- diff-bug #6 (pass 2): no Windows run of the port-0 test — fix now, by the pull-request CI, whose matrix runs `windows-latest` and which the merge waits on. A red Windows job is fixed on the branch before the merge.
+- diff-bug #7 (pass 2): an `http_proxy` without 127.0.0.1 in `no_proxy` sends every dry run to the proxy — follow-up, to "dry-run test comment gaps" (it is not new in this diff).
+- diff-bug #8 (pass 2): the `httr2::req_dry_run` mock re-raises the condition with its classes and is scoped to the test — noted.
+- diff-bug #9 (pass 2): AC6 unticked, and the pass-1 lines describe the old test — reject, false: AC6 was ticked at f0dc352 with its evidence line, and the pass-1 lines are that pass's record, which the pass-2 lines follow.
+- blame-history #1 (pass 2): no Windows evidence for the new test — fix now, the same CI check as diff-bug #6.
+- blame-history #2 (pass 2): "with httpuv installed" disagrees with a test that has no skip — reject, false: `require_httpuv()` skips off CI when httpuv is missing.
+- blame-history #3 (pass 2): the test name line is 93 characters — reject, style.
+- blame-history #4 (pass 2): D-006 says "headless workflow", and the helper now says "source-tree tests workflow" — reject, not in this diff: a decision record is history and is not edited.
+- prior-review #1 (pass 2): no `skip_on_cran()` — reject, false: the block took 0.137 s, under the 1 s bar.
+- ripple #1: the "curl echo fault follow-ups" row text is stale — reject, planned change: post-merge hygiene deletes the row, which ends with "started M090".
+- ripple #2: the never-replies comment says that the dry run ends with a curl error, and on Linux it gets "Failed to create server" (E3) — follow-up, to "dry-run test comment gaps" (an unmodified line).
+- ripple #3: the "dry-run retry exit" row names only the held-port tests, and the new test also needs the retry — fix now.
+- ripple #4: the `free_port()` comment says that nothing listens on the port — follow-up, to "dry-run test comment gaps" (an unmodified line).

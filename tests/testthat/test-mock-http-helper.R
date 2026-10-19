@@ -158,9 +158,9 @@ test_that("request_target() reads a request when the program on the first dry-ru
 # On Ubuntu 24.04 with libcurl 8.5.0, the echo server cannot bind a port that
 # another program holds. There each held-port test in this file either
 # retries on "Failed to create server" and not on a curl error, or skips.
-# Here the first dry run instead gets port 0. The echo server starts there
-# with no error, and curl's connection to 127.0.0.1 port 0 fails with curl's
-# own error, as no program can listen on port 0. So with httpuv
+# Here the first dry run instead gets port 0. The echo server starts with no
+# error when it is given port 0, yet curl sends the request to 127.0.0.1 port
+# 0, where no program can listen, so curl raises its own error. So with httpuv
 # installed, this test runs the retry after a curl error on Linux too.
 test_that("request_target() reads a request when the first dry run ends with a curl error", {
   require_httpuv()
