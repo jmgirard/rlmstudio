@@ -10,7 +10,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M092 | Requests to localhost, 127.0.0.1, and ::1 skip a set proxy | planned | — | normal | milestones/M092-local-proxy-skip.md |
+| M092 | Requests to localhost, 127.0.0.1, and ::1 skip a set proxy | in-progress | — | normal | milestones/M092-local-proxy-skip.md |
 | M091 | Test dry runs skip a set proxy, and two helper comments match each system | done | — | normal | milestones/archive/M091-dry-run-test-gaps.md |
 | M090 | The curl echo fault is checked on Linux and reported to curl | done | — | normal | milestones/archive/M090-curl-echo-linux.md |
 | M089 | The OpenAI batch vector fallback names what it cannot store | done | — | normal | milestones/archive/M089-openai-fallback-text.md |

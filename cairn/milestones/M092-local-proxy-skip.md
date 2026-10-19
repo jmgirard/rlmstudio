@@ -1,13 +1,13 @@
 # M092: Requests to localhost, 127.0.0.1, and ::1 skip a set proxy
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** IP1
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes where every package request to this machine goes when a proxy is set
-- **Branch/PR:** —
+- **Branch/PR:** m092-local-proxy-skip
 
 ## Goal
 
@@ -39,7 +39,7 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 
 ## Tasks
 
-- [ ] T1: Write `tests/testthat/test-proxy.R`. Start two httpuv listeners in the test process, a test server and a proxy, and set the proxy variables with `withr::local_envvar()`. Call `lms_server_ready(host, timeout = 0.5)`, then run `httpuv::service()` to read the request that each listener holds. `req_perform()` blocks R, so neither listener answers during the call. One case for each hostname of AC1 and AC2, and the AC3 case. Do not go through `request_dry_run()`, which sets `noproxy = "*"` (`helper-mock-http.R:206`) and would hide the change. Before T2, the AC1 and AC2 cases must fail with the proxy listener holding the request, and the AC3 case must pass.
+- [x] T1: Write `tests/testthat/test-proxy.R`. Start two httpuv listeners in the test process, a test server and a proxy, and set the proxy variables with `withr::local_envvar()`. Call `lms_server_ready(host, timeout = 0.5)`, then run `httpuv::service()` to read the request that each listener holds. `req_perform()` blocks R, so neither listener answers during the call. One case for each hostname of AC1 and AC2, and the AC3 case. Do not go through `request_dry_run()`, which sets `noproxy = "*"` (`helper-mock-http.R:206`) and would hide the change. Before T2, the AC1 and AC2 cases must fail with the proxy listener holding the request, and the AC3 case must pass.
 - [ ] T2: In `lms_client()` (`R/chat.R:2697`), when the hostname from `host_address(host)`, in lower case, is `localhost`, `127.0.0.1`, or `::1`, add `httr2::req_options(noproxy = <hostname>)`. Probe that curl matches `LOCALHOST` and `[::1]` against that value. Update the roxygen block of `lms_client()`. Leave `no_server_hint()` unchanged.
 - [ ] T3: Add the `NEWS.md` entry of AC5.
 - [ ] T4: Run the AC4 greps, `devtools::document()`, `devtools::test()`, and `devtools::check()`. If LM Studio runs, also call `lms_server_ready()` with `http_proxy` set to a closed port, and log the result in one work-log line.
@@ -55,6 +55,8 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 - 2026-10-18: plan gate chose the three-name host set over every loopback address because users type these three; falsified by a user with another loopback host whose request goes to a proxy.
 - 2026-10-18: plan gate chose `noproxy` set to the hostname over `noproxy = "*"` because a redirect to another host then keeps the user's proxy rules; falsified by a curl build that does not match `LOCALHOST` or `[::1]` against the hostname value.
 - 2026-10-18: plan gate chose in-process httpuv listeners read after the call over a server in a second R process because callr is not in Suggests and adding it is a dependency change; falsified by a run where a listener does not get the request after the call times out.
+- 2026-10-18: implement started on branch m092-local-proxy-skip; RB tripwire offer on AC1 (ip-touching): user chose to proceed without a brief.
+- 2026-10-18: T1 done: `test-proxy.R` added. Before T2, the `localhost`, `LOCALHOST`, `127.0.0.1`, and `[::1]` cases each fail on both checks, with the test proxy holding the full URL; the other-host case passes. Each case takes about 0.2-0.3 s. The suite is red by design until T2.
 - 2026-10-18: lessons harvested: M004 (socket rules differ by system; httpuv must be in DESCRIPTION, which it is) and M087 (time test blocks on an idle machine, since each case waits 0.5 s).
 
 ## Decisions
