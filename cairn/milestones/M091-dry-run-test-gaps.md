@@ -127,3 +127,21 @@ Branch synced: `origin/main` is `22eeadb`, the branch's base, so no merge was ne
 - AC3 evidence: a direct run outside testthat, with `http_proxy` and `all_proxy` set to `http://127.0.0.1:29096` (a `free_port()` port), `no_proxy` and `NO_PROXY` empty, and the echo port 29333, gave method POST, path `/v1/models/load`, body `{"model":"m"}`, in 1 try. In the full suite, "request_target() reads a request when a proxy is set" ran 4 expectations, 0 failed.
 - AC4 evidence: `devtools::test()` on macOS with no proxy variable in the environment (`env | grep -i proxy` empty, and the six variables unset): 0 failed, 0 errors, 0 warnings, 3 skipped, 24695 expectations passed.
 - Gate: `cairn_validate.py` all checks passed; `devtools::document()` left no diff; `pkgdown::check_pkgdown()` no problems; `devtools::check()` 0 errors, 0 warnings, 0 notes; README.Rmd and `R/` untouched; no NEWS entry owed (test files only); no principle changed, so no `cairn_impact` run.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: the proxy test never shows that the proxy is in use, so it passes without the fix where libcurl ignores the proxy variables — fix now, a control dry run without `noproxy` must fail with `curl_error_couldnt_connect` naming the proxy port, fixed f3e6ded
+- diff-bug #2: the echo port of the proxy test can be one a program holds on 127.0.0.1 alone on macOS, and the test expects 1 try — follow-up, row "free_port held-port callers"
+- diff-bug #3: the URL-with-space test compares the helper's error with a direct `req_dry_run()` sent without `noproxy` — fix now, the direct call sets `noproxy = "*"`, fixed f3e6ded
+- diff-bug #4: the helper's stop message names one cause, another program on the port, when every try fails — follow-up, row "free_port held-port callers"
+- diff-bug #5: "such as http_proxy" could be read to cover uppercase `HTTP_PROXY` — reject, false: the comment names the lowercase variable that libcurl reads and claims nothing about the uppercase one
+- blame-history #1: the proxy test comment says the proxy port has no listener, against the new `free_port()` caveat — fix now, the comment now says "in a clean run" and points to the control, fixed f3e6ded
+- blame-history #2: no Linux run of the proxy fix — reject, false: AC3 and AC4 promise no Linux result, and the PR's CI matrix runs the new test on Ubuntu and Windows before the merge, which waits on green
+- prior-review #1: the same proxy-port comment contradiction as blame-history #1 — fix now, same fix, fixed f3e6ded
+- ripple #1: the test name "free_port() returns a port that nothing listens on" in `test-ports.R:43` repeats the removed claim — follow-up, row "free_port held-port callers"
+- ripple #2: `helper-ports.R:6` says a port in use makes `serverSocket()` raise — fix now, the comment names the all-addresses case and the macOS exception, fixed f3e6ded
+- ripple #3: the candidate row "dry-run test comment gaps" is still open — reject, planned change: post-merge hygiene graduates it
+- ripple #4 and #5: `test-serve.R:38` and `test-server-ready.R:11-12` take a closed port from `free_port()` — follow-up, row "free_port held-port callers"
+- ripple #6: `test-mock-http-helper.R:121` "the other outcome" pairs with the removed count — fix now, "another outcome", fixed f3e6ded
+- ripple #7: LESSONS M004 "runs on macOS alone" conflicts with the Linux results — reject, false: on Linux the request never reaches the held port, which is what the lesson says
+- ripple #8: same as diff-bug #4 — follow-up, row "free_port held-port callers"
+- ripple #9: the "dry-run retry exit" row does not list the proxy test — reject, false: the proxy test does not exercise the retry and stays valid once the retry goes
+- After the fixes: the helper test file passed 51 with no proxy set and 51 with `http_proxy` and `all_proxy` set to port 9; `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped, 24697 passed.
