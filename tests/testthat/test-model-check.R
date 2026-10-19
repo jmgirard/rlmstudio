@@ -115,22 +115,6 @@ reply_with_model <- function(route, model_json, text_json = quoted("reply")) {
   mock_response(200L, body)
 }
 
-# A model list whose entries are given as `key = c(instance ids)`.
-model_list_response <- function(...) {
-  entries <- list(...)
-  models <- lapply(names(entries), function(key) {
-    list(
-      type = "llm",
-      key = key,
-      loaded_instances = lapply(entries[[key]], \(id) list(id = id))
-    )
-  })
-  mock_response(
-    200L,
-    as.character(jsonlite::toJSON(list(models = models), auto_unbox = TRUE))
-  )
-}
-
 # Two models: org/model-x loaded under the id "x-instance", and org/model-y
 # loaded under its key.
 two_models_list <- function() {
@@ -146,35 +130,6 @@ route_label <- c(
   openresponses = "OpenResponses Failed"
 )
 
-# Assert that `err` reports a reply from `reply_model` to a call for `asked`.
-expect_mismatch <- function(err, asked, reply_model, info = NULL) {
-  expect_true(inherits(err, "rlmstudio_model_mismatch"), info = info)
-  expect_true(inherits(err, "rlmstudio_bad_response"), info = info)
-  expect_identical(err$model, asked, info = info)
-  expect_identical(err$reply_model, reply_model, info = info)
-  expect_identical(err$status, 200L, info = info)
-  msg <- gsub("[[:space:]]+", " ", cli::ansi_strip(conditionMessage(err)))
-  expect_true(grepl(asked, msg, fixed = TRUE), info = info)
-  expect_true(grepl(reply_model, msg, fixed = TRUE), info = info)
-  expect_false(grepl("simplify", msg, fixed = TRUE), info = info)
-}
-
-# Log every request that reaches the real req_perform(), so a test can count
-# the requests of a recorded playback.
-local_request_log <- function(.env = parent.frame()) {
-  log <- new.env(parent = emptyenv())
-  log$urls <- character()
-  real <- httr2::req_perform
-  testthat::local_mocked_bindings(
-    req_perform = function(req, ...) {
-      log$urls <- c(log$urls, req$url)
-      real(req, ...)
-    },
-    .package = "httr2",
-    .env = .env
-  )
-  log
-}
 
 test_that("a recorded reply to an unknown model name aborts with either simplify", {
   for (route in chat_routes) {

@@ -126,7 +126,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
       `text-embedding-nomic-embed-text-v1.5` loaded, and the model list with
       a model loaded under another id (`lms load --identifier`). Unload all
       and stop the server in a `finally` clause (LESSONS M083, M017).
-- [ ] T2: AC1, tests first. Reuse `check_reply_model()` and
+- [x] T2: AC1, tests first. Reuse `check_reply_model()` and
       `reply_model_serves()` (`R/chat.R:969`) in `embed_request()`
       (`R/embed.R`). Abort at a mismatch in the batch loop
       (`R/embed.R:185`), with the subclass test inside the parent handler
@@ -159,6 +159,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
 - 2026-10-19: no partial issue, no release, no dependency change; changelog: one NEWS entry (T5).
 - 2026-10-19: status in-progress, branch m095-model-name-stops cut from main at 35f9949.
 - 2026-10-19: T1 done: `data-raw/record-model-stop-cassette.R` recorded `tests/testthat/stop_live/` (none, embed_unknown, embed_alias) on LM Studio 0.4.26+4; all three routes gave 400 "No models loaded" with nothing loaded; embeddings gave 200 from `text-embedding-nomic-embed-text-v1.5` for "not-a-model" and 200 naming "my-nomic" for the key. Directory named `stop_live`, because `model_stop_live` put one tarball path at 100 bytes. Server stopped, no model loaded. data-raw/README.md lists the script.
+- 2026-10-19: T2 done: `embed_request()` calls `check_reply_model()`; the `lms_embed()` loop aborts with results at `rlmstudio_model_mismatch` and at an `rlmstudio_no_server` from the lookup. New `tests/testthat/test-model-stops.R` (9 blocks) and `helper-model-check.R` (helpers moved from test-model-check.R). Red before the change; a plant that drops the two new handlers turned 3 blocks red. Full `devtools::test()`: 0 failed, 3 live skips. Chose a package-level cache env set by each batch call over a hidden argument, because `lms_chat_batch()` reaches the check through `lms_chat()`, whose dots go to the request body; its code landed with T2 and its tests come in T4.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

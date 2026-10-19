@@ -188,6 +188,20 @@ lms_embed <- function(
     }
     keep_failure(cnd)
   }
+  # A reply from another model means that the wrong model answers every
+  # request, so it ends the call (D-025, D-046). The test sits in this handler
+  # and not in a handler of its own, because `tryCatch()` runs a handler
+  # inside the handlers named after it (LESSONS, M049).
+  keep_or_abort_bad <- function(cnd) {
+    if (inherits(cnd, "rlmstudio_model_mismatch")) {
+      abort_with_results(cnd)
+    }
+    keep_failure(cnd)
+  }
+  # A lookup that keeps a reply id keeps it for the rest of the call, so a
+  # later reply with that id sends no lookup (D-046).
+  old_cache <- start_reply_model_cache()
+  on.exit(end_reply_model_cache(old_cache), add = TRUE)
 
   for (b in seq_along(batches)) {
     rows <- batches[[b]]
@@ -211,10 +225,13 @@ lms_embed <- function(
     body <- c(base, list(input = as.list(unname(input[rows]))))
     body <- utils::modifyList(body, dots)
 
+    # The lookup of the reply-model check probes the server, so a server
+    # that stops after the reply ends the call with its results.
     res <- tryCatch(
-      embed_request(client, body, has_token, simplify),
+      embed_request(client, body, has_token, simplify, host, token),
+      rlmstudio_no_server = abort_with_results,
       rlmstudio_api_error = keep_or_abort_api,
-      rlmstudio_bad_response = keep_failure
+      rlmstudio_bad_response = keep_or_abort_bad
     )
 
     if (inherits(res, c("rlmstudio_api_error", "rlmstudio_bad_response"))) {
@@ -286,10 +303,12 @@ lms_embed <- function(
 #' @param body List. The request body, whose `input` is one batch.
 #' @param has_token Logical. Whether a token was sent, for the abort hint.
 #' @param simplify Logical. Whether to build the matrix from the reply.
+#' @param host,token The host and token of the call, for the model-list
+#'   lookup of `check_reply_model()`.
 #' @return A list of `value`, the matrix or the parsed body, and `resp`.
 #'
 #' @noRd
-embed_request <- function(client, body, has_token, simplify) {
+embed_request <- function(client, body, has_token, simplify, host, token) {
   resp <- client |>
     httr2::req_url_path("v1/embeddings") |>
     rlm_req_body(body) |>
@@ -301,6 +320,17 @@ embed_request <- function(client, body, has_token, simplify) {
   }
 
   resp_data <- parse_ok_body(resp, "Embeddings Failed")
+  # With one embedding model loaded, LM Studio answered an unknown name with
+  # status 200 and vectors from that model (D-046), as the chat routes do
+  # (D-025).
+  check_reply_model(
+    resp,
+    resp_data,
+    body[["model"]],
+    host,
+    token,
+    "Embeddings Failed"
+  )
 
   if (!isTRUE(simplify)) {
     return(list(value = resp_data, resp = resp))
