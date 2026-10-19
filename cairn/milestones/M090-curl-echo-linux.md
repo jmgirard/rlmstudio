@@ -168,6 +168,7 @@ account.
 - 2026-10-18: T9 approach: try 1 gets port 0 through the existing `local_dry_run_ports()` mock of curl's port picker. The echo server starts on port 0 with no error, and curl's own transfer to 127.0.0.1 port 0 fails with `curl_error_couldnt_connect` (observed on macOS and in the container). A mock of `httr2::req_dry_run` keeps the first error, and httr2 is in Imports. Chose this over adding curl to Suggests, because this needs no dependency change and the error now comes from the echo's own transfer (diff-bug #4); falsified by a system where httpuv refuses port 0, or where a connection to port 0 does not fail with a curl error.
 - 2026-10-18: T9 done: no `curl::` call is left in `tests/` or `R/` outside comments and one message string. The new block passed on macOS (nb 5, 0.137 s) and in the container (file 41 passed, 1 skipped, 0 failed). A plant (`curl_error` clause replaced by `TRUE`) went red with `curl_error_couldnt_connect` from `curl_dryrun()`. The block now calls `local_dry_run_ports(`, so the AC1 domain is 6 blocks, and page row E7 records its tries on both systems.
 - 2026-10-18: verify at 9b11175: `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped. `devtools::check()` 0 errors, 0 warnings, 0 notes. Status review.
+- 2026-10-18: step-7 approval: m090-curl-echo-linux approved for merge, with the edit of jeroen/curl issue 459's body to the page's corrected text.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
