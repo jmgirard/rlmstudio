@@ -95,7 +95,7 @@
 #' \itemize{
 #'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
 #'   \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response. With a \code{schema}, it returns the reply parsed into an R value instead.
-#'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
+#'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities. With \code{api_type = "openai"}, the \code{logprobs} of that object is \code{NULL}, and the call gives a warning of class \code{rlmstudio_no_logprobs}. The \code{rlmstudio.quiet} option does not hide it.
 #' }
 #'
 #' With `simplify = TRUE` and `api_type = "native"` or
@@ -609,9 +609,10 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param logprobs `TRUE` or `FALSE`. Whether to request logprobs (currently
-#'   stubbed by LM Studio). Any other value, `NULL` and `NA` included, aborts
-#'   before the check for a running server.
+#' @param logprobs `TRUE` or `FALSE`. Whether to request logprobs. The
+#'   package reads none from this endpoint, so the result holds `NULL`. Any
+#'   other value, `NULL` and `NA` included, aborts before the check for a
+#'   running server.
 #' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses output to text. Any
 #'   other value, `NULL` and `NA` included, aborts before the check for a
 #'   running server.
@@ -641,8 +642,11 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
 #'   returns a character string containing the generated
 #'   text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
-#'   object with the log probabilities populated as \code{NULL} since they are
-#'   currently stubbed in the LM Studio OpenAI endpoint. With
+#'   object whose \code{logprobs} is \code{NULL}, because the package reads no
+#'   log probabilities from this endpoint. Such a call gives a warning of class
+#'   `rlmstudio_no_logprobs` after the cut-off warning, if there is one. The
+#'   `rlmstudio.quiet` option does not hide it. A call whose reply fails gives
+#'   no such warning. Use [lms_chat_openresponses()] for log probabilities. With
 #'   \code{simplify = TRUE}, reply content that is not one string, such as the
 #'   `null` content of a reply that holds only a tool call, raises
 #'   `rlmstudio_bad_response`.
@@ -673,6 +677,7 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @inheritSection rlmstudio-conditions Malformed chat reply
 #' @inheritSection rlmstudio-conditions Cut-off reply
 #' @inheritSection rlmstudio-conditions Reply from another model
+#' @aliases rlmstudio_no_logprobs
 #' @export
 #' @examples
 #' \dontrun{
@@ -1879,6 +1884,13 @@ integer_or_na <- function(x) {
 #'   `TRUE` is ignored. The batch then returns what it returns with
 #'   `logprobs = FALSE`, in each format. It gives one warning for the whole
 #'   batch, after the check for a running server, even with `quiet = TRUE`.
+#'   With `api_type = "openai"` and `simplify = TRUE`, the batch sends the
+#'   flag, and the `logprobs` of each reply is `NULL`, because the package
+#'   reads no log probabilities from that route. The batch then gives one
+#'   warning of class `rlmstudio_no_logprobs` that counts those replies, after
+#'   the failed-inputs and cut-off warnings, or before it aborts on a lost
+#'   server. The `rlmstudio.quiet` option and `quiet = TRUE` do not hide it.
+#'   A batch in which no reply comes back gives no such warning.
 #'   Two values here that [lms_chat()] reads as the same argument abort
 #'   with a message that names the argument. Examples are
 #'   `logprobs = TRUE, logprobs = FALSE`, the shortened names

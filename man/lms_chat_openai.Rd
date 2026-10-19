@@ -2,6 +2,7 @@
 % Please edit documentation in R/chat.R
 \name{lms_chat_openai}
 \alias{lms_chat_openai}
+\alias{rlmstudio_no_logprobs}
 \title{Chat Completion via OpenAI Compatibility API}
 \usage{
 lms_chat_openai(
@@ -166,9 +167,10 @@ of a message. The server checks them.}
 
 \item{host}{Character. Server URL.}
 
-\item{logprobs}{\code{TRUE} or \code{FALSE}. Whether to request logprobs (currently
-stubbed by LM Studio). Any other value, \code{NULL} and \code{NA} included, aborts
-before the check for a running server.}
+\item{logprobs}{\code{TRUE} or \code{FALSE}. Whether to request logprobs. The
+package reads none from this endpoint, so the result holds \code{NULL}. Any
+other value, \code{NULL} and \code{NA} included, aborts before the check for a
+running server.}
 
 \item{simplify}{\code{TRUE} or \code{FALSE}. If \code{TRUE}, parses output to text. Any
 other value, \code{NULL} and \code{NA} included, aborts before the check for a
@@ -208,8 +210,11 @@ response. A status-200 body that does not parse as JSON raises
 \code{rlmstudio_bad_response} with either setting of \code{simplify}. Otherwise,
 returns a character string containing the generated
 text. If \code{logprobs = TRUE}, it returns an \code{lms_chat_result}
-object with the log probabilities populated as \code{NULL} since they are
-currently stubbed in the LM Studio OpenAI endpoint. With
+object whose \code{logprobs} is \code{NULL}, because the package reads no
+log probabilities from this endpoint. Such a call gives a warning of class
+\code{rlmstudio_no_logprobs} after the cut-off warning, if there is one. The
+\code{rlmstudio.quiet} option does not hide it. A call whose reply fails gives
+no such warning. Use \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} for log probabilities. With
 \code{simplify = TRUE}, reply content that is not one string, such as the
 \code{null} content of a reply that holds only a tool call, raises
 \code{rlmstudio_bad_response}.
