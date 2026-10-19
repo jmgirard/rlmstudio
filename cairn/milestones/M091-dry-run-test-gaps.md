@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M091: Test dry runs skip a set proxy, and two helper comments match each system
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -91,7 +91,7 @@ variables.
       `request_dry_run()` and extend its comment with the proxy case. Plant
       check: remove the option and see the new test go red. No `curl::` call
       (LESSONS M004).
-- [ ] T3: Run `devtools::document()` (no diff expected), `devtools::test()`,
+- [x] T3: Run `devtools::document()` (no diff expected), `devtools::test()`,
       and `devtools::check()`.
 
 ## Work log
@@ -110,6 +110,9 @@ variables.
 - 2026-10-18: T1 done: probe on macOS (R 4.6.1) held port 31234 on 127.0.0.1 with httpuv, and `serverSocket(31234)` then returned a connection; the `free_port()` comment and the never-replies comment now state the macOS and Linux results (row E3); `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped.
 - 2026-10-18: T2: the first draft of the proxy test took the proxy port and the echo port from two bare `free_port()` calls, which return the same port, so the echo server acted as the proxy and the test failed on an absolute-URL path; the echo port now leaves the proxy port out of its scan.
 - 2026-10-18: T2 done: on the old helper the proxy test failed with the helper's stop "The dry run received no request in 5 tries", last error `Could not connect to server` to the proxy port; with `httr2::req_options(req, noproxy = "*")` in `request_dry_run()` it passes in 1 try; `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped.
+- 2026-10-18: T3 done: `devtools::document()` left no diff; `devtools::check()` 0 errors, 0 warnings, 0 notes (proxy variables unset).
+- 2026-10-18: claim audit: not owed — internal tier.
+- 2026-10-18: implement complete; status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

@@ -10,7 +10,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M091 | Test dry runs skip a set proxy, and two helper comments match each system | in-progress | — | normal | milestones/M091-dry-run-test-gaps.md |
+| M091 | Test dry runs skip a set proxy, and two helper comments match each system | review | — | normal | milestones/M091-dry-run-test-gaps.md |
 | M090 | The curl echo fault is checked on Linux and reported to curl | done | — | normal | milestones/archive/M090-curl-echo-linux.md |
 | M089 | The OpenAI batch vector fallback names what it cannot store | done | — | normal | milestones/archive/M089-openai-fallback-text.md |
 | M088 | A missing load config or missing OpenAI logprobs warns past quiet | done | — | normal | milestones/archive/M088-missing-result-warnings.md |
