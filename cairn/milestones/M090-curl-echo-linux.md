@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M090: The curl echo fault is checked on Linux and reported to curl
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** internal — test helpers, a reference page, and an upstream report, which no package user relies on   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m090-curl-echo-linux   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -91,17 +91,17 @@ account.
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate. -->
 
-- [ ] T1: Write a trace script in the scratchpad, not committed. It runs each
+- [x] T1: Write a trace script in the scratchpad, not committed. It runs each
       block that `grep -n 'local_dry_run_ports(' tests/testthat/test-mock-http-helper.R`
       lists, plus the URL-with-space block, and logs each dry-run try: a
       request read, an empty result, or the condition's classes and message,
       or the block's skip message. Wrap `httr2::req_dry_run()` with a
       logging mock or `trace()`, so the helper itself is unchanged.
-- [ ] T2: Run the trace script on macOS. Record the results, the date, and
+- [x] T2: Run the trace script on macOS. Record the results, the date, and
       `packageVersion("curl")` and `curl::curl_version()$version` on a new
       page, `cairn/references/curl-echo-fault.md`, from the synthesis-note
       template, and add its line to `cairn/references/INDEX.md`.
-- [ ] T3: Run the trace script and `test-mock-http-helper.R` in
+- [x] T3: Run the trace script and `test-mock-http-helper.R` in
       `rocker/r-ver:4.6`. Install `libcurl4-openssl-dev` with apt and the test
       packages from CRAN inside the container. Pass the package source on
       stdin with `tar`, as LESSONS (PR #85 hotfix) says, because Colima mounts
@@ -149,6 +149,10 @@ account.
 - 2026-10-18: question set: who files the curl report — the agent files it from the operator's account with `gh issue create` once the reproducer confirms the fault.
 - 2026-10-18: question set: run the tests in the local `rocker/r-ver:4.6` image, with apt and CRAN installs inside the container — granted.
 - 2026-10-18: added the parked candidate row "dry-run retry exit" for the retry's removal once curl fixes the bind (search-first: no overlap).
+- 2026-10-18: status in-progress on branch m090-curl-echo-linux, cut from main at dde3de2.
+- 2026-10-18: T1 done: the trace script (scratchpad `trace-dry-run.R`, not committed) swaps `httr2::req_dry_run()` with `assignInNamespace()` and runs each block with `test_file(desc = )`. Without `NOT_CRAN=true`, the two `skip_on_cran()` blocks skip, so every run sets it.
+- 2026-10-18: T2 done: macOS results recorded on `cairn/references/curl-echo-fault.md` (E1 to E6), page line added to INDEX.md.
+- 2026-10-18: T3 done: in the container, every held-port try ends with "Failed to create server", and the time-limit block skips; the whole file gave 36 passed, 1 skipped, 0 failed. `docker run` pulled `rocker/r-ver:4.6` again, because this Docker context did not find the copy that `docker images` had listed. The question set granted the image and the installs inside it, and not the pull.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
