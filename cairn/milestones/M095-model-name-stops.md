@@ -98,7 +98,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
       `rlmstudio_model_mismatch` and that both functions stop at
       "No models loaded". `NEWS.md` has one entry that names the embedding
       check, the stop, and the one lookup per kept id.
-- [ ] AC5: On the dev machine, `devtools::test()` with the live tests
+- [x] AC5: On the dev machine, `devtools::test()` with the live tests
       skipped and `devtools::check()` both give 0 errors and 0 warnings.
 
 ## Coverage
@@ -192,3 +192,5 @@ Pass 2 (2026-10-19, at c58232f, branch level with origin/main at 35f9949; `test_
 - AC2: PASS at c58232f, by the blocks that pass 1 names (now 11 to 15), unchanged by T7.
 - AC3: PASS at c58232f, by the blocks that pass 1 names (now 18 to 23), unchanged by T7.
 - AC4: PASS. `NEWS.md` opens with one entry, "Three changes for a model name that LM Studio cannot serve:", whose three sub-items name the embedding check, the "No models loaded" stop, and the kept reply ids. The help statements of pass 1 stand (`devtools::document()` gives no diff).
+- AC5: PASS. On the dev machine, `devtools::test()` on the c58232f tree: 25065 passed, 0 failed, 0 errors, 3 live skips; `devtools::check()` at c58232f: 0 errors, 0 warnings, 0 notes.
+- Gate: `cairn_validate.py` all checks passed; no principle changed, so `cairn_impact` skipped; `devtools::document()` no diff; README not touched; `pkgdown::check_pkgdown()` no problems; NEWS entry present; no new top-level file.
