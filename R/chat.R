@@ -1072,7 +1072,7 @@ keep_reply_model <- function(model, reply_model) {
 #'
 #' Reads the model list of every model type through the checks of
 #' `list_models()`, with no message. A failed lookup raises the condition of
-#' that failure, under a label that names the chat function and the lookup.
+#' that failure, under a label that names the calling function and the lookup.
 #'
 #' @param model Character. The model name the call sent.
 #' @param reply_model Character. The `model` field of the reply.

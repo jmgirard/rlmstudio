@@ -58,7 +58,8 @@
 #' `force = TRUE`, which read that list. [lms_chat_openai()] and
 #' [lms_chat_openresponses()] raise it for such a model list too, with either
 #' setting of `simplify`, through the model lookup that a reply from another
-#' model starts. [lms_chat()] raises it through them. [lms_load()],
+#' model starts. [lms_chat()] raises it through them. [lms_embed()] raises it
+#' in the same way for the inputs of that request. [lms_load()],
 #' [lms_download()], and [lms_download_status()] raise it for a reply of their
 #' own with another shape, such as `{}`. A process that does not answer in
 #' HTTP gives an `httr2_failure` error. Use [lms_server_ready()] for the
@@ -78,8 +79,9 @@
 #' error instead. That error aborts the batch and carries no `results` field.
 #'
 #' [lms_embed()] checks the server before each request, and a request carries
-#' at most `batch_size` inputs. If a check after the first request finds the
-#' server gone, the call aborts with `rlmstudio_no_server`. Once a request has
+#' at most `batch_size` inputs. If a check after the first request, or the
+#' check of a model-list lookup, finds the server gone, the call aborts with
+#' `rlmstudio_no_server`. Once a request has
 #' succeeded, the condition carries a `results` field. With `simplify = TRUE`,
 #' `results` is a matrix with `NA` in each row whose embedding did not arrive.
 #' With `simplify = FALSE`, it is a list with one element per batch, with
@@ -159,9 +161,10 @@
 #' @section Malformed model list:
 #' [list_models()] also raises it for a status-200 model list with the wrong
 #' shape. [lms_unload_all()] and [lms_load()] without `force = TRUE` raise it
-#' through [list_models()]. [lms_chat_openai()] and [lms_chat_openresponses()]
-#' apply these rules to the model list of their model lookup, as the "Reply
-#' from another model" section of [lms_chat_openai()] describes. A model list
+#' through [list_models()]. [lms_chat_openai()], [lms_chat_openresponses()],
+#' and [lms_embed()] apply these rules to the model list of their model
+#' lookup, as the "Reply from another model" section of [lms_chat_openai()]
+#' describes. A model list
 #' must follow four rules. Each field is
 #' read by its exact name, so a field named `keyX` does not stand in for
 #' `key`.
@@ -229,12 +232,16 @@
 #' aborts with `rlmstudio_bad_response` for a request whose embeddings have
 #' another number of dimensions than those of an earlier request. That
 #' condition carries a `results` field, a matrix as the "Server not running"
-#' section describes. See the details of [lms_embed()].
+#' section describes. An `rlmstudio_model_mismatch` also ends the call, as
+#' the "Reply from another model" section says. See the details of
+#' [lms_embed()].
 #'
 #' The messages of [lms_embed()] name `simplify = FALSE`, which returns the
-#' body unchanged, with one exception. A body that did not parse as JSON is
-#' checked before that argument is read, so its message points at the host
-#' instead.
+#' body unchanged, with three exceptions. A body that did not parse as JSON
+#' is checked before that argument is read, so its message points at the
+#' host instead. The messages of `rlmstudio_model_mismatch` and of a failed
+#' model-list lookup do not name it, because the check runs with either
+#' setting of `simplify`.
 #'
 #' @section Malformed chat reply:
 #' [lms_chat_native()] and [lms_chat_openresponses()] raise it with
@@ -360,10 +367,10 @@
 #' 200 and a reply from the loaded model. With two chat models loaded, they
 #' answered with status 400 and the `code` `"model_not_found"`, as the "API
 #' failure" section describes. On LM Studio 0.4.26+4 with one embedding model
-#' loaded, `/v1/embeddings` answered a name that it could not find, and the
-#' name of a loaded chat model, with status 200 and vectors from the loaded
-#' embedding model. The `model` field names the loaded instance that
-#' answered. Its id can differ from the key that the call asked for.
+#' loaded, `/v1/embeddings` answered a name that it could not find with
+#' status 200 and vectors from the loaded embedding model. The `model` field
+#' names the loaded instance that answered. Its id can differ from the key
+#' that the call asked for.
 #'
 #' If the `model` field equals the name that the call sent, the reply is
 #' accepted. If it differs, the call sends one request for the model list to
@@ -390,11 +397,12 @@
 #' object, if it has no `model` field, or if its `model` is not one string or
 #' holds only whitespace. A body that is not a JSON object is returned with
 #' `simplify = FALSE`, and with `simplify = TRUE` it raises the error that the
-#' "Malformed chat reply" section describes. If the instance that answered is
+#' "Malformed chat reply" section describes, or for [lms_embed()] the
+#' "Malformed embeddings" section. If the instance that answered is
 #' unloaded before the model-list request, the call aborts, also when that
 #' instance belongs to the asked model.
 #'
-#' If the model-list request fails, the call raises the condition of that
+#' If the model-list request fails, the check raises the condition of that
 #' failure. The message opens with the label of the function, followed
 #' by "because the model-list lookup failed". A status other than 200 raises
 #' `rlmstudio_api_error`. A body that does not parse as JSON, or that breaks a
@@ -420,9 +428,10 @@
 #' [lms_embed()] aborts at the first request that raises
 #' `rlmstudio_model_mismatch`, and no request goes out after it. A failed
 #' model-list lookup that raises `rlmstudio_no_server`, or an
-#' `rlmstudio_api_error` with status 401, 403, or 404, ends the call in the
-#' same way. Once a request has succeeded, the condition carries a `results`
-#' field, a matrix or a list as the "Server not running" section describes.
+#' `rlmstudio_api_error` that would end the call as an embeddings failure,
+#' such as one with status 401, 403, or 404, ends the call in the same way.
+#' Once a request has succeeded, the condition carries a `results` field, a
+#' matrix or a list as the "Server not running" section describes.
 #' Any other failure of the lookup fails the inputs of that request alone, as
 #' the "API failure" section describes for a failed request.
 #'

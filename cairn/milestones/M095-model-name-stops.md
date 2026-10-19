@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M095: Model-name stops for embeddings and batches
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -141,7 +141,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
       D-026). Write the help of AC4 against observed output, and the NEWS
       entry. Pin `rlmstudio.quiet = FALSE` in message tests (LESSONS M086).
       Run `devtools::document()`.
-- [ ] T6: Run `devtools::test()` and `devtools::check()`.
+- [x] T6: Run `devtools::test()` and `devtools::check()`.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -164,6 +164,8 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
 - 2026-10-19: T4 done: `lms_chat_batch()` starts the reply-id cache after its server check and restores it on exit, as `lms_embed()` does. 6 new blocks. A plant with the cache off turned 4 red; a plant that keeps any id once one lookup ran turned the 2 second-id blocks red. Full `devtools::test()`: 25039 passed, 0 failed, 3 live skips.
 - 2026-10-19: T5 done: D-046 appended (narrows D-019, annotates D-024, D-025, D-026). Help: the "API failure" and "Reply from another model" sections of `rlmstudio-conditions`, the `lms_embed()` details (which now inherit "Reply from another model"), the `lms_chat_batch()` details, and the internal docs of `check_reply_model()` and `rlm_abort_api()`. Three NEWS entries, one per change, rewritten until the simple-english lint hook reported no hits. Added a test that `lms_embed()` fails a `model_not_found` 400 alone, because the "API failure" section now states it. `devtools::document()` run.
 - 2026-10-19: T6: `devtools::check()` at 0b2d6dd: 0 errors, 0 warnings, 0 notes. The `document()` link warning for `is_server_running` (`R/serve.R:753`) also shows on main.
+- 2026-10-19: claim audit: 110 claims read, 15 corrected — NEWS.md, R/conditions.R, R/chat.R, data-raw/record-model-stop-cassette.R (chat-model-name embedding case dropped for lack of a recording, routes named, cache entry narrowed, eight existing help sentences updated for `lms_embed()`); the reader's one re-read confirmed all 15 and named two long lines and a failed-run wording, both fixed. Full `devtools::test()` after the fixes: 25043 passed, 0 failed.
+- 2026-10-19: T6 done; status review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

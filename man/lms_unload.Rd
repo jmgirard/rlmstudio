@@ -87,7 +87,8 @@ another shape, and so do \code{\link[=lms_unload_all]{lms_unload_all()}} and \co
 \code{force = TRUE}, which read that list. \code{\link[=lms_chat_openai]{lms_chat_openai()}} and
 \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} raise it for such a model list too, with either
 setting of \code{simplify}, through the model lookup that a reply from another
-model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_load]{lms_load()}},
+model starts. \code{\link[=lms_chat]{lms_chat()}} raises it through them. \code{\link[=lms_embed]{lms_embed()}} raises it
+in the same way for the inputs of that request. \code{\link[=lms_load]{lms_load()}},
 \code{\link[=lms_download]{lms_download()}}, and \code{\link[=lms_download_status]{lms_download_status()}} raise it for a reply of their
 own with another shape, such as \code{{}}. A process that does not answer in
 HTTP gives an \code{httr2_failure} error. Use \code{\link[=lms_server_ready]{lms_server_ready()}} for the
@@ -107,8 +108,9 @@ such as a server that stops during a request, raises an \code{httr2_failure}
 error instead. That error aborts the batch and carries no \code{results} field.
 
 \code{\link[=lms_embed]{lms_embed()}} checks the server before each request, and a request carries
-at most \code{batch_size} inputs. If a check after the first request finds the
-server gone, the call aborts with \code{rlmstudio_no_server}. Once a request has
+at most \code{batch_size} inputs. If a check after the first request, or the
+check of a model-list lookup, finds the server gone, the call aborts with
+\code{rlmstudio_no_server}. Once a request has
 succeeded, the condition carries a \code{results} field. With \code{simplify = TRUE},
 \code{results} is a matrix with \code{NA} in each row whose embedding did not arrive.
 With \code{simplify = FALSE}, it is a list with one element per batch, with

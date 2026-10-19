@@ -40,8 +40,8 @@
 # headers, and timing, are written to disk. No request header, and therefore
 # no API token, reaches the recorded files. The script loads the embedding
 # model with `lms load`, because the REST load endpoint takes no instance id,
-# and it unloads every instance that it loaded at the end. None of these calls
-# is recorded.
+# and it unloads each instance that it loaded once that instance is recorded,
+# or at once if a recording fails. None of these calls is recorded.
 #
 # The script needs pkgload, httptest2 and withr, for the reasons that
 # data-raw/record-embed-cassette.R gives.
