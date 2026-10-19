@@ -132,7 +132,7 @@ every instance field.
       the ttl load, the version, the date. Re-record the cassette, update
       the recorded-reply test, then unload both models, start the server on
       1234, and stop it.
-- [ ] T5: Help in `R/list.R`, `devtools::document()`, a NEWS entry, and the
+- [x] T5: Help in `R/list.R`, `devtools::document()`, a NEWS entry, and the
       model-list note in `cairn/references/lmstudio-api-surface.md`.
 
 ## Work log
@@ -164,6 +164,7 @@ every instance field.
 - 2026-10-19: T2 tests in `test-list-instances.R`: `instance_json()` takes `ttl`, `fixed_columns` holds five names, `expect_empty_instances()` checks a double ttl column; new tests for the column (values 600 and 12.5, absent, null, all-NA frame), the clash, the fault over 6 forms, the type skip, and a third body in the list_models/lms_server_ready test. Run before T3: failures in the new and the five-column tests (10 shown, 27 more), as expected.
 - 2026-10-19: T3 in `R/list.R`: `list_instances()` reads the field with `as.double()` (NA_real_ when absent or null) into a fifth column and the zero-row frame; `instance_list_fault()` checks it with `is_json_number()` before `config`. Full `devtools::test()` with the live token: 1 failure, the four-column empty frame in `test-list-args.R` "an unknown type returns the empty frame...", updated to five columns; that file then passes, `test-list-instances.R` passes.
 - 2026-10-19: T4: generator header names the CLI loads (gemma with `--ttl 600`, nomic with none), 2026-10-19, LM Studio 0.4.26+4, and the script now stops if gemma has no remaining ttl. Re-recorded the cassette (gemma 213, nomic field absent); no token text in it. The recorded-reply test asserts `c(213, NA_real_)` and passes. Then unloaded both models, started the server on 1234, and stopped it.
+- 2026-10-19: T5: `list_instances()` help (intro sentence on the `lms ps` fields now says "ttl setting", Columns section with five fixed columns and the ttl bullet, clash rule, `@return`), the "Malformed model list" section in `R/conditions.R` (three rules, inherited into 9 Rd files), the `instance_list_fault()` comment, a NEWS entry, and the API reference note. `devtools::document()` then gives no further diff; `devtools::test()` with the server stopped: 0 failed, 0 errors, 3 skipped (live). The simple-english hook flagged 10 em-dashes and 2 long sentences in `lmstudio-api-surface.md` that were there before this edit; left as they are.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

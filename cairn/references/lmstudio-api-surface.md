@@ -151,10 +151,12 @@ all.
   `loaded_instances`. `list_instances()` flattens `loaded_instances` into one
   row per instance, with each `config` field in a column, which is the table
   `lms ps` prints (M050). It lacks four fields that `lms ps --json` reports:
-  the generation status, the queued requests, the ttl, and the last-used time.
-  Each loaded instance carries `remaining_ttl_seconds`, and `list_instances()`
-  does not read it. The value was 600 right after a load with `--ttl 600`
-  (observed 2026-10-18, LM Studio 0.4.26+4, corrected M093).
+  the generation status, the queued requests, the ttl setting, and the
+  last-used time. A loaded instance with a ttl carries `remaining_ttl_seconds`,
+  and `list_instances()` returns it as a column (M094). The value was 600
+  right after a load with `--ttl 600` (observed 2026-10-18, LM Studio
+  0.4.26+4, corrected M093). An instance loaded with no ttl has no such field
+  (observed 2026-10-19, LM Studio 0.4.26+4, M094).
 - **Streaming.** A chat request with `stream: true` returns Server Sent Events.
   There are nineteen named event types. Nine cover the run itself:
   `chat.start`, `model_load.start`, `model_load.progress`, `model_load.end`,

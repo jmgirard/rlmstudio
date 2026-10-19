@@ -38,8 +38,9 @@ authentication. \code{NULL} reads the \code{rlmstudio.token} option and then the
 A \code{data.frame} with one row per loaded instance of a model
 whose type is in \code{type}, with the columns that the "Columns" section
 describes. If there is no such instance, it returns a \code{data.frame}
-with zero rows and the four character columns, invisibly, and prints a
-message that \code{quiet} controls.
+with zero rows and the five fixed columns, four character columns and the
+double column \code{remaining_ttl_seconds}, invisibly, and prints a message
+that \code{quiet} controls.
 }
 \description{
 Retrieves the loaded model instances on the server via the LM Studio REST
@@ -49,13 +50,14 @@ that \code{\link[=list_models]{list_models()}} reads, so it honors \code{host} a
 }
 \details{
 The model list does not carry four fields that \verb{lms ps --json} reports: the
-generation status, the queued requests, the ttl, and the last-used time.
-Each loaded instance in the model list carries \code{remaining_ttl_seconds},
-which \code{list_instances()} does not read.
+generation status, the queued requests, the ttl setting, and the last-used
+time. It carries the time left before the automatic unload, in the
+\code{remaining_ttl_seconds} column.
 }
 \section{Columns}{
 
-The first four columns are character columns:
+The first five columns are the fixed columns. The first four are character
+columns:
 \itemize{
 \item \code{id}: the id of the instance.
 \item \code{key}: the key of its model.
@@ -64,11 +66,19 @@ The first four columns are character columns:
 list gives none or \code{null}. An empty name stays \code{""}.
 }
 
+The fifth is a double column:
+\itemize{
+\item \code{remaining_ttl_seconds}: the seconds left before LM Studio unloads the
+instance for its ttl, or \code{NA} when the model list gives none or \code{null}.
+In LM Studio 0.4.26+4, an instance loaded with no ttl has no such field,
+so it holds \code{NA}. An older server can omit the field for every instance.
+}
+
 Rows follow the order of the models in the model list, then the order of
 the instances of a model. Two instances with the same id, or two models
 with the same key, give separate rows.
 
-After the four columns, the frame has one column for each field name in the
+After the five columns, the frame has one column for each field name in the
 \code{config} object of an instance, in order of first appearance. When one
 \code{config} holds a name twice, the first value counts. A row whose \code{config}
 lacks the field, or has no \code{config}, holds \code{NA} there, or \code{NULL} in a
@@ -76,9 +86,10 @@ list-column.
 
 A column takes the field name as it is, with no name repair, so a name such
 as \code{a-b} needs backticks or \code{[[}. A field name that is empty, or that equals
-one of the four column names or the column name of an earlier field, takes
-the prefix \code{config.}, again and again while the name still clashes. A field
-named \code{id} so gives the column \code{config.id}.
+one of the five fixed column names or the column name of an earlier field,
+takes the prefix \code{config.}, again and again while the name still clashes. A
+field named \code{id} so gives the column \code{config.id}, and a field named
+\code{remaining_ttl_seconds} gives \code{config.remaining_ttl_seconds}.
 
 The column type follows the values of the field that are present and not
 \code{null}:
@@ -261,12 +272,13 @@ that the filters drop can still raise the condition. The message names the
 field or entry that broke a rule. \code{\link[=lms_server_ready]{lms_server_ready()}} applies the same
 rules and returns \code{FALSE} for a body that breaks one.
 
-\code{\link[=list_instances]{list_instances()}} applies the four rules too, and two more. They cover
+\code{\link[=list_instances]{list_instances()}} applies the four rules too, and three more. They cover
 only an entry whose \code{type} is in its \code{type} argument and that has at least
 one loaded instance. The \code{display_name} of such an entry is a string, or
-absent, or \code{null}. The \code{config} of each of its instances is a JSON object,
-or absent, or \code{null}. \code{\link[=list_models]{list_models()}} and \code{\link[=lms_server_ready]{lms_server_ready()}} do not apply
-these two rules.
+absent, or \code{null}. The \code{remaining_ttl_seconds} of each of its instances is
+a number, or absent, or \code{null}. The \code{config} of each of its instances is a
+JSON object, or absent, or \code{null}. \code{\link[=list_models]{list_models()}} and \code{\link[=lms_server_ready]{lms_server_ready()}}
+do not apply these three rules.
 }
 
 \examples{

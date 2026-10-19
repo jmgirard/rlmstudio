@@ -168,12 +168,13 @@
 #' field or entry that broke a rule. [lms_server_ready()] applies the same
 #' rules and returns `FALSE` for a body that breaks one.
 #'
-#' [list_instances()] applies the four rules too, and two more. They cover
+#' [list_instances()] applies the four rules too, and three more. They cover
 #' only an entry whose `type` is in its `type` argument and that has at least
 #' one loaded instance. The `display_name` of such an entry is a string, or
-#' absent, or `null`. The `config` of each of its instances is a JSON object,
-#' or absent, or `null`. [list_models()] and [lms_server_ready()] do not apply
-#' these two rules.
+#' absent, or `null`. The `remaining_ttl_seconds` of each of its instances is
+#' a number, or absent, or `null`. The `config` of each of its instances is a
+#' JSON object, or absent, or `null`. [list_models()] and [lms_server_ready()]
+#' do not apply these three rules.
 #'
 #' @section Malformed load or download reply:
 #' [lms_load()], [lms_download()], and [lms_download_status()] also raise it

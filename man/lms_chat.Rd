@@ -330,12 +330,13 @@ that the filters drop can still raise the condition. The message names the
 field or entry that broke a rule. \code{\link[=lms_server_ready]{lms_server_ready()}} applies the same
 rules and returns \code{FALSE} for a body that breaks one.
 
-\code{\link[=list_instances]{list_instances()}} applies the four rules too, and two more. They cover
+\code{\link[=list_instances]{list_instances()}} applies the four rules too, and three more. They cover
 only an entry whose \code{type} is in its \code{type} argument and that has at least
 one loaded instance. The \code{display_name} of such an entry is a string, or
-absent, or \code{null}. The \code{config} of each of its instances is a JSON object,
-or absent, or \code{null}. \code{\link[=list_models]{list_models()}} and \code{\link[=lms_server_ready]{lms_server_ready()}} do not apply
-these two rules.
+absent, or \code{null}. The \code{remaining_ttl_seconds} of each of its instances is
+a number, or absent, or \code{null}. The \code{config} of each of its instances is a
+JSON object, or absent, or \code{null}. \code{\link[=list_models]{list_models()}} and \code{\link[=lms_server_ready]{lms_server_ready()}}
+do not apply these three rules.
 }
 
 \section{Malformed chat reply}{
