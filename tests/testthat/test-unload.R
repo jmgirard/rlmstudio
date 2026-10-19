@@ -138,6 +138,7 @@ test_that("lms_unload names the HTTP status when the extracted message is empty"
 })
 
 test_that("lms_unload_all returns early when list_models reports nothing loaded", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   local_mocked_bindings(
     is_server_running = function(...) TRUE,
     list_models = function(...) data.frame()
