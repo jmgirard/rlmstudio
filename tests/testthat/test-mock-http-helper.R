@@ -155,6 +155,41 @@ test_that("request_target() reads a request when the program on the first dry-ru
   expect_identical(tries$n, 2L)
 })
 
+# On Ubuntu 24.04 with libcurl 8.5.0, the echo server cannot bind a port that
+# another program holds. There each held-port test in this file either
+# retries on "Failed to create server" and not on a curl error, or skips.
+# Here the first dry run instead gets port 0. The echo server starts with no
+# error when it is given port 0, yet curl sends the request to 127.0.0.1 port
+# 0, where no program can listen, so curl raises its own error. So with httpuv
+# installed, this test runs the retry after a curl error on Linux too.
+test_that("request_target() reads a request when the first dry run ends with a curl error", {
+  require_httpuv()
+  spare <- free_port()
+  tries <- local_dry_run_ports(function(n) if (n == 1L) 0L else spare)
+  # Keep the first error that a dry run raises, to assert which error it was.
+  real_dry_run <- httr2::req_dry_run
+  seen <- new.env(parent = emptyenv())
+  testthat::local_mocked_bindings(
+    req_dry_run = function(...) {
+      tryCatch(real_dry_run(...), error = function(cnd) {
+        if (is.null(seen$first)) seen$first <- cnd
+        stop(cnd)
+      })
+    },
+    .package = "httr2"
+  )
+  req <- httr2::request("http://localhost:1234/v1/models/load") |>
+    httr2::req_body_raw('{"model": "m"}', type = "application/json")
+
+  target <- request_target(req)
+
+  expect_s3_class(seen$first, "curl_error")
+  expect_identical(target$method, "POST")
+  expect_identical(target$path, "/v1/models/load")
+  expect_identical(target$body, list(model = "m"))
+  expect_identical(tries$n, 2L)
+})
+
 test_that("the dry-run helper names the cause when every try lands on a held port", {
   require_httpuv()
   held <- free_port()
