@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M095: Model-name stops for embeddings and batches
 
-- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -66,7 +66,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
       `model` field, a lookup that fails alone, and a lookup with no server.
       Each asserts which condition is raised, or none, the number of
       embeddings requests sent, and whether `results` is present.
-- [ ] AC2: `lms_chat_batch()` and `lms_embed()` abort at the first
+- [x] AC2: `lms_chat_batch()` and `lms_embed()` abort at the first
       `rlmstudio_api_error` with status 400 whose response body has an
       `error` string, or an `error.message` string, that starts with
       "No models loaded" in this letter case. No chat or embeddings request
@@ -80,7 +80,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
       embeddings requests sent, and `results`. Tests in both functions send
       a 400 with another message beside a successful request and assert that
       the call goes on.
-- [ ] AC3: In one call of `lms_chat_batch()` on the `"openai"` or
+- [x] AC3: In one call of `lms_chat_batch()` on the `"openai"` or
       `"openresponses"` route, or of `lms_embed()`, a reply whose `model` id
       a lookup in that call already kept for the asked name sends no lookup.
       Tests with three replies that name the same id, which differs from the
@@ -166,9 +166,17 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
 - 2026-10-19: T6: `devtools::check()` at 0b2d6dd: 0 errors, 0 warnings, 0 notes. The `document()` link warning for `is_server_running` (`R/serve.R:753`) also shows on main.
 - 2026-10-19: claim audit: 110 claims read, 15 corrected — NEWS.md, R/conditions.R, R/chat.R, data-raw/record-model-stop-cassette.R (chat-model-name embedding case dropped for lack of a recording, routes named, cache entry narrowed, eight existing help sentences updated for `lms_embed()`); the reader's one re-read confirmed all 15 and named two long lines and a failed-run wording, both fixed. Full `devtools::test()` after the fixes: 25043 passed, 0 failed.
 - 2026-10-19: T6 done; status review.
+- 2026-10-19: review return 1: AC1 needs the request-2-of-3 mismatch served from the reply recorded in `stop_live/embed_unknown`, not a mocked reply; AC4 needs one NEWS entry that names the embedding check, the stop, and the one lookup per kept id, not three entries. Status in-progress.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+Pass 1 (2026-10-19, at cd8badf, branch level with origin/main at 35f9949).
+
+- AC1: FAIL as written. `test-model-stops.R` blocks 1 to 9 pass (`test_file`, 0 failed). The criterion asks for "a mismatch at request 2 of 3 from the reply recorded on 2026-10-19"; block 4 serves a mocked `org/embed-y` reply at request 2, and the recorded reply is served only at request 1 (block 1).
+- AC2: PASS. Blocks 10 to 14 pass: the recorded "No models loaded" bodies stop the `"openai"` and `"openresponses"` batches at input 2 of 3 in all three formats and `lms_embed()` at request 2 of 3, with class, status 400, request counts, and `results` asserted; both error-text shapes stop (block 12); five near misses beside a success go on in both functions (blocks 13, 14).
+- AC3: PASS. Blocks 17 to 22 pass: one lookup for three replies naming one kept id on both routes in the list and data-frame formats and in `lms_embed()`; two lookups when the third reply names a second id (blocks 18, 21); two `lms_embed()` calls send two lookups (block 22), and two chat batches plus a single call send three (block 20).
+- AC4: FAIL as written. The help statements hold (`man/lms_embed.Rd`, `man/lms_chat_batch.Rd`, `man/rlmstudio-conditions.Rd` each name `rlmstudio_model_mismatch`, "No models loaded", and the accepted-id rule; `lms_embed.Rd` line 85 names the exceptions). The criterion asks for "one entry that names the embedding check, the stop, and the one lookup per kept id"; `NEWS.md` holds three entries, one per change.

@@ -10,7 +10,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M095 | Model-name stops for embeddings and batches | review | — | normal | milestones/M095-model-name-stops.md |
+| M095 | Model-name stops for embeddings and batches | in-progress | — | normal | milestones/M095-model-name-stops.md |
 | M094 | list_instances remaining ttl column | done | — | normal | milestones/archive/M094-list-instances-ttl-column.md |
 | M093 | list_instances tests for a two-kind field and an empty display name | done | — | normal | milestones/archive/M093-list-instances-tests.md |
 | M092 | Requests to localhost, 127.0.0.1, and ::1 skip a set proxy | done | — | normal | milestones/archive/M092-local-proxy-skip.md |
