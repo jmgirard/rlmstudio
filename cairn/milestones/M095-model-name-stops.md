@@ -193,6 +193,7 @@ Pass 2 (2026-10-19, at c58232f, branch level with origin/main at 35f9949; `test_
 - AC3: PASS at c58232f, by the blocks that pass 1 names (now 18 to 23), unchanged by T7.
 - AC4: PASS. `NEWS.md` opens with one entry, "Three changes for a model name that LM Studio cannot serve:", whose three sub-items name the embedding check, the "No models loaded" stop, and the kept reply ids. The help statements of pass 1 stand (`devtools::document()` gives no diff).
 - AC5: PASS. On the dev machine, `devtools::test()` on the c58232f tree: 25065 passed, 0 failed, 0 errors, 3 live skips; `devtools::check()` at c58232f: 0 errors, 0 warnings, 0 notes.
+- AC5 after the fix-now commit: `devtools::test()` at de493dd: 25101 passed, 0 failed, 0 errors, 3 live skips; `devtools::check()` at a8557ea: 0 errors, 0 warnings, 0 notes. Plants for the fixes: a host-blind cache and a dropped restore in `lms_embed()` turned 3 blocks red.
 - spawned: diff-bug, blame-history, prior-review, ripple
 - diff-bug #1: the reply-id cache has no host in its key, so a call made during a batch (a calling handler, a lazy argument) to another host can accept a kept id with no lookup — fix now, fixed de493dd (host joins the key)
 - diff-bug #2: `start_reply_model_cache()` runs before `on.exit()` is set, so an interrupt between them leaves the cache on for the session — fix now, fixed de493dd (restore registered first)
