@@ -23,10 +23,13 @@ instances_model <- function(
   )
 }
 
-# One loaded instance as JSON text. `config` is a JSON literal, or NULL to
-# leave the field out.
-instance_json <- function(id, config = NULL) {
+# One loaded instance as JSON text. `config` and `ttl` are JSON literals, or
+# NULL to leave the field out. `ttl` is the `remaining_ttl_seconds` field.
+instance_json <- function(id, config = NULL, ttl = NULL) {
   fields <- c(id = paste0('"', id, '"'))
+  if (!is.null(ttl)) {
+    fields <- c(fields, remaining_ttl_seconds = ttl)
+  }
   if (!is.null(config)) {
     fields <- c(fields, config = config)
   }
@@ -44,7 +47,8 @@ run_list_instances <- function(body, ..., .env = parent.frame()) {
   list(value = value, requests = recorder$requests)
 }
 
-fixed_columns <- c("id", "key", "type", "display_name")
+character_columns <- c("id", "key", "type", "display_name")
+fixed_columns <- c(character_columns, "remaining_ttl_seconds")
 
 # Four models. The first has two instances that share an id. The second has
 # none. The third has an instance and a type outside the default `type`. The
@@ -115,9 +119,10 @@ expect_empty_instances <- function(res) {
   expect_s3_class(res, "data.frame")
   expect_identical(nrow(res), 0L)
   expect_identical(names(res), fixed_columns)
-  for (column in fixed_columns) {
+  for (column in character_columns) {
     expect_identical(res[[column]], character(), info = column)
   }
+  expect_identical(res$remaining_ttl_seconds, double())
 }
 
 test_that("list_instances returns an empty frame and a message with no instance", {
@@ -246,6 +251,51 @@ test_that("the first of two equal keys in one configuration counts", {
   expect_identical(res$k, c(1, 2))
 })
 
+
+# The remaining ttl column ------------------------------------------------------
+
+test_that("remaining_ttl_seconds is the fifth column, a double, NA when absent or null", {
+  body <- instances_body(c(
+    instances_model(
+      "llm", "m1",
+      instances = c(
+        instance_json("i1", '{"context_length": 4096}', ttl = "600"),
+        instance_json("i2", ttl = "12.5")
+      )
+    ),
+    instances_model(
+      "embedding", "m2",
+      instances = c(instance_json("i3"), instance_json("i4", ttl = "null"))
+    )
+  ))
+  res <- run_list_instances(body, quiet = TRUE)$value
+  expect_identical(
+    names(res),
+    c("id", "key", "type", "display_name", "remaining_ttl_seconds", "context_length")
+  )
+  expect_identical(res$remaining_ttl_seconds, c(600, 12.5, NA_real_, NA_real_))
+})
+
+test_that("remaining_ttl_seconds is a double column when no instance has a number", {
+  body <- instances_body(instances_model(
+    "llm", "m1",
+    instances = c(instance_json("i1"), instance_json("i2", ttl = "null"))
+  ))
+  res <- run_list_instances(body, quiet = TRUE)$value
+  expect_identical(res$remaining_ttl_seconds, c(NA_real_, NA_real_))
+})
+
+test_that("a configuration field named remaining_ttl_seconds takes the config. prefix", {
+  body <- instances_body(instances_model(
+    "llm", "m1",
+    instances = instance_json("i1", '{"remaining_ttl_seconds": 5}', ttl = "300")
+  ))
+  res <- run_list_instances(body, quiet = TRUE)$value
+  expect_identical(names(res), c(fixed_columns, "config.remaining_ttl_seconds"))
+  expect_identical(res$remaining_ttl_seconds, 300)
+  expect_identical(res[["config.remaining_ttl_seconds"]], 5)
+})
+
 # The condition that `list_instances()` raises on `body`, or NULL.
 instances_raised_by <- function(body, ..., .env = parent.frame()) {
   local_mocked_bindings(is_server_running = function(...) TRUE, .env = .env)
@@ -305,7 +355,40 @@ test_that("a config that is not a JSON object aborts with rlmstudio_bad_response
   }
 })
 
-test_that("the two new checks skip a model outside `type` or with no instance", {
+test_that("a remaining_ttl_seconds that is not a number aborts with rlmstudio_bad_response", {
+  for (form in setdiff(names(json_forms), c("number", "null"))) {
+    bad <- instances_model(
+      "llm", "m1",
+      instances = c(instance_json("i1"), instance_json("i2", ttl = json_forms[[form]]))
+    )
+    cnd <- instances_raised_by(instances_body(c(loaded_llm, bad)))
+    expect_bad_instances(
+      cnd,
+      c(
+        paste(
+          "`remaining_ttl_seconds` of entry 2 of `loaded_instances` in entry 2",
+          "of `models` is not a number."
+        )
+      ),
+      paste("remaining_ttl_seconds as", form)
+    )
+  }
+})
+
+test_that("the remaining_ttl_seconds check skips a model outside `type`", {
+  body <- instances_body(c(
+    loaded_llm,
+    instances_model(
+      "other", "m2",
+      instances = instance_json("i2", ttl = json_forms[["string"]])
+    )
+  ))
+  expect_null(instances_raised_by(body))
+  res <- run_list_instances(body, quiet = TRUE)$value
+  expect_identical(res$id, "i0")
+})
+
+test_that("the display_name and config checks skip a model outside `type` or with no instance", {
   bad_name <- json_forms[["number"]]
   bad_config <- instance_json("i3", json_forms[["array"]])
   body <- instances_body(c(
@@ -318,7 +401,7 @@ test_that("the two new checks skip a model outside `type` or with no instance", 
   expect_identical(res$id, "i0")
 })
 
-test_that("list_models and lms_server_ready accept the bodies the two checks reject", {
+test_that("list_models and lms_server_ready accept the bodies the instance checks reject", {
   bodies <- list(
     display_name = instances_body(instances_model(
       "llm", "m1", json_forms[["number"]],
@@ -327,6 +410,10 @@ test_that("list_models and lms_server_ready accept the bodies the two checks rej
     config = instances_body(instances_model(
       "llm", "m1",
       instances = instance_json("i1", json_forms[["array"]])
+    )),
+    remaining_ttl_seconds = instances_body(instances_model(
+      "llm", "m1",
+      instances = instance_json("i1", ttl = json_forms[["string"]])
     ))
   )
   local_mocked_bindings(is_server_running = function(...) TRUE)
@@ -400,8 +487,9 @@ test_that("a reply with a status other than 200 aborts with rlmstudio_api_error"
 test_that("a recorded model list gives one row per loaded instance", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
 
-  # The reply was recorded on 2026-09-28 from LM Studio 0.4.25+1 by
-  # data-raw/record-list-instances-cassette.R. The cassette carries no
+  # The reply was recorded on 2026-10-19 from LM Studio 0.4.26+4 by
+  # data-raw/record-list-instances-cassette.R, with gemma loaded with a ttl
+  # and the embedding model loaded with none. The cassette carries no
   # request header. The test clears both token sources, so it runs the same
   # way whatever token this machine has set.
   withr::local_envvar(RLMSTUDIO_API_TOKEN = NA)
@@ -417,6 +505,8 @@ test_that("a recorded model list gives one row per loaded instance", {
   )
   expect_identical(res$type, c("llm", "embedding"))
   expect_identical(res$context_length, c(8192, 2048))
+  # The instance loaded with no ttl has no remaining_ttl_seconds field.
+  expect_identical(res$remaining_ttl_seconds, c(213, NA_real_))
 })
 
 test_that("live: the id column holds the instance ids of the model list", {

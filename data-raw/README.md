@@ -23,12 +23,12 @@ start, download each one, for example with `lms get <model>`.
 
 ```sh
 lms server start
-lms load google/gemma-3-1b -y
+lms load google/gemma-3-1b --ttl 600 -y
 lms load text-embedding-nomic-embed-text-v1.5 -y
 ```
 
-Load no other model. With a third model loaded,
-`record-list-instances-cassette.R` in step 3 stops.
+Load no other model. With a third model loaded, or with gemma loaded with
+no ttl, `record-list-instances-cassette.R` in step 3 stops.
 
 ## 2. Run the tests
 

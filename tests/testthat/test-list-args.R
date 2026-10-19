@@ -251,7 +251,8 @@ test_that("an unknown type returns the empty frame and a message, with no abort"
       id = character(),
       key = character(),
       type = character(),
-      display_name = character()
+      display_name = character(),
+      remaining_ttl_seconds = double()
     )
   )
 })
