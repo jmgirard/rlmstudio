@@ -112,7 +112,8 @@ Filed 2026-10-18 as https://github.com/jeroen/curl/issues/459. The text
 below corrects two sentences of the filed text (M090 review, diff-bug
 findings 6 and 7). The filed text gave a held port as the cause of the empty
 results, and no run observed that cause. It also did not limit the
-`find_port()` sentence to macOS.
+`find_port()` sentence to macOS. On 2026-10-18 the issue body was edited to
+the text below.
 
 Title: `curl_echo() can send the request to another program on macOS`
 
