@@ -101,7 +101,16 @@ lms_chat_batch(
   `logprobs` of `TRUE` is ignored. The batch then returns what it
   returns with `logprobs = FALSE`, in each format. It gives one warning
   for the whole batch, after the check for a running server, even with
-  `quiet = TRUE`. Two values here that
+  `quiet = TRUE`. With `api_type = "openai"` and `simplify = TRUE`, the
+  batch sends the flag, and the `logprobs` of each reply is `NULL`,
+  because the package reads no log probabilities from that route. The
+  batch then gives one warning of class `rlmstudio_no_logprobs` that
+  counts those replies, after the failed-inputs and cut-off warnings. A
+  batch that aborts on a lost server, a refused token, a model the
+  server cannot find, or a reply from another model gives it before the
+  abort. The `rlmstudio.quiet` option and `quiet = TRUE` do not hide it.
+  A batch in which no reply is read, for example because every input
+  fails, gives no such warning. Two values here that
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
   reads as the same argument abort with a message that names the
   argument. Examples are `logprobs = TRUE, logprobs = FALSE`, the

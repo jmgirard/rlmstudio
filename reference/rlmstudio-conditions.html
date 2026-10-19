@@ -5,13 +5,17 @@ rlmstudio_model_mismatch, is also an rlmstudio_bad_response, and the
 "Reply from another model" section describes it. Each one is raised through
 cli::cli_abort(), so each one is an R error that you can catch by class
 with base::tryCatch(). The chat functions on the OpenAI route also give
-one warning class of their own, described in the "Cut-off reply" section.'><meta property="og:description" content='The functions in this package that talk to the LM Studio REST API raise
+two warning classes of their own. The "Cut-off reply" section describes
+rlmstudio_reply_cut_off, and lms_chat_openai() describes
+rlmstudio_no_logprobs.'><meta property="og:description" content='The functions in this package that talk to the LM Studio REST API raise
 four condition classes of their own. One of them,
 rlmstudio_model_mismatch, is also an rlmstudio_bad_response, and the
 "Reply from another model" section describes it. Each one is raised through
 cli::cli_abort(), so each one is an R error that you can catch by class
 with base::tryCatch(). The chat functions on the OpenAI route also give
-one warning class of their own, described in the "Cut-off reply" section.'></head><body>
+two warning classes of their own. The "Cut-off reply" section describes
+rlmstudio_reply_cut_off, and lms_chat_openai() describes
+rlmstudio_no_logprobs.'></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -65,7 +69,9 @@ four condition classes of their own. One of them,
 "Reply from another model" section describes it. Each one is raised through
 <code><a href="https://cli.r-lib.org/reference/cli_abort.html" class="external-link">cli::cli_abort()</a></code>, so each one is an R error that you can catch by class
 with <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">base::tryCatch()</a></code>. The chat functions on the OpenAI route also give
-one warning class of their own, described in the "Cut-off reply" section.</p>
+two warning classes of their own. The "Cut-off reply" section describes
+<code>rlmstudio_reply_cut_off</code>, and <code><a href="lms_chat_openai.html">lms_chat_openai()</a></code> describes
+<code>rlmstudio_no_logprobs</code>.</p>
     </div>
 
 

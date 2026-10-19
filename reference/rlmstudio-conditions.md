@@ -8,8 +8,11 @@ through
 [`cli::cli_abort()`](https://cli.r-lib.org/reference/cli_abort.html), so
 each one is an R error that you can catch by class with
 [`base::tryCatch()`](https://rdrr.io/r/base/conditions.html). The chat
-functions on the OpenAI route also give one warning class of their own,
-described in the "Cut-off reply" section.
+functions on the OpenAI route also give two warning classes of their
+own. The "Cut-off reply" section describes `rlmstudio_reply_cut_off`,
+and
+[`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+describes `rlmstudio_no_logprobs`.
 
 ## Server not running
 

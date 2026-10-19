@@ -32,6 +32,22 @@
   log probability data was empty or missing. The function results do not
   change.
 
+- Two cases that cannot return what you asked for now give a warning
+  with its own class. The `rlmstudio.quiet` option does not hide either
+  warning.
+
+  - `lms_load(echo_load_config = TRUE)` on a model that is already
+    loaded, with `force = FALSE`, returns the model key, and now warns
+    with the class `rlmstudio_no_load_config`. Before, it showed an
+    alert with no class.
+  - `lms_chat_openai(logprobs = TRUE)` and
+    `lms_chat(api_type = "openai", logprobs = TRUE)` return a result
+    whose `logprobs` is `NULL`, and now warn with the class
+    `rlmstudio_no_logprobs`. If `simplify = TRUE` and the batch reads at
+    least one reply,
+    `lms_chat_batch(api_type = "openai", logprobs = TRUE)` gives one
+    such warning for the whole batch.
+
 - When no server answers, the `rlmstudio_no_server` error now says how
   to start the server. The hostname `localhost` can be in any letter
   case. If the hostname of `host` is `localhost` or `127.0.0.1`, the

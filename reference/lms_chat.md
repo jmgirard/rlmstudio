@@ -167,9 +167,13 @@ Depending on the arguments provided:
   character string containing the model's text response. With a
   `schema`, it returns the reply parsed into an R value instead.
 
-- If `simplify = TRUE` and `logprobs = TRUE` (and the chosen API type
-  supports it), returns an object of class `lms_chat_result` containing
-  both the text and a data.frame of token probabilities.
+- If `simplify = TRUE` and `logprobs = TRUE` on the `"openresponses"`
+  route, returns an object of class `lms_chat_result` containing both
+  the text and a data.frame of token probabilities, or the text alone
+  when no part of the reply carries log probabilities. With
+  `api_type = "openai"`, the `logprobs` of that object is `NULL`, and
+  the call gives a warning of class `rlmstudio_no_logprobs`. The
+  `rlmstudio.quiet` option does not hide it.
 
 With `simplify = TRUE` and `api_type = "native"` or
 `api_type = "openresponses"`, the value carries the id of the reply in a

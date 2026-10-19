@@ -195,9 +195,10 @@ lms_chat_openai(
 
 - logprobs:
 
-  `TRUE` or `FALSE`. Whether to request logprobs (currently stubbed by
-  LM Studio). Any other value, `NULL` and `NA` included, aborts before
-  the check for a running server.
+  `TRUE` or `FALSE`. Whether to request logprobs. With
+  `simplify = TRUE`, the `logprobs` of the result is `NULL`, because the
+  package reads none from this endpoint. Any other value, `NULL` and
+  `NA` included, aborts before the check for a running server.
 
 - simplify:
 
@@ -251,11 +252,16 @@ If `simplify = FALSE`, returns a list representing the raw JSON
 response. A status-200 body that does not parse as JSON raises
 `rlmstudio_bad_response` with either setting of `simplify`. Otherwise,
 returns a character string containing the generated text. If
-`logprobs = TRUE`, it returns an `lms_chat_result` object with the log
-probabilities populated as `NULL` since they are currently stubbed in
-the LM Studio OpenAI endpoint. With `simplify = TRUE`, reply content
-that is not one string, such as the `null` content of a reply that holds
-only a tool call, raises `rlmstudio_bad_response`.
+`logprobs = TRUE`, it returns an `lms_chat_result` object whose
+`logprobs` is `NULL`, because the package reads no log probabilities
+from this endpoint. Such a call gives a warning of class
+`rlmstudio_no_logprobs` after the cut-off warning, if there is one. The
+`rlmstudio.quiet` option does not hide it. A call whose reply fails
+gives no such warning. Use
+[`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+for log probabilities. With `simplify = TRUE`, reply content that is not
+one string, such as the `null` content of a reply that holds only a tool
+call, raises `rlmstudio_bad_response`.
 
 With a `schema`, `simplify = TRUE`, and `logprobs = FALSE`, the reply is
 parsed with `jsonlite::parse_json(simplifyVector = TRUE)` and the parsed

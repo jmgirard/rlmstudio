@@ -96,7 +96,10 @@ Invisibly returns a character string of the loaded model identifier upon
 success, also when the model was already loaded. It is a plain string,
 with no class, names, or S4 bit. If `echo_load_config = TRUE` and this
 call loads the model, it instead invisibly returns a list containing the
-model's detailed load configuration.
+model's detailed load configuration. If `echo_load_config = TRUE` and
+the model is already loaded, with `force = FALSE`, the call returns the
+model key and gives a warning of class `rlmstudio_no_load_config`. The
+`rlmstudio.quiet` option does not hide it.
 
 ## Long prompts
 

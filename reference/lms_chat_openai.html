@@ -219,9 +219,11 @@ of a message. The server checks them.</p></dd>
 
 
 <dt id="arg-logprobs">logprobs<a class="anchor" aria-label="anchor" href="#arg-logprobs"></a></dt>
-<dd><p><code>TRUE</code> or <code>FALSE</code>. Whether to request logprobs (currently
-stubbed by LM Studio). Any other value, <code>NULL</code> and <code>NA</code> included, aborts
-before the check for a running server.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>. Whether to request logprobs. With
+<code>simplify = TRUE</code>, the <code>logprobs</code> of the result is <code>NULL</code>, because the package reads
+none from this endpoint. Any
+other value, <code>NULL</code> and <code>NA</code> included, aborts before the check for a
+running server.</p></dd>
 
 
 <dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>
@@ -273,8 +275,11 @@ response. A status-200 body that does not parse as JSON raises
 <code>rlmstudio_bad_response</code> with either setting of <code>simplify</code>. Otherwise,
 returns a character string containing the generated
 text. If <code>logprobs = TRUE</code>, it returns an <code>lms_chat_result</code>
-object with the log probabilities populated as <code>NULL</code> since they are
-currently stubbed in the LM Studio OpenAI endpoint. With
+object whose <code>logprobs</code> is <code>NULL</code>, because the package reads no
+log probabilities from this endpoint. Such a call gives a warning of class
+<code>rlmstudio_no_logprobs</code> after the cut-off warning, if there is one. The
+<code>rlmstudio.quiet</code> option does not hide it. A call whose reply fails gives
+no such warning. Use <code><a href="lms_chat_openresponses.html">lms_chat_openresponses()</a></code> for log probabilities. With
 <code>simplify = TRUE</code>, reply content that is not one string, such as the
 <code>null</code> content of a reply that holds only a tool call, raises
 <code>rlmstudio_bad_response</code>.</p>

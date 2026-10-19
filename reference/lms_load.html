@@ -145,7 +145,11 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
 upon success, also when the model was already loaded. It is a plain
 string, with no class, names, or S4 bit. If <code>echo_load_config = TRUE</code>
 and this call loads the model, it instead invisibly
-returns a list containing the model's detailed load configuration.</p>
+returns a list containing the model's detailed load configuration. If
+<code>echo_load_config = TRUE</code> and the model is already loaded, with
+<code>force = FALSE</code>, the call returns the model key and gives a warning
+of class <code>rlmstudio_no_load_config</code>. The <code>rlmstudio.quiet</code> option does
+not hide it.</p>
     </div>
     <div class="section level2">
     <h2 id="long-prompts">Long prompts<a class="anchor" aria-label="anchor" href="#long-prompts"></a></h2>

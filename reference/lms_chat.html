@@ -208,7 +208,7 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Depending on the arguments provided:</p><ul><li><p>If <code>simplify = FALSE</code>, returns a parsed list of the raw JSON response.</p></li>
 <li><p>If <code>simplify = TRUE</code> and <code>logprobs = FALSE</code>, returns a single character string containing the model's text response. With a <code>schema</code>, it returns the reply parsed into an R value instead.</p></li>
-<li><p>If <code>simplify = TRUE</code> and <code>logprobs = TRUE</code> (and the chosen API type supports it), returns an object of class <code>lms_chat_result</code> containing both the text and a data.frame of token probabilities.</p></li>
+<li><p>If <code>simplify = TRUE</code> and <code>logprobs = TRUE</code> on the <code>"openresponses"</code> route, returns an object of class <code>lms_chat_result</code> containing both the text and a data.frame of token probabilities, or the text alone when no part of the reply carries log probabilities. With <code>api_type = "openai"</code>, the <code>logprobs</code> of that object is <code>NULL</code>, and the call gives a warning of class <code>rlmstudio_no_logprobs</code>. The <code>rlmstudio.quiet</code> option does not hide it.</p></li>
 </ul><p>With <code>simplify = TRUE</code> and <code>api_type = "native"</code> or
 <code>api_type = "openresponses"</code>, the value carries the id of the reply in a
 <code>response_id</code> attribute. Pass the value itself as <code>previous_response_id</code>
