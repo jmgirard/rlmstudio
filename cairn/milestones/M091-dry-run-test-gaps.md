@@ -113,6 +113,7 @@ variables.
 - 2026-10-18: T3 done: `devtools::document()` left no diff; `devtools::check()` 0 errors, 0 warnings, 0 notes (proxy variables unset).
 - 2026-10-18: claim audit: not owed — internal tier.
 - 2026-10-18: implement complete; status set to review.
+- 2026-10-18: step-7 approval: m091-dry-run-test-gaps approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
