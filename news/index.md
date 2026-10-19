@@ -2,6 +2,20 @@
 
 ## rlmstudio (development version)
 
+- [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+  has a new fifth column, `remaining_ttl_seconds`, so each load
+  configuration column moves one position to the right. This double
+  column holds the `remaining_ttl_seconds` that the model list gives for
+  each instance. If the field is absent or `null`, the column holds
+  `NA`. In LM Studio 0.4.26+4, an instance loaded with no ttl has no
+  such field, so it holds `NA`. If
+  [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
+  finds no instance, the zero-row frame also has this column. A load
+  configuration field named `remaining_ttl_seconds` now gives the column
+  `config.remaining_ttl_seconds`. The check covers loaded instances of a
+  model whose type is in `type`. If such a `remaining_ttl_seconds` is
+  not a number or `null`, the call aborts with `rlmstudio_bad_response`.
+
 - A request to a `host` whose hostname is `localhost`, in any letter
   case, `127.0.0.1`, or `::1` no longer goes through a proxy. The proxy
   environment variables, such as `http_proxy` or `all_proxy`, set that

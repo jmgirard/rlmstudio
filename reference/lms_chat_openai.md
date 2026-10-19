@@ -516,15 +516,16 @@ names the field or entry that broke a rule.
 applies the same rules and returns `FALSE` for a body that breaks one.
 
 [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
-applies the four rules too, and two more. They cover only an entry whose
-`type` is in its `type` argument and that has at least one loaded
+applies the four rules too, and three more. They cover only an entry
+whose `type` is in its `type` argument and that has at least one loaded
 instance. The `display_name` of such an entry is a string, or absent, or
-`null`. The `config` of each of its instances is a JSON object, or
-absent, or `null`.
+`null`. The `remaining_ttl_seconds` of each of its instances is a
+number, or absent, or `null`. The `config` of each of its instances is a
+JSON object, or absent, or `null`.
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 and
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-do not apply these two rules.
+do not apply these three rules.
 
 ## Malformed chat reply
 

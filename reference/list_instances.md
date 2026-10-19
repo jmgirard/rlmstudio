@@ -57,19 +57,22 @@ list_instances(
 A `data.frame` with one row per loaded instance of a model whose type is
 in `type`, with the columns that the "Columns" section describes. If
 there is no such instance, it returns a `data.frame` with zero rows and
-the four character columns, invisibly, and prints a message that `quiet`
+the five fixed columns, four character columns and the double column
+`remaining_ttl_seconds`, invisibly, and prints a message that `quiet`
 controls.
 
 ## Details
 
 The model list does not carry four fields that `lms ps --json` reports:
-the generation status, the queued requests, the ttl, and the last-used
-time. Each loaded instance in the model list carries
-`remaining_ttl_seconds`, which `list_instances()` does not read.
+the generation status, the queued requests, the ttl setting, and the
+last-used time. It does carry `remaining_ttl_seconds` for an instance
+loaded with a ttl, and `list_instances()` returns it in the
+`remaining_ttl_seconds` column.
 
 ## Columns
 
-The first four columns are character columns:
+The first five columns are the fixed columns. The first four are
+character columns:
 
 - `id`: the id of the instance.
 
@@ -80,11 +83,20 @@ The first four columns are character columns:
 - `display_name`: the display name of its model, or `NA` when the model
   list gives none or `null`. An empty name stays `""`.
 
+The fifth is a double column:
+
+- `remaining_ttl_seconds`: the `remaining_ttl_seconds` that the model
+  list gives for the instance, or `NA` when the field is absent or
+  `null`. In LM Studio 0.4.26+4, the value counted down from the ttl of
+  a load with `lms load --ttl`, and an instance loaded with no ttl had
+  no such field, so it holds `NA`. No other LM Studio version was
+  checked for this field.
+
 Rows follow the order of the models in the model list, then the order of
 the instances of a model. Two instances with the same id, or two models
 with the same key, give separate rows.
 
-After the four columns, the frame has one column for each field name in
+After the five columns, the frame has one column for each field name in
 the `config` object of an instance, in order of first appearance. When
 one `config` holds a name twice, the first value counts. A row whose
 `config` lacks the field, or has no `config`, holds `NA` there, or
@@ -92,9 +104,11 @@ one `config` holds a name twice, the first value counts. A row whose
 
 A column takes the field name as it is, with no name repair, so a name
 such as `a-b` needs backticks or `[[`. A field name that is empty, or
-that equals one of the four column names or the column name of an
+that equals one of the five fixed column names or the column name of an
 earlier field, takes the prefix `config.`, again and again while the
-name still clashes. A field named `id` so gives the column `config.id`.
+name still clashes. A field named `id` so gives the column `config.id`,
+and a field named `remaining_ttl_seconds` gives
+`config.remaining_ttl_seconds`.
 
 The column type follows the values of the field that are present and not
 `null`:
@@ -348,15 +362,16 @@ names the field or entry that broke a rule.
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
 applies the same rules and returns `FALSE` for a body that breaks one.
 
-`list_instances()` applies the four rules too, and two more. They cover
-only an entry whose `type` is in its `type` argument and that has at
-least one loaded instance. The `display_name` of such an entry is a
-string, or absent, or `null`. The `config` of each of its instances is a
-JSON object, or absent, or `null`.
+`list_instances()` applies the four rules too, and three more. They
+cover only an entry whose `type` is in its `type` argument and that has
+at least one loaded instance. The `display_name` of such an entry is a
+string, or absent, or `null`. The `remaining_ttl_seconds` of each of its
+instances is a number, or absent, or `null`. The `config` of each of its
+instances is a JSON object, or absent, or `null`.
 [`list_models()`](https://jmgirard.github.io/rlmstudio/reference/list_models.md)
 and
 [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
-do not apply these two rules.
+do not apply these three rules.
 
 ## See also
 
