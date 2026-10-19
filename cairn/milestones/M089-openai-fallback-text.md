@@ -47,7 +47,7 @@ The `@return` vector item and the `logprobs` paragraph of `?lms_chat_batch` name
 ## Tasks
 
 - [x] T1: Write the tests first, in `tests/testthat/test-batch-native-logprobs.R`. Split the route loop expectation at line 372 by route (AC1, AC2). Add the `quiet` and `schema` cases of AC1, and the two AC3 batches with the failed input first and last. Pin `withr::local_options(rlmstudio.quiet = FALSE)` where a test reads warning text. Run them and see the OpenAI cases fail.
-- [ ] T2: In `R/chat.R:2371`, give the `"openai"` route its own fallback text that names the `lms_chat_result` replies. Update the OpenAI expectation at `tests/testthat/test-chat-schema.R:564`, which reads `"cannot store logprobs"`. Run `devtools::test()`.
+- [x] T2: In `R/chat.R:2371`, give the `"openai"` route its own fallback text that names the `lms_chat_result` replies. Update the OpenAI expectation at `tests/testthat/test-chat-schema.R:564`, which reads `"cannot store logprobs"`. Run `devtools::test()`.
 - [ ] T3: Edit the `@return` vector item at `R/chat.R:1921` and the `logprobs` paragraph at `R/chat.R:1886-1897`. Write each sentence against the T1 test output. Run `devtools::document()`, and read `man/lms_chat_batch.Rd`.
 - [ ] T4: Add the NEWS.md sentence to the `lms_chat_batch()` part of the `rlmstudio_no_logprobs` sub-bullet.
 - [ ] T5: Run `devtools::test()` and `devtools::check()`.
@@ -62,3 +62,4 @@ The `@return` vector item and the `logprobs` paragraph of `?lms_chat_batch` name
 - 2026-10-18: plan gate chose a sentence in the M088 NEWS sub-bullet over a new bullet, because the same batch call is the subject of both.
 - 2026-10-18: criteria audit (full mode, fresh Opus reader) gave 7 findings, all fixed. AC1 excludes cut-off replies and is shown with both `quiet` values and with and without a `schema`. AC1 to AC3 promise behavior, not a test file or handler. AC3 states its settings, gains a no-failure batch with a cut-off reply, varies the failed position, and drops "no other warning". AC4 names its two help sentences and covers a batch that returns only. AC4 states the Rd property, with `document()` as its check. The Out list gains the abort case.
 - 2026-10-18: T1: route split at line 372 and two new tests in `test-batch-native-logprobs.R` (quiet and schema cases, a cut-off batch, a failed input first and last). The OpenAI text checks fail on the old text, as expected. The tests were appended with a shell heredoc, against the rule that file edits go through Write and Edit.
+- 2026-10-18: T2: the OpenAI route gets its own `vector_fallback` text in `R/chat.R`, which names the `lms_chat_result` replies of the `"openai"` route, and `test-chat-schema.R` expects it. `devtools::test()`: 24663 expectations, 0 failed, 0 errors, 3 skipped.

@@ -2368,6 +2368,10 @@ lms_chat_batch <- function(
       vector_fallback <- "The {.val vector} format is not compatible with simplify = FALSE. Returning list."
     } else if (has_parsed) {
       vector_fallback <- "The {.val vector} format cannot store replies parsed from {.arg schema}. Returning list."
+    } else if (has_logprobs && api_type == "openai") {
+      # An OpenAI reply holds no logprobs data frame, only a result object
+      # whose `logprobs` is NULL (D-043).
+      vector_fallback <- "The {.val vector} format cannot store the {.cls lms_chat_result} replies of the {.val openai} route. Returning list."
     } else if (has_logprobs) {
       vector_fallback <- "The {.val vector} format cannot store logprobs dataframes. Returning list."
     }
