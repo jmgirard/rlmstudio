@@ -2216,6 +2216,11 @@ lms_chat_batch <- function(
 
   stop_if_no_server(host)
 
+  # A lookup that keeps a reply id keeps it for the rest of the batch, so a
+  # later reply with that id sends no lookup (D-046).
+  old_cache <- start_reply_model_cache()
+  on.exit(end_reply_model_cache(old_cache), add = TRUE)
+
   # After the server probe, so a batch that cannot run gives no warning.
   # Shown whatever `quiet` says, because it is the only sign that the
   # logprobs asked for are missing (D-032).

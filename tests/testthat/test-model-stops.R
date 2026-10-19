@@ -467,3 +467,149 @@ test_that("an API error carries the error text of the body, or NULL", {
     expect_identical(err$server_message, case$text, info = case$body)
   }
 })
+
+# One lookup per kept reply id ------------------------------------------------
+
+# org/model-x loaded under two ids, neither of them its key.
+chat_ids_list <- function() {
+  model_list_response(
+    "org/model-x" = c("x-instance", "x-second"),
+    "org/model-y" = "org/model-y"
+  )
+}
+
+embed_ids_list <- function() {
+  model_list_response(
+    "org/embed-x" = c("x-instance", "x-second"),
+    "org/embed-y" = "org/embed-y"
+  )
+}
+
+test_that("a chat batch sends one lookup for replies that name one kept id", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (route in stop_routes) {
+    for (format in c("list", "data.frame")) {
+      info <- paste(route, format)
+      recorder <- local_request_sequence(list(
+        reply_with_model(route, quoted("x-instance")),
+        chat_ids_list(),
+        reply_with_model(route, quoted("x-instance")),
+        reply_with_model(route, quoted("x-instance"))
+      ))
+      out <- chat_three(route, format)
+      expect_identical(
+        count_requests(recorder_urls(recorder)),
+        c(chat = 3L, embed = 0L, lookup = 1L),
+        info = info
+      )
+      replies <- if (format == "list") unlist(out) else out$output
+      expect_identical(replies, rep("reply", 3), info = info)
+    }
+  }
+})
+
+test_that("a chat batch sends a second lookup for a second id", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (route in stop_routes) {
+    for (format in c("list", "data.frame")) {
+      info <- paste(route, format)
+      recorder <- local_request_sequence(list(
+        reply_with_model(route, quoted("x-instance")),
+        chat_ids_list(),
+        reply_with_model(route, quoted("x-instance")),
+        reply_with_model(route, quoted("x-second")),
+        chat_ids_list()
+      ))
+      chat_three(route, format)
+      expect_identical(
+        count_requests(recorder_urls(recorder)),
+        c(chat = 3L, embed = 0L, lookup = 2L),
+        info = info
+      )
+    }
+  }
+})
+
+test_that("each chat batch and each single call sends its own lookup", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (route in stop_routes) {
+    batch <- list(
+      reply_with_model(route, quoted("x-instance")),
+      chat_ids_list(),
+      reply_with_model(route, quoted("x-instance")),
+      reply_with_model(route, quoted("x-instance"))
+    )
+    recorder <- local_request_sequence(c(
+      batch,
+      batch,
+      list(reply_with_model(route, quoted("x-instance")), chat_ids_list())
+    ))
+    chat_three(route, "list")
+    chat_three(route, "list")
+    lms_chat(
+      "org/model-x",
+      "first",
+      api_type = route,
+      quiet = TRUE
+    )
+    expect_identical(
+      count_requests(recorder_urls(recorder)),
+      c(chat = 7L, embed = 0L, lookup = 3L),
+      info = route
+    )
+  }
+})
+
+test_that("lms_embed sends one lookup for replies that name one kept id", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (simplify in c(TRUE, FALSE)) {
+    recorder <- local_request_sequence(list(
+      embed_from(quoted("x-instance"), 1L),
+      embed_ids_list(),
+      embed_from(quoted("x-instance"), 2L),
+      embed_from(quoted("x-instance"), 3L)
+    ))
+    out <- embed_three(simplify)
+    if (simplify) {
+      expect_identical(out, rbind(row_for(1L), row_for(2L), row_for(3L)))
+    }
+    expect_identical(
+      count_requests(recorder_urls(recorder)),
+      c(chat = 0L, embed = 3L, lookup = 1L),
+      info = simplify
+    )
+  }
+})
+
+test_that("lms_embed sends a second lookup for a second id", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    embed_from(quoted("x-instance"), 1L),
+    embed_ids_list(),
+    embed_from(quoted("x-instance"), 2L),
+    embed_from(quoted("x-second"), 3L),
+    embed_ids_list()
+  ))
+  embed_three(TRUE)
+  expect_identical(
+    count_requests(recorder_urls(recorder)),
+    c(chat = 0L, embed = 3L, lookup = 2L)
+  )
+})
+
+test_that("each lms_embed call sends its own lookup", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  call <- list(
+    embed_from(quoted("x-instance"), 1L),
+    embed_ids_list(),
+    embed_from(quoted("x-instance"), 2L),
+    embed_from(quoted("x-instance"), 3L)
+  )
+  recorder <- local_request_sequence(c(call, call))
+  embed_three(TRUE)
+  embed_three(TRUE)
+  expect_identical(
+    count_requests(recorder_urls(recorder)),
+    c(chat = 0L, embed = 6L, lookup = 2L)
+  )
+})
