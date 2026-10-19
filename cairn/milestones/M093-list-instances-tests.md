@@ -89,7 +89,7 @@ function changes behavior.
       `config_column()` (`R/list.R`) in a scratch copy and see the new test
       red while the three-kind test stays green. Also plant a coercion of the
       two kinds to character and see it red. Restore, and log both plants.
-- [ ] T2: Add the empty `display_name` test beside "an absent or null
+- [x] T2: Add the empty `display_name` test beside "an absent or null
       display_name or config gives NA" (`test-list-instances.R:342`), through
       `run_list_instances()` with `display_name = '""'` and a second model
       whose name is not empty. Plant `display_name <- NA_character_` for an
@@ -130,6 +130,7 @@ function changes behavior.
 - 2026-10-18: no NEWS entry: no function changes behavior, and a help correction from T3 is a doc fix.
 - 2026-10-18: started; branch m093-list-instances-tests cut from main at 5de6eb3.
 - 2026-10-18: T1 done: test "a field of one number and one string gives a list-column" expects `list(8192L, "auto")`. Plants in a scratch copy of `R/list.R`: `length(kinds) > 2` made the new test error at the `vapply()` type step while the three-kind test stayed green; a character coercion of the number-string mix made it fail. Both restored (`cmp` clean). `devtools::test()`: 3055 blocks, 0 failed, 0 errors, 3 skipped.
+- 2026-10-18: T2 done: test "an empty display_name stays an empty string" expects `""` for instance i1 and "Model Two" for i2, found by id. Plants in the scratch copy: an empty name set to `NA` in `list_instances()` made it fail; a rejection of `""` in `instance_list_fault()` made it error, and the condition was the `display_name` "is not a string" bad-response abort. Both restored (`cmp` clean). `devtools::test()`: 3056 blocks, 0 failed, 0 errors, 3 skipped.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

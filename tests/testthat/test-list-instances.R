@@ -366,6 +366,16 @@ test_that("an absent or null display_name or config gives NA, or NULL in a list-
   expect_identical(res$o, list(list(k = 1L), NULL, NULL))
 })
 
+test_that("an empty display_name stays an empty string", {
+  body <- instances_body(c(
+    instances_model("llm", "m1", '""', instance_json("i1")),
+    instances_model("llm", "m2", '"Model Two"', instance_json("i2"))
+  ))
+  res <- run_list_instances(body, quiet = TRUE)$value
+  expect_identical(res$display_name[res$id == "i1"], "")
+  expect_identical(res$display_name[res$id == "i2"], "Model Two")
+})
+
 test_that("a fault of the model list rules aborts with rlmstudio_bad_response", {
   cnd <- instances_raised_by('{"models": {}}')
   expect_bad_instances(cnd, "`models` is not an array", "models as object")
