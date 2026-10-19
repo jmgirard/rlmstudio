@@ -64,6 +64,7 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 - 2026-10-18: the claim audit found that the `noproxy` option replaces the `no_proxy` variable for the whole request, so the plan's reason for `noproxy` set to the hostname holds for the proxy variables but not for `no_proxy` after a redirect. Kept the code, narrowed the prose, and added the candidate row "proxy redirect no_proxy". A test of a merged value needs a test server in a second process, because an in-process server cannot answer during the call.
 - 2026-10-18: claim audit re-read of the 3 corrected claims: all accurate. Status set to review.
 - 2026-10-18: review evidence pass: a planted `::1` bind failure showed the CI branch recording a failure and then a skip, since `fail()` does not stop the test. The case is now one if/else; the plant then gives a skip off CI and a failure with no skip on CI.
+- 2026-10-18: review fix-now: the test server of the `localhost` cases also listens on `::1`, `local_recorder()` tries up to 5 ports, and `local_test_proxy()` stops with the reason. The tests use `timeout = 0.2`, not the 0.5 s that T1 and the line below give. With the old `lms_client()` swapped in, the 4 local cases fail and the other-host case passes.
 - 2026-10-18: lessons harvested: M004 (socket rules differ by system; httpuv must be in DESCRIPTION, which it is) and M087 (time test blocks on an idle machine, since each case waits 0.5 s).
 
 ## Decisions
@@ -78,4 +79,19 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 - Consistency gate (2026-10-18): `cairn_validate.py` all checks passed; `devtools::document()` no diff; README not touched; `pkgdown::check_pkgdown()` no problems; NEWS entry present; no new top-level file. No principle changed, so `cairn_impact` is skipped.
 - spawned: diff-bug, blame-history, prior-review, ripple
 - ripple #1: `cairn/references/lmstudio-api-surface.md:54-55` said `lms_client()` sets `Content-Type` and `Accept` only — fix now (marked as a record of when the note was written, corrected M092)
+- diff-bug #1: on Windows, `localhost` can try `::1` first, and a connect to a closed loopback port is not refused at once, so the 0.2 s request could end before curl tries 127.0.0.1 — fix now (the test server for the `localhost` cases also listens on `::1` at the same port where it can)
+- diff-bug #2: httpuv reading the request after curl times out is shown only on macOS — reject (no defect shown; the Linux and Windows R-CMD-check jobs at the merge wait test it, and a red job is fixed on the branch)
+- diff-bug #3: a test proxy that cannot start gives `proxy$port` NULL and an unrelated error — fix now (`local_test_proxy()` stops with the reason, and `local_recorder()` tries up to 5 ports)
+- diff-bug #4: the AC3 check relies on httpuv putting the full URL in `PATH_INFO` — reject (false as a defect: an httpuv change would turn the test red, not hide a fault)
+- diff-bug #5: the outer block holds only nested tests and may report as empty — reject (false: the test table shows it with 0 expectations and no skip)
+- diff-bug #6: T1 text and the lessons work-log line say 0.5 s, the code uses 0.2 s — fix now (work-log line records 0.2 s)
+- diff-bug #7: `localhost.`, `[0:0:0:0:0:0:0:1]`, and `[::1%lo0]` still go to a set proxy — reject (planned change: D-044 leaves other loopback forms out)
+- diff-bug #8: the local set is written in `lms_client()` and `no_server_hint()` with no shared helper — reject (planned change: D-044 keeps the sets apart)
+- diff-bug #9: NEWS writes `::1` where `host` holds `[::1]`, omits the redirect case, and one sentence reads oddly — reject (false and style: the entry names the hostname, which is `::1`, and says "starts at", which the redirect case does not contradict)
+- blame-history #1: a redirect hop from a local host loses the user's `no_proxy`, against D-044's wording — follow-up (row "proxy redirect no_proxy"; D-045 narrows D-044)
+- blame-history #2: the curl matching rests on the tests alone, and AC6 is open — reject (no defect: the tests run the matching, and AC6 is checked at the merge wait)
+- prior-review #1: same as diff-bug #1 — fix now (same fix)
+- prior-review #2: NEWS omits the redirect case, and "in any letter case" rests on one spelling — reject (false: "starts at" is accurate, and the code lowercases every spelling before it compares)
+- prior-review #3: same as diff-bug #3, and the parked row "free_port held-port callers" — fix now (same fix; the row stays for the older callers)
+- prior-review #4: block time near the 1 s bar — reject (no defect: the largest block took 0.25 s on this machine)
 - ripple #2: the `request_dry_run()` comment in `helper-mock-http.R` gave the `noproxy = "*"` reason without the new `lms_client()` value — fix now (comment says the helper value replaces it)

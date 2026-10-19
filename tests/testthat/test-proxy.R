@@ -13,11 +13,17 @@
 # The request waits in the socket, and serve_pending() reads it after the call
 # times out. For a request sent to a proxy, the path is the full URL. The port
 # leaves out `exclude`: on macOS free_port() can return a port that an httpuv
-# server holds on one address. The server stops when `env` exits. If it cannot
-# start, the error comes back as the value.
-local_recorder <- function(bind, exclude = integer(), env = parent.frame()) {
+# server holds on one address. On macOS free_port() can also return a port
+# that another program holds on 127.0.0.1 alone, and the start on `bind` then
+# fails, so the helper tries up to 5 ports. The same server also listens on
+# each address in `also` at that port, where it can. curl can try ::1 first
+# for localhost, and on Windows a connect to a closed loopback port is not
+# refused at once, so the request could time out before curl tries 127.0.0.1.
+# The servers stop when `env` exits. If no start on `bind` succeeds, the last
+# error comes back as the value.
+local_recorder <- function(bind, also = character(), exclude = integer(),
+                           env = parent.frame()) {
   hits <- character()
-  port <- free_port(setdiff(20000:40000, exclude))
   app <- list(call = function(req) {
     hits <<- c(hits, req$PATH_INFO)
     list(
@@ -26,12 +32,35 @@ local_recorder <- function(bind, exclude = integer(), env = parent.frame()) {
       body = '{"models": []}'
     )
   })
-  server <- tryCatch(httpuv::startServer(bind, port, app), error = identity)
+  tried <- exclude
+  for (i in 1:5) {
+    port <- free_port(setdiff(20000:40000, tried))
+    tried <- c(tried, port)
+    server <- tryCatch(httpuv::startServer(bind, port, app), error = identity)
+    if (!inherits(server, "error")) {
+      break
+    }
+  }
   if (inherits(server, "error")) {
     return(server)
   }
   withr::defer(httpuv::stopServer(server), envir = env)
+  for (address in also) {
+    extra <- tryCatch(httpuv::startServer(address, port, app), error = \(e) NULL)
+    if (!is.null(extra)) {
+      withr::defer(httpuv::stopServer(extra), envir = env)
+    }
+  }
   list(port = port, hits = function() hits)
+}
+
+# Start the test proxy on 127.0.0.1, or stop the test with the reason.
+local_test_proxy <- function(env = parent.frame()) {
+  proxy <- local_recorder("127.0.0.1", env = env)
+  if (inherits(proxy, "error")) {
+    stop("The test proxy cannot start: ", conditionMessage(proxy), call. = FALSE)
+  }
+  proxy
 }
 
 # Set every proxy variable that libcurl reads to `proxy`, and unset no_proxy.
@@ -56,11 +85,11 @@ serve_pending <- function(recorders, seconds = 2) {
 }
 
 # Send the readiness request to a test server at `hostname`, with the proxy
-# variables set to a test proxy, and return what each one recorded. `bind` is
-# the address the test server listens on.
-proxy_round <- function(hostname, bind) {
-  proxy <- local_recorder("127.0.0.1")
-  server <- local_recorder(bind, exclude = proxy$port)
+# variables set to a test proxy, and return what each one recorded. `bind` and
+# `also` are the addresses the test server listens on.
+proxy_round <- function(hostname, bind, also = character()) {
+  proxy <- local_test_proxy()
+  server <- local_recorder(bind, also = also, exclude = proxy$port)
   if (inherits(server, "error")) {
     return(server)
   }
@@ -77,7 +106,7 @@ test_that("a request to localhost or 127.0.0.1 skips a set proxy", {
   require_httpuv()
   for (hostname in c("localhost", "LOCALHOST", "127.0.0.1")) {
     test_that(paste("hostname", hostname), {
-      hits <- proxy_round(hostname, bind = "127.0.0.1")
+      hits <- proxy_round(hostname, bind = "127.0.0.1", also = "::1")
       expect_identical(hits$server, "/api/v1/models", info = hostname)
       expect_identical(hits$proxy, character(), info = hostname)
     })
@@ -102,7 +131,7 @@ test_that("a request to [::1] skips a set proxy", {
 
 test_that("a request to another host still goes to a set proxy", {
   require_httpuv()
-  proxy <- local_recorder("127.0.0.1")
+  proxy <- local_test_proxy()
   local_proxy_env(paste0("http://127.0.0.1:", proxy$port))
 
   lms_server_ready(host = "http://lmstudio.test:1234", timeout = 0.2)
