@@ -175,6 +175,7 @@ every instance field.
 - 2026-10-19: substantive amendment: AC6 narrowed at the user's choice at the stop (user override, "Use the narrower AC6 wording you proposed"): the older-server clause becomes "no LM Studio version other than 0.4.26+4 was checked for this field", with the four second re-audit findings applied (clash rule names five names, both NA cases, no other-version sentence, NEWS names the version). No further reader, since two re-audit lines on AC6 exist. The deliverable already meets it (commit 5c21e96).
 - 2026-10-19: all tasks done; status set to review.
 - 2026-10-19: review in progress: AC1 to AC6 evidence recorded and ticked; `devtools::check()` and the four reviewers still running (checkpoint, AC7 and findings not yet recorded).
+- 2026-10-19: step-7 approval: m094-list-instances-ttl-column approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
