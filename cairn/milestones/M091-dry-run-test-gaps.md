@@ -1,0 +1,114 @@
+<!-- Section ownership + write-modes: see tracking-rules.md "Milestone-file
+     section ownership". A phase skill never rewrites another phase's section.
+     Per-section owners are tagged below. The one size check that can fail is
+     cairn_validate's <150 over the plan-owned body. -->
+# M091: Test dry runs skip a set proxy, and two helper comments match each system
+
+- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
+- **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
+- **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
+- **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
+- **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
+- **Surface tier:** internal — test helpers and test comments, which no package user relies on   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
+- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+
+## Goal
+<!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
+
+The test dry runs of `helper-mock-http.R` reach the echo server when a proxy
+is set, and the comments of two test helpers state what happens on macOS and
+on Linux.
+
+## Scope
+<!-- owner: plan · create/amend-via-gate -->
+
+**In:** the three gaps of the candidate row "dry-run test comment gaps".
+Correct the comment above the never-replies block of
+`tests/testthat/test-mock-http-helper.R` to the two results of row E3 of
+`cairn/references/curl-echo-fault.md`. Correct the `free_port()` comment of
+`tests/testthat/helper-ports.R`. Make `request_dry_run()` in
+`tests/testthat/helper-mock-http.R` send each dry run with
+`httr2::req_options(noproxy = "*")`, and add a test that sets the proxy
+variables.
+
+**Out:**
+- Whether the package's own requests to LM Studio skip a set proxy → the
+  candidate row "proxy and local requests", added at this plan. This
+  milestone changes test helpers only.
+- Removing the dry-run retry once curl binds its echo server to 127.0.0.1 →
+  the candidate row "dry-run retry exit".
+- Any change to `R/` or to a user-facing doc → none is needed, so no NEWS
+  entry.
+
+## Acceptance criteria
+<!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
+
+- [ ] AC1: The comment above the `test_that()` block "request_target() reads
+      a request when the program on the first dry-run port never replies" in
+      `tests/testthat/test-mock-http-helper.R` states that the first try ends
+      with curl's timeout error on macOS and with httpuv's "Failed to create
+      server" on Linux, the two results that row E3 of
+      `cairn/references/curl-echo-fault.md` records.
+- [ ] AC2: The comment above `free_port()` in `tests/testthat/helper-ports.R`
+      does not say that nothing listens on the returned port. It states that
+      on macOS the returned port can be one that another program holds on
+      127.0.0.1 alone.
+- [ ] AC3: With `http_proxy` and `all_proxy` set to `http://127.0.0.1:<port>`
+      for a port that `free_port()` returned, and `no_proxy` and `NO_PROXY`
+      set to empty strings, `request_target()` reads the method, path, and
+      body of a request in 1 dry-run try.
+- [ ] AC4: `devtools::test()` on macOS, run with no proxy variables set,
+      reports 0 failures and 0 warnings.
+
+## Coverage
+<!-- owner: plan · create/amend-via-gate; each acceptance criterion → the
+     task(s) satisfying it, by positional number (AC/Task counted
+     top-to-bottom). Review reads to fence evidence — tracking-rules "AC fencing". -->
+
+- AC1 → T1
+- AC2 → T1
+- AC3 → T2
+- AC4 → T3
+
+## Tasks
+<!-- owner: plan (create) / implement (check-off, minor edits); substantive
+     change is amend-via-gate. Every item opens with its positional label —
+     `Tn:` — the item's position counted top-to-bottom, the number Coverage
+     cites; an insertion, removal, or reorder renumbers the labels and the
+     Coverage lines together. -->
+
+- [ ] T1: Correct the two comments. First probe on macOS: hold a port on
+      127.0.0.1 alone with `httpuv::startServer()`, then confirm that
+      `serverSocket()` on that port succeeds, so `bind_free_port()` can
+      return it. Write the `free_port()` comment from that probe and the
+      never-replies comment from row E3 (derived-claims rule).
+- [ ] T2: Test first. In `tests/testthat/test-mock-http-helper.R`, add a
+      test that sets the AC3 variables with `withr::local_envvar()`, counts
+      tries with `local_dry_run_ports()`, and asserts method, path, body, and
+      `tries$n` of 1. See it fail on the current helper with the helper's "no
+      request" stop. Then add `httr2::req_options(req, noproxy = "*")` to
+      `request_dry_run()` and extend its comment with the proxy case. Plant
+      check: remove the option and see the new test go red. No `curl::` call
+      (LESSONS M004).
+- [ ] T3: Run `devtools::document()` (no diff expected), `devtools::test()`,
+      and `devtools::check()`.
+
+## Work log
+<!-- owner: any skill · append-only; one line per entry; absolute dates. -->
+
+- 2026-10-18: created by /milestone-plan.
+- 2026-10-18: tier check: not run — work named at the question set.
+- 2026-10-18: question set: which candidate to plan — the dry-run test gaps; fix the proxy gap too, or the comments only — the comments and the proxy.
+- 2026-10-18: collision sweep: absorbs the candidate row "dry-run test comment gaps"; distinct from the parked row "dry-run retry exit" (removes the retry, not touched here); no D-entry, archive, or Known issues overlap on proxies; GitHub inbox has 0 open issues and 0 open PRs.
+- 2026-10-18: probe on macOS: with `http_proxy=http://127.0.0.1:9`, a dry run failed with `curl_error_couldnt_connect` to port 9, and with `req_options(noproxy = "*")` or `proxy = ""` it read the request.
+- 2026-10-18: lessons harvested: M004 (no `curl::` call in tests, since DESCRIPTION does not list curl), PR #85 hotfix (Linux libcurl differs, CI covers Ubuntu).
+- 2026-10-18: plan gate chose `httr2::req_options(noproxy = "*")` on the request over setting `no_proxy` with `withr` inside the helper, because the option binds to the curl handle and does not depend on which variable spellings libcurl reads; falsified by an httr2 or curl release whose dry run ignores the handle's `noproxy` option.
+- 2026-10-18: criteria audit (reduced mode, fresh Opus reader): AC1 and AC2 no finding; AC3 bound an instrument ("as a test asserts"), so the criterion narrowed to the helper's behavior and the test moved to T2; AC4 borderline, narrowed to a run with no proxy variables set.
+- 2026-10-18: added the candidate row "proxy and local requests" for the package's own requests, outside this test-only scope.
+
+## Decisions
+<!-- owner: implement / review · append-only; milestone-local. -->
+
+## Review
+<!-- owner: review · exclusive -->
