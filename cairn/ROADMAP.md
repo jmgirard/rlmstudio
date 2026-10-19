@@ -10,7 +10,7 @@ _Released 0.3.0 2026-10-02 (CRAN, from 6e9eaf4)._
      terminal (done or dropped) rows. Older ones live in milestones/archive/ and git. -->
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M094 | list_instances remaining ttl column | planned | — | normal | milestones/M094-list-instances-ttl-column.md |
+| M094 | list_instances remaining ttl column | in-progress | — | normal | milestones/M094-list-instances-ttl-column.md |
 | M093 | list_instances tests for a two-kind field and an empty display name | done | — | normal | milestones/archive/M093-list-instances-tests.md |
 | M092 | Requests to localhost, 127.0.0.1, and ::1 skip a set proxy | done | — | normal | milestones/archive/M092-local-proxy-skip.md |
 | M091 | Test dry runs skip a set proxy, and two helper comments match each system | done | — | normal | milestones/archive/M091-dry-run-test-gaps.md |

@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M094: list_instances remaining ttl column
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP1   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — a new column in the result of the exported `list_instances()`   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m094-list-instances-ttl-column   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -115,7 +115,7 @@ every instance field.
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Live probe. Start the server on port 1234 with the token from
+- [x] T1: Live probe. Start the server on port 1234 with the token from
       `~/.lms-token`. Load `google/gemma-3-1b` with `lms load --ttl 600` and
       `text-embedding-nomic-embed-text-v1.5` with no ttl. Read
       `GET /api/v1/models` and `lms ps --json`, and record in one work-log
@@ -159,6 +159,8 @@ every instance field.
 - 2026-10-19: plan gate chose the REST field alone over reading `lms ps --json` for the four other fields, because the CLI cannot reach a remote `host` or use a token; falsified by a REST list that carries those fields, or a user who needs them on a local host.
 - 2026-10-19: plan gate chose the name `remaining_ttl_seconds` over `ttl_seconds`, because `lms ps` reports a ttl setting in milliseconds that a short name would be read as; falsified by a user who reads the column as the ttl setting.
 - 2026-10-19: plan chose the fifth position, before the configuration columns, over appending after them, because the fixed columns then stay together and a configuration field cannot move it; falsified by a user script that indexes configuration columns by position.
+- 2026-10-19: implement started on branch m094-list-instances-ttl-column, cut from main at 211b83c.
+- 2026-10-19: T1 live probe, LM Studio 0.4.26+4: in `GET /api/v1/models`, gemma-3-1b loaded with `--ttl 600` carried `remaining_ttl_seconds` 590, an integer, about 10 s after the load; the nomic instance loaded with no ttl had no such field at all (absent, not `null`). `lms ps --json` gave `ttlMs` 600000 and `null`. The no-ttl value is absent, so AC1 and AC2 stand. Both models stay loaded for T4.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
