@@ -1,6 +1,6 @@
 # rlmstudio (development version)
 
-* A request to a `host` whose hostname is `localhost`, in any letter case, `127.0.0.1`, or `::1` no longer goes through a proxy. The proxy environment variables, such as `http_proxy` or `all_proxy`, set that proxy. Before, unless `no_proxy` listed the host, curl sent the request and its text to the proxy, and the call failed. A request to any other host follows the proxy variables as before.
+* A request to a `host` whose hostname is `localhost`, in any letter case, `127.0.0.1`, or `::1` no longer goes through a proxy. The proxy environment variables, such as `http_proxy` or `all_proxy`, set that proxy. Before, unless `no_proxy` listed the host, curl sent the request and its text to the proxy. The call then failed, or got its answer from the proxy and not straight from the server. A request that starts at any other host follows the proxy variables as before.
 
 * `vignette("getting-started")` now tells you to open the LM Studio app once after the install. The vignette starts the server with `port = 1234`, because LM Studio otherwise uses the port that it used last time. It shows how to find a model key in the LM Studio model catalog. It also names the `status` of a finished download, `"completed"`.
 

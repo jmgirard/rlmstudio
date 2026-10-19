@@ -2680,7 +2680,10 @@ rlm_check_route_dots <- function(dot_names, api_type) {
 #' host it sends even a request for this machine to the proxy. So when the
 #' hostname of `host` is `localhost`, in any letter case, `127.0.0.1`, or
 #' `::1`, the request sets curl's `noproxy` option to that hostname and goes to
-#' the host directly. A request for any other host follows the proxy variables.
+#' the host directly. A request that starts at any other host follows the
+#' proxy variables. The option replaces the `no_proxy` variable for the whole
+#' request. So if a server at one of the three hosts redirects to another host,
+#' curl sends that request to the proxy, even when `no_proxy` lists that host.
 #'
 #' @param host Character. The host address of the local server.
 #'   Defaults to "http://localhost:1234".

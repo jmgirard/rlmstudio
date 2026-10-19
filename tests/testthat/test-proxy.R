@@ -7,7 +7,8 @@
 # which sets noproxy itself and so would hide what lms_client() does.
 
 # Start an httpuv server on `bind` that records the path of each request it
-# reads. httpuv reads a request only while R runs httpuv::service(), and
+# reads. httpuv runs the R handler for a request only while R runs
+# httpuv::service(), later::run_now(), or sits idle at the prompt.
 # httr2::req_perform() blocks R, so no request gets an answer during the call.
 # The request waits in the socket, and serve_pending() reads it after the call
 # times out. For a request sent to a proxy, the path is the full URL. The port
