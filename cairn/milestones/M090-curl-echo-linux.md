@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M090: The curl echo fault is checked on Linux and reported to curl
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -132,7 +132,7 @@ account.
       `gh issue create --repo jeroen/curl` from the operator's account,
       as the question set granted. Record the URL on the page. If an issue
       now covers it, record that issue's URL instead and file nothing.
-- [ ] T8: Run `devtools::test()` on macOS. It reports 0 failures and 0
+- [x] T8: Run `devtools::test()` on macOS. It reports 0 failures and 0
       warnings.
 
 ## Work log
@@ -157,6 +157,9 @@ account.
 - 2026-10-18: T5 done: the grep lists 3 sentences. The Ubuntu 24.04 "Out of memory" sentence (E5) and the time-limit skip sentence (E6) already match the container record and stay. The new T4 comment now says that each held-port test on Linux retries on "Failed to create server" or skips (E1 to E4, E6).
 - 2026-10-18: T6 done: the reproducer ran on macOS (curl 8.0.0, libcurl 8.14.1): `find_port()` returned the held port, and `curl_echo()` returned a list with `url` alone. In the container it got `NULL` from `find_port()` and "Failed to create server". The page cites `R/echo.R` lines 62, 84, 94 and `src/findport.c` lines 52, 63 at curl commit d4f60d6.
 - 2026-10-18: T7 done: two searches of `jeroen/curl` issues found no report of the fault. Filed https://github.com/jeroen/curl/issues/459 from the operator's account, as the question set granted, and recorded the URL on the page.
+- 2026-10-18: T8 done: `devtools::test()` on macOS gave 0 failed, 0 errors, 0 warnings, 3 skipped.
+- 2026-10-18: claim audit: not owed — internal tier.
+- 2026-10-18: status review. The Docker container `m090` stays up for review re-runs. It holds the package source in `/pkg` and the scripts in `/trace`.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
