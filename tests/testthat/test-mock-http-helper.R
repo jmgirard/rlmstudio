@@ -212,11 +212,19 @@ test_that("request_target() reads a request when a proxy is set", {
     httr2::req_dry_run(httr2::req_timeout(req, 5), quiet = TRUE),
     curl_error = identity
   )
-  expect_s3_class(control, "curl_error_couldnt_connect")
-  expect_match(
-    conditionMessage(control), paste0("port ", proxy_port),
-    fixed = TRUE
+  # macOS and Linux refuse the connection at once. On the Windows CI runner the
+  # connect to the closed port times out at the 2 seconds that curl_echo()
+  # allows, and that message names no port.
+  connect_classes <- c(
+    "curl_error_couldnt_connect", "curl_error_operation_timedout"
   )
+  expect_true(inherits(control, connect_classes), info = class(control)[1])
+  if (inherits(control, "curl_error_couldnt_connect")) {
+    expect_match(
+      conditionMessage(control), paste0("port ", proxy_port),
+      fixed = TRUE
+    )
+  }
   # free_port() scans from the same start each time, so the echo port must
   # leave the proxy port out, or the echo server would act as the proxy.
   spare <- free_port(setdiff(20000:40000, proxy_port))

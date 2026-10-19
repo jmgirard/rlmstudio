@@ -114,6 +114,7 @@ variables.
 - 2026-10-18: claim audit: not owed — internal tier.
 - 2026-10-18: implement complete; status set to review.
 - 2026-10-18: step-7 approval: m091-dry-run-test-gaps approved for merge
+- 2026-10-18: PR #94 CI red on windows-latest (release) only: the proxy test's control dry run got `curl_error_operation_timedout` ("Connection timed out after 2000 milliseconds", no port named) where macOS and Linux get `curl_error_couldnt_connect`; the helper part passed. The control now accepts either class and checks the port only on a refused connection. The 2 test warnings of that job (`test-arg-guards.R:688`, `test-vignette-claims.R:224`) also show on main's last Windows run. Fix is to the test's control alone, so the approval stands.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
