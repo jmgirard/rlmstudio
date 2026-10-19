@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M090: The curl echo fault is checked on Linux and reported to curl
 
-- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -160,6 +160,7 @@ account.
 - 2026-10-18: T8 done: `devtools::test()` on macOS gave 0 failed, 0 errors, 0 warnings, 3 skipped.
 - 2026-10-18: claim audit: not owed — internal tier.
 - 2026-10-18: status review. The Docker container `m090` stays up for review re-runs. It holds the package source in `/pkg` and the scripts in `/trace`.
+- 2026-10-18: review return 1: `devtools::check()` warns "'::' or ':::' import not declared from: 'curl'" in tests, because the new curl-error test calls `curl::curl_echo` and `curl::curl_fetch_memory` and DESCRIPTION does not list curl. Fix it so the check gives 0 warnings. Declaring curl in Suggests is a dependency change that the question set did not grant.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
@@ -193,3 +194,4 @@ Pass 1, 2026-10-18, branch head 628c702, synced with main dde3de2 (no move).
 - prior-review #1: no `skip_on_cran()` — reject, false (0.147 s, as blame-history #2).
 - prior-review #2: the comment generalizes from two runs — fix now, same fix as blame-history #1, fixed 323b4df and 025061b.
 - Re-check after the fixes, head 025061b. AC1: the grep still lists 5 blocks (lines 108, 126, 147, 202, 255), the same blocks E1 to E4 and E6, and the page adds row E7 for the fixed test. AC2: the fixed test raises curl's `curl_error_url_malformat` from `curl_fetch_memory()` on call 1 and builds no condition. It asserts method, path, body, and 2 calls, and its only skip path is still `require_httpuv()`. It passed on macOS (nb 5, 0.112 s) and in the container (nb 5, file 41 passed, 1 skipped, 0 failed). A plant (`curl_error` clause replaced by `TRUE`) went red with `curl_error_url_malformat`. AC3: the grep lists 158, 163, 218, 238. The sentence at 158 to 160 (Ubuntu 24.04, cannot bind a held port, retries on "Failed to create server" or skips) matches E1 to E4 and E6. The sentence at 162 to 163 (the retry after a curl error runs on Linux too) matches the E7 container column. 218 matches E5, and 238 matches E6.
+- Gate: `devtools::test()` at 323b4df (025061b changed only a comment after it) gave 0 failed, 0 errors, 0 warnings, 3 skipped. `devtools::check()` gave 0 errors, 1 warning, 0 notes: "checking for unstated dependencies in 'tests' ... '::' or ':::' import not declared from: 'curl'". The new test calls `curl::curl_echo` and `curl::curl_fetch_memory`, and DESCRIPTION does not list curl. Gate failure, so review return 1.
