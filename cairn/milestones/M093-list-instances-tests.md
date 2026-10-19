@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M093: list_instances tests for a two-kind field and an empty display name
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — the help of the exported `list_instances()` can change, and the tests ship in the package   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m093-list-instances-tests   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -83,7 +83,7 @@ function changes behavior.
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Add the two-kind test beside "an object, an array, or mixed kinds
+- [x] T1: Add the two-kind test beside "an object, an array, or mixed kinds
       give a list-column" (`test-list-instances.R:200`), through
       `config_frame()`. Plant `length(kinds) > 2` for `length(kinds) > 1` in
       `config_column()` (`R/list.R`) in a scratch copy and see the new test
@@ -128,6 +128,8 @@ function changes behavior.
 - 2026-10-18: criteria audit (full mode, fresh Opus reader) returned 4 findings. AC1 and AC2 could pass for the wrong reason: fixed by naming the exact input shape and an `expect_identical()` assert. AC3 was not decidable over prose field names, was met by deleting the sentence, and read an idle reply with no ttl: narrowed to a same-name key match, ignoring case, for the four `lms ps` keys, with the help bound both ways and a ttl load. The reader's stem search (`ttl`, `queue`, `lastused`) was declined as a recalled-spelling list. AC4: no finding.
 - 2026-10-18: plan chose mocked JSON-text bodies through the existing helpers over a new recorded reply, because a live server gives no `""` display name or two-kind config field on demand; falsified by a recorded reply that holds either shape.
 - 2026-10-18: no NEWS entry: no function changes behavior, and a help correction from T3 is a doc fix.
+- 2026-10-18: started; branch m093-list-instances-tests cut from main at 5de6eb3.
+- 2026-10-18: T1 done: test "a field of one number and one string gives a list-column" expects `list(8192L, "auto")`. Plants in a scratch copy of `R/list.R`: `length(kinds) > 2` made the new test error at the `vapply()` type step while the three-kind test stayed green; a character coercion of the number-string mix made it fail. Both restored (`cmp` clean). `devtools::test()`: 3055 blocks, 0 failed, 0 errors, 3 skipped.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

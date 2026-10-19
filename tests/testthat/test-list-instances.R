@@ -214,6 +214,11 @@ test_that("an object, an array, or mixed kinds give a list-column", {
   expect_null(res$on[[3]])
 })
 
+test_that("a field of one number and one string gives a list-column", {
+  res <- config_frame(c('{"two": 8192}', '{"two": "auto"}'))
+  expect_identical(res$two, list(8192L, "auto"))
+})
+
 test_that("a configuration field keeps its name unless it clashes", {
   res <- config_frame(c('{"a-b": 1, "id": "x", "config.id": "y", "": 2}'))
   expect_identical(
