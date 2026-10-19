@@ -119,7 +119,7 @@ account.
       the page records for the container run. This includes the skip text of
       the time-limit block and the "Out of memory" sentence above the
       URL-with-space block.
-- [ ] T6: Write a reproducer script that holds 127.0.0.1 alone at a port with
+- [x] T6: Write a reproducer script that holds 127.0.0.1 alone at a port with
       `httpuv::startServer()` and calls `curl::curl_echo()` at that port. Run
       it on macOS, and record the result and the versions on the page. Read
       `R/echo.R` on curl's default branch with
@@ -127,7 +127,7 @@ account.
       and cite the bind and target lines. Write the report text on the page
       in the register of the curl issue tracker: the fault, the reproducer,
       the macOS and Linux results, and the cause.
-- [ ] T7: First search `jeroen/curl` issues for the fault again. If none
+- [x] T7: First search `jeroen/curl` issues for the fault again. If none
       covers it, file the report with
       `gh issue create --repo jeroen/curl` from the operator's account,
       as the question set granted. Record the URL on the page. If an issue
@@ -155,6 +155,8 @@ account.
 - 2026-10-18: T3 done: in the container, every held-port try ends with "Failed to create server", and the time-limit block skips; the whole file gave 36 passed, 1 skipped, 0 failed. `docker run` pulled `rocker/r-ver:4.6` again, because this Docker context did not find the copy that `docker images` had listed. The question set granted the image and the installs inside it, and not the pull.
 - 2026-10-18: T4 done: the new test mocks `curl::curl_echo()` so that call 1 runs `curl::curl_fetch_memory()` against a `free_port()` on 127.0.0.1 and call 2 runs the real echo. Planted in a scratch copy (the `curl_error` clause of the retry condition replaced by `TRUE`), it went red with `curl_error_couldnt_connect` from `curl_fetch_memory()`. It passed on macOS and in the container (file: 40 passed, 1 skipped, 0 failed). It does not call `local_dry_run_ports(`, so the AC1 domain stays 5 blocks and the trace did not need a re-run.
 - 2026-10-18: T5 done: the grep lists 3 sentences. The Ubuntu 24.04 "Out of memory" sentence (E5) and the time-limit skip sentence (E6) already match the container record and stay. The new T4 comment now says that each held-port test on Linux retries on "Failed to create server" or skips (E1 to E4, E6).
+- 2026-10-18: T6 done: the reproducer ran on macOS (curl 8.0.0, libcurl 8.14.1): `find_port()` returned the held port, and `curl_echo()` returned a list with `url` alone. In the container it got `NULL` from `find_port()` and "Failed to create server". The page cites `R/echo.R` lines 62, 84, 94 and `src/findport.c` lines 52, 63 at curl commit d4f60d6.
+- 2026-10-18: T7 done: two searches of `jeroen/curl` issues found no report of the fault. Filed https://github.com/jeroen/curl/issues/459 from the operator's account, as the question set granted, and recorded the URL on the page.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

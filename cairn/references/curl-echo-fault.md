@@ -54,6 +54,95 @@ call of `req_dry_run()`, and tries 2 to 6 are the 5 tries of the helper.
 "Failed to create server" has the classes `simpleError`, `error`, and
 `condition` on both systems.
 
+## The source lines
+
+At `jeroen/curl` commit `d4f60d67d38166c900f8cd9cf658cfd28340a425`
+(2026-10-14), `R/echo.R` line 62 binds the echo server with
+`httpuv::startServer("0.0.0.0", port, ...)`. Lines 84 and 94 send the
+request to `http://127.0.0.1:<port>`. In `src/findport.c`, lines 52 and 63
+probe each port on `INADDR_ANY` with `SO_REUSEADDR`.
+
+## The reproducer and its runs
+
+```r
+library(curl)
+
+# Another program listens on 127.0.0.1 alone at a port.
+port <- httpuv::randomPort()
+other <- httpuv::startServer(
+  "127.0.0.1", port,
+  list(call = function(req) list(status = 200L, headers = list(), body = ""))
+)
+
+# find_port() still reports the port as free.
+curl:::find_port(port)
+
+# curl_echo() binds 0.0.0.0 at that port and sends the request to 127.0.0.1.
+h <- new_handle(url = "http://localhost/hello", postfields = "abc")
+res <- curl_echo(h, port = port)
+str(res)
+
+httpuv::stopServer(other)
+packageVersion("curl")
+curl_version()$version
+```
+
+macOS 27.0.1 (arm64), R 4.6.1, curl 8.0.0, libcurl 8.14.1, run 2026-10-18.
+`find_port(port)` returned the held port, and `curl_echo()` returned a list
+with `url` alone, so the result has no method, path, or body:
+
+```
+> str(res)
+List of 1
+ $ url: chr "http://localhost/hello"
+```
+
+In the Linux container (curl 8.1.0, libcurl 8.5.0), run 2026-10-18,
+`find_port(port)` returned `NULL`, and `curl_echo()` stopped with
+"Failed to create server".
+
+## The report
+
+Filed 2026-10-18 as https://github.com/jeroen/curl/issues/459, with the
+text below.
+
+Title: `curl_echo() can send the request to another program on macOS`
+
+````markdown
+`curl_echo()` starts its server on `0.0.0.0` ([R/echo.R#L62](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L62)) but sends the request to `127.0.0.1` ([L84](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L84), [L94](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L94)). On macOS, a bind to `0.0.0.0` can share a port that another program holds on `127.0.0.1` alone. The request then goes to that other program, and `curl_echo()` returns a result with no method, path, or body. `find_port()` probes on `INADDR_ANY` with `SO_REUSEADDR` ([src/findport.c#L52](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/src/findport.c#L52)), so it reports such a port as free.
+
+We hit this in a package test suite. Now and then, `httr2::req_dry_run()` returned an empty result, because the random port was one that a local service held on 127.0.0.1.
+
+Reprex (macOS 27.0.1 arm64, R 4.6.1, curl 8.0.0, libcurl 8.14.1):
+
+```r
+library(curl)
+
+# Another program listens on 127.0.0.1 alone at a port.
+port <- httpuv::randomPort()
+other <- httpuv::startServer(
+  "127.0.0.1", port,
+  list(call = function(req) list(status = 200L, headers = list(), body = ""))
+)
+
+# find_port() still reports the port as free.
+curl:::find_port(port)
+
+# curl_echo() binds 0.0.0.0 at that port and sends the request to 127.0.0.1.
+h <- new_handle(url = "http://localhost/hello", postfields = "abc")
+res <- curl_echo(h, port = port)
+str(res)
+#> List of 1
+#>  $ url: chr "http://localhost/hello"
+
+httpuv::stopServer(other)
+```
+
+On Linux (Ubuntu 24.04, curl 8.1.0, libcurl 8.5.0), `find_port(port)` returns `NULL` in the same script. There `curl_echo()` stops with "Failed to create server", so we see the problem on macOS and not on Linux.
+
+A possible fix is to bind the echo server to `127.0.0.1`, the address it sends to, and to probe `127.0.0.1` in `find_port()`.
+````
+
 ## Disposition
 
 On Linux, every held-port block passes through the "Failed to create
