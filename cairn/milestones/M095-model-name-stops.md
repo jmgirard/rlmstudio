@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M095: Model-name stops for embeddings and batches
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** GP2, GP3   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** user-facing — it changes when two exported functions abort   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m095-model-name-stops   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -119,7 +119,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Record the live replies. Start the server with `port = 1234`.
+- [x] T1: Record the live replies. Start the server with `port = 1234`.
       Record the "No models loaded" 400 of `/v1/chat/completions`,
       `/v1/responses`, and `/v1/embeddings` with nothing loaded. Record the
       200 of `/v1/embeddings` for an unknown name with
@@ -157,6 +157,8 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
 - 2026-10-19: plan chose a per-call cache of kept ids over a help note on the lookup cost, because a batch against a model loaded under another id doubled its requests; falsified by a model unloaded and reloaded under the same id mid-call to another model.
 - 2026-10-19: criteria audit (full mode, fresh Opus reader): 20 findings. Fixed: goal narrowed to the two faults shown (G1); AC1 counts embeddings requests only, states lookup failure, the non-space rule, and probes both `simplify` settings and stops at request 1 and 2; AC2 reads the body's `error` or `error.message` string, adds a non-stop 400 beside a success in both functions, and stops at input 2 of 3; AC3 names one id, a second id, both routes, both formats, and two calls; old AC4 (variant names) left the milestone by the user's answer, which settles AC1-c and AC4-a to e; docs AC narrowed per topic and adds the "Reply from another model" section; check AC names the environment; D-entry list taken into T5.
 - 2026-10-19: no partial issue, no release, no dependency change; changelog: one NEWS entry (T5).
+- 2026-10-19: status in-progress, branch m095-model-name-stops cut from main at 35f9949.
+- 2026-10-19: T1 done: `data-raw/record-model-stop-cassette.R` recorded `tests/testthat/stop_live/` (none, embed_unknown, embed_alias) on LM Studio 0.4.26+4; all three routes gave 400 "No models loaded" with nothing loaded; embeddings gave 200 from `text-embedding-nomic-embed-text-v1.5` for "not-a-model" and 200 naming "my-nomic" for the key. Directory named `stop_live`, because `model_stop_live` put one tarball path at 100 bytes. Server stopped, no model loaded. data-raw/README.md lists the script.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
