@@ -94,3 +94,33 @@ Evidence gathered 2026-10-18 on branch m088-missing-result-warnings at eadb4b0, 
 - AC5: `options(rlmstudio.quiet = TRUE)` then `devtools::test()`: 3042 rows, 0 failed, 0 errors, 3 skipped (in `test-embed.R` and `test-list-instances.R`). On main at 5305240 the same run failed 8 expectations in 7 tests.
 - AC6: installed to a scratch library, `utils::help("rlmstudio_no_load_config", package = "rlmstudio")` found 1 topic (`lms_load`) and `utils::help("rlmstudio_no_logprobs", ...)` found 1 (`lms_chat_openai`). `tools::Rd2txt()` of `lms_load`, `lms_chat_openai`, `lms_chat`, `lms_chat_batch`: each names its class and, within 450 characters after it, says the `rlmstudio.quiet` option does not hide it; `lms_chat_batch` says "one warning of class `rlmstudio_no_logprobs`". NEWS.md: one bullet ("Two cases that cannot return what you asked for ...") with a sub-bullet per warning.
 - AC7: `devtools::test()`: 3042 rows, 0 failed, 0 errors, 0 warnings, 3 skipped. `devtools::document()`: `git status --short` empty after it. `devtools::check()`: 0 errors, 0 warnings, 0 notes.
+
+Consistency gate: `cairn_validate.py` all checks passed; no DESIGN principle changed, so `cairn_impact.py` skipped; `devtools::document()` no diff; README.Rmd untouched; `pkgdown::check_pkgdown()` no problems; NEWS.md has the entry; no new top-level files; `devtools::check()` clean (AC7). No vignette chunk calls the OpenAI route with logprobs.
+
+spawned: diff-bug, blame-history, prior-review
+
+- diff-bug #1: under `options(warn = 2)` an OpenAI logprobs call, or a whole batch, now errors — reject (planned change): the user chose a warning past quiet at the plan gate, and `warn = 2` turns any warning into an error, as it already does for the D-010 and D-021 batch warnings.
+- diff-bug #2: DESIGN.md GP5 and GP6 text not updated for the trade — reject (planned change): a GP is traded with a stated justification, which D-043 records, and D-010, D-021, and D-037 traded GP6 the same way without editing its text.
+- diff-bug #3: `?lms_chat` `@return` says an OpenResponses `logprobs = TRUE` call always returns an `lms_chat_result`, but `responses_reply_value()` returns text when no part carries logprobs — fix now (the line this branch reworded), fixed f58910a.
+- diff-bug #4: the vector-format fallback warning names logprobs data frames next to the new `NULL` warning — follow-up (pre-existing text): new candidate row "openai batch fallback text".
+- diff-bug #5: with quiet off, the load case shows the info line and a warning that repeats it — reject (planned change): the plan put the warning after the quiet-aware info line.
+- diff-bug #6: `call = NULL` differs between the single-call and batch warnings — reject (style): each matches its neighbor warning.
+- diff-bug #7: `run_usage_batch()` returns a `no_logprobs` count that no test reads — fix now, fixed f58910a (the usage test asserts 1 on the OpenAI logprobs setting, 0 elsewhere).
+- diff-bug #8: only the lost-server abort path is tested — fix now, fixed f58910a (a 401 abort test).
+- diff-bug #9: a loop expectation has no `info` — fix now, fixed f58910a.
+- diff-bug #10: `@param logprobs` "the result holds `NULL`" reads as the whole result — fix now, fixed f58910a.
+- blame-history #1: both warning texts say "The openai route returns no log probabilities", a server claim that T5 removed from the help — fix now, fixed f58910a (now "The package reads no log probabilities from the openai route").
+- blame-history #2: DESIGN.md Known issues still says LM Studio stubs the logprobs — fix now, fixed f58910a (corrected in place, marked corrected M088).
+- blame-history #3: same as diff-bug #7 — fix now, fixed f58910a.
+- blame-history #4: the cut-off schema test lets a finished reply give one warning — reject (false): the count is exact (`extra`) and each extra warning is checked for the `rlmstudio_no_logprobs` class.
+- blame-history #5: `test-chat-batch.R` route branch — reject (false): the count stays exact.
+- blame-history #6: `single_value()` muffles the warning — reject (planned change): that helper compares values, and `test-missing-result-warnings.R` covers the warning.
+- blame-history #7: GP5 text — reject (planned change), as diff-bug #2.
+- blame-history #8: quiet pins — no conflict, noted.
+- blame-history #9: changed warning counts encode D-043 — no conflict, noted.
+- prior-review #1: `test-vignette-claims.R` asserts the warning with `expect_warning()`, which lets a second one pass (LESSONS M019) — fix now, fixed f58910a (counted with `collect_warnings()`).
+- prior-review #2: same as diff-bug #7 — fix now, fixed f58910a.
+- prior-review #3: the `?rlmstudio-conditions` intro says the OpenAI chat functions give "one warning class of their own" — fix now, fixed f58910a (now two, naming both).
+- prior-review #4: echo alert past quiet matches the candidate row and M086 — no conflict, noted.
+
+After the fixes: `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped; under `rlmstudio.quiet = TRUE` 0 failed, 0 errors. No finding showed a criterion failing, so no return.
