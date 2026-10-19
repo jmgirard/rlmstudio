@@ -534,6 +534,7 @@ test_that("batch format data.frame holds parsed replies in a list-column", {
 })
 
 test_that("batch reads shortened argument names as lms_chat() does", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(200L, completion_body(quoted('{"score": 3}'))))
 
@@ -549,8 +550,8 @@ test_that("batch reads shortened argument names as lms_chat() does", {
   expect_identical(out, list(list(score = 3L)))
 
   # `log` is how lms_chat() would take `logprobs`, so the reply is not parsed
-  # and the vector format names logprobs, not the schema. The route returns
-  # no logprobs, so the batch also says so (D-043).
+  # and the vector format names the result objects, not the schema. The route
+  # returns no logprobs, so the batch also says so (D-043).
   expect_warning(
     expect_warning(
       lms_chat_batch(
@@ -561,7 +562,7 @@ test_that("batch reads shortened argument names as lms_chat() does", {
         log = TRUE,
         schema = score_schema
       ),
-      "cannot store logprobs"
+      "cannot store the .*lms_chat_result.* replies of the .*openai.* route"
     ),
     class = "rlmstudio_no_logprobs"
   )
