@@ -135,6 +135,7 @@ function changes behavior.
 - 2026-10-18: T4 done: `devtools::document()` left no diff; `devtools::test()`: 3056 blocks, 0 failed, 0 errors, 3 skipped.
 - 2026-10-18: claim audit: 2 claims read, 0 corrected — tests/testthat/test-list-instances.R
 - 2026-10-18: status review; handed to /milestone-review.
+- 2026-10-19: step-7 approval: m093-list-instances-tests approved for merge
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
