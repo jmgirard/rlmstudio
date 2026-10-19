@@ -227,7 +227,8 @@
 #' [lms_embed()] reads each request on its own. A bad body, of either kind
 #' that the "Malformed response" section and this section describe, fails the
 #' inputs of that request alone, and the call warns once and
-#' goes on. The call aborts with the condition only if every request fails,
+#' goes on. Unless a stop that the details of [lms_embed()] list ends the call
+#' first, the call aborts with the condition only if every request fails,
 #' and then with the condition of the first. With `simplify = TRUE`, it also
 #' aborts with `rlmstudio_bad_response` for a request whose embeddings have
 #' another number of dimensions than those of an earlier request. That
@@ -385,8 +386,8 @@
 #' carries the `content` and `finish_reason` fields, both `NULL`.
 #'
 #' Within one call of [lms_chat_batch()] or [lms_embed()], a reply whose
-#' `model` field a lookup of that call already accepted for the asked name is
-#' accepted with no other request. Each such call, and each call of
+#' `model` field a lookup of that call already accepted for the asked name and
+#' the same host is accepted with no other request. Each such call, and each call of
 #' [lms_chat_openai()] or [lms_chat_openresponses()] outside a batch, starts
 #' with no accepted ids.
 #'
@@ -432,8 +433,11 @@
 #' such as one with status 401, 403, or 404, ends the call in the same way.
 #' Once a request has succeeded, the condition carries a `results` field, a
 #' matrix or a list as the "Server not running" section describes.
-#' Any other failure of the lookup fails the inputs of that request alone, as
-#' the "API failure" section describes for a failed request.
+#' Any other `rlmstudio_api_error` or `rlmstudio_bad_response` from the
+#' lookup fails the inputs of that request alone, as the "API failure"
+#' section describes for a failed request. An error of any other class, such
+#' as an `httr2_failure` from a server that stops during the lookup, aborts
+#' the call unchanged.
 #'
 #' @name rlmstudio-conditions
 #' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response rlmstudio_reply_cut_off rlmstudio_model_mismatch

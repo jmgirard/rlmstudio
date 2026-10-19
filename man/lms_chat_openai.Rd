@@ -555,8 +555,8 @@ reply. The message names both. A condition from \code{\link[=lms_chat_openai]{lm
 carries the \code{content} and \code{finish_reason} fields, both \code{NULL}.
 
 Within one call of \code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_embed]{lms_embed()}}, a reply whose
-\code{model} field a lookup of that call already accepted for the asked name is
-accepted with no other request. Each such call, and each call of
+\code{model} field a lookup of that call already accepted for the asked name and
+the same host is accepted with no other request. Each such call, and each call of
 \code{\link[=lms_chat_openai]{lms_chat_openai()}} or \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} outside a batch, starts
 with no accepted ids.
 
@@ -602,8 +602,11 @@ model-list lookup that raises \code{rlmstudio_no_server}, or an
 such as one with status 401, 403, or 404, ends the call in the same way.
 Once a request has succeeded, the condition carries a \code{results} field, a
 matrix or a list as the "Server not running" section describes.
-Any other failure of the lookup fails the inputs of that request alone, as
-the "API failure" section describes for a failed request.
+Any other \code{rlmstudio_api_error} or \code{rlmstudio_bad_response} from the
+lookup fails the inputs of that request alone, as the "API failure"
+section describes for a failed request. An error of any other class, such
+as an \code{httr2_failure} from a server that stops during the lookup, aborts
+the call unchanged.
 }
 
 \examples{

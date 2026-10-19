@@ -504,6 +504,27 @@ test_that("lms_embed goes on past a 400 with the code model_not_found", {
   expect_identical(length(recorder$requests), 3L)
 })
 
+test_that("a stop of lms_embed gives no warning about inputs that failed before it", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    embed_from(quoted("org/embed-x"), 1L),
+    mock_response(400L, '{"error": "boom"}'),
+    recorded_no_models("embed")
+  ))
+  warnings <- character()
+  err <- withCallingHandlers(
+    tryCatch(embed_three(TRUE), rlmstudio_api_error = identity),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_identical(err$server_message, no_models_text)
+  expect_identical(err$results, rbind(row_for(1L), c(NA, NA), c(NA, NA)))
+  expect_identical(warnings, character())
+  expect_identical(length(recorder$requests), 3L)
+})
+
 test_that("an API error carries the error text of the body, or NULL", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   cases <- list(
@@ -670,4 +691,107 @@ test_that("each lms_embed call sends its own lookup", {
     count_requests(recorder_urls(recorder)),
     c(chat = 0L, embed = 6L, lookup = 2L)
   )
+})
+
+test_that("a call that aborts leaves no kept ids for the next call", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    embed_from(quoted("x-instance"), 1L),
+    embed_ids_list(),
+    embed_from(quoted("org/embed-y"), 2L),
+    embed_ids_list(),
+    embed_from(quoted("x-instance"), 1L),
+    embed_ids_list()
+  ))
+  expect_error(embed_three(TRUE), class = "rlmstudio_model_mismatch")
+  expect_null(reply_model_cache$kept)
+  out <- lms_embed("org/embed-x", "a")
+  expect_identical(out, rbind(row_for(1L)))
+  expect_identical(
+    count_requests(recorder_urls(recorder)),
+    c(chat = 0L, embed = 3L, lookup = 3L)
+  )
+  for (route in stop_routes) {
+    recorder <- local_request_sequence(list(
+      reply_with_model(route, quoted("x-instance")),
+      chat_ids_list(),
+      recorded_no_models(route),
+      reply_with_model(route, quoted("x-instance")),
+      chat_ids_list()
+    ))
+    expect_error(chat_three(route, "list"), class = "rlmstudio_api_error")
+    expect_null(reply_model_cache$kept)
+    lms_chat("org/model-x", "first", api_type = route, quiet = TRUE)
+    expect_identical(
+      count_requests(recorder_urls(recorder)),
+      c(chat = 3L, embed = 0L, lookup = 2L),
+      info = route
+    )
+  }
+})
+
+test_that("a kept reply id counts only for its asked name and host", {
+  old <- reply_model_cache$kept
+  withr::defer(end_reply_model_cache(old))
+  start_reply_model_cache()
+  keep_reply_model("org/model-x", "x-instance", "http://localhost:1234")
+  expect_true(
+    reply_model_kept("org/model-x", "x-instance", "http://localhost:1234")
+  )
+  expect_false(
+    reply_model_kept("org/model-x", "x-instance", "http://localhost:4321")
+  )
+  expect_false(
+    reply_model_kept("org/model-y", "x-instance", "http://localhost:1234")
+  )
+  expect_false(
+    reply_model_kept("org/model-x", "x-second", "http://localhost:1234")
+  )
+  end_reply_model_cache(NULL)
+  expect_false(
+    reply_model_kept("org/model-x", "x-instance", "http://localhost:1234")
+  )
+  keep_reply_model("org/model-x", "x-instance", "http://localhost:1234")
+  expect_null(reply_model_cache$kept)
+})
+
+# Asked names that need no lookup, or one ----------------------------------------
+
+test_that("a named, classed, or S4 asked name that the same model answers sends no lookup", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  s4_env <- new.env()
+  s4_string <- methods::setClass(
+    "rlmstudioM095String",
+    contains = "character",
+    where = s4_env
+  )
+  asked <- list(
+    named = c(a = "org/embed-x"),
+    classed = structure("org/embed-x", class = c("glue", "character")),
+    s4 = s4_string("org/embed-x")
+  )
+  for (kind in names(asked)) {
+    for (simplify in c(TRUE, FALSE)) {
+      info <- paste(kind, simplify)
+      recorder <- local_request_sequence(list(embed_from(quoted("org/embed-x"))))
+      expect_no_error(lms_embed(asked[[kind]], "a", simplify = simplify))
+      expect_identical(length(recorder$requests), 1L, info = info)
+    }
+  }
+})
+
+test_that("an asked name in another letter case is accepted after one lookup", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (simplify in c(TRUE, FALSE)) {
+    recorder <- local_request_sequence(list(
+      embed_from(quoted("org/embed-x")),
+      model_list_response("org/embed-x" = "org/embed-x")
+    ))
+    expect_no_error(lms_embed("Org/Embed-X", "a", simplify = simplify))
+    expect_identical(
+      count_requests(recorder_urls(recorder)),
+      c(chat = 0L, embed = 1L, lookup = 1L),
+      info = simplify
+    )
+  }
 })

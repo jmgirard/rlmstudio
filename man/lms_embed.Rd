@@ -76,7 +76,9 @@ column names.
 \description{
 Sends one or more texts to an embedding model and returns the vector that
 the model produced for each one. The texts go out in batches of at most
-\code{batch_size}, one request per batch, in the order given.
+\code{batch_size}, one request per batch, in the order given. A reply that
+names another model can add one model-list request, as the "Reply from
+another model" section describes.
 }
 \details{
 Before each request after the first, the function checks again that the
@@ -99,7 +101,8 @@ or 404; an \code{rlmstudio_api_error} with \code{status} 400 whose \code{server_
 starts with "No models loaded", which LM Studio sent for an unknown name
 with no model loaded; and an \code{rlmstudio_model_mismatch}, a reply from a
 model other than the one asked for. The "API failure" and "Reply from
-another model" sections below describe the last two. With
+another model" sections below describe the last two. A fault that ends the
+call gives no warning about the inputs that failed before it. With
 \code{simplify = TRUE}, a fifth fault does the same: a request whose embeddings
 have another number of dimensions than those of an earlier request. It
 aborts with \code{rlmstudio_bad_response}. With \code{simplify = FALSE}, the bodies
@@ -290,7 +293,8 @@ vector with the wrong text and give back a matrix that is silently wrong.
 \code{\link[=lms_embed]{lms_embed()}} reads each request on its own. A bad body, of either kind
 that the "Malformed response" section and this section describe, fails the
 inputs of that request alone, and the call warns once and
-goes on. The call aborts with the condition only if every request fails,
+goes on. Unless a stop that the details of \code{\link[=lms_embed]{lms_embed()}} list ends the call
+first, the call aborts with the condition only if every request fails,
 and then with the condition of the first. With \code{simplify = TRUE}, it also
 aborts with \code{rlmstudio_bad_response} for a request whose embeddings have
 another number of dimensions than those of an earlier request. That
@@ -334,8 +338,8 @@ reply. The message names both. A condition from \code{\link[=lms_chat_openai]{lm
 carries the \code{content} and \code{finish_reason} fields, both \code{NULL}.
 
 Within one call of \code{\link[=lms_chat_batch]{lms_chat_batch()}} or \code{\link[=lms_embed]{lms_embed()}}, a reply whose
-\code{model} field a lookup of that call already accepted for the asked name is
-accepted with no other request. Each such call, and each call of
+\code{model} field a lookup of that call already accepted for the asked name and
+the same host is accepted with no other request. Each such call, and each call of
 \code{\link[=lms_chat_openai]{lms_chat_openai()}} or \code{\link[=lms_chat_openresponses]{lms_chat_openresponses()}} outside a batch, starts
 with no accepted ids.
 
@@ -381,8 +385,11 @@ model-list lookup that raises \code{rlmstudio_no_server}, or an
 such as one with status 401, 403, or 404, ends the call in the same way.
 Once a request has succeeded, the condition carries a \code{results} field, a
 matrix or a list as the "Server not running" section describes.
-Any other failure of the lookup fails the inputs of that request alone, as
-the "API failure" section describes for a failed request.
+Any other \code{rlmstudio_api_error} or \code{rlmstudio_bad_response} from the
+lookup fails the inputs of that request alone, as the "API failure"
+section describes for a failed request. An error of any other class, such
+as an \code{httr2_failure} from a server that stops during the lookup, aborts
+the call unchanged.
 }
 
 \examples{

@@ -2,7 +2,9 @@
 #'
 #' Sends one or more texts to an embedding model and returns the vector that
 #' the model produced for each one. The texts go out in batches of at most
-#' `batch_size`, one request per batch, in the order given.
+#' `batch_size`, one request per batch, in the order given. A reply that
+#' names another model can add one model-list request, as the "Reply from
+#' another model" section describes.
 #'
 #' @param model Character. The loaded embedding model name. Must be one name,
 #'   given as a single string. The string must be valid in its declared
@@ -70,7 +72,8 @@
 #' starts with "No models loaded", which LM Studio sent for an unknown name
 #' with no model loaded; and an `rlmstudio_model_mismatch`, a reply from a
 #' model other than the one asked for. The "API failure" and "Reply from
-#' another model" sections below describe the last two. With
+#' another model" sections below describe the last two. A fault that ends the
+#' call gives no warning about the inputs that failed before it. With
 #' `simplify = TRUE`, a fifth fault does the same: a request whose embeddings
 #' have another number of dimensions than those of an earlier request. It
 #' aborts with `rlmstudio_bad_response`. With `simplify = FALSE`, the bodies
@@ -210,8 +213,9 @@ lms_embed <- function(
   }
   # A lookup that keeps a reply id keeps it for the rest of the call, so a
   # later reply with that id sends no lookup (D-046).
-  old_cache <- start_reply_model_cache()
+  old_cache <- reply_model_cache$kept
   on.exit(end_reply_model_cache(old_cache), add = TRUE)
+  start_reply_model_cache()
 
   for (b in seq_along(batches)) {
     rows <- batches[[b]]

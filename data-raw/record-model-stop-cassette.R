@@ -155,7 +155,9 @@ invisible(tryCatch(
     key_loaded <- TRUE
     lms_cli("load", embedder, "-y")
     record_case("embed_unknown", embed = "not-a-model")
-    unload_quietly(embedder)
+    # This unload stops on failure, so the alias case never records with a
+    # second instance loaded, and the `finally` clause tries it again.
+    lms_unload(embedder, host = host)
     key_loaded <- FALSE
     alias_loaded <- TRUE
     lms_cli("load", embedder, "--identifier", embedder_id, "-y")

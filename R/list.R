@@ -444,8 +444,8 @@ config_column <- function(configs, field) {
 #' Request the model list and check its body
 #'
 #' The request and the checks that `list_models()` runs after its server
-#' probe. The model check of the chat functions runs them too, so a model list
-#' fails there with the same classes.
+#' probe. The model check of the chat functions and of `lms_embed()` runs them
+#' too, so a model list fails there with the same classes.
 #'
 #' @param host Character. The base URL of the server.
 #' @param token Character or `NULL`. The API token, resolved as the calling

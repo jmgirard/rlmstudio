@@ -979,11 +979,11 @@ check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
   if (identical(reply_model, model)) {
     return(invisible())
   }
-  if (reply_model_kept(model, reply_model)) {
+  if (reply_model_kept(model, reply_model, host)) {
     return(invisible())
   }
   if (reply_model_serves(model, reply_model, host, token, label)) {
-    keep_reply_model(model, reply_model)
+    keep_reply_model(model, reply_model, host)
     return(invisible())
   }
   # The names are placed in the detail as text, so braces in a name that the
@@ -1012,25 +1012,32 @@ check_reply_model <- function(resp, resp_data, model, host, token, label, ...) {
 }
 
 # The reply ids that a lookup accepted during the current batch call, as
-# parallel `models` and `ids` vectors, or NULL outside a batch call. A batch
-# function sets it for the length of its call, so a later reply with a kept id
-# for the same asked name sends no lookup (D-046).
+# parallel `models`, `ids`, and `hosts` vectors, or NULL outside a batch call.
+# A batch function sets it for the length of its call, so a later reply with a
+# kept id for the same asked name and host sends no lookup (D-046). The host
+# is part of the key, because code that runs during the batch, such as a
+# calling handler, can send a call to another host.
 reply_model_cache <- new.env(parent = emptyenv())
 
 #' Start an empty cache of accepted reply ids for one batch call
 #'
-#' @return The cache that was set before, for `end_reply_model_cache()`.
+#' The caller reads `reply_model_cache$kept` and registers
+#' `end_reply_model_cache()` with `on.exit()` before it calls this, so an
+#' interrupt cannot leave the cache on after the call.
 #'
 #' @noRd
 start_reply_model_cache <- function() {
-  old <- reply_model_cache$kept
-  reply_model_cache$kept <- list(models = character(), ids = character())
-  old
+  reply_model_cache$kept <- list(
+    models = character(),
+    ids = character(),
+    hosts = character()
+  )
+  invisible()
 }
 
 #' Put back the cache that was set before a batch call
 #'
-#' @param old The value that `start_reply_model_cache()` returned.
+#' @param old The value of `reply_model_cache$kept` before the call.
 #'
 #' @noRd
 end_reply_model_cache <- function(old) {
@@ -1042,13 +1049,15 @@ end_reply_model_cache <- function(old) {
 #'
 #' @param model Character. The model name the call sent.
 #' @param reply_model Character. The `model` field of the reply.
-#' @return `TRUE` when the cache holds the pair, else `FALSE`, also outside a
-#'   batch call.
+#' @param host Character. The host of the call.
+#' @return `TRUE` when the cache holds the three values together, else
+#'   `FALSE`, also outside a batch call.
 #'
 #' @noRd
-reply_model_kept <- function(model, reply_model) {
+reply_model_kept <- function(model, reply_model, host) {
   kept <- reply_model_cache$kept
-  !is.null(kept) && any(kept$models == model & kept$ids == reply_model)
+  !is.null(kept) &&
+    any(kept$models == model & kept$ids == reply_model & kept$hosts == host)
 }
 
 #' Keep a reply id that a lookup accepted, for the rest of the batch call
@@ -1058,11 +1067,12 @@ reply_model_kept <- function(model, reply_model) {
 #' @inheritParams reply_model_kept
 #'
 #' @noRd
-keep_reply_model <- function(model, reply_model) {
+keep_reply_model <- function(model, reply_model, host) {
   kept <- reply_model_cache$kept
   if (!is.null(kept)) {
     kept$models <- c(kept$models, model)
     kept$ids <- c(kept$ids, reply_model)
+    kept$hosts <- c(kept$hosts, host)
     reply_model_cache$kept <- kept
   }
   invisible()
@@ -2226,8 +2236,9 @@ lms_chat_batch <- function(
 
   # A lookup that keeps a reply id keeps it for the rest of the batch, so a
   # later reply with that id sends no lookup (D-046).
-  old_cache <- start_reply_model_cache()
+  old_cache <- reply_model_cache$kept
   on.exit(end_reply_model_cache(old_cache), add = TRUE)
+  start_reply_model_cache()
 
   # After the server probe, so a batch that cannot run gives no warning.
   # Shown whatever `quiet` says, because it is the only sign that the
