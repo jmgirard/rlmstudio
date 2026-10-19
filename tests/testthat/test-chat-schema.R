@@ -534,6 +534,7 @@ test_that("batch format data.frame holds parsed replies in a list-column", {
 })
 
 test_that("batch reads shortened argument names as lms_chat() does", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
   local_request_recorder(mock_response(200L, completion_body(quoted('{"score": 3}'))))
 

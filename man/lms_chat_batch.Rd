@@ -83,11 +83,12 @@ server, a refused token, a model the server cannot find, or a reply from
 another model gives it before the abort. The \code{rlmstudio.quiet} option
 and \code{quiet = TRUE} do not hide it. A batch in which no reply is read,
 for example because every input fails, gives no such warning.
-With \code{logprobs = TRUE} on the \code{"openresponses"} or \code{"openai"} route,
-\code{format = "vector"} returns the list and says why in a warning. In a
-batch that returns, that reason is a line of the failed-inputs warning
-if an input failed. Otherwise it is its own warning, before the cut-off
-and no-logprobs warnings.
+With \code{simplify = TRUE} and \code{logprobs = TRUE} on the \code{"openresponses"} or
+\code{"openai"} route, \code{format = "vector"} returns the list and says why in a
+warning. The \code{rlmstudio.quiet} option and \code{quiet = TRUE} do not hide it.
+In a batch that returns, that reason is a line of the failed-inputs
+warning if an input failed. Otherwise it is its own warning, before any
+cut-off or no-logprobs warning.
 Two values here that \code{\link[=lms_chat]{lms_chat()}} reads as the same argument abort
 with a message that names the argument. Examples are
 \verb{logprobs = TRUE, logprobs = FALSE}, the shortened names

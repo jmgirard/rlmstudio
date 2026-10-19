@@ -1894,11 +1894,12 @@ integer_or_na <- function(x) {
 #'   another model gives it before the abort. The `rlmstudio.quiet` option
 #'   and `quiet = TRUE` do not hide it. A batch in which no reply is read,
 #'   for example because every input fails, gives no such warning.
-#'   With `logprobs = TRUE` on the `"openresponses"` or `"openai"` route,
-#'   `format = "vector"` returns the list and says why in a warning. In a
-#'   batch that returns, that reason is a line of the failed-inputs warning
-#'   if an input failed. Otherwise it is its own warning, before the cut-off
-#'   and no-logprobs warnings.
+#'   With `simplify = TRUE` and `logprobs = TRUE` on the `"openresponses"` or
+#'   `"openai"` route, `format = "vector"` returns the list and says why in a
+#'   warning. The `rlmstudio.quiet` option and `quiet = TRUE` do not hide it.
+#'   In a batch that returns, that reason is a line of the failed-inputs
+#'   warning if an input failed. Otherwise it is its own warning, before any
+#'   cut-off or no-logprobs warning.
 #'   Two values here that [lms_chat()] reads as the same argument abort
 #'   with a message that names the argument. Examples are
 #'   `logprobs = TRUE, logprobs = FALSE`, the shortened names
