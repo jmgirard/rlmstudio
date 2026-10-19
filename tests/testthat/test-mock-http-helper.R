@@ -155,28 +155,31 @@ test_that("request_target() reads a request when the program on the first dry-ru
   expect_identical(tries$n, 2L)
 })
 
-# On Linux the echo server cannot bind a port that another program holds, so
-# each held-port test in this file either retries on "Failed to create
-# server" and not on a curl error, or skips. Here the first dry run instead
-# ends with curl's own error for a connection to a port that nothing listens
-# on, which no socket rule changes, so the retry after a curl error runs on
-# every system.
+# On Ubuntu 24.04 with libcurl 8.5.0, the echo server cannot bind a port that
+# another program holds. There each held-port test in this file either
+# retries on "Failed to create server" and not on a curl error, or skips.
+# Here the first dry run instead ends with curl's own error for a port number
+# out of range, which curl raises before it opens a socket. So with httpuv
+# installed, this test runs the retry after a curl error on macOS and on Linux.
 test_that("request_target() reads a request when the first dry run ends with a curl error", {
   require_httpuv()
   real_echo <- curl::curl_echo
+  spare <- free_port()
   seen <- new.env(parent = emptyenv())
   seen$calls <- 0L
   testthat::local_mocked_bindings(
     curl_echo = function(handle, ...) {
       seen$calls <- seen$calls + 1L
       if (seen$calls == 1L) {
-        url <- paste0("http://127.0.0.1:", free_port())
-        return(tryCatch(curl::curl_fetch_memory(url), error = function(cnd) {
-          seen$first <- cnd
-          stop(cnd)
-        }))
+        return(tryCatch(
+          curl::curl_fetch_memory("http://127.0.0.1:99999/"),
+          error = function(cnd) {
+            seen$first <- cnd
+            stop(cnd)
+          }
+        ))
       }
-      real_echo(handle, ...)
+      real_echo(handle, port = spare, ...)
     },
     .package = "curl"
   )
@@ -187,6 +190,7 @@ test_that("request_target() reads a request when the first dry run ends with a c
 
   expect_s3_class(seen$first, "curl_error")
   expect_identical(target$method, "POST")
+  expect_identical(target$path, "/v1/models/load")
   expect_identical(target$body, list(model = "m"))
   expect_identical(seen$calls, 2L)
 })

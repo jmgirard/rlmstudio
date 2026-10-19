@@ -103,15 +103,18 @@ In the Linux container (curl 8.1.0, libcurl 8.5.0), run 2026-10-18,
 
 ## The report
 
-Filed 2026-10-18 as https://github.com/jeroen/curl/issues/459, with the
-text below.
+Filed 2026-10-18 as https://github.com/jeroen/curl/issues/459. The text
+below corrects two sentences of the filed text (M090 review, diff-bug
+findings 6 and 7). The filed text gave a held port as the cause of the empty
+results, and no run observed that cause. It also did not limit the
+`find_port()` sentence to macOS.
 
 Title: `curl_echo() can send the request to another program on macOS`
 
 ````markdown
-`curl_echo()` starts its server on `0.0.0.0` ([R/echo.R#L62](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L62)) but sends the request to `127.0.0.1` ([L84](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L84), [L94](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L94)). On macOS, a bind to `0.0.0.0` can share a port that another program holds on `127.0.0.1` alone. The request then goes to that other program, and `curl_echo()` returns a result with no method, path, or body. `find_port()` probes on `INADDR_ANY` with `SO_REUSEADDR` ([src/findport.c#L52](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/src/findport.c#L52)), so it reports such a port as free.
+`curl_echo()` starts its server on `0.0.0.0` ([R/echo.R#L62](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L62)) but sends the request to `127.0.0.1` ([L84](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L84), [L94](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/R/echo.R#L94)). On macOS, a bind to `0.0.0.0` can share a port that another program holds on `127.0.0.1` alone. The request then goes to that other program, and `curl_echo()` returns a result with no method, path, or body. `find_port()` probes on `INADDR_ANY` with `SO_REUSEADDR` ([src/findport.c#L52](https://github.com/jeroen/curl/blob/d4f60d67d38166c900f8cd9cf658cfd28340a425/src/findport.c#L52)), so on macOS it reports such a port as free.
 
-We hit this in a package test suite. Now and then, `httr2::req_dry_run()` returned an empty result, because the random port was one that a local service held on 127.0.0.1.
+We found this while looking into a package test suite in which `httr2::req_dry_run()` now and then returned a result with no body. The reprex below shows one way to get such a result.
 
 Reprex (macOS 27.0.1 arm64, R 4.6.1, curl 8.0.0, libcurl 8.14.1):
 
