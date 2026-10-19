@@ -193,4 +193,31 @@ Pass 2 (2026-10-19, at c58232f, branch level with origin/main at 35f9949; `test_
 - AC3: PASS at c58232f, by the blocks that pass 1 names (now 18 to 23), unchanged by T7.
 - AC4: PASS. `NEWS.md` opens with one entry, "Three changes for a model name that LM Studio cannot serve:", whose three sub-items name the embedding check, the "No models loaded" stop, and the kept reply ids. The help statements of pass 1 stand (`devtools::document()` gives no diff).
 - AC5: PASS. On the dev machine, `devtools::test()` on the c58232f tree: 25065 passed, 0 failed, 0 errors, 3 live skips; `devtools::check()` at c58232f: 0 errors, 0 warnings, 0 notes.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: the reply-id cache has no host in its key, so a call made during a batch (a calling handler, a lazy argument) to another host can accept a kept id with no lookup — fix now (host joins the key)
+- diff-bug #2: `start_reply_model_cache()` runs before `on.exit()` is set, so an interrupt between them leaves the cache on for the session — fix now (restore registered first)
+- diff-bug #3: the help says any other lookup failure fails its request alone, but an `httr2_failure` in the lookup aborts the call with no `results` — fix now (help names the conditions; other errors abort unchanged, as the existing rule says)
+- diff-bug #4: DESIGN.md Conventions bullet on `rlm_abort_api()` omits `server_message` — fix now
+- diff-bug #5: NEWS does not say that a failed lookup now fails a request or ends `lms_embed()` — fix now
+- diff-bug #6: NEWS says the "No models loaded" condition carries `results` with no condition, but `lms_embed()` adds it only after a request succeeded — fix now
+- diff-bug #7: a kept id is accepted after another model is loaded under the same id mid-call — reject, planned change: D-046 records this as the falsifier of the cache
+- diff-bug #8: no test shows that an aborting call leaves the cache off — fix now (test added)
+- diff-bug #9: each API error parses the body three times — reject, style: an efficiency nit with no defect
+- diff-bug #10: `server_message` keeps an empty or blank string that the shown message skips — reject, false as a defect: the help says "as the server sent it"
+- diff-bug #11: `vignette("chat-options")` lists `status` and `code` but not `server_message` — follow-up, candidate row "chat-options server_message" (the edit needs a live re-knit)
+- diff-bug #12: the recorder sets `key_loaded <- FALSE` after an unload that only warns — fix now (unload that stops)
+- blame-history #1: D-046 should say it narrows D-026 — reject, false: D-026's decision covers the `model_not_found` 400, which still fails its request alone
+- blame-history #2: the `lms_embed()` description says "one request per batch", and the lookup adds a request — fix now
+- blame-history #3: a lookup 401, 403, or 404 now ends `lms_embed()` after a 200 reply — reject, planned change (AC1)
+- blame-history #4: the package-level cache can accept an id reused by another model — reject, planned change: D-046 names it
+- blame-history #5: `cnd$status` uses `$` — reject, style
+- blame-history #6: the "No models loaded" stop is not limited to the three probed routes — reject, false as a defect: the help states the rule without a route limit and names the probed routes as observations
+- prior-review #1: the early stops of `lms_embed()` give no failed-inputs warning, and the help does not say so — fix now (help sentence and test)
+- prior-review #2: NEWS `results` claim for `lms_embed()` (as diff-bug #6) — fix now
+- prior-review #3: no `lms_embed()` test of a named, classed, or S4 model string or a key in another letter case — fix now (tests added)
+- ripple #1: candidate row "model-name cases" still lists the three cases this milestone ships — fix at post-merge hygiene (the row narrows to the variant-name case)
+- ripple #2: "Malformed embeddings" says the call aborts "only if every request fails", which the new stops break — fix now
+- ripple #3: `test-vignette-claims.R:886` comment says the model check runs on two routes — fix now
+- ripple #4: `R/list.R:447` says only the chat functions run the lookup — fix now
+- ripple #5: DESIGN.md `rlm_abort_api()` fields (as diff-bug #4) — fix now
 - Gate: `cairn_validate.py` all checks passed; no principle changed, so `cairn_impact` skipped; `devtools::document()` no diff; README not touched; `pkgdown::check_pkgdown()` no problems; NEWS entry present; no new top-level file.
