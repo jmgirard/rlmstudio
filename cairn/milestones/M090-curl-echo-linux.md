@@ -44,7 +44,7 @@ account.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets. -->
 
-- [ ] AC1: `cairn/references/curl-echo-fault.md` exists with its line in
+- [x] AC1: `cairn/references/curl-echo-fault.md` exists with its line in
       `cairn/references/INDEX.md`. For each `test_that()` block of
       `tests/testthat/test-mock-http-helper.R` that calls
       `local_dry_run_ports(`, which `grep -n` over the merged file lists, the
@@ -55,24 +55,24 @@ account.
       path gives. It records this for one run on macOS and one run in the
       `rocker/r-ver:4.6` container, each with its date and its curl and
       libcurl versions.
-- [ ] AC2: `tests/testthat/test-mock-http-helper.R` holds a test whose first
+- [x] AC2: `tests/testthat/test-mock-http-helper.R` holds a test whose first
       dry-run try ends with a condition of class `curl_error` that curl itself
       raised, not one the test builds. The test asserts that
       `request_target()` then reads the method and body of the request and
       that 2 tries ran. It holds no skip that applies on macOS or in the
       `rocker/r-ver:4.6` container with httpuv installed.
-- [ ] AC3: Each comment sentence of `tests/testthat/test-mock-http-helper.R`
+- [x] AC3: Each comment sentence of `tests/testthat/test-mock-http-helper.R`
       and `tests/testthat/helper-mock-http.R` that holds a line listed by
       `grep -n -i -E 'linux|ubuntu'` states only a result, class, or message
       that the AC1 page records for the container run.
-- [ ] AC4: The AC1 page holds a report for the curl maintainers and a
+- [x] AC4: The AC1 page holds a report for the curl maintainers and a
       reproducer script. The page records one run of the reproducer on macOS,
       with the curl and libcurl versions of that run, in which
       `curl::curl_echo()` returns a result with no method while another
       program listens on 127.0.0.1 alone at the port it was given. The page
       also cites the lines of `R/echo.R` on curl's default branch, at a named
       commit, that bind 0.0.0.0 and send to 127.0.0.1.
-- [ ] AC5: The report is filed as an issue on `jeroen/curl`, and the AC1 page
+- [x] AC5: The report is filed as an issue on `jeroen/curl`, and the AC1 page
       records its URL.
 - [ ] AC6: `devtools::test()` on macOS reports 0 failures and 0 warnings.
 
@@ -166,3 +166,11 @@ account.
 
 ## Review
 <!-- owner: review · exclusive. -->
+
+Pass 1, 2026-10-18, branch head 628c702, synced with main dde3de2 (no move).
+
+- AC1 evidence: `cairn/references/curl-echo-fault.md` exists, and INDEX.md has its line (1 match). `grep -n 'local_dry_run_ports('` over the branch file lists lines 108, 126, 147, 198, 251, which are 5 blocks, and those blocks are E1 to E4 and E6. A fresh trace run on macOS (curl 8.0.0, libcurl 8.14.1) and in the container (curl 8.1.0, libcurl 8.5.0) gave the same try results as the page rows E1 to E6, the E6 skip message and the E5 URL-with-space messages included. The page names each run's date and versions.
+- AC2 evidence: the block "request_target() reads a request when the first dry run ends with a curl error" raises curl's own error from `curl::curl_fetch_memory()` on call 1 of a mocked `curl::curl_echo()`. It builds no condition. It asserts `expect_s3_class(seen$first, "curl_error")`, the method `"POST"`, the body, and `seen$calls` 2. Its only skip path is `require_httpuv()`, which skips only without httpuv. A fresh container run gave nb 4, failed 0, skipped FALSE, and the macOS run is inside AC6's suite. The implement plant (T4 work log) went red with `curl_error_couldnt_connect`.
+- AC3 evidence: `grep -n -i -E 'linux|ubuntu'` lists 3 lines, all in `test-mock-http-helper.R` (158, 214, 234), and none in the helper. The sentence at 158 says each held-port test on Linux retries on "Failed to create server" or skips, which matches E1 to E4 and E6. The sentence at 214 gives "Out of memory" for libcurl 8.5.0 on Ubuntu 24.04, which matches E5. The sentence at 234 says the test skips on Linux, which matches E6.
+- AC4 evidence: the page holds the report and the reproducer. A fresh run of the reproducer, extracted from the page, on macOS (curl 8.0.0, libcurl 8.14.1) gave the held port from `find_port()` and `str(res)` with `url` alone. The page records that run. `gh api` at commit d4f60d6 shows the `startServer("0.0.0.0", ...)` line at `R/echo.R` 62, the `127.0.0.1` targets at 84 and 94, and `INADDR_ANY` and `SO_REUSEADDR` at `src/findport.c` 52 and 63, as the page cites them.
+- AC5 evidence: `gh issue view 459 --repo jeroen/curl` shows https://github.com/jeroen/curl/issues/459, author jmgirard, created 2026-10-19T02:20:17Z UTC, state OPEN. The page's report section records that URL.
