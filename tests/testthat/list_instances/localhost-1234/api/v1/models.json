@@ -2,6 +2,60 @@
     "models": [
         {
             "type": "llm",
+            "publisher": "liquid",
+            "key": "liquid/lfm2-350m",
+            "display_name": "Lfm2 350m",
+            "architecture": "lfm2",
+            "quantization": {
+                "name": "8bit",
+                "bits_per_weight": 8
+            },
+            "size_bytes": 381665721,
+            "params_string": "350M",
+            "loaded_instances": [
+
+            ],
+            "max_context_length": 128000,
+            "format": "mlx",
+            "capabilities": {
+                "vision": false,
+                "trained_for_tool_use": true
+            },
+            "description": null,
+            "variants": [
+                "liquid/lfm2-350m@8bit"
+            ],
+            "selected_variant": "liquid/lfm2-350m@8bit"
+        },
+        {
+            "type": "llm",
+            "publisher": "google",
+            "key": "google/functiongemma-270m",
+            "display_name": "Functiongemma 270m",
+            "architecture": "gemma3_text",
+            "quantization": {
+                "name": "BF16",
+                "bits_per_weight": 16
+            },
+            "size_bytes": 569721566,
+            "params_string": "270m",
+            "loaded_instances": [
+
+            ],
+            "max_context_length": 32768,
+            "format": "mlx",
+            "capabilities": {
+                "vision": false,
+                "trained_for_tool_use": true
+            },
+            "description": null,
+            "variants": [
+                "google/functiongemma-270m@bf16"
+            ],
+            "selected_variant": "google/functiongemma-270m@bf16"
+        },
+        {
+            "type": "llm",
             "publisher": "google",
             "key": "google/gemma-4-e4b",
             "display_name": "Gemma 4 E4B",
@@ -112,9 +166,9 @@
                     "id": "google/gemma-3-1b",
                     "config": {
                         "context_length": 8192,
-                        "parallel": 4,
-                        "reasoning_budget_message": ""
-                    }
+                        "parallel": 4
+                    },
+                    "remaining_ttl_seconds": 213
                 }
             ],
             "max_context_length": 32768,

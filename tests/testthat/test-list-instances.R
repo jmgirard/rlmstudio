@@ -487,8 +487,9 @@ test_that("a reply with a status other than 200 aborts with rlmstudio_api_error"
 test_that("a recorded model list gives one row per loaded instance", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
 
-  # The reply was recorded on 2026-09-28 from LM Studio 0.4.25+1 by
-  # data-raw/record-list-instances-cassette.R. The cassette carries no
+  # The reply was recorded on 2026-10-19 from LM Studio 0.4.26+4 by
+  # data-raw/record-list-instances-cassette.R, with gemma loaded with a ttl
+  # and the embedding model loaded with none. The cassette carries no
   # request header. The test clears both token sources, so it runs the same
   # way whatever token this machine has set.
   withr::local_envvar(RLMSTUDIO_API_TOKEN = NA)
@@ -504,6 +505,8 @@ test_that("a recorded model list gives one row per loaded instance", {
   )
   expect_identical(res$type, c("llm", "embedding"))
   expect_identical(res$context_length, c(8192, 2048))
+  # The instance loaded with no ttl has no remaining_ttl_seconds field.
+  expect_identical(res$remaining_ttl_seconds, c(213, NA_real_))
 })
 
 test_that("live: the id column holds the instance ids of the model list", {

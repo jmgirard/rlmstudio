@@ -2,21 +2,26 @@
 #
 # Provenance of tests/testthat/list_instances/:
 #   Source:    a live LM Studio REST server at http://localhost:1234
-#   Models:    google/gemma-3-1b and text-embedding-nomic-embed-text-v1.5,
-#              each with one loaded instance
-#   Recorded:  2026-09-28, LM Studio 0.4.25+1
+#   Models:    google/gemma-3-1b, loaded with a ttl, and
+#              text-embedding-nomic-embed-text-v1.5, loaded with none, each
+#              with one loaded instance
+#   Recorded:  2026-10-19, LM Studio 0.4.26+4
 #   Requests:  GET /api/v1/models
 #   Seed:      none. The model list holds no generated text.
 #
 # Run this from the repository root with LM Studio running, the two models
 # above loaded and no other model loaded, and RLMSTUDIO_API_TOKEN set if your
-# server requires a token:
+# server requires a token. The REST load takes no ttl, so load the two models
+# with the CLI first:
 #
+#   lms load google/gemma-3-1b --ttl 600
+#   lms load text-embedding-nomic-embed-text-v1.5
 #   Rscript data-raw/record-list-instances-cassette.R
 #
 # The script loads and unloads nothing. It stops before it records if the
-# loaded llm and embedding instances are not the two above, one each. It does
-# not see a loaded instance of another model type.
+# loaded llm and embedding instances are not the two above, one each, or if
+# the gemma instance has no remaining ttl. It does not see a loaded instance
+# of another model type.
 #
 # httptest2 records only when the target directory is absent, so the script
 # deletes it first. Only the response body is written to disk. No request
@@ -49,8 +54,15 @@ if (!setequal(loaded$key, expected) || nrow(loaded) != length(expected)) {
     call. = FALSE
   )
 }
+if (is.na(loaded$remaining_ttl_seconds[loaded$key == expected[[1]]])) {
+  stop(
+    "Load ", expected[[1]], " with a ttl, such as `lms load ",
+    expected[[1]], " --ttl 600`, before you record.",
+    call. = FALSE
+  )
+}
 
-target <- file.path("tests", "testthat", "list_instances")
+target <-file.path("tests", "testthat", "list_instances")
 unlink(target, recursive = TRUE)
 
 withr::with_dir(file.path("tests", "testthat"), {

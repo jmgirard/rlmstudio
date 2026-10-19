@@ -128,7 +128,7 @@ every instance field.
 - [x] T3: In `R/list.R`, read the field in `list_instances()` with
       `as.double()`, add it to the rows, the frame, and the zero-row frame,
       and add the type rule to `instance_list_fault()`. Run `devtools::test()`.
-- [ ] T4: Rewrite the header of `data-raw/record-list-instances-cassette.R`:
+- [x] T4: Rewrite the header of `data-raw/record-list-instances-cassette.R`:
       the ttl load, the version, the date. Re-record the cassette, update
       the recorded-reply test, then unload both models, start the server on
       1234, and stop it.
@@ -163,6 +163,7 @@ every instance field.
 - 2026-10-19: T1 live probe, LM Studio 0.4.26+4: in `GET /api/v1/models`, gemma-3-1b loaded with `--ttl 600` carried `remaining_ttl_seconds` 590, an integer, about 10 s after the load; the nomic instance loaded with no ttl had no such field at all (absent, not `null`). `lms ps --json` gave `ttlMs` 600000 and `null`. The no-ttl value is absent, so AC1 and AC2 stand. Both models stay loaded for T4.
 - 2026-10-19: T2 tests in `test-list-instances.R`: `instance_json()` takes `ttl`, `fixed_columns` holds five names, `expect_empty_instances()` checks a double ttl column; new tests for the column (values 600 and 12.5, absent, null, all-NA frame), the clash, the fault over 6 forms, the type skip, and a third body in the list_models/lms_server_ready test. Run before T3: failures in the new and the five-column tests (10 shown, 27 more), as expected.
 - 2026-10-19: T3 in `R/list.R`: `list_instances()` reads the field with `as.double()` (NA_real_ when absent or null) into a fifth column and the zero-row frame; `instance_list_fault()` checks it with `is_json_number()` before `config`. Full `devtools::test()` with the live token: 1 failure, the four-column empty frame in `test-list-args.R` "an unknown type returns the empty frame...", updated to five columns; that file then passes, `test-list-instances.R` passes.
+- 2026-10-19: T4: generator header names the CLI loads (gemma with `--ttl 600`, nomic with none), 2026-10-19, LM Studio 0.4.26+4, and the script now stops if gemma has no remaining ttl. Re-recorded the cassette (gemma 213, nomic field absent); no token text in it. The recorded-reply test asserts `c(213, NA_real_)` and passes. Then unloaded both models, started the server on 1234, and stopped it.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
