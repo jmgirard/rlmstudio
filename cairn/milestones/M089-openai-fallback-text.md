@@ -68,6 +68,7 @@ The `@return` vector item and the `logprobs` paragraph of `?lms_chat_batch` name
 - 2026-10-18: claim audit (first pass, fresh Opus reader): 19 claims read, 2 imprecise and corrected (the `warning_kinds` comment, and the NEWS sentence, which now states `simplify = TRUE` and a batch that does not abort). Its note that an OpenResponses reply with no logprobs part also gets the "logprobs dataframes" text, which AC2 keeps, became the candidate row "openresponses fallback text". The re-read of the two corrections is pending.
 - 2026-10-18: claim audit: 19 claims read, 3 corrected — NEWS.md, tests/testthat/test-batch-native-logprobs.R. The re-read passed the `warning_kinds` comment and added `logprobs = TRUE` to the NEWS sentence. No second pass, by the stopping rule.
 - 2026-10-18: T5: `devtools::check()` at f8c592c (T4): 0 errors, 0 warnings, 0 notes. The later commits change only a test comment, NEWS.md, and tracking files. Status set to review.
+- 2026-10-18: step-7 approval: m089-openai-fallback-text approved for merge
 
 ## Decisions
 
