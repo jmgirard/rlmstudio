@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M094: list_instances remaining ttl column
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -83,15 +83,19 @@ every instance field.
       and the date of the recording.
 - [ ] AC6: In the `list_instances()` help (`R/list.R` and
       `man/list_instances.Rd`), the sentence that says `list_instances()`
-      does not read `remaining_ttl_seconds` is removed. The Columns section,
-      the clash rule, and `@return` describe five fixed columns and the double
-      type of `remaining_ttl_seconds`. The help states the `NA` case, what
-      the column holds for an instance loaded with no ttl in LM Studio
-      0.4.26+4, and that an older server can omit the field. The sentence on
-      the fields that only `lms ps --json` gives names the ttl setting, not
-      the remaining time. A `NEWS.md` entry names the new column, the column
-      in the zero-row frame, and the `config.` prefix that a configuration
-      field named `remaining_ttl_seconds` now takes.
+      does not read `remaining_ttl_seconds` is removed. The Columns section
+      and `@return` describe five fixed columns and the double type of
+      `remaining_ttl_seconds`, and the clash rule names five fixed column
+      names. The help states that the column holds `NA` where the field is
+      absent or `null`, what the column holds for an instance loaded with no
+      ttl in LM Studio 0.4.26+4, and that no LM Studio version other than
+      0.4.26+4 was checked for this field. It has no sentence on the field in
+      other versions beyond that one. The sentence on the fields that only
+      `lms ps --json` gives names the ttl setting, not the remaining time. A
+      `NEWS.md` entry names the new column, the column in the zero-row frame,
+      and the `config.` prefix that a configuration field named
+      `remaining_ttl_seconds` now takes, and it names LM Studio 0.4.26+4
+      where it states what an instance with no ttl holds.
 - [ ] AC7: `Rscript -e 'devtools::document()'` produces no diff, and
       `Rscript -e 'devtools::test()'` reports no failure and no error.
 
@@ -168,6 +172,8 @@ every instance field.
 - 2026-10-19: claim audit: 34 claims read, 5 corrected — R/list.R and man/list_instances.Rd (the column meaning, the intro sentence, the unsupported older-server sentence), NEWS.md (meaning, the abort scope, the no-ttl version), data-raw/record-list-instances-cassette.R (the REST ttl claim now cites the 2026-09-27 probe). Also fixed a lost space in the generator and the stale test name "the two new checks". `test-list-instances.R` passes after the fixes.
 - 2026-10-19: re-audit: AC6 (full) — 1 finding on the amendment that replaces "an older server can omit the field" with "other LM Studio versions were not checked": the sentence names no object; narrower "no LM Studio version other than 0.4.26+4 was checked for this field". It also noted that the NEWS no-ttl claim has no version.
 - 2026-10-19: re-audit: AC6 (full) — 4 findings on the narrower wording: the clash rule states no type; "the NA case" is ambiguous; nothing requires removing the older-server sentence; the NEWS no-ttl claim has no version bound. This second re-audit line is the stop; AC6 text unchanged on disk until the user picks.
+- 2026-10-19: substantive amendment: AC6 narrowed at the user's choice at the stop (user override, "Use the narrower AC6 wording you proposed"): the older-server clause becomes "no LM Studio version other than 0.4.26+4 was checked for this field", with the four second re-audit findings applied (clash rule names five names, both NA cases, no other-version sentence, NEWS names the version). No further reader, since two re-audit lines on AC6 exist. The deliverable already meets it (commit 5c21e96).
+- 2026-10-19: all tasks done; status set to review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
