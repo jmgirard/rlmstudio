@@ -163,6 +163,45 @@ test_that("a mismatch at the second request aborts with the results so far", {
   }
 })
 
+# The recorded file `file` of the case `case_dir`, as a status-200 response.
+recorded_ok <- function(case_dir, ...) {
+  path <- test_path("stop_live", case_dir, "localhost-1234", ...)
+  mock_response(200L, paste(readLines(path, warn = FALSE), collapse = "\n"))
+}
+
+test_that("a recorded reply from another model at the second request aborts with the results so far", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  for (simplify in c(TRUE, FALSE)) {
+    recorder <- local_request_sequence(list(
+      embed_from(quoted("not-a-model"), 1L),
+      recorded_ok("embed_unknown", "v1", "embeddings-e3ba6f-POST.json"),
+      recorded_ok("embed_unknown", "api", "v1", "models.json")
+    ))
+    err <- expect_error(
+      lms_embed(
+        "not-a-model",
+        c("a", "b", "c"),
+        batch_size = 1,
+        simplify = simplify,
+        quiet = TRUE
+      ),
+      class = "rlmstudio_model_mismatch"
+    )
+    expect_mismatch(err, "not-a-model", recorded_embedder, info = simplify)
+    expected <- if (simplify) {
+      rbind(row_for(1L), c(NA, NA), c(NA, NA))
+    } else {
+      list(jsonlite::parse_json(embed_text(quoted("not-a-model"), 1L)), NULL, NULL)
+    }
+    expect_identical(err$results, expected, info = simplify)
+    expect_identical(
+      count_requests(recorder_urls(recorder)),
+      c(chat = 0L, embed = 2L, lookup = 1L),
+      info = simplify
+    )
+  }
+})
+
 test_that("a reply from another instance of the asked model is kept", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   for (simplify in c(TRUE, FALSE)) {

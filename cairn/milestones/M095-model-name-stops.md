@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M095: Model-name stops for embeddings and batches
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -106,10 +106,10 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
      task(s) satisfying it, by positional number (AC/Task counted
      top-to-bottom). Review reads to fence evidence — tracking-rules "AC fencing". -->
 
-- AC1 → T1, T2
+- AC1 → T1, T2, T7
 - AC2 → T1, T3
 - AC3 → T1, T4
-- AC4 → T5
+- AC4 → T5, T7
 - AC5 → T6
 
 ## Tasks
@@ -142,6 +142,9 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
       entry. Pin `rlmstudio.quiet = FALSE` in message tests (LESSONS M086).
       Run `devtools::document()`.
 - [x] T6: Run `devtools::test()` and `devtools::check()`.
+- [x] T7: Review return 1. Serve the reply recorded in
+      `stop_live/embed_unknown` at request 2 of 3 in an AC1 test, and
+      merge the three NEWS entries into one entry for AC4.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates. -->
@@ -167,6 +170,8 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
 - 2026-10-19: claim audit: 110 claims read, 15 corrected — NEWS.md, R/conditions.R, R/chat.R, data-raw/record-model-stop-cassette.R (chat-model-name embedding case dropped for lack of a recording, routes named, cache entry narrowed, eight existing help sentences updated for `lms_embed()`); the reader's one re-read confirmed all 15 and named two long lines and a failed-run wording, both fixed. Full `devtools::test()` after the fixes: 25043 passed, 0 failed.
 - 2026-10-19: T6 done; status review.
 - 2026-10-19: review return 1: AC1 needs the request-2-of-3 mismatch served from the reply recorded in `stop_live/embed_unknown`, not a mocked reply; AC4 needs one NEWS entry that names the embedding check, the stop, and the one lookup per kept id, not three entries. Status in-progress.
+- 2026-10-19: T7 added for review return 1 (minor amendment; Coverage AC1 and AC4 now also map to T7).
+- 2026-10-19: T7 done: new block serves the recorded `embed_unknown` reply and model list at request 2 of 3 with both `simplify` settings; a plant that skips `check_reply_model()` in `embed_request()` turned it red. NEWS: the three entries became one entry with three sub-items. Full `devtools::test()`: 25065 passed, 0 failed, 3 live skips. Status review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
