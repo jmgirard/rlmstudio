@@ -135,8 +135,11 @@ test_that("request_target() reads a request when the echo server cannot bind the
 })
 
 # An httpuv handler that returns NULL sends no reply, as a program that does
-# not speak HTTP can do. The dry run then ends with a curl error, which is the
-# third outcome the dry-run helper tries again on.
+# not speak HTTP can do. On macOS the echo server binds over the held port, so
+# the request reaches that program and the first try ends with curl's timeout
+# error. On Linux the echo server cannot bind the held port, so the first try
+# ends with httpuv's "Failed to create server". The dry-run helper tries again
+# after either one.
 test_that("request_target() reads a request when the program on the first dry-run port never replies", {
   testthat::skip_on_cran()
   require_httpuv()

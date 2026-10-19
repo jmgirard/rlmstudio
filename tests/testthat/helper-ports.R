@@ -31,8 +31,10 @@ local_listener <- function(ports = 20000:40000, env = parent.frame()) {
   bound$port
 }
 
-# Return a port that nothing listens on. The helper binds it and gives it back,
-# so the port was free a moment ago.
+# Return a port that the helper could bind on all addresses a moment ago. The
+# helper binds it and gives it back. On macOS that bind also succeeds over a
+# port that another program holds on 127.0.0.1 alone, so the returned port can
+# be one that such a program listens on.
 free_port <- function(ports = 20000:40000) {
   bound <- bind_free_port(ports)
   close(bound$con)

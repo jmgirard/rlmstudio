@@ -4,14 +4,14 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M091: Test dry runs skip a set proxy, and two helper comments match each system
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
 - **Principles touched:** —   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
 - **Resolves:** —   <!-- owner: plan · create/amend-via-gate; comma-separated GitHub issues the scope absorbs, each `#N closes` (the PR closes it at merge) or `#N partial` (the remainder gets a candidate row), or — ; skill conduct only — no validate check parses it -->
 - **Surface tier:** internal — test helpers and test comments, which no package user relies on   <!-- owner: plan · create/amend-via-gate; user-facing | internal — <one-clause reason>; skill conduct only — no validate check parses it -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
+- **Branch/PR:** m091-dry-run-test-gaps   <!-- owner: implement (branch) / review (PR URL) · create; a companion checkout the milestone also works in is one further entry per checkout, `companion: <abs-path> <branch>` (implement), its PR URL appended by review — /milestone-review merges companions first, in listed order -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -78,7 +78,7 @@ variables.
      cites; an insertion, removal, or reorder renumbers the labels and the
      Coverage lines together. -->
 
-- [ ] T1: Correct the two comments. First probe on macOS: hold a port on
+- [x] T1: Correct the two comments. First probe on macOS: hold a port on
       127.0.0.1 alone with `httpuv::startServer()`, then confirm that
       `serverSocket()` on that port succeeds, so `bind_free_port()` can
       return it. Write the `free_port()` comment from that probe and the
@@ -106,6 +106,8 @@ variables.
 - 2026-10-18: plan gate chose `httr2::req_options(noproxy = "*")` on the request over setting `no_proxy` with `withr` inside the helper, because the option binds to the curl handle and does not depend on which variable spellings libcurl reads; falsified by an httr2 or curl release whose dry run ignores the handle's `noproxy` option.
 - 2026-10-18: criteria audit (reduced mode, fresh Opus reader): AC1 and AC2 no finding; AC3 bound an instrument ("as a test asserts"), so the criterion narrowed to the helper's behavior and the test moved to T2; AC4 borderline, narrowed to a run with no proxy variables set.
 - 2026-10-18: added the candidate row "proxy and local requests" for the package's own requests, outside this test-only scope.
+- 2026-10-18: implement started on branch `m091-dry-run-test-gaps`, cut from `22eeadb`.
+- 2026-10-18: T1 done: probe on macOS (R 4.6.1) held port 31234 on 127.0.0.1 with httpuv, and `serverSocket(31234)` then returned a connection; the `free_port()` comment and the never-replies comment now state the macOS and Linux results (row E3); `devtools::test()` 0 failed, 0 errors, 0 warnings, 3 skipped.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
