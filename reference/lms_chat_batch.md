@@ -110,7 +110,13 @@ lms_chat_batch(
   server cannot find, or a reply from another model gives it before the
   abort. The `rlmstudio.quiet` option and `quiet = TRUE` do not hide it.
   A batch in which no reply is read, for example because every input
-  fails, gives no such warning. Two values here that
+  fails, gives no such warning. With `simplify = TRUE` and
+  `logprobs = TRUE` on the `"openresponses"` or `"openai"` route,
+  `format = "vector"` returns the list and says why in a warning. The
+  `rlmstudio.quiet` option and `quiet = TRUE` do not hide it. In a batch
+  that returns, that reason is a line of the failed-inputs warning if an
+  input failed. Otherwise it is its own warning, before any cut-off or
+  no-logprobs warning. Two values here that
   [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
   reads as the same argument abort with a message that names the
   argument. Examples are `logprobs = TRUE, logprobs = FALSE`, the
@@ -151,7 +157,9 @@ The return type depends on the `format` argument:
 - `"vector"`: A character vector of responses, with `NA` for an input
   that failed. This format is only supported if `simplify = TRUE`, and
   `logprobs = FALSE` or `api_type = "native"`. With a `schema`, it warns
-  and returns the list instead.
+  and returns the list instead. With `logprobs = TRUE` on the
+  `"openresponses"` or `"openai"` route, it also warns and returns the
+  list.
 
 - `"list"`: A list where each element is the response corresponding to
   the provided input, or the condition for an input that failed. With a

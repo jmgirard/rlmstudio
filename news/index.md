@@ -46,7 +46,12 @@
     `rlmstudio_no_logprobs`. If `simplify = TRUE` and the batch reads at
     least one reply,
     `lms_chat_batch(api_type = "openai", logprobs = TRUE)` gives one
-    such warning for the whole batch.
+    such warning for the whole batch. If `simplify = TRUE` and
+    `format = "vector"`, a `logprobs = TRUE` batch on that route that
+    does not abort returns the list, as before. Its warning now says
+    that the vector format “cannot store the `<lms_chat_result>` replies
+    of the `"openai"` route”. Before, it said that the vector format
+    “cannot store logprobs dataframes”.
 
 - When no server answers, the `rlmstudio_no_server` error now says how
   to start the server. The hostname `localhost` can be in any letter

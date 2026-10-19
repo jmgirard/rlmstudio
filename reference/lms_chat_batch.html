@@ -150,6 +150,12 @@ server, a refused token, a model the server cannot find, or a reply from
 another model gives it before the abort. The <code>rlmstudio.quiet</code> option
 and <code>quiet = TRUE</code> do not hide it. A batch in which no reply is read,
 for example because every input fails, gives no such warning.
+With <code>simplify = TRUE</code> and <code>logprobs = TRUE</code> on the <code>"openresponses"</code> or
+<code>"openai"</code> route, <code>format = "vector"</code> returns the list and says why in a
+warning. The <code>rlmstudio.quiet</code> option and <code>quiet = TRUE</code> do not hide it.
+In a batch that returns, that reason is a line of the failed-inputs
+warning if an input failed. Otherwise it is its own warning, before any
+cut-off or no-logprobs warning.
 Two values here that <code><a href="lms_chat.html">lms_chat()</a></code> reads as the same argument abort
 with a message that names the argument. Examples are
 <code>logprobs = TRUE, logprobs = FALSE</code>, the shortened names
@@ -182,7 +188,7 @@ authentication. <code>NULL</code> reads the <code>rlmstudio.token</code> option 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The return type depends on the <code>format</code> argument:</p><ul><li><p><code>"vector"</code>: A character vector of responses, with <code>NA</code> for an input that failed. This format is only supported if <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code> or <code>api_type = "native"</code>. With a <code>schema</code>, it warns and returns the list instead.</p></li>
+    <p>The return type depends on the <code>format</code> argument:</p><ul><li><p><code>"vector"</code>: A character vector of responses, with <code>NA</code> for an input that failed. This format is only supported if <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code> or <code>api_type = "native"</code>. With a <code>schema</code>, it warns and returns the list instead. With <code>logprobs = TRUE</code> on the <code>"openresponses"</code> or <code>"openai"</code> route, it also warns and returns the list.</p></li>
 <li><p><code>"list"</code>: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a <code>schema</code>, <code>simplify = TRUE</code>, and <code>logprobs = FALSE</code>, each element that did not fail is the parsed reply.</p></li>
 <li><p><code>"data.frame"</code>: A data.frame containing <code>input</code> and <code>output</code> columns, with <code>NA</code> in <code>output</code> for an input that failed. If <code>logprobs = TRUE</code> on the <code>"openresponses"</code> or <code>"openai"</code> route, an additional list-column named <code>logprobs</code> is included, with <code>NULL</code> for an input that failed. The <code>"native"</code> route adds no <code>logprobs</code> column. With a <code>schema</code> and <code>logprobs = FALSE</code>, <code>output</code> is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow <code>output</code>, or <code>logprobs</code> when it is there, as described below. With an object <code>schema</code> and <code>logprobs = FALSE</code>, one column per schema property comes after them, as described below.</p></li>
 </ul><p>On the native and OpenResponses routes with <code>simplify = TRUE</code>, <code><a href="lms_chat.html">lms_chat()</a></code>
