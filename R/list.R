@@ -156,8 +156,9 @@ list_models <- function(
 #'
 #' The model list does not carry four fields that `lms ps --json` reports: the
 #' generation status, the queued requests, the ttl setting, and the last-used
-#' time. It carries the time left before the automatic unload, in the
-#' `remaining_ttl_seconds` column.
+#' time. It does carry `remaining_ttl_seconds` for an instance loaded with a
+#' ttl, and `list_instances()` returns it in the `remaining_ttl_seconds`
+#' column.
 #'
 #' @section Columns:
 #' The first five columns are the fixed columns. The first four are character
@@ -171,10 +172,11 @@ list_models <- function(
 #'
 #' The fifth is a double column:
 #'
-#' - `remaining_ttl_seconds`: the seconds left before LM Studio unloads the
-#'   instance for its ttl, or `NA` when the model list gives none or `null`.
-#'   In LM Studio 0.4.26+4, an instance loaded with no ttl has no such field,
-#'   so it holds `NA`. An older server can omit the field for every instance.
+#' - `remaining_ttl_seconds`: the `remaining_ttl_seconds` that the model list
+#'   gives for the instance, or `NA` when the field is absent or `null`. In
+#'   LM Studio 0.4.26+4, the value counted down from the ttl of a load with
+#'   `lms load --ttl`, and an instance loaded with no ttl had no such field,
+#'   so it holds `NA`. No other LM Studio version was checked for this field.
 #'
 #' Rows follow the order of the models in the model list, then the order of
 #' the instances of a model. Two instances with the same id, or two models

@@ -11,8 +11,8 @@
 #
 # Run this from the repository root with LM Studio running, the two models
 # above loaded and no other model loaded, and RLMSTUDIO_API_TOKEN set if your
-# server requires a token. The REST load takes no ttl, so load the two models
-# with the CLI first:
+# server requires a token. The REST load endpoint rejected `ttl` when probed
+# on 2026-09-27, so load the two models with the CLI first:
 #
 #   lms load google/gemma-3-1b --ttl 600
 #   lms load text-embedding-nomic-embed-text-v1.5
@@ -62,7 +62,7 @@ if (is.na(loaded$remaining_ttl_seconds[loaded$key == expected[[1]]])) {
   )
 }
 
-target <-file.path("tests", "testthat", "list_instances")
+target <- file.path("tests", "testthat", "list_instances")
 unlink(target, recursive = TRUE)
 
 withr::with_dir(file.path("tests", "testthat"), {

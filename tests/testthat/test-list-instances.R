@@ -388,7 +388,7 @@ test_that("the remaining_ttl_seconds check skips a model outside `type`", {
   expect_identical(res$id, "i0")
 })
 
-test_that("the two new checks skip a model outside `type` or with no instance", {
+test_that("the display_name and config checks skip a model outside `type` or with no instance", {
   bad_name <- json_forms[["number"]]
   bad_config <- instance_json("i3", json_forms[["array"]])
   body <- instances_body(c(

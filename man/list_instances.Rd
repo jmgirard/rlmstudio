@@ -51,8 +51,9 @@ that \code{\link[=list_models]{list_models()}} reads, so it honors \code{host} a
 \details{
 The model list does not carry four fields that \verb{lms ps --json} reports: the
 generation status, the queued requests, the ttl setting, and the last-used
-time. It carries the time left before the automatic unload, in the
-\code{remaining_ttl_seconds} column.
+time. It does carry \code{remaining_ttl_seconds} for an instance loaded with a
+ttl, and \code{list_instances()} returns it in the \code{remaining_ttl_seconds}
+column.
 }
 \section{Columns}{
 
@@ -68,10 +69,11 @@ list gives none or \code{null}. An empty name stays \code{""}.
 
 The fifth is a double column:
 \itemize{
-\item \code{remaining_ttl_seconds}: the seconds left before LM Studio unloads the
-instance for its ttl, or \code{NA} when the model list gives none or \code{null}.
-In LM Studio 0.4.26+4, an instance loaded with no ttl has no such field,
-so it holds \code{NA}. An older server can omit the field for every instance.
+\item \code{remaining_ttl_seconds}: the \code{remaining_ttl_seconds} that the model list
+gives for the instance, or \code{NA} when the field is absent or \code{null}. In
+LM Studio 0.4.26+4, the value counted down from the ttl of a load with
+\verb{lms load --ttl}, and an instance loaded with no ttl had no such field,
+so it holds \code{NA}. No other LM Studio version was checked for this field.
 }
 
 Rows follow the order of the models in the model list, then the order of
