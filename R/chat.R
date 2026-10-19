@@ -2675,6 +2675,13 @@ rlm_check_route_dots <- function(dot_names, api_type) {
 
 #' Create a base request for the LM Studio API
 #'
+#' Every request of the package starts here. libcurl reads the proxy
+#' environment variables, such as `http_proxy`, and unless `no_proxy` lists the
+#' host it sends even a request for this machine to the proxy. So when the
+#' hostname of `host` is `localhost`, in any letter case, `127.0.0.1`, or
+#' `::1`, the request sets curl's `noproxy` option to that hostname and goes to
+#' the host directly. A request for any other host follows the proxy variables.
+#'
 #' @param host Character. The host address of the local server.
 #'   Defaults to "http://localhost:1234".
 #' @param token Character or `NULL`. An API token for a server that requires
@@ -2700,6 +2707,14 @@ lms_client <- function(host = "http://localhost:1234", token = NULL) {
       "Content-Type" = "application/json",
       "Accept" = "application/json"
     )
+
+  address <- host_address(host)
+  if (!is.null(address)) {
+    hostname <- tolower(address$hostname)
+    if (hostname %in% c("localhost", "127.0.0.1", "::1")) {
+      req <- httr2::req_options(req, noproxy = hostname)
+    }
+  }
 
   resolved <- rlm_token(token)
   if (is.null(resolved)) {
