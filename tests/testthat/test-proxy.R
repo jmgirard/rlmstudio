@@ -90,14 +90,14 @@ test_that("a request to localhost or 127.0.0.1 skips a set proxy", {
 test_that("a request to [::1] skips a set proxy", {
   require_httpuv()
   hits <- proxy_round("[::1]", bind = "::1")
-  if (inherits(hits, "error")) {
-    if (nzchar(Sys.getenv("CI"))) {
-      fail(paste("The test server cannot listen on ::1:", conditionMessage(hits)))
-    }
+  if (!inherits(hits, "error")) {
+    expect_identical(hits$server, "/api/v1/models")
+    expect_identical(hits$proxy, character())
+  } else if (nzchar(Sys.getenv("CI"))) {
+    fail(paste("The test server cannot listen on ::1:", conditionMessage(hits)))
+  } else {
     skip(paste("This machine cannot listen on ::1:", conditionMessage(hits)))
   }
-  expect_identical(hits$server, "/api/v1/models")
-  expect_identical(hits$proxy, character())
 })
 
 test_that("a request to another host still goes to a set proxy", {

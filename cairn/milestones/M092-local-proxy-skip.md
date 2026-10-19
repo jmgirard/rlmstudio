@@ -63,6 +63,7 @@ A package request to a `host` named `localhost`, `127.0.0.1`, or `::1` goes to t
 - 2026-10-18: claim audit: 27 claims read, 3 corrected — NEWS.md, R/chat.R, tests/testthat/test-proxy.R. The NEWS "call failed" sentence now also names a proxy that forwards. The "other host" claims now say "starts at", and the `lms_client()` help names the redirect case. The httpuv comment names all three times the handler runs.
 - 2026-10-18: the claim audit found that the `noproxy` option replaces the `no_proxy` variable for the whole request, so the plan's reason for `noproxy` set to the hostname holds for the proxy variables but not for `no_proxy` after a redirect. Kept the code, narrowed the prose, and added the candidate row "proxy redirect no_proxy". A test of a merged value needs a test server in a second process, because an in-process server cannot answer during the call.
 - 2026-10-18: claim audit re-read of the 3 corrected claims: all accurate. Status set to review.
+- 2026-10-18: review evidence pass: a planted `::1` bind failure showed the CI branch recording a failure and then a skip, since `fail()` does not stop the test. The case is now one if/else; the plant then gives a skip off CI and a failure with no skip on CI.
 - 2026-10-18: lessons harvested: M004 (socket rules differ by system; httpuv must be in DESCRIPTION, which it is) and M087 (time test blocks on an idle machine, since each case waits 0.5 s).
 
 ## Decisions
