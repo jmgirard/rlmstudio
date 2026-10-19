@@ -4,7 +4,7 @@
      cairn_validate's <150 over the plan-owned body. -->
 # M093: list_instances tests for a two-kind field and an empty display name
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Driving RR:** —   <!-- owner: plan · create/amend-via-gate; RR<NN> whose Binding criteria bind this milestone's ACs (binding-criteria check), or — -->
@@ -103,7 +103,7 @@ function changes behavior.
       give the four fields, and the match result of each. If a key matches,
       narrow the sentence at `R/list.R:157-158` and run `document()`.
       Unload, start on 1234, and stop the server (M083 lesson).
-- [ ] T4: Run the verify slot: `devtools::document()` with no diff, then
+- [x] T4: Run the verify slot: `devtools::document()` with no diff, then
       `devtools::test()` clean.
 
 ## Work log
@@ -132,6 +132,9 @@ function changes behavior.
 - 2026-10-18: T1 done: test "a field of one number and one string gives a list-column" expects `list(8192L, "auto")`. Plants in a scratch copy of `R/list.R`: `length(kinds) > 2` made the new test error at the `vapply()` type step while the three-kind test stayed green; a character coercion of the number-string mix made it fail. Both restored (`cmp` clean). `devtools::test()`: 3055 blocks, 0 failed, 0 errors, 3 skipped.
 - 2026-10-18: T2 done: test "an empty display_name stays an empty string" expects `""` for instance i1 and "Model Two" for i2, found by id. Plants in the scratch copy: an empty name set to `NA` in `list_instances()` made it fail; a rejection of `""` in `instance_list_fault()` made it error, and the condition was the `display_name` "is not a string" bad-response abort. Both restored (`cmp` clean). `devtools::test()`: 3056 blocks, 0 failed, 0 errors, 3 skipped.
 - 2026-10-18: T3 live reading, LM Studio 0.4.26+4 (lms CLI commit dcefd5a), `google/gemma-3-1b` loaded with `--ttl 600`. `lms ps --json` entry keys: type, modelKey, format, displayName, publisher, path, sizeBytes, indexedModelIdentifier, deviceIdentifier, paramsString, architecture, quantization, variants, selectedVariant, identifier, ttlMs, lastUsedTime, vision, trainedForToolUse, maxContextLength, contextLength, status, queued, parallel, engineConfigFileEnabled. The four fields: status (generation status), queued (queued requests), ttlMs (ttl), lastUsedTime (last-used time). A sweep of all 28 distinct keys of `GET /api/v1/models` at any depth, ignoring case, found none of the four. The instance object holds id, config (context_length, parallel), and remaining_ttl_seconds (600). So the help sentence at `R/list.R:157-158` stays unchanged. The candidate row now records `remaining_ttl_seconds`. Teardown: unload all, server stopped on 1234, `lms ps --json` empty.
+- 2026-10-18: T4 done: `devtools::document()` left no diff; `devtools::test()`: 3056 blocks, 0 failed, 0 errors, 3 skipped.
+- 2026-10-18: claim audit: 2 claims read, 0 corrected — tests/testthat/test-list-instances.R
+- 2026-10-18: status review; handed to /milestone-review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
