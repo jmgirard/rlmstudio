@@ -2,6 +2,48 @@
 
 ## rlmstudio (development version)
 
+- Three changes for a model name that LM Studio cannot serve:
+
+  - [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+    now checks which model answered, as
+    [`lms_chat_openai()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openai.md)
+    and
+    [`lms_chat_openresponses()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_openresponses.md)
+    do. In LM Studio 0.4.26+4, one embedding model was loaded.
+    `/v1/embeddings` then answered an unknown name with vectors from
+    that embedding model.
+    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+    returned those vectors. The new check reads the `model` field of
+    each reply. If that field differs from the asked name and no loaded
+    instance of that model has that id, the call now aborts with
+    `rlmstudio_model_mismatch`. After a request that succeeded, the
+    condition carries a `results` field. The check can send a model-list
+    request. If that request fails, the inputs of that embeddings
+    request fail. A lost server or a status of 401, 403, or 404 ends the
+    call.
+  - [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    and
+    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+    now stop at the first status 400 whose error text starts with “No
+    models loaded”. In LM Studio 0.4.26+4 with no model loaded,
+    `/v1/chat/completions`, `/v1/responses`, and `/v1/embeddings` gave
+    this error for an unknown name. Before, the batch sent every input,
+    and each one failed. The condition carries a `results` field, as at
+    the other stops. For
+    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md),
+    that field is there only after a request that succeeded. An
+    `rlmstudio_api_error` now carries a `server_message` field, the
+    error text that the server sent, or `NULL`.
+  - [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    and
+    [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+    now keep each reply id that a model-list lookup accepted, for the
+    rest of the call. A later reply with a kept id sends no lookup.
+    Before,
+    [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
+    against a model loaded under another id sent one model-list request
+    for each input.
+
 - [`list_instances()`](https://jmgirard.github.io/rlmstudio/reference/list_instances.md)
   has a new fifth column, `remaining_ttl_seconds`, so each load
   configuration column moves one position to the right. This double

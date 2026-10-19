@@ -138,6 +138,8 @@ raise it for such a model list too, with either setting of `simplify`,
 through the model lookup that a reply from another model starts.
 [`lms_chat()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat.md)
 raises it through them.
+[`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
+raises it in the same way for the inputs of that request.
 [`lms_load()`](https://jmgirard.github.io/rlmstudio/reference/lms_load.md),
 `lms_download()`, and
 [`lms_download_status()`](https://jmgirard.github.io/rlmstudio/reference/lms_download_status.md)
@@ -166,13 +168,14 @@ batch and carries no `results` field.
 
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
 checks the server before each request, and a request carries at most
-`batch_size` inputs. If a check after the first request finds the server
-gone, the call aborts with `rlmstudio_no_server`. Once a request has
-succeeded, the condition carries a `results` field. With
-`simplify = TRUE`, `results` is a matrix with `NA` in each row whose
-embedding did not arrive. With `simplify = FALSE`, it is a list with one
-element per batch, with `NULL` in the element of the request that ended
-the call and in every element after it.
+`batch_size` inputs. If a check after the first request, or the check of
+a model-list lookup, finds the server gone, the call aborts with
+`rlmstudio_no_server`. Once a request has succeeded, the condition
+carries a `results` field. With `simplify = TRUE`, `results` is a matrix
+with `NA` in each row whose embedding did not arrive. With
+`simplify = FALSE`, it is a list with one element per batch, with `NULL`
+in the element of the request that ended the call and in every element
+after it.
 
 ## API failure
 
@@ -182,28 +185,40 @@ carries a `status` field, which holds the HTTP response status as an
 integer. It also carries a `code` field. The field holds the string at
 `error.code` of the response body, such as `"model_not_found"`. It is
 `NULL` when the body does not parse, when `error` is not a JSON object,
-or when its `code` is not one string.
+or when its `code` is not one string. A `server_message` field holds the
+error text as the server sent it: the `error` string of the body, or
+else the string at `error.message`. It is `NULL` when the body does not
+parse or holds neither string.
+
+On LM Studio 0.4.26+4 with no model loaded, `/v1/chat/completions`,
+`/v1/responses`, and `/v1/embeddings` answered a model name that the
+server could not find with status 400, no `code`, and a `server_message`
+that starts with "No models loaded".
 
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md)
-aborts on it when its `status` is 401, 403, or 404, and when its
-`status` is 400 and its `code` is `"model_not_found"`. No request goes
-out after that input. The condition then carries a `results` field that
-follows the rule for a lost server in the "Server not running" section:
-its elements before the failed input hold the values that
-`format = "list"` returns for those inputs, and the element of the
-failed input and every element after it are `NULL`. For any other
+aborts on it when its `status` is 401, 403, or 404, when its `status` is
+400 and its `code` is `"model_not_found"`, and when its `status` is 400
+and its `server_message` starts with "No models loaded", in that letter
+case. No request goes out after that input. The condition then carries a
+`results` field that follows the rule for a lost server in the "Server
+not running" section: its elements before the failed input hold the
+values that `format = "list"` returns for those inputs, and the element
+of the failed input and every element after it are `NULL`. For any other
 status, the element of the failed input holds the condition, or `NA`
 where the result is text, and the batch warns once and goes on. See the
 details of
 [`lms_chat_batch()`](https://jmgirard.github.io/rlmstudio/reference/lms_chat_batch.md).
 
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
-follows the same rule for each request. A 401, 403, or 404 aborts the
-call, and once a request has succeeded the condition carries a `results`
-field, a matrix or a list as the "Server not running" section describes.
-Any other status fails the inputs of that request alone, and the call
-warns once and goes on. If every request fails, the call aborts with the
-first condition. See the details of
+follows the same rule for each request, except for the code
+`"model_not_found"`. A 401, 403, or 404 aborts the call, and so does a
+400 whose `server_message` starts with "No models loaded". Once a
+request has succeeded, the condition carries a `results` field, a matrix
+or a list as the "Server not running" section describes. Any other
+status, a 400 with the code `"model_not_found"` included, fails the
+inputs of that request alone, and the call warns once and goes on. If
+every request fails, the call aborts with the first condition. See the
+details of
 [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md).
 
 ## Malformed response
