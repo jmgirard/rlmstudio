@@ -418,7 +418,8 @@ openai_failed <- function() {
   mock_response(500L, '{"error": {"message": "boom"}}')
 }
 
-# The class of each warning, in order, with the fallback warning named.
+# The class of each warning, in order. A warning with neither class, such as
+# the vector fallback or the failed-inputs warning, is "other".
 warning_kinds <- function(warnings) {
   vapply(
     warnings,
