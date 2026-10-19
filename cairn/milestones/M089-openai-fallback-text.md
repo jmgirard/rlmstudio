@@ -80,3 +80,24 @@ Evidence gathered 2026-10-18 at fbd9f33, from a mocked-server script (`load_all(
 - AC3: a read reply and a cut-off reply give `other, cut_off, no_logprobs`, the first being the AC1 text. Three inputs with the status-500 failure at position 1, then at position 3, each give `other, cut_off, no_logprobs`. The first reads "1 input failed, at position 1" (or 3) and ends with the `i` line holding the AC1 text. The test "the openai vector fallback comes first among the batch warnings" passes (16 expectations).
 - AC4: `man/lms_chat_batch.Rd:121` (value, vector item) says that with `logprobs = TRUE` on either route it "also warns and returns the list". `man/lms_chat_batch.Rd:86-90` (the `logprobs` paragraph of `...`) says the vector format returns the list and says why, that in a batch that returns the reason is a line of the failed-inputs warning if an input failed, and otherwise its own warning before the cut-off and no-logprobs warnings. This matches the AC3 output. A fresh `devtools::document()` left `git status` clean.
 - AC5: `NEWS.md:13`, in the development section, in the `lms_chat_openai(logprobs = TRUE)` sub-bullet that names `rlmstudio_no_logprobs`, states the new text ("cannot store the `lms_chat_result` replies of the `"openai"` route") and the old one ("cannot store logprobs data frames"). No milestone number.
+- spawned: diff-bug, blame-history, prior-review
+- diff-bug #1: when every input fails, the OpenAI fallback text names `lms_chat_result` replies that the list does not hold, and the OpenResponses text has the same gap — follow-up, absorbed into the row "openresponses fallback text".
+- diff-bug #2: an OpenResponses reply with no logprobs part is plain text, so "cannot store logprobs dataframes" is wrong for it — follow-up, already the row "openresponses fallback text" (AC2 keeps the text).
+- diff-bug #3: the NEWS sentence can read as if the list return were new — fixed 8734464 ("returns the list, as before").
+- diff-bug #4: NEWS paraphrased the old text as "logprobs data frames" — fixed 8734464 (both texts quoted as the warning gives them).
+- diff-bug #5: the help sentence "before the cut-off and no-logprobs warnings" names warnings that the OpenResponses route never gives — fixed 8734464 ("before any cut-off or no-logprobs warning").
+- diff-bug #6: two `expect_no_match()` calls had no `info` — fixed 8734464.
+- diff-bug #7: the route loop test read warning text without the `rlmstudio.quiet = FALSE` pin — fixed 8734464.
+- diff-bug #8: the AC3 batches ran with `quiet = TRUE` alone — fixed 8734464 (both values).
+- diff-bug #9: no OpenResponses case of a failed input that carries the fallback text — fixed 8734464 (new test "an openresponses failed input carries the fallback text").
+- diff-bug #10: the code comment cites D-043 for the OpenAI choice of text — reject, false: the comment cites D-043 for the NULL `logprobs` of an OpenAI result, which D-043 records.
+- diff-bug #11: the message style matches its neighbors — reject, false: it reports no defect.
+- diff-bug #12: the regex at `test-chat-schema.R:564` has `.*` gaps — reject, style: that test tells the logprobs text from the schema text, and the new tests match the full text.
+- blame-history #1: the help sentence omits `simplify = TRUE`, and with `simplify = FALSE` the reason is the simplify one — fixed 8734464.
+- blame-history #2: no record says why the OpenAI vector batch returns a list and not the reply text — reject, planned change: the user chose the list at the plan gate, and the Out list records it.
+- prior-review #1: the edited test at `test-chat-schema.R:551-568` reads warning text with no quiet pin — fixed 8734464.
+- prior-review #2: the route loop test has no quiet pin — fixed 8734464 (same as diff-bug #7).
+- prior-review #3: the loose regex at `test-chat-schema.R:564` — reject, style (same as diff-bug #12).
+- prior-review #4: the help does not say that the fallback warning ignores quiet — fixed 8734464, with a new check under `options(rlmstudio.quiet = TRUE)` and `quiet = NULL`.
+- AC4 re-check after 8734464: `man/lms_chat_batch.Rd:86-91` now says "With `simplify = TRUE` and `logprobs = TRUE` on the "openresponses" or "openai" route, `format = "vector"` returns the list and says why in a warning", that quiet and the option do not hide it, and "Otherwise it is its own warning, before any cut-off or no-logprobs warning". `man/lms_chat_batch.Rd:121` is unchanged. `test-batch-native-logprobs.R` passes (279 expectations, 0 failed), and `test-chat-schema.R` passes (630, 0 failed).
+- AC5 re-check after 8734464: `NEWS.md:13` now quotes the new text ("cannot store the `<lms_chat_result>` replies of the `"openai"` route") and the old one ("cannot store logprobs dataframes"), in the same sub-bullet.
