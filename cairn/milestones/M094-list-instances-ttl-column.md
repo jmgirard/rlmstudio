@@ -49,7 +49,7 @@ every instance field.
      coverage-complete counts AC checkboxes positionally (M107); departures:
      a "Deviations from RR<NN>" table ends this section. -->
 
-- [ ] AC1: `list_instances()` returns a double column `remaining_ttl_seconds`
+- [x] AC1: `list_instances()` returns a double column `remaining_ttl_seconds`
       as its fifth column, after `display_name` and before the configuration
       columns. It holds each instance's value, and `NA_real_` where the field
       is absent or `null`. The column is double in every non-empty frame,
@@ -57,7 +57,7 @@ every instance field.
       `tests/testthat/test-list-instances.R` assert the position, and assert
       with `expect_identical()` two different values, one of them a whole
       number, both `NA` cases, and the all-`NA` frame, against doubles.
-- [ ] AC2: A `remaining_ttl_seconds` that is not a number aborts with
+- [x] AC2: A `remaining_ttl_seconds` that is not a number aborts with
       `rlmstudio_bad_response`. With a valid instance first, the message for
       the second instance of the second model holds "`remaining_ttl_seconds`
       of entry 2 of `loaded_instances` in entry 2 of `models` is not a
@@ -67,21 +67,21 @@ every instance field.
       whose type is not in `type`. A test asserts that `list_models()` and
       `lms_server_ready()` accept the body whose only fault is a string
       `remaining_ttl_seconds`.
-- [ ] AC3: With no instance found, the zero-row frame has the columns `id`,
+- [x] AC3: With no instance found, the zero-row frame has the columns `id`,
       `key`, `type`, and `display_name` as character and
       `remaining_ttl_seconds` as double, in that order, asserted by a test.
-- [ ] AC4: A configuration field named `remaining_ttl_seconds` gives the
+- [x] AC4: A configuration field named `remaining_ttl_seconds` gives the
       column `config.remaining_ttl_seconds`. A test asserts that
       `remaining_ttl_seconds` holds the instance value and
       `config.remaining_ttl_seconds` holds the configuration value.
-- [ ] AC5: On the cassette in `tests/testthat/list_instances/`,
+- [x] AC5: On the cassette in `tests/testthat/list_instances/`,
       `list_instances()` returns `remaining_ttl_seconds` as a double, with a
       number for the instance loaded with a ttl and, for the other instance,
       the value that a no-ttl instance gives in the live probe. A test
       asserts both values. The header of
       `data-raw/record-list-instances-cassette.R` names the LM Studio version
       and the date of the recording.
-- [ ] AC6: In the `list_instances()` help (`R/list.R` and
+- [x] AC6: In the `list_instances()` help (`R/list.R` and
       `man/list_instances.Rd`), the sentence that says `list_instances()`
       does not read `remaining_ttl_seconds` is removed. The Columns section
       and `@return` describe five fixed columns and the double type of
@@ -174,6 +174,7 @@ every instance field.
 - 2026-10-19: re-audit: AC6 (full) — 4 findings on the narrower wording: the clash rule states no type; "the NA case" is ambiguous; nothing requires removing the older-server sentence; the NEWS no-ttl claim has no version bound. This second re-audit line is the stop; AC6 text unchanged on disk until the user picks.
 - 2026-10-19: substantive amendment: AC6 narrowed at the user's choice at the stop (user override, "Use the narrower AC6 wording you proposed"): the older-server clause becomes "no LM Studio version other than 0.4.26+4 was checked for this field", with the four second re-audit findings applied (clash rule names five names, both NA cases, no other-version sentence, NEWS names the version). No further reader, since two re-audit lines on AC6 exist. The deliverable already meets it (commit 5c21e96).
 - 2026-10-19: all tasks done; status set to review.
+- 2026-10-19: review in progress: AC1 to AC6 evidence recorded and ticked; `devtools::check()` and the four reviewers still running (checkpoint, AC7 and findings not yet recorded).
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
@@ -187,3 +188,10 @@ every instance field.
      results, review findings + triage. EXEMPT from the 150-line cap (M55),
      as are the work log (D-046) and the decisions section (D-074); evidence
      never scrambles plan-owned content. -->
+
+- AC1 evidence (2026-10-19, `test_file("tests/testthat/test-list-instances.R")` at 0e9acc8, 238 expectations, 0 failed, 0 errors): "remaining_ttl_seconds is the fifth column, a double, NA when absent or null" (2 expectations: names with the column fifth and before `context_length`; `expect_identical` to `c(600, 12.5, NA_real_, NA_real_)` with 600 a whole number, absent and null cases) and "remaining_ttl_seconds is a double column when no instance has a number" (`c(NA_real_, NA_real_)`) pass. T2 log records them failing before T3.
+- AC2 evidence (same run): "a remaining_ttl_seconds that is not a number aborts with rlmstudio_bad_response" passes with 24 expectations over the 6 `json_forms` other than number and null (string, boolean, empty array, array, empty object, object), each asserting the class, status 200, "API List Failed", and the exact text "`remaining_ttl_seconds` of entry 2 of `loaded_instances` in entry 2 of `models` is not a number." with a valid instance first. "the remaining_ttl_seconds check skips a model outside `type`" passes (2). The subtest "list_models and lms_server_ready accept the bodies the instance checks reject / remaining_ttl_seconds" passes (3) on the body whose only fault is a string `remaining_ttl_seconds`.
+- AC3 evidence (same run): "list_instances returns an empty frame and a message with no instance" (30) and "quiet = TRUE and the rlmstudio.quiet option each stop the message" (54) pass through `expect_empty_instances()`, which asserts the names `id`, `key`, `type`, `display_name`, `remaining_ttl_seconds` in order, `character()` for the first four, and `double()` for the fifth. `test-list-args.R` "an unknown type returns the empty frame and a message, with no abort" passes (6) with the five-column frame.
+- AC4 evidence (same run): "a configuration field named remaining_ttl_seconds takes the config. prefix" passes (3): names are the five fixed columns then `config.remaining_ttl_seconds`; `remaining_ttl_seconds` is 300 (instance value) and `config.remaining_ttl_seconds` is 5 (configuration value).
+- AC5 evidence (same run): "a recorded model list gives one row per loaded instance" passes (4) on `tests/testthat/list_instances/`, asserting `remaining_ttl_seconds` identical to `c(213, NA_real_)`: a number for gemma, loaded with `--ttl 600`, and NA for nomic, whose field is absent as in the T1 probe. The generator header reads "Recorded:  2026-10-19, LM Studio 0.4.26+4" (`data-raw/record-list-instances-cassette.R:8`).
+- AC6 evidence (2026-10-19, `grep` and a read of `man/list_instances.Rd` and `R/list.R` at 0e9acc8): "does not read" matches only the unrelated `lms_unload()` sentence (Rd:151), so the sentence about `remaining_ttl_seconds` is gone. Rd:60 "The first five columns are the fixed columns", Rd:70 "The fifth is a double column", Rd:41 `@return` "the five fixed columns, four character columns and the double column `remaining_ttl_seconds`", Rd:91 clash rule "one of the five fixed column names". Rd:72-76: NA "when the field is absent or `null`", the 0.4.26+4 no-ttl case ("had no such field, so it holds `NA`"), and "No other LM Studio version was checked for this field."; no other sentence on other versions. Rd:53 names "the ttl setting". `NEWS.md:3` names the fifth column, the zero-row frame, `config.remaining_ttl_seconds`, and "In LM Studio 0.4.26+4" for the no-ttl case.
