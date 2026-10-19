@@ -48,7 +48,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
      insertion, removal, or reorder renumbers the labels and the Coverage
      lines together. -->
 
-- [ ] AC1: `lms_embed()` checks the `model` field of each status-200 reply,
+- [x] AC1: `lms_embed()` checks the `model` field of each status-200 reply,
       with either setting of `simplify`, by the rule of `lms_chat_openai()`.
       When the field is a string with a non-space character that differs
       from the asked name, one model-list lookup decides. The reply is kept
@@ -89,7 +89,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
       and data-frame formats, and in `lms_embed()`. A test whose third reply
       names a second such id asserts two lookups. A test of two calls asserts
       two lookups.
-- [ ] AC4: The `lms_embed()` help states the reply-model check, the
+- [x] AC4: The `lms_embed()` help states the reply-model check, the
       "No models loaded" stop, and the one lookup per kept id, and its
       paragraph on failed requests names these exceptions. The
       `lms_chat_batch()` help states the "No models loaded" stop and the one
@@ -185,3 +185,10 @@ Pass 1 (2026-10-19, at cd8badf, branch level with origin/main at 35f9949).
 - AC2: PASS. Blocks 10 to 14 pass: the recorded "No models loaded" bodies stop the `"openai"` and `"openresponses"` batches at input 2 of 3 in all three formats and `lms_embed()` at request 2 of 3, with class, status 400, request counts, and `results` asserted; both error-text shapes stop (block 12); five near misses beside a success go on in both functions (blocks 13, 14).
 - AC3: PASS. Blocks 17 to 22 pass: one lookup for three replies naming one kept id on both routes in the list and data-frame formats and in `lms_embed()`; two lookups when the third reply names a second id (blocks 18, 21); two `lms_embed()` calls send two lookups (block 22), and two chat batches plus a single call send three (block 20).
 - AC4: FAIL as written. The help statements hold (`man/lms_embed.Rd`, `man/lms_chat_batch.Rd`, `man/rlmstudio-conditions.Rd` each name `rlmstudio_model_mismatch`, "No models loaded", and the accepted-id rule; `lms_embed.Rd` line 85 names the exceptions). The criterion asks for "one entry that names the embedding check, the stop, and the one lookup per kept id"; `NEWS.md` holds three entries, one per change.
+
+Pass 2 (2026-10-19, at c58232f, branch level with origin/main at 35f9949; `test_file("test-model-stops.R")`: 23 blocks, 0 failed, 0 errors).
+
+- AC1: PASS. Block 1 aborts on the recorded `embed_unknown` reply at request 1 with no `results`, and block 5 serves that recorded reply and model list at request 2 of 3, aborting with `results` of row 1, two embeddings requests, and one lookup, with `simplify = TRUE` and `FALSE`. Block 2 keeps the recorded `embed_alias` reply after one lookup; block 6 keeps a mocked reply from another instance; block 7 sends no lookup for six `model` forms that are not a string with a character; block 8 fails a request alone at a 500 or a malformed lookup; blocks 9 and 10 end the call with `results` at a lookup with no server and at a lookup 401, 403, 404. Each asserts the class or none, the embeddings request count, and `results`.
+- AC2: PASS at c58232f, by the blocks that pass 1 names (now 11 to 15), unchanged by T7.
+- AC3: PASS at c58232f, by the blocks that pass 1 names (now 18 to 23), unchanged by T7.
+- AC4: PASS. `NEWS.md` opens with one entry, "Three changes for a model name that LM Studio cannot serve:", whose three sub-items name the embedding check, the "No models loaded" stop, and the kept reply ids. The help statements of pass 1 stand (`devtools::document()` gives no diff).
