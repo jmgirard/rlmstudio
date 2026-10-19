@@ -168,7 +168,7 @@ of a message. The server checks them.}
 \item{host}{Character. Server URL.}
 
 \item{logprobs}{\code{TRUE} or \code{FALSE}. Whether to request logprobs. With
-\code{simplify = TRUE}, the result holds \code{NULL}, because the package reads
+\code{simplify = TRUE}, the \code{logprobs} of the result is \code{NULL}, because the package reads
 none from this endpoint. Any
 other value, \code{NULL} and \code{NA} included, aborts before the check for a
 running server.}

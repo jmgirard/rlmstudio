@@ -95,7 +95,7 @@
 #' \itemize{
 #'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
 #'   \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response. With a \code{schema}, it returns the reply parsed into an R value instead.
-#'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (on the \code{"openresponses"} or \code{"openai"} route), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities. With \code{api_type = "openai"}, the \code{logprobs} of that object is \code{NULL}, and the call gives a warning of class \code{rlmstudio_no_logprobs}. The \code{rlmstudio.quiet} option does not hide it.
+#'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} on the \code{"openresponses"} route, returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities, or the text alone when no part of the reply carries log probabilities. With \code{api_type = "openai"}, the \code{logprobs} of that object is \code{NULL}, and the call gives a warning of class \code{rlmstudio_no_logprobs}. The \code{rlmstudio.quiet} option does not hide it.
 #' }
 #'
 #' With `simplify = TRUE` and `api_type = "native"` or
@@ -610,7 +610,7 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
 #' @param logprobs `TRUE` or `FALSE`. Whether to request logprobs. With
-#'   `simplify = TRUE`, the result holds `NULL`, because the package reads
+#'   `simplify = TRUE`, the `logprobs` of the result is `NULL`, because the package reads
 #'   none from this endpoint. Any
 #'   other value, `NULL` and `NA` included, aborts before the check for a
 #'   running server.
@@ -901,7 +901,7 @@ warn_if_cut_off <- function(finish_reason) {
 warn_no_openai_logprobs <- function() {
   cli::cli_warn(
     c(
-      "The {.val openai} route returns no log probabilities, so the {.field logprobs} of the result is {.code NULL}.",
+      "The package reads no log probabilities from the {.val openai} route, so the {.field logprobs} of the result is {.code NULL}.",
       "i" = "Use {.fn lms_chat_openresponses} or {.code lms_chat(api_type = \"openresponses\")} for log probabilities."
     ),
     class = "rlmstudio_no_logprobs",
@@ -2297,7 +2297,7 @@ lms_chat_batch <- function(
     }
     cli::cli_warn(
       c(
-        "The {.val openai} route returns no log probabilities, so the {.field logprobs} of {no_logprobs} repl{?y/ies} {?is/are} {.code NULL}.",
+        "The package reads no log probabilities from the {.val openai} route, so the {.field logprobs} of {no_logprobs} repl{?y/ies} {?is/are} {.code NULL}.",
         "i" = "Use {.code api_type = \"openresponses\"} for log probabilities."
       ),
       class = "rlmstudio_no_logprobs"

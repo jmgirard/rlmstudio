@@ -827,10 +827,14 @@ test_that("lms_chat() returns log probabilities on the default route alone", {
   ))
 
   default <- lms_chat("a-model", "hi", logprobs = TRUE)
-  expect_warning(
-    openai <- lms_chat("a-model", "hi", api_type = "openai", logprobs = TRUE),
-    class = "rlmstudio_no_logprobs"
+  # The route returns no logprobs, so the call gives one warning of its class
+  # (D-043). collect_warnings() counts each warning.
+  openai_run <- collect_warnings(
+    lms_chat("a-model", "hi", api_type = "openai", logprobs = TRUE)
   )
+  openai <- openai_run$value
+  expect_identical(length(openai_run$warnings), 1L)
+  expect_s3_class(openai_run$warnings[[1]], "rlmstudio_no_logprobs")
   expect_warning(
     native <- lms_chat("a-model", "hi", api_type = "native", logprobs = TRUE),
     "does not support logprobs",

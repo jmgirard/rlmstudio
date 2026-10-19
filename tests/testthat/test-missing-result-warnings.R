@@ -182,7 +182,7 @@ test_that("an OpenAI call that returns no lms_chat_result gives no logprobs warn
     case <- cases[[name]]
     res <- do.call(run_openai_call, c(list(case$responses), case$args))
     expect_true(inherits(res$value, case$class), info = name)
-    expect_length(no_logprobs(res$warnings), 0L)
+    expect_identical(length(no_logprobs(res$warnings)), 0L, info = name)
   }
 })
 
@@ -282,6 +282,29 @@ test_that("a batch that loses the server gives the logprobs warning before the a
   found <- no_logprobs(warnings)
   expect_identical(length(found), 1L)
   expect_match(conditionMessage(found[[1]]), "1 reply", fixed = TRUE)
+})
+
+test_that("a batch that aborts on a refused token gives the logprobs warning first", {
+  withr::local_options(rlmstudio.quiet = TRUE)
+  testthat::local_mocked_bindings(is_server_running = function(...) TRUE)
+  local_request_sequence(list(
+    text_reply(),
+    mock_response(401L, '{"error": {"message": "no"}}')
+  ))
+  warnings <- list()
+  err <- expect_error(
+    withCallingHandlers(
+      lms_chat_batch("a-model", c("a", "b"), api_type = "openai", logprobs = TRUE),
+      warning = function(w) {
+        warnings[[length(warnings) + 1L]] <<- w
+        invokeRestart("muffleWarning")
+      }
+    ),
+    class = "rlmstudio_api_error"
+  )
+  expect_identical(err$status, 401L)
+  expect_s3_class(err$results[[1]], "lms_chat_result")
+  expect_identical(length(no_logprobs(warnings)), 1L)
 })
 
 test_that("an OpenAI logprobs batch with no result gives no logprobs warning", {

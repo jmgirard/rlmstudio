@@ -165,6 +165,13 @@ test_that("a data-frame batch adds the id and token counts of each reply", {
       expect_identical(res$out$output, c("reply 1", "reply 2"), info = info)
     }
     expect_identical(res$warnings, character(), info = info)
+    # One no-logprobs warning for the batch on the OpenAI route with logprobs,
+    # and none on any other setting (D-043).
+    expect_identical(
+      res$no_logprobs,
+      as.integer(s$api_type == "openai" && s$logprobs),
+      info = info
+    )
   }
 })
 
