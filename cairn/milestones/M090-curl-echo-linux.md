@@ -106,7 +106,7 @@ account.
       packages from CRAN inside the container. Pass the package source on
       stdin with `tar`, as LESSONS (PR #85 hotfix) says, because Colima mounts
       only `$HOME`. Record the results on the page as in T2.
-- [ ] T4: Add the curl-error test to `test-mock-http-helper.R`. On try 1, the
+- [x] T4: Add the curl-error test to `test-mock-http-helper.R`. On try 1, the
       dry run gets a real curl error. For example, a mocked
       `curl::curl_echo()` fetches a port that no program holds, and curl
       cannot connect there on any system. Test first: in a scratch
@@ -153,6 +153,7 @@ account.
 - 2026-10-18: T1 done: the trace script (scratchpad `trace-dry-run.R`, not committed) swaps `httr2::req_dry_run()` with `assignInNamespace()` and runs each block with `test_file(desc = )`. Without `NOT_CRAN=true`, the two `skip_on_cran()` blocks skip, so every run sets it.
 - 2026-10-18: T2 done: macOS results recorded on `cairn/references/curl-echo-fault.md` (E1 to E6), page line added to INDEX.md.
 - 2026-10-18: T3 done: in the container, every held-port try ends with "Failed to create server", and the time-limit block skips; the whole file gave 36 passed, 1 skipped, 0 failed. `docker run` pulled `rocker/r-ver:4.6` again, because this Docker context did not find the copy that `docker images` had listed. The question set granted the image and the installs inside it, and not the pull.
+- 2026-10-18: T4 done: the new test mocks `curl::curl_echo()` so that call 1 runs `curl::curl_fetch_memory()` against a `free_port()` on 127.0.0.1 and call 2 runs the real echo. Planted in a scratch copy (the `curl_error` clause of the retry condition replaced by `TRUE`), it went red with `curl_error_couldnt_connect` from `curl_fetch_memory()`. It passed on macOS and in the container (file: 40 passed, 1 skipped, 0 failed). It does not call `local_dry_run_ports(`, so the AC1 domain stays 5 blocks and the trace did not need a re-run.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
