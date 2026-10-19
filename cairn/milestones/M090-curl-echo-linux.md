@@ -176,19 +176,20 @@ Pass 1, 2026-10-18, branch head 628c702, synced with main dde3de2 (no move).
 - AC5 evidence: `gh issue view 459 --repo jeroen/curl` shows https://github.com/jeroen/curl/issues/459, author jmgirard, created 2026-10-19T02:20:17Z UTC, state OPEN. The page's report section records that URL.
 - Consistency gate: `cairn_validate.py` all checks passed. `devtools::document()` left no diff. `pkgdown::check_pkgdown()` found no problems. README is not touched. No changelog entry is due (internal tier, no user-visible change). No new top-level file. `devtools::check()` runs after the fix-now commits.
 - spawned: diff-bug, blame-history, prior-review
-- diff-bug #1: try 2 calls the real `curl_echo()` on curl's random port, so a held port there gives a third try and fails `seen$calls == 2L` — fix now (try 2 gets a pinned `free_port()` port).
-- diff-bug #2: `free_port()` can return a port that a program holds on 127.0.0.1 alone on macOS, so the try-1 connect can succeed and the comment's "nothing listens" is unsupported — fix now (try 1 fetches a URL with port 99999, which curl rejects as `curl_error_url_malformat` before any socket, observed on macOS and in the container).
-- diff-bug #3: the try-1 fetch has no timeout and follows a proxy setting — fix now (the out-of-range port fails at once, with or without `http_proxy`, observed on both systems).
+- diff-bug #1: try 2 calls the real `curl_echo()` on curl's random port, so a held port there gives a third try and fails `seen$calls == 2L` — fix now (try 2 gets a pinned `free_port()` port), fixed 323b4df.
+- diff-bug #2: `free_port()` can return a port that a program holds on 127.0.0.1 alone on macOS, so the try-1 connect can succeed and the comment's "nothing listens" is unsupported — fix now (try 1 fetches a URL with port 99999, which curl rejects as `curl_error_url_malformat` before any socket, observed on macOS and in the container), fixed 323b4df.
+- diff-bug #3: the try-1 fetch has no timeout and follows a proxy setting — fix now (the out-of-range port fails at once, with or without `http_proxy`, observed on both systems), fixed 323b4df.
 - diff-bug #4: the try-1 error comes from `curl_fetch_memory()` and not from the echo's own transfer — reject, planned change (the plan gate chose a mock that makes try 1 end with a real curl error).
-- diff-bug #5: the new test does not assert `target$path` — fix now (assertion added).
-- diff-bug #6: the filed report says the empty results happened because a local service held the port, which no record observed — fix now on the page. The edit of issue 459 waits on the merge question, because the question set granted filing and not editing.
-- diff-bug #7: the report credits the probe settings alone for calling the port free, and the outcome also depends on the system — fix now on the page ("on macOS" added). The issue edit waits as in #6.
+- diff-bug #5: the new test does not assert `target$path` — fix now (assertion added), fixed 323b4df.
+- diff-bug #6: the filed report says the empty results happened because a local service held the port, which no record observed — fix now on the page. The edit of issue 459 waits on the merge question, because the question set granted filing and not editing. Page fixed 323b4df.
+- diff-bug #7: the report credits the probe settings alone for calling the port free, and the outcome also depends on the system — fix now on the page ("on macOS" added). The issue edit waits as in #6. Page fixed 323b4df.
 - diff-bug #8: the suggested fix was never run — reject, false (the report calls it "a possible fix" and claims no result).
 - diff-bug #9: the page's line cites, versions, and timeouts check out — noted.
 - diff-bug #10: an uncommitted change to the milestone file — reject, false (checkpoint ea6d002 committed it before the reviewer finished).
-- blame-history #1: the new comment states a general Linux fact from one Ubuntu 24.04 run — fix now (the comment names Ubuntu 24.04 and libcurl 8.5.0).
+- blame-history #1: the new comment states a general Linux fact from one Ubuntu 24.04 run — fix now (the comment names Ubuntu 24.04 and libcurl 8.5.0), fixed 323b4df and 025061b.
 - blame-history #2: no CRAN skip and no timing — reject, false (the block took 0.147 s on macOS, and DESIGN's CRAN skip is for blocks of 1 s or more).
-- blame-history #3: the try-1 fetch has no timeout — fix now, same fix as diff-bug #3.
-- blame-history #4: "runs on every system" is false where httpuv is missing — fix now (the comment says "with httpuv installed" and names macOS and Linux).
+- blame-history #3: the try-1 fetch has no timeout — fix now, same fix as diff-bug #3, fixed 323b4df.
+- blame-history #4: "runs on every system" is false where httpuv is missing — fix now (the comment says "with httpuv installed" and claims Linux alone, which the container run shows), fixed 323b4df and 025061b.
 - prior-review #1: no `skip_on_cran()` — reject, false (0.147 s, as blame-history #2).
-- prior-review #2: the comment generalizes from two runs — fix now, same fix as blame-history #1.
+- prior-review #2: the comment generalizes from two runs — fix now, same fix as blame-history #1, fixed 323b4df and 025061b.
+- Re-check after the fixes, head 025061b. AC1: the grep still lists 5 blocks (lines 108, 126, 147, 202, 255), the same blocks E1 to E4 and E6, and the page adds row E7 for the fixed test. AC2: the fixed test raises curl's `curl_error_url_malformat` from `curl_fetch_memory()` on call 1 and builds no condition. It asserts method, path, body, and 2 calls, and its only skip path is still `require_httpuv()`. It passed on macOS (nb 5, 0.112 s) and in the container (nb 5, file 41 passed, 1 skipped, 0 failed). A plant (`curl_error` clause replaced by `TRUE`) went red with `curl_error_url_malformat`. AC3: the grep lists 158, 163, 218, 238. The sentence at 158 to 160 (Ubuntu 24.04, cannot bind a held port, retries on "Failed to create server" or skips) matches E1 to E4 and E6. The sentence at 162 to 163 (the retry after a curl error runs on Linux too) matches the E7 container column. 218 matches E5, and 238 matches E6.
