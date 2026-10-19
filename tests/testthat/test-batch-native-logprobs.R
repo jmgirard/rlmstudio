@@ -328,10 +328,28 @@ run_route_batch <- function(route, format) {
   ))
 }
 
+# The OpenAI route returns no logprobs, so its batch also gives one warning of
+# class `rlmstudio_no_logprobs` (D-043). Split it from the other warnings.
+split_no_logprobs <- function(warnings) {
+  is_no_logprobs <- vapply(
+    warnings,
+    function(w) inherits(w, "rlmstudio_no_logprobs"),
+    logical(1)
+  )
+  list(no_logprobs = warnings[is_no_logprobs], other = warnings[!is_no_logprobs])
+}
+
 test_that("the openresponses and openai routes keep the logprobs results", {
   for (route in names(logprobs_route_replies)) {
+    expected_no_logprobs <- if (route == "openai") 1L else 0L
     lst <- run_route_batch(route, "list")
-    expect_identical(lst$warnings, list(), info = route)
+    lst_warnings <- split_no_logprobs(lst$warnings)
+    expect_identical(lst_warnings$other, list(), info = route)
+    expect_identical(
+      length(lst_warnings$no_logprobs),
+      expected_no_logprobs,
+      info = route
+    )
     # `expect_type()` and `expect_s3_class()` take no `info`, so these name
     # the route through `expect_true()`.
     expect_true(is.list(lst$value), info = route)
@@ -341,7 +359,13 @@ test_that("the openresponses and openai routes keep the logprobs results", {
 
     vec <- run_route_batch(route, "vector")
     expect_identical(vec$value, lst$value, info = route)
-    shown <- warning_texts(vec$warnings)
+    vec_warnings <- split_no_logprobs(vec$warnings)
+    expect_identical(
+      length(vec_warnings$no_logprobs),
+      expected_no_logprobs,
+      info = route
+    )
+    shown <- warning_texts(vec_warnings$other)
     expect_identical(length(shown), 1L, info = route)
     expect_match(
       shown,

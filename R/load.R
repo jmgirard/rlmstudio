@@ -43,7 +43,11 @@
 #'   upon success, also when the model was already loaded. It is a plain
 #'   string, with no class, names, or S4 bit. If \code{echo_load_config = TRUE}
 #'   and this call loads the model, it instead invisibly
-#'   returns a list containing the model's detailed load configuration.
+#'   returns a list containing the model's detailed load configuration. If
+#'   \code{echo_load_config = TRUE} and the model is already loaded, with
+#'   \code{force = FALSE}, the call returns the model key and gives a warning
+#'   of class `rlmstudio_no_load_config`. The `rlmstudio.quiet` option does
+#'   not hide it.
 #'
 #' @section Long prompts:
 #' A prompt longer than the context length of the loaded model fails. On LM
@@ -85,7 +89,7 @@
 #' @inheritSection rlmstudio-conditions Malformed model list
 #' @inheritSection rlmstudio-conditions Malformed load or download reply
 #'
-#' @aliases rlmstudio_context_above_max
+#' @aliases rlmstudio_context_above_max rlmstudio_no_load_config
 #' @export
 #'
 #' @examples
@@ -145,9 +149,15 @@ lms_load <- function(
       rlm_alert_info(
         "Model {.val {model}} is already loaded. Use {.code force = TRUE} to load an additional instance."
       )
+      # Shown whatever `quiet` says, because the call returns the model key
+      # where the caller asked for the load config (D-043).
       if (isTRUE(echo_load_config)) {
-        cli::cli_alert_warning(
-          "Cannot echo load config because the model was already loaded."
+        cli::cli_warn(
+          c(
+            "Cannot echo the load config, because {.val {model}} was already loaded.",
+            "i" = "The call returns the model key. Use {.code force = TRUE} to load another instance and get its load config."
+          ),
+          class = "rlmstudio_no_load_config"
         )
       }
       return(invisible(model))

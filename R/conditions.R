@@ -6,7 +6,9 @@
 #' "Reply from another model" section describes it. Each one is raised through
 #' [cli::cli_abort()], so each one is an R error that you can catch by class
 #' with [base::tryCatch()]. The chat functions on the OpenAI route also give
-#' one warning class of their own, described in the "Cut-off reply" section.
+#' two warning classes of their own. The "Cut-off reply" section describes
+#' `rlmstudio_reply_cut_off`, and [lms_chat_openai()] describes
+#' `rlmstudio_no_logprobs`.
 #'
 #' @section Server not running:
 #' Functions that call the LM Studio REST API open a TCP connection to the

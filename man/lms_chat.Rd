@@ -126,7 +126,7 @@ Depending on the arguments provided:
 \itemize{
 \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
 \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response. With a \code{schema}, it returns the reply parsed into an R value instead.
-\item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities.
+\item If \code{simplify = TRUE} and \code{logprobs = TRUE} on the \code{"openresponses"} route, returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities, or the text alone when no part of the reply carries log probabilities. With \code{api_type = "openai"}, the \code{logprobs} of that object is \code{NULL}, and the call gives a warning of class \code{rlmstudio_no_logprobs}. The \code{rlmstudio.quiet} option does not hide it.
 }
 
 With \code{simplify = TRUE} and \code{api_type = "native"} or

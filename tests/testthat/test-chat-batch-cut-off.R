@@ -60,9 +60,12 @@ test_that("a text batch gives one cut-off warning and keeps every reply", {
     }
   }
 
+  # With logprobs, the OpenAI route also gives its no-logprobs warning, after
+  # the cut-off warning (D-043).
   res <- run_cut_off_batch(cut_off_replies(), format = "list", logprobs = TRUE, quiet = TRUE)
-  expect_identical(length(res$warnings), 1L)
+  expect_identical(length(res$warnings), 2L)
   expect_one_cut_off_warning(res$warnings, "logprobs")
+  expect_s3_class(res$warnings[[2]], "rlmstudio_no_logprobs")
   for (i in seq_along(texts)) {
     expect_s3_class(res$value[[i]], "lms_chat_result")
     expect_identical(res$value[[i]]$text, texts[[i]], info = paste("logprobs", i))

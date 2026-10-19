@@ -513,6 +513,7 @@ consent_install <- function(interactive, answer = NA, allow = NA, lms_found = FA
 }
 
 test_that("install_lmstudio() with the headless method runs the LM Studio install script", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   res <- consent_install(interactive = TRUE, answer = TRUE)
   expect_null(res$shown$error)
   expect_length(res$runs, 1L)
@@ -641,6 +642,7 @@ test_that("lms_daemon_status() returns the lines that lms status prints", {
 })
 
 test_that("lms_daemon_stop() returns TRUE when the daemon stopped or was not running", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   local_lms_calls()
   stopped <- NULL
   capture_shown(stopped <- lms_daemon_stop())
@@ -704,6 +706,7 @@ test_that("each server start in the README and the vignette sources passes port 
 })
 
 test_that("lms_server_stop() sends server stop alone and reports the stop", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   calls <- local_lms_calls()
 
   shown <- capture_shown(status <- withVisible(lms_server_stop()))
@@ -824,7 +827,14 @@ test_that("lms_chat() returns log probabilities on the default route alone", {
   ))
 
   default <- lms_chat("a-model", "hi", logprobs = TRUE)
-  openai <- lms_chat("a-model", "hi", api_type = "openai", logprobs = TRUE)
+  # The route returns no logprobs, so the call gives one warning of its class
+  # (D-043). collect_warnings() counts each warning.
+  openai_run <- collect_warnings(
+    lms_chat("a-model", "hi", api_type = "openai", logprobs = TRUE)
+  )
+  openai <- openai_run$value
+  expect_identical(length(openai_run$warnings), 1L)
+  expect_s3_class(openai_run$warnings[[1]], "rlmstudio_no_logprobs")
   expect_warning(
     native <- lms_chat("a-model", "hi", api_type = "native", logprobs = TRUE),
     "does not support logprobs",

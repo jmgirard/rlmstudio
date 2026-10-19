@@ -15,7 +15,9 @@ four condition classes of their own. One of them,
 "Reply from another model" section describes it. Each one is raised through
 \code{\link[cli:cli_abort]{cli::cli_abort()}}, so each one is an R error that you can catch by class
 with \code{\link[base:tryCatch]{base::tryCatch()}}. The chat functions on the OpenAI route also give
-one warning class of their own, described in the "Cut-off reply" section.
+two warning classes of their own. The "Cut-off reply" section describes
+\code{rlmstudio_reply_cut_off}, and \code{\link[=lms_chat_openai]{lms_chat_openai()}} describes
+\code{rlmstudio_no_logprobs}.
 }
 \section{Server not running}{
 

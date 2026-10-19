@@ -33,6 +33,7 @@ test_that("lms_daemon_status parses multi-line output correctly", {
 })
 
 test_that("lms_daemon_stop exits gracefully when managed by GUI", {
+  withr::local_options(rlmstudio.quiet = FALSE)
   mock_run_gui <- function(command, args, error_on_status) {
     list(status = 1, stdout = "", stderr = "part of LM Studio")
   }

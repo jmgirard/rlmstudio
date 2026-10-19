@@ -57,7 +57,10 @@ usage_json <- function(api_type, input, output, reasoning, details = NULL) {
 }
 
 # Run a data-frame batch whose input i is answered by `responses[[i]]`, a
-# response or a body string. Returns the result and the warnings.
+# response or a body string. Returns the result and the warnings. An OpenAI
+# batch with logprobs also gives one `rlmstudio_no_logprobs` warning (D-043).
+# `test-missing-result-warnings.R` covers it, so it is counted apart in
+# `no_logprobs` and left out of `warnings`.
 run_usage_batch <- function(responses, api_type, logprobs = FALSE, schema = FALSE) {
   responses <- lapply(responses, function(r) {
     if (is.character(r)) mock_response(200L, r) else r
@@ -77,8 +80,18 @@ run_usage_batch <- function(responses, api_type, logprobs = FALSE, schema = FALS
   if (schema) {
     args$schema <- score_schema
   }
-  warnings <- testthat::capture_warnings(out <- do.call(lms_chat_batch, args))
-  list(out = out, warnings = warnings)
+  res <- collect_warnings(do.call(lms_chat_batch, args))
+  is_no_logprobs <- vapply(
+    res$warnings,
+    function(w) inherits(w, "rlmstudio_no_logprobs"),
+    logical(1)
+  )
+  warnings <- vapply(
+    res$warnings[!is_no_logprobs],
+    conditionMessage,
+    character(1)
+  )
+  list(out = res$value, warnings = warnings, no_logprobs = sum(is_no_logprobs))
 }
 
 # The settings of AC1 and AC2: each route with and without logprobs, and the
@@ -152,6 +165,13 @@ test_that("a data-frame batch adds the id and token counts of each reply", {
       expect_identical(res$out$output, c("reply 1", "reply 2"), info = info)
     }
     expect_identical(res$warnings, character(), info = info)
+    # One no-logprobs warning for the batch on the OpenAI route with logprobs,
+    # and none on any other setting (D-043).
+    expect_identical(
+      res$no_logprobs,
+      as.integer(s$api_type == "openai" && s$logprobs),
+      info = info
+    )
   }
 })
 
@@ -414,7 +434,15 @@ single_value <- function(s, body) {
   if (s$schema) {
     args$schema <- score_schema
   }
-  tryCatch(do.call(lms_chat, args), error = identity)
+  # The OpenAI route with logprobs gives its no-logprobs warning, which
+  # `test-missing-result-warnings.R` covers.
+  tryCatch(
+    withCallingHandlers(
+      do.call(lms_chat, args),
+      rlmstudio_no_logprobs = function(w) invokeRestart("muffleWarning")
+    ),
+    error = identity
+  )
 }
 
 test_that("a readable reply gives the answer the single call returns", {
