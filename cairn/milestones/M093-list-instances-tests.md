@@ -46,16 +46,16 @@ function changes behavior.
      coverage-complete counts AC checkboxes positionally (M107); departures:
      a "Deviations from RR<NN>" table ends this section. -->
 
-- [ ] AC1: `tests/testthat/test-list-instances.R` has a test in which one
+- [x] AC1: `tests/testthat/test-list-instances.R` has a test in which one
       `config` field holds a whole JSON number in one instance and a JSON
       string in another, is present and not `null` in no other instance, and
       is never an object or array. The test asserts with `expect_identical()`
       that the column is the list of the integer and the string, in row order.
-- [ ] AC2: `tests/testthat/test-list-instances.R` has a test in which a model
+- [x] AC2: `tests/testthat/test-list-instances.R` has a test in which a model
       of type `"llm"` with one loaded instance has `display_name` `""`. The
       test asserts with `expect_identical()` that the `display_name` of that
       row, found by its id, is `""`, and the call does not abort.
-- [ ] AC3: In one session, an instance is loaded with a ttl set, and
+- [x] AC3: In one session, an instance is loaded with a ttl set, and
       `lms ps --json` and `GET /api/v1/models` are read. For each of the four
       `lms ps` keys that give the generation status, the queued requests, the
       ttl, and the last-used time, the reply is searched at any depth for a
@@ -63,7 +63,7 @@ function changes behavior.
       (`R/list.R` and `man/list_instances.Rd`) still names as absent each of
       the four whose key has no such match, and no longer names as absent
       each one whose key has one.
-- [ ] AC4: `Rscript -e 'devtools::document()'` produces no diff, and
+- [x] AC4: `Rscript -e 'devtools::document()'` produces no diff, and
       `Rscript -e 'devtools::test()'` reports no failure and no error.
 
 ## Coverage
@@ -148,3 +148,8 @@ function changes behavior.
      results, review findings + triage. EXEMPT from the 150-line cap (M55),
      as are the work log (D-046) and the decisions section (D-074); evidence
      never scrambles plan-owned content. -->
+
+- AC1 evidence (2026-10-18): `test-list-instances.R:217` "a field of one number and one string gives a list-column" builds `{"two": 8192}` and `{"two": "auto"}` through `config_frame()`, two instances only, and asserts `expect_identical(res$two, list(8192L, "auto"))`. Fresh `test_file()` run: 1 expectation, 0 failed, no error. Discrimination: two plants in T1 work log.
+- AC2 evidence (2026-10-18): `test-list-instances.R:369` "an empty display_name stays an empty string" uses an `"llm"` model `m1` with `display_name` `""` and instance `i1`, plus a control model with "Model Two", calls `run_list_instances()` directly (an abort errors the test), and asserts `expect_identical(res$display_name[res$id == "i1"], "")`. Fresh run: 2 expectations, 0 failed, no error. Discrimination: two plants in T2 work log.
+- AC3 evidence (2026-10-18, fresh review session): server started on 1234, `google/gemma-3-1b` loaded with `--ttl 600`; `lms ps --json` entry holds `status`, `queued`, `ttlMs` (600000), and `lastUsedTime`. A sweep of all 28 distinct keys of `GET /api/v1/models` (1 loaded instance) at any depth, ignoring case, matched none of the four. The help still names all four as absent (`R/list.R:157-158`, `man/list_instances.Rd:52`), and `git diff main...HEAD -- R man` is empty. Teardown: unloaded, server stopped.
+- AC4 evidence (2026-10-19): `devtools::document()` left no change outside the milestone file; `devtools::test()`: 3056 blocks, 0 failed, 0 errors, 3 skipped.
