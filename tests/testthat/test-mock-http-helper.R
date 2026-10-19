@@ -156,11 +156,11 @@ test_that("request_target() reads a request when the program on the first dry-ru
 })
 
 # On Linux the echo server cannot bind a port that another program holds, so
-# the held-port tests above reach the helper's retry on "Failed to create
-# server" and not on a curl error. Here the first dry run instead ends with
-# curl's own error for a connection to a port that nothing listens on, which
-# no socket rule changes, so the retry after a curl error runs on every
-# system.
+# each held-port test in this file either retries on "Failed to create
+# server" and not on a curl error, or skips. Here the first dry run instead
+# ends with curl's own error for a connection to a port that nothing listens
+# on, which no socket rule changes, so the retry after a curl error runs on
+# every system.
 test_that("request_target() reads a request when the first dry run ends with a curl error", {
   require_httpuv()
   real_echo <- curl::curl_echo

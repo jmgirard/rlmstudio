@@ -114,7 +114,7 @@ account.
       and see the test go red with the curl error itself. Then restore the
       copy. Run the test on macOS and in the container. Re-run T1's script
       on the merged file if the test calls `local_dry_run_ports(`.
-- [ ] T5: Run `grep -n -i -E 'linux|ubuntu'` over both test files. Rewrite
+- [x] T5: Run `grep -n -i -E 'linux|ubuntu'` over both test files. Rewrite
       each comment sentence that holds a listed line so it states only what
       the page records for the container run. This includes the skip text of
       the time-limit block and the "Out of memory" sentence above the
@@ -154,6 +154,7 @@ account.
 - 2026-10-18: T2 done: macOS results recorded on `cairn/references/curl-echo-fault.md` (E1 to E6), page line added to INDEX.md.
 - 2026-10-18: T3 done: in the container, every held-port try ends with "Failed to create server", and the time-limit block skips; the whole file gave 36 passed, 1 skipped, 0 failed. `docker run` pulled `rocker/r-ver:4.6` again, because this Docker context did not find the copy that `docker images` had listed. The question set granted the image and the installs inside it, and not the pull.
 - 2026-10-18: T4 done: the new test mocks `curl::curl_echo()` so that call 1 runs `curl::curl_fetch_memory()` against a `free_port()` on 127.0.0.1 and call 2 runs the real echo. Planted in a scratch copy (the `curl_error` clause of the retry condition replaced by `TRUE`), it went red with `curl_error_couldnt_connect` from `curl_fetch_memory()`. It passed on macOS and in the container (file: 40 passed, 1 skipped, 0 failed). It does not call `local_dry_run_ports(`, so the AC1 domain stays 5 blocks and the trace did not need a re-run.
+- 2026-10-18: T5 done: the grep lists 3 sentences. The Ubuntu 24.04 "Out of memory" sentence (E5) and the time-limit skip sentence (E6) already match the container record and stay. The new T4 comment now says that each held-port test on Linux retries on "Failed to create server" or skips (E1 to E4, E6).
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->
