@@ -1894,6 +1894,11 @@ integer_or_na <- function(x) {
 #'   another model gives it before the abort. The `rlmstudio.quiet` option
 #'   and `quiet = TRUE` do not hide it. A batch in which no reply is read,
 #'   for example because every input fails, gives no such warning.
+#'   With `logprobs = TRUE` on the `"openresponses"` or `"openai"` route,
+#'   `format = "vector"` returns the list and says why in a warning. In a
+#'   batch that returns, that reason is a line of the failed-inputs warning
+#'   if an input failed. Otherwise it is its own warning, before the cut-off
+#'   and no-logprobs warnings.
 #'   Two values here that [lms_chat()] reads as the same argument abort
 #'   with a message that names the argument. Examples are
 #'   `logprobs = TRUE, logprobs = FALSE`, the shortened names
@@ -1918,7 +1923,7 @@ integer_or_na <- function(x) {
 #'   package reads a whole reply and not a streamed one.
 #' @return The return type depends on the \code{format} argument:
 #' \itemize{
-#'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE}, and \code{logprobs = FALSE} or \code{api_type = "native"}. With a \code{schema}, it warns and returns the list instead.
+#'   \item \code{"vector"}: A character vector of responses, with \code{NA} for an input that failed. This format is only supported if \code{simplify = TRUE}, and \code{logprobs = FALSE} or \code{api_type = "native"}. With a \code{schema}, it warns and returns the list instead. With \code{logprobs = TRUE} on the \code{"openresponses"} or \code{"openai"} route, it also warns and returns the list.
 #'   \item \code{"list"}: A list where each element is the response corresponding to the provided input, or the condition for an input that failed. With a \code{schema}, \code{simplify = TRUE}, and \code{logprobs = FALSE}, each element that did not fail is the parsed reply.
 #'   \item \code{"data.frame"}: A data.frame containing \code{input} and \code{output} columns, with \code{NA} in \code{output} for an input that failed. If \code{logprobs = TRUE} on the \code{"openresponses"} or \code{"openai"} route, an additional list-column named \code{logprobs} is included, with \code{NULL} for an input that failed. The \code{"native"} route adds no \code{logprobs} column. With a \code{schema} and \code{logprobs = FALSE}, \code{output} is a list-column of parsed replies, with the condition in place of an input that failed. Columns read from each reply follow \code{output}, or \code{logprobs} when it is there, as described below. With an object \code{schema} and \code{logprobs = FALSE}, one column per schema property comes after them, as described below.
 #' }
