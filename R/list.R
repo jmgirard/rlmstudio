@@ -273,11 +273,15 @@ list_instances <- function(
       display_name <- NA_character_
     }
     for (instance in model[["loaded_instances"]]) {
+      # jsonlite reads a whole number as an integer.
+      ttl <- instance[["remaining_ttl_seconds"]]
+      ttl <- if (is.null(ttl)) NA_real_ else as.double(ttl)
       rows[[length(rows) + 1L]] <- list(
         id = instance[["id"]],
         key = model[["key"]],
         type = model[["type"]],
         display_name = display_name,
+        remaining_ttl_seconds = ttl,
         config = instance[["config"]]
       )
     }
@@ -295,16 +299,20 @@ list_instances <- function(
       id = character(),
       key = character(),
       type = character(),
-      display_name = character()
+      display_name = character(),
+      remaining_ttl_seconds = double()
     )))
   }
 
-  column <- function(name) vapply(rows, function(row) row[[name]], character(1))
+  column <- function(name, kind = character(1)) {
+    vapply(rows, function(row) row[[name]], kind)
+  }
   df <- data.frame(
     id = column("id"),
     key = column("key"),
     type = column("type"),
-    display_name = column("display_name")
+    display_name = column("display_name"),
+    remaining_ttl_seconds = column("remaining_ttl_seconds", double(1))
   )
 
   configs <- lapply(rows, function(row) row[["config"]])
@@ -353,12 +361,14 @@ instance_list_fault <- function(models, type) {
       return(paste0("`display_name` of ", where, " is not a string."))
     }
     for (j in seq_along(instances)) {
+      in_where <- paste0("entry ", j, " of `loaded_instances` in ", where)
+      ttl <- instances[[j]][["remaining_ttl_seconds"]]
+      if (!is.null(ttl) && !is_json_number(ttl)) {
+        return(paste0("`remaining_ttl_seconds` of ", in_where, " is not a number."))
+      }
       config <- instances[[j]][["config"]]
       if (!is.null(config) && !is_json_object(config)) {
-        return(paste0(
-          "`config` of entry ", j, " of `loaded_instances` in ", where,
-          " is not a JSON object."
-        ))
+        return(paste0("`config` of ", in_where, " is not a JSON object."))
       }
     }
   }
