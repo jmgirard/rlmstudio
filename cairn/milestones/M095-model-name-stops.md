@@ -137,7 +137,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
 - [x] T4: AC3, tests first. Keep the kept ids of one call and pass them to
       `reply_model_serves()`. `lms_chat_batch()` reaches it through
       `lms_chat()`, so mock the lookup at the delegate (LESSONS M003).
-- [ ] T5: Append the D-entry (narrows D-019, annotates D-024, D-025,
+- [x] T5: Append the D-entry (narrows D-019, annotates D-024, D-025,
       D-026). Write the help of AC4 against observed output, and the NEWS
       entry. Pin `rlmstudio.quiet = FALSE` in message tests (LESSONS M086).
       Run `devtools::document()`.
@@ -162,6 +162,7 @@ shown that code on `/v1/embeddings`, because one embedding model is on disk.
 - 2026-10-19: T2 done: `embed_request()` calls `check_reply_model()`; the `lms_embed()` loop aborts with results at `rlmstudio_model_mismatch` and at an `rlmstudio_no_server` from the lookup. New `tests/testthat/test-model-stops.R` (9 blocks) and `helper-model-check.R` (helpers moved from test-model-check.R). Red before the change; a plant that drops the two new handlers turned 3 blocks red. Full `devtools::test()`: 0 failed, 3 live skips. Chose a package-level cache env set by each batch call over a hidden argument, because `lms_chat_batch()` reaches the check through `lms_chat()`, whose dots go to the request body; its code landed with T2 and its tests come in T4.
 - 2026-10-19: T3 done: `rlm_abort_api()` adds a `server_message` field (the body's `error` string, else its `error.message` string, else NULL) through `api_error_text()`; `is_no_models_loaded()` drives the stop in both batch handlers. Chose a new condition field over a match on the condition message, because that message opens with the wrapper label; falsified by a user who reads `server_message` as more than the server's text. 6 new blocks: red on the old code; a plant that drops the chat stop turned 2 red; the 5 near-miss controls stayed green. Full `devtools::test()`: 0 failed, 3 live skips.
 - 2026-10-19: T4 done: `lms_chat_batch()` starts the reply-id cache after its server check and restores it on exit, as `lms_embed()` does. 6 new blocks. A plant with the cache off turned 4 red; a plant that keeps any id once one lookup ran turned the 2 second-id blocks red. Full `devtools::test()`: 25039 passed, 0 failed, 3 live skips.
+- 2026-10-19: T5 done: D-046 appended (narrows D-019, annotates D-024, D-025, D-026). Help: the "API failure" and "Reply from another model" sections of `rlmstudio-conditions`, the `lms_embed()` details (which now inherit "Reply from another model"), the `lms_chat_batch()` details, and the internal docs of `check_reply_model()` and `rlm_abort_api()`. Three NEWS entries, one per change, rewritten until the simple-english lint hook reported no hits. Added a test that `lms_embed()` fails a `model_not_found` 400 alone, because the "API failure" section now states it. `devtools::document()` run.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local. -->

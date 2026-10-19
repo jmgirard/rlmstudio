@@ -93,11 +93,21 @@
 #' integer. It also carries a `code` field. The field holds the string at
 #' `error.code` of the response body, such as `"model_not_found"`. It is
 #' `NULL` when the body does not parse, when `error` is not a JSON object, or
-#' when its `code` is not one string.
+#' when its `code` is not one string. A `server_message` field holds the
+#' error text as the server sent it: the `error` string of the body, or else
+#' the string at `error.message`. It is `NULL` when the body does not parse
+#' or holds neither string.
 #'
-#' [lms_chat_batch()] aborts on it when its `status` is 401, 403, or 404, and
-#' when its `status` is 400 and its `code` is `"model_not_found"`. No request
-#' goes out after that input. The condition then carries a
+#' On LM Studio 0.4.26+4 with no model loaded, `/v1/chat/completions`,
+#' `/v1/responses`, and `/v1/embeddings` answered a model name that the server
+#' could not find with status 400, no `code`, and a `server_message` that
+#' starts with "No models loaded".
+#'
+#' [lms_chat_batch()] aborts on it when its `status` is 401, 403, or 404,
+#' when its `status` is 400 and its `code` is `"model_not_found"`, and when
+#' its `status` is 400 and its `server_message` starts with
+#' "No models loaded", in that letter case. No request goes out after that
+#' input. The condition then carries a
 #' `results` field that follows the rule for a lost server in the "Server not
 #' running" section: its elements before the failed input hold the values that
 #' `format = "list"` returns for those inputs, and the element of the failed
@@ -106,12 +116,14 @@
 #' is text, and the batch warns once and goes on. See the details of
 #' [lms_chat_batch()].
 #'
-#' [lms_embed()] follows the same rule for each request. A 401, 403, or 404
-#' aborts the call, and once a request has succeeded the condition carries a
-#' `results` field, a matrix or a list as the "Server not running" section
-#' describes. Any other status fails the inputs of that request alone, and
-#' the call warns once and goes on. If every request fails, the call aborts
-#' with the first condition. See the details of [lms_embed()].
+#' [lms_embed()] follows the same rule for each request, except for the code
+#' `"model_not_found"`. A 401, 403, or 404 aborts the call, and so does a 400
+#' whose `server_message` starts with "No models loaded". Once a request has
+#' succeeded, the condition carries a `results` field, a matrix or a list as
+#' the "Server not running" section describes. Any other status, a 400 with
+#' the code `"model_not_found"` included, fails the inputs of that request
+#' alone, and the call warns once and goes on. If every request fails, the
+#' call aborts with the first condition. See the details of [lms_embed()].
 #'
 #' @section Malformed response:
 #' A condition of class `rlmstudio_bad_response` is raised when the server
@@ -341,14 +353,17 @@
 #' because it is the only sign that an answer is not complete.
 #'
 #' @section Reply from another model:
-#' [lms_chat_openai()] and [lms_chat_openresponses()] read the `model` field
-#' of each status-200 reply, with either setting of `simplify`. On LM Studio
-#' 0.4.25+1 with one chat model loaded, both routes answered a model name that
-#' the server could not find with status 200 and a reply from the loaded
-#' model. With two chat models loaded, they answered with status 400 and the
-#' `code` `"model_not_found"`, as the "API failure" section describes. The
-#' `model` field names the loaded instance that answered. Its id can differ
-#' from the key that the call asked for.
+#' [lms_chat_openai()], [lms_chat_openresponses()], and [lms_embed()] read
+#' the `model` field of each status-200 reply, with either setting of
+#' `simplify`. On LM Studio 0.4.25+1 with one chat model loaded, both chat
+#' routes answered a model name that the server could not find with status
+#' 200 and a reply from the loaded model. With two chat models loaded, they
+#' answered with status 400 and the `code` `"model_not_found"`, as the "API
+#' failure" section describes. On LM Studio 0.4.26+4 with one embedding model
+#' loaded, `/v1/embeddings` answered a name that it could not find, and the
+#' name of a loaded chat model, with status 200 and vectors from the loaded
+#' embedding model. The `model` field names the loaded instance that
+#' answered. Its id can differ from the key that the call asked for.
 #'
 #' If the `model` field equals the name that the call sent, the reply is
 #' accepted. If it differs, the call sends one request for the model list to
@@ -362,9 +377,16 @@
 #' reply. The message names both. A condition from [lms_chat_openai()] also
 #' carries the `content` and `finish_reason` fields, both `NULL`.
 #'
+#' Within one call of [lms_chat_batch()] or [lms_embed()], a reply whose
+#' `model` field a lookup of that call already accepted for the asked name is
+#' accepted with no other request. Each such call, and each call of
+#' [lms_chat_openai()] or [lms_chat_openresponses()] outside a batch, starts
+#' with no accepted ids.
+#'
 #' The check runs before the reply is read, so it also runs with
 #' `logprobs = TRUE`, with a `schema` on [lms_chat_openai()], and for a reply
-#' with no answer text. A reply is not checked if its body is not a JSON
+#' with no answer text. In [lms_embed()], it runs before the vectors are
+#' read. A reply is not checked if its body is not a JSON
 #' object, if it has no `model` field, or if its `model` is not one string or
 #' holds only whitespace. A body that is not a JSON object is returned with
 #' `simplify = FALSE`, and with `simplify = TRUE` it raises the error that the
@@ -373,7 +395,7 @@
 #' instance belongs to the asked model.
 #'
 #' If the model-list request fails, the call raises the condition of that
-#' failure. The message opens with the label of the chat function, followed
+#' failure. The message opens with the label of the function, followed
 #' by "because the model-list lookup failed". A status other than 200 raises
 #' `rlmstudio_api_error`. A body that does not parse as JSON, or that breaks a
 #' rule of a model list in the "Malformed model list" section, raises
@@ -390,9 +412,19 @@
 #' [lms_chat_batch()] aborts at the first input that raises
 #' `rlmstudio_model_mismatch`, on the `"openai"` and `"openresponses"` routes.
 #' It also aborts at an `rlmstudio_api_error` with status 400 whose `code` is
-#' `"model_not_found"`. No request goes out after that input. In both cases,
-#' the condition carries a `results` field that follows the rule for a lost
-#' server in the "Server not running" section.
+#' `"model_not_found"`, and at one with status 400 whose `server_message`
+#' starts with "No models loaded". No request goes out after that input. In
+#' each case, the condition carries a `results` field that follows the rule
+#' for a lost server in the "Server not running" section.
+#'
+#' [lms_embed()] aborts at the first request that raises
+#' `rlmstudio_model_mismatch`, and no request goes out after it. A failed
+#' model-list lookup that raises `rlmstudio_no_server`, or an
+#' `rlmstudio_api_error` with status 401, 403, or 404, ends the call in the
+#' same way. Once a request has succeeded, the condition carries a `results`
+#' field, a matrix or a list as the "Server not running" section describes.
+#' Any other failure of the lookup fails the inputs of that request alone, as
+#' the "API failure" section describes for a failed request.
 #'
 #' @name rlmstudio-conditions
 #' @aliases rlmstudio_no_server rlmstudio_api_error rlmstudio_bad_response rlmstudio_reply_cut_off rlmstudio_model_mismatch

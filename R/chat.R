@@ -936,21 +936,25 @@ check_body_object <- function(resp, resp_data, label, ...) {
   }
 }
 
-#' Abort on a chat reply from a model other than the one asked for
+#' Abort on a chat or embedding reply from a model other than the one asked for
 #'
 #' LM Studio can answer a model name that it cannot find with a reply from
-#' the one chat model it has loaded, under status 200 (M049 work log). The
+#' the one chat model it has loaded, under status 200 (M049 work log), and
+#' `/v1/embeddings` does the same with its one embedding model (D-046). The
 #' `model` field of the reply names the loaded instance that answered. Its id
 #' can differ from the key the caller asked for, so a name that differs
 #' starts one model-list request, and the reply is accepted when the
 #' answering instance belongs to a model whose key equals the asked name in
-#' any letter case (D-025). A reply with no `model` string is not checked.
+#' any letter case (D-025). Inside a batch call, a reply id that a lookup of
+#' that call accepted for the same name starts no other request (D-046). A
+#' reply with no `model` string is not checked.
 #' Fields are read with `[[`, because `$` would read a field whose name only
 #' starts with the one asked for. The asked name is compared as a plain
 #' string, because `identical()` also compares names, class, and the S4 bit.
-#' Both callers reassign `model` to the plain string that `rlm_check_id()`
-#' returns, so it reaches this function with no class. `unclass(model)[[1]]`
-#' keeps the comparison plain for a caller that does not reassign.
+#' The three callers reassign `model` to the plain string that
+#' `rlm_check_id()` returns, so it reaches this function with no class.
+#' `unclass(model)[[1]]` keeps the comparison plain for a caller that does not
+#' reassign.
 #' `unclass()` keeps the S4 bit, and `[[` drops it.
 #'
 #' Runs before the caller's `simplify` branch, so `simplify = FALSE` cannot
@@ -2084,8 +2088,9 @@ integer_or_na <- function(x) {
 #' An `rlmstudio_bad_response` that [lms_chat()] raises for one input fails
 #' that input alone, unless it is an `rlmstudio_model_mismatch`. So does an
 #' `rlmstudio_api_error` with any `status` other than 401, 403, or 404,
-#' unless its `status` is 400 and its `code` is `"model_not_found"`. The batch
-#' goes on to the next input. Where the
+#' unless its `status` is 400 and its `code` is `"model_not_found"` or its
+#' `server_message` starts with "No models loaded". The batch goes on to the
+#' next input. Where the
 #' result is a list, or the `output` list-column that a `schema` gives, the
 #' element for that input holds the condition without its backtrace. An
 #' `rlmstudio_bad_response` for reply content that does not
@@ -2112,11 +2117,14 @@ integer_or_na <- function(x) {
 #' failure" section below. No warning about failed inputs is given.
 #'
 #' The batch aborts in the same way at an `rlmstudio_api_error` with `status`
-#' 400 and the `code` `"model_not_found"`, and at an
+#' 400 and the `code` `"model_not_found"`, at one with `status` 400 whose
+#' `server_message` starts with "No models loaded", and at an
 #' `rlmstudio_model_mismatch`. The `"openai"` and `"openresponses"` routes
 #' give these for a model name that the server cannot find, so every later
-#' input fails in the same way.
-#' See the "Reply from another model" section below.
+#' input fails in the same way. They gave the "No models loaded" status 400
+#' when no model was loaded. Within one batch, a reply id that the model-list
+#' lookup accepted is not looked up again.
+#' See the "API failure" and "Reply from another model" sections below.
 #'
 #' A `previous_response_id` that the server does not hold gives status 400
 #' with the `code` `"invalid_value"` on the native route and

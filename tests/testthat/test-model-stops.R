@@ -446,6 +446,25 @@ test_that("lms_embed goes on past a failure that is not the stop", {
   }
 })
 
+test_that("lms_embed goes on past a 400 with the code model_not_found", {
+  local_mocked_bindings(is_server_running = function(...) TRUE)
+  recorder <- local_request_sequence(list(
+    embed_from(quoted("org/embed-x"), 1L),
+    mock_response(
+      400L,
+      '{"error": {"message": "Not found.", "code": "model_not_found"}}'
+    ),
+    embed_from(quoted("org/embed-x"), 3L)
+  ))
+  expect_warning(
+    out <- embed_three(FALSE),
+    "1 input failed, at position 2"
+  )
+  expect_true(inherits(out[[2]], "rlmstudio_api_error"))
+  expect_identical(out[[2]]$code, "model_not_found")
+  expect_identical(length(recorder$requests), 3L)
+})
+
 test_that("an API error carries the error text of the body, or NULL", {
   local_mocked_bindings(is_server_running = function(...) TRUE)
   cases <- list(

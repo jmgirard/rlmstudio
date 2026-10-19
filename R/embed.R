@@ -53,19 +53,25 @@
 #' Before each request after the first, the function checks again that the
 #' server is running.
 #'
-#' A request that fails with an `rlmstudio_bad_response`, or with an
-#' `rlmstudio_api_error` whose `status` is not 401, 403, or 404, fails the
-#' inputs it carried alone. Their rows hold `NA`, or their element of the
+#' A request that fails with an `rlmstudio_bad_response` other than an
+#' `rlmstudio_model_mismatch`, or with an `rlmstudio_api_error` that does not
+#' end the call as described below, fails the inputs it carried alone. Their
+#' rows hold `NA`, or their element of the
 #' `simplify = FALSE` list holds the condition without its backtrace. The call
 #' goes on to the next request and then gives one warning that names the
 #' count and the positions of the failed inputs. That warning shows even with
 #' `quiet = TRUE`. If every request fails, the call aborts with the condition
 #' of the first failed request, and no warning is given.
 #'
-#' Two faults end the call at once, and no request goes out after them: a
-#' server that the check before a request finds gone, and an
-#' `rlmstudio_api_error` with `status` 401, 403, or 404. With
-#' `simplify = TRUE`, a third fault does the same: a request whose embeddings
+#' Four faults end the call at once, and no request goes out after them: a
+#' server that the check before a request, or the model-list lookup of the
+#' reply check, finds gone; an `rlmstudio_api_error` with `status` 401, 403,
+#' or 404; an `rlmstudio_api_error` with `status` 400 whose `server_message`
+#' starts with "No models loaded", which LM Studio sent for an unknown name
+#' with no model loaded; and an `rlmstudio_model_mismatch`, a reply from a
+#' model other than the one asked for. The "API failure" and "Reply from
+#' another model" sections below describe the last two. With
+#' `simplify = TRUE`, a fifth fault does the same: a request whose embeddings
 #' have another number of dimensions than those of an earlier request. It
 #' aborts with `rlmstudio_bad_response`. With `simplify = FALSE`, the bodies
 #' do not go through the matrix checks, so bodies of two widths are returned
@@ -94,6 +100,7 @@
 #' @inheritSection rlmstudio-conditions API failure
 #' @inheritSection rlmstudio-conditions Malformed response
 #' @inheritSection rlmstudio-conditions Malformed embeddings
+#' @inheritSection rlmstudio-conditions Reply from another model
 #' @export
 #' @examples
 #' \dontrun{
