@@ -74,7 +74,7 @@ account.
       commit, that bind 0.0.0.0 and send to 127.0.0.1.
 - [x] AC5: The report is filed as an issue on `jeroen/curl`, and the AC1 page
       records its URL.
-- [ ] AC6: `devtools::test()` on macOS reports 0 failures and 0 warnings.
+- [x] AC6: `devtools::test()` on macOS reports 0 failures and 0 warnings.
 
 ## Coverage
 <!-- owner: plan · create/amend-via-gate; each acceptance criterion → the
@@ -202,3 +202,12 @@ Pass 1, 2026-10-18, branch head 628c702, synced with main dde3de2 (no move).
 - prior-review #2: the comment generalizes from two runs — fix now, same fix as blame-history #1, fixed 323b4df and 025061b.
 - Re-check after the fixes, head 025061b. AC1: the grep still lists 5 blocks (lines 108, 126, 147, 202, 255), the same blocks E1 to E4 and E6, and the page adds row E7 for the fixed test. AC2: the fixed test raises curl's `curl_error_url_malformat` from `curl_fetch_memory()` on call 1 and builds no condition. It asserts method, path, body, and 2 calls, and its only skip path is still `require_httpuv()`. It passed on macOS (nb 5, 0.112 s) and in the container (nb 5, file 41 passed, 1 skipped, 0 failed). A plant (`curl_error` clause replaced by `TRUE`) went red with `curl_error_url_malformat`. AC3: the grep lists 158, 163, 218, 238. The sentence at 158 to 160 (Ubuntu 24.04, cannot bind a held port, retries on "Failed to create server" or skips) matches E1 to E4 and E6. The sentence at 162 to 163 (the retry after a curl error runs on Linux too) matches the E7 container column. 218 matches E5, and 238 matches E6.
 - Gate: `devtools::test()` at 323b4df (025061b changed only a comment after it) gave 0 failed, 0 errors, 0 warnings, 3 skipped. `devtools::check()` gave 0 errors, 1 warning, 0 notes: "checking for unstated dependencies in 'tests' ... '::' or ':::' import not declared from: 'curl'". The new test calls `curl::curl_echo` and `curl::curl_fetch_memory`, and DESCRIPTION does not list curl. Gate failure, so review return 1.
+
+Pass 2, 2026-10-18, head 6a87742, synced with main dde3de2 (no move). There is no code diff between 9b11175 and the head.
+
+- AC1 evidence (pass 2): `grep -n 'local_dry_run_ports('` lists 6 blocks (lines 108, 126, 147, 168, 197, 250), which are E1 to E4, E6, and E7. A fresh trace of all 6 blocks and the URL-with-space block on macOS and in the container gave the try results of page rows E1 to E7, the E6 skip message included.
+- AC2 evidence (pass 2): the block gives port 0 to try 1 through `local_dry_run_ports()`, and curl's own transfer fails there with `curl_error_couldnt_connect`. The test builds no condition, and it keeps the first error through a mock of `httr2::req_dry_run`. It asserts `curl_error`, method, path, body, and `tries$n` 2. Its only skip path is `require_httpuv()`. The fresh trace run passed it on macOS and in the container (5 expectations each). The T9 plant went red with `curl_error_couldnt_connect` from `curl_dryrun()`.
+- AC3 evidence (pass 2): the grep lists lines 158, 164, 213, 233. The sentence at 158 to 160 matches E1 to E4 and E6. The sentence at 163 to 164 ("the retry after a curl error on Linux too") matches the E7 container column. 213 matches E5, and 233 matches E6.
+- AC4 evidence (pass 2): the page's reproducer, extracted and re-run on macOS, gave the held port from `find_port()` and `str(res)` with `url` alone. The cited curl lines did not change on the page since pass 1.
+- AC5 evidence (pass 2): `gh issue view 459 --repo jeroen/curl` shows OPEN at https://github.com/jeroen/curl/issues/459, and the page records that URL.
+- AC6 evidence: `devtools::test()` at 9b11175 (the head's code) gave 0 failed, 0 errors, 0 warnings, 3 skipped.
