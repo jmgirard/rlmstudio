@@ -4,7 +4,8 @@
 #   Source:    a live LM Studio REST server at http://localhost:1234
 #   Models:    google/gemma-3-1b, loaded with a ttl, and
 #              text-embedding-nomic-embed-text-v1.5, loaded with none, each
-#              with one loaded instance
+#              with one loaded instance. The list also holds the other
+#              models on the recording machine, with no instance.
 #   Recorded:  2026-10-19, LM Studio 0.4.26+4
 #   Requests:  GET /api/v1/models
 #   Seed:      none. The model list holds no generated text.

@@ -285,9 +285,10 @@ list_instances <- function(
       display_name <- NA_character_
     }
     for (instance in model[["loaded_instances"]]) {
-      # jsonlite reads a whole number as an integer.
       ttl <- instance[["remaining_ttl_seconds"]]
-      ttl <- if (is.null(ttl)) NA_real_ else as.double(ttl)
+      if (is.null(ttl)) {
+        ttl <- NA_real_
+      }
       rows[[length(rows) + 1L]] <- list(
         id = instance[["id"]],
         key = model[["key"]],
