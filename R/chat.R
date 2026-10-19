@@ -95,7 +95,7 @@
 #' \itemize{
 #'   \item If \code{simplify = FALSE}, returns a parsed list of the raw JSON response.
 #'   \item If \code{simplify = TRUE} and \code{logprobs = FALSE}, returns a single character string containing the model's text response. With a \code{schema}, it returns the reply parsed into an R value instead.
-#'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (and the chosen API type supports it), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities. With \code{api_type = "openai"}, the \code{logprobs} of that object is \code{NULL}, and the call gives a warning of class \code{rlmstudio_no_logprobs}. The \code{rlmstudio.quiet} option does not hide it.
+#'   \item If \code{simplify = TRUE} and \code{logprobs = TRUE} (on the \code{"openresponses"} or \code{"openai"} route), returns an object of class \code{lms_chat_result} containing both the text and a data.frame of token probabilities. With \code{api_type = "openai"}, the \code{logprobs} of that object is \code{NULL}, and the call gives a warning of class \code{rlmstudio_no_logprobs}. The \code{rlmstudio.quiet} option does not hide it.
 #' }
 #'
 #' With `simplify = TRUE` and `api_type = "native"` or
@@ -609,8 +609,9 @@ responses_reply_value <- function(resp, resp_data, logprobs) {
 #' @param token Character or `NULL`. An API token for a server that requires
 #'   authentication. `NULL` reads the `rlmstudio.token` option and then the
 #'   `RLMSTUDIO_API_TOKEN` environment variable. See [rlmstudio_token].
-#' @param logprobs `TRUE` or `FALSE`. Whether to request logprobs. The
-#'   package reads none from this endpoint, so the result holds `NULL`. Any
+#' @param logprobs `TRUE` or `FALSE`. Whether to request logprobs. With
+#'   `simplify = TRUE`, the result holds `NULL`, because the package reads
+#'   none from this endpoint. Any
 #'   other value, `NULL` and `NA` included, aborts before the check for a
 #'   running server.
 #' @param simplify `TRUE` or `FALSE`. If `TRUE`, parses output to text. Any
@@ -1888,9 +1889,11 @@ integer_or_na <- function(x) {
 #'   flag, and the `logprobs` of each reply is `NULL`, because the package
 #'   reads no log probabilities from that route. The batch then gives one
 #'   warning of class `rlmstudio_no_logprobs` that counts those replies, after
-#'   the failed-inputs and cut-off warnings, or before it aborts on a lost
-#'   server. The `rlmstudio.quiet` option and `quiet = TRUE` do not hide it.
-#'   A batch in which no reply comes back gives no such warning.
+#'   the failed-inputs and cut-off warnings. A batch that aborts on a lost
+#'   server, a refused token, a model the server cannot find, or a reply from
+#'   another model gives it before the abort. The `rlmstudio.quiet` option
+#'   and `quiet = TRUE` do not hide it. A batch in which no reply is read,
+#'   for example because every input fails, gives no such warning.
 #'   Two values here that [lms_chat()] reads as the same argument abort
 #'   with a message that names the argument. Examples are
 #'   `logprobs = TRUE, logprobs = FALSE`, the shortened names

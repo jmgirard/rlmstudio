@@ -78,9 +78,11 @@ With \code{api_type = "openai"} and \code{simplify = TRUE}, the batch sends the
 flag, and the \code{logprobs} of each reply is \code{NULL}, because the package
 reads no log probabilities from that route. The batch then gives one
 warning of class \code{rlmstudio_no_logprobs} that counts those replies, after
-the failed-inputs and cut-off warnings, or before it aborts on a lost
-server. The \code{rlmstudio.quiet} option and \code{quiet = TRUE} do not hide it.
-A batch in which no reply comes back gives no such warning.
+the failed-inputs and cut-off warnings. A batch that aborts on a lost
+server, a refused token, a model the server cannot find, or a reply from
+another model gives it before the abort. The \code{rlmstudio.quiet} option
+and \code{quiet = TRUE} do not hide it. A batch in which no reply is read,
+for example because every input fails, gives no such warning.
 Two values here that \code{\link[=lms_chat]{lms_chat()}} reads as the same argument abort
 with a message that names the argument. Examples are
 \verb{logprobs = TRUE, logprobs = FALSE}, the shortened names
