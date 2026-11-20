@@ -100,7 +100,7 @@ lms_chat_openai(
     data frame is sent, one row of cells for each message. jsonlite does
     not unbox a value inside a list-matrix cell, at any depth in a list,
     unless
-    [`jsonlite::unbox()`](https://jeroen.r-universe.dev/jsonlite/reference/unbox.html)
+    [`jsonlite::unbox()`](https://rdrr.io/pkg/jsonlite/man/unbox.html)
     wraps it. A data frame in a cell is sent as an array of objects
     whose values are not boxed. So a length-one atomic cell is sent as a
     one-element array, such as `["a"]`, and a `NULL` cell is sent as

@@ -123,7 +123,7 @@ The column type follows the values of the field that are present and not
 
 In these four kinds, a `null` value is `NA`. Any other mix, or any JSON
 object or array, gives a list-column. It holds each value as
-[`jsonlite::parse_json()`](https://jeroen.r-universe.dev/jsonlite/reference/read_json.html)
+[`jsonlite::parse_json()`](https://rdrr.io/pkg/jsonlite/man/read_json.html)
 returns it, and `NULL` where the field is absent or `null`.
 
 ## Server not running

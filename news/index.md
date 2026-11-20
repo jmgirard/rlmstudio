@@ -2,6 +2,13 @@
 
 ## rlmstudio (development version)
 
+- The tests no longer expect one libcurl’s wording for two curl errors:
+  a `host` that holds a space, and a failed connect through a proxy.
+  CRAN’s Debian checks failed on the first, where libcurl says “Bad
+  hostname” and not “Malformed input to a URL function”. The
+  [`lms_server_ready()`](https://jmgirard.github.io/rlmstudio/reference/lms_server_ready.md)
+  help now names both reasons. The function does not change.
+
 - Three changes for a model name that LM Studio cannot serve:
 
   - [`lms_embed()`](https://jmgirard.github.io/rlmstudio/reference/lms_embed.md)
