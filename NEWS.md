@@ -1,6 +1,6 @@
 # rlmstudio (development version)
 
-* The tests no longer expect one libcurl's wording for a `host` that holds a space. Their failure on CRAN's Debian checks came from libcurl, which there says "Bad hostname" and not "Malformed input to a URL function". The `lms_server_ready()` help now names both reasons. The function does not change.
+* The tests no longer expect one libcurl's wording for two curl errors: a `host` that holds a space, and a failed connect through a proxy. CRAN's Debian checks failed on the first, where libcurl says "Bad hostname" and not "Malformed input to a URL function". The `lms_server_ready()` help now names both reasons. The function does not change.
 
 * Three changes for a model name that LM Studio cannot serve:
   * `lms_embed()` now checks which model answered, as `lms_chat_openai()` and `lms_chat_openresponses()` do. In LM Studio 0.4.26+4, one embedding model was loaded. `/v1/embeddings` then answered an unknown name with vectors from that embedding model. `lms_embed()` returned those vectors. The new check reads the `model` field of each reply. If that field differs from the asked name and no loaded instance of that model has that id, the call now aborts with `rlmstudio_model_mismatch`. After a request that succeeded, the condition carries a `results` field. The check can send a model-list request. If that request fails, the inputs of that embeddings request fail. A lost server or a status of 401, 403, or 404 ends the call.

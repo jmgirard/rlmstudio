@@ -197,8 +197,9 @@ test_that("request_target() reads a request when the first dry run ends with a c
 # request for 127.0.0.1 to the proxy. Here the proxy port comes from
 # free_port(), so in a clean run no program listens there. The control dry run
 # below, sent without curl's noproxy option, shows that the proxy is in use:
-# it fails to connect. A dry run of the helper that went to the proxy would
-# fail the same way on every try.
+# it fails to connect, and the same dry run with the noproxy option reaches
+# the echo server. A dry run of the helper that went to the proxy would fail
+# the same way on every try.
 test_that("request_target() reads a request when a proxy is set", {
   require_httpuv()
   proxy_port <- free_port()
@@ -214,17 +215,17 @@ test_that("request_target() reads a request when a proxy is set", {
   )
   # macOS and Linux refuse the connection at once. On the Windows CI runner the
   # connect to the closed port times out at the 2 seconds that curl_echo()
-  # allows, and that message names no port.
+  # allows. The message names the proxy port or the echo port, by the libcurl
+  # version, so the test reads only the class.
   connect_classes <- c(
     "curl_error_couldnt_connect", "curl_error_operation_timedout"
   )
   expect_true(inherits(control, connect_classes), info = class(control)[1])
-  if (inherits(control, "curl_error_couldnt_connect")) {
-    expect_match(
-      conditionMessage(control), paste0("port ", proxy_port),
-      fixed = TRUE
-    )
-  }
+  direct <- httr2::req_dry_run(
+    httr2::req_options(httr2::req_timeout(req, 5), noproxy = "*"),
+    quiet = TRUE
+  )
+  expect_identical(direct$method, "POST")
   # free_port() scans from the same start each time, so the echo port must
   # leave the proxy port out, or the echo server would act as the proxy.
   spare <- free_port(setdiff(20000:40000, proxy_port))
