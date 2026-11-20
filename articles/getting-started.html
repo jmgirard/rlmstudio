@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rlmstudio</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -203,7 +203,7 @@ computer. So the output shows <code>"already_downloaded"</code>.</p>
 <code class="sourceCode R"><span><span class="co"># Download the model, or find that it is already on disk</span></span>
 <span><span class="va">job_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lms_download.html">lms_download</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ℹ Initiating download for model: "google/gemma-3-1b"...</span></span>
-<span><span class="co">#&gt; ✔ Initiating download for model: "google/gemma-3-1b"... [1.4s]</span></span>
+<span><span class="co">#&gt; ✔ Initiating download for model: "google/gemma-3-1b"... [1.1s]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" is already downloaded.</span></span>
 <span><span class="va">job_id</span></span>
@@ -271,11 +271,15 @@ prompts.</p>
 <span>  system_prompt <span class="op">=</span> <span class="st">"Answer with one word."</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">answers</span></span>
-<span><span class="co">#&gt; [1] "Apple \n" "Blue."    "Mars "</span></span>
+<span><span class="co">#&gt; [1] "Apple \n"                                       </span></span>
+<span><span class="co">#&gt; [2] "Blue \n\nLet me know if you’d like another one!"</span></span>
+<span><span class="co">#&gt; [3] "Mars \n"</span></span>
 <span></span>
 <span><span class="co"># Remove the spaces and line breaks around each reply</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/trimws.html" class="external-link">trimws</a></span><span class="op">(</span><span class="va">answers</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Apple" "Blue." "Mars"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Apple"                                          </span></span>
+<span><span class="co">#&gt; [2] "Blue \n\nLet me know if you’d like another one!"</span></span>
+<span><span class="co">#&gt; [3] "Mars"</span></span></code></pre></div>
 <p>A reply can carry extra spaces or line breaks, and a model does not
 always follow its system prompt. So read the replies before you use
 them.</p>
@@ -291,7 +295,7 @@ server.</p>
 <code class="sourceCode R"><span><span class="co"># Remove the model from memory</span></span>
 <span><span class="fu"><a href="../reference/lms_unload.html">lms_unload</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ℹ Unloading model: "google/gemma-3-1b"...</span></span>
-<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [590ms]</span></span>
+<span><span class="co">#&gt; ✔ Model "google/gemma-3-1b" unloaded successfully. [666ms]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span></span>
 <span><span class="co"># Stop the local server</span></span>
