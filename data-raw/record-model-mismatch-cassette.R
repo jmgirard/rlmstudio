@@ -5,7 +5,7 @@
 #   Source:    a live LM Studio REST server at http://localhost:1234
 #   Models:    google/gemma-3-1b, and qwen/qwen3-4b-2507 loaded under the
 #              instance id "my-qwen"
-#   Recorded:  2026-09-28, LM Studio 0.4.25+1
+#   Recorded:  2026-11-20, LM Studio 0.4.28+2
 #   Requests:  the prompt below on /v1/chat/completions and /v1/responses,
 #              with temperature 0, then GET /api/v1/models
 #   Seed:      none. The tests read the `model` field, the status, and the

@@ -212,7 +212,7 @@ test_that("a response recorded from a live server builds the matrix", {
 
     # Read off the recorded body: the first number of the element whose index
     # is 0. It is fractional, so a coercion that lost the fraction would show.
-    expect_equal(out[1, 1], 0.014852429740130901)
+    expect_equal(out[1, 1], 0.014838537201285362)
 
     # Three different texts give three different vectors, so the matrix is not
     # one row copied across. All three pairs are compared.

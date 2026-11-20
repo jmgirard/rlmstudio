@@ -4,7 +4,7 @@
 # Provenance of tests/testthat/thread_live/:
 #   Source:    a live LM Studio REST server at http://localhost:1234
 #   Model:     google/gemma-3-1b
-#   Recorded:  see the git log of this directory, LM Studio 0.4.25+1
+#   Recorded:  see the git log of this directory, LM Studio 0.4.28+2
 #   Requests:  six chat calls, each with temperature 0:
 #              1. /api/v1/chat, the first prompt below.
 #              2. /v1/responses, the second prompt below, with the

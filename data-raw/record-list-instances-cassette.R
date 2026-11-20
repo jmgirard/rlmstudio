@@ -6,7 +6,7 @@
 #              text-embedding-nomic-embed-text-v1.5, loaded with none, each
 #              with one loaded instance. The list also holds the other
 #              models on the recording machine, with no instance.
-#   Recorded:  2026-10-19, LM Studio 0.4.26+4
+#   Recorded:  2026-11-20, LM Studio 0.4.28+2
 #   Requests:  GET /api/v1/models
 #   Seed:      none. The model list holds no generated text.
 #

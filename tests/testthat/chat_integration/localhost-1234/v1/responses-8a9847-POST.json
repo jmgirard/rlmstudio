@@ -1,8 +1,8 @@
 {
-    "id": "resp_b8cd888530dabd44e55d0c160c68ccee6d1e2b4676aec3eb",
+    "id": "resp_83a2c1baab4edbf2fe8e8d7cae1704de6fad1008dffb0063",
     "object": "response",
-    "created_at": 1790903542,
-    "completed_at": 1790903542,
+    "created_at": 1795201016,
+    "completed_at": 1795201016,
     "status": "completed",
     "incomplete_details": null,
     "model": "google/gemma-3-1b",
@@ -10,7 +10,7 @@
     "instructions": "Rate on a scale of 1 to 5. Respond with ONLY the integer.",
     "output": [
         {
-            "id": "msg_nuoxm213k68u2oeiczixrl",
+            "id": "msg_8ev4539050svu1nb8lymr",
             "type": "message",
             "role": "assistant",
             "status": "completed",
@@ -38,7 +38,7 @@
                                 },
                                 {
                                     "token": "4",
-                                    "logprob": -4.765625,
+                                    "logprob": -4.75,
                                     "bytes": [
                                         52
                                     ]
@@ -52,14 +52,14 @@
                                 },
                                 {
                                     "token": "1",
-                                    "logprob": -5.953125,
+                                    "logprob": -5.9375,
                                     "bytes": [
                                         49
                                     ]
                                 },
                                 {
                                     "token": "**",
-                                    "logprob": -7.875,
+                                    "logprob": -7.890625,
                                     "bytes": [
                                         42,
                                         42
@@ -83,7 +83,7 @@
                                 },
                                 {
                                     "token": "<end_of_turn>",
-                                    "logprob": -4.578125,
+                                    "logprob": -4.625,
                                     "bytes": [
                                         60,
                                         101,
@@ -109,14 +109,14 @@
                                 },
                                 {
                                     "token": ".",
-                                    "logprob": -6.46875,
+                                    "logprob": -6.484375,
                                     "bytes": [
                                         46
                                     ]
                                 },
                                 {
                                     "token": "\n\n",
-                                    "logprob": -7.0625,
+                                    "logprob": -7.078125,
                                     "bytes": [
                                         10,
                                         10
@@ -151,9 +151,9 @@
         "effort": null
     },
     "usage": {
-        "input_tokens": 32,
+        "input_tokens": 33,
         "output_tokens": 2,
-        "total_tokens": 34,
+        "total_tokens": 35,
         "input_tokens_details": {
             "cached_tokens": 0
         },

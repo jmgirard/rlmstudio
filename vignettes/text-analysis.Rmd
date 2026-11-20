@@ -274,15 +274,15 @@ first <- digits$logprobs[[1]]
 first[first$step == 1, c("candidate_token", "candidate_logprob")]
 #>    candidate_token candidate_logprob
 #> 1                3         -0.312500
-#> 2                4         -1.578125
-#> 3                5         -3.046875
-#> 4                2         -6.265625
-#> 5                1         -9.718750
-#> 6               **        -10.265625
-#> 7                         -13.593750
+#> 2                4         -1.546875
+#> 3                5         -3.031250
+#> 4                2         -6.234375
+#> 5                1         -9.671875
+#> 6               **        -10.218750
+#> 7                         -13.640625
 #> 8                6        -14.218750
 #> 9               ★★        -14.671875
-#> 10             ★★★        -14.796875
+#> 10             ★★★        -14.781250
 ```
 
 The first token of the reply, `3`, is the candidate with the highest log
@@ -315,11 +315,11 @@ for (i in seq_len(nrow(digits))) {
 
 reviews[, c("id", "stars", "score")]
 #>   id stars    score
-#> 1  1     4 3.303161
-#> 2  2     5 1.566338
-#> 3  3     5 4.995173
-#> 4  4     1 1.974338
-#> 5  5     5 4.990429
+#> 1  1     4 3.308940
+#> 2  2     5 1.592781
+#> 3  3     5 4.995182
+#> 4  4     1 1.973611
+#> 5  5     5 4.990685
 #> 6  6    NA       NA
 ```
 
@@ -407,12 +407,12 @@ for (i in seq_len(nrow(reviews))) {
 
 reviews[, c("id", "summary", "similarity")]
 #>   id                         summary similarity
-#> 1  1    Excellent, but slow service.  0.8815064
-#> 2  2 **A disappointing experience.**  0.4035788
-#> 3  3                Excellent pizza!  0.4533284
-#> 4  4            Terrible experience.  0.5790611
-#> 5  5            Relaxing and lovely.  0.5259393
-#> 6  6                            <NA>  0.3849732
+#> 1  1    Excellent, but slow service.  0.8815107
+#> 2  2 **A disappointing experience.**  0.4035735
+#> 3  3                Excellent pizza!  0.4533436
+#> 4  4            Terrible experience.  0.5790512
+#> 5  5            Relaxing and lovely.  0.5259289
+#> 6  6                            <NA>  0.3849692
 ```
 
 Each embedding of this model holds 768 numbers, one for each column of
@@ -435,12 +435,12 @@ Each section added columns to the same data frame. Here it is without the
 ``` r
 reviews[, names(reviews) != "text"]
 #>   id                         summary sentiment stars    score similarity
-#> 1  1    Excellent, but slow service.  positive     4 3.303161  0.8815064
-#> 2  2 **A disappointing experience.**  negative     5 1.566338  0.4035788
-#> 3  3                Excellent pizza!  positive     5 4.995173  0.4533284
-#> 4  4            Terrible experience.  negative     1 1.974338  0.5790611
-#> 5  5            Relaxing and lovely.  positive     5 4.990429  0.5259393
-#> 6  6                            <NA>      <NA>    NA       NA  0.3849732
+#> 1  1    Excellent, but slow service.  positive     4 3.308940  0.8815107
+#> 2  2 **A disappointing experience.**  negative     5 1.592781  0.4035735
+#> 3  3                Excellent pizza!  positive     5 4.995182  0.4533436
+#> 4  4            Terrible experience.  negative     1 1.973611  0.5790512
+#> 5  5            Relaxing and lovely.  positive     5 4.990685  0.5259289
+#> 6  6                            <NA>      <NA>    NA       NA  0.3849692
 ```
 
 ## The loaded models

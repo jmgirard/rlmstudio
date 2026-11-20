@@ -168,7 +168,7 @@
                         "context_length": 8192,
                         "parallel": 4
                     },
-                    "remaining_ttl_seconds": 213
+                    "remaining_ttl_seconds": 432
                 }
             ],
             "max_context_length": 32768,

@@ -6,7 +6,7 @@
 #              just-in-time model loading on
 #   Models:    text-embedding-nomic-embed-text-v1.5, loaded under its key and
 #              then under the instance id "my-nomic"
-#   Recorded:  2026-10-19, LM Studio 0.4.26+4
+#   Recorded:  2026-11-20, LM Studio 0.4.28+2
 #   Requests:  the prompt below on /v1/chat/completions and /v1/responses with
 #              temperature 0, the text below on /v1/embeddings, then
 #              GET /api/v1/models

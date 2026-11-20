@@ -10,8 +10,8 @@
         "input_tokens": 15,
         "total_output_tokens": 3,
         "reasoning_output_tokens": 0,
-        "tokens_per_second": 336.436021083324,
-        "time_to_first_token_seconds": 0.18
+        "tokens_per_second": 321.7791037937113,
+        "time_to_first_token_seconds": 0.04
     },
-    "response_id": "resp_f18ddafd1e04920be3be3cc2daf1bd7c24e6466141f79306"
+    "response_id": "resp_721d0f85d4beccc42b8abd2ebb058de9a49a0b2804021878"
 }
