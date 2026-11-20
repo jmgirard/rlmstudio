@@ -421,8 +421,9 @@ test_that("a structured reply recorded from a live server parses", {
   content <- raw$choices[[1]]$message$content
   expect_type(content, "character")
   expect_identical(parsed, jsonlite::parse_json(content, simplifyVector = TRUE))
-  # Stated apart from the parser: the recorded reply is `{ "score": 3 }`.
-  expect_identical(parsed, list(score = 3L))
+  # Stated apart from the parser: the recorded reply is
+  # `{"score": 3, "rating": 4}`. The schema does not forbid other keys.
+  expect_identical(parsed, list(score = 3L, rating = 4L))
 })
 
 test_that("a reply that LM Studio cut off at the token limit names max_tokens", {

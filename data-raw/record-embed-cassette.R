@@ -3,7 +3,7 @@
 # Provenance of tests/testthat/embed_live/:
 #   Source:    a live LM Studio REST server at http://localhost:1234
 #   Model:     text-embedding-nomic-embed-text-v1.5
-#   Recorded:  2026-09-20
+#   Recorded:  2026-11-20, LM Studio 0.4.28+2
 #   Inputs:    the three strings in `texts` below, in that order
 #   Seed:      none. The model is deterministic for a fixed input.
 #

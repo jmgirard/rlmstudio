@@ -1,8 +1,8 @@
 {
-    "id": "resp_a6a8c0c3c95bb2fe65c12bb1c657d7126c088a706daccc91",
+    "id": "resp_0765db205f44686ccf0295e5bc0b3f37e9be7f0e03a07181",
     "object": "response",
-    "created_at": 1790903511,
-    "completed_at": 1790903512,
+    "created_at": 1795200983,
+    "completed_at": 1795200984,
     "status": "completed",
     "incomplete_details": null,
     "model": "google/gemma-3-1b",
@@ -10,7 +10,7 @@
     "instructions": null,
     "output": [
         {
-            "id": "msg_nggl2l1ev9nbr5gaw8nc4m",
+            "id": "msg_5tupj846t7sc7utmvoo47u",
             "type": "message",
             "role": "assistant",
             "status": "completed",
@@ -50,11 +50,11 @@
         "effort": null
     },
     "usage": {
-        "input_tokens": 0,
+        "input_tokens": 15,
         "output_tokens": 2,
-        "total_tokens": 2,
+        "total_tokens": 17,
         "input_tokens_details": {
-            "cached_tokens": 0
+            "cached_tokens": 14
         },
         "output_tokens_details": {
             "reasoning_tokens": 0

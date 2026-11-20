@@ -1,8 +1,8 @@
 {
-    "id": "resp_b0c480aafbceb30677d1ca627532e6a0e436be9942d9f2d0",
+    "id": "resp_4a671fc3fbc0c2ee52975b60eaeb25c1fa9db485598fbe96",
     "object": "response",
-    "created_at": 1790903516,
-    "completed_at": 1790903516,
+    "created_at": 1795200990,
+    "completed_at": 1795200990,
     "status": "completed",
     "incomplete_details": null,
     "model": "my-qwen",
@@ -10,7 +10,7 @@
     "instructions": null,
     "output": [
         {
-            "id": "msg_wthgk73jmb7hie03oxhm4",
+            "id": "msg_e4axzjuywbrjeqjhqimymf",
             "type": "message",
             "role": "assistant",
             "status": "completed",
@@ -50,11 +50,11 @@
         "effort": null
     },
     "usage": {
-        "input_tokens": 0,
+        "input_tokens": 14,
         "output_tokens": 1,
-        "total_tokens": 1,
+        "total_tokens": 15,
         "input_tokens_details": {
-            "cached_tokens": 0
+            "cached_tokens": 13
         },
         "output_tokens_details": {
             "reasoning_tokens": 0

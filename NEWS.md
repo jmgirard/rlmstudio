@@ -1,29 +1,35 @@
-# rlmstudio (development version)
+# rlmstudio 0.4.0
 
-* The tests no longer expect one libcurl's wording for two curl errors: a `host` that holds a space, and a failed connect through a proxy. CRAN's Debian checks failed on the first, where libcurl says "Bad hostname" and not "Malformed input to a URL function". The `lms_server_ready()` help now names both reasons. The function does not change.
+## Breaking changes
+
+* `list_instances()` has a new fifth column, `remaining_ttl_seconds`, so each load configuration column moves one position to the right. This double column holds the `remaining_ttl_seconds` that the model list gives for each instance. If the field is absent or `null`, the column holds `NA`. In LM Studio 0.4.26+4, an instance loaded with no ttl has no such field, so it holds `NA`. If `list_instances()` finds no instance, the zero-row frame also has this column. A load configuration field named `remaining_ttl_seconds` now gives the column `config.remaining_ttl_seconds`. The check covers loaded instances of a model whose type is in `type`. If such a `remaining_ttl_seconds` is not a number or `null`, the call aborts with `rlmstudio_bad_response`.
+
+* Two cases that cannot return what you asked for now give a warning with its own class. The `rlmstudio.quiet` option does not hide either warning.
+  * `lms_load(echo_load_config = TRUE)` on a model that is already loaded, with `force = FALSE`, returns the model key, and now warns with the class `rlmstudio_no_load_config`. Before, it showed an alert with no class.
+  * With `simplify = TRUE`, `lms_chat_openai(logprobs = TRUE)` and `lms_chat(api_type = "openai", logprobs = TRUE)` return a result whose `logprobs` is `NULL`, and now warn with the class `rlmstudio_no_logprobs`. If `simplify = TRUE` and the batch reads at least one reply, `lms_chat_batch(api_type = "openai", logprobs = TRUE)` gives one such warning for the whole batch. If `simplify = TRUE` and `format = "vector"`, a `logprobs = TRUE` batch on that route that does not abort returns the list, as before. Its warning now says that the vector format "cannot store the `<lms_chat_result>` replies of the `"openai"` route". Before, it said that the vector format "cannot store logprobs dataframes".
+
+## New features
+
+* When no server answers, the `rlmstudio_no_server` error now says how to start the server. The hostname `localhost` can be in any letter case. If the hostname of `host` is `localhost` or `127.0.0.1`, the error says to run `lms_server_start()` with the port of `host`. If `host` names no port, that port is 1234. For any other `host`, the error names that host and says to start the server there. The headless `install_lmstudio()` message now names `lms_server_start(port = 1234)`, and the "Server not running" help section gives the same hint.
+
+## Bug fixes and new checks
 
 * Three changes for a model name that LM Studio cannot serve:
   * `lms_embed()` now checks which model answered, as `lms_chat_openai()` and `lms_chat_openresponses()` do. In LM Studio 0.4.26+4, one embedding model was loaded. `/v1/embeddings` then answered an unknown name with vectors from that embedding model. `lms_embed()` returned those vectors. The new check reads the `model` field of each reply. If that field differs from the asked name and no loaded instance of that model has that id, the call now aborts with `rlmstudio_model_mismatch`. After a request that succeeded, the condition carries a `results` field. The check can send a model-list request. If that request fails, the inputs of that embeddings request fail. A lost server or a status of 401, 403, or 404 ends the call.
   * `lms_chat_batch()` and `lms_embed()` now stop at the first status 400 whose error text starts with "No models loaded". In LM Studio 0.4.26+4 with no model loaded, `/v1/chat/completions`, `/v1/responses`, and `/v1/embeddings` gave this error for an unknown name. Before, the batch sent every input, and each one failed. The condition carries a `results` field, as at the other stops. For `lms_embed()`, that field is there only after a request that succeeded. An `rlmstudio_api_error` now carries a `server_message` field, the error text that the server sent, or `NULL`.
   * `lms_chat_batch()` and `lms_embed()` now keep each reply id that a model-list lookup accepted, for the rest of the call. A later reply with a kept id sends no lookup. Before, `lms_chat_batch()` against a model loaded under another id sent one model-list request for each input.
 
-* `list_instances()` has a new fifth column, `remaining_ttl_seconds`, so each load configuration column moves one position to the right. This double column holds the `remaining_ttl_seconds` that the model list gives for each instance. If the field is absent or `null`, the column holds `NA`. In LM Studio 0.4.26+4, an instance loaded with no ttl has no such field, so it holds `NA`. If `list_instances()` finds no instance, the zero-row frame also has this column. A load configuration field named `remaining_ttl_seconds` now gives the column `config.remaining_ttl_seconds`. The check covers loaded instances of a model whose type is in `type`. If such a `remaining_ttl_seconds` is not a number or `null`, the call aborts with `rlmstudio_bad_response`.
-
 * A request to a `host` whose hostname is `localhost`, in any letter case, `127.0.0.1`, or `::1` no longer goes through a proxy. The proxy environment variables, such as `http_proxy` or `all_proxy`, set that proxy. Before, unless `no_proxy` listed the host, curl sent the request and its text to the proxy. The call then failed, or got its answer from the proxy and not straight from the server. A request that starts at any other host follows the proxy variables as before.
-
-* `vignette("getting-started")` now tells you to open the LM Studio app once after the install. The vignette starts the server with `port = 1234`, because LM Studio otherwise uses the port that it used last time. It shows how to find a model key in the LM Studio model catalog. It also names the `status` of a finished download, `"completed"`.
 
 * `lms_server_start()` with no `port` now says that the server started "on the port that LM Studio used last", not "on the default port". The README, the other vignettes, and the help examples, apart from one that shows another port, now start the server with `port = 1234`. The other functions that send requests ask that port by default, and the `port` help now says so.
 
-* `install_lmstudio(method = "browser")` now tells you to open the LM Studio app once before you restart R.
-
 * With `options(rlmstudio.quiet = TRUE)`, `check_lms_version()`, `install_lmstudio(method = "browser")`, and the print of a chat result now show no alerts. Before, `check_lms_version()` showed an alert for a missing CLI, for version output that did not parse, and for a version that was too old. `install_lmstudio()` showed its request to install the software, and the print showed that log probability data was empty or missing. The function results do not change.
 
-* Two cases that cannot return what you asked for now give a warning with its own class. The `rlmstudio.quiet` option does not hide either warning.
-  * `lms_load(echo_load_config = TRUE)` on a model that is already loaded, with `force = FALSE`, returns the model key, and now warns with the class `rlmstudio_no_load_config`. Before, it showed an alert with no class.
-  * `lms_chat_openai(logprobs = TRUE)` and `lms_chat(api_type = "openai", logprobs = TRUE)` return a result whose `logprobs` is `NULL`, and now warn with the class `rlmstudio_no_logprobs`. If `simplify = TRUE` and the batch reads at least one reply, `lms_chat_batch(api_type = "openai", logprobs = TRUE)` gives one such warning for the whole batch. If `simplify = TRUE` and `format = "vector"`, a `logprobs = TRUE` batch on that route that does not abort returns the list, as before. Its warning now says that the vector format "cannot store the `<lms_chat_result>` replies of the `"openai"` route". Before, it said that the vector format "cannot store logprobs dataframes".
+* `install_lmstudio(method = "browser")` now tells you to open the LM Studio app once before you restart R.
 
-* When no server answers, the `rlmstudio_no_server` error now says how to start the server. The hostname `localhost` can be in any letter case. If the hostname of `host` is `localhost` or `127.0.0.1`, the error says to run `lms_server_start()` with the port of `host`. If `host` names no port, that port is 1234. For any other `host`, the error names that host and says to start the server there. The headless `install_lmstudio()` message now names `lms_server_start(port = 1234)`, and the "Server not running" help section gives the same hint.
+* `vignette("getting-started")` now tells you to open the LM Studio app once after the install. The vignette starts the server with `port = 1234`, because LM Studio otherwise uses the port that it used last time. It shows how to find a model key in the LM Studio model catalog. It also names the `status` of a finished download, `"completed"`.
+
+* The tests no longer expect one libcurl's wording for two curl errors: a `host` that holds a space, and a failed connect through a proxy. CRAN's Debian checks failed on the first, where libcurl says "Bad hostname" and not "Malformed input to a URL function". The `lms_server_ready()` help now names both reasons. The function does not change.
 
 # rlmstudio 0.3.0
 

@@ -4,7 +4,7 @@
 # Provenance of tests/testthat/chat_cutoff_live/:
 #   Source:    a live LM Studio REST server at http://localhost:1234
 #   Model:     google/gemma-3-1b
-#   Recorded:  2026-09-21
+#   Recorded:  2026-11-20, LM Studio 0.4.28+2
 #   Request:   the `messages` and `schema` below, with temperature 0 and
 #              max_tokens 5, so the server stops the reply at the token limit
 #              before the JSON is complete
