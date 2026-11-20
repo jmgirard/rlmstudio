@@ -221,13 +221,21 @@ test_that("a host that is not one string aborts whatever the reason", {
 })
 
 test_that("a host that cannot be parsed as a URL aborts", {
-  # curl names the reason, so the page quotes two of them rather than one.
-  # The wording of the empty-host reason depends on the libcurl version:
+  # curl names the reason, and its wording depends on the libcurl version.
+  # For a host with a space, libcurl 8.14.1 says "Malformed input to a URL
+  # function", and the libcurl of CRAN's Debian check says "Bad hostname". So
+  # the test reads curl's reason for the same URL first. For an empty host,
   # libcurl 8.14.1 says "No host part in the URL", and the libcurl of CRAN's
   # Debian check says "No host present". The test matches only the common start.
+  curl_message <- tryCatch(
+    httr2::url_modify("http://exa mple:1234", path = "api/v1/models"),
+    error = conditionMessage
+  )
+  expect_match(curl_message, "Failed to parse URL: ", fixed = TRUE)
   expect_error(
     lms_server_ready(host = "http://exa mple:1234"),
-    "Failed to parse URL: Malformed input to a URL function"
+    curl_message,
+    fixed = TRUE
   )
   expect_error(
     lms_server_ready(host = ""),
